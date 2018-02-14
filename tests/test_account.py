@@ -1,12 +1,12 @@
 import unittest
 import mock
 from pprint import pprint
-from bitshares import BitShares
-from bitshares.account import Account
-from bitshares.amount import Amount
-from bitshares.asset import Asset
-from bitshares.instance import set_shared_bitshares_instance
-from bitsharesbase.operationids import getOperationNameForId
+from steem import Steem
+from steem.account import Account
+from steem.amount import Amount
+from steem.asset import Asset
+from steem.instance import set_shared_bitshares_instance
+from steembase.operationids import getOperationNameForId
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 

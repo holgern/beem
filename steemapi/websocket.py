@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 # logging.basicConfig(level=logging.DEBUG)
 
 
-class BitSharesWebsocket(Events):
+class SteemWebsocket(Events):
     """ Create a websocket connection and request push notifications
 
         :param str urls: Either a single Websocket URL, or a list of URLs

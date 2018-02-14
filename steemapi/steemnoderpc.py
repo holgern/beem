@@ -7,7 +7,7 @@ import json
 import time
 from itertools import cycle
 from grapheneapi.graphenewsrpc import GrapheneWebsocketRPC
-from bitsharesbase.chains import known_chains
+from steembase.chains import known_chains
 from . import exceptions
 import logging
 log = logging.getLogger(__name__)
@@ -17,10 +17,10 @@ class NumRetriesReached(Exception):
     pass
 
 
-class BitSharesNodeRPC(GrapheneWebsocketRPC):
+class SteemNodeRPC(GrapheneWebsocketRPC):
 
     def __init__(self, *args, **kwargs):
-        super(BitSharesNodeRPC, self).__init__(*args, **kwargs)
+        super(SteemNodeRPC, self).__init__(*args, **kwargs)
         self.chain_params = self.get_network()
 
     def register_apis(self):
@@ -39,7 +39,7 @@ class BitSharesNodeRPC(GrapheneWebsocketRPC):
         """
         try:
             # Forward call to GrapheneWebsocketRPC and catch+evaluate errors
-            return super(BitSharesNodeRPC, self).rpcexec(payload)
+            return super(SteemNodeRPC, self).rpcexec(payload)
         except exceptions.RPCError as e:
             msg = exceptions.decodeRPCErrorMsg(e).strip()
             if msg == "missing required active authority":

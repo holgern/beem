@@ -11,24 +11,24 @@ except LookupError:
     ascii = codecs.lookup('ascii')
     codecs.register(lambda name, enc=ascii: {True: enc}.get(name == 'mbcs'))
 
-VERSION = '0.1.11'
+VERSION = '0.19.0'
 
 setup(
-    name='bitshares',
+    name='steemi',
     version=VERSION,
-    description='Python library for bitshares',
+    description='Unofficial Python library for STEEM',
     long_description=open('README.md').read(),
-    download_url='https://github.com/xeroc/python-bitshares/tarball/' + VERSION,
-    author='Fabian Schuh',
-    author_email='Fabian@chainsquad.com',
-    maintainer='Fabian Schuh',
-    maintainer_email='Fabian@chainsquad.com',
-    url='http://www.github.com/xeroc/python-bitshares',
-    keywords=['bitshares', 'library', 'api', 'rpc'],
+    download_url='https://github.com/holgern/pySteemi/tarball/' + VERSION,
+    author='Holger Nahrstaedt',
+    author_email='holger@nahrstaedt.de',
+    maintainer='Holger Nahrstaedt',
+    maintainer_email='holger@nahrstaedt.de',
+    url='http://www.github.com/holgern/pySteemi',
+    keywords=['steem', 'library', 'api', 'rpc'],
     packages=[
-        "bitshares",
-        "bitsharesapi",
-        "bitsharesbase"
+        "steem",
+        "steemapi",
+        "steembase"
     ],
     classifiers=[
         'License :: OSI Approved :: MIT License',
@@ -45,7 +45,7 @@ setup(
         "appdirs",
         "Events",
         "scrypt",
-        "pycryptodome",  # for AES, installed through graphenelib already
+        "pycryptodomex",  # for AES, installed through graphenelib already
     ],
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],

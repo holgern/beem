@@ -2,9 +2,9 @@ import json
 import logging
 
 from datetime import datetime, timedelta
-from bitsharesapi.bitsharesnoderpc import BitSharesNodeRPC
-from bitsharesbase.account import PrivateKey, PublicKey
-from bitsharesbase import transactions, operations
+from steemapi.bitsharesnoderpc import SteemNodeRPC
+from steembase.account import PrivateKey, PublicKey
+from steembase import transactions, operations
 from .asset import Asset
 from .account import Account
 from .amount import Amount
@@ -24,7 +24,7 @@ from .utils import formatTime, test_proposal_in_buffer
 log = logging.getLogger(__name__)
 
 
-class BitShares(object):
+class Steem(object):
     """ Connect to the BitShares network.
 
         :param str node: Node to connect to *(optional)*
@@ -157,13 +157,13 @@ class BitShares(object):
                 rpcuser="",
                 rpcpassword="",
                 **kwargs):
-        """ Connect to BitShares network (internal use only)
+        """ Connect to Steem network (internal use only)
         """
         if not node:
             if "node" in config:
                 node = config["node"]
             else:
-                raise ValueError("A BitShares node needs to be provided!")
+                raise ValueError("A Steem node needs to be provided!")
 
         if not rpcuser and "rpcuser" in config:
             rpcuser = config["rpcuser"]
@@ -171,7 +171,7 @@ class BitShares(object):
         if not rpcpassword and "rpcpassword" in config:
             rpcpassword = config["rpcpassword"]
 
-        self.rpc = BitSharesNodeRPC(node, rpcuser, rpcpassword, **kwargs)
+        self.rpc = SteemNodeRPC(node, rpcuser, rpcpassword, **kwargs)
 
     @property
     def prefix(self):

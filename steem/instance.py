@@ -1,29 +1,29 @@
-import bitshares as bts
+import steem as stm
 
 
 class SharedInstance():
     instance = None
 
 
-def shared_bitshares_instance():
+def shared_steem_instance():
     """ This method will initialize ``SharedInstance.instance`` and return it.
         The purpose of this method is to have offer single default
         bitshares instance that can be reused by multiple classes.
     """
     if not SharedInstance.instance:
         clear_cache()
-        SharedInstance.instance = bts.BitShares()
+        SharedInstance.instance = stm.Steem()
     return SharedInstance.instance
 
 
-def set_shared_bitshares_instance(bitshares_instance):
-    """ This method allows us to override default bitshares instance for all users of
+def set_shared_steem_instance(steem_instance):
+    """ This method allows us to override default steem instance for all users of
         ``SharedInstance.instance``.
 
         :param bitshares.bitshares.BitShares bitshares_instance: BitShares instance
     """
     clear_cache()
-    SharedInstance.instance = bitshares_instance
+    SharedInstance.instance = steem_instance
 
 
 def clear_cache():

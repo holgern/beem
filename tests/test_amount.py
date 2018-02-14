@@ -1,8 +1,8 @@
 import unittest
-from bitshares import BitShares
-from bitshares.amount import Amount
-from bitshares.asset import Asset
-from bitshares.instance import set_shared_bitshares_instance, SharedInstance
+from steem import Steem
+from steem.amount import Amount
+from steem.asset import Asset
+from steem.instance import set_shared_steem_instance, SharedInstance
 
 
 class Testcases(unittest.TestCase):

@@ -13,8 +13,13 @@ from .objecttypes import object_type
 from .account import PublicKey
 from graphenebase.objects import Operation as GPHOperation
 from .operationids import operations
-default_prefix = "BTS"
+default_prefix = "STM"
 
+asset_precision = {
+    "STEEM": 3,
+    "VESTS": 6,
+    "SBD": 3,
+}
 
 def AssetId(asset):
     return ObjectId(asset, "asset")
@@ -48,7 +53,7 @@ class Operation(GPHOperation):
         super(Operation, self).__init__(*args, **kwargs)
 
     def _getklass(self, name):
-        module = __import__("bitsharesbase.operations", fromlist=["operations"])
+        module = __import__("steembase.operations", fromlist=["operations"])
         class_ = getattr(module, name)
         return class_
 
@@ -80,7 +85,7 @@ class Asset(GrapheneObject):
             ]))
 
 
-class Memo(GrapheneObject):
+class Permission(GrapheneObject):
     def __init__(self, *args, **kwargs):
         if isArgsThisClass(self, args):
                 self.data = args[0].data
@@ -291,83 +296,6 @@ class SpecialAuthority(Static_variant):
         super().__init__(data, id)
 
 
-class Extension(Array):
-    def __str__(self):
-        """ We overload the __str__ function because the json
-            representation is different for extensions
-        """
-        return json.dumps(self.json)
 
 
-class AccountCreateExtensions(Extension):
-    def __init__(self, *args, **kwargs):
-        # Extensions #################################
-        class Null_ext(GrapheneObject):
-            def __init__(self, kwargs):
-                super().__init__(OrderedDict([]))
 
-        class Owner_special_authority(SpecialAuthority):
-            def __init__(self, kwargs):
-                super().__init__(kwargs)
-
-        class Active_special_authority(SpecialAuthority):
-            def __init__(self, kwargs):
-                super().__init__(kwargs)
-
-        class Buyback_options(GrapheneObject):
-            def __init__(self, kwargs):
-                if isArgsThisClass(self, args):
-                        self.data = args[0].data
-                else:
-                    if len(args) == 1 and len(kwargs) == 0:
-                        kwargs = args[0]
-#                    assert "1.3.0" in kwargs["markets"], "CORE asset must be in 'markets' to pay fees"
-                    super().__init__(OrderedDict([
-                        ('asset_to_buy', ObjectId(kwargs["asset_to_buy"], "asset")),
-                        ('asset_to_buy_issuer', ObjectId(kwargs["asset_to_buy_issuer"], "account")),
-                        ('markets', Array([
-                            ObjectId(x, "asset") for x in kwargs["markets"]
-                        ])),
-                    ]))
-        # End of Extensions definition ################
-        if isArgsThisClass(self, args):
-            self.data = args[0].data
-        else:
-            if len(args) == 1 and len(kwargs) == 0:
-                kwargs = args[0]
-
-        self.json = dict()
-        a = []
-        sorted_options = [
-            "null_ext",
-            "owner_special_authority",
-            "active_special_authority",
-            "buyback_options"
-        ]
-        sorting = sorted(kwargs.items(), key=lambda x: sorted_options.index(x[0]))
-        for key, value in sorting:
-            self.json.update({key: value})
-            if key == "null_ext":
-                a.append(Static_variant(
-                    Null_ext({key: value}),
-                    sorted_options.index(key))
-                )
-            elif key == "owner_special_authority":
-                a.append(Static_variant(
-                    Owner_special_authority(value),
-                    sorted_options.index(key))
-                )
-            elif key == "active_special_authority":
-                a.append(Static_variant(
-                    Active_special_authority(value),
-                    sorted_options.index(key))
-                )
-            elif key == "buyback_options":
-                a.append(Static_variant(
-                    Buyback_options(value),
-                    sorted_options.index(key))
-                )
-            else:
-                raise NotImplementedError("Extension {} is unknown".format(key))
-
-        super().__init__(a)

@@ -1,4 +1,4 @@
-from bitshares.instance import shared_bitshares_instance
+from steem.instance import shared_steem_instance
 from .exceptions import AccountDoesNotExistsException
 from .blockchainobject import BlockchainObject
 
