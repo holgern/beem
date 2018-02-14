@@ -3,11 +3,11 @@ import string
 import unittest
 import random
 from pprint import pprint
-from bitshares import BitShares
-from bitsharesbase.operationids import getOperationNameForId
-from bitshares.amount import Amount
-from bitsharesbase.account import PrivateKey
-from bitshares.instance import set_shared_bitshares_instance
+from steem import Steem
+from steembase.operationids import getOperationNameForId
+from steem.amount import Amount
+from steembase.account import PrivateKey
+from steem.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 core_unit = "TEST"
@@ -18,14 +18,14 @@ class Testcases(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.bts = BitShares(
-            "wss://node.testnet.bitshares.eu",
+        self.bts = Steem(
+            "wss://node.testnet.steem.eu",
             nobroadcast=True,
             keys={"active": wif, "owner": wif, "memo": wif},
         )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
-        set_shared_bitshares_instance(self.bts)
+        set_shared_steem_instance(self.bts)
         self.bts.set_default_account("init0")
 
     def test_connect(self):

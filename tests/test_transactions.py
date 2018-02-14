@@ -1,13 +1,13 @@
-from bitsharesbase import (
+from steembase import (
     transactions,
     memo,
     account,
     operations,
     objects
 )
-from bitsharesbase.objects import Operation
-from bitsharesbase.signedtransactions import Signed_Transaction
-from bitsharesbase.account import PrivateKey
+from steembase.objects import Operation
+from steembase.signedtransactions import Signed_Transaction
+from steembase.account import PrivateKey
 import random
 import unittest
 from pprint import pprint
@@ -15,7 +15,7 @@ from binascii import hexlify
 
 TEST_AGAINST_CLI_WALLET = False
 
-prefix = "BTS"
+prefix = "STM"
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 ref_block_num = 34294
 ref_block_prefix = 3707022213

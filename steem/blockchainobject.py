@@ -1,4 +1,4 @@
-from bitshares.instance import shared_bitshares_instance
+from steem.instance import shared_steem_instance
 from datetime import datetime, timedelta
 
 
@@ -62,11 +62,11 @@ class BlockchainObject(dict):
         object_id=None,
         lazy=False,
         use_cache=True,
-        bitshares_instance=None,
+        steem_instance=None,
         *args,
         **kwargs
     ):
-        self.bitshares = bitshares_instance or shared_bitshares_instance()
+        self.steem = steem_instance or shared_steem_instance()
         self.cached = False
         self.identifier = None
 

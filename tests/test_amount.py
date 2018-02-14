@@ -10,11 +10,11 @@ class Testcases(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.bts = BitShares(
-            "wss://node.testnet.bitshares.eu",
+        self.bts = Steem(
+            "wss://node.testnet.steem.eu",
             nobroadcast=True,
         )
-        set_shared_bitshares_instance(self.bts)
+        set_shared_steem_instance(self.bts)
         self.asset = Asset("1.3.0")
         self.symbol = self.asset["symbol"]
         self.precision = self.asset["precision"]

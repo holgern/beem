@@ -10,7 +10,7 @@ from bitsharesbase import operations
 class Dex():
     """ This class simplifies interactions with the decentralized exchange.
 
-        :param bitshares.bitshares.BitShares bitshares_instance: BitShares instance
+        :param bitshares.bitshares.Steem bitshares_instance: Steem instance
 
         .. note:: The methods of this class only deal with a single asset (at
                   most). If you are looking to deal with orders for trading,

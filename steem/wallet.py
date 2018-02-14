@@ -1,7 +1,7 @@
 import logging
 import os
 from graphenebase import bip38
-from bitsharesbase.account import PrivateKey, GPHPrivateKey
+from steembase.account import PrivateKey, GPHPrivateKey
 from .account import Account
 from .exceptions import (
     KeyNotFound,
@@ -21,20 +21,20 @@ class Wallet():
         your accounts. It either uses manually provided private keys
         or uses a SQLite database managed by storage.py.
 
-        :param BitSharesNodeRPC rpc: RPC connection to a BitShares node
+        :param SteemNodeRPC rpc: RPC connection to a Steem node
         :param array,dict,string keys: Predefine the wif keys to shortcut the
                wallet database
 
         Three wallet operation modes are possible:
 
-        * **Wallet Database**: Here, pybitshares loads the keys from the
+        * **Wallet Database**: Here, pysteem loads the keys from the
           locally stored wallet SQLite database (see ``storage.py``).
-          To use this mode, simply call ``BitShares()`` without the
+          To use this mode, simply call ``Steem()`` without the
           ``keys`` parameter
         * **Providing Keys**: Here, you can provide the keys for
           your accounts manually. All you need to do is add the wif
           keys for the accounts you want to use as a simple array
-          using the ``keys`` parameter to ``BitShares()``.
+          using the ``keys`` parameter to ``Steem()``.
         * **Force keys**: This more is for advanced users and
           requires that you know what you are doing. Here, the
           ``keys`` parameter is a dictionary that overwrite the
@@ -87,7 +87,7 @@ class Wallet():
 
     def setKeys(self, loadkeys):
         """ This method is strictly only for in memory keys that are
-            passed to Wallet/BitShares with the ``keys`` argument
+            passed to Wallet/Steem with the ``keys`` argument
         """
         log.debug(
             "Force setting of private keys. Not using the wallet database!")
@@ -336,7 +336,7 @@ class Wallet():
         """
         for id in self.getAccountsFromPublicKey(pub):
             try:
-                account = Account(id)   # FIXME: self.bitshares is not available in wallet!
+                account = Account(id)   # FIXME: self.steem is not available in wallet!
             except:
                 continue
             yield {"name": account["name"],
@@ -353,7 +353,7 @@ class Wallet():
             return {"name": None, "type": None, "pubkey": pub}
         else:
             try:
-                account = Account(name)   # FIXME: self.bitshares is not available in wallet!
+                account = Account(name)   # FIXME: self.steem is not available in wallet!
             except:
                 return
             return {"name": account["name"],

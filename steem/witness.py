@@ -8,7 +8,7 @@ class Witness(BlockchainObject):
     """ Read data about a witness in the chain
 
         :param str account_name: Name of the witness
-        :param bitshares bitshares_instance: BitShares() instance to use when
+        :param steem steem_instance: BitShares() instance to use when
                accesing a RPC
 
     """
@@ -18,37 +18,37 @@ class Witness(BlockchainObject):
         if self.test_valid_objectid(self.identifier):
             _, i, _ = self.identifier.split(".")
             if int(i) == 6:
-                witness = self.bitshares.rpc.get_object(self.identifier)
+                witness = self.steem.rpc.get_object(self.identifier)
             else:
-                witness = self.bitshares.rpc.get_witness_by_account(
+                witness = self.steem.rpc.get_witness_by_account(
                     self.identifier)
         else:
             account = Account(
-                self.identifier, bitshares_instance=self.bitshares)
-            witness = self.bitshares.rpc.get_witness_by_account(account["id"])
+                self.identifier, steem_instance=self.steem)
+            witness = self.steem.rpc.get_witness_by_account(account["id"])
         if not witness:
             raise WitnessDoesNotExistsException
-        super(Witness, self).__init__(witness, bitshares_instance=self.bitshares)
+        super(Witness, self).__init__(witness, steem_instance=self.steem)
 
     @property
     def account(self):
-        return Account(self["witness_account"], bitshares_instance=self.bitshares)
+        return Account(self["witness_account"], steem_instance=self.steem)
 
 
 class Witnesses(list):
     """ Obtain a list of **active** witnesses and the current schedule
 
-        :param bitshares bitshares_instance: BitShares() instance to use when
+        :param steem steem_instance: BitShares() instance to use when
             accesing a RPC
     """
-    def __init__(self, bitshares_instance=None):
-        self.bitshares = bitshares_instance or shared_bitshares_instance()
-        self.schedule = self.bitshares.rpc.get_object(
+    def __init__(self, steem_instance=None):
+        self.steem = steem_instance or shared_steem_instance()
+        self.schedule = self.steem.rpc.get_object(
             "2.12.0").get("current_shuffled_witnesses", [])
 
         super(Witnesses, self).__init__(
             [
-                Witness(x, lazy=True, bitshares_instance=self.bitshares)
+                Witness(x, lazy=True, steem_instance=self.steem)
                 for x in self.schedule
             ]
         )

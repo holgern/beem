@@ -7,14 +7,14 @@ class Account(BlockchainObject):
     """ This class allows to easily access Account data
 
         :param str account_name: Name of the account
-        :param bitshares.bitshares.BitShares bitshares_instance: BitShares
+        :param steem.steem.Steem steem_instance: Steem
                instance
         :param bool lazy: Use lazy loading
         :param bool full: Obtain all account data including orders, positions,
                etc.
         :returns: Account data
         :rtype: dictionary
-        :raises bitshares.exceptions.AccountDoesNotExistsException: if account
+        :raises steem.exceptions.AccountDoesNotExistsException: if account
                 does not exist
 
         Instances of this class are dictionaries that come with additional
@@ -23,7 +23,7 @@ class Account(BlockchainObject):
 
         .. code-block:: python
 
-            from bitshares.account import Account
+            from steem.account import Account
             account = Account("init0")
             print(account)
 
@@ -40,14 +40,14 @@ class Account(BlockchainObject):
         account,
         full=False,
         lazy=False,
-        bitshares_instance=None
+        steem_instance=None
     ):
         self.full = full
         super().__init__(
             account,
             lazy=lazy,
             full=full,
-            bitshares_instance=bitshares_instance
+            steem_instance=steem_instance
         )
 
     def refresh(self):
@@ -55,16 +55,16 @@ class Account(BlockchainObject):
         """
         import re
         if re.match("^1\.2\.[0-9]*$", self.identifier):
-            account = self.bitshares.rpc.get_objects([self.identifier])[0]
+            account = self.steem.rpc.get_objects([self.identifier])[0]
         else:
-            account = self.bitshares.rpc.lookup_account_names(
+            account = self.steem.rpc.lookup_account_names(
                 [self.identifier])[0]
         if not account:
             raise AccountDoesNotExistsException(self.identifier)
         self.identifier = account["id"]
 
         if self.full:
-            account = self.bitshares.rpc.get_full_accounts(
+            account = self.steem.rpc.get_full_accounts(
                 [account["id"]], False)[0][1]
             super(Account, self).__init__(account["account"])
             for k, v in account.items():
@@ -86,18 +86,18 @@ class Account(BlockchainObject):
     @property
     def balances(self):
         """ List balances of an account. This call returns instances of
-            :class:`bitshares.amount.Amount`.
+            :class:`steem.amount.Amount`.
         """
         from .amount import Amount
-        balances = self.bitshares.rpc.get_account_balances(self["id"], [])
+        balances = self.steem.rpc.get_account_balances(self["id"], [])
         return [
-            Amount(b, bitshares_instance=self.bitshares)
+            Amount(b, steem_instance=self.steem)
             for b in balances if int(b["amount"]) > 0
         ]
 
     def balance(self, symbol):
         """ Obtain the balance of a specific Asset. This call returns instances of
-            :class:`bitshares.amount.Amount`.
+            :class:`steem.amount.Amount`.
         """
         from .amount import Amount
         if isinstance(symbol, dict) and "symbol" in symbol:
@@ -110,7 +110,7 @@ class Account(BlockchainObject):
 
     @property
     def call_positions(self):
-        """ Alias for :func:bitshares.account.Account.callpositions
+        """ Alias for :func:steem.account.Account.callpositions
         """
         return self.callpositions()
 
@@ -120,7 +120,7 @@ class Account(BlockchainObject):
         """
         self.ensure_full()
         from .dex import Dex
-        dex = Dex(bitshares_instance=self.bitshares)
+        dex = Dex(steem_instance=self.steem)
         return dex.list_debt_positions(self)
 
     @property
@@ -130,7 +130,7 @@ class Account(BlockchainObject):
         from .price import Order
         self.ensure_full()
         return [
-            Order(o, bitshares_instance=self.bitshares)
+            Order(o, steem_instance=self.steem)
             for o in self["limit_orders"]
         ]
 
@@ -163,11 +163,11 @@ class Account(BlockchainObject):
             :param array exclude_ops: Exclude thse operations from
                 generator (*optional*)
         """
-        from bitsharesbase.operations import getOperationNameForId
+        from steembase.operations import getOperationNameForId
         _limit = 100
         cnt = 0
 
-        mostrecent = self.bitshares.rpc.get_account_history(
+        mostrecent = self.steem.rpc.get_account_history(
             self["id"],
             "1.11.{}".format(0),
             1,
@@ -183,7 +183,7 @@ class Account(BlockchainObject):
 
         while True:
             # RPC call
-            txs = self.bitshares.rpc.get_account_history(
+            txs = self.steem.rpc.get_account_history(
                 self["id"],
                 "1.11.{}".format(last),
                 _limit,
@@ -210,12 +210,12 @@ class Account(BlockchainObject):
             first = int(txs[-1]["id"].split(".")[2])
 
     def upgrade(self):
-        return self.bitshares.upgrade_account(account=self)
+        return self.steem.upgrade_account(account=self)
 
 
 class AccountUpdate(dict):
     """ This purpose of this class is to keep track of account updates
-        as they are pushed through by :class:`bitshares.notify.Notify`.
+        as they are pushed through by :class:`steem.notify.Notify`.
 
         Instances of this class are dictionaries and take the following
         form:
@@ -236,15 +236,15 @@ class AccountUpdate(dict):
     def __init__(
         self,
         data,
-        bitshares_instance=None
+        steem_instance=None
     ):
-        self.bitshares = bitshares_instance or shared_bitshares_instance()
+        self.steem = steem_instance or shared_steem_instance()
 
         if isinstance(data, dict):
             super(AccountUpdate, self).__init__(data)
         else:
-            account = Account(data, bitshares_instance=self.bitshares)
-            update = self.bitshares.rpc.get_objects([
+            account = Account(data, steem_instance=self.steem)
+            update = self.steem.rpc.get_objects([
                 "2.6.%s" % (account["id"].split(".")[2])
             ])[0]
             super(AccountUpdate, self).__init__(update)
@@ -252,7 +252,7 @@ class AccountUpdate(dict):
     @property
     def account(self):
         """ In oder to obtain the actual
-            :class:`bitshares.account.Account` from this class, you can
+            :class:`steem.account.Account` from this class, you can
             use the ``account`` attribute.
         """
         account = Account(self["owner"])

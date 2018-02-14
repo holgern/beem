@@ -7,7 +7,7 @@ class Block(BlockchainObject):
     """ Read a single block from the chain
 
         :param int block: block number
-        :param bitshares.bitshares.BitShares bitshares_instance: BitShares
+        :param bitshares.bitshares.Steem bitshares_instance: Steem
             instance
         :param bool lazy: Use lazy loading
 

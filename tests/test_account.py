@@ -5,7 +5,7 @@ from steem import Steem
 from steem.account import Account
 from steem.amount import Amount
 from steem.asset import Asset
-from steem.instance import set_shared_bitshares_instance
+from steem.instance import set_shared_steem_instance
 from steembase.operationids import getOperationNameForId
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
@@ -16,8 +16,8 @@ class Testcases(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.bts = BitShares(
-            "wss://node.testnet.bitshares.eu",
+        self.bts = Steem(
+            "wss://node.testnet.steem.eu",
             nobroadcast=True,
             # We want to bundle many operations into a single transaction
             bundle=True,
@@ -25,7 +25,7 @@ class Testcases(unittest.TestCase):
             wif={"active": wif}
         )
         self.bts.set_default_account("init0")
-        set_shared_bitshares_instance(self.bts)
+        set_shared_steem_instance(self.bts)
 
     def test_account(self):
         Account("witness-account")

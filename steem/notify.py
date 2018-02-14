@@ -1,6 +1,6 @@
 import logging
 from events import Events
-from bitsharesapi.websocket import BitSharesWebsocket
+from bitsharesapi.websocket import SteemWebsocket
 from bitshares.instance import shared_bitshares_instance
 from bitshares.market import Market
 from bitshares.price import Order, FilledOrder, UpdateCallOrder
@@ -19,7 +19,7 @@ class Notify(Events):
         :param fnt on_block: Callback that will be called for each block received
         :param fnt on_account: Callback that will be called for changes of the listed accounts
         :param fnt on_market: Callback that will be called for changes of the listed markets
-        :param bitshares.bitshares.BitShares bitshares_instance: BitShares instance
+        :param bitshares.bitshares.Steem bitshares_instance: Steem instance
 
         **Example**
 
@@ -66,7 +66,7 @@ class Notify(Events):
         super(Notify, self).__init__()
         self.events = Events()
 
-        # BitShares instance
+        # Steem instance
         self.bitshares = bitshares_instance or shared_bitshares_instance()
 
         # Markets
@@ -94,7 +94,7 @@ class Notify(Events):
             self.on_market += on_market
 
         # Open the websocket
-        self.websocket = BitSharesWebsocket(
+        self.websocket = SteemWebsocket(
             urls=self.bitshares.rpc.urls,
             user=self.bitshares.rpc.user,
             password=self.bitshares.rpc.password,

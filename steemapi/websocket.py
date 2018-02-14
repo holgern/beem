@@ -34,11 +34,11 @@ class SteemWebsocket(Events):
         * ``on_market``
 
         which will be called accordingly with the notification
-        message received from the BitShares node:
+        message received from the Steem node:
 
         .. code-block:: python
 
-            ws = BitSharesWebsocket(
+            ws = SteemWebsocket(
                 "wss://node.testnet.bitshares.eu",
                 objects=["2.0.x", "2.1.x", "1.3.x"]
             )

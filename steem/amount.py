@@ -1,4 +1,4 @@
-from bitshares.instance import shared_bitshares_instance
+from steem.instance import shared_steem_instance
 from .asset import Asset
 
 
@@ -10,7 +10,7 @@ class Amount(dict):
         :param list args: Allows to deal with different representations of an amount
         :param float amount: Let's create an instance with a specific amount
         :param str asset: Let's you create an instance with a specific asset (symbol)
-        :param bitshares.bitshares.BitShares bitshares_instance: BitShares instance
+        :param steem.steem.Steem steem_instance: Steem instance
         :returns: All data required to represent an Amount/Asset
         :rtype: dict
         :raises ValueError: if the data provided is not recognized
@@ -21,14 +21,14 @@ class Amount(dict):
             * ``args`` can be a dictionary containing ``amount`` and ``asset_id``
             * ``args`` can be a dictionary containing ``amount`` and ``asset``
             * ``args`` can be a list of a ``float`` and ``str`` (symbol)
-            * ``args`` can be a list of a ``float`` and a :class:`bitshares.asset.Asset`
+            * ``args`` can be a list of a ``float`` and a :class:`steem.asset.Asset`
             * ``amount`` and ``asset`` are defined manually
 
         An instance is a dictionary and comes with the following keys:
 
             * ``amount`` (float)
             * ``symbol`` (str)
-            * ``asset`` (instance of :class:`bitshares.asset.Asset`)
+            * ``asset`` (instance of :class:`steem.asset.Asset`)
 
         Instances of this class can be used in regular mathematical expressions
         (``+-*/%``) such as:
@@ -38,10 +38,10 @@ class Amount(dict):
             Amount("1 USD") * 2
             Amount("15 GOLD") + Amount("0.5 GOLD")
     """
-    def __init__(self, *args, amount=None, asset=None, bitshares_instance=None):
+    def __init__(self, *args, amount=None, asset=None, steem_instance=None):
         self["asset"] = {}
 
-        self.bitshares = bitshares_instance or shared_bitshares_instance()
+        self.steem = steem_instance or shared_steem_instance()
 
         if len(args) == 1 and isinstance(args[0], Amount):
             # Copy Asset object
@@ -51,13 +51,13 @@ class Amount(dict):
 
         elif len(args) == 1 and isinstance(args[0], str):
             self["amount"], self["symbol"] = args[0].split(" ")
-            self["asset"] = Asset(self["symbol"], bitshares_instance=self.bitshares)
+            self["asset"] = Asset(self["symbol"], steem_instance=self.steem)
 
         elif (len(args) == 1 and
                 isinstance(args[0], dict) and
                 "amount" in args[0] and
                 "asset_id" in args[0]):
-            self["asset"] = Asset(args[0]["asset_id"], bitshares_instance=self.bitshares)
+            self["asset"] = Asset(args[0]["asset_id"], steem_instance=self.steem)
             self["symbol"] = self["asset"]["symbol"]
             self["amount"] = int(args[0]["amount"]) / 10 ** self["asset"]["precision"]
 
@@ -65,7 +65,7 @@ class Amount(dict):
                 isinstance(args[0], dict) and
                 "amount" in args[0] and
                 "asset" in args[0]):
-            self["asset"] = Asset(args[0]["asset"], bitshares_instance=self.bitshares)
+            self["asset"] = Asset(args[0]["asset"], steem_instance=self.steem)
             self["symbol"] = self["asset"]["symbol"]
             self["amount"] = int(args[0]["amount"]) / 10 ** self["asset"]["precision"]
 
@@ -76,7 +76,7 @@ class Amount(dict):
 
         elif len(args) == 2 and isinstance(args[1], str):
             self["amount"] = args[0]
-            self["asset"] = Asset(args[1], bitshares_instance=self.bitshares)
+            self["asset"] = Asset(args[1], steem_instance=self.steem)
             self["symbol"] = self["asset"]["symbol"]
 
         elif isinstance(amount, (int, float)) and asset and isinstance(asset, Asset):
@@ -91,7 +91,7 @@ class Amount(dict):
 
         elif isinstance(amount, (int, float)) and asset and isinstance(asset, str):
             self["amount"] = amount
-            self["asset"] = Asset(asset, bitshares_instance=self.bitshares)
+            self["asset"] = Asset(asset, steem_instance=self.steem)
             self["symbol"] = asset
 
         else:
@@ -106,7 +106,7 @@ class Amount(dict):
         return Amount(
             amount=self["amount"],
             asset=self["asset"].copy(),
-            bitshares_instance=self.bitshares)
+            steem_instance=self.steem)
 
     @property
     def amount(self):
@@ -125,10 +125,10 @@ class Amount(dict):
 
     @property
     def asset(self):
-        """ Returns the asset as instance of :class:`bitshares.asset.Asset`
+        """ Returns the asset as instance of :class:`steem.asset.Asset`
         """
         if not self["asset"]:
-            self["asset"] = Asset(self["symbol"], bitshares_instance=self.bitshares)
+            self["asset"] = Asset(self["symbol"], steem_instance=self.steem)
         return self["asset"]
 
     def json(self):

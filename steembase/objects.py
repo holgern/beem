@@ -84,6 +84,52 @@ class Asset(GrapheneObject):
                 ('asset_id', ObjectId(kwargs["asset_id"], "asset"))
             ]))
 
+class Memo(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if isArgsThisClass(self, args):
+                self.data = args[0].data
+        else:
+            if len(args) == 1 and len(kwargs) == 0:
+                kwargs = args[0]
+            prefix = kwargs.pop("prefix", default_prefix)
+            if "message" in kwargs and kwargs["message"]:
+                super().__init__(OrderedDict([
+                    ('from', PublicKey(kwargs["from"], prefix=prefix)),
+                    ('to', PublicKey(kwargs["to"], prefix=prefix)),
+                    ('nonce', Uint64(int(kwargs["nonce"]))),
+                    ('message', Bytes(kwargs["message"]))
+                ]))
+            else:
+                super().__init__(None)
+
+
+class Price(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if isArgsThisClass(self, args):
+                self.data = args[0].data
+        else:
+            if len(args) == 1 and len(kwargs) == 0:
+                kwargs = args[0]
+            super().__init__(OrderedDict([
+                ('base', Asset(kwargs["base"])),
+                ('quote', Asset(kwargs["quote"]))
+            ]))
+
+
+class PriceFeed(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if isArgsThisClass(self, args):
+                self.data = args[0].data
+        else:
+            if len(args) == 1 and len(kwargs) == 0:
+                kwargs = args[0]
+            super().__init__(OrderedDict([
+                ('settlement_price', Price(kwargs["settlement_price"])),
+                ('maintenance_collateral_ratio', Uint16(kwargs["maintenance_collateral_ratio"])),
+                ('maximum_short_squeeze_ratio', Uint16(kwargs["maximum_short_squeeze_ratio"])),
+                ('core_exchange_rate', Price(kwargs["core_exchange_rate"])),
+            ]))
+
 
 class Permission(GrapheneObject):
     def __init__(self, *args, **kwargs):
@@ -299,3 +345,84 @@ class SpecialAuthority(Static_variant):
 
 
 
+        
+class Extension(Array):
+    def __str__(self):
+        """ We overload the __str__ function because the json
+            representation is different for extensions
+        """
+        return json.dumps(self.json)
+
+
+class AccountCreateExtensions(Extension):
+    def __init__(self, *args, **kwargs):
+        # Extensions #################################
+        class Null_ext(GrapheneObject):
+            def __init__(self, kwargs):
+                super().__init__(OrderedDict([]))
+
+        class Owner_special_authority(SpecialAuthority):
+            def __init__(self, kwargs):
+                super().__init__(kwargs)
+
+        class Active_special_authority(SpecialAuthority):
+            def __init__(self, kwargs):
+                super().__init__(kwargs)
+
+        class Buyback_options(GrapheneObject):
+            def __init__(self, kwargs):
+                if isArgsThisClass(self, args):
+                        self.data = args[0].data
+                else:
+                    if len(args) == 1 and len(kwargs) == 0:
+                        kwargs = args[0]
+#                    assert "1.3.0" in kwargs["markets"], "CORE asset must be in 'markets' to pay fees"
+                    super().__init__(OrderedDict([
+                        ('asset_to_buy', ObjectId(kwargs["asset_to_buy"], "asset")),
+                        ('asset_to_buy_issuer', ObjectId(kwargs["asset_to_buy_issuer"], "account")),
+                        ('markets', Array([
+                            ObjectId(x, "asset") for x in kwargs["markets"]
+                        ])),
+                    ]))
+        # End of Extensions definition ################
+        if isArgsThisClass(self, args):
+            self.data = args[0].data
+        else:
+            if len(args) == 1 and len(kwargs) == 0:
+                kwargs = args[0]
+
+        self.json = dict()
+        a = []
+        sorted_options = [
+            "null_ext",
+            "owner_special_authority",
+            "active_special_authority",
+            "buyback_options"
+        ]
+        sorting = sorted(kwargs.items(), key=lambda x: sorted_options.index(x[0]))
+        for key, value in sorting:
+            self.json.update({key: value})
+            if key == "null_ext":
+                a.append(Static_variant(
+                    Null_ext({key: value}),
+                    sorted_options.index(key))
+                )
+            elif key == "owner_special_authority":
+                a.append(Static_variant(
+                    Owner_special_authority(value),
+                    sorted_options.index(key))
+                )
+            elif key == "active_special_authority":
+                a.append(Static_variant(
+                    Active_special_authority(value),
+                    sorted_options.index(key))
+                )
+            elif key == "buyback_options":
+                a.append(Static_variant(
+                    Buyback_options(value),
+                    sorted_options.index(key))
+                )
+            else:
+                raise NotImplementedError("Extension {} is unknown".format(key))
+
+        super().__init__(a)

@@ -1,15 +1,15 @@
 from .account import Account
-from bitsharesbase.objects import Operation
-from bitsharesbase.account import PrivateKey, PublicKey
-from bitsharesbase.signedtransactions import Signed_Transaction
-from bitsharesbase import transactions, operations
+from steembase.objects import Operation
+from steembase.account import PrivateKey, PublicKey
+from steembase.signedtransactions import Signed_Transaction
+from steembase import transactions, operations
 from .exceptions import (
     InsufficientAuthorityError,
     MissingKeyError,
     InvalidWifError,
     WalletLocked
 )
-from bitshares.instance import shared_bitshares_instance
+from steem.instance import shared_steem_instance
 import logging
 log = logging.getLogger(__name__)
 
@@ -23,9 +23,9 @@ class ProposalBuilder:
             supposed to expire
         :param int proposal_review: Number of seconds for review of the
             proposal
-        :param bitshares.transactionbuilder.TransactionBuilder: Specify
+        :param steem.transactionbuilder.TransactionBuilder: Specify
             your own instance of transaction builder (optional)
-        :param bitshares.bitshares.BitShares bitshares_instance: BitShares
+        :param steem.steem.BitShares steem_instance: BitShares
             instance
     """
     def __init__(
@@ -34,11 +34,11 @@ class ProposalBuilder:
         proposal_expiration=None,
         proposal_review=None,
         parent=None,
-        bitshares_instance=None,
+        steem_instance=None,
         *args,
         **kwargs
     ):
-        self.bitshares = bitshares_instance or shared_bitshares_instance()
+        self.steem = steem_instance or shared_steem_instance()
 
         self.set_expiration(proposal_expiration or 2 * 24 * 60 * 60)
         self.set_review(proposal_review)
@@ -106,7 +106,7 @@ class ProposalBuilder:
         ops = [operations.Op_wrapper(op=o) for o in list(self.ops)]
         proposer = Account(
             self.proposer,
-            bitshares_instance=self.bitshares
+            steem_instance=self.steem
         )
         data = {
             "fee": {"amount": 0, "asset_id": "1.3.0"},
@@ -133,9 +133,9 @@ class TransactionBuilder(dict):
         tx={},
         proposer=None,
         expiration=None,
-        bitshares_instance=None
+        steem_instance=None
     ):
-        self.bitshares = bitshares_instance or shared_bitshares_instance()
+        self.steem = steem_instance or shared_steem_instance()
         self.clear()
         if tx and isinstance(tx, dict):
             super(TransactionBuilder, self).__init__(tx)
@@ -209,10 +209,10 @@ class TransactionBuilder(dict):
             and permission is supposed to sign the transaction
         """
         assert permission in ["active", "owner"], "Invalid permission"
-        account = Account(account, bitshares_instance=self.bitshares)
+        account = Account(account, steem_instance=self.steem)
         required_treshold = account[permission]["weight_threshold"]
 
-        if self.bitshares.wallet.locked():
+        if self.steem.wallet.locked():
             raise WalletLocked()
 
         def fetchkeys(account, perm, level=0):
@@ -221,7 +221,7 @@ class TransactionBuilder(dict):
             r = []
             for authority in account[perm]["key_auths"]:
                 try:
-                    wif = self.bitshares.wallet.getPrivateKeyForPublicKey(
+                    wif = self.steem.wallet.getPrivateKeyForPublicKey(
                         authority[0])
                     r.append([wif, authority[1]])
                 except Exception:
@@ -231,7 +231,7 @@ class TransactionBuilder(dict):
                 # go one level deeper
                 for authority in account[perm]["account_auths"]:
                     auth_account = Account(
-                        authority[0], bitshares_instance=self.bitshares)
+                        authority[0], steem_instance=self.steem)
                     r.extend(fetchkeys(auth_account, perm, level + 1))
 
             return r
@@ -240,12 +240,12 @@ class TransactionBuilder(dict):
             # is the account an instance of public key?
             if isinstance(account, PublicKey):
                 self.wifs.add(
-                    self.bitshares.wallet.getPrivateKeyForPublicKey(
+                    self.steem.wallet.getPrivateKeyForPublicKey(
                         str(account)
                     )
                 )
             else:
-                account = Account(account, bitshares_instance=self.bitshares)
+                account = Account(account, steem_instance=self.steem)
                 required_treshold = account[permission]["weight_threshold"]
                 keys = fetchkeys(account, permission)
                 if permission != "owner":
@@ -282,12 +282,12 @@ class TransactionBuilder(dict):
                 ops.extend([Operation(op)])
 
         # We no wrap everything into an actual transaction
-        ops = transactions.addRequiredFees(self.bitshares.rpc, ops)
+        ops = transactions.addRequiredFees(self.steem.rpc, ops)
         expiration = transactions.formatTimeFromNow(
-            self.expiration or self.bitshares.expiration
+            self.expiration or self.steem.expiration
         )
         ref_block_num, ref_block_prefix = transactions.getBlockParams(
-            self.bitshares.rpc)
+            self.steem.rpc)
         self.tx = Signed_Transaction(
             ref_block_num=ref_block_num,
             ref_block_prefix=ref_block_prefix,
@@ -313,19 +313,19 @@ class TransactionBuilder(dict):
 
         # Legacy compatibility!
         # If we are doing a proposal, obtain the account from the proposer_id
-        if self.bitshares.proposer:
+        if self.steem.proposer:
             proposer = Account(
-                self.bitshares.proposer,
-                bitshares_instance=self.bitshares)
+                self.steem.proposer,
+                steem_instance=self.steem)
             self.wifs = set()
             self.signing_accounts = list()
             self.appendSigner(proposer["id"], "active")
 
         # We need to set the default prefix, otherwise pubkeys are
         # presented wrongly!
-        if self.bitshares.rpc:
+        if self.steem.rpc:
             operations.default_prefix = (
-                self.bitshares.rpc.chain_params["prefix"])
+                self.steem.rpc.chain_params["prefix"])
         elif "blockchain" in self:
             operations.default_prefix = self["blockchain"]["prefix"]
 
@@ -337,20 +337,20 @@ class TransactionBuilder(dict):
         if not any(self.wifs):
             raise MissingKeyError
 
-        signedtx.sign(self.wifs, chain=self.bitshares.rpc.chain_params)
+        signedtx.sign(self.wifs, chain=self.steem.rpc.chain_params)
         self["signatures"].extend(signedtx.json().get("signatures"))
 
     def verify_authority(self):
         """ Verify the authority of the signed transaction
         """
         try:
-            if not self.bitshares.rpc.verify_authority(self.json()):
+            if not self.steem.rpc.verify_authority(self.json()):
                 raise InsufficientAuthorityError
         except Exception as e:
             raise e
 
     def broadcast(self):
-        """ Broadcast a transaction to the bitshares network
+        """ Broadcast a transaction to the steem network
 
             :param tx tx: Signed transaction to broadcast
         """
@@ -363,19 +363,19 @@ class TransactionBuilder(dict):
 
         ret = self.json()
 
-        if self.bitshares.nobroadcast:
+        if self.steem.nobroadcast:
             log.warning("Not broadcasting anything!")
             self.clear()
             return ret
 
         # Broadcast
         try:
-            if self.bitshares.blocking:
-                ret = self.bitshares.rpc.broadcast_transaction_synchronous(
+            if self.steem.blocking:
+                ret = self.steem.rpc.broadcast_transaction_synchronous(
                     ret, api="network_broadcast")
                 ret.update(**ret["trx"])
             else:
-                self.bitshares.rpc.broadcast_transaction(
+                self.steem.rpc.broadcast_transaction(
                     ret, api="network_broadcast")
         except Exception as e:
             raise e
@@ -401,7 +401,7 @@ class TransactionBuilder(dict):
             FIXME: Does not work with owner keys!
         """
         self.constructTx()
-        self["blockchain"] = self.bitshares.rpc.chain_params
+        self["blockchain"] = self.steem.rpc.chain_params
 
         if isinstance(account, PublicKey):
             self["missing_signatures"] = [
@@ -440,6 +440,6 @@ class TransactionBuilder(dict):
         """
         missing_signatures = self.get("missing_signatures", [])
         for pub in missing_signatures:
-            wif = self.bitshares.wallet.getPrivateKeyForPublicKey(pub)
+            wif = self.steem.wallet.getPrivateKeyForPublicKey(pub)
             if wif:
                 self.appendWif(wif)
