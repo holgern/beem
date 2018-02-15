@@ -1,5 +1,5 @@
 Price
 ~~~~~~
 
-.. autoclass:: bitshares.price.Price
+.. autoclass:: steem.price.Price
    :members:

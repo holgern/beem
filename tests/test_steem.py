@@ -26,13 +26,13 @@ class Testcases(unittest.TestCase):
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(self.bts)
-        self.bts.set_default_account("init0")
+        self.bts.set_default_account("test")
 
     def test_connect(self):
         self.bts.connect()
 
     def test_set_default_account(self):
-        self.bts.set_default_account("init0")
+        self.bts.set_default_account("test")
 
     def test_info(self):
         info = self.bts.info()

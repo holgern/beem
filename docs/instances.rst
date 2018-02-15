@@ -1,16 +1,16 @@
 Instances
 ~~~~~~~~~
 
-Default instance to be used when no ``bitshares_instance`` is given to
+Default instance to be used when no ``steem_instance`` is given to
 the Objects!
 
 .. code-block:: python
 
-   from bitshares.instance import shared_bitshares_instance
+   from steem.instance import shared_steem_instance
 
    account = Account("xeroc")
    # is equivalent with 
-   account = Account("xeroc", bitshares_instance=shared_bitshares_instance())
+   account = Account("xeroc", steem_instance=shared_steem_instance())
 
-.. automethod:: bitshares.instance.shared_bitshares_instance
-.. automethod:: bitshares.instance.set_shared_bitshares_instance
+.. automethod:: steem.instance.shared_steem_instance
+.. automethod:: steem.instance.set_shared_steem_instance

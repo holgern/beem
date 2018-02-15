@@ -5,11 +5,11 @@ Read data about a worker
 
 .. code-block:: python
 
-   from bitshares.witness import Witness
+   from steem.witness import Witness
    Witness("refund400")
 
-.. autoclass:: bitshares.worker.Worker
+.. autoclass:: steem.worker.Worker
    :members:
 
-.. autoclass:: bitshares.worker.Workers
+.. autoclass:: steem.worker.Workers
    :members:

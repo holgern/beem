@@ -1,8 +1,8 @@
 Exceptions
 ~~~~~~~~~~
 
-.. autoclass:: bitshares.exceptions
+.. autoclass:: steem.exceptions
    :members:
 
-.. autoclass:: bitsharesapi.exceptions
+.. autoclass:: steemapi.exceptions
    :members:

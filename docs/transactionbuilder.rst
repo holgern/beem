@@ -5,8 +5,8 @@ To build your own transactions and sign them
 
 .. code-block:: python
 
-   from bitshares.transactionbuilder import TransactionBuilder
-   from bitsharesbase.operations import Transfer
+   from steem.transactionbuilder import TransactionBuilder
+   from steembase.operations import Transfer
    tx = TransactionBuilder()
    tx.appendOps(Transfer(**{
             "fee": {"amount": 0, "asset_id": "1.3.0"},  # will be filled in automatically
@@ -18,5 +18,5 @@ To build your own transactions and sign them
    tx.sign()
    tx.broadcast()
 
-.. autoclass:: bitshares.transactionbuilder.TransactionBuilder
+.. autoclass:: steem.transactionbuilder.TransactionBuilder
    :members:

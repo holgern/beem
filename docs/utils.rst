@@ -1,5 +1,5 @@
 Utilities
 ~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: bitshares.utils
+.. autoclass:: steem.utils
    :members:

@@ -1,4 +1,4 @@
-.. python-bitshares documentation master file, created by
+.. python-steem documentation master file, created by
    sphinx-quickstart on Fri Jun  5 14:06:38 2015.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
@@ -9,7 +9,7 @@
    http://openalea.gforge.inria.fr/doc/openalea/doc/_build/html/source/sphinx/rest_syntax.html
    http://rest-sphinx-memo.readthedocs.org/en/latest/ReST.html
 
-Welcome to pybitshares's documentation!
+Welcome to pysteem's documentation!
 ===============================================
 
 BitShares is a **blockchain-based autonomous company** (i.e. a DAC) that
@@ -24,7 +24,7 @@ assets as well as customized on-chain smart contracts.
 About this Library
 ------------------
 
-The purpose of *pybitshares* is to simplify development of products and
+The purpose of *pysteem* is to simplify development of products and
 services that use the BitShares blockchain. It comes with
 
 * it's own (bip32-encrypted) wallet
@@ -52,26 +52,26 @@ Quickstart
 
 .. code-block:: python
 
-   from bitshares import BitShares
-   bitshares = BitShares()
-   bitshares.wallet.unlock("wallet-passphrase")
-   bitshares.transfer("<to>", "<amount>", "<asset>", "[<memo>]", account="<from>")
+   from steem import BitShares
+   steem = BitShares()
+   steem.wallet.unlock("wallet-passphrase")
+   steem.transfer("<to>", "<amount>", "<asset>", "[<memo>]", account="<from>")
 
 .. code-block:: python
 
-   from bitshares.blockchain import Blockchain
+   from steem.blockchain import Blockchain
    blockchain = Blockchain()
    for op in Blockchain.ops():
        print(op)
 
 .. code-block:: python
 
-   from bitshares.block import Block
+   from steem.block import Block
    print(Block(1))
 
 .. code-block:: python
 
-   from bitshares.account import Account
+   from steem.account import Account
    account = Account("init0")
    print(account.balances)
    print(account.openorders)
@@ -80,17 +80,17 @@ Quickstart
 
 .. code-block:: python
 
-   from bitshares.market import Market
+   from steem.market import Market
    market = Market("USD:BTS")
    print(market.ticker())
-   market.bitshares.wallet.unlock("wallet-passphrase")
+   market.steem.wallet.unlock("wallet-passphrase")
    print(market.sell(300, 100)  # sell 100 USD for 300 BTS/USD
 
 .. code-block:: python
 
-   from bitshares.dex import Dex
+   from steem.dex import Dex
    dex = Dex()
-   dex.bitshares.wallet.unlock("wallet-passphrase")
+   dex.steem.wallet.unlock("wallet-passphrase")
    dex.adjust_collateral_ratio("SILVER", 3.5)
    
 
@@ -112,7 +112,7 @@ Python-BitShares Libraries
 .. toctree::
    :maxdepth: 1
 
-   bitshares
+   steem
    instances
    account
    amount

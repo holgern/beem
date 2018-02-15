@@ -16,7 +16,7 @@ We load the class for manual transaction construction via:
 
 .. code-block:: python
 
-    from bitsharesbase import transactions, operations
+    from steembase import transactions, operations
 
 Construction
 ############

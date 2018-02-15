@@ -1,8 +1,8 @@
 Proposal
 ~~~~~~~~
 
-.. autoclass:: bitshares.proposal.Proposal
+.. autoclass:: steem.proposal.Proposal
    :members:
 
-.. autoclass:: bitshares.proposal.Proposals
+.. autoclass:: steem.proposal.Proposals
    :members:

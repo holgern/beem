@@ -5,9 +5,9 @@ Easily read data in a Block
 
 .. code-block:: python
 
-   from bitshares.block import Block
+   from steem.block import Block
    from pprint import pprint
    pprint(Block(1))
 
-.. autoclass:: bitshares.block.Block
+.. autoclass:: steem.block.Block
    :members:

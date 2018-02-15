@@ -1,5 +1,5 @@
 Asset
 ~~~~~~
 
-.. autoclass:: bitshares.asset.Asset
+.. autoclass:: steem.asset.Asset
    :members:

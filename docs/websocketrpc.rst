@@ -7,5 +7,5 @@ websockets.
 
 Defintion
 =========
-.. autoclass:: bitsharesapi.bitsharesnoderpc.BitSharesNodeRPC
+.. autoclass:: steemapi.steemnoderpc.BitSharesNodeRPC
     :members: rpcexec, __getattr__

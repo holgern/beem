@@ -1,5 +1,5 @@
 Vesting
 ~~~~~~~
 
-.. autoclass:: bitshares.vesting.Vesting
+.. autoclass:: steem.vesting.Vesting
    :members:

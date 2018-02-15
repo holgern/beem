@@ -1,5 +1,5 @@
 Market
 ~~~~~~~
 
-.. autoclass:: bitshares.market.Market
+.. autoclass:: steem.market.Market
     :members:

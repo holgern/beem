@@ -1,5 +1,5 @@
 Dex
 ~~~
 
-.. autoclass:: bitshares.dex.Dex
+.. autoclass:: steem.dex.Dex
     :members:

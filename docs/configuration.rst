@@ -2,7 +2,7 @@
 Configuration
 *************
 
-The pybitshares library comes with its own local configuration database
+The pysteem library comes with its own local configuration database
 that stores information like
 
 * API node URL
@@ -15,20 +15,20 @@ You can access those variables like a regular dictionary by using
 
 .. code-block:: python
 
-    from bitshares import BitShares
-    bitshares = BitShares()
-    print(bitshares.config.items())
+    from steem import BitShares
+    steem = BitShares()
+    print(steem.config.items())
 
 Keys can be added and changed like they are for regular dictionaries.
 
-If you don't want to load the :class:`bitshares.BitShares` class, you
+If you don't want to load the :class:`steem.BitShares` class, you
 can load the configuration directly by using:
 
 .. code-block:: python
 
-    from bitshares.storage import configStorage as config
+    from steem.storage import configStorage as config
 
 API
 ---
-.. autoclass:: bitshares.storage.Configuration
+.. autoclass:: steem.storage.Configuration
    :members:

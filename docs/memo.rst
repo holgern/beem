@@ -53,13 +53,13 @@ Example
 Encrypting a memo
 ~~~~~~~~~~~~~~~~~
 
-The high level memo class makes use of the pybitshares wallet to obtain keys
+The high level memo class makes use of the pysteem wallet to obtain keys
 for the corresponding accounts.
 
 .. code-block:: python
 
-    from bitshares.memo import Memo
-    from bitshares.account import Account
+    from steem.memo import Memo
+    from steem.account import Account
 
     memoObj = Memo(
         from_account=Account(from_account),
@@ -73,8 +73,8 @@ Decoding of a received memo
 .. code-block:: python
 
      from getpass import getpass
-     from bitshares.block import Block
-     from bitshares.memo import Memo
+     from steem.block import Block
+     from steem.memo import Memo
 
      # Obtain a transfer from the blockchain
      block = Block(23755086)                   # block
@@ -96,5 +96,5 @@ Decoding of a received memo
 API
 ###
 
-.. automodule:: bitsharesbase.memo
+.. automodule:: steembase.memo
     :members:

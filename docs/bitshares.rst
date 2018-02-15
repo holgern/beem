@@ -7,5 +7,5 @@ the related blockchain technology and cryptography. This library can be
 used to do anything that is allowed according to the BitShares
 blockchain protocol.
 
-.. autoclass:: bitshares.bitshares.BitShares
+.. autoclass:: steem.steem.BitShares
    :members:

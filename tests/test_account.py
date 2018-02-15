@@ -28,15 +28,14 @@ class Testcases(unittest.TestCase):
         set_shared_steem_instance(self.bts)
 
     def test_account(self):
-        Account("witness-account")
-        Account("1.2.3")
+        Account("test")
+        Account("DoesNotExistsXXX")
         # asset = Asset("1.3.0")
         # symbol = asset["symbol"]
-        account = Account("witness-account", full=True)
-        self.assertEqual(account.name, "witness-account")
+        account = Account("test", full=True)
+        self.assertEqual(account.name, "test")
         self.assertEqual(account["name"], account.name)
-        self.assertEqual(account["id"], "1.2.1")
-        self.assertIsInstance(account.balance("1.3.0"), Amount)
+        self.assertIsInstance(account.balance("SBD"), Amount)
         # self.assertIsInstance(account.balance({"symbol": symbol}), Amount)
         self.assertIsInstance(account.balances, list)
         for h in account.history(limit=1):
@@ -52,20 +51,4 @@ class Testcases(unittest.TestCase):
         self.assertEqual(str(account), "<Account 1.2.1>")
         self.assertIsInstance(Account(account), Account)
 
-    def test_account_upgrade(self):
-        account = Account("witness-account")
-        tx = account.upgrade()
-        ops = tx["operations"]
-        op = ops[0][1]
-        self.assertEqual(len(ops), 1)
-        self.assertEqual(
-            getOperationNameForId(ops[0][0]),
-            "account_upgrade"
-        )
-        self.assertTrue(
-            op["upgrade_to_lifetime_member"]
-        )
-        self.assertEqual(
-            op["account_to_upgrade"],
-            "1.2.1",
-        )
+

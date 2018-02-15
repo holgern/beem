@@ -1,4 +1,4 @@
-Contributing to python-bitshares 
+Contributing to python-steem 
 ================================
 
 We welcome your contributions to our project.
@@ -6,9 +6,9 @@ We welcome your contributions to our project.
 Repository
 ----------
 
-The *main* repository of python-bitshares is currently located at:
+The *main* repository of python-steem is currently located at:
 
-    https://github.com/xeroc/python-bitshares
+    https://github.com/xeroc/python-steem
 
 Flow
 ----
