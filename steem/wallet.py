@@ -65,10 +65,10 @@ class Wallet():
 
         # Prefix?
         if Wallet.rpc:
-            self.prefix = "STM"# Wallet.rpc.chain_params["prefix"]
+            self.prefix = Wallet.rpc.chain_params["prefix"]
         else:
             # If not connected, load prefix from config
-            self.prefix = "STM"# self.configStorage["prefix"]
+            self.prefix = self.configStorage["prefix"]
 
         # Compatibility after name change from wif->keys
         if "wif" in kwargs and "keys" not in kwargs:

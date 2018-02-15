@@ -175,7 +175,7 @@ class Steem(object):
 
     @property
     def prefix(self):
-        return "STM"# self.rpc.chain_params["prefix"]
+        return  self.rpc.chain_params["prefix"]
 
     def set_default_account(self, account):
         """ Set the default account to be used

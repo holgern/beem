@@ -21,7 +21,7 @@ class SteemNodeRPC(GrapheneWebsocketRPC):
 
     def __init__(self, *args, **kwargs):
         super(SteemNodeRPC, self).__init__(*args, **kwargs)
-        #self.chain_params = self.get_network()
+        self.chain_params = self.get_network()
 
     def register_apis(self):
         return
@@ -85,8 +85,8 @@ class SteemNodeRPC(GrapheneWebsocketRPC):
         """ Identify the connected network. This call returns a
             dictionary with keys chain_id, core_symbol and prefix
         """
-        props = self.get_chain_properties()
-        chain_id = props["chain_id"]
+        props = self.get_config()
+        chain_id = props["STEEMIT_CHAIN_ID"]
         for k, v in known_chains.items():
             if v["chain_id"] == chain_id:
                 return v

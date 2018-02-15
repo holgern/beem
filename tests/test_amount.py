@@ -15,10 +15,10 @@ class Testcases(unittest.TestCase):
             nobroadcast=True,
         )
         set_shared_steem_instance(self.bts)
-        self.asset = Asset("1.3.0")
+        self.asset = Asset("sbd_symbol")
         self.symbol = self.asset["symbol"]
         self.precision = self.asset["precision"]
-        self.asset2 = Asset("1.3.1")
+        self.asset2 = Asset("steem_symbol")
 
     def dotest(self, ret, amount, symbol):
         self.assertEqual(float(ret), float(amount))
@@ -50,7 +50,7 @@ class Testcases(unittest.TestCase):
         self.dotest(amount, 1.3, self.symbol)
 
         # Asset as symbol
-        amount = Amount(1.3, Asset("1.3.0"))
+        amount = Amount(1.3, Asset("sbd_symbol"))
         self.dotest(amount, 1.3, self.symbol)
 
         # Asset as symbol
@@ -58,11 +58,11 @@ class Testcases(unittest.TestCase):
         self.dotest(amount, 1.3, self.symbol)
 
         # keyword inits
-        amount = Amount(amount=1.3, asset=Asset("1.3.0"))
+        amount = Amount(amount=1.3, asset=Asset("sbd_symbol"))
         self.dotest(amount, 1.3, self.symbol)
 
         # keyword inits
-        amount = Amount(amount=1.3, asset=dict(Asset("1.3.0")))
+        amount = Amount(amount=1.3, asset=dict(Asset("sbd_symbol")))
         self.dotest(amount, 1.3, self.symbol)
 
         # keyword inits
@@ -98,12 +98,12 @@ class Testcases(unittest.TestCase):
     def test_string(self):
         self.assertEqual(
             str(Amount("1", self.symbol)),
-            "1.00000 {}".format(self.symbol))
+            "1.000 {}".format(self.symbol))
 
     def test_int(self):
         self.assertEqual(
             int(Amount("1", self.symbol)),
-            100000)
+            1000)
 
     def test_float(self):
         self.assertEqual(

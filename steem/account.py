@@ -2,6 +2,7 @@ from steem.instance import shared_steem_instance
 from .exceptions import AccountDoesNotExistsException
 from .blockchainobject import BlockchainObject
 
+import json
 
 class Account(BlockchainObject):
     """ This class allows to easily access Account data
@@ -24,7 +25,7 @@ class Account(BlockchainObject):
         .. code-block:: python
 
             from steem.account import Account
-            account = Account("init0")
+            account = Account("test")
             print(account)
 
         .. note:: This class comes with its own caching function to reduce the
@@ -53,14 +54,10 @@ class Account(BlockchainObject):
     def refresh(self):
         """ Refresh/Obtain an account's data from the API server
         """
-        import re
-        if re.match("^1\.2\.[0-9]*$", self.identifier):
-            account = self.steem.rpc.get_objects([self.identifier])[0]
-        else:
-            account = self.steem.rpc.lookup_account_names(
-                [self.identifier])[0]
+        account = self.steem.rpc.lookup_account_names(
+                [self.name])[0]
         if not account:
-            raise AccountDoesNotExistsException(self.identifier)
+            raise AccountDoesNotExistsException(self.name)
         self.identifier = account["id"]
 
         if self.full:
@@ -73,15 +70,26 @@ class Account(BlockchainObject):
         else:
             super(Account, self).__init__(account)
 
+    def getSimilarAccountNames(self,limit=5):
+        """ Returns limit similar accounts with name as array
+        """
+        return self.steem.rpc.lookup_accounts(self.name,limit)
+
     @property
     def name(self):
         return self["name"]
 
     @property
-    def is_ltm(self):
-        """ Is the account a lifetime member (LTM)?
+    def profile(self):
+        """ Returns the account profile
         """
-        return self["id"] == self["lifetime_referrer"]
+        return json.loads(self["json_metadata"])["profile"]
+
+    @property
+    def sp(self):
+        """ Returns the accounts Steem Power
+        """
+        vests = self["vesting_shares"]
 
     @property
     def balances(self):
