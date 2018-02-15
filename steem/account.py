@@ -54,21 +54,23 @@ class Account(BlockchainObject):
     def refresh(self):
         """ Refresh/Obtain an account's data from the API server
         """
-        account = self.steem.rpc.lookup_account_names(
-                [self.name])[0]
+        if isinstance(self.identifier,str):
+            name = self.identifier
+        else:
+            name = self.name
+        if self.full:
+            account = self.steem.rpc.get_accounts(
+                [name])
+        else:
+            account = self.steem.rpc.lookup_account_names(
+                    [name])
         if not account:
             raise AccountDoesNotExistsException(self.name)
+        else:
+            account = account[0]
         self.identifier = account["id"]
 
-        if self.full:
-            account = self.steem.rpc.get_full_accounts(
-                [account["id"]], False)[0][1]
-            super(Account, self).__init__(account["account"])
-            for k, v in account.items():
-                if k != "account":
-                    self[k] = v
-        else:
-            super(Account, self).__init__(account)
+        super(Account, self).__init__(account)
 
     def getSimilarAccountNames(self,limit=5):
         """ Returns limit similar accounts with name as array
@@ -92,55 +94,67 @@ class Account(BlockchainObject):
         vests = self["vesting_shares"]
 
     @property
-    def balances(self):
+    def available_balances(self):
         """ List balances of an account. This call returns instances of
             :class:`steem.amount.Amount`.
         """
         from .amount import Amount
-        balances = self.steem.rpc.get_account_balances(self["id"], [])
+        available_str = [self["balance"], self["sbd_balance"], self["vesting_shares"]]
         return [
             Amount(b, steem_instance=self.steem)
-            for b in balances if int(b["amount"]) > 0
+            for b in available_str # if int(b["amount"]) > 0
         ]
 
-    def balance(self, symbol):
+    @property
+    def saving_balances(self):
+        from .amount import Amount
+        savings_str = [self["savings_balance"], self["savings_sbd_balance"]]
+        return [
+            Amount(b, steem_instance=self.steem)
+            for b in savings_str # if int(b["amount"]) > 0
+        ]
+
+    @property
+    def reward_balances(self):
+        from .amount import Amount
+        rewards_str = [self["reward_steem_balance"], self["reward_sbd_balance"], self["reward_vesting_balance"]]
+        return [
+            Amount(b, steem_instance=self.steem)
+            for b in rewards_str # if int(b["amount"]) > 0
+        ]
+
+    @property
+    def total_balances(self):
+
+        return [ self.balance(self.available_balances, "STEEM") + self.balance(self.saving_balances, "STEEM") + 
+                        self.balance(self.reward_balances, "STEEM"),
+                 self.balance(self.available_balances, "SBD") + self.balance(self.saving_balances, "SBD") +
+                      self.balance(self.reward_balances, "SBD"),
+                 self.balance(self.available_balances, "VESTS") + self.balance(self.reward_balances, "VESTS"),
+        ]
+
+    @property
+    def get_balances(self):
+
+        return {
+            'available': self.available_balances,
+            'savings': self.saving_balances,
+            'rewards': self.reward_balances,
+            'total': self.total_balances,
+        }
+
+    def balance(self, balances, symbol):
         """ Obtain the balance of a specific Asset. This call returns instances of
             :class:`steem.amount.Amount`.
         """
         from .amount import Amount
         if isinstance(symbol, dict) and "symbol" in symbol:
             symbol = symbol["symbol"]
-        balances = self.balances
+        
         for b in balances:
             if b["symbol"] == symbol:
                 return b
         return Amount(0, symbol)
-
-    @property
-    def call_positions(self):
-        """ Alias for :func:steem.account.Account.callpositions
-        """
-        return self.callpositions()
-
-    @property
-    def callpositions(self):
-        """ List call positions (collateralized positions :doc:`mpa`)
-        """
-        self.ensure_full()
-        from .dex import Dex
-        dex = Dex(steem_instance=self.steem)
-        return dex.list_debt_positions(self)
-
-    @property
-    def openorders(self):
-        """ Returns open Orders
-        """
-        from .price import Order
-        self.ensure_full()
-        return [
-            Order(o, steem_instance=self.steem)
-            for o in self["limit_orders"]
-        ]
 
     @property
     def is_fully_loaded(self):
@@ -155,7 +169,7 @@ class Account(BlockchainObject):
 
     def history(
         self, first=None,
-        last=0, limit=100,
+        limit=100,
         only_ops=[], exclude_ops=[]
     ):
         """ Returns a generator for individual account transactions. The
@@ -176,11 +190,9 @@ class Account(BlockchainObject):
         cnt = 0
 
         mostrecent = self.steem.rpc.get_account_history(
-            self["id"],
-            "1.11.{}".format(0),
-            1,
-            "1.11.{}".format(9999999999999),
-            api="history"
+            self["name"],
+            -1,
+            1
         )
         if not mostrecent:
             return
@@ -192,20 +204,14 @@ class Account(BlockchainObject):
         while True:
             # RPC call
             txs = self.steem.rpc.get_account_history(
-                self["id"],
-                "1.11.{}".format(last),
+                self["name"],
+                first,
                 _limit,
-                "1.11.{}".format(first - 1),
-                api="history"
             )
             for i in txs:
-                if exclude_ops and getOperationNameForId(
-                    i["op"][0]
-                ) in exclude_ops:
+                if exclude_ops and i[1]["op"][0] in exclude_ops:
                     continue
-                if not only_ops or getOperationNameForId(
-                    i["op"][0]
-                ) in only_ops:
+                if not only_ops or i[1]["op"][0] in only_ops:
                     cnt += 1
                     yield i
                     if limit >= 0 and cnt >= limit:
@@ -215,10 +221,11 @@ class Account(BlockchainObject):
                 break
             if len(txs) < _limit:
                 break
-            first = int(txs[-1]["id"].split(".")[2])
+            # first = int(txs[-1]["id"].split(".")[2])
+            first = txs[-1][0]
 
-    def upgrade(self):
-        return self.steem.upgrade_account(account=self)
+    # def upgrade(self):
+    #    return self.steem.upgrade_account(account=self)
 
 
 class AccountUpdate(dict):

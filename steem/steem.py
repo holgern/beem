@@ -12,7 +12,6 @@ from .price import Price
 from .witness import Witness
 from .committee import Committee
 from .vesting import Vesting
-from .worker import Worker
 from .storage import configStorage as config
 from .exceptions import (
     AccountExistsException,
@@ -1072,71 +1071,6 @@ class Steem(object):
             }))
         return self.finalizeOp(op, account["name"], "active", **kwargs)
 
-    def approveworker(self, workers, account=None, **kwargs):
-        """ Approve a worker
-
-            :param list workers: list of worker member name or id
-            :param str account: (optional) the account to allow access
-                to (defaults to ``default_account``)
-        """
-        if not account:
-            if "default_account" in config:
-                account = config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self)
-        options = account["options"]
-
-        if not isinstance(workers, (list, set, tuple)):
-            workers = {workers}
-
-        for worker in workers:
-            worker = Worker(worker, steem_instance=self)
-            options["votes"].append(worker["vote_for"])
-        options["votes"] = list(set(options["votes"]))
-
-        op = operations.Account_update(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
-            "account": account["id"],
-            "new_options": options,
-            "extensions": {},
-            "prefix": self.prefix
-        })
-        return self.finalizeOp(op, account["name"], "active", **kwargs)
-
-    def disapproveworker(self, workers, account=None, **kwargs):
-        """ Disapprove a worker
-
-            :param list workers: list of worker name or id
-            :param str account: (optional) the account to allow access
-                to (defaults to ``default_account``)
-        """
-        if not account:
-            if "default_account" in config:
-                account = config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self)
-        options = account["options"]
-
-        if not isinstance(workers, (list, set, tuple)):
-            workers = {workers}
-
-        for worker in workers:
-            worker = Worker(worker, steem_instance=self)
-            if worker["vote_for"] in options["votes"]:
-                options["votes"].remove(worker["vote_for"])
-        options["votes"] = list(set(options["votes"]))
-
-        op = operations.Account_update(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
-            "account": account["id"],
-            "new_options": options,
-            "extensions": {},
-            "prefix": self.prefix
-        })
-        return self.finalizeOp(op, account["name"], "active", **kwargs)
-
     def cancel(self, orderNumbers, account=None, **kwargs):
         """ Cancels an order you have placed in a given market. Requires
             only the "orderNumbers". An order number takes the form
@@ -1313,71 +1247,6 @@ class Steem(object):
         })
         return self.finalizeOp(op, account, "active", **kwargs)
 
-    def create_worker(
-        self,
-        name,
-        daily_pay,
-        end,
-        url="",
-        begin=None,
-        payment_type="vesting",
-        pay_vesting_period_days=0,
-        account=None,
-        **kwargs
-    ):
-        """ Reserve/Burn an amount of this shares
-
-            This removes the shares from the supply
-
-            **Required**
-
-            :param str name: Name of the worke
-            :param steem.amount.Amount daily_pay: The amount to be paid daily
-            :param datetime end: Date/time of end of the worker
-
-            **Optional**
-
-            :param str url: URL to read more about the worker
-            :param datetime begin: Date/time of begin of the worker
-            :param string payment_type: ["burn", "refund", "vesting"] (default: "vesting")
-            :param int pay_vesting_period_days: Days of vesting (default: 0)
-            :param str account: (optional) the account to allow access
-                to (defaults to ``default_account``)
-        """
-        from steembase.transactions import timeformat
-        assert isinstance(daily_pay, Amount)
-        assert daily_pay["symbol"] == "BTS"
-        if not begin:
-            begin = datetime.utcnow() + timedelta(seconds=30)
-        if not account:
-            if "default_account" in config:
-                account = config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self)
-
-        if payment_type == "refund":
-            initializer = [0, {}]
-        elif payment_type == "vesting":
-            initializer = [
-                1, {"pay_vesting_period_days": pay_vesting_period_days}
-            ]
-        elif payment_type == "burn":
-            initializer = [2, {}]
-        else:
-            raise ValueError('payment_type not in ["burn", "refund", "vesting"]')
-
-        op = operations.Worker_create(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
-            "owner": account["id"],
-            "work_begin_date": begin.strftime(timeformat),
-            "work_end_date": end.strftime(timeformat),
-            "daily_pay": int(daily_pay),
-            "name": name,
-            "url": url,
-            "initializer": initializer
-        })
-        return self.finalizeOp(op, account, "active", **kwargs)
 
     def fund_fee_pool(self, symbol, amount, account=None, **kwargs):
         """ Fund the fee pool of an asset

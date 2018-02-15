@@ -49,6 +49,16 @@ def assets_from_string(text):
     """
     return re.split(r'[\-:/]', text)
 
+def resolve_authorperm(identifier):
+    """Correctly split a string containing an authorperm.
+
+    Splits the string into author and permlink with the
+    following separator: ``/``.
+    """    
+    match = re.match("@?([\w\-\.]*)/([\w\-]*)", identifier)
+    if not hasattr(match, "group"):
+        raise ValueError("Invalid identifier")
+    return match.group(1), match.group(2)
 
 def test_proposal_in_buffer(buf, operation_name, id):
     from .transactionbuilder import ProposalBuilder

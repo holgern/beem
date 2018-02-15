@@ -59,12 +59,6 @@ class InvalidWifError(Exception):
     pass
 
 
-class ProposalDoesNotExistException(Exception):
-    """ The proposal does not exist
-    """
-    pass
-
-
 class BlockDoesNotExistsException(Exception):
     """ The block does not exist
     """

@@ -22,12 +22,12 @@ class Testcases(unittest.TestCase):
     def test_add_one_proposal_one_op(self):
         bts = self.bts
         tx1 = bts.new_tx()
-        proposal1 = bts.new_proposal(tx1, proposer="init0")
+        proposal1 = bts.new_proposal(tx1, proposer="test")
         op = operations.Transfer(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
+            "fee": {"amount": 0, "asset_id": "sbd_symbol"},
             "from": "1.2.0",
             "to": "1.2.0",
-            "amount": {"amount": 0, "asset_id": "1.3.0"},
+            "amount": {"amount": 0, "asset_id": "sbd_symbol"},
             "prefix": "TEST"
         })
         proposal1.appendOps(op)

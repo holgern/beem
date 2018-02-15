@@ -15,17 +15,8 @@ class Witness(BlockchainObject):
     type_ids = [6, 2]
 
     def refresh(self):
-        if self.test_valid_objectid(self.identifier):
-            _, i, _ = self.identifier.split(".")
-            if int(i) == 6:
-                witness = self.steem.rpc.get_object(self.identifier)
-            else:
-                witness = self.steem.rpc.get_witness_by_account(
-                    self.identifier)
-        else:
-            account = Account(
-                self.identifier, steem_instance=self.steem)
-            witness = self.steem.rpc.get_witness_by_account(account["id"])
+
+        witness = self.steem.rpc.get_witness_by_account(self.identifier)
         if not witness:
             raise WitnessDoesNotExistsException
         super(Witness, self).__init__(witness, steem_instance=self.steem)
