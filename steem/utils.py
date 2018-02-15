@@ -49,7 +49,7 @@ def assets_from_string(text):
     """
     return re.split(r'[\-:/]', text)
 
-  
+
 def test_proposal_in_buffer(buf, operation_name, id):
     from .transactionbuilder import ProposalBuilder
     from peerplaysbase.operationids import operations

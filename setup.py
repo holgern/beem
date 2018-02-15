@@ -11,13 +11,13 @@ except LookupError:
     ascii = codecs.lookup('ascii')
     codecs.register(lambda name, enc=ascii: {True: enc}.get(name == 'mbcs'))
 
-VERSION = '0.19.0'
+VERSION = '0.18.1'
 
 setup(
     name='steemi',
     version=VERSION,
     description='Unofficial Python library for STEEM',
-    long_description=open('README.md').read(),
+    long_description=open('README.rst').read(),
     download_url='https://github.com/holgern/pySteemi/tarball/' + VERSION,
     author='Holger Nahrstaedt',
     author_email='holger@nahrstaedt.de',

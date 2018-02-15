@@ -30,8 +30,8 @@ class Testcases(unittest.TestCase):
     def test_account(self):
         Account("witness-account")
         Account("1.2.3")
-        asset = Asset("1.3.0")
-        symbol = asset["symbol"]
+        # asset = Asset("1.3.0")
+        # symbol = asset["symbol"]
         account = Account("witness-account", full=True)
         self.assertEqual(account.name, "witness-account")
         self.assertEqual(account["name"], account.name)

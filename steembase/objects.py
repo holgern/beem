@@ -21,6 +21,7 @@ asset_precision = {
     "SBD": 3,
 }
 
+
 def AssetId(asset):
     return ObjectId(asset, "asset")
 
@@ -84,54 +85,8 @@ class Asset(GrapheneObject):
                 ('asset_id', ObjectId(kwargs["asset_id"], "asset"))
             ]))
 
+
 class Memo(GrapheneObject):
-    def __init__(self, *args, **kwargs):
-        if isArgsThisClass(self, args):
-                self.data = args[0].data
-        else:
-            if len(args) == 1 and len(kwargs) == 0:
-                kwargs = args[0]
-            prefix = kwargs.pop("prefix", default_prefix)
-            if "message" in kwargs and kwargs["message"]:
-                super().__init__(OrderedDict([
-                    ('from', PublicKey(kwargs["from"], prefix=prefix)),
-                    ('to', PublicKey(kwargs["to"], prefix=prefix)),
-                    ('nonce', Uint64(int(kwargs["nonce"]))),
-                    ('message', Bytes(kwargs["message"]))
-                ]))
-            else:
-                super().__init__(None)
-
-
-class Price(GrapheneObject):
-    def __init__(self, *args, **kwargs):
-        if isArgsThisClass(self, args):
-                self.data = args[0].data
-        else:
-            if len(args) == 1 and len(kwargs) == 0:
-                kwargs = args[0]
-            super().__init__(OrderedDict([
-                ('base', Asset(kwargs["base"])),
-                ('quote', Asset(kwargs["quote"]))
-            ]))
-
-
-class PriceFeed(GrapheneObject):
-    def __init__(self, *args, **kwargs):
-        if isArgsThisClass(self, args):
-                self.data = args[0].data
-        else:
-            if len(args) == 1 and len(kwargs) == 0:
-                kwargs = args[0]
-            super().__init__(OrderedDict([
-                ('settlement_price', Price(kwargs["settlement_price"])),
-                ('maintenance_collateral_ratio', Uint16(kwargs["maintenance_collateral_ratio"])),
-                ('maximum_short_squeeze_ratio', Uint16(kwargs["maximum_short_squeeze_ratio"])),
-                ('core_exchange_rate', Price(kwargs["core_exchange_rate"])),
-            ]))
-
-
-class Permission(GrapheneObject):
     def __init__(self, *args, **kwargs):
         if isArgsThisClass(self, args):
                 self.data = args[0].data
@@ -342,10 +297,6 @@ class SpecialAuthority(Static_variant):
         super().__init__(data, id)
 
 
-
-
-
-        
 class Extension(Array):
     def __str__(self):
         """ We overload the __str__ function because the json

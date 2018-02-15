@@ -1,0 +1,15 @@
+[flake8]
+ignore =
+    # indentation is not a multiple of four,
+    E111,E114,
+    # visually indented line with same indent as next logical line,
+    E129,E501,F401,E722, E122
+exclude =
+    .git,
+    __pycache__,
+    docs/conf.py,
+    old,
+    build,
+    dist
+max-line-length=80
+max-complexity = 50

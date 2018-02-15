@@ -10,6 +10,7 @@ except ImportError:
     except ImportError:
         raise ImportError("Missing dependency: pyCryptodome")
 
+
 class AESCipher(object):
     """
     A classical AES Cipher. Can use any size of data and any size of password thanks to padding.
