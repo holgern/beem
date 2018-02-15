@@ -26,7 +26,7 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         # proposal = bts.new_proposal(bts.tx())
         proposal = bts.proposal()
-        self.bts.transfer("init1", 1, "TEST", append_to=proposal)
+        self.bts.transfer("test", 1, "SBD", append_to=proposal)
         tx = bts.tx().json()  # default tx buffer
         ops = tx["operations"]
         self.assertEqual(len(ops), 1)
@@ -43,7 +43,7 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         proposal = bts.new_proposal()
         # proposal = bts.proposal()
-        self.bts.transfer("init1", 1, "TEST", append_to=proposal)
+        self.bts.transfer("test", 1, "SBD", append_to=proposal)
         tx = bts.tx().json()  # default tx buffer
         ops = tx["operations"]
         self.assertEqual(len(ops), 1)
@@ -60,8 +60,8 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         parent = bts.new_tx()
         proposal = bts.new_proposal(parent)
-        self.bts.transfer("init1", 1, "TEST", append_to=proposal)
-        self.bts.transfer("init1", 1, "TEST", append_to=parent)
+        self.bts.transfer("test", 1, "SBD", append_to=proposal)
+        self.bts.transfer("test", 1, "SBD", append_to=parent)
         tx = parent.json()
         ops = tx["operations"]
         self.assertEqual(len(ops), 2)
@@ -79,8 +79,8 @@ class Testcases(unittest.TestCase):
 
     def test_finalizeOps_changeproposer_new(self):
         bts = self.bts
-        proposal = bts.proposal(proposer="init5")
-        bts.transfer("init1", 1, "TEST", append_to=proposal)
+        proposal = bts.proposal(proposer="test")
+        bts.transfer("test", 1, "SBD", append_to=proposal)
         tx = bts.tx().json()
         ops = tx["operations"]
         self.assertEqual(len(ops), 1)

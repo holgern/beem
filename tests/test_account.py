@@ -1,7 +1,7 @@
 import unittest
 import mock
 from pprint import pprint
-from steem import Steem
+from steem import Steem, exceptions
 from steem.account import Account
 from steem.amount import Amount
 from steem.asset import Asset
@@ -29,15 +29,18 @@ class Testcases(unittest.TestCase):
 
     def test_account(self):
         Account("test")
-        Account("DoesNotExistsXXX")
+        with self.assertRaises(
+            exceptions.AccountDoesNotExistsException
+        ):        
+            Account("DoesNotExistsXXX")
         # asset = Asset("1.3.0")
         # symbol = asset["symbol"]
         account = Account("test", full=True)
         self.assertEqual(account.name, "test")
         self.assertEqual(account["name"], account.name)
-        self.assertIsInstance(account.balance("SBD"), Amount)
+        self.assertIsInstance(account.balance("available", "SBD"), Amount)
         # self.assertIsInstance(account.balance({"symbol": symbol}), Amount)
-        self.assertIsInstance(account.balances, list)
+        self.assertIsInstance(account.available_balances, list)
         for h in account.history(limit=1):
             pass
 
@@ -47,8 +50,8 @@ class Testcases(unittest.TestCase):
         account.cached = False
         self.assertIn("id", account)
         account.cached = False
-        self.assertEqual(account["id"], "1.2.1")
-        self.assertEqual(str(account), "<Account 1.2.1>")
+        # self.assertEqual(account["id"], "1.2.1")
+        self.assertEqual(str(account), "<Account test>")
         self.assertIsInstance(Account(account), Account)
 
 

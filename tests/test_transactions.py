@@ -73,10 +73,10 @@ class Testcases(unittest.TestCase):
                     },
             "seller": "1.2.29",
             "amount_to_sell": {"amount": 100000,
-                               "asset_id": "1.3.0"
+                               "asset_id": "SBD"
                                },
             "min_to_receive": {"amount": 10000,
-                               "asset_id": "1.3.105"
+                               "asset_id": "SBD"
                                },
             "expiration": "2016-05-18T09:22:05",
             "fill_or_kill": False,
@@ -92,7 +92,7 @@ class Testcases(unittest.TestCase):
     def test_limit_order_cancel(self):
         self.op = operations.Limit_order_cancel(**{
             "fee": {"amount": 0,
-                    "asset_id": "1.3.0"
+                    "asset_id": "SBD"
                     },
             "fee_paying_account": "1.2.104",
             "order": "1.7.51840",
@@ -109,7 +109,7 @@ class Testcases(unittest.TestCase):
             'fee_paying_account': "1.2.1",
             'proposal': "1.10.90",
             'active_approvals_to_add': ["1.2.5"],
-            "fee": objects.Asset(amount=12512, asset_id="1.3.0"),
+            "fee": objects.Asset(amount=12512, asset_id="SBD"),
         })
         self.cm = ("f68585abf4dce7c804570117e03000000000000000015a01050000000"
                    "000000001203255378db6dc19443e74421c954ad7fdcf23f4ea45fe4f"
@@ -122,11 +122,11 @@ class Testcases(unittest.TestCase):
         from_account_id = "1.2.0"
         to_account_id = "1.2.1"
         amount = 1000000
-        asset_id = "1.3.4"
+        asset_id = "SBD"
         message = "abcdefgABCDEFG0123456789"
         nonce = "5862723643998573708"
 
-        fee = objects.Asset(amount=0, asset_id="1.3.0")
+        fee = objects.Asset(amount=0, asset_id="SBD")
         amount = objects.Asset(amount=int(amount), asset_id=asset_id)
         encrypted_memo = memo.encode_memo(
             account.PrivateKey(wif),
@@ -163,12 +163,12 @@ class Testcases(unittest.TestCase):
     def test_pricefeed(self):
         feed = objects.PriceFeed(**{
             "settlement_price": objects.Price(
-                base=objects.Asset(amount=214211, asset_id="1.3.0"),
-                quote=objects.Asset(amount=1241, asset_id="1.3.14"),
+                base=objects.Asset(amount=214211, asset_id="SBD"),
+                quote=objects.Asset(amount=1241, asset_id="STEEM"),
             ),
             "core_exchange_rate": objects.Price(
-                base=objects.Asset(amount=1241, asset_id="1.3.0"),
-                quote=objects.Asset(amount=6231, asset_id="1.3.14"),
+                base=objects.Asset(amount=1241, asset_id="SBD"),
+                quote=objects.Asset(amount=6231, asset_id="STEEM"),
             ),
             "maximum_short_squeeze_ratio": 1100,
             "maintenance_collateral_ratio": 1750,

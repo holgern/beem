@@ -238,41 +238,6 @@ class BitAssetOptions(GrapheneObject):
             ]))
 
 
-class Worker_initializer(Static_variant):
-
-    def __init__(self, o):
-
-        class Burn_worker_initializer(GrapheneObject):
-            def __init__(self, kwargs):
-                super().__init__(OrderedDict([]))
-
-        class Refund_worker_initializer(GrapheneObject):
-            def __init__(self, kwargs):
-                super().__init__(OrderedDict([]))
-
-        class Vesting_balance_worker_initializer(GrapheneObject):
-            def __init__(self, *args, **kwargs):
-                if isArgsThisClass(self, args):
-                    self.data = args[0].data
-                else:
-                    if len(args) == 1 and len(kwargs) == 0:
-                        kwargs = args[0]
-                    super().__init__(OrderedDict([
-                        ('pay_vesting_period_days', Uint16(kwargs["pay_vesting_period_days"])),
-                    ]))
-
-        id = o[0]
-        if id == 0:
-            data = Refund_worker_initializer(o[1])
-        elif id == 1:
-            data = Vesting_balance_worker_initializer(o[1])
-        elif id == 2:
-            data = Burn_worker_initializer(o[1])
-        else:
-            raise Exception("Unknown Worker_initializer")
-        super().__init__(data, id)
-
-
 class SpecialAuthority(Static_variant):
     def __init__(self, o):
 

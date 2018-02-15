@@ -21,7 +21,6 @@ from .objects import (
     BitAssetOptions,
     AssetOptions,
     ObjectId,
-    Worker_initializer,
     SpecialAuthority,
     AccountCreateExtensions
 )

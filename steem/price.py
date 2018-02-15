@@ -46,7 +46,6 @@ class Price(dict):
         * ``Price(0.315, base="USD", quote="BTS")``
         * ``Price(0.315, base=Asset("USD"), quote=Asset("BTS"))``
         * ``Price({"base": {"amount": 1, "asset_id": "1.3.0"}, "quote": {"amount": 10, "asset_id": "1.3.106"}})``
-        * ``Price({"receives": {"amount": 1, "asset_id": "1.3.0"}, "pays": {"amount": 10, "asset_id": "1.3.106"}}, base_asset=Asset("1.3.0"))``
         * ``Price(quote="10 GOLD", base="1 USD")``
         * ``Price("10 GOLD", "1 USD")``
         * ``Price(Amount("10 GOLD"), Amount("1 USD"))``
@@ -96,21 +95,6 @@ class Price(dict):
                 self["quote"] = Amount(args[0]["base"], steem_instance=self.steem)
                 self["base"] = Amount(args[0]["quote"], steem_instance=self.steem)
 
-        elif len(args) == 1 and isinstance(args[0], dict) and "receives" in args[0]:
-            # Filled order
-            assert base_asset, "Need a 'base_asset' asset"
-            base_asset = Asset(base_asset, steem_instance=self.steem)
-            if args[0]["receives"]["asset_id"] == base_asset["id"]:
-                # If the seller received "base" in a quote_base market, than
-                # it has been a sell order of quote
-                self["base"] = Amount(args[0]["receives"], steem_instance=self.steem)
-                self["quote"] = Amount(args[0]["pays"], steem_instance=self.steem)
-                self["type"] = "sell"
-            else:
-                # buy order
-                self["base"] = Amount(args[0]["pays"], steem_instance=self.steem)
-                self["quote"] = Amount(args[0]["receives"], steem_instance=self.steem)
-                self["type"] = "buy"
 
         elif len(args) == 1 and (isinstance(base, Asset) and isinstance(quote, Asset)):
             price = args[0]

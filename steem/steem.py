@@ -10,7 +10,6 @@ from .account import Account
 from .amount import Amount
 from .price import Price
 from .witness import Witness
-from .committee import Committee
 from .vesting import Vesting
 from .storage import configStorage as config
 from .exceptions import (
@@ -173,8 +172,16 @@ class Steem(object):
         self.rpc = SteemNodeRPC(node, rpcuser, rpcpassword, **kwargs)
 
     @property
+    def chain_params(self):
+        if self.offline:
+            from steembase.chains import known_chains
+            return known_chains["STEEM"]
+        else:
+            return  self.rpc.chain_params
+
+    @property
     def prefix(self):
-        return  self.rpc.chain_params["prefix"]
+        return  self.chain_params["prefix"]
 
     def set_default_account(self, account):
         """ Set the default account to be used

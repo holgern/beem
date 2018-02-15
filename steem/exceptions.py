@@ -84,22 +84,12 @@ class WrongMasterPasswordException(Exception):
     pass
 
 
-class CommitteeMemberDoesNotExistsException(Exception):
-    """ Committee Member does not exist
-    """
-    pass
-
 
 class VestingBalanceDoesNotExistsException(Exception):
     """ Vesting Balance does not exist
     """
     pass
 
-
-class WorkerDoesNotExistsException(Exception):
-    """ Worker does not exist
-    """
-    pass
 
 
 class ObjectNotInProposalBuffer(Exception):

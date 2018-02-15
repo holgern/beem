@@ -19,58 +19,54 @@ class Testcases(unittest.TestCase):
     def test_init(self):
         # self.assertEqual(1, 1)
 
-        Price("0.315 USD/BTS")
-        Price(1.0, "USD/GOLD")
-        Price(0.315, base="USD", quote="BTS")
-        Price(0.315, base=Asset("USD"), quote=Asset("BTS"))
+        Price("0.315 STEEM/SBD")
+        Price(1.0, "STEEM/SBD")
+        Price(0.315, base="STEEM", quote="SBD")
+        Price(0.315, base=Asset("STEEM"), quote=Asset("SBD"))
         Price({
-            "base": {"amount": 1, "asset_id": "1.3.0"},
-            "quote": {"amount": 10, "asset_id": "1.3.106"}})
-        Price({
-            "receives": {"amount": 1, "asset_id": "1.3.0"},
-            "pays": {"amount": 10, "asset_id": "1.3.106"},
-        }, base_asset=Asset("1.3.0"))
-        Price(quote="10 GOLD", base="1 USD")
-        Price("10 GOLD", "1 USD")
-        Price(Amount("10 GOLD"), Amount("1 USD"))
+            "base": {"amount": 1, "asset_id": "SBD"},
+            "quote": {"amount": 10, "asset_id": "STEEM"}})
+        Price(quote="10 SBD", base="1 STEEM")
+        Price("10 SBD", "1 STEEM")
+        Price(Amount("10 SBD"), Amount("1 STEEM"))
 
     def test_multiplication(self):
-        p1 = Price(10.0, "USD/GOLD")
-        p2 = Price(5.0, "EUR/USD")
+        p1 = Price(10.0, "STEEM/SBD")
+        p2 = Price(5.0, "VESTS/STEEM")
         p3 = p1 * p2
-        p4 = p3.as_base("GOLD")
+        p4 = p3.as_base("SBD")
 
-        self.assertEqual(p4["quote"]["symbol"], "EUR")
-        self.assertEqual(p4["base"]["symbol"], "GOLD")
-        # 10 USD/GOLD * 0.2 EUR/USD = 50 EUR/GOLD = 0.02 GOLD/EUR
+        self.assertEqual(p4["quote"]["symbol"], "VESTS")
+        self.assertEqual(p4["base"]["symbol"], "SBD")
+        # 10 STEEM/SBD * 0.2 VESTS/STEEM = 50 VESTS/SBD = 0.02 SBD/VESTS
         self.assertEqual(float(p4), 0.02)
 
         # Inline multiplication
         p5 = p1
         p5 *= p2
-        p4 = p5.as_base("GOLD")
-        self.assertEqual(p4["quote"]["symbol"], "EUR")
-        self.assertEqual(p4["base"]["symbol"], "GOLD")
-        # 10 USD/GOLD * 0.2 EUR/USD = 2 EUR/GOLD = 0.02 GOLD/EUR
+        p4 = p5.as_base("SBD")
+        self.assertEqual(p4["quote"]["symbol"], "VESTS")
+        self.assertEqual(p4["base"]["symbol"], "SBD")
+        # 10 STEEM/SBD * 0.2 VESTS/STEEM = 2 VESTS/SBD = 0.02 SBD/VESTS
         self.assertEqual(float(p4), 0.02)
 
     def test_div(self):
-        p1 = Price(10.0, "USD/GOLD")
-        p2 = Price(5.0, "USD/EUR")
+        p1 = Price(10.0, "STEEM/SBD")
+        p2 = Price(5.0, "STEEM/VESTS")
 
-        # 10 USD/GOLD / 5 USD/EUR = 2 EUR/GOLD
+        # 10 STEEM/SBD / 5 STEEM/VESTS = 2 VESTS/SBD
         p3 = p1 / p2
-        p4 = p3.as_base("EUR")
-        self.assertEqual(p4["base"]["symbol"], "EUR")
-        self.assertEqual(p4["quote"]["symbol"], "GOLD")
-        # 10 USD/GOLD * 0.2 EUR/USD = 2 EUR/GOLD = 0.5 GOLD/EUR
+        p4 = p3.as_base("VESTS")
+        self.assertEqual(p4["base"]["symbol"], "VESTS")
+        self.assertEqual(p4["quote"]["symbol"], "SBD")
+        # 10 STEEM/SBD * 0.2 VESTS/STEEM = 2 VESTS/SBD = 0.5 SBD/VESTS
         self.assertEqual(float(p4), 2)
 
     def test_div2(self):
-        p1 = Price(10.0, "USD/GOLD")
-        p2 = Price(5.0, "USD/GOLD")
+        p1 = Price(10.0, "STEEM/SBD")
+        p2 = Price(5.0, "STEEM/SBD")
 
-        # 10 USD/GOLD / 5 USD/EUR = 2 EUR/GOLD
+        # 10 STEEM/SBD / 5 STEEM/VESTS = 2 VESTS/SBD
         p3 = p1 / p2
         self.assertTrue(isinstance(p3, (float, int)))
         self.assertEqual(float(p3), 2.0)

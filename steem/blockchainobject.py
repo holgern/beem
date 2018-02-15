@@ -62,6 +62,7 @@ class BlockchainObject(dict):
         object_id=None,
         lazy=False,
         use_cache=True,
+        id_item=None,
         steem_instance=None,
         *args,
         **kwargs
@@ -69,17 +70,22 @@ class BlockchainObject(dict):
         self.steem = steem_instance or shared_steem_instance()
         self.cached = False
         self.identifier = None
+        
 
         # We don't read lists, sets, or tuples
         if isinstance(data, (list, set, tuple)):
             raise ValueError(
                 "Cannot interpret lists! Please load elements individually!")
 
+        if id_item and isinstance(id_item,str):
+            self.id_item = id_item
+        else:
+            self.id_item = "id"
         if klass and isinstance(data, klass):
-            self.identifier = data.get("id")
+            self.identifier = data.get(self.id_item)
             super().__init__(data)
         elif isinstance(data, dict):
-            self.identifier = data.get("id")
+            self.identifier = data.get(self.id_item)
             super().__init__(data)
         elif isinstance(data, int):
             # This is only for block number bascially
@@ -87,7 +93,7 @@ class BlockchainObject(dict):
             if not lazy and not self.cached:
                 self.refresh()
             # make sure to store the blocknumber for caching
-            self["id"] = str(data)
+            self[self.id_item] = str(data)
             # Set identifier again as it is overwritten in super() in refresh()
             self.identifier = data
         else:
@@ -138,8 +144,8 @@ class BlockchainObject(dict):
 
     def cache(self):
         # store in cache
-        if dict.__contains__(self, "id"):
-            BlockchainObject._cache[self.get("id")] = self
+        if dict.__contains__(self, self.id_item):
+            BlockchainObject._cache[self.get(self.id_item)] = self
 
     def iscached(self, id):
         return id in BlockchainObject._cache

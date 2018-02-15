@@ -8,13 +8,11 @@ __all__ = [
     "asset",
     "block",
     "blockchain",
-    "dex",
     "market",
     "storage",
     "price",
     "utils",
     "wallet",
-    "committee",
     "vesting",
     "vote",
     "message"

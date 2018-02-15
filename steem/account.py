@@ -39,6 +39,7 @@ class Account(BlockchainObject):
     def __init__(
         self,
         account,
+        id_item ="name",
         full=False,
         lazy=False,
         steem_instance=None
@@ -48,29 +49,28 @@ class Account(BlockchainObject):
             account,
             lazy=lazy,
             full=full,
+            id_item = "name",
             steem_instance=steem_instance
         )
 
     def refresh(self):
         """ Refresh/Obtain an account's data from the API server
         """
-        if isinstance(self.identifier,str):
-            name = self.identifier
-        else:
-            name = self.name
         if self.full:
             account = self.steem.rpc.get_accounts(
-                [name])
+                [self.identifier])
         else:
             account = self.steem.rpc.lookup_account_names(
-                    [name])
+                    [self.identifier])
         if not account:
-            raise AccountDoesNotExistsException(self.name)
+            raise AccountDoesNotExistsException(self.identifier)
         else:
             account = account[0]
-        self.identifier = account["id"]
+        if not account:
+            raise AccountDoesNotExistsException(self.identifier)        
+        # self.identifier = account["id"]
 
-        super(Account, self).__init__(account)
+        super(Account, self).__init__(account,id_item="name")
 
     def getSimilarAccountNames(self,limit=5):
         """ Returns limit similar accounts with name as array
@@ -147,6 +147,17 @@ class Account(BlockchainObject):
         """ Obtain the balance of a specific Asset. This call returns instances of
             :class:`steem.amount.Amount`.
         """
+        if isinstance(balances,str):
+            if balances == "available":
+                balances = self.available_balances
+            elif balances == "saving":
+                balances = self.saving_balances
+            elif balances == "reward":
+                balances = self.reward_balances
+            elif balances == "total":
+                balances = self.total_balances
+            else:
+                return
         from .amount import Amount
         if isinstance(symbol, dict) and "symbol" in symbol:
             symbol = symbol["symbol"]
@@ -222,7 +233,7 @@ class Account(BlockchainObject):
             if len(txs) < _limit:
                 break
             # first = int(txs[-1]["id"].split(".")[2])
-            first = txs[-1][0]
+            first = txs[-1][1]["block"]
 
     # def upgrade(self):
     #    return self.steem.upgrade_account(account=self)
