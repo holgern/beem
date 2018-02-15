@@ -12,12 +12,12 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
-            "wss://node.testnet.steem.eu",
+            "wss://testnet.steem.vc",
             nobroadcast=True,
             keys={"active": wif}
         )
         set_shared_steem_instance(self.bts)
-        self.bts.set_default_account("init0")
+        self.bts.set_default_account("test")
 
     def test_add_one_proposal_one_op(self):
         bts = self.bts

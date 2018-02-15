@@ -19,7 +19,7 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
-            "wss://node.testnet.steem.eu",
+            "wss://testnet.steem.vc",
             nobroadcast=True,
             keys={"active": wif, "owner": wif, "memo": wif},
         )

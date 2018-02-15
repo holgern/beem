@@ -17,14 +17,14 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
-            "wss://node.testnet.steem.eu",
+            "wss://testnet.steem.vc",
             nobroadcast=True,
             # We want to bundle many operations into a single transaction
             bundle=True,
             # Overwrite wallet to use this list of wifs only
             wif={"active": wif}
         )
-        self.bts.set_default_account("init0")
+        self.bts.set_default_account("test")
         set_shared_steem_instance(self.bts)
 
     def test_account(self):

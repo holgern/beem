@@ -37,9 +37,9 @@ class DataDir(object):
          Furthermore, it offers an interface to generated backups
          in the `backups/` directory every now and then.
     """
-    appname = "bitshares"
-    appauthor = "Fabian Schuh"
-    storageDatabase = "bitshares.sqlite"
+    appname = "steemi"
+    appauthor = "Holger Nahrstaedt"
+    storageDatabase = "steemi.sqlite"
 
     data_dir = user_data_dir(appname, appauthor)
     sqlDataBaseFile = os.path.join(data_dir, storageDatabase)
@@ -218,7 +218,7 @@ class Configuration(DataDir):
 
     #: Default configuration
     config_defaults = {
-        "node": "wss://node.bitshares.eu",
+        "node": "wss://gtg.steem.house:8090",
         "rpcpassword": "",
         "rpcuser": "",
         "order-expiration": 7 * 24 * 60 * 60,

@@ -23,9 +23,9 @@ class Testcases(unittest.TestCase):
         def new_refresh(self):
             dict.__init__(
                 self, {
-                    "name": "init0",
+                    "name": "test",
                     "options": {
-                        "memo_key": "BTS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+                        "memo_key": "STM6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
                     }})
 
         with mock.patch(
@@ -39,9 +39,9 @@ class Testcases(unittest.TestCase):
         def new_refresh(self):
             dict.__init__(
                 self, {
-                    "name": "init0",
+                    "name": "test",
                     "options": {
-                        "memo_key": "BTS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+                        "memo_key": "STM6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
                     }})
 
         with mock.patch(
@@ -49,27 +49,27 @@ class Testcases(unittest.TestCase):
             new=new_refresh
         ):
             Message(
-                "-----BEGIN BITSHARES SIGNED MESSAGE-----\n"
+                "-----BEGIN STEEM SIGNED MESSAGE-----\n"
                 "message foobar\n"
                 "-----BEGIN META-----\n"
-                "account=init0\n"
-                "memokey=BTS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\n"
+                "account=test\n"
+                "memokey=STM6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\n"
                 "block=23814223\n"
                 "timestamp=2018-01-24T11:42:33\n"
                 "-----BEGIN SIGNATURE-----\n"
                 "2034f601e175a25cf9f60a828650301f57c9efab53929b6a82fb413feb8a786fcb3ba4238dd8bece03aee38526ee363324d43944d4a3f9dc624fbe53ef5f0c9a5e\n"
-                "-----END BITSHARES SIGNED MESSAGE-----\n"
+                "-----END STEEM SIGNED MESSAGE-----\n"
             ).verify()
 
             Message(
-                "-----BEGIN BITSHARES SIGNED MESSAGE-----"
+                "-----BEGIN STEEM SIGNED MESSAGE-----"
                 "message foobar\n"
                 "-----BEGIN META-----"
-                "account=init0\n"
-                "memokey=BTS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\n"
+                "account=test\n"
+                "memokey=STM6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\n"
                 "block=23814223\n"
                 "timestamp=2018-01-24T11:42:33"
                 "-----BEGIN SIGNATURE-----"
                 "2034f601e175a25cf9f60a828650301f57c9efab53929b6a82fb413feb8a786fcb3ba4238dd8bece03aee38526ee363324d43944d4a3f9dc624fbe53ef5f0c9a5e\n"
-                "-----END BITSHARES SIGNED MESSAGE-----"
+                "-----END STEEM SIGNED MESSAGE-----"
             ).verify()

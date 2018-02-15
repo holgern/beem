@@ -13,14 +13,14 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
-            "wss://node.testnet.steem.eu",
+            "wss://testnet.steem.vc",
             nobroadcast=True,
             keys={"active": wif},
         )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(self.bts)
-        self.bts.set_default_account("init0")
+        self.bts.set_default_account("test")
 
     def test_finalizeOps_proposal(self):
         bts = self.bts

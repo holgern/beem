@@ -11,7 +11,7 @@ class Testcases(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(Testcases, self).__init__(*args, **kwargs)
         steem = Steem(
-            "wss://node.steem.eu",
+            "wss://testnet.steem.vc",
             nobroadcast=True,
         )
         set_shared_steem_instance(steem)

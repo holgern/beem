@@ -21,12 +21,13 @@ class SteemNodeRPC(GrapheneWebsocketRPC):
 
     def __init__(self, *args, **kwargs):
         super(SteemNodeRPC, self).__init__(*args, **kwargs)
-        self.chain_params = self.get_network()
+        #self.chain_params = self.get_network()
 
     def register_apis(self):
-        self.api_id["database"] = self.database(api_id=1)
-        self.api_id["history"] = self.history(api_id=1)
-        self.api_id["network_broadcast"] = self.network_broadcast(api_id=1)
+        return
+        # self.api_id["database"] = self.database(api_id=1)
+        #self.api_id["history"] = self.history(api_id=1)
+        #self.api_id["network_broadcast"] = self.network_broadcast(api_id=1)
 
     def rpcexec(self, payload):
         """ Execute a call by sending the payload.
