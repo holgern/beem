@@ -140,12 +140,17 @@ class Account_update(GrapheneObject):
             else:
                 posting = Optional(None)
 
+            if "memo_key" in kwargs:
+                memo_key = Optional(Permission(kwargs["memo_key"], prefix=prefix))
+            else:
+                memo_key = Optional(None)
+
             super().__init__(OrderedDict([
                 ('account', ObjectId(kwargs["account"], "account")),
                 ('owner', owner),
                 ('active', active),
                 ('posting', posting),
-                ('memo_key', PublicKey(kwargs["memo_key"], prefix=prefix)),
+                ('memo_key', memo_key),
                 ('json_metadata', AccountCreateExtensions(kwargs["json_metadata"])),
             ]))
 

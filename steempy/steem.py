@@ -527,8 +527,15 @@ class Steem(object):
                        'key_auths': active_key_authority,
                        "address_auths": [],
                        'weight_threshold': 1},
-            "options": {"memo_key": memo,
-                        "voting_account": voting_account["id"],
+            'posting': {'account_auths': active_accounts_authority,
+                       'key_auths': active_key_authority,
+                       "address_auths": [],
+                       'weight_threshold': 1},
+            'memo': {'account_auths': active_accounts_authority,
+                       'key_auths': active_key_authority,
+                       "address_auths": [],
+                       'weight_threshold': 1},
+            "options": {"voting_account": voting_account["id"],
                         "num_witness": 0,
                         "num_committee": 0,
                         "votes": [],
@@ -748,17 +755,16 @@ class Steem(object):
         PublicKey(key, prefix=self.prefix)
 
         account = Account(account, steem_instance=self)
-        account["options"]["memo_key"] = key
+        account["memo_key"] = key
         op = operations.Account_update(**{
-            "fee": {"amount": 0, "asset_id": "SBD"},
             "account": account["id"],
-            "new_options": account["options"],
+            "memo_key": account["memo_key"],
             "extensions": {}
         })
         return self.finalizeOp(op, account["name"], "active", **kwargs)
 
     # -------------------------------------------------------------------------
-    #  Approval and Disapproval of witnesses, workers, committee, and proposals
+    #  Approval and Disapproval of witnesses
     # -------------------------------------------------------------------------
     def approvewitness(self, witnesses, account=None, **kwargs):
         """ Approve a witness

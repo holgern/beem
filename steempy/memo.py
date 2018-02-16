@@ -21,7 +21,7 @@ class Memo(object):
 
         .. code-block:: python
 
-            from steem.memo import Memo
+            from steempy.memo import Memo
             m = Memo("steemeu", "wallet.xeroc")
             m.steem.wallet.unlock("secret")
             enc = (m.encrypt("foobar"))
@@ -74,7 +74,7 @@ class Memo(object):
 
         nonce = str(random.getrandbits(64))
         memo_wif = self.steem.wallet.getPrivateKeyForPublicKey(
-            self.from_account["options"]["memo_key"]
+            self.from_account["memo_key"]
         )
         if not memo_wif:
             raise MissingKeyError("Memo key for %s missing!" % self.from_account["name"])
@@ -82,7 +82,7 @@ class Memo(object):
         enc = BtsMemo.encode_memo(
             PrivateKey(memo_wif),
             PublicKey(
-                self.to_account["options"]["memo_key"],
+                self.to_account["memo_key"],
                 prefix=self.steem.prefix
             ),
             nonce,
@@ -92,8 +92,8 @@ class Memo(object):
         return {
             "message": enc,
             "nonce": nonce,
-            "from": self.from_account["options"]["memo_key"],
-            "to": self.to_account["options"]["memo_key"]
+            "from": self.from_account["memo_key"],
+            "to": self.to_account["memo_key"]
         }
 
     def decrypt(self, memo):

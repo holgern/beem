@@ -12,10 +12,10 @@ from .storage import configStorage as config
 log = logging.getLogger(__name__)
 
 MESSAGE_SPLIT = (
-    "-----BEGIN BITSHARES SIGNED MESSAGE-----",
+    "-----BEGIN STEEM SIGNED MESSAGE-----",
     "-----BEGIN META-----",
     "-----BEGIN SIGNATURE-----",
-    "-----END BITSHARES SIGNED MESSAGE-----"
+    "-----END STEEM SIGNED MESSAGE-----"
 )
 
 SIGNED_MESSAGE_META = """{message}
