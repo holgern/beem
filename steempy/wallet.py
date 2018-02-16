@@ -284,7 +284,7 @@ class Wallet():
             if not account:
                 return
             key = self.getPrivateKeyForPublicKey(
-                account["options"]["memo_key"])
+                account["memo_key"])
             if key:
                 return key
             return False
@@ -368,7 +368,7 @@ class Wallet():
             for key in account[authority]["key_auths"]:
                 if pub == key[0]:
                     return authority
-        if pub == account["options"]["memo_key"]:
+        if pub == account["memo_key"]:
             return "memo"
         return None
 

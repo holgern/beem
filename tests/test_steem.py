@@ -27,6 +27,8 @@ class Testcases(unittest.TestCase):
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(self.bts)
         self.bts.set_default_account("test")
+
+
 """
     def test_connect(self):
         self.bts.connect()
@@ -215,4 +217,3 @@ class Testcases(unittest.TestCase):
             "1:0",
             op["new_options"]["votes"])
 """
-

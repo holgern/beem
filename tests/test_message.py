@@ -23,9 +23,9 @@ class Testcases(unittest.TestCase):
         def new_refresh(self):
             dict.__init__(
                 self, {
-                    "name": "test",
-                    "memo_key": "STM6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
-                    })
+                "name": "test",
+                "memo_key": "STM6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+                })
 
         with mock.patch(
             "steempy.account.Account.refresh",
@@ -38,9 +38,9 @@ class Testcases(unittest.TestCase):
         def new_refresh(self):
             dict.__init__(
                 self, {
-                    "name": "test",
-                    "memo_key": "STM6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
-                    })
+                "name": "test",
+                "memo_key": "STM6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+                })
 
         with mock.patch(
             "steempy.account.Account.refresh",

@@ -16,8 +16,8 @@ from .exceptions import (
     AccountExistsException,
 )
 from .wallet import Wallet
-from .transactionbuilder import TransactionBuilder, ProposalBuilder
-from .utils import formatTime, test_proposal_in_buffer
+from .transactionbuilder import TransactionBuilder
+from .utils import formatTime
 
 log = logging.getLogger(__name__)
 
@@ -127,12 +127,6 @@ class Steem(object):
         self.bundle = bool(kwargs.get("bundle", False))
         self.blocking = kwargs.get("blocking", False)
 
-        # Legacy Proposal attributes
-        self.proposer = kwargs.get("proposer", None)
-        self.proposal_expiration = int(
-            kwargs.get("proposal_expiration", 60 * 60 * 24))
-        self.proposal_review = int(kwargs.get("proposal_review", 0))
-
         # Store config for access through other Classes
         self.config = config
 
@@ -177,11 +171,11 @@ class Steem(object):
             from steempybase.chains import known_chains
             return known_chains["STEEM"]
         else:
-            return  self.rpc.chain_params
+            return self.rpc.chain_params
 
     @property
     def prefix(self):
-        return  self.chain_params["prefix"]
+        return self.chain_params["prefix"]
 
     def set_default_account(self, account):
         """ Set the default account to be used
@@ -221,27 +215,16 @@ class Steem(object):
                 You may want to use your own txbuffer
         """
         if "append_to" in kwargs and kwargs["append_to"]:
-            if self.proposer:
-                log.warn(
-                    "You may not use append_to and steem.proposer at "
-                    "the same time. Append steem.new_proposal(..) instead"
-                )
+
             # Append to the append_to and return
             append_to = kwargs["append_to"]
             parent = append_to.get_parent()
-            assert isinstance(append_to, (TransactionBuilder, ProposalBuilder))
+            assert isinstance(append_to, (TransactionBuilder))
             append_to.appendOps(ops)
             # Add the signer to the buffer so we sign the tx properly
             parent.appendSigner(account, permission)
             # This returns as we used append_to, it does NOT broadcast, or sign
             return append_to.get_parent()
-        elif self.proposer:
-            # Legacy proposer mode!
-            proposal = self.proposal()
-            proposal.set_proposer(self.proposer)
-            proposal.set_expiration(self.proposal_expiration)
-            proposal.set_review(self.proposal_review)
-            proposal.appendOps(ops)
             # Go forward to see what the other options do ...
         else:
             # Append tot he default buffer
@@ -323,74 +306,10 @@ class Steem(object):
         """
         return self.tx()
 
-    @property
-    def propbuffer(self):
-        """ Return the default proposal buffer
-        """
-        return self.proposal()
-
     def tx(self):
         """ Returns the default transaction buffer
         """
         return self._txbuffers[0]
-
-    def proposal(
-        self,
-        proposer=None,
-        proposal_expiration=None,
-        proposal_review=None
-    ):
-        """ Return the default proposal buffer
-
-            ... note:: If any parameter is set, the default proposal
-               parameters will be changed!
-        """
-        if not self._propbuffer:
-            return self.new_proposal(
-                self.tx(),
-                proposer,
-                proposal_expiration,
-                proposal_review
-            )
-        if proposer:
-            self._propbuffer[0].set_proposer(proposer)
-        if proposal_expiration:
-            self._propbuffer[0].set_expiration(proposal_expiration)
-        if proposal_review:
-            self._propbuffer[0].set_review(proposal_review)
-        return self._propbuffer[0]
-
-    def new_proposal(
-        self,
-        parent=None,
-        proposer=None,
-        proposal_expiration=None,
-        proposal_review=None
-    ):
-        if not parent:
-            parent = self.tx()
-        if not proposal_expiration:
-            proposal_expiration = self.proposal_expiration
-
-        if not proposal_review:
-            proposal_review = self.proposal_review
-
-        if not proposer:
-            if "default_account" in config:
-                proposer = config["default_account"]
-
-        # Else, we create a new object
-        proposal = ProposalBuilder(
-            proposer,
-            proposal_expiration,
-            proposal_review,
-            steem_instance=self,
-            parent=parent
-        )
-        if parent:
-            parent.appendOps(proposal)
-        self._propbuffer.append(proposal)
-        return proposal
 
     def new_tx(self, *args, **kwargs):
         """ Let's obtain a new txbuffer
@@ -407,7 +326,6 @@ class Steem(object):
 
     def clear(self):
         self._txbuffers = []
-        self._propbuffer = []
         # Base/Default proposal/tx buffers
         self.new_tx()
         # self.new_proposal()
@@ -917,167 +835,6 @@ class Steem(object):
         })
         return self.finalizeOp(op, account["name"], "active", **kwargs)
 
-    def approvecommittee(self, committees, account=None, **kwargs):
-        """ Approve a committee
-
-            :param list committees: list of committee member name or id
-            :param str account: (optional) the account to allow access
-                to (defaults to ``default_account``)
-        """
-        if not account:
-            if "default_account" in config:
-                account = config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self)
-        options = account["options"]
-
-        if not isinstance(committees, (list, set, tuple)):
-            committees = {committees}
-
-        for committee in committees:
-            committee = Committee(committee, steem_instance=self)
-            options["votes"].append(committee["vote_id"])
-
-        options["votes"] = list(set(options["votes"]))
-        options["num_committee"] = len(list(filter(
-            lambda x: float(x.split(":")[0]) == 0,
-            options["votes"]
-        )))
-
-        op = operations.Account_update(**{
-            "fee": {"amount": 0, "asset_id": "SBD"},
-            "account": account["id"],
-            "new_options": options,
-            "extensions": {},
-            "prefix": self.prefix
-        })
-        return self.finalizeOp(op, account["name"], "active", **kwargs)
-
-    def disapprovecommittee(self, committees, account=None, **kwargs):
-        """ Disapprove a committee
-
-            :param list committees: list of committee name or id
-            :param str account: (optional) the account to allow access
-                to (defaults to ``default_account``)
-        """
-        if not account:
-            if "default_account" in config:
-                account = config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self)
-        options = account["options"]
-
-        if not isinstance(committees, (list, set, tuple)):
-            committees = {committees}
-
-        for committee in committees:
-            committee = Committee(committee, steem_instance=self)
-            if committee["vote_id"] in options["votes"]:
-                options["votes"].remove(committee["vote_id"])
-
-        options["votes"] = list(set(options["votes"]))
-        options["num_committee"] = len(list(filter(
-            lambda x: float(x.split(":")[0]) == 0,
-            options["votes"]
-        )))
-
-        op = operations.Account_update(**{
-            "fee": {"amount": 0, "asset_id": "SBD"},
-            "account": account["id"],
-            "new_options": options,
-            "extensions": {},
-            "prefix": self.prefix
-        })
-        return self.finalizeOp(op, account["name"], "active", **kwargs)
-
-    def approveproposal(
-        self, proposal_ids, account=None, approver=None, **kwargs
-    ):
-        """ Approve Proposal
-
-            :param list proposal_id: Ids of the proposals
-            :param str account: (optional) the account to allow access
-                to (defaults to ``default_account``)
-        """
-        from .proposal import Proposal
-        if not account:
-            if "default_account" in config:
-                account = config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self)
-        is_key = approver and approver[:3] == self.prefix
-        if not approver and not is_key:
-            approver = account
-        elif approver and not is_key:
-            approver = Account(approver, steem_instance=self)
-        else:
-            approver = PublicKey(approver)
-
-        if not isinstance(proposal_ids, (list, set, tuple)):
-            proposal_ids = {proposal_ids}
-
-        op = []
-        for proposal_id in proposal_ids:
-            proposal = Proposal(proposal_id, steem_instance=self)
-            update_dict = {
-                "fee": {"amount": 0, "asset_id": "SBD"},
-                'fee_paying_account': account["id"],
-                'proposal': proposal["id"],
-                'active_approvals_to_add': [approver["id"]],
-                "prefix": self.prefix
-            }
-            if is_key:
-                update_dict.update({
-                    'key_approvals_to_add': [str(approver)],
-                })
-            else:
-                update_dict.update({
-                    'active_approvals_to_add': [approver["id"]],
-                })
-            op.append(operations.Proposal_update(**update_dict))
-        if is_key:
-            self.txbuffer.appendSigner(account["name"], "active")
-        return self.finalizeOp(op, approver["name"], "active", **kwargs)
-
-    def disapproveproposal(
-        self, proposal_ids, account=None, approver=None, **kwargs
-    ):
-        """ Disapprove Proposal
-
-            :param list proposal_ids: Ids of the proposals
-            :param str account: (optional) the account to allow access
-                to (defaults to ``default_account``)
-        """
-        from .proposal import Proposal
-        if not account:
-            if "default_account" in config:
-                account = config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self)
-        if not approver:
-            approver = account
-        else:
-            approver = Account(approver, steem_instance=self)
-
-        if not isinstance(proposal_ids, (list, set, tuple)):
-            proposal_ids = {proposal_ids}
-
-        op = []
-        for proposal_id in proposal_ids:
-            proposal = Proposal(proposal_id, steem_instance=self)
-            op.append(operations.Proposal_update(**{
-                "fee": {"amount": 0, "asset_id": "1.3.0"},
-                'fee_paying_account': account["id"],
-                'proposal': proposal["id"],
-                'active_approvals_to_remove': [approver["id"]],
-                "prefix": self.prefix
-            }))
-        return self.finalizeOp(op, account["name"], "active", **kwargs)
-
     def cancel(self, orderNumbers, account=None, **kwargs):
         """ Cancels an order you have placed in a given market. Requires
             only the "orderNumbers". An order number takes the form
@@ -1106,109 +863,6 @@ class Steem(object):
                     "prefix": self.prefix}))
         return self.finalizeOp(op, account["name"], "active", **kwargs)
 
-    def vesting_balance_withdraw(self, vesting_id, amount=None, account=None, **kwargs):
-        """ Withdraw vesting balance
-
-            :param str vesting_id: Id of the vesting object
-            :param steempy.amount.Amount Amount: to withdraw ("all" if not provided")
-            :param str account: (optional) the account to allow access
-                to (defaults to ``default_account``)
-
-        """
-        if not account:
-            if "default_account" in config:
-                account = config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self)
-
-        if not amount:
-            obj = Vesting(vesting_id, steem_instance=self)
-            amount = obj.claimable
-
-        op = operations.Vesting_balance_withdraw(**{
-            "fee": {"amount": 0, "asset_id": "SBD"},
-            "vesting_balance": vesting_id,
-            "owner": account["id"],
-            "amount": {
-                "amount": int(amount),
-                "asset_id": amount["asset"]["id"]
-            },
-            "prefix": self.prefix
-        })
-        return self.finalizeOp(op, account["name"], "active")
-
-    def publish_price_feed(
-        self,
-        symbol,
-        settlement_price,
-        cer=None,
-        mssr=110,
-        mcr=200,
-        account=None
-    ):
-        """ Publish a price feed for a market-pegged asset
-
-            :param str symbol: Symbol of the asset to publish feed for
-            :param steempy.price.Price settlement_price: Price for settlement
-            :param steempy.price.Price cer: Core exchange Rate (default ``settlement_price + 5%``)
-            :param float mssr: Percentage for max short squeeze ratio (default: 110%)
-            :param float mcr: Percentage for maintenance collateral ratio (default: 200%)
-            :param str account: (optional) the account to allow access
-                to (defaults to ``default_account``)
-
-            .. note:: The ``account`` needs to be allowed to produce a
-                      price feed for ``symbol``. For witness produced
-                      feeds this means ``account`` is a witness account!
-        """
-        assert mcr > 100
-        assert mssr > 100
-        assert isinstance(settlement_price, Price), "settlement_price needs to be instance of `steem.price.Price`!"
-        assert cer is None or isinstance(cer, Price), "cer needs to be instance of `steem.price.Price`!"
-        if not account:
-            if "default_account" in config:
-                account = config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self)
-        asset = Asset(symbol, steem_instance=self, full=True)
-        backing_asset = asset["bitasset_data"]["options"]["short_backing_asset"]
-        assert asset["id"] == settlement_price["base"]["asset"]["id"] or \
-            asset["id"] == settlement_price["quote"]["asset"]["id"], \
-            "Price needs to contain the asset of the symbol you'd like to produce a feed for!"
-        assert asset.is_bitasset, "Symbol needs to be a bitasset!"
-        assert settlement_price["base"]["asset"]["id"] == backing_asset or \
-            settlement_price["quote"]["asset"]["id"] == backing_asset, \
-            "The Price needs to be relative to the backing collateral!"
-
-        settlement_price = settlement_price.as_base(symbol)
-
-        if cer:
-            cer = cer.as_base(symbol)
-            if cer["quote"]["asset"]["id"] != "SBD":
-                raise ValueError(
-                    "CER must be defined against core asset '1.3.0'")
-        else:
-            if settlement_price["quote"]["asset"]["id"] != "SBD":
-                raise ValueError(
-                    "CER must be manually provided because it relates to core asset '1.3.0'"
-                )
-            cer = settlement_price.as_quote(symbol) * 0.95
-
-        op = operations.Asset_publish_feed(**{
-            "fee": {"amount": 0, "asset_id": "SBD"},
-            "publisher": account["id"],
-            "asset_id": asset["id"],
-            "feed": {
-                "settlement_price": settlement_price.as_base(symbol).json(),
-                "core_exchange_rate": cer.as_base(symbol).json(),
-                "maximum_short_squeeze_ratio": int(mssr * 10),
-                "maintenance_collateral_ratio": int(mcr * 10),
-            },
-            "prefix": self.prefix
-        })
-        return self.finalizeOp(op, account["name"], "active")
-
     def update_witness(self, witness_identifier, url=None, key=None, **kwargs):
         """ Upgrade a witness account
 
@@ -1227,55 +881,3 @@ class Steem(object):
             "new_signing_key": key,
         })
         return self.finalizeOp(op, account["name"], "active", **kwargs)
-
-    def reserve(self, amount, account=None, **kwargs):
-        """ Reserve/Burn an amount of this shares
-
-            This removes the shares from the supply
-
-            :param steem.amount.Amount amount: The amount to be burned.
-            :param str account: (optional) the account to allow access
-                to (defaults to ``default_account``)
-        """
-        assert isinstance(amount, Amount)
-        if not account:
-            if "default_account" in config:
-                account = config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self)
-        op = operations.Asset_reserve(**{
-            "fee": {"amount": 0, "asset_id": "SBD"},
-            "payer": account["id"],
-            "amount_to_reserve": {
-                "amount": int(amount),
-                "asset_id": amount["asset"]["id"]},
-            "extensions": []
-        })
-        return self.finalizeOp(op, account, "active", **kwargs)
-
-
-    def fund_fee_pool(self, symbol, amount, account=None, **kwargs):
-        """ Fund the fee pool of an asset
-
-            :param str symbol: The symbol to fund the fee pool of
-            :param float amount: The amount to be burned.
-            :param str account: (optional) the account to allow access
-                to (defaults to ``default_account``)
-        """
-        assert isinstance(amount, float)
-        if not account:
-            if "default_account" in config:
-                account = config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self)
-        asset = Asset(symbol, steem_instance=self)
-        op = operations.Asset_fund_fee_pool(**{
-            "fee": {"amount": 0, "asset_id": "SBD"},
-            "from_account": account["id"],
-            "asset_id": asset["id"],
-            "amount": int(float(amount) * 10 ** asset["precision"]),
-            "extensions": []
-        })
-        return self.finalizeOp(op, account, "active", **kwargs)

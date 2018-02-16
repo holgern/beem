@@ -70,14 +70,13 @@ class BlockchainObject(dict):
         self.steem = steem_instance or shared_steem_instance()
         self.cached = False
         self.identifier = None
-        
 
         # We don't read lists, sets, or tuples
         if isinstance(data, (list, set, tuple)):
             raise ValueError(
                 "Cannot interpret lists! Please load elements individually!")
 
-        if id_item and isinstance(id_item,str):
+        if id_item and isinstance(id_item, str):
             self.id_item = id_item
         else:
             self.id_item = "id"

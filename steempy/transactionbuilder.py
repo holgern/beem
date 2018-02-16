@@ -14,116 +14,6 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class ProposalBuilder:
-    """ Proposal Builder allows us to construct an independent Proposal
-        that may later be added to an instance ot TransactionBuilder
-
-        :param str proposer: Account name of the proposing user
-        :param int proposal_expiration: Number seconds until the proposal is
-            supposed to expire
-        :param int proposal_review: Number of seconds for review of the
-            proposal
-        :param steem.transactionbuilder.TransactionBuilder: Specify
-            your own instance of transaction builder (optional)
-        :param steempy.steem.BitShares steem_instance: BitShares
-            instance
-    """
-    def __init__(
-        self,
-        proposer,
-        proposal_expiration=None,
-        proposal_review=None,
-        parent=None,
-        steem_instance=None,
-        *args,
-        **kwargs
-    ):
-        self.steem = steem_instance or shared_steem_instance()
-
-        self.set_expiration(proposal_expiration or 2 * 24 * 60 * 60)
-        self.set_review(proposal_review)
-        self.set_parent(parent)
-        self.set_proposer(proposer)
-        self.ops = list()
-
-    def is_empty(self):
-        return not (len(self.ops) > 0)
-
-    def set_proposer(self, p):
-        self.proposer = p
-
-    def set_expiration(self, p):
-        self.proposal_expiration = p
-
-    def set_review(self, p):
-        self.proposal_review = p
-
-    def set_parent(self, p):
-        self.parent = p
-
-    def appendOps(self, ops, append_to=None):
-        """ Append op(s) to the transaction builder
-
-            :param list ops: One or a list of operations
-        """
-        if isinstance(ops, list):
-            self.ops.extend(ops)
-        else:
-            self.ops.append(ops)
-        parent = self.parent
-        if parent:
-            parent._set_require_reconstruction()
-
-    def list_operations(self):
-        return [Operation(o) for o in self.ops]
-
-    def broadcast(self):
-        assert self.parent, "No parent transaction provided!"
-        self.parent._set_require_reconstruction()
-        return self.parent.broadcast()
-
-    def get_parent(self):
-        """ This allows to referr to the actual parent of the Proposal
-        """
-        return self.parent
-
-    def __repr__(self):
-        return "<Proposal ops=%s>" % str(self.ops)
-
-    def json(self):
-        """ Return the json formated version of this proposal
-        """
-        raw = self.get_raw()
-        if not raw:
-            return dict()
-        return raw.json()
-
-    def get_raw(self):
-        """ Returns an instance of base "Operations" for further processing
-        """
-        if not self.ops:
-            return
-        ops = [operations.Op_wrapper(op=o) for o in list(self.ops)]
-        proposer = Account(
-            self.proposer,
-            steem_instance=self.steem
-        )
-        data = {
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
-            "fee_paying_account": proposer["id"],
-            "expiration_time": transactions.formatTimeFromNow(
-                self.proposal_expiration),
-            "proposed_ops": [o.json() for o in ops],
-            "extensions": []
-        }
-        if self.proposal_review:
-            data.update({
-                "review_period_seconds": self.proposal_review
-            })
-        ops = operations.Proposal_create(**data)
-        return Operation(ops)
-
-
 class TransactionBuilder(dict):
     """ This class simplifies the creation of transactions by adding
         operations and signers.
@@ -271,15 +161,8 @@ class TransactionBuilder(dict):
         """
         ops = list()
         for op in self.ops:
-            if isinstance(op, ProposalBuilder):
-                # This operation is a proposal an needs to be deal with
-                # differently
-                proposals = op.get_raw()
-                if proposals:
-                    ops.append(proposals)
-            else:
-                # otherwise, we simply wrap ops into Operations
-                ops.extend([Operation(op)])
+            # otherwise, we simply wrap ops into Operations
+            ops.extend([Operation(op)])
 
         # We no wrap everything into an actual transaction
         ops = transactions.addRequiredFees(self.steem.rpc, ops)
@@ -312,14 +195,6 @@ class TransactionBuilder(dict):
             return
 
         # Legacy compatibility!
-        # If we are doing a proposal, obtain the account from the proposer_id
-        if self.steem.proposer:
-            proposer = Account(
-                self.steem.proposer,
-                steem_instance=self.steem)
-            self.wifs = set()
-            self.signing_accounts = list()
-            self.appendSigner(proposer["id"], "active")
 
         # We need to set the default prefix, otherwise pubkeys are
         # presented wrongly!

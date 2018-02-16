@@ -47,6 +47,8 @@ class Testcases(unittest.TestCase):
             # print("ist:  %s" % txWire[:-130])
             # print(txWire[:-130] == self.cm[:-130])
             self.assertEqual(self.cm[:-130], txWire[:-130])
+
+
 """
     def test_call_update(self):
         self.op = operations.Call_order_update(**{

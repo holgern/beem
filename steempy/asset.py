@@ -1,12 +1,7 @@
 import json
 from steempy.account import Account
 from steempybase import operations
-from steempybase.asset_permissions import (
-    asset_permissions,
-    force_flag,
-    test_permissions,
-    todict
-)
+
 from .exceptions import AssetDoesNotExistsException
 from .blockchainobject import BlockchainObject
 
@@ -56,12 +51,12 @@ class Asset(BlockchainObject):
             self["asset"] = "steem_symbol"
             self["precision"] = 3
             self["id"] = 1
-            self["symbol"] = self.steem.chain_params["steem_symbol"]            
+            self["symbol"] = self.steem.chain_params["steem_symbol"]
         elif self.identifier == "vests_symbol" or self.identifier == self.steem.chain_params["vests_symbol"] or self.identifier == 2:
             self["asset"] = "vests_symbol"
             self["precision"] = 6
             self["id"] = 2
-            self["symbol"] = self.steem.chain_params["vests_symbol"] 
+            self["symbol"] = self.steem.chain_params["vests_symbol"]
         else:
             raise AssetDoesNotExistsException(self.identifier)
 

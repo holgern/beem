@@ -7,7 +7,7 @@ class Block(BlockchainObject):
     """ Read a single block from the chain
 
         :param int block: block number
-        :param steem.steem.Steem steem_instance: Steem
+        :param steempy.steem.Steem steem_instance: Steem
             instance
         :param bool lazy: Use lazy loading
 
@@ -17,7 +17,7 @@ class Block(BlockchainObject):
 
         .. code-block:: python
 
-            from steem.block import Block
+            from steempy.block import Block
             block = Block(1)
             print(block)
 

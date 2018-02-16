@@ -84,12 +84,10 @@ class WrongMasterPasswordException(Exception):
     pass
 
 
-
 class VestingBalanceDoesNotExistsException(Exception):
     """ Vesting Balance does not exist
     """
     pass
-
 
 
 class ObjectNotInProposalBuffer(Exception):

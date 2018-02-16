@@ -134,11 +134,11 @@ class Account_update(GrapheneObject):
                 active = Optional(Permission(kwargs["active"], prefix=prefix))
             else:
                 active = Optional(None)
-                
+
             if "posting" in kwargs:
                 posting = Optional(Permission(kwargs["posting"], prefix=prefix))
             else:
-                posting = Optional(None)            
+                posting = Optional(None)
 
             super().__init__(OrderedDict([
                 ('account', ObjectId(kwargs["account"], "account")),
@@ -175,4 +175,3 @@ class Witness_update(GrapheneObject):
                 ('props', WitnessProps(kwargs["props"])),
                 ('fee', Asset(kwargs["fee"])),
             ]))
-

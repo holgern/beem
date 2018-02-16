@@ -1,8 +1,8 @@
 from steempy.instance import shared_steem_instance
 from .exceptions import AccountDoesNotExistsException
 from .blockchainobject import BlockchainObject
-
 import json
+
 
 class Account(BlockchainObject):
     """ This class allows to easily access Account data
@@ -15,7 +15,7 @@ class Account(BlockchainObject):
                etc.
         :returns: Account data
         :rtype: dictionary
-        :raises steem.exceptions.AccountDoesNotExistsException: if account
+        :raises steempy.exceptions.AccountDoesNotExistsException: if account
                 does not exist
 
         Instances of this class are dictionaries that come with additional
@@ -24,7 +24,7 @@ class Account(BlockchainObject):
 
         .. code-block:: python
 
-            from steem.account import Account
+            from steempy.account import Account
             account = Account("test")
             print(account)
 
@@ -39,7 +39,7 @@ class Account(BlockchainObject):
     def __init__(
         self,
         account,
-        id_item ="name",
+        id_item="name",
         full=False,
         lazy=False,
         steem_instance=None
@@ -49,7 +49,7 @@ class Account(BlockchainObject):
             account,
             lazy=lazy,
             full=full,
-            id_item = "name",
+            id_item="name",
             steem_instance=steem_instance
         )
 
@@ -61,21 +61,21 @@ class Account(BlockchainObject):
                 [self.identifier])
         else:
             account = self.steem.rpc.lookup_account_names(
-                    [self.identifier])
+                [self.identifier])
         if not account:
             raise AccountDoesNotExistsException(self.identifier)
         else:
             account = account[0]
         if not account:
-            raise AccountDoesNotExistsException(self.identifier)        
+            raise AccountDoesNotExistsException(self.identifier)
         # self.identifier = account["id"]
 
-        super(Account, self).__init__(account,id_item="name")
+        super(Account, self).__init__(account, id_item="name")
 
-    def getSimilarAccountNames(self,limit=5):
+    def getSimilarAccountNames(self, limit=5):
         """ Returns limit similar accounts with name as array
         """
-        return self.steem.rpc.lookup_accounts(self.name,limit)
+        return self.steem.rpc.lookup_accounts(self.name, limit)
 
     @property
     def name(self):
@@ -88,12 +88,6 @@ class Account(BlockchainObject):
         return json.loads(self["json_metadata"])["profile"]
 
     @property
-    def sp(self):
-        """ Returns the accounts Steem Power
-        """
-        vests = self["vesting_shares"]
-
-    @property
     def available_balances(self):
         """ List balances of an account. This call returns instances of
             :class:`steem.amount.Amount`.
@@ -102,7 +96,7 @@ class Account(BlockchainObject):
         available_str = [self["balance"], self["sbd_balance"], self["vesting_shares"]]
         return [
             Amount(b, steem_instance=self.steem)
-            for b in available_str # if int(b["amount"]) > 0
+            for b in available_str  # if int(b["amount"]) > 0
         ]
 
     @property
@@ -111,7 +105,7 @@ class Account(BlockchainObject):
         savings_str = [self["savings_balance"], self["savings_sbd_balance"]]
         return [
             Amount(b, steem_instance=self.steem)
-            for b in savings_str # if int(b["amount"]) > 0
+            for b in savings_str  # if int(b["amount"]) > 0
         ]
 
     @property
@@ -120,17 +114,17 @@ class Account(BlockchainObject):
         rewards_str = [self["reward_steem_balance"], self["reward_sbd_balance"], self["reward_vesting_balance"]]
         return [
             Amount(b, steem_instance=self.steem)
-            for b in rewards_str # if int(b["amount"]) > 0
+            for b in rewards_str  # if int(b["amount"]) > 0
         ]
 
     @property
     def total_balances(self):
-
-        return [ self.balance(self.available_balances, "STEEM") + self.balance(self.saving_balances, "STEEM") + 
-                        self.balance(self.reward_balances, "STEEM"),
-                 self.balance(self.available_balances, "SBD") + self.balance(self.saving_balances, "SBD") +
-                      self.balance(self.reward_balances, "SBD"),
-                 self.balance(self.available_balances, "VESTS") + self.balance(self.reward_balances, "VESTS"),
+        return [
+            self.balance(self.available_balances, "STEEM") + self.balance(self.saving_balances, "STEEM") +
+            self.balance(self.reward_balances, "STEEM"),
+            self.balance(self.available_balances, "SBD") + self.balance(self.saving_balances, "SBD") +
+            self.balance(self.reward_balances, "SBD"),
+            self.balance(self.available_balances, "VESTS") + self.balance(self.reward_balances, "VESTS"),
         ]
 
     @property
@@ -147,7 +141,7 @@ class Account(BlockchainObject):
         """ Obtain the balance of a specific Asset. This call returns instances of
             :class:`steem.amount.Amount`.
         """
-        if isinstance(balances,str):
+        if isinstance(balances, str):
             if balances == "available":
                 balances = self.available_balances
             elif balances == "saving":
@@ -161,7 +155,7 @@ class Account(BlockchainObject):
         from .amount import Amount
         if isinstance(symbol, dict) and "symbol" in symbol:
             symbol = symbol["symbol"]
-        
+
         for b in balances:
             if b["symbol"] == symbol:
                 return b
@@ -241,7 +235,7 @@ class Account(BlockchainObject):
 
 class AccountUpdate(dict):
     """ This purpose of this class is to keep track of account updates
-        as they are pushed through by :class:`steem.notify.Notify`.
+        as they are pushed through by :class:`steempy.notify.Notify`.
 
         Instances of this class are dictionaries and take the following
         form:

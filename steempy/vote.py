@@ -4,10 +4,11 @@ from .utils import resolve_authorperm
 import logging
 log = logging.getLogger(__name__)
 
+
 class VoteObject(dict):
     def __repr__(self):
         return "<%s %s>" % (
-            self.__class__.__name__, str(self.voter))    
+            self.__class__.__name__, str(self.voter))
 
 
 class Vote(VoteObject):
@@ -19,7 +20,7 @@ class Vote(VoteObject):
     """
     type_id = 11
 
-    def refresh(self,authorperm=None,voter=None):
+    def refresh(self, authorperm=None, voter=None):
         vote = self.identifier
         if authorperm is not None:
             vote["authorperm"] = authorperm
@@ -69,7 +70,7 @@ class ActiveVotes(list):
 
         super(ActiveVotes, self).__init__(
             [
-                Vote(x,authorperm=authorperm)
+                Vote(x, authorperm=authorperm)
                 for x in votes
             ]
         )
@@ -89,7 +90,7 @@ class AccountVotes(list):
 
         super(AccountVotes, self).__init__(
             [
-                Vote(x,voter=account.name)
+                Vote(x, voter=account.name)
                 for x in votes
             ]
         )

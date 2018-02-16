@@ -18,6 +18,8 @@ class Testcases(unittest.TestCase):
         )
         set_shared_steem_instance(self.bts)
         self.bts.set_default_account("test")
+
+
 """
     def test_add_one_proposal_one_op(self):
         bts = self.bts

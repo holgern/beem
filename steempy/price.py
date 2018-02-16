@@ -95,7 +95,6 @@ class Price(dict):
                 self["quote"] = Amount(args[0]["base"], steem_instance=self.steem)
                 self["base"] = Amount(args[0]["quote"], steem_instance=self.steem)
 
-
         elif len(args) == 1 and (isinstance(base, Asset) and isinstance(quote, Asset)):
             price = args[0]
             frac = Fraction(float(price)).limit_denominator(10 ** base["precision"])

@@ -4,6 +4,7 @@ from steempy.instance import set_shared_steem_instance
 from steempy.account import Account
 from steempy.witness import Witness
 
+
 class Testcases(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
@@ -33,6 +34,3 @@ class Testcases(unittest.TestCase):
         c = Witness("jesta")
         self.assertEqual(c["owner"], "jesta")
         self.assertIsInstance(c.account, Account)
-
-
-

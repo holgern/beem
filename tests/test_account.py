@@ -31,7 +31,7 @@ class Testcases(unittest.TestCase):
         Account("test")
         with self.assertRaises(
             exceptions.AccountDoesNotExistsException
-        ):        
+        ):
             Account("DoesNotExistsXXX")
         # asset = Asset("1.3.0")
         # symbol = asset["symbol"]
@@ -53,5 +53,3 @@ class Testcases(unittest.TestCase):
         # self.assertEqual(account["id"], "1.2.1")
         self.assertEqual(str(account), "<Account test>")
         self.assertIsInstance(Account(account), Account)
-
-
