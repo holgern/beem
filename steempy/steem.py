@@ -230,6 +230,7 @@ class Steem(object):
             # Append tot he default buffer
             self.txbuffer.appendOps(ops)
 
+        assert permission in account, "Could not access %s of account %s"%(permission+account["name"])
         # Add signing information, signer, sign and optionally broadcast
         if self.unsigned:
             # In case we don't want to sign anything
