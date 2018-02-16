@@ -21,7 +21,7 @@ class Testcases(unittest.TestCase):
         self.bts = Steem(
             "wss://testnet.steem.vc",
             nobroadcast=True,
-            unsigned = True,
+            # unsigned = True,
             keys={"active": wif, "owner": wif, "memo": wif},
         )
         # from getpass import getpass

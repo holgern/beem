@@ -11,7 +11,7 @@ node.
     from steempyapi.websocket import SteemWebsocket
 
     ws = SteemWebsocket(
-        "wss://testnet.steem.vc,
+        "wss://testnet.steem.vc",
         accounts=["test"],
         # on_market=pprint,
         on_account=print,
