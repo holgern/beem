@@ -1,9 +1,10 @@
 graphenelib
 pycryptodomex>=3.4.6
-scrypt>=0.7.1
+scrypt>=0.8.0
 Events>=0.2.2
 pyyaml
 pytest
 pytest-mock
 coverage
 mock
+appdirs

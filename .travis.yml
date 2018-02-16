@@ -38,11 +38,10 @@ before_install:
   - pip install --upgrade pip
   - pip install --upgrade wheel
   # Set numpy version first, other packages link against it
-  - pip install six nose coverage codecov codecov pytest pytest-cov
+  - pip install six nose coverage codecov tox pytest pytest-cov
 
 script:
-  - python setup.py build
-  - pytest --cov=./
+ - tox
 
 after_success:
   - codecov
