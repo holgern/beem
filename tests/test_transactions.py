@@ -5,9 +5,9 @@ from steembase import (
     operations,
     objects
 )
-from steembase.objects import Operation
-from steembase.signedtransactions import Signed_Transaction
-from steembase.account import PrivateKey
+from steempybase.objects import Operation
+from steempybase.signedtransactions import Signed_Transaction
+from steempybase.account import PrivateKey
 import random
 import unittest
 from pprint import pprint

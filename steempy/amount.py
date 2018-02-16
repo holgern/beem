@@ -1,4 +1,4 @@
-from steem.instance import shared_steem_instance
+from steempy.instance import shared_steem_instance
 from .asset import Asset
 
 

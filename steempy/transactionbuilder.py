@@ -1,15 +1,15 @@
 from .account import Account
-from steembase.objects import Operation
-from steembase.account import PrivateKey, PublicKey
-from steembase.signedtransactions import Signed_Transaction
-from steembase import transactions, operations
+from steempybase.objects import Operation
+from steempybase.account import PrivateKey, PublicKey
+from steempybase.signedtransactions import Signed_Transaction
+from steempybase import transactions, operations
 from .exceptions import (
     InsufficientAuthorityError,
     MissingKeyError,
     InvalidWifError,
     WalletLocked
 )
-from steem.instance import shared_steem_instance
+from steempy.instance import shared_steem_instance
 import logging
 log = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ class ProposalBuilder:
             proposal
         :param steem.transactionbuilder.TransactionBuilder: Specify
             your own instance of transaction builder (optional)
-        :param steem.steem.BitShares steem_instance: BitShares
+        :param steempy.steem.BitShares steem_instance: BitShares
             instance
     """
     def __init__(

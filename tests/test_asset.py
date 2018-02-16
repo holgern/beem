@@ -1,8 +1,8 @@
 import unittest
-from steem import Steem
-from steem.asset import Asset
-from steem.instance import set_shared_steem_instance
-from steem.exceptions import AssetDoesNotExistsException
+from steempy import Steem
+from steempy.asset import Asset
+from steempy.instance import set_shared_steem_instance
+from steempy.exceptions import AssetDoesNotExistsException
 
 
 class Testcases(unittest.TestCase):

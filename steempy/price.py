@@ -1,5 +1,5 @@
 from fractions import Fraction
-from steem.instance import shared_steem_instance
+from steempy.instance import shared_steem_instance
 from .exceptions import InvalidAssetException
 from .account import Account
 from .amount import Amount
@@ -14,7 +14,7 @@ class Price(dict):
 
             (quote, base)
 
-        each being an instance of :class:`steem.amount.Amount`. The
+        each being an instance of :class:`steempy.amount.Amount`. The
         amount themselves define the price.
 
         .. note::
@@ -22,43 +22,43 @@ class Price(dict):
             The price (floating) is derived as ``base/quote``
 
         :param list args: Allows to deal with different representations of a price
-        :param steem.asset.Asset base: Base asset
-        :param steem.asset.Asset quote: Quote asset
-        :param steem.steem.BitShares steem_instance: BitShares instance
+        :param steempy.asset.Asset base: Base asset
+        :param steempy.asset.Asset quote: Quote asset
+        :param steempy.steem.Steem steem_instance: Steem instance
         :returns: All data required to represent a price
         :rtype: dict
 
         Way to obtain a proper instance:
 
             * ``args`` is a str with a price and two assets
-            * ``args`` can be a floating number and ``base`` and ``quote`` being instances of :class:`steem.asset.Asset`
+            * ``args`` can be a floating number and ``base`` and ``quote`` being instances of :class:`steempy.asset.Asset`
             * ``args`` can be a floating number and ``base`` and ``quote`` being instances of ``str``
             * ``args`` can be dict with keys ``price``, ``base``, and ``quote`` (*graphene balances*)
             * ``args`` can be dict with keys ``base`` and ``quote``
             * ``args`` can be dict with key ``receives`` (filled orders)
-            * ``args`` being a list of ``[quote, base]`` both being instances of :class:`steem.amount.Amount`
+            * ``args`` being a list of ``[quote, base]`` both being instances of :class:`steempy.amount.Amount`
             * ``args`` being a list of ``[quote, base]`` both being instances of ``str`` (``amount symbol``)
-            * ``base`` and ``quote`` being instances of :class:`steem.asset.Amount`
+            * ``base`` and ``quote`` being instances of :class:`steempy.asset.Amount`
 
         This allows instanciations like:
 
-        * ``Price("0.315 USD/BTS")``
-        * ``Price(0.315, base="USD", quote="BTS")``
-        * ``Price(0.315, base=Asset("USD"), quote=Asset("BTS"))``
-        * ``Price({"base": {"amount": 1, "asset_id": "1.3.0"}, "quote": {"amount": 10, "asset_id": "1.3.106"}})``
-        * ``Price(quote="10 GOLD", base="1 USD")``
-        * ``Price("10 GOLD", "1 USD")``
-        * ``Price(Amount("10 GOLD"), Amount("1 USD"))``
-        * ``Price(1.0, "USD/GOLD")``
+        * ``Price("0.315 SBD/STEEM")``
+        * ``Price(0.315, base="SBD", quote="STEEM")``
+        * ``Price(0.315, base=Asset("SBD"), quote=Asset("STEEM"))``
+        * ``Price({"base": {"amount": 1, "asset_id": "SBD"}, "quote": {"amount": 10, "asset_id": "SBD"}})``
+        * ``Price(quote="10 STEEM", base="1 SBD")``
+        * ``Price("10 STEEM", "1 SBD")``
+        * ``Price(Amount("10 STEEM"), Amount("1 SBD"))``
+        * ``Price(1.0, "SBD/STEEM")``
 
         Instances of this class can be used in regular mathematical expressions
         (``+-*/%``) such as:
 
         .. code-block:: python
 
-            >>> from steem.price import Price
-            >>> Price("0.3314 USD/BTS") * 2
-            0.662600000 USD/BTS
+            >>> from steempy.price import Price
+            >>> Price("0.3314 SBD/STEEM") * 2
+            0.662600000 SBD/STEEM
 
     """
     def __init__(
@@ -190,7 +190,7 @@ class Price(dict):
             raise InvalidAssetException
 
     def invert(self):
-        """ Invert the price (e.g. go from ``USD/BTS`` into ``BTS/USD``)
+        """ Invert the price (e.g. go from ``SBD/STEEM`` into ``STEEM/SBD``)
         """
         tmp = self["quote"]
         self["quote"] = self["base"]
@@ -386,7 +386,7 @@ class Order(Price):
         ratio of base and quote) but instead has those amounts represent the
         amounts of an actual order!
 
-        :param steem.steem.BitShares steem_instance: BitShares instance
+        :param steem.steem.Steem steem_instance: Steem instance
 
         .. note::
 
@@ -460,7 +460,7 @@ class FilledOrder(Price):
         ratio of base and quote) but instead has those amounts represent the
         amounts of an actually filled order!
 
-        :param steem.steem.BitShares steem_instance: BitShares instance
+        :param steem.steem.Steem steem_instance: Steem instance
 
         .. note:: Instances of this class come with an additional ``time`` key
                   that shows when the order has been filled!
@@ -517,7 +517,7 @@ class UpdateCallOrder(Price):
         and ``quote`` Amounts not only be used to represent the **call
         price** (as a ratio of base and quote).
 
-        :param steem.steem.BitShares steem_instance: BitShares instance
+        :param steem.steem.Steem steem_instance: Steem instance
     """
     def __init__(self, call, steem_instance=None, **kwargs):
 
@@ -555,7 +555,7 @@ class PriceFeed(dict):
         * a settlement price, and
         * a date
 
-        :param steem.steem.BitShares steem_instance: BitShares instance
+        :param steem.steem.Steem steem_instance: Steem instance
 
     """
     def __init__(self, feed, steem_instance=None):

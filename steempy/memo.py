@@ -1,7 +1,7 @@
-from steem.instance import shared_steem_instance
+from steempy.instance import shared_steem_instance
 import random
-from steembase import memo as BtsMemo
-from steembase.account import PrivateKey, PublicKey
+from steempybase import memo as BtsMemo
+from steempybase.account import PrivateKey, PublicKey
 from .account import Account
 from .exceptions import MissingKeyError, KeyNotFound
 

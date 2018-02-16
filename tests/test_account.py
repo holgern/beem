@@ -1,12 +1,12 @@
 import unittest
 import mock
 from pprint import pprint
-from steem import Steem, exceptions
-from steem.account import Account
-from steem.amount import Amount
-from steem.asset import Asset
-from steem.instance import set_shared_steem_instance
-from steembase.operationids import getOperationNameForId
+from steempy import Steem, exceptions
+from steempy.account import Account
+from steempy.amount import Amount
+from steempy.asset import Asset
+from steempy.instance import set_shared_steem_instance
+from steempybase.operationids import getOperationNameForId
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 

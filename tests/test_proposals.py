@@ -1,8 +1,8 @@
 import unittest
 from pprint import pprint
-from steem import Steem
-from steembase.operationids import getOperationNameForId
-from steem.instance import set_shared_steem_instance
+from steempy import Steem
+from steempybase.operationids import getOperationNameForId
+from steempy.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 

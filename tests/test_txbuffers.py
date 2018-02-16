@@ -1,7 +1,7 @@
 import unittest
-from steem import Steem
-from steembase import operations
-from steem.instance import set_shared_steem_instance
+from steempy import Steem
+from steempybase import operations
+from steempy.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 

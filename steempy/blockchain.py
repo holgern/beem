@@ -1,7 +1,7 @@
 import time
 from .block import Block
-from steem.instance import shared_steem_instance
-from steembase.operationids import getOperationNameForId
+from steempy.instance import shared_steem_instance
+from steempybase.operationids import getOperationNameForId
 
 
 class Blockchain(object):

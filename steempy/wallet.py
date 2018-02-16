@@ -1,7 +1,7 @@
 import logging
 import os
 from graphenebase import bip38
-from steembase.account import PrivateKey, GPHPrivateKey
+from steempybase.account import PrivateKey, GPHPrivateKey
 from .account import Account
 from .exceptions import (
     KeyNotFound,
@@ -27,7 +27,7 @@ class Wallet():
 
         Three wallet operation modes are possible:
 
-        * **Wallet Database**: Here, pysteem loads the keys from the
+        * **Wallet Database**: Here, steempy loads the keys from the
           locally stored wallet SQLite database (see ``storage.py``).
           To use this mode, simply call ``Steem()`` without the
           ``keys`` parameter

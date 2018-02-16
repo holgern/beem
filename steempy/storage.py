@@ -37,9 +37,9 @@ class DataDir(object):
          Furthermore, it offers an interface to generated backups
          in the `backups/` directory every now and then.
     """
-    appname = "steemi"
+    appname = "steempy"
     appauthor = "Holger Nahrstaedt"
-    storageDatabase = "steemi.sqlite"
+    storageDatabase = "steempy.sqlite"
 
     data_dir = user_data_dir(appname, appauthor)
     sqlDataBaseFile = os.path.join(data_dir, storageDatabase)

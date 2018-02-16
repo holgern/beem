@@ -1,4 +1,4 @@
-from steem.instance import shared_steem_instance
+from steempy.instance import shared_steem_instance
 from .exceptions import AccountDoesNotExistsException
 from .blockchainobject import BlockchainObject
 
@@ -196,7 +196,7 @@ class Account(BlockchainObject):
             :param array exclude_ops: Exclude thse operations from
                 generator (*optional*)
         """
-        from steembase.operations import getOperationNameForId
+        from steempybase.operations import getOperationNameForId
         _limit = 100
         cnt = 0
 

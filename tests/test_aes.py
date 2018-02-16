@@ -3,7 +3,7 @@ import random
 import unittest
 import base64
 from pprint import pprint
-from steem.aes import AESCipher
+from steempy.aes import AESCipher
 
 
 class Testcases(unittest.TestCase):

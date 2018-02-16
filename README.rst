@@ -1,4 +1,4 @@
-Unofficial Python 3 Library for Steem
+steempy - Unofficial Python 3 Library for Steem
 =====================================
 
 !!!NOT WORKING AT THE MOMENT - DO NOT USE!!!
@@ -34,8 +34,8 @@ For OSX, please do the following::
 You can install py-scrypt from this repository if you want the latest
 but possibly non-compiling version::
 
-    git clone https://github.com/holgern/pySteemi.git
-    cd pySteemi
+    git clone https://github.com/holgern/steempy.git
+    cd steempy
     python setup.py build
     
     python setup.py install --user
@@ -52,4 +52,4 @@ Changelog
 * Replaced all BitShares by Steem
 * Flake8 fixed
 * Unit tests are working
-*
+* renamed to steempy

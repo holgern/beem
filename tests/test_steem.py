@@ -3,11 +3,11 @@ import string
 import unittest
 import random
 from pprint import pprint
-from steem import Steem
-from steembase.operationids import getOperationNameForId
-from steem.amount import Amount
-from steembase.account import PrivateKey
-from steem.instance import set_shared_steem_instance
+from steempy import Steem
+from steempybase.operationids import getOperationNameForId
+from steempy.amount import Amount
+from steempybase.account import PrivateKey
+from steempy.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 core_unit = "TEST"

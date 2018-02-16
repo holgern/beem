@@ -1,8 +1,8 @@
 import unittest
 import mock
-from steem import Steem
-from steem.message import Message
-from steem.instance import set_shared_steem_instance
+from steempy import Steem
+from steempy.message import Message
+from steempy.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 core_unit = "PPY"

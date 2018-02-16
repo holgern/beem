@@ -2,9 +2,9 @@ import re
 import logging
 from binascii import hexlify, unhexlify
 from graphenebase.ecdsa import verify_message, sign_message
-from steembase.account import PublicKey
-from steem.instance import shared_steem_instance
-from steem.account import Account
+from steempybase.account import PublicKey
+from steempy.instance import shared_steem_instance
+from steempy.account import Account
 from .exceptions import InvalidMessageSignature
 from .storage import configStorage as config
 

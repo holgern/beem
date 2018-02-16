@@ -1,4 +1,4 @@
-import steem as stm
+import steempy as stm
 
 
 class SharedInstance():

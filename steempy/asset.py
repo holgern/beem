@@ -1,7 +1,7 @@
 import json
-from steem.account import Account
-from steembase import operations
-from steembase.asset_permissions import (
+from steempy.account import Account
+from steempybase import operations
+from steempybase.asset_permissions import (
     asset_permissions,
     force_flag,
     test_permissions,

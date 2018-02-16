@@ -1,8 +1,8 @@
 import unittest
-from steem import Steem, exceptions
-from steem.instance import set_shared_steem_instance
-from steem.account import Account
-from steem.witness import Witness
+from steempy import Steem, exceptions
+from steempy.instance import set_shared_steem_instance
+from steempy.account import Account
+from steempy.witness import Witness
 
 class Testcases(unittest.TestCase):
 

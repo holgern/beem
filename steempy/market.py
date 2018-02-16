@@ -1,4 +1,4 @@
-from steem.instance import shared_steem_instance
+from steempy.instance import shared_steem_instance
 from datetime import datetime, timedelta
 from .utils import (
     formatTimeFromNow, formatTime, formatTimeString, assets_from_string)
@@ -6,7 +6,7 @@ from .asset import Asset
 from .amount import Amount
 from .price import Price, Order, FilledOrder
 from .account import Account
-from steembase import operations
+from steempybase import operations
 
 
 class Market(dict):

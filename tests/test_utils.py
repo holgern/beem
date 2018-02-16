@@ -1,5 +1,5 @@
-from steem.utils import assets_from_string
-from steem.utils import resolve_authorperm
+from steempy.utils import assets_from_string
+from steempy.utils import resolve_authorperm
 
 def test_assets_from_string():
     assert assets_from_string('USD:BTS') == ['USD', 'BTS']

@@ -1,8 +1,8 @@
-from steem import Steem
-from steem.instance import set_shared_steem_instance
-from steem.amount import Amount
-from steem.price import Price
-from steem.asset import Asset
+from steempy import Steem
+from steempy.instance import set_shared_steem_instance
+from steempy.amount import Amount
+from steempy.price import Price
+from steempy.asset import Asset
 import unittest
 
 

@@ -14,11 +14,11 @@ except LookupError:
 VERSION = '0.18.1'
 
 setup(
-    name='steemi',
+    name='steempy',
     version=VERSION,
     description='Unofficial Python library for STEEM',
     long_description=open('README.rst').read(),
-    download_url='https://github.com/holgern/pySteemi/tarball/' + VERSION,
+    download_url='https://github.com/holgern/steempy/tarball/' + VERSION,
     author='Holger Nahrstaedt',
     author_email='holger@nahrstaedt.de',
     maintainer='Holger Nahrstaedt',
@@ -26,9 +26,9 @@ setup(
     url='http://www.github.com/holgern/pySteemi',
     keywords=['steem', 'library', 'api', 'rpc'],
     packages=[
-        "steem",
-        "steemapi",
-        "steembase"
+        "steempy",
+        "steempyapi",
+        "steempybase"
     ],
     classifiers=[
         'License :: OSI Approved :: MIT License',

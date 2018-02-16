@@ -2,9 +2,9 @@ import json
 import logging
 
 from datetime import datetime, timedelta
-from steemapi.steemnoderpc import SteemNodeRPC
-from steembase.account import PrivateKey, PublicKey
-from steembase import transactions, operations
+from steempyapi.steemnoderpc import SteemNodeRPC
+from steempybase.account import PrivateKey, PublicKey
+from steempybase import transactions, operations
 from .asset import Asset
 from .account import Account
 from .amount import Amount
@@ -83,7 +83,7 @@ class Steem(object):
 
         .. code-block:: python
 
-            from steem import Steem
+            from steempy import Steem
             steem = Steem()
             print(steem.info())
 
@@ -174,7 +174,7 @@ class Steem(object):
     @property
     def chain_params(self):
         if self.offline:
-            from steembase.chains import known_chains
+            from steempybase.chains import known_chains
             return known_chains["STEEM"]
         else:
             return  self.rpc.chain_params
@@ -216,8 +216,8 @@ class Steem(object):
                 posting permission. Neither can you use different
                 accounts for different operations!
 
-            ... note:: This uses ``steem.txbuffer`` as instance of
-                :class:`steem.transactionbuilder.TransactionBuilder`.
+            ... note:: This uses ``steempy.txbuffer`` as instance of
+                :class:`steempy.transactionbuilder.TransactionBuilder`.
                 You may want to use your own txbuffer
         """
         if "append_to" in kwargs and kwargs["append_to"]:
@@ -301,10 +301,10 @@ class Steem(object):
     # -------------------------------------------------------------------------
     def newWallet(self, pwd):
         """ Create a new wallet. This method is basically only calls
-            :func:`steem.wallet.create`.
+            :func:`steempy.wallet.create`.
 
             :param str pwd: Password to use for the new wallet
-            :raises steem.exceptions.WalletExists: if there is already a
+            :raises steempy.exceptions.WalletExists: if there is already a
                 wallet created
         """
         return self.wallet.create(pwd)
@@ -480,7 +480,7 @@ class Steem(object):
         """ Create new account on Steem
 
             The brainkey/password can be used to recover all generated keys
-            (see `steembase.account` for more details.
+            (see `steempybase.account` for more details.
 
             By default, this call will use ``default_account`` to
             register a new name ``account_name`` with all keys being
@@ -542,7 +542,7 @@ class Steem(object):
         registrar = Account(registrar, steem_instance=self)
 
         " Generate new keys from password"
-        from steembase.account import PasswordKey, PublicKey
+        from steempybase.account import PasswordKey, PublicKey
         if password:
             active_key = PasswordKey(account_name, password, role="active")
             owner_key = PasswordKey(account_name, password, role="owner")
@@ -596,7 +596,7 @@ class Steem(object):
             proxy_account or "proxy-to-self", steem_instance=self)
 
         op = {
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
+            "fee": {"amount": 0, "asset_id": "SBD"},
             "registrar": registrar["id"],
             "referrer": referrer["id"],
             "referrer_percent": referrer_percent * 100,
@@ -635,7 +635,7 @@ class Steem(object):
             raise ValueError("You need to provide an account")
         account = Account(account, steem_instance=self)
         op = operations.Account_upgrade(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
+            "fee": {"amount": 0, "asset_id": "SBD"},
             "account_to_upgrade": account["id"],
             "upgrade_to_lifetime_member": True,
             "prefix": self.prefix
@@ -717,7 +717,7 @@ class Steem(object):
             self._test_weights_treshold(authority)
 
         op = operations.Account_update(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
+            "fee": {"amount": 0, "asset_id": "SBD"},
             "account": account["id"],
             permission: authority,
             "extensions": {},
@@ -801,7 +801,7 @@ class Steem(object):
             self._test_weights_treshold(authority)
 
         op = operations.Account_update(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
+            "fee": {"amount": 0, "asset_id": "SBD"},
             "account": account["id"],
             permission: authority,
             "extensions": {}
@@ -832,7 +832,7 @@ class Steem(object):
         account = Account(account, steem_instance=self)
         account["options"]["memo_key"] = key
         op = operations.Account_update(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
+            "fee": {"amount": 0, "asset_id": "SBD"},
             "account": account["id"],
             "new_options": account["options"],
             "extensions": {}
@@ -871,7 +871,7 @@ class Steem(object):
         )))
 
         op = operations.Account_update(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
+            "fee": {"amount": 0, "asset_id": "SBD"},
             "account": account["id"],
             "new_options": options,
             "extensions": {},
@@ -909,7 +909,7 @@ class Steem(object):
         )))
 
         op = operations.Account_update(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
+            "fee": {"amount": 0, "asset_id": "SBD"},
             "account": account["id"],
             "new_options": options,
             "extensions": {},
@@ -946,7 +946,7 @@ class Steem(object):
         )))
 
         op = operations.Account_update(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
+            "fee": {"amount": 0, "asset_id": "SBD"},
             "account": account["id"],
             "new_options": options,
             "extensions": {},
@@ -984,7 +984,7 @@ class Steem(object):
         )))
 
         op = operations.Account_update(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
+            "fee": {"amount": 0, "asset_id": "SBD"},
             "account": account["id"],
             "new_options": options,
             "extensions": {},
@@ -1023,7 +1023,7 @@ class Steem(object):
         for proposal_id in proposal_ids:
             proposal = Proposal(proposal_id, steem_instance=self)
             update_dict = {
-                "fee": {"amount": 0, "asset_id": "1.3.0"},
+                "fee": {"amount": 0, "asset_id": "SBD"},
                 'fee_paying_account': account["id"],
                 'proposal': proposal["id"],
                 'active_approvals_to_add': [approver["id"]],
@@ -1099,7 +1099,7 @@ class Steem(object):
         for order in orderNumbers:
             op.append(
                 operations.Limit_order_cancel(**{
-                    "fee": {"amount": 0, "asset_id": "1.3.0"},
+                    "fee": {"amount": 0, "asset_id": "SBD"},
                     "fee_paying_account": account["id"],
                     "order": order,
                     "extensions": [],
@@ -1110,7 +1110,7 @@ class Steem(object):
         """ Withdraw vesting balance
 
             :param str vesting_id: Id of the vesting object
-            :param steem.amount.Amount Amount: to withdraw ("all" if not provided")
+            :param steempy.amount.Amount Amount: to withdraw ("all" if not provided")
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
 
@@ -1127,7 +1127,7 @@ class Steem(object):
             amount = obj.claimable
 
         op = operations.Vesting_balance_withdraw(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
+            "fee": {"amount": 0, "asset_id": "SBD"},
             "vesting_balance": vesting_id,
             "owner": account["id"],
             "amount": {
@@ -1150,8 +1150,8 @@ class Steem(object):
         """ Publish a price feed for a market-pegged asset
 
             :param str symbol: Symbol of the asset to publish feed for
-            :param steem.price.Price settlement_price: Price for settlement
-            :param steem.price.Price cer: Core exchange Rate (default ``settlement_price + 5%``)
+            :param steempy.price.Price settlement_price: Price for settlement
+            :param steempy.price.Price cer: Core exchange Rate (default ``settlement_price + 5%``)
             :param float mssr: Percentage for max short squeeze ratio (default: 110%)
             :param float mcr: Percentage for maintenance collateral ratio (default: 200%)
             :param str account: (optional) the account to allow access
@@ -1185,18 +1185,18 @@ class Steem(object):
 
         if cer:
             cer = cer.as_base(symbol)
-            if cer["quote"]["asset"]["id"] != "1.3.0":
+            if cer["quote"]["asset"]["id"] != "SBD":
                 raise ValueError(
                     "CER must be defined against core asset '1.3.0'")
         else:
-            if settlement_price["quote"]["asset"]["id"] != "1.3.0":
+            if settlement_price["quote"]["asset"]["id"] != "SBD":
                 raise ValueError(
                     "CER must be manually provided because it relates to core asset '1.3.0'"
                 )
             cer = settlement_price.as_quote(symbol) * 0.95
 
         op = operations.Asset_publish_feed(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
+            "fee": {"amount": 0, "asset_id": "SBD"},
             "publisher": account["id"],
             "asset_id": asset["id"],
             "feed": {
@@ -1219,7 +1219,7 @@ class Steem(object):
         witness = Witness(witness_identifier)
         account = witness.account
         op = operations.Witness_update(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
+            "fee": {"amount": 0, "asset_id": "SBD"},
             "prefix": self.prefix,
             "witness": witness["id"],
             "witness_account": account["id"],
@@ -1245,7 +1245,7 @@ class Steem(object):
             raise ValueError("You need to provide an account")
         account = Account(account, steem_instance=self)
         op = operations.Asset_reserve(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
+            "fee": {"amount": 0, "asset_id": "SBD"},
             "payer": account["id"],
             "amount_to_reserve": {
                 "amount": int(amount),
@@ -1272,7 +1272,7 @@ class Steem(object):
         account = Account(account, steem_instance=self)
         asset = Asset(symbol, steem_instance=self)
         op = operations.Asset_fund_fee_pool(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
+            "fee": {"amount": 0, "asset_id": "SBD"},
             "from_account": account["id"],
             "asset_id": asset["id"],
             "amount": int(float(amount) * 10 ** asset["precision"]),

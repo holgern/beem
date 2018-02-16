@@ -1,8 +1,8 @@
 import unittest
-from steem import Steem
-from steem.amount import Amount
-from steem.asset import Asset
-from steem.instance import set_shared_steem_instance, SharedInstance
+from steempy import Steem
+from steempy.amount import Amount
+from steempy.asset import Asset
+from steempy.instance import set_shared_steem_instance, SharedInstance
 
 
 class Testcases(unittest.TestCase):
