@@ -12,8 +12,9 @@ from .account import PublicKey
 from .operationids import operations
 from .objects import (
     Operation,
-    Asset,
     Memo,
+    Amount,
+    Extension,
     Price,
     WitnessProps,
     Permission,
@@ -53,9 +54,9 @@ class Transfer(GrapheneObject):
             else:
                 memo = Optional(None)
             super().__init__(OrderedDict([
-                ('from', ObjectId(kwargs["from"], "account")),
-                ('to', ObjectId(kwargs["to"], "account")),
-                ('amount', Asset(kwargs["amount"])),
+                ('from', (kwargs["from"])),
+                ('to', (kwargs["to"])),
+                ('amount', Amount(kwargs["amount"])),
                 ('memo', memo),
                 ('extensions', Set([])),
             ]))
@@ -69,11 +70,25 @@ class Vote(GrapheneObject):
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
             super().__init__(OrderedDict([
-                ('Voter', String(kwargs["voter"])),
+                ('Voter', (kwargs["voter"])),
                 ('author', ObjectId(kwargs["author"], "account")),
-                ('permlink', String(kwargs["permlink"])),
+                ('permlink', (kwargs["permlink"])),
                 ('weight', Int16(kwargs["feed"])),
                 ('extensions', Set([])),
+            ]))
+
+
+class Account_Witness_Vote(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if isArgsThisClass(self, args):
+            self.data = args[0].data
+        else:
+            if len(args) == 1 and len(kwargs) == 0:
+                kwargs = args[0]
+            super().__init__(OrderedDict([
+                ('account', String(kwargs["account"])),
+                ('witness', String(kwargs["witness"])),
+                ('approve', Bool(bool(kwargs["approve"]))),
             ]))
 
 
@@ -104,14 +119,14 @@ class Account_create(GrapheneObject):
                        ) <= 16, "Account name must be at most 16 chars long"
 
             super().__init__(OrderedDict([
-                ('fee', Asset(kwargs["fee"])),
-                ('creator', ObjectId(kwargs["creator"], "account")),
+                ('fee', Amount(kwargs["fee"])),
+                ('creator', String(kwargs["creator"])),
                 ('new_account_name', String(kwargs["new_account_name"])),
                 ('owner', Permission(kwargs["owner"], prefix=prefix)),
                 ('active', Permission(kwargs["active"], prefix=prefix)),
                 ('posting', Permission(kwargs["posting"], prefix=prefix)),
-                ('memo_key', Permission(kwargs["memo_key"], prefix=prefix)),
-                ('json_metadata', AccountCreateExtensions(kwargs["json_metadata"])),
+                ('memo_key', String(kwargs["memo_key"])),
+                ('json_metadata', Set(kwargs["json_metadata"])),
             ]))
 
 
@@ -146,12 +161,12 @@ class Account_update(GrapheneObject):
                 memo_key = Optional(None)
 
             super().__init__(OrderedDict([
-                ('account', ObjectId(kwargs["account"], "account")),
+                ('account', (kwargs["account"])),
                 ('owner', owner),
                 ('active', active),
                 ('posting', posting),
                 ('memo_key', memo_key),
-                ('json_metadata', AccountCreateExtensions(kwargs["json_metadata"])),
+                ('json_metadata', Set(kwargs["json_metadata"])),
             ]))
 
 
@@ -178,5 +193,5 @@ class Witness_update(GrapheneObject):
                 ('url', url),
                 ('block_signing_key', block_signing_key),
                 ('props', WitnessProps(kwargs["props"])),
-                ('fee', Asset(kwargs["fee"])),
+                ('fee', Amount(kwargs["fee"])),
             ]))

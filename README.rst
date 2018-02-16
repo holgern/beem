@@ -1,7 +1,7 @@
 steempy - Unofficial Python 3 Library for Steem
 =====================================
 
-!!!NOT WORKING AT THE MOMENT - DO NOT USE!!!
+!!!Alpha-State, be carefull!!!
 
 steemi is an unofficial python 3 library for steem, which is created new from scratch from https://github.com/xeroc/python-bitshares.
 
@@ -48,7 +48,7 @@ but possibly non-compiling version::
 
 Run tests after install::
 
-    python setup.py test
+    pytest
 
 Changelog
 =========

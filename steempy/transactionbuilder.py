@@ -165,7 +165,7 @@ class TransactionBuilder(dict):
             ops.extend([Operation(op)])
 
         # We no wrap everything into an actual transaction
-        ops = transactions.addRequiredFees(self.steem.rpc, ops)
+        # ops = transactions.addRequiredFees(self.steem.rpc, ops)
         expiration = transactions.formatTimeFromNow(
             self.expiration or self.steem.expiration
         )

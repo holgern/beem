@@ -13,6 +13,7 @@ from .objecttypes import object_type
 from .account import PublicKey
 from graphenebase.objects import Operation as GPHOperation
 from .operationids import operations
+import struct
 default_prefix = "STM"
 
 asset_precision = {
@@ -34,19 +35,44 @@ class ObjectId(GPHObjectId):
     """ Encodes object/protocol ids
     """
     def __init__(self, object_str, type_verify=None):
-        if len(object_str.split(".")) == 3:
-            space, type, id = object_str.split(".")
-            self.space = int(space)
-            self.type = int(type)
-            self.instance = Id(int(id))
-            self.Id = object_str
-            if type_verify:
-                assert object_type[type_verify] == int(type),\
-                    "Object id does not match object type! " +\
-                    "Excpected %d, got %d" %\
-                    (object_type[type_verify], int(type))
+        # space, type, id = object_str.split(".")
+        # self.space = int(space)
+        # self.type = int(type)
+        self.instance = Id(int(object_str))
+        self.Id = object_str
+        # if type_verify:
+        #     assert object_type[type_verify] == int(type),\
+        #        "Object id does not match object type! " +\
+        #        "Excpected %d, got %d" %\
+        #        (object_type[type_verify], int(type))
+        # else:
+        #     raise Exception("Object id is invalid")
+
+
+class Amount():
+    def __init__(self, d):
+        if isinstance(d, str):
+            self.amount, self.asset = d.strip().split(" ")
+            self.amount = float(self.amount)
+
+            if self.asset in asset_precision:
+                self.precision = asset_precision[self.asset]
+            else:
+                raise Exception("Asset unknown")
         else:
-            raise Exception("Object id is invalid")
+            self.amount = d.amount
+            self.asset = d.symbol
+            self.precision = d.asset.precision
+
+    def __bytes__(self):
+        # padding
+        asset = self.asset + "\x00" * (7 - len(self.asset))
+        amount = round(float(self.amount) * 10**self.precision)
+        return (struct.pack("<q", amount) + struct.pack("<b", self.precision) +
+                bytes(asset, "ascii"))
+
+    def __str__(self):
+        return '{:.{}f} {}'.format(self.amount, self.precision, self.asset)
 
 
 class Operation(GPHOperation):
@@ -73,7 +99,7 @@ class Operation(GPHOperation):
         return json.loads(str(self))
 
 
-class Asset(GrapheneObject):
+class Transfer(GrapheneObject):
     def __init__(self, *args, **kwargs):
         if isArgsThisClass(self, args):
                 self.data = args[0].data
@@ -81,8 +107,10 @@ class Asset(GrapheneObject):
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
             super().__init__(OrderedDict([
-                ('amount', Int64(kwargs["amount"])),
-                ('asset_id', ObjectId(kwargs["asset_id"], "asset"))
+                ('from', String(kwargs["from"])),
+                ('to', String(kwargs["to"])),
+                ('amount', Amount(kwargs["amount"])),
+                ('memo', String(kwargs["memo"])),
             ]))
 
 
@@ -113,7 +141,7 @@ class WitnessProps(GrapheneObject):
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
             super().__init__(OrderedDict([
-                ('account_creation_fee', Asset(kwargs["account_creation_fee"])),
+                ('account_creation_fee', Amount(kwargs["account_creation_fee"])),
                 ('maximum_block_size', Uint32(kwargs["maximum_block_size"])),
                 ('sbd_interest_rate', Uint16(kwargs["sbd_interest_rate"])),
             ]))
@@ -127,8 +155,8 @@ class Price(GrapheneObject):
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
             super().__init__(OrderedDict([
-                ('base', Asset(kwargs["base"])),
-                ('quote', Asset(kwargs["quote"]))
+                ('base', Amount(kwargs["base"])),
+                ('quote', Amount(kwargs["quote"]))
             ]))
 
 
@@ -150,7 +178,7 @@ class Permission(GrapheneObject):
                 reverse=False,
             )
             accountAuths = Map([
-                [ObjectId(e[0], "account"), Uint16(e[1])]
+                [String(e[0]), Uint16(e[1])]
                 for e in kwargs["account_auths"]
             ])
             keyAuths = Map([

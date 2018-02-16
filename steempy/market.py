@@ -127,28 +127,6 @@ class Market(dict):
         if cer["base"]["asset_id"] == self["quote"]["id"]:
             data["core_exchange_rate"] = data["core_exchange_rate"].invert()
 
-        # smartcoin stuff
-        if "bitasset_data_id" in self["quote"]:
-            bitasset = self.steem.rpc.get_object(self["quote"]["bitasset_data_id"])
-            backing_asset_id = bitasset["options"]["short_backing_asset"]
-            if backing_asset_id == self["base"]["id"]:
-                sp = bitasset["current_feed"]["settlement_price"]
-                data["quoteSettlement_price"] = Price(
-                    sp,
-                    steem_instance=self.steem
-                )
-                if sp["base"]["asset_id"] == self["quote"]["id"]:
-                    data["quoteSettlement_price"] = data["quoteSettlement_price"].invert()
-
-        elif "bitasset_data_id" in self["base"]:
-            bitasset = self.steem.rpc.get_object(self["base"]["bitasset_data_id"])
-            backing_asset_id = bitasset["options"]["short_backing_asset"]
-            if backing_asset_id == self["quote"]["id"]:
-                data["baseSettlement_price"] = Price(
-                    bitasset["current_feed"]["settlement_price"],
-                    steem_instance=self.steem
-                )
-
         ticker = self.steem.rpc.get_ticker(
             self["base"]["id"],
             self["quote"]["id"],

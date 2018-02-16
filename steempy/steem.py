@@ -10,7 +10,6 @@ from .account import Account
 from .amount import Amount
 from .price import Price
 from .witness import Witness
-from .vesting import Vesting
 from .storage import configStorage as config
 from .exceptions import (
     AccountExistsException,
@@ -115,6 +114,7 @@ class Steem(object):
             kwargs["apis"] = [
                 "database",
                 "network_broadcast",
+                "market_history_api"
             ]
 
         self.rpc = None
@@ -360,17 +360,11 @@ class Steem(object):
             to_account=to,
             steem_instance=self
         )
-
         op = operations.Transfer(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
-            "from": account["id"],
-            "to": to["id"],
-            "amount": {
-                "amount": int(amount),
-                "asset_id": amount.asset["id"]
-            },
+            "amount": amount,
+            "to": to["name"],
             "memo": memoObj.encrypt(memo),
-            "prefix": self.prefix
+            "from": account["name"],
         })
         return self.finalizeOp(op, account, "active", **kwargs)
 
@@ -381,17 +375,17 @@ class Steem(object):
         self,
         account_name,
         registrar=None,
-        referrer="1.2.35641",
-        referrer_percent=50,
         owner_key=None,
         active_key=None,
         memo_key=None,
+        posting_key=None,
         password=None,
         additional_owner_keys=[],
         additional_active_keys=[],
+        additional_posting_keys=[],
         additional_owner_accounts=[],
         additional_active_accounts=[],
-        proxy_account="proxy-to-self",
+        additional_posting_accounts=[],
         storekeys=True,
         **kwargs
     ):
@@ -456,7 +450,6 @@ class Steem(object):
         except:
             pass
 
-        referrer = Account(referrer, steem_instance=self)
         registrar = Account(registrar, steem_instance=self)
 
         " Generate new keys from password"
@@ -464,11 +457,14 @@ class Steem(object):
         if password:
             active_key = PasswordKey(account_name, password, role="active")
             owner_key = PasswordKey(account_name, password, role="owner")
+            posting_key = PasswordKey(account_name, password, role="posting")
             memo_key = PasswordKey(account_name, password, role="memo")
             active_pubkey = active_key.get_public_key()
             owner_pubkey = owner_key.get_public_key()
+            posting_pubkey = posting_key.get_public_key()
             memo_pubkey = memo_key.get_public_key()
             active_privkey = active_key.get_private_key()
+            posting_privkey = posting_key.get_private_key()
             # owner_privkey   = owner_key.get_private_key()
             memo_privkey = memo_key.get_private_key()
             # store private keys
@@ -476,11 +472,14 @@ class Steem(object):
                 # self.wallet.addPrivateKey(owner_privkey)
                 self.wallet.addPrivateKey(active_privkey)
                 self.wallet.addPrivateKey(memo_privkey)
-        elif (owner_key and active_key and memo_key):
+                self.wallet.addPrivateKey(posting_privkey)
+        elif (owner_key and active_key and memo_key and posting_key):
             active_pubkey = PublicKey(
                 active_key, prefix=self.prefix)
             owner_pubkey = PublicKey(
                 owner_key, prefix=self.prefix)
+            posting_pubkey = PublicKey(
+                posting_key, prefix=self.prefix)
             memo_pubkey = PublicKey(
                 memo_key, prefix=self.prefix)
         else:
@@ -489,36 +488,38 @@ class Steem(object):
             )
         owner = format(owner_pubkey, self.prefix)
         active = format(active_pubkey, self.prefix)
+        posting = format(posting_pubkey, self.prefix)
         memo = format(memo_pubkey, self.prefix)
 
         owner_key_authority = [[owner, 1]]
         active_key_authority = [[active, 1]]
+        posting_key_authority = [[posting, 1]]
         owner_accounts_authority = []
         active_accounts_authority = []
+        posting_accounts_authority = []
 
         # additional authorities
         for k in additional_owner_keys:
             owner_key_authority.append([k, 1])
         for k in additional_active_keys:
             active_key_authority.append([k, 1])
+        for k in additional_posting_keys:
+            posting_key_authority.append([k, 1])
 
         for k in additional_owner_accounts:
             addaccount = Account(k, steem_instance=self)
-            owner_accounts_authority.append([addaccount["id"], 1])
+            owner_accounts_authority.append([addaccount["name"], 1])
         for k in additional_active_accounts:
             addaccount = Account(k, steem_instance=self)
-            active_accounts_authority.append([addaccount["id"], 1])
-
-        # voting account
-        voting_account = Account(
-            proxy_account or "proxy-to-self", steem_instance=self)
+            active_accounts_authority.append([addaccount["name"], 1])
+        for k in additional_posting_accounts:
+            addaccount = Account(k, steem_instance=self)
+            posting_accounts_authority.append([addaccount["name"], 1])
 
         op = {
-            "fee": {"amount": 0, "asset_id": "SBD"},
-            "registrar": registrar["id"],
-            "referrer": referrer["id"],
-            "referrer_percent": referrer_percent * 100,
-            "name": account_name,
+            "fee": Amount(0, "STEEM"),
+            "creator": registrar["name"],
+            "new_account_name": account_name,
             'owner': {'account_auths': owner_accounts_authority,
                       'key_auths': owner_key_authority,
                       "address_auths": [],
@@ -528,21 +529,11 @@ class Steem(object):
                        "address_auths": [],
                        'weight_threshold': 1},
             'posting': {'account_auths': active_accounts_authority,
-                       'key_auths': active_key_authority,
-                       "address_auths": [],
-                       'weight_threshold': 1},
-            'memo': {'account_auths': active_accounts_authority,
-                       'key_auths': active_key_authority,
-                       "address_auths": [],
-                       'weight_threshold': 1},
-            "options": {"voting_account": voting_account["id"],
-                        "num_witness": 0,
-                        "num_committee": 0,
-                        "votes": [],
-                        "extensions": []
-                        },
-            "extensions": {},
-            "prefix": self.prefix
+                        'key_auths': posting_key_authority,
+                        "address_auths": [],
+                        'weight_threshold': 1},
+            'memo_key': memo,
+            "json_metadata": {},
         }
         op = operations.Account_create(**op)
         return self.finalizeOp(op, registrar, "active", **kwargs)
@@ -585,7 +576,7 @@ class Steem(object):
             raise ValueError("Cannot have threshold of 0")
 
     def allow(
-        self, foreign, weight=None, permission="active",
+        self, foreign, weight=None, permission="posting",
         account=None, threshold=None, **kwargs
     ):
         """ Give additional access to an account by some other public
@@ -610,9 +601,9 @@ class Steem(object):
         if not account:
             raise ValueError("You need to provide an account")
 
-        if permission not in ["owner", "active"]:
+        if permission not in ["owner", "posting", "active"]:
             raise ValueError(
-                "Permission needs to be either 'owner', or 'active"
+                "Permission needs to be either 'owner', 'posting', or 'active"
             )
         account = Account(account, steem_instance=self)
 
@@ -642,10 +633,10 @@ class Steem(object):
             self._test_weights_treshold(authority)
 
         op = operations.Account_update(**{
-            "fee": {"amount": 0, "asset_id": "SBD"},
-            "account": account["id"],
+            "account": account["name"],
             permission: authority,
-            "extensions": {},
+            "memo_key": account["memo_key"],
+            "json_metadata": account["json_metadata"],
             "prefix": self.prefix
         })
         if permission == "owner":
@@ -654,7 +645,7 @@ class Steem(object):
             return self.finalizeOp(op, account["name"], "active", **kwargs)
 
     def disallow(
-        self, foreign, permission="active",
+        self, foreign, permission="posting",
         account=None, threshold=None, **kwargs
     ):
         """ Remove additional access to an account by some other public
@@ -674,9 +665,9 @@ class Steem(object):
         if not account:
             raise ValueError("You need to provide an account")
 
-        if permission not in ["owner", "active"]:
+        if permission not in ["owner", "active", "posting"]:
             raise ValueError(
-                "Permission needs to be either 'owner', or 'active"
+                "Permission needs to be either 'owner', 'posting', or 'active"
             )
         account = Account(account, steem_instance=self)
         authority = account[permission]
@@ -726,10 +717,10 @@ class Steem(object):
             self._test_weights_treshold(authority)
 
         op = operations.Account_update(**{
-            "fee": {"amount": 0, "asset_id": "SBD"},
-            "account": account["id"],
+            "account": account["name"],
             permission: authority,
-            "extensions": {}
+            "memo_key": account["memo_key"],
+            "json_metadata": account["json_metadata"]
         })
         if permission == "owner":
             return self.finalizeOp(op, account["name"], "owner", **kwargs)
@@ -757,16 +748,16 @@ class Steem(object):
         account = Account(account, steem_instance=self)
         account["memo_key"] = key
         op = operations.Account_update(**{
-            "account": account["id"],
+            "account": account["name"],
             "memo_key": account["memo_key"],
-            "extensions": {}
+            "json_metadata": account["json_metadata"]
         })
         return self.finalizeOp(op, account["name"], "active", **kwargs)
 
     # -------------------------------------------------------------------------
     #  Approval and Disapproval of witnesses
     # -------------------------------------------------------------------------
-    def approvewitness(self, witnesses, account=None, **kwargs):
+    def approvewitness(self, witness, account=None, approve=True, **kwargs):
         """ Approve a witness
 
             :param list witnesses: list of Witness name or id
@@ -779,111 +770,26 @@ class Steem(object):
         if not account:
             raise ValueError("You need to provide an account")
         account = Account(account, steem_instance=self)
-        options = account["options"]
 
-        if not isinstance(witnesses, (list, set, tuple)):
-            witnesses = {witnesses}
+        # if not isinstance(witnesses, (list, set, tuple)):
+        #     witnesses = {witnesses}
 
-        for witness in witnesses:
-            witness = Witness(witness, steem_instance=self)
-            options["votes"].append(witness["vote_id"])
+        # for witness in witnesses:
+        #     witness = Witness(witness, steem_instance=self)
 
-        options["votes"] = list(set(options["votes"]))
-        options["num_witness"] = len(list(filter(
-            lambda x: float(x.split(":")[0]) == 1,
-            options["votes"]
-        )))
-
-        op = operations.Account_update(**{
-            "fee": {"amount": 0, "asset_id": "SBD"},
+        op = operations.Account_Witness_Vote(**{
             "account": account["id"],
-            "new_options": options,
-            "extensions": {},
-            "prefix": self.prefix
+            "witness": witness,
+            "approve": approve
         })
         return self.finalizeOp(op, account["name"], "active", **kwargs)
 
-    def disapprovewitness(self, witnesses, account=None, **kwargs):
+    def disapprovewitness(self, witness, account=None, **kwargs):
         """ Disapprove a witness
 
             :param list witnesses: list of Witness name or id
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
         """
-        if not account:
-            if "default_account" in config:
-                account = config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self)
-        options = account["options"]
-
-        if not isinstance(witnesses, (list, set, tuple)):
-            witnesses = {witnesses}
-
-        for witness in witnesses:
-            witness = Witness(witness, steem_instance=self)
-            if witness["vote_id"] in options["votes"]:
-                options["votes"].remove(witness["vote_id"])
-
-        options["votes"] = list(set(options["votes"]))
-        options["num_witness"] = len(list(filter(
-            lambda x: float(x.split(":")[0]) == 1,
-            options["votes"]
-        )))
-
-        op = operations.Account_update(**{
-            "fee": {"amount": 0, "asset_id": "SBD"},
-            "account": account["id"],
-            "new_options": options,
-            "extensions": {},
-            "prefix": self.prefix
-        })
-        return self.finalizeOp(op, account["name"], "active", **kwargs)
-
-    def cancel(self, orderNumbers, account=None, **kwargs):
-        """ Cancels an order you have placed in a given market. Requires
-            only the "orderNumbers". An order number takes the form
-            ``1.7.xxx``.
-
-            :param str orderNumbers: The Order Object ide of the form ``1.7.xxxx``
-        """
-        if not account:
-            if "default_account" in config:
-                account = config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, full=False, steem_instance=self)
-
-        if not isinstance(orderNumbers, (list, set, tuple)):
-            orderNumbers = {orderNumbers}
-
-        op = []
-        for order in orderNumbers:
-            op.append(
-                operations.Limit_order_cancel(**{
-                    "fee": {"amount": 0, "asset_id": "SBD"},
-                    "fee_paying_account": account["id"],
-                    "order": order,
-                    "extensions": [],
-                    "prefix": self.prefix}))
-        return self.finalizeOp(op, account["name"], "active", **kwargs)
-
-    def update_witness(self, witness_identifier, url=None, key=None, **kwargs):
-        """ Upgrade a witness account
-
-            :param str witness_identifier: Identifier for the witness
-            :param str url: New URL for the witness
-            :param str key: Public Key for the signing
-        """
-        witness = Witness(witness_identifier)
-        account = witness.account
-        op = operations.Witness_update(**{
-            "fee": {"amount": 0, "asset_id": "SBD"},
-            "prefix": self.prefix,
-            "witness": witness["id"],
-            "witness_account": account["id"],
-            "new_url": url,
-            "new_signing_key": key,
-        })
-        return self.finalizeOp(op, account["name"], "active", **kwargs)
+        return self.approvewitness(
+            witness=witness, account=account, approve=False)

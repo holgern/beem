@@ -10,7 +10,7 @@ from steempybase.account import PrivateKey
 from steempy.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-core_unit = "STEEM"
+core_unit = "STM"
 
 
 class Testcases(unittest.TestCase):
@@ -19,7 +19,7 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
-            "wss://testnet.steem.vc",
+            # "wss://testnet.steem.vc",
             nobroadcast=True,
             keys={"active": wif, "owner": wif, "memo": wif},
         )
@@ -27,6 +27,72 @@ class Testcases(unittest.TestCase):
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(self.bts)
         self.bts.set_default_account("test")
+
+    def test_transfer(self):
+        bts = self.bts
+        # bts.prefix ="STX"
+        tx = bts.transfer(
+            "test", 1.33, "SBD", memo="Foobar", account="test1")
+        self.assertEqual(
+            getOperationNameForId(tx["operations"][0][0]),
+            "transfer"
+        )
+        op = tx["operations"][0][1]
+        self.assertIn("memo", op)
+        self.assertEqual(op["from"], "test1")
+        self.assertEqual(op["to"], "test")
+        amount = Amount(op["amount"])
+        self.assertEqual(float(amount), 1.33)
+
+    def test_create_account(self):
+        bts = self.bts
+        name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
+        key1 = PrivateKey()
+        key2 = PrivateKey()
+        key3 = PrivateKey()
+        key4 = PrivateKey()
+        key5 = PrivateKey()
+        tx = bts.create_account(
+            name,
+            registrar="test",   # 1.2.7
+            owner_key=format(key1.pubkey, core_unit),
+            active_key=format(key2.pubkey, core_unit),
+            posting_key=format(key3.pubkey, core_unit),
+            memo_key=format(key4.pubkey, core_unit),
+            additional_owner_keys=[format(key5.pubkey, core_unit)],
+            additional_active_keys=[format(key5.pubkey, core_unit)],
+            additional_owner_accounts=["test1"],  # 1.2.0
+            additional_active_accounts=["test1"],
+            storekeys=False
+        )
+        self.assertEqual(
+            getOperationNameForId(tx["operations"][0][0]),
+            "account_create"
+        )
+        op = tx["operations"][0][1]
+        role = "active"
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            "test1",
+            [x[0] for x in op[role]["account_auths"]])
+        role = "owner"
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            "test1",
+            [x[0] for x in op[role]["account_auths"]])
+        self.assertEqual(
+            op["creator"],
+            "test")
 
 
 """
@@ -61,81 +127,6 @@ class Testcases(unittest.TestCase):
         ops2 = tx2["operations"]
         self.assertEqual(len(ops1), 2)
         self.assertEqual(len(ops2), 1)
-
-    def test_transfer(self):
-        bts = self.bts
-        tx = bts.transfer(
-            "1.2.8", 1.33, core_unit, memo="Foobar", account="1.2.7")
-        self.assertEqual(
-            getOperationNameForId(tx["operations"][0][0]),
-            "transfer"
-        )
-        op = tx["operations"][0][1]
-        self.assertIn("memo", op)
-        self.assertEqual(op["from"], "1.2.7")
-        self.assertEqual(op["to"], "1.2.8")
-        amount = Amount(op["amount"])
-        self.assertEqual(float(amount), 1.33)
-
-    def test_create_account(self):
-        bts = self.bts
-        name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
-        key1 = PrivateKey()
-        key2 = PrivateKey()
-        key3 = PrivateKey()
-        key4 = PrivateKey()
-        tx = bts.create_account(
-            name,
-            registrar="init0",   # 1.2.7
-            referrer="init1",    # 1.2.8
-            referrer_percent=33,
-            owner_key=format(key1.pubkey, core_unit),
-            active_key=format(key2.pubkey, core_unit),
-            memo_key=format(key3.pubkey, core_unit),
-            additional_owner_keys=[format(key4.pubkey, core_unit)],
-            additional_active_keys=[format(key4.pubkey, core_unit)],
-            additional_owner_accounts=["committee-account"],  # 1.2.0
-            additional_active_accounts=["committee-account"],
-            proxy_account="init0",
-            storekeys=False
-        )
-        self.assertEqual(
-            getOperationNameForId(tx["operations"][0][0]),
-            "account_create"
-        )
-        op = tx["operations"][0][1]
-        role = "active"
-        self.assertIn(
-            format(key4.pubkey, core_unit),
-            [x[0] for x in op[role]["key_auths"]])
-        self.assertIn(
-            format(key4.pubkey, core_unit),
-            [x[0] for x in op[role]["key_auths"]])
-        self.assertIn(
-            "1.2.0",
-            [x[0] for x in op[role]["account_auths"]])
-        role = "owner"
-        self.assertIn(
-            format(key4.pubkey, core_unit),
-            [x[0] for x in op[role]["key_auths"]])
-        self.assertIn(
-            format(key4.pubkey, core_unit),
-            [x[0] for x in op[role]["key_auths"]])
-        self.assertIn(
-            "1.2.0",
-            [x[0] for x in op[role]["account_auths"]])
-        self.assertEqual(
-            op["options"]["voting_account"],
-            "1.2.6")
-        self.assertEqual(
-            op["registrar"],
-            "1.2.6")
-        self.assertEqual(
-            op["referrer"],
-            "1.2.7")
-        self.assertEqual(
-            op["referrer_percent"],
-            33 * 100)
 
     def test_weight_threshold(self):
         bts = self.bts
