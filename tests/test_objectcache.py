@@ -1,8 +1,8 @@
 import time
 import unittest
-from steem import Steem, exceptions
-from steem.instance import set_shared_steem_instance
-from steem.blockchainobject import ObjectCache
+from steempy import Steem, exceptions
+from steempy.instance import set_shared_steem_instance
+from steempy.blockchainobject import ObjectCache
 
 
 class Testcases(unittest.TestCase):
