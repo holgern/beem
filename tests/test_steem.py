@@ -18,7 +18,8 @@ class Testcases(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.bts = Steem(
+    def test_transfer(self):
+        bts = Steem(
             # "wss://testnet.steem.vc",
             nobroadcast=True,
             keys={"active": wif, "owner": wif, "memo": wif},
@@ -27,9 +28,6 @@ class Testcases(unittest.TestCase):
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(self.bts)
         self.bts.set_default_account("test")
-
-    def test_transfer(self):
-        bts = self.bts
         # bts.prefix ="STX"
         tx = bts.transfer(
             "test", 1.33, "SBD", memo="Foobar", account="test1")
@@ -45,7 +43,14 @@ class Testcases(unittest.TestCase):
         self.assertEqual(float(amount), 1.33)
 
     def test_create_account(self):
-        bts = self.bts
+        bts = Steem(
+            "wss://testnet.steem.vc",
+            nobroadcast=True,
+            keys={"active": wif, "owner": wif, "memo": wif},
+        )
+        # from getpass import getpass
+        # self.bts.wallet.unlock(getpass())
+        set_shared_steem_instance(self.bts)
         name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
         key1 = PrivateKey()
         key2 = PrivateKey()
