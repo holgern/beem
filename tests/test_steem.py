@@ -10,7 +10,7 @@ from steempybase.account import PrivateKey
 from steempy.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-core_unit = "TEST"
+core_unit = "STEEM"
 
 
 class Testcases(unittest.TestCase):
@@ -27,7 +27,7 @@ class Testcases(unittest.TestCase):
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(self.bts)
         self.bts.set_default_account("test")
-
+"""
     def test_connect(self):
         self.bts.connect()
 
@@ -214,15 +214,5 @@ class Testcases(unittest.TestCase):
         self.assertIn(
             "1:0",
             op["new_options"]["votes"])
+"""
 
-    def test_approvecommittee(self):
-        bts = self.bts
-        tx = bts.approvecommittee("init0")
-        self.assertEqual(
-            getOperationNameForId(tx["operations"][0][0]),
-            "account_update"
-        )
-        op = tx["operations"][0][1]
-        self.assertIn(
-            "0:11",
-            op["new_options"]["votes"])

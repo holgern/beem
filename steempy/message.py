@@ -64,12 +64,12 @@ class Message():
         meta = dict(
             timestamp=info["time"],
             block=info["head_block_number"],
-            memokey=account["options"]["memo_key"],
+            memokey=account["memo_key"],
             account=account["name"])
 
         # wif key
         wif = self.steem.wallet.getPrivateKeyForPublicKey(
-            account["options"]["memo_key"]
+            account["memo_key"]
         )
 
         # signature
@@ -117,12 +117,12 @@ class Message():
             steem_instance=self.steem)
 
         # Test if memo key is the same as on the blockchain
-        if not account["options"]["memo_key"] == meta["memokey"]:
+        if not account["memo_key"] == meta["memokey"]:
             log.error(
                 "Memo Key of account {} on the Blockchain".format(
                     account["name"]) +
                 "differs from memo key in the message: {} != {}".format(
-                    account["options"]["memo_key"], meta["memokey"]
+                    account["memo_key"], meta["memokey"]
                 )
             )
 

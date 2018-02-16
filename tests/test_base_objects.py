@@ -22,20 +22,17 @@ class Testcases(unittest.TestCase):
 
         c = Account("test")
         self.assertEqual(c["name"], "test")
-        self.assertIsInstance(c.account, Account)
+        self.assertIsInstance(c, Account)
 
     def test_Witness(self):
         with self.assertRaises(
-            exceptions.AccountDoesNotExistsException
+            exceptions.WitnessDoesNotExistsException
         ):
             Witness("FOObarNonExisting")
 
-        c = Witness("test")
-        self.assertEqual(c["name"], "test")
+        c = Witness("jesta")
+        self.assertEqual(c["owner"], "jesta")
         self.assertIsInstance(c.account, Account)
 
-        with self.assertRaises(
-            exceptions.WitnessDoesNotExistsException
-        ):
-            Witness("nathan")
+
 

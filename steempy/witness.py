@@ -23,7 +23,7 @@ class Witness(BlockchainObject):
 
     @property
     def account(self):
-        return Account(self["witness_account"], steem_instance=self.steem)
+        return Account(self["owner"], steem_instance=self.steem)
 
 
 class Witnesses(list):
@@ -34,12 +34,13 @@ class Witnesses(list):
     """
     def __init__(self, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
-        self.schedule = self.steem.rpc.get_object(
-            "2.12.0").get("current_shuffled_witnesses", [])
+        self.active_witnessess = self.steem.rpc.get_active_witnesses()
+        self.schedule = self.steem.rpc.get_witness_schedule()
+        self.witness_count = self.steem.rpc.get_witness_count()
 
         super(Witnesses, self).__init__(
             [
                 Witness(x, lazy=True, steem_instance=self.steem)
-                for x in self.schedule
+                for x in self.active_witnessess
             ]
         )

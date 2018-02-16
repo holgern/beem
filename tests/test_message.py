@@ -24,12 +24,11 @@ class Testcases(unittest.TestCase):
             dict.__init__(
                 self, {
                     "name": "test",
-                    "options": {
-                        "memo_key": "STM6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
-                    }})
+                    "memo_key": "STM6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+                    })
 
         with mock.patch(
-            "steem.account.Account.refresh",
+            "steempy.account.Account.refresh",
             new=new_refresh
         ):
             p = Message("message foobar").sign()
@@ -40,12 +39,11 @@ class Testcases(unittest.TestCase):
             dict.__init__(
                 self, {
                     "name": "test",
-                    "options": {
-                        "memo_key": "STM6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
-                    }})
+                    "memo_key": "STM6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+                    })
 
         with mock.patch(
-            "steem.account.Account.refresh",
+            "steempy.account.Account.refresh",
             new=new_refresh
         ):
             Message(

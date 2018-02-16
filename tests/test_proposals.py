@@ -21,7 +21,7 @@ class Testcases(unittest.TestCase):
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(self.bts)
         self.bts.set_default_account("test")
-
+"""
     def test_finalizeOps_proposal(self):
         bts = self.bts
         # proposal = bts.new_proposal(bts.tx())
@@ -93,8 +93,6 @@ class Testcases(unittest.TestCase):
         self.assertEqual(
             getOperationNameForId(prop["proposed_ops"][0]["op"][0]),
             "transfer")
-
-    """
     def test_finalizeOps_changeproposer_legacy(self):
         bts = self.bts
         bts.proposer = "init5"
@@ -110,7 +108,6 @@ class Testcases(unittest.TestCase):
         self.assertEqual(
             getOperationNameForId(prop["proposed_ops"][0]["op"][0]),
             "transfer")
-    """
 
     def test_new_proposals(self):
         bts = self.bts
@@ -123,3 +120,4 @@ class Testcases(unittest.TestCase):
         p1 = bts.new_tx()
         p2 = bts.new_tx()
         self.assertIsNotNone(id(p1), id(p2))
+"""
