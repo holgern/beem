@@ -51,7 +51,7 @@ install:
   - conda update -q conda
   - conda info -a
   - conda install --yes nose conda-build pycrypto setuptools pip numpy pytest-pylint
-  - conda install --yes pycryptodomex scrypt pyyaml pytest pytest-mock coverage mock
+  - conda install --yes pycryptodomex scrypt pyyaml pytest pytest-mock coverage mock appdirs
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.

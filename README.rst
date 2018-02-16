@@ -8,8 +8,11 @@ steemi is an unofficial python 3 library for steem, which is created new from sc
 .. image:: https://travis-ci.org/holgern/steempy.svg?branch=master
     :target: https://travis-ci.org/holgern/steempy
 
-.. image:: https://ci.appveyor.com/api/projects/status/3mnnhx4vo240mb4g?svg=true
+.. image:: https://ci.appveyor.com/api/projects/status/lnk5385dv0c2j28l?svg=true
     :target: https://ci.appveyor.com/project/holger80/steempy
+
+.. image:: https://circleci.com/gh/holgern/steempy.svg?style=svg
+    :target: https://circleci.com/gh/holgern/steempy
 
 .. image:: https://codecov.io/gh/holgern/steempy/branch/master/graph/badge.svg
   :target: https://codecov.io/gh/holgern/steempy

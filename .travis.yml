@@ -6,7 +6,7 @@ sudo: false
 matrix:
   include:
     - os: linux
-      python: 2.7
+      python: 3.5
       env:
         - PYFLAKES=1
         - PEP8=1
