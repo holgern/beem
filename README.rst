@@ -5,11 +5,14 @@ steempy - Unofficial Python 3 Library for Steem
 
 steemi is an unofficial python 3 library for steem, which is created new from scratch from https://github.com/xeroc/python-bitshares.
 
-.. image:: https://travis-ci.org/holgern/pySteemi.svg?branch=master
-    :target: https://travis-ci.org/holgern/pySteemi
+.. image:: https://travis-ci.org/holgern/steempy.svg?branch=master
+    :target: https://travis-ci.org/holgern/steempy
 
 .. image:: https://ci.appveyor.com/api/projects/status/3mnnhx4vo240mb4g?svg=true
-    :target: https://ci.appveyor.com/project/holger80/pySteemi
+    :target: https://ci.appveyor.com/project/holger80/steempy
+
+.. image:: https://codecov.io/gh/holgern/steempy/branch/master/graph/badge.svg
+  :target: https://codecov.io/gh/holgern/steempy
 
 Installation
 ============
