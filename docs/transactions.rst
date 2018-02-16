@@ -16,7 +16,7 @@ We load the class for manual transaction construction via:
 
 .. code-block:: python
 
-    from steembase import transactions, operations
+    from steempybase import transactions, operations
 
 Construction
 ############

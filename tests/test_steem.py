@@ -54,7 +54,7 @@ class Testcases(unittest.TestCase):
         key5 = PrivateKey()
         tx = bts.create_account(
             name,
-            registrar="test",   # 1.2.7
+            creator="test",   # 1.2.7
             owner_key=format(key1.pubkey, core_unit),
             active_key=format(key2.pubkey, core_unit),
             posting_key=format(key3.pubkey, core_unit),

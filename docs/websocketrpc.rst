@@ -1,5 +1,5 @@
 ****************
-BitSharesNodeRPC
+SteemNodeRPC
 ****************
 
 This class allows to call API methods exposed by the witness node via
@@ -7,5 +7,5 @@ websockets.
 
 Defintion
 =========
-.. autoclass:: steemapi.steemnoderpc.BitSharesNodeRPC
+.. autoclass:: steempyapi.steemnoderpc.SteemNodeRPC
     :members: rpcexec, __getattr__

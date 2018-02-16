@@ -7,11 +7,11 @@ These classes are very low level and are not well documented.
 API
 ---
 
-.. autoclass:: steem.storage.DataDir
+.. autoclass:: steempy.storage.DataDir
    :members:
 
-.. autoclass:: steem.storage.Key
+.. autoclass:: steempy.storage.Key
    :members:
 
-.. autoclass:: steem.storage.MasterPassword
+.. autoclass:: steempy.storage.MasterPassword
    :members:

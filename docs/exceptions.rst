@@ -1,8 +1,8 @@
 Exceptions
 ~~~~~~~~~~
 
-.. autoclass:: steem.exceptions
+.. autoclass:: steempy.exceptions
    :members:
 
-.. autoclass:: steemapi.exceptions
+.. autoclass:: steempyapi.exceptions
    :members:

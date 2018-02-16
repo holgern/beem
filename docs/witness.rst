@@ -5,11 +5,11 @@ Read data about a witness
 
 .. code-block:: python
 
-   from steem.witness import Witness
+   from steempy.witness import Witness
    Witness("chainsquad.com")
 
-.. autoclass:: steem.witness.Witness
+.. autoclass:: steempy.witness.Witness
    :members:
 
-.. autoclass:: steem.witness.Witnesses
+.. autoclass:: steempy.witness.Witnesses
    :members:

@@ -374,7 +374,7 @@ class Steem(object):
     def create_account(
         self,
         account_name,
-        registrar=None,
+        creator=None,
         owner_key=None,
         active_key=None,
         memo_key=None,
@@ -387,6 +387,7 @@ class Steem(object):
         additional_active_accounts=[],
         additional_posting_accounts=[],
         storekeys=True,
+        store_owner_key=False,
         **kwargs
     ):
         """ Create new account on Steem
@@ -433,9 +434,9 @@ class Steem(object):
                 the blockchain
 
         """
-        if not registrar and config["default_account"]:
-            registrar = config["default_account"]
-        if not registrar:
+        if not creator and config["default_account"]:
+            creator = config["default_account"]
+        if not creator:
             raise ValueError(
                 "Not registrar account given. Define it with " +
                 "registrar=x, or set the default_account using uptick")
@@ -450,7 +451,7 @@ class Steem(object):
         except:
             pass
 
-        registrar = Account(registrar, steem_instance=self)
+        # creator = Account(creator, steem_instance=self)
 
         " Generate new keys from password"
         from steempybase.account import PasswordKey, PublicKey
@@ -469,7 +470,8 @@ class Steem(object):
             memo_privkey = memo_key.get_private_key()
             # store private keys
             if storekeys:
-                # self.wallet.addPrivateKey(owner_privkey)
+                if store_owner_key:
+                    self.wallet.addPrivateKey(owner_privkey)
                 self.wallet.addPrivateKey(active_privkey)
                 self.wallet.addPrivateKey(memo_privkey)
                 self.wallet.addPrivateKey(posting_privkey)
@@ -518,7 +520,7 @@ class Steem(object):
 
         op = {
             "fee": Amount(0, "STEEM"),
-            "creator": registrar["name"],
+            "creator": creator,
             "new_account_name": account_name,
             'owner': {'account_auths': owner_accounts_authority,
                       'key_auths': owner_key_authority,
@@ -536,7 +538,7 @@ class Steem(object):
             "json_metadata": {},
         }
         op = operations.Account_create(**op)
-        return self.finalizeOp(op, registrar, "active", **kwargs)
+        return self.finalizeOp(op, creator, "active", **kwargs)
 
     def upgrade_account(self, account=None, **kwargs):
         """ Upgrade an account to Lifetime membership

@@ -15,13 +15,13 @@ You can access those variables like a regular dictionary by using
 
 .. code-block:: python
 
-    from steem import BitShares
-    steem = BitShares()
+    from steem import Steem
+    steem = Steem()
     print(steem.config.items())
 
 Keys can be added and changed like they are for regular dictionaries.
 
-If you don't want to load the :class:`steem.BitShares` class, you
+If you don't want to load the :class:`steem.Steem` class, you
 can load the configuration directly by using:
 
 .. code-block:: python

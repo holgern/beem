@@ -8,8 +8,8 @@ A new wallet can be created by using:
 
 .. code-block:: python
 
-   from steem import BitShares
-   steem = BitShares()
+   from steempy import Steem
+   steem = Steem()
    steem.wallet.create("supersecret-passphrase")
 
 This will raise an exception if you already have a wallet installed.
@@ -21,8 +21,8 @@ The wallet can be unlocked for signing using
 
 .. code-block:: python
 
-   from steem import BitShares
-   steem = BitShares()
+   from steempy import Steem
+   steem = Steem()
    steem.wallet.unlock("supersecret-passphrase")
 
 Adding a Private Key
@@ -34,8 +34,8 @@ A private key can be added by using the
 
 .. code-block:: python
 
-   from steem import BitShares
-   steem = BitShares()
+   from steempy import Steem
+   steem = Steem()
    steem.wallet.unlock("supersecret-passphrase")
    steem.wallet.addPrivateKey("5xxxxxxxxxxxxxxxxxxxx")
 
@@ -45,5 +45,5 @@ A private key can be added by using the
 API
 ---
 
-.. autoclass:: steem.wallet.Wallet
+.. autoclass:: steempy.wallet.Wallet
    :members:

@@ -5,7 +5,7 @@ Tutorials
 Bundle Many Operations
 ----------------------
 
-With BitShares, you can bundle multiple operations into a single
+With Steem, you can bundle multiple operations into a single
 transactions. This can be used to do a multi-send (one sender, multiple
 receivers), but it also allows to use any other kind of operation. The
 advantage here is that the user can be sure that the operations are
@@ -14,9 +14,9 @@ executed in the same order as they are added to the transaction.
 .. code-block:: python
 
   from pprint import pprint
-  from steem import BitShares
+  from steempy import Steem
 
-  testnet = BitShares(
+  testnet = Steem(
       "wss://node.testnet.steem.eu",
       nobroadcast=True,
       bundle=True,
@@ -35,7 +35,7 @@ executed in the same order as they are added to the transaction.
 Proposing a Transaction
 -----------------------
 
-In BitShares, you can propose a transactions to any account. This is
+In Steem, you can propose a transactions to any account. This is
 used to facilitate on-chain multisig transactions. With
 python-steem, you can do this simply by using the ``proposer``
 attribute:
@@ -43,9 +43,9 @@ attribute:
 .. code-block:: python
 
   from pprint import pprint
-  from steem import BitShares
+  from steem import Steem
 
-  testnet = BitShares(
+  testnet = Steem(
       "wss://node.testnet.steem.eu",
       proposer="xeroc"
   )
@@ -57,15 +57,15 @@ Simple Sell Script
 
 .. code-block:: python
 
-    from steem import BitShares
+    from steem import Steem
     from steem.market import Market
     from steem.price import Price
     from steem.amount import Amount
 
     #
-    # Instanciate BitShares (pick network via API node)
+    # Instanciate Steem (pick network via API node)
     #
-    steem = BitShares(
+    steem = Steem(
         "wss://node.testnet.steem.eu",
         nobroadcast=True   # <<--- set this to False when you want to fire!
     )
@@ -100,7 +100,7 @@ Sell at a timely rate
 .. code-block:: python
 
     import threading
-    from steem import BitShares
+    from steem import Steem
     from steem.market import Market
     from steem.price import Price
     from steem.amount import Amount
@@ -119,9 +119,9 @@ Sell at a timely rate
 
     if __name__ == "__main__":
         #
-        # Instanciate BitShares (pick network via API node)
+        # Instanciate Steem (pick network via API node)
         #
-        steem = BitShares(
+        steem = Steem(
             "wss://node.testnet.steem.eu",
             nobroadcast=True   # <<--- set this to False when you want to fire!
         )

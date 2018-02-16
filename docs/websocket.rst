@@ -1,21 +1,19 @@
 ******************
-BitSharesWebsocket
+SteemWebsocket
 ******************
 
-This class allows subscribe to push notifications from the BitShares
+This class allows subscribe to push notifications from the Steem
 node.
 
 .. code-block:: python
 
     from pprint import pprint
-    from steemapi.websocket import BitSharesWebsocket
+    from steempyapi.websocket import SteemWebsocket
 
-    ws = BitSharesWebsocket(
-        "wss://node.testnet.steem.eu",
-        markets=[["1.3.0", "1.3.172"]],
-        accounts=["xeroc"],
-        objects=["2.0.x", "2.1.x"],
-        on_market=pprint,
+    ws = SteemWebsocket(
+        "wss://testnet.steem.vc,
+        accounts=["test"],
+        # on_market=pprint,
         on_account=print,
     )
 
@@ -23,7 +21,7 @@ node.
 
 Defintion
 =========
-.. autoclass:: steemapi.websocket.BitSharesWebsocket
+.. autoclass:: steempyapi.websocket.SteemWebsocket
     :members:
     :undoc-members:
     :private-members:

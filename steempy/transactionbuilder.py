@@ -98,7 +98,7 @@ class TransactionBuilder(dict):
         """ Try to obtain the wif key from the wallet by telling which account
             and permission is supposed to sign the transaction
         """
-        assert permission in ["active", "owner"], "Invalid permission"
+        assert permission in ["active", "owner", "posting"], "Invalid permission"
         account = Account(account, steem_instance=self.steem)
         required_treshold = account[permission]["weight_threshold"]
 
