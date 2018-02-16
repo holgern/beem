@@ -19,7 +19,7 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
-            # "wss://testnet.steem.vc",
+            "wss://testnet.steem.vc",
             nobroadcast=True,
             keys={"active": wif, "owner": wif, "memo": wif},
         )
@@ -28,21 +28,55 @@ class Testcases(unittest.TestCase):
         set_shared_steem_instance(self.bts)
         self.bts.set_default_account("test")
 
-    def test_transfer(self):
+    def test_create_account(self):
         bts = self.bts
-        # bts.prefix ="STX"
-        tx = bts.transfer(
-            "test", 1.33, "SBD", memo="Foobar", account="test1")
+        name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
+        key1 = PrivateKey()
+        key2 = PrivateKey()
+        key3 = PrivateKey()
+        key4 = PrivateKey()
+        key5 = PrivateKey()
+        tx = bts.create_account(
+            name,
+            creator="test",   # 1.2.7
+            owner_key=format(key1.pubkey, core_unit),
+            active_key=format(key2.pubkey, core_unit),
+            posting_key=format(key3.pubkey, core_unit),
+            memo_key=format(key4.pubkey, core_unit),
+            additional_owner_keys=[format(key5.pubkey, core_unit)],
+            additional_active_keys=[format(key5.pubkey, core_unit)],
+            additional_owner_accounts=["test1"],  # 1.2.0
+            additional_active_accounts=["test1"],
+            storekeys=False
+        )
         self.assertEqual(
             getOperationNameForId(tx["operations"][0][0]),
-            "transfer"
+            "account_create"
         )
         op = tx["operations"][0][1]
-        self.assertIn("memo", op)
-        self.assertEqual(op["from"], "test1")
-        self.assertEqual(op["to"], "test")
-        amount = Amount(op["amount"])
-        self.assertEqual(float(amount), 1.33)
+        role = "active"
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            "test1",
+            [x[0] for x in op[role]["account_auths"]])
+        role = "owner"
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            "test1",
+            [x[0] for x in op[role]["account_auths"]])
+        self.assertEqual(
+            op["creator"],
+            "test")
 
 
 """
