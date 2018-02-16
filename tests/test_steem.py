@@ -26,8 +26,8 @@ class Testcases(unittest.TestCase):
         )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
-        set_shared_steem_instance(self.bts)
-        self.bts.set_default_account("test")
+        set_shared_steem_instance(bts)
+        bts.set_default_account("test")
         # bts.prefix ="STX"
         tx = bts.transfer(
             "test", 1.33, "SBD", memo="Foobar", account="test1")
@@ -50,7 +50,8 @@ class Testcases(unittest.TestCase):
         )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
-        set_shared_steem_instance(self.bts)
+        set_shared_steem_instance(bts)
+        bts.set_default_account("test")
         name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
         key1 = PrivateKey()
         key2 = PrivateKey()
