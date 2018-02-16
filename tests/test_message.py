@@ -2,6 +2,7 @@ import unittest
 import mock
 from steempy import Steem
 from steempy.message import Message
+from steempy.account import Account
 from steempy.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
@@ -23,7 +24,9 @@ class Testcases(unittest.TestCase):
         def new_refresh(self):
             dict.__init__(
                 self, {
+                "identifier": "test",
                 "name": "test",
+                "id_item": "name",
                 "memo_key": "STM6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
                 })
 
@@ -31,14 +34,18 @@ class Testcases(unittest.TestCase):
             "steempy.account.Account.refresh",
             new=new_refresh
         ):
-            p = Message("message foobar").sign()
-            Message(p).verify()
+            account = Account("test")
+            account["memo_key"] = "STM6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+            p = Message("message foobar").sign(account=account)
+            Message(p).verify(account=account)
 
     def test_verify_message(self):
         def new_refresh(self):
             dict.__init__(
                 self, {
+                "identifier": "test",
                 "name": "test",
+                "id_item": "name",
                 "memo_key": "STM6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
                 })
 
