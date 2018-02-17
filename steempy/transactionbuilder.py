@@ -101,7 +101,11 @@ class TransactionBuilder(dict):
         assert permission in ["active", "owner", "posting"], "Invalid permission"
         account = Account(account, steem_instance=self.steem)
         if permission not in account:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, steem_instance=self.steem, lazy=False, full=True)
+            account.clear_cache()
+            account.refresh()
+        if permission not in account:
+            account = Account(account, steem_instance=self.steem)        
         assert permission in account, "Could not access permission"
         
         required_treshold = account[permission]["weight_threshold"]
@@ -178,10 +182,10 @@ class TransactionBuilder(dict):
         ref_block_num, ref_block_prefix = transactions.getBlockParams(
             self.steem.rpc)
         self.tx = Signed_Transaction(
-            ref_block_num=ref_block_num,
             ref_block_prefix=ref_block_prefix,
             expiration=expiration,
-            operations=ops
+            operations=ops,
+            ref_block_num=ref_block_num
         )
         super(TransactionBuilder, self).update(self.tx.json())
         self._unset_require_reconstruction()

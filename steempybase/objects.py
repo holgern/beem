@@ -35,18 +35,19 @@ class ObjectId(GPHObjectId):
     """ Encodes object/protocol ids
     """
     def __init__(self, object_str, type_verify=None):
-        # space, type, id = object_str.split(".")
-        # self.space = int(space)
-        # self.type = int(type)
-        self.instance = Id(int(object_str))
-        self.Id = object_str
-        # if type_verify:
-        #     assert object_type[type_verify] == int(type),\
-        #        "Object id does not match object type! " +\
-        #        "Excpected %d, got %d" %\
-        #        (object_type[type_verify], int(type))
-        # else:
-        #     raise Exception("Object id is invalid")
+        if len(object_str.split(".")) == 3:
+            space, type, id = object_str.split(".")
+            self.space = int(space)
+            self.type = int(type)
+            self.instance = Id(int(id))
+            self.Id = object_str
+            if type_verify:
+                assert object_type[type_verify] == int(type),\
+                    "Object id does not match object type! " +\
+                    "Excpected %d, got %d" %\
+                    (object_type[type_verify], int(type))
+        else:
+            raise Exception("Object id is invalid")
 
 
 class Amount():
@@ -97,6 +98,14 @@ class Operation(GPHOperation):
 
     def json(self):
         return json.loads(str(self))
+        #return json.loads(str(json.dumps([self.name, self.op.toJson()])))
+
+    def __bytes__(self):
+        return bytes(Id(self.opId)) + bytes(self.op)
+        # return bytes(self.op)
+
+    def __str__(self):
+        return json.dumps([self.name.lower(), self.op.toJson()])
 
 
 class Transfer(GrapheneObject):
@@ -189,7 +198,6 @@ class Permission(GrapheneObject):
                 ('weight_threshold', Uint32(int(kwargs["weight_threshold"]))),
                 ('account_auths', accountAuths),
                 ('key_auths', keyAuths),
-                ('extensions', Set([])),
             ]))
 
 
@@ -216,7 +224,6 @@ class AccountOptions(GrapheneObject):
                 ('num_witness', Uint16(kwargs["num_witness"])),
                 ('num_committee', Uint16(kwargs["num_committee"])),
                 ('votes', Array([VoteId(o) for o in kwargs["votes"]])),
-                ('extensions', Set([])),
             ]))
 
 

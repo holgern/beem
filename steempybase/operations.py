@@ -49,16 +49,17 @@ class Transfer(GrapheneObject):
                 if isinstance(kwargs["memo"], dict):
                     kwargs["memo"]["prefix"] = prefix
                     memo = Optional(Memo(**kwargs["memo"]))
+                elif isinstance(kwargs["memo"], str):
+                    memo = (String(kwargs["memo"]))
                 else:
                     memo = Optional(Memo(kwargs["memo"]))
             else:
                 memo = Optional(None)
             super().__init__(OrderedDict([
-                ('from', (kwargs["from"])),
-                ('to', (kwargs["to"])),
+                ('from', String(kwargs["from"])),
+                ('to', String(kwargs["to"])),
                 ('amount', Amount(kwargs["amount"])),
                 ('memo', memo),
-                ('extensions', Set([])),
             ]))
 
 

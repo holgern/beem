@@ -34,7 +34,7 @@ class Testcases(unittest.TestCase):
         tx = bts.transfer(
             "test", 1.33, "SBD", memo="Foobar", account="test1")
         self.assertEqual(
-            getOperationNameForId(tx["operations"][0][0]),
+            tx["operations"][0][0],
             "transfer"
         )
         op = tx["operations"][0][1]

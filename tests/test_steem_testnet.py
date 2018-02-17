@@ -51,7 +51,7 @@ class Testcases(unittest.TestCase):
             storekeys=False
         )
         self.assertEqual(
-            getOperationNameForId(tx["operations"][0][0]),
+            tx["operations"][0][0],
             "account_create"
         )
         op = tx["operations"][0][1]

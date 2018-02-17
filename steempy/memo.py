@@ -34,7 +34,7 @@ class Memo(object):
 
         .. code-block:: python
 
-            from steem.memo import Memo
+            from steempy.memo import Memo
             m = Memo()
             m.steem.wallet.unlock("secret")
             print(memo.decrypt(op_data["memo"]))
