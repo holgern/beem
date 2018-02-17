@@ -1,1 +1,26 @@
-include *.rst
+include setup.py
+include README.rst
+include LICENSE.txt
+include *.txt
+include MANIFEST.in
+
+# All source files
+recursive-include steempy *
+recursive-include steempybase *
+recursive-include steempyapi *
+# All documentation
+recursive-include docs *
+# recursive-include demo *
+
+
+# Add build and testing tools
+include tox.ini
+recursive-include util *
+
+# Exclude what we don't want to include
+prune build
+prune doc/build
+prune */__pycache__
+
+global-exclude *.py[cod] *.egg *.egg-info
+global-exclude *~ *.bak *.swp

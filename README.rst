@@ -16,6 +16,9 @@ steemi is an unofficial python 3 library for steem, which is created new from sc
 
 .. image:: https://codecov.io/gh/holgern/steempy/branch/master/graph/badge.svg
   :target: https://codecov.io/gh/holgern/steempy
+  
+.. image:: https://readthedocs.org/projects/steempy/badge/?version=latest
+  :target: http://steempy.readthedocs.org/en/latest/?badge=latest
 
 Installation
 ============
