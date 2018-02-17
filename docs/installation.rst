@@ -12,6 +12,12 @@ Install with `pip`:
     $ sudo apt-get install libffi-dev libssl-dev python-dev
     $ pip3 install steempy
 
+or the newest git version:
+
+::
+
+    $ pip install -U git+git://github.com/holgern/steempy
+
 Manual installation:
 
 ::
