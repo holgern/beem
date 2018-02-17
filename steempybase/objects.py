@@ -98,11 +98,10 @@ class Operation(GPHOperation):
 
     def json(self):
         return json.loads(str(self))
-        #return json.loads(str(json.dumps([self.name, self.op.toJson()])))
+        # return json.loads(str(json.dumps([self.name, self.op.toJson()])))
 
     def __bytes__(self):
         return bytes(Id(self.opId)) + bytes(self.op)
-        # return bytes(self.op)
 
     def __str__(self):
         return json.dumps([self.name.lower(), self.op.toJson()])

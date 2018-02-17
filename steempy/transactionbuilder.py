@@ -105,9 +105,9 @@ class TransactionBuilder(dict):
             account.clear_cache()
             account.refresh()
         if permission not in account:
-            account = Account(account, steem_instance=self.steem)        
+            account = Account(account, steem_instance=self.steem)
         assert permission in account, "Could not access permission"
-        
+
         required_treshold = account[permission]["weight_threshold"]
 
         if self.steem.wallet.locked():

@@ -49,7 +49,6 @@ class Testcases(unittest.TestCase):
         if self.cm_unsigned != '':
             self.assertEqual(self.cm_unsigned, txWire_Unsigned)
         self.assertEqual(self.cm[:-130], txWire[:-130])
-        
 
         if TEST_AGAINST_CLI_WALLET:
             from grapheneapi.grapheneapi import GrapheneAPI
@@ -76,14 +75,14 @@ class Testcases(unittest.TestCase):
             "memo": "Fooo"
         })
         self.op = [2, {'from': 'foo', 'to': 'baar', 'amount': '111.110 STEEM', 'memo': 'Fooo'}]
-        self.cm_op = ("") # ("03666f6f046261617206b201000000000003535445454d000004466f6f6f")
+        self.cm_op = ("")  # ("03666f6f046261617206b201000000000003535445454d000004466f6f6f")
         self.cm = ("f68585abf4dce7c80457010203666f6f046261617206b201000000"
                    "000003535445454d000004466f6f6f00012025416c234dd5ff15d8"
                    "b45486833443c128002bcafa57269cada3ad213ef88adb5831f63a"
                    "58d8b81bbdd92d494da01eeb13ee1786d02ce075228b25d7132f8f"
                    "3e")
         self.cm_unsigned = ("f68585abf4dce7c80457010203666f6f046261617206b201"
-                            "000000000003535445454d000004466f6f6f0000")        
+                            "000000000003535445454d000004466f6f6f0000")
         self.doit()
 
 

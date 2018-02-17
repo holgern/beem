@@ -466,7 +466,7 @@ class Steem(object):
             memo_pubkey = memo_key.get_public_key()
             active_privkey = active_key.get_private_key()
             posting_privkey = posting_key.get_private_key()
-            # owner_privkey   = owner_key.get_private_key()
+            owner_privkey = owner_key.get_private_key()
             memo_privkey = memo_key.get_private_key()
             # store private keys
             if storekeys:
