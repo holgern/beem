@@ -50,11 +50,15 @@ Run tests after install::
 
     pytest
 
+Documentation
+=============
+Documentation is available at http://steempy.readthedocs.io/en/latest/
+
 Changelog
 =========
 0.19.1
 -----
-
+* Imported from https://github.com/xeroc/python-bitshares 
 * Replaced all BitShares by Steem
 * Flake8 fixed
 * Unit tests are working
@@ -62,3 +66,12 @@ Changelog
 * Docs fixed
 * Signing fixed
 * pysteem: Account, Amount, Asset, Block, Blockchain, Instance, Memo, Message, Notify, Price, Steem, Transactionbuilder, Vote, Witness are working
+
+
+License
+=======
+This library is licensed under the MIT License.
+
+Acknowledgements
+================
+https://github.com/xeroc/python-bitshares and https://github.com/xeroc/python-graphenelib were created by Fabian Schuh (xeroc).
