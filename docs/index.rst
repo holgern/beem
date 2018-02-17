@@ -9,23 +9,23 @@
    http://openalea.gforge.inria.fr/doc/openalea/doc/_build/html/source/sphinx/rest_syntax.html
    http://rest-sphinx-memo.readthedocs.org/en/latest/ReST.html
 
-Welcome to pysteem's documentation!
+Welcome to steempy's documentation!
 ===============================================
 
-BitShares is a **blockchain-based autonomous company** (i.e. a DAC) that
+Steem is a **blockchain-based autonomous company** (i.e. a DAC) that
 offers decentralized exchanging as well as sophisticated financial
 instruments as *products*.
 
 It is based on *Graphene* (tm), a blockchain technology stack (i.e.
 software) that allows for fast transactions and ascalable blockchain
-solution. In case of BitShares, it comes with decentralized trading of
+solution. In case of Steem, it comes with decentralized trading of
 assets as well as customized on-chain smart contracts.
 
 About this Library
 ------------------
 
-The purpose of *pysteem* is to simplify development of products and
-services that use the BitShares blockchain. It comes with
+The purpose of *steempy* is to simplify development of products and
+services that use the Steem blockchain. It comes with
 
 * it's own (bip32-encrypted) wallet
 * RPC interface for the Blockchain backend
@@ -52,27 +52,27 @@ Quickstart
 
 .. code-block:: python
 
-   from steem import BitShares
-   steem = BitShares()
+   from steempy import Steem
+   steem = Steem()
    steem.wallet.unlock("wallet-passphrase")
    steem.transfer("<to>", "<amount>", "<asset>", "[<memo>]", account="<from>")
 
 .. code-block:: python
 
-   from steem.blockchain import Blockchain
+   from steempy.blockchain import Blockchain
    blockchain = Blockchain()
    for op in Blockchain.ops():
        print(op)
 
 .. code-block:: python
 
-   from steem.block import Block
+   from steempy.block import Block
    print(Block(1))
 
 .. code-block:: python
 
-   from steem.account import Account
-   account = Account("init0")
+   from steempy.account import Account
+   account = Account("test")
    print(account.balances)
    print(account.openorders)
    for h in account.history():
@@ -80,7 +80,7 @@ Quickstart
 
 .. code-block:: python
 
-   from steem.market import Market
+   from steempy.market import Market
    market = Market("USD:BTS")
    print(market.ticker())
    market.steem.wallet.unlock("wallet-passphrase")
@@ -88,7 +88,7 @@ Quickstart
 
 .. code-block:: python
 
-   from steem.dex import Dex
+   from steempy.dex import Dex
    dex = Dex()
    dex.steem.wallet.unlock("wallet-passphrase")
    dex.adjust_collateral_ratio("SILVER", 3.5)
@@ -106,7 +106,7 @@ General
    contribute
    support
 
-Python-BitShares Libraries
+steempy Libraries
 --------------------------
 
 .. toctree::
@@ -126,8 +126,6 @@ Python-BitShares Libraries
    price
    vesting
    witness
-   worker
-   proposal
 
 Low Level Classes
 -----------------
@@ -150,7 +148,6 @@ Glossary
 .. toctree::
    :maxdepth: 1
 
-   mpa
 
 Indices and tables
 ==================

@@ -6,11 +6,11 @@ the Objects!
 
 .. code-block:: python
 
-   from steem.instance import shared_steem_instance
+   from steempy.instance import shared_steem_instance
 
-   account = Account("xeroc")
+   account = Account("test")
    # is equivalent with 
-   account = Account("xeroc", steem_instance=shared_steem_instance())
+   account = Account("test", steem_instance=shared_steem_instance())
 
-.. automethod:: steem.instance.shared_steem_instance
-.. automethod:: steem.instance.set_shared_steem_instance
+.. automethod:: steempy.instance.shared_steem_instance
+.. automethod:: steempy.instance.set_shared_steem_instance

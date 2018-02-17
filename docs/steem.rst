@@ -1,11 +1,11 @@
-BitShares
+Steem
 ~~~~~~~~~
 
-The BitShares library has been designed to allow developers to easily
+The Steem library has been designed to allow developers to easily
 access its routines and make use of the network without dealing with all
 the related blockchain technology and cryptography. This library can be
-used to do anything that is allowed according to the BitShares
+used to do anything that is allowed according to the Steem
 blockchain protocol.
 
-.. autoclass:: steempy.steem.BitShares
+.. autoclass:: steempy.steem.Steem
    :members:

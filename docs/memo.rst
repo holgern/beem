@@ -96,5 +96,5 @@ Decoding of a received memo
 API
 ###
 
-.. automodule:: steembase.memo
+.. automodule:: steempybase.memo
     :members:

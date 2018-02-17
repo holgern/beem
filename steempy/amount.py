@@ -17,7 +17,7 @@ class Amount(dict):
 
         Way to obtain a proper instance:
 
-            * ``args`` can be a string, e.g.:  "1 USD"
+            * ``args`` can be a string, e.g.:  "1 SBD"
             * ``args`` can be a dictionary containing ``amount`` and ``asset_id``
             * ``args`` can be a dictionary containing ``amount`` and ``asset``
             * ``args`` can be a list of a ``float`` and ``str`` (symbol)
@@ -35,8 +35,8 @@ class Amount(dict):
 
         .. code-block:: python
 
-            Amount("1 USD") * 2
-            Amount("15 GOLD") + Amount("0.5 GOLD")
+            Amount("1 STEEM") * 2
+            Amount("15 SBD") + Amount("0.5 SBD")
     """
     def __init__(self, *args, amount=None, asset=None, steem_instance=None):
         self["asset"] = {}

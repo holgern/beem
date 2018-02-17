@@ -128,7 +128,7 @@ class Account(BlockchainObject):
         ]
 
     @property
-    def get_balances(self):
+    def balances(self):
 
         return {
             'available': self.available_balances,
@@ -165,7 +165,7 @@ class Account(BlockchainObject):
     def is_fully_loaded(self):
         """ Is this instance fully loaded / e.g. all data available?
         """
-        return (self.full and "votes" in self)
+        return (self.full)
 
     def ensure_full(self):
         if not self.is_fully_loaded:
@@ -243,8 +243,6 @@ class AccountUpdate(dict):
         ... code-block: js
 
             {'id': '2.6.29',
-             'lifetime_fees_paid': '44261516129',
-             'most_recent_op': '2.9.0',
              'owner': '1.2.29',
              'pending_fees': 0,
              'pending_vested_fees': 16310,

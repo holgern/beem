@@ -1,5 +1,5 @@
 Asset
 ~~~~~~
 
-.. autoclass:: steem.asset.Asset
+.. autoclass:: steempy.asset.Asset
    :members:

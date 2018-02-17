@@ -8,7 +8,7 @@ class Blockchain(object):
     """ This class allows to access the blockchain and read data
         from it
 
-        :param steem.steem.Steem steem_instance: Steem
+        :param steempy.steem.Steem steem_instance: Steem
                  instance
         :param str mode: (default) Irreversible block (``irreversible``) or
                  actual head block (``head``)
@@ -34,11 +34,25 @@ class Blockchain(object):
         """
         return self.steem.rpc.get_dynamic_global_properties()
 
-    def chainParameters(self):
-        """ The blockchain parameters, such as fees, and committee-controlled
-            parameters are returned here
+    def feed_history(self):
+        """ Returns the feed_history
         """
-        return self.config()["parameters"]
+        return self.steem.rpc.get_feed_history()
+
+    def current_median_history_price(self):
+        """ Returns the current median price
+        """
+        return self.steem.rpc.get_current_median_history_price()
+
+    def next_scheduled_hardfork(self):
+        """ Returns Hardfork and live_time of the hardfork
+        """
+        return self.steem.rpc.get_next_scheduled_hardfork()
+
+    def hardfork_version(self):
+        """ Current Hardfork Version as String
+        """
+        return self.steem.rpc.get_hardfork_version()
 
     def get_network(self):
         """ Identify the network
@@ -54,9 +68,9 @@ class Blockchain(object):
         return self.steem.rpc.get_chain_properties()
 
     def config(self):
-        """ Returns object 2.0.0
+        """ Returns config
         """
-        return self.steem.rpc.get_object("2.0.0")
+        return self.steem.rpc.get_config()
 
     def get_current_block_num(self):
         """ This call returns the current block
@@ -158,7 +172,7 @@ class Blockchain(object):
             for tx in block["transactions"]:
                 for op in tx["operations"]:
                     # Replace opid by op name
-                    op[0] = getOperationNameForId(op[0])
+                    # op[0] = getOperationNameForId(op[0])
                     yield {
                         "block_num": block["block_num"],
                         "op": op,

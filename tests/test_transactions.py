@@ -30,13 +30,10 @@ class Testcases(unittest.TestCase):
     def doit(self, printWire=False, ops=None):
         if ops is None:
             ops = [Operation(self.op)]
-        if len(ops) > 0:
-            txWire_ops = hexlify(bytes(ops[0])).decode("ascii")
         tx = Signed_Transaction(ref_block_num=ref_block_num,
                                 ref_block_prefix=ref_block_prefix,
                                 expiration=expiration,
                                 operations=ops)
-        txWire_Unsigned = hexlify(bytes(tx)).decode("ascii")
         tx = tx.sign([wif], chain=prefix)
         tx.verify([PrivateKey(wif).pubkey], prefix)
         txWire = hexlify(bytes(tx)).decode("ascii")
@@ -44,10 +41,6 @@ class Testcases(unittest.TestCase):
             print()
             print(txWire)
             print()
-        if self.cm_op != '' and len(ops) > 0:
-            self.assertEqual(self.cm_op, txWire_ops)
-        if self.cm_unsigned != '':
-            self.assertEqual(self.cm_unsigned, txWire_Unsigned)
         self.assertEqual(self.cm[:-130], txWire[:-130])
 
         if TEST_AGAINST_CLI_WALLET:
@@ -63,8 +56,6 @@ class Testcases(unittest.TestCase):
         self.cm = ("f68585abf4dce7c8045700000120020c2218cd5bcbaf3bdaba2f192a7"
                    "a69cb2307fcc6be2c09e45e204d175fc5fb715df86fcccfa1235babe6"
                    "09461cc9fdfadbae06381d711576fb4265bd832008")
-        self.cm_unsigned = ("f68585abf4dce7c80457000000")
-        self.cm_op = ("")
         self.doit(ops=[])
 
     def test_Transfer(self):
@@ -74,15 +65,11 @@ class Testcases(unittest.TestCase):
             "amount": Amount("111.110 STEEM"),
             "memo": "Fooo"
         })
-        self.op = [2, {'from': 'foo', 'to': 'baar', 'amount': '111.110 STEEM', 'memo': 'Fooo'}]
-        self.cm_op = ("")  # ("03666f6f046261617206b201000000000003535445454d000004466f6f6f")
         self.cm = ("f68585abf4dce7c80457010203666f6f046261617206b201000000"
                    "000003535445454d000004466f6f6f00012025416c234dd5ff15d8"
                    "b45486833443c128002bcafa57269cada3ad213ef88adb5831f63a"
                    "58d8b81bbdd92d494da01eeb13ee1786d02ce075228b25d7132f8f"
                    "3e")
-        self.cm_unsigned = ("f68585abf4dce7c80457010203666f6f046261617206b201"
-                            "000000000003535445454d000004466f6f6f0000")
         self.doit()
 
 

@@ -38,10 +38,10 @@ Now we can use the predefined transaction formats, e.g. ``Transfer`` or
 
         expiration = transactions.formatTimeFromNow(60)
         op = operations.Transfer(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},  # will be filled in automatically
-            "from": "1.2.124",
-            "to": "1.2.1241",
-            "amount": {"amount": 10000, "asset_id": "1.3.0"},
+            "from": "test",
+            "to": "test1",
+            "amount": "1.000 SBD",
+            "memo": ""
         })
         ops    = [transactions.Operation(op)]
         ref_block_num, ref_block_prefix = transactions.getBlockParams(rpc)
@@ -51,34 +51,6 @@ Now we can use the predefined transaction formats, e.g. ``Transfer`` or
                                                  operations=ops)
         tx = tx.sign([wif])
 
-**Example A: Limit-order-create**
-
-.. code-block:: python
-
-    # Expiration time 60 seconds in the future
-    expiration = transactions.formatTimeFromNow(60)
-    op = operations.Limit_order_create(**{
-        "fee": {"amount": 100,
-                "asset_id": "1.3.0"
-                },
-        "seller": "1.2.29",
-        "amount_to_sell": {"amount": 100000,
-                           "asset_id": "1.3.0"
-                           },
-        "min_to_receive": {"amount": 10000,
-                           "asset_id": "1.3.105"
-                           },
-        "expiration": "2016-05-18T09:22:05",
-        "fill_or_kill": False,
-        "extensions": []
-    })
-    ops    = [transactions.Operation(op)]
-    ref_block_num, ref_block_prefix = transactions.getBlockParams(rpc)
-    tx     = transactions.Signed_Transaction(ref_block_num=ref_block_num,
-                                             ref_block_prefix=ref_block_prefix,
-                                             expiration=expiration,
-                                             operations=ops)
-    tx = tx.sign([wif])
 
 Broadcasting
 ############

@@ -6,7 +6,7 @@ Read data about a witness
 .. code-block:: python
 
    from steempy.witness import Witness
-   Witness("chainsquad.com")
+   Witness("gtg")
 
 .. autoclass:: steempy.witness.Witness
    :members:

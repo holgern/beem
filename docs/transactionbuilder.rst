@@ -9,12 +9,12 @@ To build your own transactions and sign them
    from steempybase.operations import Transfer
    tx = TransactionBuilder()
    tx.appendOps(Transfer(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},  # will be filled in automatically
-            "from": "1.2.124",
-            "to": "1.2.1241",
-            "amount": {"amount": 10000, "asset_id": "1.3.0"},
+            "from": "test",
+            "to": "test1",
+            "amount": "1 STEEM",
+            "memo": ""
         }))
-   tx.appendSigner("xeroc", "active")
+   tx.appendSigner("test", "active")
    tx.sign()
    tx.broadcast()
 

@@ -17,17 +17,17 @@ executed in the same order as they are added to the transaction.
   from steempy import Steem
 
   testnet = Steem(
-      "wss://node.testnet.steem.eu",
+      "wss://testnet.steem.vc",
       nobroadcast=True,
       bundle=True,
   )
 
   testnet.wallet.unlock("supersecret")
 
-  testnet.transfer("init0", 1, "TEST", account="xeroc")
-  testnet.transfer("init1", 1, "TEST", account="xeroc")
-  testnet.transfer("init2", 1, "TEST", account="xeroc")
-  testnet.transfer("init3", 1, "TEST", account="xeroc")
+  testnet.transfer("test1", 1, "STEEM", account="test")
+  testnet.transfer("test1", 1, "STEEM", account="test")
+  testnet.transfer("test1", 1, "STEEM", account="test")
+  testnet.transfer("test1", 1, "STEEM", account="test")
 
   pprint(testnet.broadcast())
 
@@ -43,24 +43,24 @@ attribute:
 .. code-block:: python
 
   from pprint import pprint
-  from steem import Steem
+  from steempy import Steem
 
   testnet = Steem(
-      "wss://node.testnet.steem.eu",
-      proposer="xeroc"
+      "wss://testnet.steem.vc",
+      proposer="test"
   )
   testnet.wallet.unlock("supersecret")
-  pprint(testnet.transfer("init0", 1, "TEST", account="xeroc"))
+  pprint(testnet.transfer("tst1", 1, "STEEM", account="test"))
 
 Simple Sell Script
 ------------------
 
 .. code-block:: python
 
-    from steem import Steem
-    from steem.market import Market
-    from steem.price import Price
-    from steem.amount import Amount
+    from steempy import Steem
+    from steempy.market import Market
+    from steempy.price import Price
+    from steempy.amount import Amount
 
     #
     # Instanciate Steem (pick network via API node)
@@ -100,10 +100,10 @@ Sell at a timely rate
 .. code-block:: python
 
     import threading
-    from steem import Steem
-    from steem.market import Market
-    from steem.price import Price
-    from steem.amount import Amount
+    from steempy import Steem
+    from steempy.market import Market
+    from steempy.price import Price
+    from steempy.amount import Amount
 
 
     def sell():

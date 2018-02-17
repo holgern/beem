@@ -52,10 +52,13 @@ Run tests after install::
 
 Changelog
 =========
-0.18.1
+0.19.1
 -----
 
 * Replaced all BitShares by Steem
 * Flake8 fixed
 * Unit tests are working
 * renamed to steempy
+* Docs fixed
+* Signing fixed
+* pysteem: Account, Amount, Asset, Block, Blockchain, Instance, Memo, Message, Notify, Price, Steem, Transactionbuilder, Vote, Witness are working

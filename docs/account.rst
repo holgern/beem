@@ -5,13 +5,13 @@ Obtaining data of an account.
 
 .. code-block:: python
 
-   from steem.account import Account
-   account = Account("xeroc")
+   from steempy.account import Account
+   account = Account("test")
    print(account)
    print(account.balances)
 
-.. autoclass:: steem.account.Account
+.. autoclass:: steempy.account.Account
    :members:
 
-.. autoclass:: steem.account.AccountUpdate
+.. autoclass:: steempy.account.AccountUpdate
    :members:

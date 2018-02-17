@@ -1,5 +1,5 @@
 Price
 ~~~~~~
 
-.. autoclass:: steem.price.Price
+.. autoclass:: steempy.price.Price
    :members:

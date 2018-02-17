@@ -15,7 +15,7 @@ You can access those variables like a regular dictionary by using
 
 .. code-block:: python
 
-    from steem import Steem
+    from steempy import Steem
     steem = Steem()
     print(steem.config.items())
 
@@ -26,9 +26,9 @@ can load the configuration directly by using:
 
 .. code-block:: python
 
-    from steem.storage import configStorage as config
+    from steempy.storage import configStorage as config
 
 API
 ---
-.. autoclass:: steem.storage.Configuration
+.. autoclass:: steempy.storage.Configuration
    :members:
