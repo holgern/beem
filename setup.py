@@ -16,6 +16,7 @@ except LookupError:
 
 VERSION = '0.19.1'
 
+
 def write_version_py(filename):
     cnt = """
 # THIS FILE IS GENERATED FROM stempy SETUP.PY
@@ -23,6 +24,7 @@ version = '%(version)s'
 """
     with open(filename, 'w') as a:
         a.write(cnt % {'version': VERSION})
+
 
 if __name__ == '__main__':
 
