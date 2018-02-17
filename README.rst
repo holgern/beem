@@ -40,12 +40,12 @@ For OSX, please do the following::
     export CFLAGS="-I$(brew --prefix openssl)/include $CFLAGS"
     export LDFLAGS="-L$(brew --prefix openssl)/lib $LDFLAGS"
     
+Install steempy by pip::
+
+    pip install -U steempy
+    
 You can install steempy from this repository if you want the latest
 but possibly non-compiling version::
-
-    pip install -U git+git://github.com/holgern/steempy
-    
-or by::
 
     git clone https://github.com/holgern/steempy.git
     cd steempy
