@@ -114,7 +114,12 @@ class Steem(object):
             kwargs["apis"] = [
                 "database",
                 "network_broadcast",
-                "market_history_api"
+                "market_history",
+                "follow",
+                "login",
+                "account_by_key",
+                "tag",
+                "raw_block"
             ]
 
         self.rpc = None

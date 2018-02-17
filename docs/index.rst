@@ -74,7 +74,6 @@ Quickstart
    from steempy.account import Account
    account = Account("test")
    print(account.balances)
-   print(account.openorders)
    for h in account.history():
        print(h)
 

@@ -115,31 +115,19 @@ class BlockchainObject(dict):
             BlockchainObject._cache.clear()
 
     def test_valid_objectid(self, i):
-        if "." not in i:
-            return False
-        parts = i.split(".")
-        if len(parts) == 3:
-            try:
-                [int(x) for x in parts]
-                return True
-            except:
-                pass
+        if isinstance(i, str):
+            return True
+        elif isinstance(i, int):
+            return True
+        else:
             return False
 
     def testid(self, id):
-        parts = id.split(".")
         if not self.type_id:
             return
 
         if not self.type_ids:
             self.type_ids = [self.type_id]
-
-        assert int(parts[0]) == self.space_id,\
-            "Valid id's for {} are {}.{}.x".format(
-                self.__class__.__name__, self.space_id, self.type_id)
-        assert int(parts[1]) in self.type_ids,\
-            "Valid id's for {} are {}.{}.x".format(
-                self.__class__.__name__, self.space_id, self.type_ids)
 
     def cache(self):
         # store in cache

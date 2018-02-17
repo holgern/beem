@@ -26,8 +26,10 @@ class SteemNodeRPC(GrapheneWebsocketRPC):
     def register_apis(self):
         return
         # self.api_id["database"] = self.database(api_id=1)
-        # self.api_id["history"] = self.history(api_id=1)
+        # self.api_id["market_history"] = self.market_history(api_id=1)
         # self.api_id["network_broadcast"] = self.network_broadcast(api_id=1)
+        # self.api_id["follow"] = self.follow(api_id=1)
+        # self.api_id["login"] = self.login(api_id=1)
 
     def rpcexec(self, payload):
         """ Execute a call by sending the payload.

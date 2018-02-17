@@ -1,5 +1,5 @@
 steempy - Unofficial Python 3 Library for Steem
-=====================================
+===============================================
 
 !!!Alpha-State, be carefull!!!
 
@@ -59,8 +59,9 @@ Documentation is available at http://steempy.readthedocs.io/en/latest/
 
 Changelog
 =========
+
 0.19.1
------
+------
 * Imported from https://github.com/xeroc/python-bitshares 
 * Replaced all BitShares by Steem
 * Flake8 fixed

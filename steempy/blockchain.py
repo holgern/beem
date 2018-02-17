@@ -123,7 +123,7 @@ class Blockchain(object):
              confirmed by 2/3 of all block producers and is thus irreversible)
         """
         # Let's find out how often blocks are generated!
-        block_interval = self.chainParameters().get("block_interval")
+        block_interval = self.config().get("STEEMIT_BLOCK_INTERVAL")
 
         if not start:
             start = self.get_current_block_num()
@@ -243,11 +243,11 @@ class Blockchain(object):
         while True:
             ret = self.steem.rpc.lookup_accounts(lastname, steps)
             for account in ret:
-                yield account[0]
-                if account[0] == stop:
+                yield account
+                if account == stop:
                     raise StopIteration
-            if lastname == ret[-1][0]:
+            if lastname == ret[-1]:
                 raise StopIteration
-            lastname = ret[-1][0]
+            lastname = ret[-1]
             if len(ret) < steps:
                 raise StopIteration
