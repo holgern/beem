@@ -242,7 +242,7 @@ class AccountUpdate(dict):
 
         ... code-block: js
 
-            {'id': '2.6.29',
+            {'name': 'test',
              'owner': '1.2.29',
              'pending_fees': 0,
              'pending_vested_fees': 16310,
@@ -262,10 +262,10 @@ class AccountUpdate(dict):
             super(AccountUpdate, self).__init__(data)
         else:
             account = Account(data, steem_instance=self.steem)
-            update = self.steem.rpc.get_objects([
-                "2.6.%s" % (account["id"].split(".")[2])
-            ])[0]
-            super(AccountUpdate, self).__init__(update)
+            # update = self.steem.rpc.get_objects([
+            #    "2.6.%s" % (account["id"].split(".")[2])
+            # ])[0]
+            super(AccountUpdate, self).__init__(account)
 
     @property
     def account(self):
@@ -273,9 +273,9 @@ class AccountUpdate(dict):
             :class:`steem.account.Account` from this class, you can
             use the ``account`` attribute.
         """
-        account = Account(self["owner"])
+        account = Account(self["name"])
         account.refresh()
         return account
 
     def __repr__(self):
-        return "<AccountUpdate: {}>".format(self["owner"])
+        return "<AccountUpdate: {}>".format(self["name"])

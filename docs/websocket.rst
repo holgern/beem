@@ -14,7 +14,7 @@ node.
         "wss://gtg.steem.house:8090",
         accounts=["test"],
         # on_market=pprint,
-        on_block=print,
+        # on_block=print,
         on_account=print,
     )
 

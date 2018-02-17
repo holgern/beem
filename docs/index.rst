@@ -55,7 +55,7 @@ Quickstart
    from steempy import Steem
    steem = Steem()
    steem.wallet.unlock("wallet-passphrase")
-   steem.transfer("<to>", "<amount>", "<asset>", "[<memo>]", account="<from>")
+   steem.transfer("<to>", "<amount>", "<asset>", "<memo>", account="<from>")
 
 .. code-block:: python
 
@@ -81,17 +81,18 @@ Quickstart
 .. code-block:: python
 
    from steempy.market import Market
-   market = Market("USD:BTS")
-   print(market.ticker())
-   market.steem.wallet.unlock("wallet-passphrase")
-   print(market.sell(300, 100)  # sell 100 USD for 300 BTS/USD
+   # Not working at the moment
+   # market = Market("STEEM:SBD")
+   # print(market.ticker())
+   # market.steem.wallet.unlock("wallet-passphrase")
+   # print(market.sell(300, 100)  # sell 100 STEEM for 300 STEEM/SBD
 
 .. code-block:: python
 
    from steempy.dex import Dex
-   dex = Dex()
-   dex.steem.wallet.unlock("wallet-passphrase")
-   dex.adjust_collateral_ratio("SILVER", 3.5)
+   # not working at the moment
+   # dex = Dex()
+   # dex.steem.wallet.unlock("wallet-passphrase")
    
 
 General
