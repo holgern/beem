@@ -107,21 +107,6 @@ class Operation(GPHOperation):
         return json.dumps([self.name.lower(), self.op.toJson()])
 
 
-class Transfer(GrapheneObject):
-    def __init__(self, *args, **kwargs):
-        if isArgsThisClass(self, args):
-                self.data = args[0].data
-        else:
-            if len(args) == 1 and len(kwargs) == 0:
-                kwargs = args[0]
-            super().__init__(OrderedDict([
-                ('from', String(kwargs["from"])),
-                ('to', String(kwargs["to"])),
-                ('amount', Amount(kwargs["amount"])),
-                ('memo', String(kwargs["memo"])),
-            ]))
-
-
 class Memo(GrapheneObject):
     def __init__(self, *args, **kwargs):
         if isArgsThisClass(self, args):

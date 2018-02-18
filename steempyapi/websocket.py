@@ -32,47 +32,19 @@ class SteemWebsocket(Events):
         .. code-block:: python
 
             ws = SteemWebsocket(
-                "wss://node.testnet.bitshares.eu",
+                "wss://gtg.steem.house:8090",
             )
             ws.on_block += print
             ws.run_forever()
 
         Notices:
 
-        * ``on_account``:
-
-            .. code-block:: js
-
-                {'id': '2.6.29',
-                 'lifetime_fees_paid': '44257768405',
-                 'most_recent_op': '2.9.1195638',
-                 'owner': '1.2.29',
-                 'pending_fees': 0,
-                 'pending_vested_fees': 100,
-                 'total_core_in_orders': '6788960277634',
-                 'total_ops': 505865}
 
         * ``on_block``:
 
             .. code-block:: js
 
                 '0062f19df70ecf3a478a84b4607d9ad8b3e3b607'
-
-        * ``on_tx``:
-
-            .. code-block:: js
-
-                {'expiration': '2017-02-23T09:33:22',
-                 'extensions': [],
-                 'operations': [[0,
-                                 {'amount': {'amount': 100000, 'asset_id': '1.3.0'},
-                                  'extensions': [],
-                                  'fee': {'amount': 100, 'asset_id': '1.3.0'},
-                                  'from': '1.2.29',
-                                  'to': '1.2.17'}]],
-                 'ref_block_num': 62001,
-                 'ref_block_prefix': 390951726,
-                 'signatures': ['20784246dc1064ed5f87dbbb9aaff3fcce052135269a8653fb500da46e7068bec56e85ea997b8d250a9cc926777c700eed41e34ba1cabe65940965ebe133ff9098']}
 
 
     """

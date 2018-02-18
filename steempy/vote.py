@@ -58,7 +58,7 @@ class Vote(VoteObject):
 
 
 class ActiveVotes(list):
-    """ Obtain a list of pending proposals for an account
+    """ Obtain a list of pending proposals for a post
 
         :param str authorperm: authorperm link
         :param steem steem_instance: Steem() instance to use when accesing a RPC
