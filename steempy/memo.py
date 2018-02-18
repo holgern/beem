@@ -9,9 +9,9 @@ from .exceptions import MissingKeyError, KeyNotFound
 class Memo(object):
     """ Deals with Memos that are attached to a transfer
 
-        :param steem.account.Account from_account: Account that has sent the memo
-        :param steem.account.Account to_account: Account that has received the memo
-        :param steem.steem.Steem steem_instance: Steem instance
+        :param steempy.account.Account from_account: Account that has sent the memo
+        :param steempy.account.Account to_account: Account that has received the memo
+        :param steempy.steem.Steem steem_instance: Steem instance
 
         A memo is encrypted with a shared secret derived from a private key of
         the sender and a public key of the receiver. Due to the underlying

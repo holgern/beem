@@ -29,7 +29,6 @@ class SteemNodeRPC(GrapheneWebsocketRPC):
         # self.api_id["market_history"] = self.market_history(api_id=1)
         # self.api_id["network_broadcast"] = self.network_broadcast(api_id=1)
         # self.api_id["follow"] = self.follow(api_id=1)
-        # self.api_id["login"] = self.login(api_id=1)
 
     def rpcexec(self, payload):
         """ Execute a call by sending the payload.
@@ -61,27 +60,10 @@ class SteemNodeRPC(GrapheneWebsocketRPC):
 
             :param str name: Account name or account id
         """
-        if len(name.split(".")) == 3:
-            return self.get_objects([name])[0]
-        else:
-            return self.get_account_by_name(name, **kwargs)
-
-    def get_asset(self, name, **kwargs):
-        """ Get full asset from name of id
-
-            :param str name: Symbol name or asset id (e.g. 1.3.0)
-        """
-        if len(name.split(".")) == 3:
-            return self.get_objects([name], **kwargs)[0]
-        else:
-            return self.lookup_asset_symbols([name], **kwargs)[0]
-
-    def get_object(self, o, **kwargs):
-        """ Get object with id ``o``
-
-            :param str o: Full object id
-        """
-        return self.get_objects([o], **kwargs)[0]
+        if isinstance(name, str):
+            return self.get_accounts([name], **kwargs)
+        elif isinstance(name, int):
+            return self.get_account_references(name, **kwargs)
 
     def get_network(self):
         """ Identify the connected network. This call returns a

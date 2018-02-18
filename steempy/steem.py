@@ -116,7 +116,6 @@ class Steem(object):
                 "network_broadcast",
                 "market_history",
                 "follow",
-                "login",
                 "account_by_key",
                 "tag",
                 "raw_block"

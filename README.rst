@@ -63,6 +63,10 @@ Documentation is available at http://steempy.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.2
+------
+* Notify and websocket fixed
+* Several fixes
 
 0.19.1
 ------

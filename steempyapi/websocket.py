@@ -20,18 +20,11 @@ class SteemWebsocket(Events):
         :param str urls: Either a single Websocket URL, or a list of URLs
         :param str user: Username for Authentication
         :param str password: Password for Authentication
-        :param list accounts: list of account names or ids to get push notifications for
-        :param list markets: list of asset_ids, e.g. ``[['1.3.0', '1.3.121']]``
-        :param list objects: list of objects id's you'd like to be notified when changing
         :param int keep_alive: seconds between a ping to the backend (defaults to 25seconds)
 
         After instanciating this class, you can add event slots for:
 
-        * ``on_tx``
-        * ``on_object``
         * ``on_block``
-        * ``on_account``
-        * ``on_market``
 
         which will be called accordingly with the notification
         message received from the Steem node:
@@ -40,9 +33,8 @@ class SteemWebsocket(Events):
 
             ws = SteemWebsocket(
                 "wss://node.testnet.bitshares.eu",
-                objects=["2.0.x", "2.1.x", "1.3.x"]
             )
-            ws.on_object += print
+            ws.on_block += print
             ws.run_forever()
 
         Notices:
@@ -82,19 +74,10 @@ class SteemWebsocket(Events):
                  'ref_block_prefix': 390951726,
                  'signatures': ['20784246dc1064ed5f87dbbb9aaff3fcce052135269a8653fb500da46e7068bec56e85ea997b8d250a9cc926777c700eed41e34ba1cabe65940965ebe133ff9098']}
 
-        * ``on_market``:
-
-            .. code-block:: js
-
-                ['1.7.68612']
 
     """
     __events__ = [
-        'on_tx',
-        'on_object',
         'on_block',
-        'on_account',
-        'on_market',
     ]
 
     def __init__(
@@ -103,14 +86,8 @@ class SteemWebsocket(Events):
         user="",
         password="",
         *args,
-        accounts=[],
-        markets=[],
-        objects=[],
-        on_tx=None,
-        on_object=None,
+        only_block_id=False,
         on_block=None,
-        on_account=None,
-        on_market=None,
         keep_alive=25,
         num_retries=-1,
         **kwargs
@@ -123,6 +100,7 @@ class SteemWebsocket(Events):
         self.user = user
         self.password = password
         self.keep_alive = keep_alive
+        self.only_block_id = only_block_id
         if isinstance(urls, cycle):
             self.urls = urls
         elif isinstance(urls, list):
@@ -134,24 +112,13 @@ class SteemWebsocket(Events):
         Events.__init__(self)
         self.events = Events()
 
-        # Store the objects we are interested in
-        self.subscription_accounts = accounts
-        self.subscription_markets = markets
-        self.subscription_objects = objects
-
-        if on_tx:
-            self.on_tx += on_tx
-        if on_object:
-            self.on_object += on_object
         if on_block:
             self.on_block += on_block
-        if on_account:
-            self.on_account += on_account
-        if on_market:
-            self.on_market += on_market
 
     def cancel_subscriptions(self):
-        self.cancel_all_subscriptions()
+        # self.cancel_all_subscriptions()
+        # api call removed in 0.19.1
+        log.exception("cancel_all_subscriptions removed from api")
 
     def on_open(self, ws):
         """ This method will be called once the websocket connection is
@@ -163,44 +130,23 @@ class SteemWebsocket(Events):
               callback/slot available for callbacks
         """
         self.login(self.user, self.password, api_id=1)
-        self.database(api_id=1)
-        self.cancel_all_subscriptions()
+        # self.database(api_id=1)
+        # self.cancel_all_subscriptions()
 
         # Subscribe to events on the Backend and give them a
         # callback number that allows us to identify the event
-        if len(self.on_object) or len(self.subscription_accounts):
-            self.set_subscribe_callback(
-                self.__events__.index('on_object'),
-                False)
-
-        if len(self.on_tx):
-            self.set_pending_transaction_callback(
-                self.__events__.index('on_tx'))
+        # set_pending_transaction_callback is removed from api
+        # api call removed in 0.19.1
 
         if len(self.on_block):
             self.set_block_applied_callback(
                 self.__events__.index('on_block'))
 
-        if self.subscription_accounts and self.on_account:
-            # Unfortunately, account subscriptions don't have their own
-            # callback number
-            log.debug("Subscribing to accounts %s" % str(self.subscription_accounts))
-            self.get_full_accounts(self.subscription_accounts, True)
-
-        if self.subscription_markets and self.on_market:
-            log.debug("Subscribing to markets %s" % str(self.subscription_markets))
-            for market in self.subscription_markets:
-                # Technially, every market could have it's own
-                # callback number
-                self.subscribe_to_market(
-                    self.__events__.index('on_market'),
-                    market[0], market[1])
-
         # We keep the connetion alive by requesting a short object
         def ping(self):
             while 1:
                 log.debug('Sending ping')
-                self.get_objects(["2.8.0"])
+                self.get_chain_properties()
                 time.sleep(self.keep_alive)
 
         self.keepalive = threading.Thread(
@@ -209,23 +155,20 @@ class SteemWebsocket(Events):
         )
         self.keepalive.start()
 
-    def process_notice(self, notice):
+    def process_block(self, data):
         """ This method is called on notices that need processing. Here,
-            we call ``on_object`` and ``on_account`` slots.
+            we call the ``on_block`` slot.
         """
-        id = notice["id"]
-
-        _a, _b, _ = id.split(".")
-
-        if id in self.subscription_objects:
-            self.on_object(notice)
-
-        elif ".".join([_a, _b, "x"]) in self.subscription_objects:
-            self.on_object(notice)
-
-        elif id[:4] == "2.6.":
-            # Treat account updates separately
-            self.on_account(notice)
+        # id = data["id"]
+        block = data["result"]
+        if "previous" in block:
+            block_id = block["previous"]
+            block_number = int(block_id[:8], base=16)
+            block["id"] = block_number
+            # print(result)
+            # print(block_number)
+            # self.get_block(block_number)
+            self.on_block(block)
 
     def on_message(self, ws, reply, *args):
         """ This method is called by the websocket connection on every
@@ -235,6 +178,7 @@ class SteemWebsocket(Events):
         """
         log.debug("Received message: %s" % str(reply))
         data = {}
+        # print(reply)
         try:
             data = json.loads(reply, strict=False)
         except ValueError:
@@ -242,6 +186,7 @@ class SteemWebsocket(Events):
 
         if data.get("method") == "notice":
             id = data["params"][0]
+            # print(data)
 
             if id >= len(self.__events__):
                 log.critical(
@@ -251,19 +196,21 @@ class SteemWebsocket(Events):
                 return
 
             # This is a "general" object change notification
-            if id == self.__events__.index('on_object'):
+            if id == self.__events__.index('on_block'):
                 # Let's see if a specific object has changed
-                for notice in data["params"][1]:
-                    try:
-                        if "id" in notice:
-                            self.process_notice(notice)
-                        else:
-                            for obj in notice:
-                                if "id" in obj:
-                                    self.process_notice(obj)
-                    except Exception as e:
-                        log.critical("Error in process_notice: {}\n\n{}".format(str(e), traceback.format_exc))
+                for new_block in data["params"][1]:
+                    if not new_block:
+                        continue
+                    block_id = new_block["previous"]
+                    block_number = int(block_id[:8], base=16)
+                    # print(new_block)
+                    # print(block_number)
+                    if self.only_block_id:
+                        self.on_block(block_number)
+                    else:
+                        self.get_block(block_number)
             else:
+                # print(data)
                 try:
                     callbackname = self.__events__[id]
                     log.debug("Patching through to call %s" % callbackname)
@@ -271,10 +218,13 @@ class SteemWebsocket(Events):
                 except Exception as e:
                     log.critical("Error in {}: {}\n\n{}".format(
                         callbackname, str(e), traceback.format_exc()))
+        else:
+            self.process_block(data)
 
     def on_error(self, ws, error):
         """ Called on websocket errors
         """
+        print(error)
         log.exception(error)
 
     def on_close(self, ws):
@@ -302,7 +252,7 @@ class SteemWebsocket(Events):
                     on_message=self.on_message,
                     on_error=self.on_error,
                     on_close=self.on_close,
-                    on_open=self.on_open
+                    on_open=self.on_open,
                 )
                 self.ws.run_forever()
             except websocket.WebSocketException as exc:
