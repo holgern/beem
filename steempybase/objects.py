@@ -167,7 +167,12 @@ class Permission(GrapheneObject):
             # Key and not located here)
             kwargs["key_auths"] = sorted(
                 kwargs["key_auths"],
-                key=lambda x: repr(PublicKey(x[0], prefix=prefix).address),
+                key=lambda x: repr(PublicKey(x[0], prefix=prefix)),
+                reverse=False,
+            )
+            kwargs["account_auths"] = sorted(
+                kwargs["account_auths"],
+                key=lambda x: x[0],
                 reverse=False,
             )
             accountAuths = Map([
@@ -211,30 +216,6 @@ class AccountOptions(GrapheneObject):
             ]))
 
 
-class SpecialAuthority(Static_variant):
-    def __init__(self, o):
-
-        class No_special_authority(GrapheneObject):
-            def __init__(self, kwargs):
-                super().__init__(OrderedDict([]))
-
-        class Top_holders_special_authority(GrapheneObject):
-            def __init__(self, kwargs):
-                super().__init__(OrderedDict([
-                    ('asset', ObjectId(kwargs["asset"], "asset")),
-                    ('num_top_holders', Uint8(kwargs["num_top_holders"])),
-                ]))
-
-        id = o[0]
-        if id == 0:
-            data = No_special_authority(o[1])
-        elif id == 1:
-            data = Top_holders_special_authority(o[1])
-        else:
-            raise Exception("Unknown SpecialAuthority")
-        super().__init__(data, id)
-
-
 class Extension(Array):
     def __str__(self):
         """ We overload the __str__ function because the json
@@ -243,75 +224,66 @@ class Extension(Array):
         return json.dumps(self.json)
 
 
-class AccountCreateExtensions(Extension):
+class ExchangeRate(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        # Extensions #################################
-        class Null_ext(GrapheneObject):
-            def __init__(self, kwargs):
-                super().__init__(OrderedDict([]))
-
-        class Owner_special_authority(SpecialAuthority):
-            def __init__(self, kwargs):
-                super().__init__(kwargs)
-
-        class Active_special_authority(SpecialAuthority):
-            def __init__(self, kwargs):
-                super().__init__(kwargs)
-
-        class Buyback_options(GrapheneObject):
-            def __init__(self, kwargs):
-                if isArgsThisClass(self, args):
-                        self.data = args[0].data
-                else:
-                    if len(args) == 1 and len(kwargs) == 0:
-                        kwargs = args[0]
-#                    assert "1.3.0" in kwargs["markets"], "CORE asset must be in 'markets' to pay fees"
-                    super().__init__(OrderedDict([
-                        ('asset_to_buy', ObjectId(kwargs["asset_to_buy"], "asset")),
-                        ('asset_to_buy_issuer', ObjectId(kwargs["asset_to_buy_issuer"], "account")),
-                        ('markets', Array([
-                            ObjectId(x, "asset") for x in kwargs["markets"]
-                        ])),
-                    ]))
-        # End of Extensions definition ################
         if isArgsThisClass(self, args):
             self.data = args[0].data
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
 
-        self.json = dict()
-        a = []
-        sorted_options = [
-            "null_ext",
-            "owner_special_authority",
-            "active_special_authority",
-            "buyback_options"
-        ]
-        sorting = sorted(kwargs.items(), key=lambda x: sorted_options.index(x[0]))
-        for key, value in sorting:
-            self.json.update({key: value})
-            if key == "null_ext":
-                a.append(Static_variant(
-                    Null_ext({key: value}),
-                    sorted_options.index(key))
-                )
-            elif key == "owner_special_authority":
-                a.append(Static_variant(
-                    Owner_special_authority(value),
-                    sorted_options.index(key))
-                )
-            elif key == "active_special_authority":
-                a.append(Static_variant(
-                    Active_special_authority(value),
-                    sorted_options.index(key))
-                )
-            elif key == "buyback_options":
-                a.append(Static_variant(
-                    Buyback_options(value),
-                    sorted_options.index(key))
-                )
-            else:
-                raise NotImplementedError("Extension {} is unknown".format(key))
+            super().__init__(
+                OrderedDict([
+                    ('base', Amount(kwargs["base"])),
+                    ('quote', Amount(kwargs["quote"])),
+                ]))
 
-        super().__init__(a)
+
+class Beneficiary(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if isArgsThisClass(self, args):
+            self.data = args[0].data
+        else:
+            if len(args) == 1 and len(kwargs) == 0:
+                kwargs = args[0]
+        super().__init__(
+            OrderedDict([
+                ('account', String(kwargs["account"])),
+                ('weight', Int16(kwargs["weight"])),
+            ]))
+
+
+class Beneficiaries(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if isArgsThisClass(self, args):
+            self.data = args[0].data
+        else:
+            if len(args) == 1 and len(kwargs) == 0:
+                kwargs = args[0]
+
+        super().__init__(
+            OrderedDict([
+                ('beneficiaries',
+                 Array([Beneficiary(o) for o in kwargs["beneficiaries"]])),
+            ]))
+
+
+class CommentOptionExtensions(Static_variant):
+    """ Serialize Comment Payout Beneficiaries.
+    Args:
+        beneficiaries (list): A static_variant containing beneficiaries.
+    Example:
+        ::
+            [0,
+                {'beneficiaries': [
+                    {'account': 'furion', 'weight': 10000}
+                ]}
+            ]
+    """
+    def __init__(self, o):
+        type_id, data = o
+        if type_id == 0:
+            data = (Beneficiaries(data))
+        else:
+            raise Exception("Unknown CommentOptionExtension")
+        super().__init__(data, type_id)

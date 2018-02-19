@@ -9,6 +9,8 @@ from steempy.instance import set_shared_steem_instance
 from steempybase.operationids import getOperationNameForId
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
+# steem_node = "wss://gtg.steem.house:8090"
+steem_node = "wss://steemd.pevo.science"
 
 
 class Testcases(unittest.TestCase):
@@ -17,7 +19,7 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
-            "wss://testnet.steem.vc",
+            steem_node,
             nobroadcast=True,
             # We want to bundle many operations into a single transaction
             bundle=True,

@@ -3,6 +3,8 @@ import unittest
 from steempy import Steem, exceptions
 from steempy.instance import set_shared_steem_instance
 from steempy.blockchainobject import ObjectCache
+# steem_node = "wss://gtg.steem.house:8090"
+steem_node = "wss://steemd.pevo.science"
 
 
 class Testcases(unittest.TestCase):
@@ -11,6 +13,7 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
+            steem_node,
             nobroadcast=True,
         )
         set_shared_steem_instance(self.bts)

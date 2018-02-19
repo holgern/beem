@@ -3,6 +3,8 @@ from steempy import Steem
 from steempy.asset import Asset
 from steempy.instance import set_shared_steem_instance
 from steempy.exceptions import AssetDoesNotExistsException
+# steem_node = "wss://gtg.steem.house:8090"
+steem_node = "wss://steemd.pevo.science"
 
 
 class Testcases(unittest.TestCase):
@@ -11,6 +13,7 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
+            steem_node,
             nobroadcast=True,
         )
         set_shared_steem_instance(self.bts)

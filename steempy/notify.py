@@ -27,9 +27,7 @@ class Notify(Events):
 
             notify = Notify(
                 accounts=["test"],
-                on_account=print,
                 on_block=print,
-                on_tx=print
             )
             notify.listen()
 

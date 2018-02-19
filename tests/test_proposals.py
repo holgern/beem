@@ -5,6 +5,8 @@ from steempybase.operationids import getOperationNameForId
 from steempy.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
+# steem_node = "wss://gtg.steem.house:8090"
+steem_node = "wss://steemd.pevo.science"
 
 
 class Testcases(unittest.TestCase):
@@ -13,7 +15,7 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
-            "wss://testnet.steem.vc",
+            steem_node,
             nobroadcast=True,
             keys={"active": wif},
         )

@@ -4,6 +4,8 @@ from steempy.amount import Amount
 from steempy.price import Price
 from steempy.asset import Asset
 import unittest
+# steem_node = "wss://gtg.steem.house:8090"
+steem_node = "wss://steemd.pevo.science"
 
 
 class Testcases(unittest.TestCase):
@@ -11,7 +13,7 @@ class Testcases(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(Testcases, self).__init__(*args, **kwargs)
         steem = Steem(
-            "wss://testnet.steem.vc",
+            steem_node,
             nobroadcast=True,
         )
         set_shared_steem_instance(steem)

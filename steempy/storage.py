@@ -38,7 +38,7 @@ class DataDir(object):
          in the `backups/` directory every now and then.
     """
     appname = "steempy"
-    appauthor = "Holger Nahrstaedt"
+    appauthor = "steempy"
     storageDatabase = "steempy.sqlite"
 
     data_dir = user_data_dir(appname, appauthor)
@@ -218,7 +218,7 @@ class Configuration(DataDir):
 
     #: Default configuration
     config_defaults = {
-        "node": "wss://gtg.steem.house:8090",
+        "node": "wss://steemd.pevo.science",
         "rpcpassword": "",
         "rpcuser": "",
         "order-expiration": 7 * 24 * 60 * 60,

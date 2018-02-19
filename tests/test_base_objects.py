@@ -3,6 +3,7 @@ from steempy import Steem, exceptions
 from steempy.instance import set_shared_steem_instance
 from steempy.account import Account
 from steempy.witness import Witness
+steem_node = "wss://steemd.pevo.science"
 
 
 class Testcases(unittest.TestCase):
@@ -11,6 +12,7 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
+            steem_node,
             nobroadcast=True,
         )
         set_shared_steem_instance(self.bts)

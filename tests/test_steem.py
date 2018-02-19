@@ -11,6 +11,8 @@ from steempy.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 core_unit = "STM"
+# steem_node = "wss://gtg.steem.house:8090"
+steem_node = "wss://steemd.pevo.science"
 
 
 class Testcases(unittest.TestCase):
@@ -19,7 +21,7 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
-            # "wss://testnet.steem.vc",
+            steem_node,
             nobroadcast=True,
             keys={"active": wif, "owner": wif, "memo": wif},
         )
@@ -44,8 +46,56 @@ class Testcases(unittest.TestCase):
         amount = Amount(op["amount"])
         self.assertEqual(float(amount), 1.33)
 
+    def test_create_account(self):
+        bts = self.bts
+        name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
+        key1 = PrivateKey()
+        key2 = PrivateKey()
+        key3 = PrivateKey()
+        key4 = PrivateKey()
+        key5 = PrivateKey()
+        tx = bts.create_account(
+            name,
+            creator="test",   # 1.2.7
+            owner_key=format(key1.pubkey, core_unit),
+            active_key=format(key2.pubkey, core_unit),
+            posting_key=format(key3.pubkey, core_unit),
+            memo_key=format(key4.pubkey, core_unit),
+            additional_owner_keys=[format(key5.pubkey, core_unit)],
+            additional_active_keys=[format(key5.pubkey, core_unit)],
+            additional_owner_accounts=["test1"],  # 1.2.0
+            additional_active_accounts=["test1"],
+            storekeys=False
+        )
+        self.assertEqual(
+            tx["operations"][0][0],
+            "account_create"
+        )
+        op = tx["operations"][0][1]
+        role = "active"
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            "test1",
+            [x[0] for x in op[role]["account_auths"]])
+        role = "owner"
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            "test1",
+            [x[0] for x in op[role]["account_auths"]])
+        self.assertEqual(
+            op["creator"],
+            "test")
 
-"""
     def test_connect(self):
         self.bts.connect()
 
@@ -59,8 +109,8 @@ class Testcases(unittest.TestCase):
                     'head_block_number',
                     'id',
                     'last_irreversible_block_num',
-                    'next_maintenance_time',
-                    'recently_missed_count',
+                    'current_witness',
+                    'total_pow',
                     'time']:
             self.assertTrue(key in info)
 
@@ -68,9 +118,9 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         tx1 = bts.new_tx()
         tx2 = bts.new_tx()
-        self.bts.transfer("init1", 1, core_unit, append_to=tx1)
-        self.bts.transfer("init1", 2, core_unit, append_to=tx2)
-        self.bts.transfer("init1", 3, core_unit, append_to=tx1)
+        self.bts.transfer("test1", 1, "STEEM", append_to=tx1)
+        self.bts.transfer("test1", 2, "STEEM", append_to=tx2)
+        self.bts.transfer("test1", 3, "STEEM", append_to=tx1)
         tx1 = tx1.json()
         tx2 = tx2.json()
         ops1 = tx1["operations"]
@@ -81,18 +131,18 @@ class Testcases(unittest.TestCase):
     def test_weight_threshold(self):
         bts = self.bts
 
-        auth = {'account_auths': [['1.2.0', '1']],
+        auth = {'account_auths': [['test', 1]],
                 'extensions': [],
                 'key_auths': [
-                    ['TEST55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n', 1],
-                    ['TEST7GM9YXcsoAJAgKbqW2oVj7bnNXFNL4pk9NugqKWPmuhoEDbkDv', 1]],
+                    ['STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n', 1],
+                    ['STM7GM9YXcsoAJAgKbqW2oVj7bnNXFNL4pk9NugqKWPmuhoEDbkDv', 1]],
                 'weight_threshold': 3}  # threshold fine
         bts._test_weights_treshold(auth)
-        auth = {'account_auths': [['1.2.0', '1']],
+        auth = {'account_auths': [['test', 1]],
                 'extensions': [],
                 'key_auths': [
-                    ['TEST55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n', 1],
-                    ['TEST7GM9YXcsoAJAgKbqW2oVj7bnNXFNL4pk9NugqKWPmuhoEDbkDv', 1]],
+                    ['STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n', 1],
+                    ['STM7GM9YXcsoAJAgKbqW2oVj7bnNXFNL4pk9NugqKWPmuhoEDbkDv', 1]],
                 'weight_threshold': 4}  # too high
 
         with self.assertRaises(ValueError):
@@ -100,20 +150,22 @@ class Testcases(unittest.TestCase):
 
     def test_allow(self):
         bts = self.bts
+        self.assertIn(bts.prefix, "STM")
         tx = bts.allow(
-            "TEST55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n",
+            "STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n",
+            account="test",
             weight=1,
             threshold=1,
-            permission="owner"
+            permission="owner",
         )
         self.assertEqual(
-            getOperationNameForId(tx["operations"][0][0]),
+            (tx["operations"][0][0]),
             "account_update"
         )
         op = tx["operations"][0][1]
         self.assertIn("owner", op)
         self.assertIn(
-            ["TEST55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n", '1'],
+            ["STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n", '1'],
             op["owner"]["key_auths"])
         self.assertEqual(op["owner"]["weight_threshold"], 1)
 
@@ -121,14 +173,14 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         with self.assertRaisesRegex(ValueError, ".*Changes nothing.*"):
             bts.disallow(
-                "TEST55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n",
+                "STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n",
                 weight=1,
                 threshold=1,
                 permission="owner"
             )
         with self.assertRaisesRegex(ValueError, ".*Changes nothing!.*"):
             bts.disallow(
-                "TEST6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
+                "STM6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
                 weight=1,
                 threshold=1,
                 permission="owner"
@@ -136,25 +188,24 @@ class Testcases(unittest.TestCase):
 
     def test_update_memo_key(self):
         bts = self.bts
-        tx = bts.update_memo_key("TEST55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n")
+        tx = bts.update_memo_key("STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n")
         self.assertEqual(
-            getOperationNameForId(tx["operations"][0][0]),
+            (tx["operations"][0][0]),
             "account_update"
         )
         op = tx["operations"][0][1]
         self.assertEqual(
-            op["new_options"]["memo_key"],
-            "TEST55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n")
+            op["memo_key"],
+            "STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n")
 
     def test_approvewitness(self):
         bts = self.bts
-        tx = bts.approvewitness("init0")
+        tx = bts.approvewitness("test1")
         self.assertEqual(
-            getOperationNameForId(tx["operations"][0][0]),
-            "account_update"
+            (tx["operations"][0][0]),
+            "account_witness_vote"
         )
         op = tx["operations"][0][1]
         self.assertIn(
-            "1:0",
-            op["new_options"]["votes"])
-"""
+            "test1",
+            op["witness"])

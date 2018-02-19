@@ -544,26 +544,6 @@ class Steem(object):
         op = operations.Account_create(**op)
         return self.finalizeOp(op, creator, "active", **kwargs)
 
-    def upgrade_account(self, account=None, **kwargs):
-        """ Upgrade an account to Lifetime membership
-
-            :param str account: (optional) the account to allow access
-                to (defaults to ``default_account``)
-        """
-        if not account:
-            if "default_account" in config:
-                account = config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self)
-        op = operations.Account_upgrade(**{
-            "fee": {"amount": 0, "asset_id": "SBD"},
-            "account_to_upgrade": account["id"],
-            "upgrade_to_lifetime_member": True,
-            "prefix": self.prefix
-        })
-        return self.finalizeOp(op, account["name"], "active", **kwargs)
-
     def _test_weights_treshold(self, authority):
         """ This method raises an error if the threshold of an authority cannot
             be reached by the weights.
@@ -613,6 +593,14 @@ class Steem(object):
             )
         account = Account(account, steem_instance=self)
 
+        if permission not in account:
+            account = Account(account, steem_instance=self, lazy=False, full=True)
+            account.clear_cache()
+            account.refresh()
+        if permission not in account:
+            account = Account(account, steem_instance=self.steem)
+        assert permission in account, "Could not access permission"
+
         if not weight:
             weight = account[permission]["weight_threshold"]
 
@@ -627,7 +615,7 @@ class Steem(object):
             try:
                 foreign_account = Account(foreign, steem_instance=self)
                 authority["account_auths"].append([
-                    foreign_account["id"],
+                    foreign_account["name"],
                     weight
                 ])
             except:
@@ -643,7 +631,6 @@ class Steem(object):
             permission: authority,
             "memo_key": account["memo_key"],
             "json_metadata": account["json_metadata"],
-            "prefix": self.prefix
         })
         if permission == "owner":
             return self.finalizeOp(op, account["name"], "owner", **kwargs)
@@ -691,10 +678,10 @@ class Steem(object):
             try:
                 foreign_account = Account(foreign, steem_instance=self)
                 affected_items = list(
-                    filter(lambda x: x[0] == foreign_account["id"],
+                    filter(lambda x: x[0] == foreign_account["name"],
                            authority["account_auths"]))
                 authority["account_auths"] = list(filter(
-                    lambda x: x[0] != foreign_account["id"],
+                    lambda x: x[0] != foreign_account["name"],
                     authority["account_auths"]
                 ))
             except:
@@ -713,14 +700,14 @@ class Steem(object):
         # Correct threshold (at most by the amount removed from the
         # authority)
         try:
-            self._test_weights_treshold(authority)
+            self.self.cm(authority)
         except:
             log.critical(
                 "The account's threshold will be reduced by %d"
                 % (removed_weight)
             )
             authority["weight_threshold"] -= removed_weight
-            self._test_weights_treshold(authority)
+            self.self.cm(authority)
 
         op = operations.Account_update(**{
             "account": account["name"],
@@ -783,8 +770,8 @@ class Steem(object):
         # for witness in witnesses:
         #     witness = Witness(witness, steem_instance=self)
 
-        op = operations.Account_Witness_Vote(**{
-            "account": account["id"],
+        op = operations.Account_witness_vote(**{
+            "account": account["name"],
             "witness": witness,
             "approve": approve
         })
