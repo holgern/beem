@@ -81,7 +81,7 @@ class Operation(GPHOperation):
         super(Operation, self).__init__(*args, **kwargs)
 
     def _getklass(self, name):
-        module = __import__("steempybase.operations", fromlist=["operations"])
+        module = __import__("beembase.operations", fromlist=["operations"])
         class_ = getattr(module, name)
         return class_
 

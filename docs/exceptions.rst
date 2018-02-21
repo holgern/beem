@@ -1,8 +1,8 @@
 Exceptions
 ~~~~~~~~~~
 
-.. autoclass:: steempy.exceptions
+.. autoclass:: beem.exceptions
    :members:
 
-.. autoclass:: steempyapi.exceptions
+.. autoclass:: beemapi.exceptions
    :members:

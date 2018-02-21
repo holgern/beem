@@ -1,7 +1,7 @@
 import unittest
 
-from steempybase.account import PrivateKey
-from steempybase.bip38 import encrypt, decrypt
+from beembase.account import PrivateKey
+from beembase.bip38 import encrypt, decrypt
 
 
 class Testcases(unittest.TestCase):

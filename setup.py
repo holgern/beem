@@ -29,26 +29,26 @@ version = '%(version)s'
 if __name__ == '__main__':
 
     # Rewrite the version file everytime
-    write_version_py('steempy/version.py')
-    write_version_py('steempybase/version.py')
-    write_version_py('steempyapi/version.py')
+    write_version_py('beem/version.py')
+    write_version_py('beembase/version.py')
+    write_version_py('beemapi/version.py')
 
     setup(
-        name='steempy',
+        name='beem',
         version=VERSION,
         description='Unofficial Python library for STEEM',
         long_description=open('README.rst').read(),
-        download_url='https://github.com/holgern/steempy/tarball/' + VERSION,
+        download_url='https://github.com/holgern/beem/tarball/' + VERSION,
         author='Holger Nahrstaedt',
         author_email='holger@nahrstaedt.de',
         maintainer='Holger Nahrstaedt',
         maintainer_email='holger@nahrstaedt.de',
-        url='http://www.github.com/holgern/steempy',
+        url='http://www.github.com/holgern/beem',
         keywords=['steem', 'library', 'api', 'rpc'],
         packages=[
-            "steempy",
-            "steempyapi",
-            "steempybase"
+            "beem",
+            "beemapi",
+            "beembase"
         ],
         classifiers=[
             'License :: OSI Approved :: MIT License',

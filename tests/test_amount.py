@@ -1,8 +1,8 @@
 import unittest
-from steempy import Steem
-from steempy.amount import Amount
-from steempy.asset import Asset
-from steempy.instance import set_shared_steem_instance, SharedInstance
+from beem import Steem
+from beem.amount import Amount
+from beem.asset import Asset
+from beem.instance import set_shared_steem_instance, SharedInstance
 nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
          "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
          "wss://steemd.minnowsupportproject.org"]

@@ -2,10 +2,10 @@ import json
 import logging
 
 from datetime import datetime, timedelta
-from steempyapi.steemnoderpc import SteemNodeRPC
-from steempyapi.exceptions import NoAccessApi
-from steempybase.account import PrivateKey, PublicKey
-from steempybase import transactions, operations
+from beemapi.steemnoderpc import SteemNodeRPC
+from beemapi.exceptions import NoAccessApi
+from beembase.account import PrivateKey, PublicKey
+from beembase import transactions, operations
 from .asset import Asset
 from .account import Account
 from .amount import Amount
@@ -83,7 +83,7 @@ class Steem(object):
 
         .. code-block:: python
 
-            from steempy import Steem
+            from beem import Steem
             steem = Steem()
             print(steem.info())
 
@@ -179,7 +179,7 @@ class Steem(object):
     @property
     def chain_params(self):
         if self.offline:
-            from steempybase.chains import known_chains
+            from beembase.chains import known_chains
             return known_chains["STEEM"]
         else:
             return self.rpc.chain_params
@@ -221,8 +221,8 @@ class Steem(object):
                 posting permission. Neither can you use different
                 accounts for different operations!
 
-            ... note:: This uses ``steempy.txbuffer`` as instance of
-                :class:`steempy.transactionbuilder.TransactionBuilder`.
+            ... note:: This uses ``beem.txbuffer`` as instance of
+                :class:`beem.transactionbuilder.TransactionBuilder`.
                 You may want to use your own txbuffer
         """
         if "append_to" in kwargs and kwargs["append_to"]:
@@ -295,10 +295,10 @@ class Steem(object):
     # -------------------------------------------------------------------------
     def newWallet(self, pwd):
         """ Create a new wallet. This method is basically only calls
-            :func:`steempy.wallet.create`.
+            :func:`beem.wallet.create`.
 
             :param str pwd: Password to use for the new wallet
-            :raises steempy.exceptions.WalletExists: if there is already a
+            :raises beem.exceptions.WalletExists: if there is already a
                 wallet created
         """
         return self.wallet.create(pwd)
@@ -404,7 +404,7 @@ class Steem(object):
         """ Create new account on Steem
 
             The brainkey/password can be used to recover all generated keys
-            (see `steempybase.account` for more details.
+            (see `beembase.account` for more details.
 
             By default, this call will use ``default_account`` to
             register a new name ``account_name`` with all keys being
@@ -465,7 +465,7 @@ class Steem(object):
         # creator = Account(creator, steem_instance=self)
 
         " Generate new keys from password"
-        from steempybase.account import PasswordKey, PublicKey
+        from beembase.account import PasswordKey, PublicKey
         if password:
             active_key = PasswordKey(account_name, password, role="active")
             owner_key = PasswordKey(account_name, password, role="owner")

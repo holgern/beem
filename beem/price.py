@@ -1,5 +1,5 @@
 from fractions import Fraction
-from steempy.instance import shared_steem_instance
+from beem.instance import shared_steem_instance
 from .exceptions import InvalidAssetException
 from .account import Account
 from .amount import Amount
@@ -14,7 +14,7 @@ class Price(dict):
 
             (quote, base)
 
-        each being an instance of :class:`steempy.amount.Amount`. The
+        each being an instance of :class:`beem.amount.Amount`. The
         amount themselves define the price.
 
         .. note::
@@ -22,23 +22,23 @@ class Price(dict):
             The price (floating) is derived as ``base/quote``
 
         :param list args: Allows to deal with different representations of a price
-        :param steempy.asset.Asset base: Base asset
-        :param steempy.asset.Asset quote: Quote asset
-        :param steempy.steem.Steem steem_instance: Steem instance
+        :param beem.asset.Asset base: Base asset
+        :param beem.asset.Asset quote: Quote asset
+        :param beem.steem.Steem steem_instance: Steem instance
         :returns: All data required to represent a price
         :rtype: dict
 
         Way to obtain a proper instance:
 
             * ``args`` is a str with a price and two assets
-            * ``args`` can be a floating number and ``base`` and ``quote`` being instances of :class:`steempy.asset.Asset`
+            * ``args`` can be a floating number and ``base`` and ``quote`` being instances of :class:`beem.asset.Asset`
             * ``args`` can be a floating number and ``base`` and ``quote`` being instances of ``str``
             * ``args`` can be dict with keys ``price``, ``base``, and ``quote`` (*graphene balances*)
             * ``args`` can be dict with keys ``base`` and ``quote``
             * ``args`` can be dict with key ``receives`` (filled orders)
-            * ``args`` being a list of ``[quote, base]`` both being instances of :class:`steempy.amount.Amount`
+            * ``args`` being a list of ``[quote, base]`` both being instances of :class:`beem.amount.Amount`
             * ``args`` being a list of ``[quote, base]`` both being instances of ``str`` (``amount symbol``)
-            * ``base`` and ``quote`` being instances of :class:`steempy.asset.Amount`
+            * ``base`` and ``quote`` being instances of :class:`beem.asset.Amount`
 
         This allows instanciations like:
 
@@ -56,7 +56,7 @@ class Price(dict):
 
         .. code-block:: python
 
-            >>> from steempy.price import Price
+            >>> from beem.price import Price
             >>> Price("0.3314 SBD/STEEM") * 2
             0.662600000 SBD/STEEM
 

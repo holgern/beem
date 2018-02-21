@@ -1,10 +1,10 @@
 import logging
 from events import Events
-from steempyapi.websocket import SteemWebsocket
-from steempy.instance import shared_steem_instance
-from steempy.blockchain import Blockchain
-from steempy.price import Order, FilledOrder, UpdateCallOrder
-from steempy.account import AccountUpdate
+from beemapi.websocket import SteemWebsocket
+from beem.instance import shared_steem_instance
+from beem.blockchain import Blockchain
+from beem.price import Order, FilledOrder, UpdateCallOrder
+from beem.account import AccountUpdate
 log = logging.getLogger(__name__)
 # logging.basicConfig(level=logging.DEBUG)
 
@@ -16,14 +16,14 @@ class Notify(Events):
         :param fnt on_tx: Callback that will be called for each transaction received
         :param fnt on_block: Callback that will be called for each block received
         :param fnt on_account: Callback that will be called for changes of the listed accounts
-        :param steempy.steem.Steem steem_instance: Steem instance
+        :param beem.steem.Steem steem_instance: Steem instance
 
         **Example**
 
         .. code-block:: python
 
             from pprint import pprint
-            from steempy.notify import Notify
+            from beem.notify import Notify
 
             notify = Notify(
                 accounts=["test"],
@@ -67,7 +67,7 @@ class Notify(Events):
 
     def process_account(self, message):
         """ This is used for processing of account Updates. It will
-            return instances of :class:steempy.account.AccountUpdate`
+            return instances of :class:beem.account.AccountUpdate`
         """
         self.on_account(AccountUpdate(
             message,

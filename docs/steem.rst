@@ -7,5 +7,5 @@ the related blockchain technology and cryptography. This library can be
 used to do anything that is allowed according to the Steem
 blockchain protocol.
 
-.. autoclass:: steempy.steem.Steem
+.. autoclass:: beem.steem.Steem
    :members:

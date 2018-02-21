@@ -1,8 +1,8 @@
 import unittest
-from steempy import Steem
-from steempy.asset import Asset
-from steempy.instance import set_shared_steem_instance
-from steempy.exceptions import AssetDoesNotExistsException
+from beem import Steem
+from beem.asset import Asset
+from beem.instance import set_shared_steem_instance
+from beem.exceptions import AssetDoesNotExistsException
 nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
          "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
          "wss://steemd.minnowsupportproject.org"]

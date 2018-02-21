@@ -1,9 +1,9 @@
 import unittest
 import mock
-from steempy import Steem
-from steempy.message import Message
-from steempy.account import Account
-from steempy.instance import set_shared_steem_instance
+from beem import Steem
+from beem.message import Message
+from beem.account import Account
+from beem.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 core_unit = "STM"
@@ -35,7 +35,7 @@ class Testcases(unittest.TestCase):
                 })
 
         with mock.patch(
-            "steempy.account.Account.refresh",
+            "beem.account.Account.refresh",
             new=new_refresh
         ):
             account = Account("test")
@@ -54,7 +54,7 @@ class Testcases(unittest.TestCase):
                 })
 
         with mock.patch(
-            "steempy.account.Account.refresh",
+            "beem.account.Account.refresh",
             new=new_refresh
         ):
             Message(

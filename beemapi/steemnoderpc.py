@@ -7,7 +7,7 @@ import json
 import time
 from itertools import cycle
 from grapheneapi.graphenewsrpc import GrapheneWebsocketRPC
-from steempybase.chains import known_chains
+from beembase.chains import known_chains
 from . import exceptions
 import logging
 log = logging.getLogger(__name__)

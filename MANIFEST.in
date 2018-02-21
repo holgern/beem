@@ -5,9 +5,9 @@ include *.txt
 include MANIFEST.in
 
 # All source files
-recursive-include steempy *
-recursive-include steempybase *
-recursive-include steempyapi *
+recursive-include beem *
+recursive-include beembase *
+recursive-include beemapi *
 # All documentation
 recursive-include docs *
 # recursive-include demo *

@@ -14,7 +14,7 @@ executed in the same order as they are added to the transaction.
 .. code-block:: python
 
   from pprint import pprint
-  from steempy import Steem
+  from beem import Steem
 
   testnet = Steem(
       "wss://testnet.steem.vc",
@@ -43,7 +43,7 @@ attribute:
 .. code-block:: python
 
   from pprint import pprint
-  from steempy import Steem
+  from beem import Steem
 
   testnet = Steem(
       "wss://testnet.steem.vc",
@@ -57,10 +57,10 @@ Simple Sell Script
 
 .. code-block:: python
 
-    from steempy import Steem
-    from steempy.market import Market
-    from steempy.price import Price
-    from steempy.amount import Amount
+    from beem import Steem
+    from beem.market import Market
+    from beem.price import Price
+    from beem.amount import Amount
 
     #
     # Instanciate Steem (pick network via API node)
@@ -100,10 +100,10 @@ Sell at a timely rate
 .. code-block:: python
 
     import threading
-    from steempy import Steem
-    from steempy.market import Market
-    from steempy.price import Price
-    from steempy.amount import Amount
+    from beem import Steem
+    from beem.market import Market
+    from beem.price import Price
+    from beem.amount import Amount
 
 
     def sell():

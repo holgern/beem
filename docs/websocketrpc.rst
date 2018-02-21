@@ -7,5 +7,5 @@ websockets.
 
 Defintion
 =========
-.. autoclass:: steempyapi.steemnoderpc.SteemNodeRPC
+.. autoclass:: beemapi.steemnoderpc.SteemNodeRPC
     :members: rpcexec, __getattr__

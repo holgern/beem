@@ -1,5 +1,5 @@
 Utilities
 ~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: steempy.utils
+.. autoclass:: beem.utils
    :members:

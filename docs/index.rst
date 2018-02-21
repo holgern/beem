@@ -9,7 +9,7 @@
    http://openalea.gforge.inria.fr/doc/openalea/doc/_build/html/source/sphinx/rest_syntax.html
    http://rest-sphinx-memo.readthedocs.org/en/latest/ReST.html
 
-Welcome to steempy's documentation!
+Welcome to beem's documentation!
 ===============================================
 
 Steem is a blockchain-based rewards platform for publishers to monetize 
@@ -23,7 +23,7 @@ content.
 About this Library
 ------------------
 
-The purpose of *steempy* is to simplify development of products and
+The purpose of *beem* is to simplify development of products and
 services that use the Steem blockchain. It comes with
 
 * it's own (bip32-encrypted) wallet
@@ -51,26 +51,26 @@ Quickstart
 
 .. code-block:: python
 
-   from steempy import Steem
+   from beem import Steem
    steem = Steem()
    steem.wallet.unlock("wallet-passphrase")
    steem.transfer("<to>", "<amount>", "<asset>", "<memo>", account="<from>")
 
 .. code-block:: python
 
-   from steempy.blockchain import Blockchain
+   from beem.blockchain import Blockchain
    blockchain = Blockchain()
    for op in Blockchain.ops():
        print(op)
 
 .. code-block:: python
 
-   from steempy.block import Block
+   from beem.block import Block
    print(Block(1))
 
 .. code-block:: python
 
-   from steempy.account import Account
+   from beem.account import Account
    account = Account("test")
    print(account.balances)
    for h in account.history():
@@ -78,7 +78,7 @@ Quickstart
 
 .. code-block:: python
 
-   from steempy.market import Market
+   from beem.market import Market
    # Not working at the moment
    # market = Market("STEEM:SBD")
    # print(market.ticker())
@@ -87,7 +87,7 @@ Quickstart
 
 .. code-block:: python
 
-   from steempy.dex import Dex
+   from beem.dex import Dex
    # not working at the moment
    # dex = Dex()
    # dex.steem.wallet.unlock("wallet-passphrase")
@@ -105,7 +105,7 @@ General
    contribute
    support
 
-steempy Libraries
+beem Libraries
 --------------------------
 
 .. toctree::

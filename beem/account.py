@@ -1,4 +1,4 @@
-from steempy.instance import shared_steem_instance
+from beem.instance import shared_steem_instance
 from .exceptions import AccountDoesNotExistsException
 from .blockchainobject import BlockchainObject
 from .utils import formatTimeString
@@ -18,7 +18,7 @@ class Account(BlockchainObject):
                etc.
         :returns: Account data
         :rtype: dictionary
-        :raises steempy.exceptions.AccountDoesNotExistsException: if account
+        :raises beem.exceptions.AccountDoesNotExistsException: if account
                 does not exist
 
         Instances of this class are dictionaries that come with additional
@@ -27,7 +27,7 @@ class Account(BlockchainObject):
 
         .. code-block:: python
 
-            from steempy.account import Account
+            from beem.account import Account
             account = Account("test")
             print(account)
 
@@ -257,7 +257,7 @@ class Account(BlockchainObject):
 
 class AccountUpdate(dict):
     """ This purpose of this class is to keep track of account updates
-        as they are pushed through by :class:`steempy.notify.Notify`.
+        as they are pushed through by :class:`beem.notify.Notify`.
 
         Instances of this class are dictionaries and take the following
         form:

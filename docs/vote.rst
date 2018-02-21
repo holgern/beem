@@ -5,10 +5,10 @@ Read data about a vote
 
 .. code-block:: python
 
-   from steempy.vote import Vote
+   from beem.vote import Vote
    Witness("gtg")
 
-.. autoclass:: steempy.vote.Vote
+.. autoclass:: beem.vote.Vote
    :members:
 
 

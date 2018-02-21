@@ -1,4 +1,4 @@
-from steempy.instance import shared_steem_instance
+from beem.instance import shared_steem_instance
 from datetime import datetime, timedelta
 import json
 

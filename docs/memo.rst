@@ -58,8 +58,8 @@ for the corresponding accounts.
 
 .. code-block:: python
 
-    from steempy.memo import Memo
-    from steempy.account import Account
+    from beem.memo import Memo
+    from beem.account import Account
 
     memoObj = Memo(
         from_account=Account(from_account),
@@ -73,8 +73,8 @@ Decoding of a received memo
 .. code-block:: python
 
      from getpass import getpass
-     from steempy.block import Block
-     from steempy.memo import Memo
+     from beem.block import Block
+     from beem.memo import Memo
 
      # Obtain a transfer from the blockchain
      block = Block(23755086)                   # block
@@ -96,5 +96,5 @@ Decoding of a received memo
 API
 ###
 
-.. automodule:: steempybase.memo
+.. automodule:: beembase.memo
     :members:

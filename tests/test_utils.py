@@ -1,5 +1,5 @@
 import unittest
-from steempy.utils import (
+from beem.utils import (
     assets_from_string,
     resolve_authorperm,
     resolve_authorpermvoter,

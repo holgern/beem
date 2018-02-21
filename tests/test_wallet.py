@@ -1,13 +1,13 @@
 import unittest
 import mock
 from pprint import pprint
-from steempy import Steem
-from steempy.account import Account
-from steempy.amount import Amount
-from steempy.asset import Asset
-from steempy.wallet import Wallet
-from steempy.instance import set_shared_steem_instance
-from steempybase.operationids import getOperationNameForId
+from beem import Steem
+from beem.account import Account
+from beem.amount import Amount
+from beem.asset import Asset
+from beem.wallet import Wallet
+from beem.instance import set_shared_steem_instance
+from beembase.operationids import getOperationNameForId
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",

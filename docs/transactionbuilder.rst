@@ -5,8 +5,8 @@ To build your own transactions and sign them
 
 .. code-block:: python
 
-   from steempy.transactionbuilder import TransactionBuilder
-   from steempybase.operations import Transfer
+   from beem.transactionbuilder import TransactionBuilder
+   from beembase.operations import Transfer
    tx = TransactionBuilder()
    tx.appendOps(Transfer(**{
             "from": "test",
@@ -18,5 +18,5 @@ To build your own transactions and sign them
    tx.sign()
    tx.broadcast()
 
-.. autoclass:: steempy.transactionbuilder.TransactionBuilder
+.. autoclass:: beem.transactionbuilder.TransactionBuilder
    :members:

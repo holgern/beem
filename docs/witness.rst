@@ -5,24 +5,24 @@ Read data about a witness
 
 .. code-block:: python
 
-   from steempy.witness import Witness
+   from beem.witness import Witness
    Witness("gtg")
 
-.. autoclass:: steempy.witness.Witness
+.. autoclass:: beem.witness.Witness
    :members:
 
-.. autoclass:: steempy.witness.Witnesses
+.. autoclass:: beem.witness.Witnesses
    :members:
 
-.. autoclass:: steempy.witness.WitnessesVotedByAccount
+.. autoclass:: beem.witness.WitnessesVotedByAccount
    :members:
    
-.. autoclass:: steempy.witness.WitnessesRankedByVote
+.. autoclass:: beem.witness.WitnessesRankedByVote
    :members:
    
-.. autoclass:: steempy.witness.WitnessesByIds
+.. autoclass:: beem.witness.WitnessesByIds
    :members:
    
-.. autoclass:: steempy.witness.LookupWitnesses
+.. autoclass:: beem.witness.LookupWitnesses
    :members:
    

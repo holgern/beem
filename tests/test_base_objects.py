@@ -1,8 +1,8 @@
 import unittest
-from steempy import Steem, exceptions
-from steempy.instance import set_shared_steem_instance
-from steempy.account import Account
-from steempy.witness import Witness
+from beem import Steem, exceptions
+from beem.instance import set_shared_steem_instance
+from beem.account import Account
+from beem.witness import Witness
 nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
          "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
          "wss://steemd.minnowsupportproject.org"]

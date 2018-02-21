@@ -1,15 +1,15 @@
 from .account import Account
-from steempybase.objects import Operation
-from steempybase.account import PrivateKey, PublicKey
-from steempybase.signedtransactions import Signed_Transaction
-from steempybase import transactions, operations
+from beembase.objects import Operation
+from beembase.account import PrivateKey, PublicKey
+from beembase.signedtransactions import Signed_Transaction
+from beembase import transactions, operations
 from .exceptions import (
     InsufficientAuthorityError,
     MissingKeyError,
     InvalidWifError,
     WalletLocked
 )
-from steempy.instance import shared_steem_instance
+from beem.instance import shared_steem_instance
 import logging
 log = logging.getLogger(__name__)
 

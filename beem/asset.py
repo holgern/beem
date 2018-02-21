@@ -1,6 +1,6 @@
 import json
-from steempy.account import Account
-from steempybase import operations
+from beem.account import Account
+from beembase import operations
 
 from .exceptions import AssetDoesNotExistsException
 from .blockchainobject import BlockchainObject
@@ -12,7 +12,7 @@ class Asset(BlockchainObject):
         :param str Asset: Symbol name or object id of an asset
         :param bool lazy: Lazy loading
         :param bool full: Also obtain bitasset-data and dynamic asset dat
-        :param steempy.steem.Steem steem_instance: Steem
+        :param beem.steem.Steem steem_instance: Steem
             instance
         :returns: All data of an asset
         :rtype: dict

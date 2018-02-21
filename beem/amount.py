@@ -1,4 +1,4 @@
-from steempy.instance import shared_steem_instance
+from beem.instance import shared_steem_instance
 from .asset import Asset
 
 
@@ -21,14 +21,14 @@ class Amount(dict):
             * ``args`` can be a dictionary containing ``amount`` and ``asset_id``
             * ``args`` can be a dictionary containing ``amount`` and ``asset``
             * ``args`` can be a list of a ``float`` and ``str`` (symbol)
-            * ``args`` can be a list of a ``float`` and a :class:`steempy.asset.Asset`
+            * ``args`` can be a list of a ``float`` and a :class:`beem.asset.Asset`
             * ``amount`` and ``asset`` are defined manually
 
         An instance is a dictionary and comes with the following keys:
 
             * ``amount`` (float)
             * ``symbol`` (str)
-            * ``asset`` (instance of :class:`steempy.asset.Asset`)
+            * ``asset`` (instance of :class:`beem.asset.Asset`)
 
         Instances of this class can be used in regular mathematical expressions
         (``+-*/%``) such as:

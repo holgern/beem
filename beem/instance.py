@@ -1,4 +1,4 @@
-import steempy as stm
+import beem as stm
 
 
 class SharedInstance():

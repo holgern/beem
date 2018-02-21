@@ -1,5 +1,5 @@
 Market
 ~~~~~~~
 
-.. autoclass:: steempy.market.Market
+.. autoclass:: beem.market.Market
     :members:

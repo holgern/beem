@@ -1,7 +1,7 @@
-from steempy.instance import shared_steem_instance
+from beem.instance import shared_steem_instance
 import random
-from steempybase import memo as BtsMemo
-from steempybase.account import PrivateKey, PublicKey
+from beembase import memo as BtsMemo
+from beembase.account import PrivateKey, PublicKey
 from .account import Account
 from .exceptions import MissingKeyError, KeyNotFound
 
@@ -9,9 +9,9 @@ from .exceptions import MissingKeyError, KeyNotFound
 class Memo(object):
     """ Deals with Memos that are attached to a transfer
 
-        :param steempy.account.Account from_account: Account that has sent the memo
-        :param steempy.account.Account to_account: Account that has received the memo
-        :param steempy.steem.Steem steem_instance: Steem instance
+        :param beem.account.Account from_account: Account that has sent the memo
+        :param beem.account.Account to_account: Account that has received the memo
+        :param beem.steem.Steem steem_instance: Steem instance
 
         A memo is encrypted with a shared secret derived from a private key of
         the sender and a public key of the receiver. Due to the underlying
@@ -21,7 +21,7 @@ class Memo(object):
 
         .. code-block:: python
 
-            from steempy.memo import Memo
+            from beem.memo import Memo
             m = Memo("steemeu", "wallet.xeroc")
             m.steem.wallet.unlock("secret")
             enc = (m.encrypt("foobar"))
@@ -34,7 +34,7 @@ class Memo(object):
 
         .. code-block:: python
 
-            from steempy.memo import Memo
+            from beem.memo import Memo
             m = Memo()
             m.steem.wallet.unlock("secret")
             print(memo.decrypt(op_data["memo"]))

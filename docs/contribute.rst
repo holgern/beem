@@ -8,7 +8,7 @@ Repository
 
 The *main* repository of python-steem is currently located at:
 
-    https://github.com/holgern/steempy
+    https://github.com/holgern/beem
 
 Flow
 ----

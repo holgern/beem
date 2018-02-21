@@ -1,7 +1,7 @@
 import unittest
-from steempy import Steem
-from steempybase import operations
-from steempy.instance import set_shared_steem_instance
+from beem import Steem
+from beembase import operations
+from beem.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",

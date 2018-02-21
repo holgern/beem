@@ -7,7 +7,7 @@ class Block(BlockchainObject):
     """ Read a single block from the chain
 
         :param int block: block number
-        :param steempy.steem.Steem steem_instance: Steem
+        :param beem.steem.Steem steem_instance: Steem
             instance
         :param bool lazy: Use lazy loading
 
@@ -17,7 +17,7 @@ class Block(BlockchainObject):
 
         .. code-block:: python
 
-            from steempy.block import Block
+            from beem.block import Block
             block = Block(1)
             print(block)
 
@@ -51,8 +51,8 @@ class Block(BlockchainObject):
 
     def ops_statistics(self, add_to_ops_stat=None):
         if add_to_ops_stat is None:
-            import steempybase.operationids
-            ops_stat = steempybase.operationids.operations.copy()
+            import beembase.operationids
+            ops_stat = beembase.operationids.operations.copy()
             for key in ops_stat:
                 ops_stat[key] = 0
         else:

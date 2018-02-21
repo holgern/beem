@@ -8,7 +8,7 @@ A new wallet can be created by using:
 
 .. code-block:: python
 
-   from steempy import Steem
+   from beem import Steem
    steem = Steem()
    steem.wallet.create("supersecret-passphrase")
 
@@ -21,7 +21,7 @@ The wallet can be unlocked for signing using
 
 .. code-block:: python
 
-   from steempy import Steem
+   from beem import Steem
    steem = Steem()
    steem.wallet.unlock("supersecret-passphrase")
 
@@ -34,7 +34,7 @@ A private key can be added by using the
 
 .. code-block:: python
 
-   from steempy import Steem
+   from beem import Steem
    steem = Steem()
    steem.wallet.unlock("supersecret-passphrase")
    steem.wallet.addPrivateKey("5xxxxxxxxxxxxxxxxxxxx")
@@ -45,5 +45,5 @@ A private key can be added by using the
 API
 ---
 
-.. autoclass:: steempy.wallet.Wallet
+.. autoclass:: beem.wallet.Wallet
    :members:

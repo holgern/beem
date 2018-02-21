@@ -1,14 +1,14 @@
 import time
 from .block import Block
-from steempy.instance import shared_steem_instance
-from steempybase.operationids import getOperationNameForId
+from beem.instance import shared_steem_instance
+from beembase.operationids import getOperationNameForId
 
 
 class Blockchain(object):
     """ This class allows to access the blockchain and read data
         from it
 
-        :param steempy.steem.Steem steem_instance: Steem
+        :param beem.steem.Steem steem_instance: Steem
                  instance
         :param str mode: (default) Irreversible block (``irreversible``) or
                  actual head block (``head``)
@@ -201,8 +201,8 @@ class Blockchain(object):
             This call returns a dict with all possible operations and their occurence.
         """
         if add_to_ops_stat is None:
-            import steempybase.operationids
-            ops_stat = steempybase.operationids.operations.copy()
+            import beembase.operationids
+            ops_stat = beembase.operationids.operations.copy()
             for key in ops_stat:
                 ops_stat[key] = 0
         else:

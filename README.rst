@@ -1,24 +1,24 @@
-steempy - Unofficial Python 3 Library for Steem
+beem - Unofficial Python 3 Library for Steem
 ===============================================
 
 !!!Alpha-State, be carefull!!!
 
 steemi is an unofficial python 3 library for steem, which is created new from scratch from https://github.com/xeroc/python-bitshares.
 
-.. image:: https://travis-ci.org/holgern/steempy.svg?branch=master
-    :target: https://travis-ci.org/holgern/steempy
+.. image:: https://travis-ci.org/holgern/beem.svg?branch=master
+    :target: https://travis-ci.org/holgern/beem
 
 .. image:: https://ci.appveyor.com/api/projects/status/lnk5385dv0c2j28l?svg=true
-    :target: https://ci.appveyor.com/project/holger80/steempy
+    :target: https://ci.appveyor.com/project/holger80/beem
 
-.. image:: https://circleci.com/gh/holgern/steempy.svg?style=svg
-    :target: https://circleci.com/gh/holgern/steempy
+.. image:: https://circleci.com/gh/holgern/beem.svg?style=svg
+    :target: https://circleci.com/gh/holgern/beem
 
-.. image:: https://codecov.io/gh/holgern/steempy/branch/master/graph/badge.svg
-  :target: https://codecov.io/gh/holgern/steempy
+.. image:: https://codecov.io/gh/holgern/beem/branch/master/graph/badge.svg
+  :target: https://codecov.io/gh/holgern/beem
   
-.. image:: https://readthedocs.org/projects/steempy/badge/?version=latest
-  :target: http://steempy.readthedocs.org/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/beem/badge/?version=latest
+  :target: http://beem.readthedocs.org/en/latest/?badge=latest
 
 Installation
 ============
@@ -40,15 +40,15 @@ For OSX, please do the following::
     export CFLAGS="-I$(brew --prefix openssl)/include $CFLAGS"
     export LDFLAGS="-L$(brew --prefix openssl)/lib $LDFLAGS"
     
-Install steempy by pip::
+Install beem by pip::
 
-    pip install -U steempy
+    pip install -U beem
     
-You can install steempy from this repository if you want the latest
+You can install beem from this repository if you want the latest
 but possibly non-compiling version::
 
-    git clone https://github.com/holgern/steempy.git
-    cd steempy
+    git clone https://github.com/holgern/beem.git
+    cd beem
     python setup.py build
     
     python setup.py install --user
@@ -59,7 +59,7 @@ Run tests after install::
 
 Documentation
 =============
-Documentation is available at http://steempy.readthedocs.io/en/latest/
+Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
@@ -83,7 +83,7 @@ Changelog
 * Replaced all BitShares by Steem
 * Flake8 fixed
 * Unit tests are working
-* renamed to steempy
+* renamed to beem
 * Docs fixed
 * Signing fixed
 * pysteem: Account, Amount, Asset, Block, Blockchain, Instance, Memo, Message, Notify, Price, Steem, Transactionbuilder, Vote, Witness are working

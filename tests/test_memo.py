@@ -1,8 +1,8 @@
 import unittest
 import os
 from pprint import pprint
-from steempybase.account import BrainKey, Address, PublicKey, PrivateKey
-from steempybase.memo import (
+from beembase.account import BrainKey, Address, PublicKey, PrivateKey
+from beembase.memo import (
     get_shared_secret,
     _pad,
     _unpad,

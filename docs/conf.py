@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# steempy documentation build configuration file, created by
+# beem documentation build configuration file, created by
 # sphinx-quickstart on Fri Jun  5 14:06:38 2015.
 #
 # This file is execfile()d with the current directory set to its
@@ -48,7 +48,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'steempy'
+project = 'beem'
 copyright = '2017, ChainSquad GmbH, 2018, Holger Nahrstaedt'
 author = 'Holger Nahrstaedt'
 
@@ -202,7 +202,7 @@ html_static_path = ['_static']
 #html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'steempydoc'
+htmlhelp_basename = 'beemdoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -224,7 +224,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'steempy.tex', 'steempy Documentation',
+  (master_doc, 'beem.tex', 'beem Documentation',
    author, 'manual'),
 ]
 
@@ -254,7 +254,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'steempy', 'steempy Documentation',
+    (master_doc, 'beem', 'beem Documentation',
      [author], 1)
 ]
 
@@ -268,8 +268,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'steempy', 'steempy Documentation',
-   author, 'steempy', 'One line description of project.',
+  (master_doc, 'beem', 'beem Documentation',
+   author, 'beem', 'One line description of project.',
    'Miscellaneous'),
 ]
 

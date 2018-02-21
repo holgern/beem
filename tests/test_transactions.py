@@ -1,4 +1,4 @@
-from steempybase import (
+from beembase import (
     transactions,
     memo,
     account,
@@ -6,12 +6,12 @@ from steempybase import (
     objects
 )
 from collections import OrderedDict
-from steempybase.objects import Operation
-from steempybase.signedtransactions import Signed_Transaction
-from steempybase.account import PrivateKey
-from steempybase.operationids import getOperationNameForId
-from steempy.amount import Amount
-from steempy.asset import Asset
+from beembase.objects import Operation
+from beembase.signedtransactions import Signed_Transaction
+from beembase.account import PrivateKey
+from beembase.operationids import getOperationNameForId
+from beem.amount import Amount
+from beem.asset import Asset
 import random
 import unittest
 from pprint import pprint

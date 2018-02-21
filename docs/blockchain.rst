@@ -5,7 +5,7 @@ Read blockchain related data-
 
 .. code-block:: python
 
-   from steempy.blockchain import Blockchain
+   from beem.blockchain import Blockchain
    chain = Blockchain()
 
 Read current block and blockchain info
@@ -29,5 +29,5 @@ Monitor for new blocks ..
    for operations in chain.ops():
        print(operations)
 
-.. autoclass:: steempy.blockchain.Blockchain
+.. autoclass:: beem.blockchain.Blockchain
    :members:
