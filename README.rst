@@ -3,12 +3,12 @@ beem - Unofficial Python 3 Library for Steem
 
 !!!Alpha-State, be carefull!!!
 
-steemi is an unofficial python 3 library for steem, which is created new from scratch from https://github.com/xeroc/python-bitshares.
+beem is an unofficial python 3 library for steem, which is created new from scratch from https://github.com/xeroc/python-bitshares.
 
 .. image:: https://travis-ci.org/holgern/beem.svg?branch=master
     :target: https://travis-ci.org/holgern/beem
 
-.. image:: https://ci.appveyor.com/api/projects/status/lnk5385dv0c2j28l?svg=true
+.. image:: https://ci.appveyor.com/api/projects/status/ig8oqp8bt2fmr09a?svg=true
     :target: https://ci.appveyor.com/project/holger80/beem
 
 .. image:: https://circleci.com/gh/holgern/beem.svg?style=svg
