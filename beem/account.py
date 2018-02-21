@@ -216,7 +216,9 @@ class Account(BlockchainObject):
         )
         if not mostrecent:
             return
-
+        if limit < 2:
+            yield mostrecent
+            return
         first = int(mostrecent[0][0])
 
         while True:
