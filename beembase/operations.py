@@ -241,8 +241,7 @@ class Comment(GrapheneObject):
                 kwargs = args[0]
             meta = ""
             if "json_metadata" in kwargs and kwargs["json_metadata"]:
-                if (isinstance(kwargs["json_metadata"], dict) or
-                    isinstance(kwargs["json_metadata"], list)):
+                if (isinstance(kwargs["json_metadata"], dict) or isinstance(kwargs["json_metadata"], list)):
                     meta = json.dumps(kwargs["json_metadata"])
                 else:
                     meta = kwargs["json_metadata"]
@@ -267,8 +266,7 @@ class Custom_json(GrapheneObject):
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
             if "json" in kwargs and kwargs["json"]:
-                if (isinstance(kwargs["json"], dict) or
-                    isinstance(kwargs["json"], list)):
+                if (isinstance(kwargs["json"], dict) or isinstance(kwargs["json"], list)):
                     js = json.dumps(kwargs["json"])
                 else:
                     js = kwargs["json"]
