@@ -19,7 +19,7 @@ VERSION = '0.19.3'
 
 def write_version_py(filename):
     cnt = """
-# THIS FILE IS GENERATED FROM stempy SETUP.PY
+# THIS FILE IS GENERATED FROM beem SETUP.PY
 version = '%(version)s'
 """
     with open(filename, 'w') as a:
