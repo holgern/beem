@@ -178,6 +178,15 @@ class Wallet():
         self.masterpassword = self.masterpwd.decrypted_master
         self.masterpwd.saveEncrytpedMaster()
 
+    def purgeWallet(self):
+        """ Purge all data in wallet database
+        """
+        if self.MasterPassword:
+            self.MasterPassword.purge(self.MasterPassword)
+        for key in self.keyStorage.getPublicKeys():
+            self.keyStorage.delete(key)
+        self.configStorage.delete(self.MasterPassword.config_key)
+
     def encrypt_wif(self, wif):
         """ Encrypt a wif key
         """

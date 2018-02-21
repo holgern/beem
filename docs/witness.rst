@@ -13,3 +13,16 @@ Read data about a witness
 
 .. autoclass:: steempy.witness.Witnesses
    :members:
+
+.. autoclass:: steempy.witness.WitnessesVotedByAccount
+   :members:
+   
+.. autoclass:: steempy.witness.WitnessesRankedByVote
+   :members:
+   
+.. autoclass:: steempy.witness.WitnessesByIds
+   :members:
+   
+.. autoclass:: steempy.witness.LookupWitnesses
+   :members:
+   

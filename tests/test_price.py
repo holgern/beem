@@ -4,8 +4,9 @@ from steempy.amount import Amount
 from steempy.price import Price
 from steempy.asset import Asset
 import unittest
-# steem_node = "wss://gtg.steem.house:8090"
-steem_node = "wss://steemd.pevo.science"
+nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
+         "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
+         "wss://steemd.minnowsupportproject.org"]
 
 
 class Testcases(unittest.TestCase):
@@ -13,7 +14,7 @@ class Testcases(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(Testcases, self).__init__(*args, **kwargs)
         steem = Steem(
-            steem_node,
+            nodes,
             nobroadcast=True,
         )
         set_shared_steem_instance(steem)

@@ -40,6 +40,29 @@ class Block(BlockchainObject):
         """
         return parse_time(self['timestamp'])
 
+    def ops(self):
+        ops = []
+        for tx in self["transactions"]:
+            for op in tx["operations"]:
+                # Replace opid by op name
+                # op[0] = getOperationNameForId(op[0])
+                ops.append(op)
+        return ops
+
+    def ops_statistics(self, add_to_ops_stat=None):
+        if add_to_ops_stat is None:
+            import steempybase.operationids
+            ops_stat = steempybase.operationids.operations.copy()
+            for key in ops_stat:
+                ops_stat[key] = 0
+        else:
+            ops_stat = add_to_ops_stat.copy()
+
+        for tx in self["transactions"]:
+            for op in tx["operations"]:
+                ops_stat[op[0]] += 1
+        return ops_stat
+
 
 class BlockHeader(BlockchainObject):
     def refresh(self):

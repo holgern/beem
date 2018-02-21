@@ -24,8 +24,6 @@ wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 ref_block_num = 34294
 ref_block_prefix = 3707022213
 expiration = "2016-04-06T08:29:27"
-# steem_node = "wss://gtg.steem.house:8090"
-steem_node = "wss://steemd.pevo.science"
 
 
 class Testcases(unittest.TestCase):

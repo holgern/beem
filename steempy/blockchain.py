@@ -29,27 +29,27 @@ class Blockchain(object):
         else:
             raise ValueError("invalid value for 'mode'!")
 
-    def info(self):
+    def get_dynamic_global_properties(self):
         """ This call returns the *dynamic global properties*
         """
         return self.steem.rpc.get_dynamic_global_properties()
 
-    def feed_history(self):
+    def get_feed_history(self):
         """ Returns the feed_history
         """
         return self.steem.rpc.get_feed_history()
 
-    def current_median_history_price(self):
+    def get_current_median_history_price(self):
         """ Returns the current median price
         """
         return self.steem.rpc.get_current_median_history_price()
 
-    def next_scheduled_hardfork(self):
+    def get_next_scheduled_hardfork(self):
         """ Returns Hardfork and live_time of the hardfork
         """
         return self.steem.rpc.get_next_scheduled_hardfork()
 
-    def hardfork_version(self):
+    def get_hardfork_version(self):
         """ Current Hardfork Version as String
         """
         return self.steem.rpc.get_hardfork_version()
@@ -63,12 +63,23 @@ class Blockchain(object):
         return self.steem.rpc.get_network()
 
     def get_chain_properties(self):
-        """ Return chain properties
+        """ Return witness elected chain properties
+
+            ::
+                {'account_creation_fee': '30.000 STEEM',
+                 'maximum_block_size': 65536,
+                 'sbd_interest_rate': 250}
+
         """
         return self.steem.rpc.get_chain_properties()
 
-    def config(self):
-        """ Returns config
+    def get_state(self, path="value"):
+        """ get_state
+        """
+        return self.steem.rpc.get_state(path)
+
+    def get_config(self):
+        """ Returns internal chain configuration.
         """
         return self.steem.rpc.get_config()
 
@@ -78,7 +89,7 @@ class Blockchain(object):
             .. note:: The block number returned depends on the ``mode`` used
                       when instanciating from this class.
         """
-        return self.info().get(self.mode)
+        return self.get_dynamic_global_properties().get(self.mode)
 
     def get_current_block(self):
         """ This call returns the current block
@@ -123,7 +134,7 @@ class Blockchain(object):
              confirmed by 2/3 of all block producers and is thus irreversible)
         """
         # Let's find out how often blocks are generated!
-        block_interval = self.config().get("STEEMIT_BLOCK_INTERVAL")
+        block_interval = self.get_config().get("STEEMIT_BLOCK_INTERVAL")
 
         if not start:
             start = self.get_current_block_num()
@@ -178,6 +189,36 @@ class Blockchain(object):
                         "op": op,
                         "timestamp": block["timestamp"]
                     }
+
+    def ops_statistics(self, start, stop=None, add_to_ops_stat=None, verbose=True):
+        """ Generates a statistics for all operations (including virtual operations) starting from
+            ``start``.
+
+            :param int start: Starting block
+            :param int stop: Stop at this block, if set to None, the current_block_num is taken
+            :param dict add_to_ops_stat, if set, the result is added to add_to_ops_stat
+            :param bool verbose, if True, the current block number and timestamp is printed
+            This call returns a dict with all possible operations and their occurence.
+        """
+        if add_to_ops_stat is None:
+            import steempybase.operationids
+            ops_stat = steempybase.operationids.operations.copy()
+            for key in ops_stat:
+                ops_stat[key] = 0
+        else:
+            ops_stat = add_to_ops_stat.copy()
+        current_block = self.get_current_block_num()
+        if start > current_block:
+            return
+        if stop is None:
+            stop = current_block
+        for block in self.blocks(start=start, stop=stop):
+            if verbose:
+                print(str(block["block_num"]) + " " + block["timestamp"])
+            for tx in block["transactions"]:
+                for op in tx["operations"]:
+                    ops_stat[op[0]] += 1
+        return ops_stat
 
     def stream(self, opNames=[], *args, **kwargs):
         """ Yield specific operations (e.g. comments) only

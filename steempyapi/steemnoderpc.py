@@ -21,14 +21,20 @@ class SteemNodeRPC(GrapheneWebsocketRPC):
 
     def __init__(self, *args, **kwargs):
         super(SteemNodeRPC, self).__init__(*args, **kwargs)
+        self.apis = kwargs.pop(
+            "apis",
+            ["database", "network_broadcast"]
+        )
         self.chain_params = self.get_network()
 
-    def register_apis(self):
-        return
-        # self.api_id["database"] = self.database(api_id=1)
-        # self.api_id["market_history"] = self.market_history(api_id=1)
-        # self.api_id["network_broadcast"] = self.network_broadcast(api_id=1)
-        # self.api_id["follow"] = self.follow(api_id=1)
+    def register_apis(self, apis=None):
+        if apis is None:
+            return
+        for api in (apis):
+            api = api.replace("_api", "")
+            self.api_id[api] = self.get_api_by_name("%s_api" % api, api_id=1)
+            if not self.api_id[api] and not isinstance(self.api_id[api], int):
+                raise exceptions.NoAccessApi("No permission to access %s API. " % api)
 
     def rpcexec(self, payload):
         """ Execute a call by sending the payload.

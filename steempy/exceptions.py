@@ -78,6 +78,18 @@ class WitnessDoesNotExistsException(Exception):
     pass
 
 
+class ContentDoesNotExistsException(Exception):
+    """ The content does not exist
+    """
+    pass
+
+
+class VoteDoesNotExistsException(Exception):
+    """ The vote does not exist
+    """
+    pass
+
+
 class WrongMasterPasswordException(Exception):
     """ The password provided could not properly unlock the wallet
     """

@@ -1,5 +1,6 @@
 from steempy.instance import shared_steem_instance
 from datetime import datetime, timedelta
+import json
 
 
 class ObjectCache(dict):
@@ -95,6 +96,12 @@ class BlockchainObject(dict):
             self[self.id_item] = str(data)
             # Set identifier again as it is overwritten in super() in refresh()
             self.identifier = data
+        elif isinstance(data, str):
+            self.identifier = data
+            if not lazy and not self.cached:
+                self.refresh()
+            self[self.id_item] = str(data)
+            self.identifier = data
         else:
             self.identifier = data
             if self.test_valid_objectid(self.identifier):
@@ -158,3 +165,6 @@ class BlockchainObject(dict):
     def __repr__(self):
         return "<%s %s>" % (
             self.__class__.__name__, str(self.identifier))
+
+    def json(self):
+        return json.loads(str(json.dumps(self)))

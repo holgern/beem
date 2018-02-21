@@ -63,6 +63,15 @@ Documentation is available at http://steempy.readthedocs.io/en/latest/
 
 Changelog
 =========
+
+0.19.3
+------
+* Add Comment/Post
+* Add Witness
+* Several bugfixes
+* Added all transactions that are supported from steem-python
+* New library name planned: beem
+
 0.19.2
 ------
 * Notify and websocket fixed

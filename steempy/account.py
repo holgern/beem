@@ -1,7 +1,10 @@
 from steempy.instance import shared_steem_instance
 from .exceptions import AccountDoesNotExistsException
 from .blockchainobject import BlockchainObject
+from .utils import formatTimeString
+from datetime import datetime
 import json
+import math
 
 
 class Account(BlockchainObject):
@@ -40,7 +43,7 @@ class Account(BlockchainObject):
         self,
         account,
         id_item="name",
-        full=False,
+        full=True,
         lazy=False,
         steem_instance=None
     ):
@@ -68,7 +71,7 @@ class Account(BlockchainObject):
             account = account[0]
         if not account:
             raise AccountDoesNotExistsException(self.identifier)
-        # self.identifier = account["id"]
+        self.identifier = account["name"]
 
         super(Account, self).__init__(account, id_item="name")
 
@@ -86,6 +89,22 @@ class Account(BlockchainObject):
         """ Returns the account profile
         """
         return json.loads(self["json_metadata"])["profile"]
+
+    @property
+    def rep(self):
+        return self.reputation()
+
+    def reputation(self, precision=2):
+        rep = int(self['reputation'])
+        if rep == 0:
+            return 25
+        score = (math.log10(abs(rep)) - 9) * 9 + 25
+        if rep < 0:
+            score = 50 - score
+        if precision is not None:
+            return round(score, precision)
+        else:
+            return score
 
     @property
     def available_balances(self):
@@ -173,24 +192,20 @@ class Account(BlockchainObject):
             self.refresh()
 
     def history(
-        self, first=None,
-        limit=100,
+        self, limit=100,
         only_ops=[], exclude_ops=[]
     ):
         """ Returns a generator for individual account transactions. The
             latest operation will be first. This call can be used in a
             ``for`` loop.
 
-            :param int first: sequence number of the first
-                transaction to return (*optional*)
-            :param int limit: limit number of transactions to
+            :param int/datetime limit: limit number of transactions to
                 return (*optional*)
             :param array only_ops: Limit generator by these
                 operations (*optional*)
             :param array exclude_ops: Exclude thse operations from
                 generator (*optional*)
         """
-        from steempybase.operations import getOperationNameForId
         _limit = 100
         cnt = 0
 
@@ -202,9 +217,7 @@ class Account(BlockchainObject):
         if not mostrecent:
             return
 
-        if not first:
-            # first = int(mostrecent[0].get("id").split(".")[2]) + 1
-            first = 9999999999
+        first = int(mostrecent[0][0])
 
         while True:
             # RPC call
@@ -213,21 +226,30 @@ class Account(BlockchainObject):
                 first,
                 _limit,
             )
-            for i in txs:
+            for i in reversed(txs):
                 if exclude_ops and i[1]["op"][0] in exclude_ops:
                     continue
                 if not only_ops or i[1]["op"][0] in only_ops:
                     cnt += 1
-                    yield i
-                    if limit >= 0 and cnt >= limit:
-                        return
-
+                    if isinstance(limit, datetime):
+                        timediff = limit - formatTimeString(i[1]["timestamp"])
+                        if timediff.total_seconds() > 0:
+                            return
+                        yield i
+                    else:
+                        yield i
+                        if limit >= 0 and cnt >= limit:
+                            return
             if not txs:
                 break
             if len(txs) < _limit:
                 break
             # first = int(txs[-1]["id"].split(".")[2])
-            first = txs[-1][1]["block"]
+            first = txs[0][0]
+            if first < 2:
+                break
+            if first < _limit:
+                _limit = first - 1
 
     # def upgrade(self):
     #    return self.steem.upgrade_account(account=self)

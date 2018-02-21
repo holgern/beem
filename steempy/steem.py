@@ -3,6 +3,7 @@ import logging
 
 from datetime import datetime, timedelta
 from steempyapi.steemnoderpc import SteemNodeRPC
+from steempyapi.exceptions import NoAccessApi
 from steempybase.account import PrivateKey, PublicKey
 from steempybase import transactions, operations
 from .asset import Asset
@@ -114,11 +115,11 @@ class Steem(object):
             kwargs["apis"] = [
                 "database",
                 "network_broadcast",
-                "market_history",
-                "follow",
-                "account_by_key",
-                "tag",
-                "raw_block"
+                # "market_history",
+                # "follow",
+                # "account_by_key",
+                # "tag",
+                # "raw_block"
             ]
 
         self.rpc = None
@@ -139,6 +140,12 @@ class Steem(object):
                          rpcuser=rpcuser,
                          rpcpassword=rpcpassword,
                          **kwargs)
+
+        # Try Optional APIs
+        try:
+            self.rpc.register_apis(["account_by_key", "follow"])
+        except NoAccessApi as e:
+            log.info(str(e))
 
         self.wallet = Wallet(self.rpc, **kwargs)
 

@@ -12,14 +12,13 @@
 Welcome to steempy's documentation!
 ===============================================
 
-Steem is a **blockchain-based autonomous company** (i.e. a DAC) that
-offers decentralized exchanging as well as sophisticated financial
-instruments as *products*.
+Steem is a blockchain-based rewards platform for publishers to monetize 
+content and grow community.
 
 It is based on *Graphene* (tm), a blockchain technology stack (i.e.
 software) that allows for fast transactions and ascalable blockchain
-solution. In case of Steem, it comes with decentralized trading of
-assets as well as customized on-chain smart contracts.
+solution. In case of Steem, it comes with decentralized publishing of
+content.
 
 About this Library
 ------------------

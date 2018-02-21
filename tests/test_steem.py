@@ -11,8 +11,9 @@ from steempy.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 core_unit = "STM"
-# steem_node = "wss://gtg.steem.house:8090"
-steem_node = "wss://steemd.pevo.science"
+nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
+         "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
+         "wss://steemd.minnowsupportproject.org"]
 
 
 class Testcases(unittest.TestCase):
@@ -21,7 +22,7 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
-            steem_node,
+            nodes,
             nobroadcast=True,
             keys={"active": wif, "owner": wif, "memo": wif},
         )

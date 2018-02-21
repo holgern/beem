@@ -14,5 +14,7 @@ __all__ = [
     "utils",
     "wallet",
     "vote",
-    "message"
+    "message",
+    "comment",
+    "discussions"
 ]

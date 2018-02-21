@@ -32,5 +32,9 @@ class UnhandledRPCError(RPCError):
     pass
 
 
+class NoAccessApi(RPCError):
+    pass
+
+
 class NumRetriesReached(Exception):
     pass

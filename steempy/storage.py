@@ -217,8 +217,11 @@ class Configuration(DataDir):
     __tablename__ = "config"
 
     #: Default configuration
+    nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
+             "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
+             "wss://steemd.minnowsupportproject.org"]
     config_defaults = {
-        "node": "wss://steemd.pevo.science",
+        "node": nodes,
         "rpcpassword": "",
         "rpcuser": "",
         "order-expiration": 7 * 24 * 60 * 60,

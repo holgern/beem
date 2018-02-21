@@ -10,9 +10,9 @@ def formatTime(t):
     """ Properly Format Time for permlinks
     """
     if isinstance(t, float):
-        return datetime.utcfromtimestamp(t).strftime(timeFormat)
+        return datetime.utcfromtimestamp(t).strftime("%Y%m%dt%H%M%S%Z")
     if isinstance(t, datetime):
-        return t.strftime(timeFormat)
+        return t.strftime("%Y%m%dt%H%M%S%Z")
 
 
 def formatTimeString(t):
@@ -50,6 +50,34 @@ def assets_from_string(text):
     return re.split(r'[\-:/]', text)
 
 
+def sanitize_permlink(permlink):
+    permlink = permlink.strip()
+    permlink = re.sub("_|\s|\.", "-", permlink)
+    permlink = re.sub("[^\w-]", "", permlink)
+    permlink = re.sub("[^a-zA-Z0-9-]", "", permlink)
+    permlink = permlink.lower()
+    return permlink
+
+
+def derive_permlink(title, parent_permlink=None, parent_author=None):
+    permlink = ""
+
+    if parent_permlink and parent_author:
+        permlink += "re-"
+        permlink += parent_author.replace("@", "")
+        permlink += "-"
+        permlink += parent_permlink
+        permlink += "-" + formatTime(time.time()) + "z"
+    elif parent_permlink:
+        permlink += "re-"
+        permlink += parent_permlink
+        permlink += "-" + formatTime(time.time()) + "z"
+    else:
+        permlink += title
+
+    return sanitize_permlink(permlink)
+
+
 def resolve_authorperm(identifier):
     """Correctly split a string containing an authorperm.
 
@@ -60,6 +88,68 @@ def resolve_authorperm(identifier):
     if not hasattr(match, "group"):
         raise ValueError("Invalid identifier")
     return match.group(1), match.group(2)
+
+
+def construct_authorperm(*args, username_prefix='@'):
+    """ Create a post identifier from comment/post object or arguments.
+    Examples:
+        ::
+            construct_authorperm('username', 'permlink')
+            construct_authorperm({'author': 'username',
+                'permlink': 'permlink'})
+    """
+    if len(args) == 1:
+        op = args[0]
+        author, permlink = op['author'], op['permlink']
+    elif len(args) == 2:
+        author, permlink = args
+    else:
+        raise ValueError(
+            'construct_identifier() received unparsable arguments')
+
+    fields = dict(prefix=username_prefix, author=author, permlink=permlink)
+    return "{prefix}{author}/{permlink}".format(**fields)
+
+
+def resolve_authorpermvoter(identifier):
+    """Correctly split a string containing an authorpermvoter.
+
+    Splits the string into author and permlink with the
+    following separator: ``/`` and ``|``.
+    """
+    pos = identifier.find("|")
+    if pos < 0:
+        raise ValueError("Invalid identifier")
+    [author, permlink] = resolve_authorperm(identifier[:pos])
+    return author, permlink, identifier[pos + 1:]
+
+
+def construct_authorpermvoter(*args, username_prefix='@'):
+    """ Create a vote identifier from vote object or arguments.
+    Examples:
+        ::
+            construct_authorpermvoter('username', 'permlink', 'voter')
+            construct_authorpermvoter({'author': 'username',
+                'permlink': 'permlink', 'voter': 'voter'})
+    """
+    if len(args) == 1:
+        op = args[0]
+        if "authorperm" in op:
+            authorperm, voter = op['authorperm'], op['voter']
+            [author, permlink] = resolve_authorperm(authorperm)
+        else:
+            author, permlink, voter = op['author'], op['permlink'], op['voter']
+    elif len(args) == 2:
+        authorperm, voter = args
+        [author, permlink] = resolve_authorperm(authorperm)
+    elif len(args) == 3:
+        author, permlink, voter = args
+    else:
+        raise ValueError(
+            'construct_identifier() received unparsable arguments')
+
+    fields = dict(prefix=username_prefix, author=author, permlink=permlink, voter=voter)
+    return "{prefix}{author}/{permlink}|{voter}".format(**fields)
 
 
 def test_proposal_in_buffer(buf, operation_name, id):
