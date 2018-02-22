@@ -27,6 +27,9 @@ The library name is derived from a beam maschine, similar to the analogy between
 
 Installation
 ============
+Warning: install beem will install pycrytodome which is not compatible to pycryto which is need for python-steem.
+At the moment, either beem or steem can be install at one maschine!
+
 For Debian and Ubuntu, please ensure that the following packages are installed:
         
 .. code:: bash
