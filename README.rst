@@ -77,6 +77,11 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.4
+------
+* beem
+* Upstream fixes from https://github.com/xeroc/python-bitshares
+* Improved Docu
 
 0.19.3
 ------
