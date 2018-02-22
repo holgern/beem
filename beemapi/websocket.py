@@ -57,10 +57,8 @@ class SteemWebsocket(Events):
         user="",
         password="",
         *args,
-        # accounts=[],
         only_block_id=False,
         on_block=None,
-        # on_account=None,
         keep_alive=25,
         num_retries=-1,
         **kwargs
