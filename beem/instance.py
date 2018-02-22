@@ -9,6 +9,16 @@ def shared_steem_instance():
     """ This method will initialize ``SharedInstance.instance`` and return it.
         The purpose of this method is to have offer single default
         steem instance that can be reused by multiple classes.
+
+        .. code-block:: python
+
+            from beem.account import Account
+            from beem.instance import shared_steem_instance
+
+            account = Account("test")
+            # is equivalent with
+            account = Account("test", steem_instance=shared_steem_instance())
+
     """
     if not SharedInstance.instance:
         clear_cache()

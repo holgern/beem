@@ -30,6 +30,7 @@ class Account(BlockchainObject):
             from beem.account import Account
             account = Account("test")
             print(account)
+            print(account.balances)
 
         .. note:: This class comes with its own caching function to reduce the
                   load on the API server. Instances of this class can be
@@ -252,54 +253,3 @@ class Account(BlockchainObject):
                 break
             if first < _limit:
                 _limit = first - 1
-
-    # def upgrade(self):
-    #    return self.steem.upgrade_account(account=self)
-
-
-class AccountUpdate(dict):
-    """ This purpose of this class is to keep track of account updates
-        as they are pushed through by :class:`beem.notify.Notify`.
-
-        Instances of this class are dictionaries and take the following
-        form:
-
-        ... code-block: js
-
-            {'name': 'test',
-             'owner': '1.2.29',
-             'pending_fees': 0,
-             'pending_vested_fees': 16310,
-             'total_core_in_orders': '6788845277634',
-             'total_ops': 0}
-
-    """
-
-    def __init__(
-        self,
-        data,
-        steem_instance=None
-    ):
-        self.steem = steem_instance or shared_steem_instance()
-
-        if isinstance(data, dict):
-            super(AccountUpdate, self).__init__(data)
-        else:
-            account = Account(data, steem_instance=self.steem)
-            # update = self.steem.rpc.get_objects([
-            #    "2.6.%s" % (account["id"].split(".")[2])
-            # ])[0]
-            super(AccountUpdate, self).__init__(account)
-
-    @property
-    def account(self):
-        """ In oder to obtain the actual
-            :class:`steem.account.Account` from this class, you can
-            use the ``account`` attribute.
-        """
-        account = Account(self["name"])
-        account.refresh()
-        return account
-
-    def __repr__(self):
-        return "<AccountUpdate: {}>".format(self["name"])

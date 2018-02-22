@@ -4,7 +4,6 @@ from beemapi.websocket import SteemWebsocket
 from beem.instance import shared_steem_instance
 from beem.blockchain import Blockchain
 from beem.price import Order, FilledOrder, UpdateCallOrder
-from beem.account import AccountUpdate
 log = logging.getLogger(__name__)
 # logging.basicConfig(level=logging.DEBUG)
 
@@ -12,10 +11,10 @@ log = logging.getLogger(__name__)
 class Notify(Events):
     """ Notifications on Blockchain events.
 
-        :param list accounts: Account names/ids to be notified about when changing
-        :param fnt on_tx: Callback that will be called for each transaction received
+        This modules allows yout to be notified of events taking place on the
+        blockchain.
+
         :param fnt on_block: Callback that will be called for each block received
-        :param fnt on_account: Callback that will be called for changes of the listed accounts
         :param beem.steem.Steem steem_instance: Steem instance
 
         **Example**
@@ -26,11 +25,9 @@ class Notify(Events):
             from beem.notify import Notify
 
             notify = Notify(
-                accounts=["test"],
                 on_block=print,
             )
             notify.listen()
-
 
     """
 
@@ -40,10 +37,11 @@ class Notify(Events):
 
     def __init__(
         self,
-        accounts=[],
+        # accounts=[],
         on_block=None,
         only_block_id=False,
         steem_instance=None,
+        keep_alive=25
     ):
         # Events
         super(Notify, self).__init__()
@@ -51,8 +49,8 @@ class Notify(Events):
 
         # Steem instance
         self.steem = steem_instance or shared_steem_instance()
-        # Callbacks
 
+        # Callbacks
         if on_block:
             self.on_block += on_block
 
@@ -63,16 +61,18 @@ class Notify(Events):
             password=self.steem.rpc.password,
             only_block_id=only_block_id,
             on_block=self.process_block,
+            keep_alive=keep_alive
         )
 
-    def process_account(self, message):
-        """ This is used for processing of account Updates. It will
-            return instances of :class:beem.account.AccountUpdate`
+    def reset_subscriptions(self, accounts=[]):
+        """Change the subscriptions of a running Notify instance
         """
-        self.on_account(AccountUpdate(
-            message,
-            steem_instance=self.steem
-        ))
+        self.websocket.reset_subscriptions(accounts)
+
+    def close(self):
+        """Cleanly close the Notify instance
+        """
+        self.websocket.close()
 
     def process_block(self, message):
         self.on_block(message)

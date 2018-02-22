@@ -10,7 +10,7 @@
    http://rest-sphinx-memo.readthedocs.org/en/latest/ReST.html
 
 Welcome to beem's documentation!
-===============================================
+================================
 
 Steem is a blockchain-based rewards platform for publishers to monetize 
 content and grow community.
@@ -19,6 +19,13 @@ It is based on *Graphene* (tm), a blockchain technology stack (i.e.
 software) that allows for fast transactions and ascalable blockchain
 solution. In case of Steem, it comes with decentralized publishing of
 content.
+
+The Steem library has been designed to allow developers to easily
+access its routines and make use of the network without dealing with all
+the related blockchain technology and cryptography. This library can be
+used to do anything that is allowed according to the Steem
+blockchain protocol.
+
 
 About this Library
 ------------------
@@ -94,7 +101,7 @@ Quickstart
    
 
 General
--------------------------
+-------
 .. toctree::
    :maxdepth: 1
 
@@ -105,42 +112,34 @@ General
    contribute
    support
 
-beem Libraries
---------------------------
+Packages
+--------
+
+
+beem
+~~~~
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 3
 
-   steem
-   instances
-   account
-   amount
-   asset
-   block
-   blockchain
-   exceptions
-   dex
-   market
-   notify
-   price
-   vesting
-   witness
+   beem
 
-Low Level Classes
------------------
+beembase
+~~~~~~~~
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 3
 
-   storage
-   utils
-   transactionbuilder
-   wallet
-   websocket
-   websocketrpc
-   transactions
-   memo
+   beembase
 
+beemapi
+~~~~~~~
+
+.. toctree::
+   :maxdepth: 3
+
+   beemapi
+   
 Glossary
 ========
 

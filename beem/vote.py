@@ -15,6 +15,11 @@ class Vote(BlockchainObject):
         :param str authorperm: perm link to post/comment
         :param steem steem_instance: Steem() instance to use when accesing a RPC
 
+        .. code-block:: python
+
+           from beem.vote import Vote
+           v = Vote("theaussiegame/cryptokittie-giveaway-number-2|")
+
     """
     type_id = 11
 

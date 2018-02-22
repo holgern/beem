@@ -39,7 +39,6 @@ class SteemWebsocket(Events):
 
         Notices:
 
-
         * ``on_block``:
 
             .. code-block:: js
@@ -58,8 +57,10 @@ class SteemWebsocket(Events):
         user="",
         password="",
         *args,
+        # accounts=[],
         only_block_id=False,
         on_block=None,
+        # on_account=None,
         keep_alive=25,
         num_retries=-1,
         **kwargs
@@ -72,6 +73,7 @@ class SteemWebsocket(Events):
         self.user = user
         self.password = password
         self.keep_alive = keep_alive
+        self.run_event = threading.Event()
         self.only_block_id = only_block_id
         if isinstance(urls, cycle):
             self.urls = urls
@@ -84,8 +86,13 @@ class SteemWebsocket(Events):
         Events.__init__(self)
         self.events = Events()
 
+        # Store the objects we are interested in
+        # self.subscription_accounts = accounts
+
         if on_block:
             self.on_block += on_block
+        # if on_account:
+        #     self.on_account += on_account
 
     def cancel_subscriptions(self):
         # self.cancel_all_subscriptions()
@@ -103,8 +110,18 @@ class SteemWebsocket(Events):
         """
         self.login(self.user, self.password, api_id=1)
         # self.database(api_id=1)
-        # self.cancel_all_subscriptions()
+        self.__set_subscriptions()
+        self.keepalive = threading.Thread(
+            target=self._ping,
+        )
+        self.keepalive.start()
 
+    def reset_subscriptions(self, accounts=[]):
+        # self.subscription_accounts = accounts
+        self.__set_subscriptions()
+
+    def __set_subscriptions(self):
+        # self.cancel_all_subscriptions()
         # Subscribe to events on the Backend and give them a
         # callback number that allows us to identify the event
         # set_pending_transaction_callback is removed from api
@@ -114,18 +131,12 @@ class SteemWebsocket(Events):
             self.set_block_applied_callback(
                 self.__events__.index('on_block'))
 
+    def _ping(self):
         # We keep the connetion alive by requesting a short object
         def ping(self):
-            while 1:
+            while not self.run_event.wait(self.keep_alive):
                 log.debug('Sending ping')
                 self.get_chain_properties()
-                time.sleep(self.keep_alive)
-
-        self.keepalive = threading.Thread(
-            target=ping,
-            args=(self,)
-        )
-        self.keepalive.start()
 
     def process_block(self, data):
         """ This method is called on notices that need processing. Here,
@@ -213,7 +224,7 @@ class SteemWebsocket(Events):
             connected with the provided APIs
         """
         cnt = 0
-        while True:
+        while not self.run_event.is_set():
             cnt += 1
             self.url = next(self.urls)
             log.debug("Trying to connect to node %s" % self.url)
@@ -250,6 +261,15 @@ class SteemWebsocket(Events):
     def get_request_id(self):
         self._request_id += 1
         return self._request_id
+
+    def close(self):
+        """ Closes the websocket connection and waits for the ping thread to close
+        """
+        self.run_event.set()
+        self.ws.close()
+
+        if self.keepalive and self.keepalive.is_alive():
+            self.keepalive.join()
 
     """ RPC Calls
     """

@@ -13,6 +13,11 @@ class Witness(BlockchainObject):
         :param steem steem_instance: Steem() instance to use when
                accesing a RPC
 
+        .. code-block:: python
+
+           from beem.witness import Witness
+           Witness("gtg")
+
     """
     type_id = 3
 

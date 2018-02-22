@@ -18,6 +18,10 @@ class NumRetriesReached(Exception):
 
 
 class SteemNodeRPC(GrapheneWebsocketRPC):
+    """ This class allows to call API methods exposed by the witness node via
+        websockets.
+
+    """
 
     def __init__(self, *args, **kwargs):
         super(SteemNodeRPC, self).__init__(*args, **kwargs)

@@ -17,6 +17,23 @@ log = logging.getLogger(__name__)
 class TransactionBuilder(dict):
     """ This class simplifies the creation of transactions by adding
         operations and signers.
+        To build your own transactions and sign them
+
+        .. code-block:: python
+
+           from beem.transactionbuilder import TransactionBuilder
+           from beembase.operations import Transfer
+           tx = TransactionBuilder()
+           tx.appendOps(Transfer(**{
+                    "from": "test",
+                    "to": "test1",
+                    "amount": "1 STEEM",
+                    "memo": ""
+                }))
+           tx.appendSigner("test", "active")
+           tx.sign()
+           tx.broadcast()
+
     """
     def __init__(
         self,
