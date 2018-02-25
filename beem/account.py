@@ -101,7 +101,7 @@ class Account(BlockchainObject):
 
     def print_info(self, force_refresh=False, return_str=False):
         """ Prints import information about the account
-        """ 
+        """
         if force_refresh:
             self.refresh()
             self.steem.refresh_data(True)

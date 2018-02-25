@@ -79,6 +79,10 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.6
+------
+* Small bug-fix
+
 0.19.5
 ------
 * Market fixed
