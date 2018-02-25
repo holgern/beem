@@ -7,9 +7,10 @@ log = logging.getLogger(__name__)
 
 
 class Query(dict):
-    def __init__(self, limit=0, truncate_body=0):
+    def __init__(self, limit=0, tag="", truncate_body=0):
         self["limit"] = limit
         self["truncate_body"] = truncate_body
+        self["tag"] = tag
 
 
 class Discussions_by_trending(list):
@@ -185,7 +186,7 @@ class Discussions_by_hot(list):
 class Discussions_by_feed(list):
     """ get_discussions_by_feed
 
-        :param str discussion_query
+        :param str discussion_query, tag musst be set to a username
         :param steem steem_instance: Steem() instance to use when accesing a RPC
     """
     def __init__(self, discussion_query, steem_instance=None):
@@ -202,7 +203,7 @@ class Discussions_by_feed(list):
 class Discussions_by_blog(list):
     """ get_discussions_by_blog
 
-        :param str discussion_query
+        :param str discussion_query, tag musst be set to a username
         :param steem steem_instance: Steem() instance to use when accesing a RPC
     """
     def __init__(self, discussion_query, steem_instance=None):

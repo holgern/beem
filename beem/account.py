@@ -100,6 +100,8 @@ class Account(BlockchainObject):
         return self.reputation()
 
     def print_info(self, force_refresh=False, return_str=False):
+        """ Prints import information about the account
+        """ 
         if force_refresh:
             self.refresh()
             self.steem.refresh_data(True)
@@ -120,7 +122,7 @@ class Account(BlockchainObject):
         rep = int(self['reputation'])
         if rep == 0:
             return 25
-        score = (math.log10(abs(rep)) - 9) * 9 + 25
+        score = max([math.log10(abs(rep)) - 9, 0]) * 9 + 25
         if rep < 0:
             score = 50 - score
         if precision is not None:
@@ -173,7 +175,7 @@ class Account(BlockchainObject):
         if missing_vp < 0:
             return 0
         recharge_seconds = missing_vp * 100 * 5 * 86400 / 10000
-        return round(missing_vp * recharge_seconds / 60 / 60, precision)
+        return round(recharge_seconds / 60 / 60, precision)
 
     def get_recharge_reminder_minutes(self, voting_power_goal=100, precision=0):
         hours = self.get_recharge_hours(voting_power_goal=voting_power_goal, precision=5)
