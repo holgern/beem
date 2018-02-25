@@ -16,5 +16,6 @@ __all__ = [
     "vote",
     "message",
     "comment",
-    "discussions"
+    "discussions",
+    "witness"
 ]
