@@ -86,19 +86,11 @@ Quickstart
 .. code-block:: python
 
    from beem.market import Market
-   # Not working at the moment
-   # market = Market("STEEM:SBD")
-   # print(market.ticker())
-   # market.steem.wallet.unlock("wallet-passphrase")
-   # print(market.sell(300, 100)  # sell 100 STEEM for 300 STEEM/SBD
+   market = Market()
+   print(market.ticker())
+   market.steem.wallet.unlock("wallet-passphrase")
+   print(market.sell(300, 100)  # sell 100 STEEM for 300 STEEM/SBD
 
-.. code-block:: python
-
-   from beem.dex import Dex
-   # not working at the moment
-   # dex = Dex()
-   # dex.steem.wallet.unlock("wallet-passphrase")
-   
 
 General
 -------

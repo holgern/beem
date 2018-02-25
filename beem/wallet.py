@@ -10,8 +10,9 @@ from .exceptions import (
     WalletLocked,
     WrongMasterPasswordException,
     NoWalletException,
-    RPCConnectionRequired
+    RPCConnectionRequired,
 )
+from beemapi.exceptions import NoAccessApi
 
 log = logging.getLogger(__name__)
 
@@ -51,6 +52,7 @@ class Wallet():
 
            from beem import Steem
            steem = Steem()
+           steem.wallet.purgeWallet()
            steem.wallet.create("supersecret-passphrase")
 
         This will raise an exception if you already have a wallet installed.
@@ -211,6 +213,11 @@ class Wallet():
         """
         self.newWallet(pwd)
 
+    def purge(self):
+        """ Alias for purgeWallet()
+        """
+        self.purgeWallet()
+
     def newWallet(self, pwd):
         """ Create a new wallet database
         """
@@ -364,7 +371,11 @@ class Wallet():
     def getAccountsFromPublicKey(self, pub):
         """ Obtain all accounts associated with a public key
         """
-        names = self.rpc.get_key_references([pub])
+        try:
+            self.rpc.register_apis(["account_by_key"])
+        except NoAccessApi as e:
+            print(str(e))
+        names = self.rpc.get_key_references([pub], api="account_by_key")
         for name in names:
             for i in name:
                 yield i
@@ -375,7 +386,11 @@ class Wallet():
         # FIXME, this only returns the first associated key.
         # If the key is used by multiple accounts, this
         # will surely lead to undesired behavior
-        names = self.rpc.get_key_references([pub])[0]
+        try:
+            self.rpc.register_apis(["account_by_key"])
+        except NoAccessApi as e:
+            print(str(e))
+        names = self.rpc.get_key_references([pub], api="account_by_key")[0]
         if not names:
             return None
         else:
@@ -415,7 +430,7 @@ class Wallet():
     def getKeyType(self, account, pub):
         """ Get key type
         """
-        for authority in ["owner", "active"]:
+        for authority in ["owner", "active", "posting"]:
             for key in account[authority]["key_auths"]:
                 if pub == key[0]:
                     return authority

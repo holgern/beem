@@ -269,7 +269,7 @@ class TransactionBuilder(dict):
             log.warning("Not broadcasting anything!")
             self.clear()
             return ret
-
+        self.steem.register_apis(["network_broadcast"])
         # Broadcast
         try:
             if self.steem.blocking:

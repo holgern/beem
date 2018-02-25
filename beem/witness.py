@@ -1,9 +1,12 @@
 from beem.instance import shared_steem_instance
 from .account import Account
+from .amount import Amount
 from .exceptions import WitnessDoesNotExistsException
 from .blockchainobject import BlockchainObject
 from .utils import formatTimeString, parse_time
 from datetime import datetime, timedelta
+from beembase import transactions, operations
+from beembase.account import PrivateKey, PublicKey
 
 
 class Witness(BlockchainObject):
@@ -39,6 +42,8 @@ class Witness(BlockchainObject):
         )
 
     def refresh(self):
+        if not self.identifier:
+            return
         witness = self.steem.rpc.get_witness_by_account(self.identifier)
         if not witness:
             raise WitnessDoesNotExistsException
@@ -48,6 +53,86 @@ class Witness(BlockchainObject):
     @property
     def account(self):
         return Account(self["owner"], steem_instance=self.steem)
+
+    def feed_publish(self,
+                     base,
+                     quote="1.000 STEEM",
+                     account=None):
+        """ Publish a feed price as a witness.
+            :param float base: USD Price of STEEM in SBD (implied price)
+            :param float quote: (optional) Quote Price. Should be 1.000, unless
+            we are adjusting the feed to support the peg.
+            :param str account: (optional) the source account for the transfer
+            if not self["owner"]
+        """
+        if not account:
+            account = self["owner"]
+        if not account:
+            raise ValueError("You need to provide an account")
+
+        account = Account(account, steem_instance=self)
+        if isinstance(base, Amount):
+            base = Amount(base, steem_instance=self.steem)
+        elif isinstance(base, str):
+            base = Amount(base, steem_instance=self.steem)
+        else:
+            base = Amount(base, "SBD", steem_instance=self.steem)
+
+        if isinstance(quote, Amount):
+            quote = Amount(quote, steem_instance=self.steem)
+        elif isinstance(quote, str):
+            quote = Amount(quote, steem_instance=self.steem)
+        else:
+            quote = Amount(quote, "STEEM", steem_instance=self.steem)
+
+        assert base.symbol == "SBD"
+        assert quote.symbol == "STEEM"
+
+        op = operations.Feed_publish(
+            **{
+                "publisher": account["name"],
+                "exchange_rate": {
+                    "base": base,
+                    "quote": quote,
+                }
+            })
+        return self.steem.finalizeOp(op, account, "active")
+
+    def update(self, signing_key, url, props, account=None):
+        """ Update witness
+            :param pubkey signing_key: Signing key
+            :param str url: URL
+            :param dict props: Properties
+            :param str account: (optional) witness account name
+             Properties:::
+                {
+                    "account_creation_fee": x,
+                    "maximum_block_size": x,
+                    "sbd_interest_rate": x,
+                }
+        """
+        if not account:
+            account = self["owner"]
+        if not account:
+            raise ValueError("You need to provide an account")
+
+        account = Account(account, steem_instance=self)
+
+        try:
+            PublicKey(signing_key)
+        except Exception as e:
+            raise e
+
+        op = operations.Witness_update(
+            **{
+                "owner": account["name"],
+                "url": url,
+                "block_signing_key": signing_key,
+                "props": props,
+                "fee": "0.000 STEEM",
+                "prefix": self.steem.chain_params["prefix"]
+            })
+        return self.steem.finalizeOp(op, account, "active")
 
 
 class WitnessesObject(list):

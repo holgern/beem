@@ -73,7 +73,7 @@ class Vote(GrapheneObject):
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
             super().__init__(OrderedDict([
-                ('Voter', String(kwargs["voter"])),
+                ('voter', String(kwargs["voter"])),
                 ('author', String(kwargs["author"])),
                 ('permlink', String(kwargs["permlink"])),
                 ('weight', Int16(kwargs["weight"])),

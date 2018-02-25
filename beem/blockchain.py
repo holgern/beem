@@ -2,6 +2,8 @@ import time
 from .block import Block
 from beem.instance import shared_steem_instance
 from beembase.operationids import getOperationNameForId
+from .amount import Amount
+from datetime import datetime
 
 
 class Blockchain(object):
@@ -39,7 +41,8 @@ class Blockchain(object):
     def __init__(
         self,
         steem_instance=None,
-        mode="irreversible"
+        mode="irreversible",
+        data_refresh_time_seconds=900,
     ):
         self.steem = steem_instance or shared_steem_instance()
 
@@ -50,67 +53,13 @@ class Blockchain(object):
         else:
             raise ValueError("invalid value for 'mode'!")
 
-    def get_dynamic_global_properties(self):
-        """ This call returns the *dynamic global properties*
-        """
-        return self.steem.rpc.get_dynamic_global_properties()
-
-    def get_feed_history(self):
-        """ Returns the feed_history
-        """
-        return self.steem.rpc.get_feed_history()
-
-    def get_current_median_history_price(self):
-        """ Returns the current median price
-        """
-        return self.steem.rpc.get_current_median_history_price()
-
-    def get_next_scheduled_hardfork(self):
-        """ Returns Hardfork and live_time of the hardfork
-        """
-        return self.steem.rpc.get_next_scheduled_hardfork()
-
-    def get_hardfork_version(self):
-        """ Current Hardfork Version as String
-        """
-        return self.steem.rpc.get_hardfork_version()
-
-    def get_network(self):
-        """ Identify the network
-
-            :returns: Network parameters
-            :rtype: dict
-        """
-        return self.steem.rpc.get_network()
-
-    def get_chain_properties(self):
-        """ Return witness elected chain properties
-
-            ::
-                {'account_creation_fee': '30.000 STEEM',
-                 'maximum_block_size': 65536,
-                 'sbd_interest_rate': 250}
-
-        """
-        return self.steem.rpc.get_chain_properties()
-
-    def get_state(self, path="value"):
-        """ get_state
-        """
-        return self.steem.rpc.get_state(path)
-
-    def get_config(self):
-        """ Returns internal chain configuration.
-        """
-        return self.steem.rpc.get_config()
-
     def get_current_block_num(self):
         """ This call returns the current block
 
             .. note:: The block number returned depends on the ``mode`` used
                       when instanciating from this class.
         """
-        return self.get_dynamic_global_properties().get(self.mode)
+        return self.steem.get_dynamic_global_properties(False).get(self.mode)
 
     def get_current_block(self):
         """ This call returns the current block
@@ -155,7 +104,7 @@ class Blockchain(object):
              confirmed by 2/3 of all block producers and is thus irreversible)
         """
         # Let's find out how often blocks are generated!
-        block_interval = self.get_config().get("STEEMIT_BLOCK_INTERVAL")
+        block_interval = self.steem.get_config().get("STEEMIT_BLOCK_INTERVAL")
 
         if not start:
             start = self.get_current_block_num()

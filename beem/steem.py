@@ -17,7 +17,7 @@ from .exceptions import (
 )
 from .wallet import Wallet
 from .transactionbuilder import TransactionBuilder
-from .utils import formatTime
+from .utils import formatTime, resolve_authorperm
 
 log = logging.getLogger(__name__)
 
@@ -108,6 +108,7 @@ class Steem(object):
                  rpcuser="",
                  rpcpassword="",
                  debug=False,
+                 data_refresh_time_seconds=900,
                  **kwargs):
 
         # More specific set of APIs to register to
@@ -115,9 +116,9 @@ class Steem(object):
             kwargs["apis"] = [
                 "database",
                 "network_broadcast",
-                # "market_history",
-                # "follow",
-                # "account_by_key",
+                "market_history",
+                "follow",
+                "account_by_key",
                 # "tag",
                 # "raw_block"
             ]
@@ -142,12 +143,16 @@ class Steem(object):
                          **kwargs)
 
         # Try Optional APIs
-        try:
-            self.rpc.register_apis(["account_by_key", "follow"])
-        except NoAccessApi as e:
-            log.info(str(e))
+        self.register_apis()
 
         self.wallet = Wallet(self.rpc, **kwargs)
+
+        self.data = {'last_refresh': None, 'dynamic_global_properties': None, 'feed_history': None,
+                     'current_median_history_price': None, 'next_scheduled_hardfork': None,
+                     'hardfork_version': None, 'network': None, 'chain_properties': None,
+                     'config': None, 'reward_fund': None}
+        self.data_refresh_time_seconds = data_refresh_time_seconds
+        # self.refresh_data()
 
         # txbuffers/propbuffer are initialized and cleared
         self.clear()
@@ -175,6 +180,205 @@ class Steem(object):
             rpcpassword = config["rpcpassword"]
 
         self.rpc = SteemNodeRPC(node, rpcuser, rpcpassword, **kwargs)
+
+    def register_apis(self, apis=["network_broadcast", "account_by_key", "follow", "market_history"]):
+
+        # Try Optional APIs
+        try:
+            self.rpc.register_apis(apis)
+        except NoAccessApi as e:
+            log.info(str(e))
+
+    def refresh_data(self, force_refresh=False):
+        if self.offline:
+            return
+        if self.data['last_refresh'] is not None and not force_refresh:
+            if (datetime.now() - self.data['last_refresh']).total_seconds() < self.data_refresh_time_seconds:
+                return
+        self.data['last_refresh'] = datetime.now()
+        self.data["dynamic_global_properties"] = self.get_dynamic_global_properties(False)
+        self.data['feed_history'] = self.get_feed_history(False)
+        self.data['current_median_history_price'] = self.get_current_median_history_price(False)
+        self.data['next_scheduled_hardfork'] = self.get_next_scheduled_hardfork(False)
+        self.data['hardfork_version'] = self.get_hardfork_version(False)
+        self.data['network'] = self.get_network(False)
+        self.data['chain_properties'] = self.get_chain_properties(False)
+        self.data['config'] = self.get_config(False)
+        self.data['reward_fund'] = {"post": self.get_reward_fund("post", False)}
+
+    def get_dynamic_global_properties(self, use_stored_data=True):
+        """ This call returns the *dynamic global properties*
+        """
+        if use_stored_data:
+            self.refresh_data()
+            return self.data['dynamic_global_properties']
+        else:
+            return self.rpc.get_dynamic_global_properties()
+
+    def get_feed_history(self, use_stored_data=True):
+        """ Returns the feed_history
+        """
+        if use_stored_data:
+            self.refresh_data()
+            return self.data['feed_history']
+        else:
+            return self.rpc.get_feed_history()
+
+    def get_reward_fund(self, fund_name="post", use_stored_data=True):
+        """ Get details for a reward fund.
+        """
+        if use_stored_data:
+            self.refresh_data()
+            return self.data['reward_fund'][fund_name]
+        else:
+            return self.rpc.get_reward_fund(fund_name)
+
+    def get_current_median_history_price(self, use_stored_data=True):
+        """ Returns the current median price
+        """
+        if use_stored_data:
+            self.refresh_data()
+            return self.data['current_median_history_price']
+        else:
+            return self.rpc.get_current_median_history_price()
+
+    def get_next_scheduled_hardfork(self, use_stored_data=True):
+        """ Returns Hardfork and live_time of the hardfork
+        """
+        if use_stored_data:
+            self.refresh_data()
+            return self.data['next_scheduled_hardfork']
+        else:
+            return self.rpc.get_next_scheduled_hardfork()
+
+    def get_hardfork_version(self, use_stored_data=True):
+        """ Current Hardfork Version as String
+        """
+        if use_stored_data:
+            self.refresh_data()
+            return self.data['hardfork_version']
+        else:
+            return self.rpc.get_hardfork_version()
+
+    def get_network(self, use_stored_data=True):
+        """ Identify the network
+
+            :returns: Network parameters
+            :rtype: dict
+        """
+        if use_stored_data:
+            self.refresh_data()
+            return self.data['network']
+        else:
+            return self.rpc.get_network()
+
+    def get_median_price(self):
+        median_price = self.get_current_median_history_price()
+        a = (
+            Amount(median_price['base']) /
+            Amount(median_price['quote'])
+        )
+        return a.as_base("SBD")
+
+    def get_payout_from_rshares(self, rshares):
+        reward_fund = self.get_reward_fund()
+        reward_balance = Amount(reward_fund["reward_balance"]).amount
+        recent_claims = float(reward_fund["recent_claims"])
+
+        fund_per_share = reward_balance / (recent_claims)
+        SBD_price = (self.get_median_price() * Amount("1 STEEM")).amount
+        payout = float(rshares) * fund_per_share * SBD_price
+        return payout
+
+    def get_steem_per_mvest(self, time_stamp=None):
+
+        if time_stamp is not None:
+            a = 2.1325476281078992e-05
+            b = -31099.685481490847
+            a2 = 2.9019227739473682e-07
+            b2 = 48.41432402074669
+
+            if (time_stamp < (b2 - b) / (a - a2)):
+                return a * time_stamp + b
+            else:
+                return a2 * time_stamp + b2
+        global_properties = self.get_dynamic_global_properties()
+
+        return (
+            Amount(global_properties['total_vesting_fund_steem']).amount /
+            (Amount(global_properties['total_vesting_shares']).amount / 1e6)
+        )
+
+    def vests_to_sp(self, vests, timestamp=None):
+        if isinstance(vests, Amount):
+            vests = vests.amount
+        return vests / 1e6 * self.get_steem_per_mvest(timestamp)
+
+    def sp_to_vests(self, sp, timestamp=None):
+        return sp * 1e6 / self.get_steem_per_mvest(timestamp)
+
+    def sp_to_sbd(self, sp, voting_power=10000, vote_pct=10000):
+        reward_fund = self.get_reward_fund()
+        reward_balance = Amount(reward_fund["reward_balance"]).amount
+        recent_claims = float(reward_fund["recent_claims"])
+        reward_share = reward_balance / recent_claims
+
+        resulting_vote = ((voting_power * (vote_pct) / 10000) + 49) / 50
+        vesting_shares = int(self.sp_to_vests(sp))
+        SBD_price = (self.get_median_price() * Amount("1 STEEM")).amount
+        VoteValue = (vesting_shares * resulting_vote * 100) * reward_share * SBD_price
+        return VoteValue
+
+    def sp_to_rshares(self, sp, voting_power=10000, vote_pct=10000):
+        """ Obtain the r-shares
+            :param number sp: Steem Power
+            :param int voting_power: voting power (100% = 10000)
+            :param int vote_pct: voting participation (100% = 10000)
+        """
+        # calculate our account voting shares (from vests), mine is 6.08b
+        vesting_shares = int(self.sp_to_vests(sp) * 1e6)
+
+        # get props
+        global_properties = self.get_dynamic_global_properties()
+        vote_power_reserve_rate = global_properties['vote_power_reserve_rate']
+
+        # determine voting power used
+        used_power = int((voting_power * vote_pct) / 10000)
+        max_vote_denom = vote_power_reserve_rate * (5 * 60 * 60 * 24) / (60 * 60 * 24)
+        used_power = int((used_power + max_vote_denom - 1) / max_vote_denom)
+        # calculate vote rshares
+        rshares = ((vesting_shares * used_power) / 10000)
+
+        return rshares
+
+    def get_chain_properties(self, use_stored_data=True):
+        """ Return witness elected chain properties
+
+            ::
+                {'account_creation_fee': '30.000 STEEM',
+                 'maximum_block_size': 65536,
+                 'sbd_interest_rate': 250}
+
+        """
+        if use_stored_data:
+            self.refresh_data()
+            return self.data['chain_properties']
+        else:
+            return self.rpc.get_chain_properties()
+
+    def get_state(self, path="value"):
+        """ get_state
+        """
+        return self.rpc.get_state(path)
+
+    def get_config(self, use_stored_data=True):
+        """ Returns internal chain configuration.
+        """
+        if use_stored_data:
+            self.refresh_data()
+            return self.data['config']
+        else:
+            return self.rpc.get_config()
 
     @property
     def chain_params(self):
@@ -340,44 +544,6 @@ class Steem(object):
         # Base/Default proposal/tx buffers
         self.new_tx()
         # self.new_proposal()
-
-    # -------------------------------------------------------------------------
-    # Simple Transfer
-    # -------------------------------------------------------------------------
-    def transfer(self, to, amount, asset, memo="", account=None, **kwargs):
-        """ Transfer an asset to another account.
-
-            :param str to: Recipient
-            :param float amount: Amount to transfer
-            :param str asset: Asset to transfer
-            :param str memo: (optional) Memo, may begin with `#` for encrypted
-                messaging
-            :param str account: (optional) the source account for the transfer
-                if not ``default_account``
-        """
-        from .memo import Memo
-        if not account:
-            if "default_account" in config:
-                account = config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-
-        account = Account(account, steem_instance=self)
-        amount = Amount(amount, asset, steem_instance=self)
-        to = Account(to, steem_instance=self)
-
-        memoObj = Memo(
-            from_account=account,
-            to_account=to,
-            steem_instance=self
-        )
-        op = operations.Transfer(**{
-            "amount": amount,
-            "to": to["name"],
-            "memo": memoObj.encrypt(memo),
-            "from": account["name"],
-        })
-        return self.finalizeOp(op, account, "active", **kwargs)
 
     # -------------------------------------------------------------------------
     # Account related calls
@@ -640,9 +806,9 @@ class Steem(object):
             "json_metadata": account["json_metadata"],
         })
         if permission == "owner":
-            return self.finalizeOp(op, account["name"], "owner", **kwargs)
+            return self.finalizeOp(op, account, "owner", **kwargs)
         else:
-            return self.finalizeOp(op, account["name"], "active", **kwargs)
+            return self.finalizeOp(op, account, "active", **kwargs)
 
     def disallow(
         self, foreign, permission="posting",
@@ -723,73 +889,35 @@ class Steem(object):
             "json_metadata": account["json_metadata"]
         })
         if permission == "owner":
-            return self.finalizeOp(op, account["name"], "owner", **kwargs)
+            return self.finalizeOp(op, account, "owner", **kwargs)
         else:
-            return self.finalizeOp(op, account["name"], "active", **kwargs)
+            return self.finalizeOp(op, account, "active", **kwargs)
 
-    def update_memo_key(self, key, account=None, **kwargs):
-        """ Update an account's memo public key
-
-            This method does **not** add any private keys to your
-            wallet but merely changes the memo public key.
-
-            :param str key: New memo public key
-            :param str account: (optional) the account to allow access
-                to (defaults to ``default_account``)
+    def custom_json(self,
+                    id,
+                    json_data,
+                    required_auths=[],
+                    required_posting_auths=[]):
+        """ Create a custom json operation
+            :param str id: identifier for the custom json (max length 32 bytes)
+            :param json json_data: the json data to put into the custom_json
+                operation
+            :param list required_auths: (optional) required auths
+            :param list required_posting_auths: (optional) posting auths
         """
-        if not account:
-            if "default_account" in config:
-                account = config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-
-        PublicKey(key, prefix=self.prefix)
-
-        account = Account(account, steem_instance=self)
-        account["memo_key"] = key
-        op = operations.Account_update(**{
-            "account": account["name"],
-            "memo_key": account["memo_key"],
-            "json_metadata": account["json_metadata"]
-        })
-        return self.finalizeOp(op, account["name"], "active", **kwargs)
-
-    # -------------------------------------------------------------------------
-    #  Approval and Disapproval of witnesses
-    # -------------------------------------------------------------------------
-    def approvewitness(self, witness, account=None, approve=True, **kwargs):
-        """ Approve a witness
-
-            :param list witnesses: list of Witness name or id
-            :param str account: (optional) the account to allow access
-                to (defaults to ``default_account``)
-        """
-        if not account:
-            if "default_account" in config:
-                account = config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self)
-
-        # if not isinstance(witnesses, (list, set, tuple)):
-        #     witnesses = {witnesses}
-
-        # for witness in witnesses:
-        #     witness = Witness(witness, steem_instance=self)
-
-        op = operations.Account_witness_vote(**{
-            "account": account["name"],
-            "witness": witness,
-            "approve": approve
-        })
-        return self.finalizeOp(op, account["name"], "active", **kwargs)
-
-    def disapprovewitness(self, witness, account=None, **kwargs):
-        """ Disapprove a witness
-
-            :param list witnesses: list of Witness name or id
-            :param str account: (optional) the account to allow access
-                to (defaults to ``default_account``)
-        """
-        return self.approvewitness(
-            witness=witness, account=account, approve=False)
+        account = None
+        if len(required_auths):
+            account = required_auths[0]
+        elif len(required_posting_auths):
+            account = required_posting_auths[0]
+        else:
+            raise Exception("At least one account needs to be specified")
+        account = Account(account, full=False, steem_instance=self)
+        op = operations.Custom_json(
+            **{
+                "json": json_data,
+                "required_auths": required_auths,
+                "required_posting_auths": required_posting_auths,
+                "id": id
+            })
+        return self.finalizeOp(op, account, "posting")

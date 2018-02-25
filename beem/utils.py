@@ -1,6 +1,7 @@
 import re
 import time
 from datetime import datetime
+import difflib
 from .exceptions import ObjectNotInProposalBuffer
 
 timeFormat = '%Y-%m-%dT%H:%M:%S'
@@ -111,6 +112,17 @@ def construct_authorperm(*args, username_prefix='@'):
     return "{prefix}{author}/{permlink}".format(**fields)
 
 
+def resolve_root_identifier(url):
+    m = re.match("/([^/]*)/@([^/]*)/([^#]*).*", url)
+    if not m:
+        return "", ""
+    else:
+        category = m.group(1)
+        author = m.group(2)
+        permlink = m.group(3)
+        return construct_authorperm(author, permlink), category
+
+
 def resolve_authorpermvoter(identifier):
     """Correctly split a string containing an authorpermvoter.
 
@@ -176,3 +188,37 @@ def test_proposal_in_buffer(buf, operation_name, id):
                 id
             )
         )
+
+
+def keep_in_dict(obj, allowed_keys=list()):
+    """ Prune a class or dictionary of all but allowed keys.
+    """
+    if type(obj) == dict:
+        items = obj.items()
+    else:
+        items = obj.__dict__.items()
+
+    return {k: v for k, v in items if k in allowed_keys}
+
+
+def remove_from_dict(obj, remove_keys=list()):
+    """ Prune a class or dictionary of specified keys.
+    """
+    if type(obj) == dict:
+        items = obj.items()
+    else:
+        items = obj.__dict__.items()
+
+    return {k: v for k, v in items if k not in remove_keys}
+
+
+def make_patch(a, b, n=3):
+    # _no_eol = '\n' + "\ No newline at end of file" + '\n'
+    _no_eol = '\n'
+    diffs = difflib.unified_diff(a.splitlines(True), b.splitlines(True), n=n)
+    try:
+        _, _ = next(diffs), next(diffs)
+        del _
+    except StopIteration:
+        pass
+    return ''.join([d if d[-1] == '\n' else d + _no_eol for d in diffs])

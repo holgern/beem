@@ -47,6 +47,12 @@ class InsufficientAuthorityError(Exception):
     pass
 
 
+class VotingInvalidOnArchivedPost(Exception):
+    """ The transaction requires signature of a higher authority
+    """
+    pass
+
+
 class MissingKeyError(Exception):
     """ A required key couldn't be found in the wallet
     """

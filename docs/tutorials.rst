@@ -17,7 +17,6 @@ executed in the same order as they are added to the transaction.
   from beem import Steem
 
   testnet = Steem(
-      "wss://testnet.steem.vc",
       nobroadcast=True,
       bundle=True,
   )
@@ -46,7 +45,6 @@ attribute:
   from beem import Steem
 
   testnet = Steem(
-      "wss://testnet.steem.vc",
       proposer="test"
   )
   testnet.wallet.unlock("supersecret")
@@ -66,7 +64,6 @@ Simple Sell Script
     # Instanciate Steem (pick network via API node)
     #
     steem = Steem(
-        "wss://node.testnet.steem.eu",
         nobroadcast=True   # <<--- set this to False when you want to fire!
     )
 
@@ -81,7 +78,6 @@ Simple Sell Script
     # Sell and buy calls always refer to the *quote*
     #
     market = Market(
-        "GOLD:USD",
         steem_instance=steem
     )
 
@@ -89,8 +85,8 @@ Simple Sell Script
     # Sell an asset for a price with amount (quote)
     #
     print(market.sell(
-        Price(100.0, "USD/GOLD"),
-        Amount("0.01 GOLD")
+        Price(100.0, "STEEM/SBD"),
+        Amount("0.01 STEEM")
     ))
 
 
@@ -122,7 +118,6 @@ Sell at a timely rate
         # Instanciate Steem (pick network via API node)
         #
         steem = Steem(
-            "wss://node.testnet.steem.eu",
             nobroadcast=True   # <<--- set this to False when you want to fire!
         )
 
@@ -137,7 +132,6 @@ Sell at a timely rate
         # Sell and buy calls always refer to the *quote*
         #
         market = Market(
-            "GOLD:USD",
             steem_instance=steem
         )
 

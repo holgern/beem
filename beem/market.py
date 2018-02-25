@@ -7,6 +7,7 @@ from .amount import Amount
 from .price import Price, Order, FilledOrder
 from .account import Account
 from beembase import operations
+import random
 
 
 class Market(dict):
@@ -43,24 +44,14 @@ class Market(dict):
     def __init__(
         self,
         *args,
-        base=None,
-        quote=None,
         steem_instance=None,
         **kwargs
     ):
         self.steem = steem_instance or shared_steem_instance()
 
-        if len(args) == 1 and isinstance(args[0], str):
-            quote_symbol, base_symbol = assets_from_string(args[0])
-            quote = Asset(quote_symbol, steem_instance=self.steem)
-            base = Asset(base_symbol, steem_instance=self.steem)
-            super(Market, self).__init__({"base": base, "quote": quote})
-        elif len(args) == 0 and base and quote:
-            super(Market, self).__init__({"base": base, "quote": quote})
-        elif len(args) == 2 and not base and not quote:
-            super(Market, self).__init__({"base": args[1], "quote": args[0]})
-        else:
-            raise ValueError("Unknown Market Format: %s" % str(args))
+        quote = Asset("STEEM", steem_instance=self.steem)
+        base = Asset("SBD", steem_instance=self.steem)
+        super(Market, self).__init__({"base": base, "quote": quote})
 
     def get_string(self, separator=":"):
         """ Return a formated string that identifies the market, e.g. ``USD:BTS``
@@ -69,23 +60,7 @@ class Market(dict):
         """
         return "%s%s%s" % (self["quote"]["symbol"], separator, self["base"]["symbol"])
 
-    def __eq__(self, other):
-        if isinstance(other, str):
-            quote_symbol, base_symbol = assets_from_string(other)
-            return (
-                self["quote"]["symbol"] == quote_symbol and
-                self["base"]["symbol"] == base_symbol
-            ) or (
-                self["quote"]["symbol"] == base_symbol and
-                self["base"]["symbol"] == quote_symbol
-            )
-        elif isinstance(other, Market):
-            return (
-                self["quote"]["symbol"] == other["quote"]["symbol"] and
-                self["base"]["symbol"] == other["base"]["symbol"]
-            )
-
-    def ticker(self):
+    def ticker(self, raw_data=False):
         """ Returns the ticker for all markets.
 
             Output Parameters:
@@ -119,20 +94,13 @@ class Market(dict):
         """
         data = {}
         # Core Exchange rate
-        cer = self["quote"]["options"]["core_exchange_rate"]
-        data["core_exchange_rate"] = Price(
-            cer,
-            steem_instance=self.steem
-        )
-        if cer["base"]["asset_id"] == self["quote"]["id"]:
-            data["core_exchange_rate"] = data["core_exchange_rate"].invert()
+        self.steem.register_apis(["market_history"])
+        ticker = self.steem.rpc.get_ticker(api="market_history")
+        if raw_data:
+            return ticker
 
-        ticker = self.steem.rpc.get_ticker(
-            self["base"]["id"],
-            self["quote"]["id"],
-        )
-        data["baseVolume"] = Amount(ticker["base_volume"], self["base"], steem_instance=self.steem)
-        data["quoteVolume"] = Amount(ticker["quote_volume"], self["quote"], steem_instance=self.steem)
+        data["sbdVolume"] = Amount(ticker["sbd_volume"], steem_instance=self.steem)
+        data["steemVolume"] = Amount(ticker["steem_volume"], steem_instance=self.steem)
         data["lowestAsk"] = Price(
             ticker["lowest_ask"],
             base=self["base"],
@@ -155,7 +123,7 @@ class Market(dict):
 
         return data
 
-    def volume24h(self):
+    def volume24h(self, raw_data=False):
         """ Returns the 24-hour volume for all markets, plus totals for primary currencies.
 
             Sample output:
@@ -168,16 +136,53 @@ class Market(dict):
                 }
 
         """
-        volume = self.steem.rpc.get_24_volume(
-            self["base"]["id"],
-            self["quote"]["id"],
-        )
+        self.steem.register_apis(["market_history"])
+        volume = self.steem.rpc.get_volume(api="market_history")
+        if raw_data:
+            return volume
         return {
-            self["base"]["symbol"]: Amount(volume["base_volume"], self["base"], steem_instance=self.steem),
-            self["quote"]["symbol"]: Amount(volume["quote_volume"], self["quote"], steem_instance=self.steem)
+            self["base"]["symbol"]: Amount(volume["sbd_volume"], steem_instance=self.steem),
+            self["quote"]["symbol"]: Amount(volume["steem_volume"], steem_instance=self.steem)
         }
 
-    def orderbook(self, limit=25):
+    def orderbook(self, limit=25, raw_data=False):
+        """ Returns the order book for a given market. You may also
+            specify "all" to get the orderbooks of all markets.
+            :param int limit: Limit the amount of orders (default: 25)
+            Sample output:
+            .. code-block:: js
+                {'bids': [0.003679 USD/BTS (1.9103 USD|519.29602 BTS),
+                0.003676 USD/BTS (299.9997 USD|81606.16394 BTS),
+                0.003665 USD/BTS (288.4618 USD|78706.21881 BTS),
+                0.003665 USD/BTS (3.5285 USD|962.74409 BTS),
+                0.003665 USD/BTS (72.5474 USD|19794.41299 BTS)],
+                'asks': [0.003738 USD/BTS (36.4715 USD|9756.17339 BTS),
+                0.003738 USD/BTS (18.6915 USD|5000.00000 BTS),
+                0.003742 USD/BTS (182.6881 USD|48820.22081 BTS),
+                0.003772 USD/BTS (4.5200 USD|1198.14798 BTS),
+                0.003799 USD/BTS (148.4975 USD|39086.59741 BTS)]}
+            .. note:: Each bid is an instance of
+                class:`steem.price.Order` and thus carries the keys
+                ``base``, ``quote`` and ``price``. From those you can
+                obtain the actual amounts for sale
+        """
+        orders = self.steem.rpc.get_order_book(limit)
+        if raw_data:
+            return orders
+        asks = list(map(lambda x: Order(
+            Amount(x["order_price"]["quote"], steem_instance=self.steem),
+            Amount(x["order_price"]["base"], steem_instance=self.steem),
+            steem_instance=self.steem), orders["asks"]))
+        bids = list(map(lambda x: Order(
+            Amount(x["order_price"]["quote"], steem_instance=self.steem),
+            Amount(x["order_price"]["base"], steem_instance=self.steem),
+            steem_instance=self.steem), orders["bids"]))
+        asks_date = list(map(lambda x: formatTimeString(x["created"]), orders["asks"]))
+        bids_date = list(map(lambda x: formatTimeString(x["created"]), orders["bids"]))
+        data = {"asks": asks, "bids": bids, "asks_date": asks_date, "bids_date": bids_date}
+        return data
+
+    def recent_trades(self, limit=25, raw_data=False):
         """ Returns the order book for a given market. You may also
             specify "all" to get the orderbooks of all markets.
 
@@ -205,25 +210,20 @@ class Market(dict):
                 obtain the actual amounts for sale
 
         """
-        orders = self.steem.rpc.get_order_book(
-            self["base"]["id"],
-            self["quote"]["id"],
-            limit
-        )
-        asks = list(map(lambda x: Order(
-            Amount(x["quote"], self["quote"], steem_instance=self.steem),
-            Amount(x["base"], self["base"], steem_instance=self.steem),
-            steem_instance=self.steem
-        ), orders["asks"]))
-        bids = list(map(lambda x: Order(
-            Amount(x["quote"], self["quote"], steem_instance=self.steem),
-            Amount(x["base"], self["base"], steem_instance=self.steem),
-            steem_instance=self.steem
-        ), orders["bids"]))
-        data = {"asks": asks, "bids": bids}
-        return data
+        self.steem.register_apis(["market_history"])
+        orders = self.steem.rpc.get_recent_trades(limit, api="market_history")
+        if raw_data:
+            return orders
+        data_order = list(map(lambda x: Order(
+            Amount(x["open_pays"], steem_instance=self.steem),
+            Amount(x["current_pays"], steem_instance=self.steem),
+            steem_instance=self.steem), orders))
 
-    def trades(self, limit=25, start=None, stop=None):
+        data_date = list(map(lambda x: formatTimeString(x["date"]), orders))
+
+        return {'date': data_date, 'order': data_order}
+
+    def trades(self, limit=25, start=None, stop=None, raw_data=False):
         """ Returns your trade history for a given market.
 
             :param int limit: Limit the amount of orders (default: 25)
@@ -237,68 +237,42 @@ class Market(dict):
             stop = datetime.now()
         if not start:
             start = stop - timedelta(hours=24)
+        self.steem.register_apis(["market_history"])
         orders = self.steem.rpc.get_trade_history(
-            self["base"]["symbol"],
-            self["quote"]["symbol"],
-            formatTime(stop),
-            formatTime(start),
-            limit)
-        return list(map(
-            lambda x: FilledOrder(
-                x,
-                quote=Amount(x["amount"], self["quote"], steem_instance=self.steem),
-                base=Amount(float(x["amount"]) * float(x["price"]), self["base"], steem_instance=self.steem),
-                steem_instance=self.steem
-            ), orders
-        ))
+            formatTimeFromNow(start),
+            formatTimeFromNow(stop),
+            limit, api="market_history")
+        if raw_data:
+            return orders
+        data_order = list(map(lambda x: Order(
+            Amount(x["open_pays"], steem_instance=self.steem),
+            Amount(x["current_pays"], steem_instance=self.steem),
+            steem_instance=self.steem), orders))
 
-    def accounttrades(self, account=None, limit=25):
-        """ Returns your trade history for a given market, specified by
-            the "currencyPair" parameter. You may also specify "all" to
-            get the orderbooks of all markets.
+        data_date = list(map(lambda x: formatTimeString(x["date"]), orders))
 
-            :param str currencyPair: Return results for a particular market only (default: "all")
-            :param int limit: Limit the amount of orders (default: 25)
+        return {'date': data_date, 'order': data_order}
 
-            Output Parameters:
+    def market_history_buckets(self):
+        self.steem.register_apis(["market_history"])
+        return self.steem.rpc.get_market_history_buckets(api="market_history")
 
-                - `type`: sell or buy
-                - `rate`: price for `quote` denoted in `base` per `quote`
-                - `amount`: amount of quote
-                - `total`: amount of base at asked price (amount/price)
+    def market_history(self, bucket_seconds=300, start_age=3600, end_age=0):
+        buckets = self.market_history_buckets()
+        # self.steem.register_apis(["market_history"])
+        if bucket_seconds < 5 and bucket_seconds >= 0:
+            bucket_seconds = buckets[bucket_seconds]
+        else:
+            if bucket_seconds not in buckets:
+                raise ValueError("You need select the bucket_seconds from " + str(buckets))
+        history = self.steem.rpc.get_market_history(
+            bucket_seconds,
+            formatTimeFromNow(-start_age - end_age),
+            formatTimeFromNow(-end_age),
+            api="market_history")
+        return history
 
-            .. note:: This call goes through the trade history and
-                      searches for your account, if there are no orders
-                      within ``limit`` trades, this call will return an
-                      empty array.
-
-        """
-        if not account:
-            if "default_account" in self.steem.config:
-                account = self.steem.config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self.steem)
-
-        filled = self.steem.rpc.get_fill_order_history(
-            self["base"]["id"],
-            self["quote"]["id"],
-            2 * limit,
-            api="history"
-        )
-        trades = []
-        for f in filled:
-            if f["op"]["account_id"] == account["id"]:
-                trades.append(
-                    FilledOrder(
-                        f,
-                        base=self["base"],
-                        quote=self["quote"],
-                        steem_instance=self.steem
-                    ))
-        return trades
-
-    def accountopenorders(self, account=None):
+    def accountopenorders(self, account=None, raw_data=False):
         """ Returns open Orders
 
             :param steem.account.Account account: Account name or instance of Account to show orders for in this market
@@ -311,19 +285,20 @@ class Market(dict):
         account = Account(account, full=True, steem_instance=self.steem)
 
         r = []
-        orders = account["limit_orders"]
+        # orders = account["limit_orders"]
+        orders = self.steem.rpc.get_open_orders(account["name"])
+        if raw_data:
+            return orders
         for o in orders:
-            if ((
-                o["sell_price"]["base"]["asset_id"] == self["base"]["id"] and
-                o["sell_price"]["quote"]["asset_id"] == self["quote"]["id"]
-            ) or (
-                o["sell_price"]["base"]["asset_id"] == self["quote"]["id"] and
-                o["sell_price"]["quote"]["asset_id"] == self["base"]["id"]
-            )):
-                r.append(Order(
-                    o,
-                    steem_instance=self.steem
-                ))
+            order = {}
+            order["order"] = Order(
+                Amount(o["sell_price"]["base"]),
+                Amount(o["sell_price"]["quote"]),
+                steem_instance=self.steem
+            )
+            order["orderid"] = o["orderid"]
+            order["created"] = formatTimeString(o["created"])
+            r.append(order)
         return r
 
     def buy(
@@ -333,6 +308,7 @@ class Market(dict):
         expiration=None,
         killfill=False,
         account=None,
+        orderid=None,
         returnOrderId=False
     ):
         """ Places a buy order in a given market
@@ -386,20 +362,22 @@ class Market(dict):
             assert(amount["asset"]["symbol"] == self["quote"]["symbol"]), \
                 "Price: {} does not match amount: {}".format(
                     str(price), str(amount))
+        elif isinstance(amount, str):
+            amount = Amount(amount, steem_instance=self.steem)
         else:
             amount = Amount(amount, self["quote"]["symbol"], steem_instance=self.steem)
 
         order = operations.Limit_order_create(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
-            "seller": account["id"],
-            "amount_to_sell": {
-                "amount": int(float(amount) * float(price) * 10 ** self["base"]["precision"]),
-                "asset_id": self["base"]["id"]
-            },
-            "min_to_receive": {
-                "amount": int(float(amount) * 10 ** self["quote"]["precision"]),
-                "asset_id": self["quote"]["id"]
-            },
+            "owner": account["name"],
+            "orderid": orderid or random.getrandbits(32),
+            "amount_to_sell": Amount(
+                float(amount) * float(price),
+                self["base"]["symbol"]
+            ),
+            "min_to_receive": Amount(
+                float(amount),
+                self["quote"]["symbol"]
+            ),
             "expiration": formatTimeFromNow(expiration),
             "fill_or_kill": killfill,
         })
@@ -424,6 +402,7 @@ class Market(dict):
         expiration=None,
         killfill=False,
         account=None,
+        orderid=None,
         returnOrderId=False
     ):
         """ Places a sell order in a given market
@@ -464,20 +443,22 @@ class Market(dict):
             assert(amount["asset"]["symbol"] == self["quote"]["symbol"]), \
                 "Price: {} does not match amount: {}".format(
                     str(price), str(amount))
+        elif isinstance(amount, str):
+            amount = Amount(amount, steem_instance=self.steem)
         else:
             amount = Amount(amount, self["quote"]["symbol"], steem_instance=self.steem)
 
         order = operations.Limit_order_create(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
-            "seller": account["id"],
-            "amount_to_sell": {
-                "amount": int(float(amount) * 10 ** self["quote"]["precision"]),
-                "asset_id": self["quote"]["id"]
-            },
-            "min_to_receive": {
-                "amount": int(float(amount) * float(price) * 10 ** self["base"]["precision"]),
-                "asset_id": self["base"]["id"]
-            },
+            "owner": account["name"],
+            "orderid": orderid or random.getrandbits(32),
+            "amount_to_sell": Amount(
+                float(amount),
+                self["quote"]["symbol"]
+            ),
+            "min_to_receive": Amount(
+                float(amount) * float(price),
+                self["base"]["symbol"]
+            ),
             "expiration": formatTimeFromNow(expiration),
             "fill_or_kill": killfill,
         })
@@ -494,41 +475,26 @@ class Market(dict):
 
         return tx
 
-    def cancel(self, orderNumber, account=None):
+    def cancel(self, orderNumbers, account=None, **kwargs):
         """ Cancels an order you have placed in a given market. Requires
-            only the "orderNumber". An order number takes the form
+            only the "orderNumbers". An order number takes the form
             ``1.7.xxx``.
-
-            :param str orderNumber: The Order Object ide of the form ``1.7.xxxx``
+            :param str orderNumbers: The Order Object ide of the form ``1.7.xxxx``
         """
-        return self.steem.cancel(orderNumber, account=account)
+        if not account:
+            if "default_account" in self.steem.config:
+                account = self.steem.config["default_account"]
+        if not account:
+            raise ValueError("You need to provide an account")
+        account = Account(account, full=False, steem_instance=self.steem)
 
-    def core_quote_market(self):
-        """ This returns an instance of the market that has the core market of the quote asset.
-            It means that quote needs to be a market pegged asset and returns a
-            market to it's collateral asset.
-        """
-        if not self["quote"].is_bitasset:
-            raise ValueError("Quote (%s) is not a bitasset!" % self["quote"]["symbol"])
-        self["quote"].full = True
-        self["quote"].refresh()
-        collateral = Asset(
-            self["quote"]["bitasset_data"]["options"]["short_backing_asset"],
-            steem_instance=self.steem
-        )
-        return Market(quote=self["quote"], base=collateral)
+        if not isinstance(orderNumbers, (list, set, tuple)):
+            orderNumbers = {orderNumbers}
 
-    def core_base_market(self):
-        """ This returns an instance of the market that has the core market of the base asset.
-            It means that base needs to be a market pegged asset and returns a
-            market to it's collateral asset.
-        """
-        if not self["base"].is_bitasset:
-            raise ValueError("base (%s) is not a bitasset!" % self["base"]["symbol"])
-        self["base"].full = True
-        self["base"].refresh()
-        collateral = Asset(
-            self["base"]["bitasset_data"]["options"]["short_backing_asset"],
-            steem_instance=self.steem
-        )
-        return Market(quote=self["base"], base=collateral)
+        op = []
+        for order in orderNumbers:
+            op.append(
+                operations.Limit_order_cancel(**{
+                    "owner": account["name"],
+                    "orderid": order}))
+        return self.steem.finalizeOp(op, account["name"], "active", **kwargs)

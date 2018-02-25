@@ -1,7 +1,4 @@
 import json
-from beem.account import Account
-from beembase import operations
-
 from .exceptions import AssetDoesNotExistsException
 from .blockchainobject import BlockchainObject
 

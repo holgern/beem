@@ -1,5 +1,5 @@
 from beem.instance import shared_steem_instance
-from .asset import Asset
+from beem.asset import Asset
 
 
 class Amount(dict):

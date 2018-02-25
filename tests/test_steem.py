@@ -6,6 +6,8 @@ from pprint import pprint
 from beem import Steem
 from beembase.operationids import getOperationNameForId
 from beem.amount import Amount
+from beem.witness import Witness
+from beem.account import Account
 from beembase.account import PrivateKey
 from beem.instance import set_shared_steem_instance
 
@@ -34,7 +36,8 @@ class Testcases(unittest.TestCase):
     def test_transfer(self):
         bts = self.bts
         # bts.prefix ="STX"
-        tx = bts.transfer(
+        acc = Account("test", steem_instance=bts)
+        tx = acc.transfer(
             "test", 1.33, "SBD", memo="Foobar", account="test1")
         self.assertEqual(
             tx["operations"][0][0],
@@ -119,9 +122,11 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         tx1 = bts.new_tx()
         tx2 = bts.new_tx()
-        self.bts.transfer("test1", 1, "STEEM", append_to=tx1)
-        self.bts.transfer("test1", 2, "STEEM", append_to=tx2)
-        self.bts.transfer("test1", 3, "STEEM", append_to=tx1)
+
+        acc = Account("test1", steem_instance=bts)
+        acc.transfer("test1", 1, "STEEM", append_to=tx1)
+        acc.transfer("test1", 2, "STEEM", append_to=tx2)
+        acc.transfer("test1", 3, "STEEM", append_to=tx1)
         tx1 = tx1.json()
         tx2 = tx2.json()
         ops1 = tx1["operations"]
@@ -189,7 +194,8 @@ class Testcases(unittest.TestCase):
 
     def test_update_memo_key(self):
         bts = self.bts
-        tx = bts.update_memo_key("STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n")
+        acc = Account("test1", steem_instance=bts)
+        tx = acc.update_memo_key("STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n")
         self.assertEqual(
             (tx["operations"][0][0]),
             "account_update"
@@ -201,7 +207,8 @@ class Testcases(unittest.TestCase):
 
     def test_approvewitness(self):
         bts = self.bts
-        tx = bts.approvewitness("test1")
+        w = Account("test", steem_instance=bts)
+        tx = w.approvewitness("test1")
         self.assertEqual(
             (tx["operations"][0][0]),
             "account_witness_vote"

@@ -6,7 +6,9 @@ from beem.utils import (
     construct_authorperm,
     construct_authorpermvoter,
     sanitize_permlink,
-    derive_permlink
+    derive_permlink,
+    resolve_root_identifier,
+    make_patch
 )
 
 
@@ -14,6 +16,9 @@ class Testcases(unittest.TestCase):
     def test_constructAuthorperm(self):
         self.assertEqual(construct_authorperm("A", "B"), "@A/B")
         self.assertEqual(construct_authorperm({'author': "A", 'permlink': "B"}), "@A/B")
+
+    def test_resolve_root_identifier(self):
+        self.assertEqual(resolve_root_identifier("/a/@b/c"), ("@b/c", "a"))
 
     def test_constructAuthorpermvoter(self):
         self.assertEqual(construct_authorpermvoter("A", "B", "C"), "@A/B|C")
@@ -44,3 +49,8 @@ class Testcases(unittest.TestCase):
         self.assertEqual(derive_permlink("Hello World"), "hello-world")
         self.assertEqual(derive_permlink("aAf_0.12"), "aaf-0-12")
         self.assertEqual(derive_permlink("[](){}"), "")
+
+    def test_patch(self):
+        self.assertEqual(make_patch("aa", "ab"), '@@ -1 +1 @@\n-aa\n+ab\n')
+        self.assertEqual(make_patch("Hello!\n Das ist ein Test!\nEnd.\n", "Hello!\n This is a Test\nEnd.\n"),
+                         '@@ -1,3 +1,3 @@\n Hello!\n- Das ist ein Test!\n+ This is a Test\n End.\n')
