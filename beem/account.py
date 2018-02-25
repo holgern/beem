@@ -714,7 +714,7 @@ class Account(BlockchainObject):
             })
         return self.steem.finalizeOp(op, account, "active")
 
-    def transfer_from_savings_cancel(self, request_id, account=None):
+    def cancel_transfer_from_savings(self, request_id, account=None):
         """ Cancel a withdrawal from 'savings' account.
             :param str request_id: Identifier for tracking or cancelling
             the withdrawal
@@ -844,7 +844,7 @@ class Account(BlockchainObject):
         else:
             amount = Amount(amount, "VESTS", steem_instance=self.steem)
         assert amount["symbol"] == "VESTS"
-        op = operations.WithdrawVesting(
+        op = operations.Withdraw_vesting(
             **{
                 "account": account["name"],
                 "vesting_shares": amount,

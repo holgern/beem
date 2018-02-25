@@ -85,6 +85,16 @@ Quickstart
 
 .. code-block:: python
 
+   from beem.steem import Steem
+   stm = Steem()
+   stm.wallet.purge()
+   stm.wallet.create("wallet-passphrase")
+   stm.wallet.unlock("wallet-passphrase")
+   stm.wallet.addPrivateKey("512345678")
+   stm.wallet.lock()
+
+.. code-block:: python
+
    from beem.market import Market
    market = Market()
    print(market.ticker())

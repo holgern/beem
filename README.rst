@@ -27,6 +27,8 @@ The library name is derived from a beam maschine, similar to the analogy between
 
 Installation
 ============
+The minimal working python version 3.4.x.
+
 Warning: install beem will install pycrytodome which is not compatible to pycryto which is need for python-steem.
 At the moment, either beem or steem can be install at one maschine!
 
@@ -77,9 +79,15 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.5
+------
+* Market fixed
+* Account, Comment, Discussion and Witness class improved
+* Bug fixes
+
 0.19.4
 ------
-* beem
+* New library name is now beem
 * Upstream fixes from https://github.com/xeroc/python-bitshares
 * Improved Docu
 

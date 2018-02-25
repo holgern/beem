@@ -22,8 +22,7 @@ class Testcases(unittest.TestCase):
         self.bts = Steem(
             nodes,
             nobroadcast=True,
-            # We want to bundle many operations into a single transaction
-            bundle=True,
+            bundle=False,
             # Overwrite wallet to use this list of wifs only
             wif={"active": wif}
         )
@@ -56,3 +55,107 @@ class Testcases(unittest.TestCase):
         # self.assertEqual(account["id"], "1.2.1")
         self.assertEqual(str(account), "<Account test>")
         self.assertIsInstance(Account(account), Account)
+
+    def test_withdraw_vesting(self):
+        bts = self.bts
+        w = Account("test", steem_instance=bts)
+        tx = w.withdraw_vesting("100 VESTS")
+        self.assertEqual(
+            (tx["operations"][0][0]),
+            "withdraw_vesting"
+        )
+        op = tx["operations"][0][1]
+        self.assertIn(
+            "test",
+            op["account"])
+
+    def test_delegate_vesting_shares(self):
+        bts = self.bts
+        w = Account("test", steem_instance=bts)
+        tx = w.delegate_vesting_shares("test1", "100 VESTS")
+        self.assertEqual(
+            (tx["operations"][0][0]),
+            "delegate_vesting_shares"
+        )
+        op = tx["operations"][0][1]
+        self.assertIn(
+            "test",
+            op["delegator"])
+
+    def test_claim_reward_balance(self):
+        bts = self.bts
+        w = Account("test", steem_instance=bts)
+        tx = w.claim_reward_balance()
+        self.assertEqual(
+            (tx["operations"][0][0]),
+            "claim_reward_balance"
+        )
+        op = tx["operations"][0][1]
+        self.assertIn(
+            "test",
+            op["account"])
+
+    def test_cancel_transfer_from_savings(self):
+        bts = self.bts
+        w = Account("test", steem_instance=bts)
+        tx = w.cancel_transfer_from_savings(0)
+        self.assertEqual(
+            (tx["operations"][0][0]),
+            "cancel_transfer_from_savings"
+        )
+        op = tx["operations"][0][1]
+        self.assertIn(
+            "test",
+            op["from"])
+
+    def test_transfer_from_savings(self):
+        bts = self.bts
+        w = Account("test", steem_instance=bts)
+        tx = w.transfer_from_savings(1, "STEEM", "")
+        self.assertEqual(
+            (tx["operations"][0][0]),
+            "transfer_from_savings"
+        )
+        op = tx["operations"][0][1]
+        self.assertIn(
+            "test",
+            op["from"])
+
+    def test_transfer_to_savings(self):
+        bts = self.bts
+        w = Account("test", steem_instance=bts)
+        tx = w.transfer_to_savings(1, "STEEM", "")
+        self.assertEqual(
+            (tx["operations"][0][0]),
+            "transfer_to_savings"
+        )
+        op = tx["operations"][0][1]
+        self.assertIn(
+            "test",
+            op["from"])
+
+    def test_convert(self):
+        bts = self.bts
+        w = Account("test", steem_instance=bts)
+        tx = w.convert("1 SBD")
+        self.assertEqual(
+            (tx["operations"][0][0]),
+            "convert"
+        )
+        op = tx["operations"][0][1]
+        self.assertIn(
+            "test",
+            op["owner"])
+
+    def test_transfer_to_vesting(self):
+        bts = self.bts
+        w = Account("test", steem_instance=bts)
+        tx = w.transfer_to_vesting("1 STEEM")
+        self.assertEqual(
+            (tx["operations"][0][0]),
+            "transfer_to_vesting"
+        )
+        op = tx["operations"][0][1]
+        self.assertIn(
+            "test",
+            op["from"])
