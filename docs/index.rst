@@ -61,7 +61,8 @@ Quickstart
    from beem import Steem
    steem = Steem()
    steem.wallet.unlock("wallet-passphrase")
-   steem.transfer("<to>", "<amount>", "<asset>", "<memo>", account="<from>")
+   account = Account("test", steem_instance=steem)
+   account.transfer("<to>", "<amount>", "<asset>", "<memo>")
 
 .. code-block:: python
 

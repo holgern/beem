@@ -70,7 +70,7 @@ class Witness(BlockchainObject):
         if not account:
             raise ValueError("You need to provide an account")
 
-        account = Account(account, steem_instance=self)
+        account = Account(account, steem_instance=self.steem)
         if isinstance(base, Amount):
             base = Amount(base, steem_instance=self.steem)
         elif isinstance(base, str):
@@ -116,7 +116,7 @@ class Witness(BlockchainObject):
         if not account:
             raise ValueError("You need to provide an account")
 
-        account = Account(account, steem_instance=self)
+        account = Account(account, steem_instance=self.steem)
 
         try:
             PublicKey(signing_key)

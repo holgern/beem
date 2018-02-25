@@ -47,7 +47,8 @@ class Comment(BlockchainObject):
         self.identifier = self["authorperm"]
 
     def refresh(self):
-        content = self.steem.rpc.get_content(self["author"], self["permlink"])
+        [author, permlink] = resolve_authorperm(self.identifier)
+        content = self.steem.rpc.get_content(author, permlink)
         if not content:
             raise ContentDoesNotExistsException
         super(Comment, self).__init__(content, id_item="authorperm", steem_instance=self.steem)
@@ -145,7 +146,7 @@ class Comment(BlockchainObject):
                 account = self.steem.config["default_account"]
         if not account:
             raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self)
+        account = Account(account, steem_instance=self.steem)
         if not identifier:
             post_author = self["author"]
             post_permlink = self["permlink"]
@@ -445,7 +446,7 @@ class Comment(BlockchainObject):
             }
         ]
         return self.steem.custom_json(
-            id="follow", json=json_body, required_posting_auths=[account["name"]])
+            id="follow", json_data=json_body, required_posting_auths=[account["name"]])
 
     def comment_options(self, options, identifier=None, account=None):
         """ Set the comment options

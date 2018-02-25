@@ -8,7 +8,7 @@ __all__ = [
     "asset",
     "block",
     "blockchain",
-    # "market",
+    "market",
     "storage",
     "price",
     "utils",

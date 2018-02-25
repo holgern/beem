@@ -15,40 +15,23 @@ executed in the same order as they are added to the transaction.
 
   from pprint import pprint
   from beem import Steem
+  from beem.account import Account
 
   testnet = Steem(
       nobroadcast=True,
       bundle=True,
   )
+  
+  account = Account("test", steem_instance=testnet)
+  account.steem.wallet.unlock("supersecret")
 
-  testnet.wallet.unlock("supersecret")
-
-  testnet.transfer("test1", 1, "STEEM", account="test")
-  testnet.transfer("test1", 1, "STEEM", account="test")
-  testnet.transfer("test1", 1, "STEEM", account="test")
-  testnet.transfer("test1", 1, "STEEM", account="test")
+  account.transfer("test1", 1, "STEEM", account="test")
+  account.transfer("test1", 1, "STEEM", account="test")
+  account.transfer("test1", 1, "STEEM", account="test")
+  account.transfer("test1", 1, "STEEM", account="test")
 
   pprint(testnet.broadcast())
 
-
-Proposing a Transaction
------------------------
-
-In Steem, you can propose a transactions to any account. This is
-used to facilitate on-chain multisig transactions. With
-python-steem, you can do this simply by using the ``proposer``
-attribute:
-
-.. code-block:: python
-
-  from pprint import pprint
-  from beem import Steem
-
-  testnet = Steem(
-      proposer="test"
-  )
-  testnet.wallet.unlock("supersecret")
-  pprint(testnet.transfer("tst1", 1, "STEEM", account="test"))
 
 Simple Sell Script
 ------------------
