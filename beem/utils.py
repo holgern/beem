@@ -94,7 +94,8 @@ def resolve_authorperm(identifier):
 def construct_authorperm(*args, username_prefix='@'):
     """ Create a post identifier from comment/post object or arguments.
     Examples:
-        ::
+
+        .. code-block:: python
             construct_authorperm('username', 'permlink')
             construct_authorperm({'author': 'username',
                 'permlink': 'permlink'})
@@ -139,7 +140,8 @@ def resolve_authorpermvoter(identifier):
 def construct_authorpermvoter(*args, username_prefix='@'):
     """ Create a vote identifier from vote object or arguments.
     Examples:
-        ::
+
+        .. code-block:: python
             construct_authorpermvoter('username', 'permlink', 'voter')
             construct_authorpermvoter({'author': 'username',
                 'permlink': 'permlink', 'voter': 'voter'})

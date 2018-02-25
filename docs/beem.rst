@@ -15,6 +15,7 @@ Submodules
    beem.blockchain
    beem.blockchainobject
    beem.comment
+   beem.discussions
    beem.exceptions
    beem.instance
    beem.market
