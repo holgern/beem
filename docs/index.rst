@@ -9,11 +9,6 @@
    http://openalea.gforge.inria.fr/doc/openalea/doc/_build/html/source/sphinx/rest_syntax.html
    http://rest-sphinx-memo.readthedocs.org/en/latest/ReST.html
 
-.. image:: _static/python-bitshares-logo.svg
-   :width: 300 px
-   :alt: Python BitShares
-   :align: center
-
 Welcome to pybitshares's documentation!
 ===============================================
 
