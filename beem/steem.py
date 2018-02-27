@@ -281,7 +281,8 @@ class Steem(object):
 
     def get_median_price(self):
         median_price = self.get_current_median_history_price()
-        a = Price(None,
+        a = Price(
+            None,
             base=Amount(median_price['base']),
             quote=Amount(median_price['quote']),
         )
