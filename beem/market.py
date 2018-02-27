@@ -49,9 +49,7 @@ class Market(dict):
 
     def __init__(
         self,
-        *args,
         steem_instance=None,
-        **kwargs
     ):
         self.steem = steem_instance or shared_steem_instance()
 
