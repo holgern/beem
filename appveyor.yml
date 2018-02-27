@@ -8,6 +8,14 @@ environment:
     WITH_COMPILER: "cmd /E:ON /V:ON /C .\\appveyor\\run_with_compiler.cmd"
 
   matrix:
+    - PYTHON: "C:\\Python27"
+      PYTHON_ARCH: "32"
+      MINICONDA: C:\Miniconda27
+
+    - PYTHON: "C:\\Python27-x64"
+      PYTHON_ARCH: "64"
+      MINICONDA: C:\Miniconda27-x64
+
     - PYTHON: "C:\\Python35"
       PYTHON_ARCH: "32"
       MINICONDA: C:\Miniconda35
