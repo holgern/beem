@@ -1,3 +1,9 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import bytes
+from builtins import object
 import shutil
 import time
 import os
@@ -344,7 +350,7 @@ class Configuration(DataDir):
         connection.commit()
 
     def __iter__(self):
-        return iter(self.items())
+        return iter(list(self.items()))
 
     def items(self):
         query = ("SELECT key, value from %s " % (self.__tablename__))

@@ -1,3 +1,9 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import str
+from builtins import object
 import logging
 import os
 from beemgraphenebase import bip38
@@ -17,7 +23,7 @@ from beemapi.exceptions import NoAccessApi
 log = logging.getLogger(__name__)
 
 
-class Wallet():
+class Wallet(object):
     """ The wallet is meant to maintain access to private keys for
         your accounts. It either uses manually provided private keys
         or uses a SQLite database managed by storage.py.

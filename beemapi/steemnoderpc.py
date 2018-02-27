@@ -1,3 +1,8 @@
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 import re
 import sys
 import threading
@@ -81,7 +86,7 @@ class SteemNodeRPC(GrapheneWebsocketRPC):
         """
         props = self.get_config()
         chain_id = props["STEEMIT_CHAIN_ID"]
-        for k, v in known_chains.items():
+        for k, v in list(known_chains.items()):
             if v["chain_id"] == chain_id:
                 return v
         raise("Connecting to unknown network!")

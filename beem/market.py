@@ -1,3 +1,8 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import str
 from beem.instance import shared_steem_instance
 from datetime import datetime, timedelta
 from .utils import (
@@ -169,16 +174,16 @@ class Market(dict):
         orders = self.steem.rpc.get_order_book(limit)
         if raw_data:
             return orders
-        asks = list(map(lambda x: Order(
+        asks = list([Order(
             Amount(x["order_price"]["quote"], steem_instance=self.steem),
             Amount(x["order_price"]["base"], steem_instance=self.steem),
-            steem_instance=self.steem), orders["asks"]))
-        bids = list(map(lambda x: Order(
+            steem_instance=self.steem) for x in orders["asks"]])
+        bids = list([Order(
             Amount(x["order_price"]["quote"], steem_instance=self.steem),
             Amount(x["order_price"]["base"], steem_instance=self.steem),
-            steem_instance=self.steem), orders["bids"]))
-        asks_date = list(map(lambda x: formatTimeString(x["created"]), orders["asks"]))
-        bids_date = list(map(lambda x: formatTimeString(x["created"]), orders["bids"]))
+            steem_instance=self.steem) for x in orders["bids"]])
+        asks_date = list([formatTimeString(x["created"]) for x in orders["asks"]])
+        bids_date = list([formatTimeString(x["created"]) for x in orders["bids"]])
         data = {"asks": asks, "bids": bids, "asks_date": asks_date, "bids_date": bids_date}
         return data
 
@@ -214,12 +219,12 @@ class Market(dict):
         orders = self.steem.rpc.get_recent_trades(limit, api="market_history")
         if raw_data:
             return orders
-        data_order = list(map(lambda x: Order(
+        data_order = list([Order(
             Amount(x["open_pays"], steem_instance=self.steem),
             Amount(x["current_pays"], steem_instance=self.steem),
-            steem_instance=self.steem), orders))
+            steem_instance=self.steem) for x in orders])
 
-        data_date = list(map(lambda x: formatTimeString(x["date"]), orders))
+        data_date = list([formatTimeString(x["date"]) for x in orders])
 
         return {'date': data_date, 'order': data_order}
 
@@ -244,12 +249,12 @@ class Market(dict):
             limit, api="market_history")
         if raw_data:
             return orders
-        data_order = list(map(lambda x: Order(
+        data_order = list([Order(
             Amount(x["open_pays"], steem_instance=self.steem),
             Amount(x["current_pays"], steem_instance=self.steem),
-            steem_instance=self.steem), orders))
+            steem_instance=self.steem) for x in orders])
 
-        data_date = list(map(lambda x: formatTimeString(x["date"]), orders))
+        data_date = list([formatTimeString(x["date"]) for x in orders])
 
         return {'date': data_date, 'order': data_order}
 

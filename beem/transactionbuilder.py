@@ -1,3 +1,8 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import str
 from .account import Account
 from beembase.objects import Operation
 from beembase.account import PrivateKey, PublicKey

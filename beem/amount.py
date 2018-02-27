@@ -1,3 +1,4 @@
+from __future__ import division
 from beem.instance import shared_steem_instance
 from beem.asset import Asset
 

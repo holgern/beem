@@ -1,3 +1,8 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import str
 from beem.instance import shared_steem_instance
 from datetime import datetime, timedelta
 import json
@@ -44,7 +49,7 @@ class ObjectCache(dict):
 
     def __str__(self):
         return "ObjectCache(n={}, default_expiration={})".format(
-            len(self.keys()), self.default_expiration)
+            len(list(self.keys())), self.default_expiration)
 
 
 class BlockchainObject(dict):
@@ -155,7 +160,7 @@ class BlockchainObject(dict):
     def items(self):
         if not self.cached:
             self.refresh()
-        return super().items()
+        return list(super().items())
 
     def __contains__(self, key):
         if not self.cached:

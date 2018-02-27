@@ -1,3 +1,9 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import str
+from builtins import object
 import json
 import logging
 
@@ -841,22 +847,14 @@ class Steem(object):
         try:
             pubkey = PublicKey(foreign, prefix=self.prefix)
             affected_items = list(
-                filter(lambda x: x[0] == str(pubkey),
-                       authority["key_auths"]))
-            authority["key_auths"] = list(filter(
-                lambda x: x[0] != str(pubkey),
-                authority["key_auths"]
-            ))
+                [x for x in authority["key_auths"] if x[0] == str(pubkey)])
+            authority["key_auths"] = list([x for x in authority["key_auths"] if x[0] != str(pubkey)])
         except:
             try:
                 foreign_account = Account(foreign, steem_instance=self)
                 affected_items = list(
-                    filter(lambda x: x[0] == foreign_account["name"],
-                           authority["account_auths"]))
-                authority["account_auths"] = list(filter(
-                    lambda x: x[0] != foreign_account["name"],
-                    authority["account_auths"]
-                ))
+                    [x for x in authority["account_auths"] if x[0] == foreign_account["name"]])
+                authority["account_auths"] = list([x for x in authority["account_auths"] if x[0] != foreign_account["name"]])
             except:
                 raise ValueError(
                     "Unknown foreign account or unvalid public key"

@@ -1,3 +1,7 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 known_chains = {
     "STEEM": {
         "chain_id": "0" * int(256 / 4),

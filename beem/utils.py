@@ -1,3 +1,8 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import next
 import re
 import time
 from datetime import datetime, timezone
@@ -198,9 +203,9 @@ def keep_in_dict(obj, allowed_keys=list()):
     """ Prune a class or dictionary of all but allowed keys.
     """
     if type(obj) == dict:
-        items = obj.items()
+        items = list(obj.items())
     else:
-        items = obj.__dict__.items()
+        items = list(obj.__dict__.items())
 
     return {k: v for k, v in items if k in allowed_keys}
 
@@ -209,9 +214,9 @@ def remove_from_dict(obj, remove_keys=list()):
     """ Prune a class or dictionary of specified keys.
     """
     if type(obj) == dict:
-        items = obj.items()
+        items = list(obj.items())
     else:
-        items = obj.__dict__.items()
+        items = list(obj.__dict__.items())
 
     return {k: v for k, v in items if k not in remove_keys}
 

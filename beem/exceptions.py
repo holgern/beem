@@ -1,3 +1,9 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+
 class WalletExists(Exception):
     """ A wallet has already been created and requires a password to be
         unlocked by means of :func:`steem.wallet.unlock`.

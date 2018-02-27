@@ -1,3 +1,8 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import str
 from .instance import shared_steem_instance
 from .account import Account
 from .amount import Amount
@@ -441,7 +446,7 @@ class Comment(BlockchainObject):
         account = Account(author, steem_instance=self.steem)
         # deal with the category and tags
         if isinstance(tags, str):
-            tags = list(set(filter(None, (re.split("[\W_]", tags)))))
+            tags = list(set([_f for _f in (re.split("[\W_]", tags)) if _f]))
 
         category = None
         tags = tags or json_metadata.get('tags', [])

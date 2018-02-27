@@ -1,3 +1,6 @@
+from builtins import str
+from builtins import bytes
+from builtins import object
 import json
 import struct
 import time
@@ -47,7 +50,7 @@ def JsonObj(data):
     return json.loads(str(data))
 
 
-class Uint8():
+class Uint8(object):
     def __init__(self, d):
         self.data = int(d)
 
@@ -58,7 +61,7 @@ class Uint8():
         return '%d' % self.data
 
 
-class Int16():
+class Int16(object):
     def __init__(self, d):
         self.data = int(d)
 
@@ -69,7 +72,7 @@ class Int16():
         return '%d' % self.data
 
 
-class Uint16():
+class Uint16(object):
     def __init__(self, d):
         self.data = int(d)
 
@@ -80,7 +83,7 @@ class Uint16():
         return '%d' % self.data
 
 
-class Uint32():
+class Uint32(object):
     def __init__(self, d):
         self.data = int(d)
 
@@ -91,7 +94,7 @@ class Uint32():
         return '%d' % self.data
 
 
-class Uint64():
+class Uint64(object):
     def __init__(self, d):
         self.data = int(d)
 
@@ -102,7 +105,7 @@ class Uint64():
         return '%d' % self.data
 
 
-class Varint32():
+class Varint32(object):
     def __init__(self, d):
         self.data = int(d)
 
@@ -113,7 +116,7 @@ class Varint32():
         return '%d' % self.data
 
 
-class Int64():
+class Int64(object):
     def __init__(self, d):
         self.data = int(d)
 
@@ -124,7 +127,7 @@ class Int64():
         return '%d' % self.data
 
 
-class String():
+class String(object):
     def __init__(self, d):
         self.data = d
 
@@ -160,7 +163,7 @@ class String():
         return bytes("".join(r), "utf-8")
 
 
-class Bytes():
+class Bytes(object):
     def __init__(self, d, length=None):
         self.data = d
         if length:
@@ -177,7 +180,7 @@ class Bytes():
         return str(self.data)
 
 
-class Void():
+class Void(object):
     def __init__(self):
         pass
 
@@ -188,7 +191,7 @@ class Void():
         return ""
 
 
-class Array():
+class Array(object):
     def __init__(self, d):
         self.data = d
         self.length = Varint32(len(self.data))
@@ -206,7 +209,7 @@ class Array():
         return json.dumps(r)
 
 
-class PointInTime():
+class PointInTime(object):
     def __init__(self, d):
         self.data = d
 
@@ -217,7 +220,7 @@ class PointInTime():
         return self.data
 
 
-class Signature():
+class Signature(object):
     def __init__(self, d):
         self.data = d
 
@@ -241,7 +244,7 @@ class Set(Array):  # Set = Array
         super().__init__(d)
 
 
-class Fixed_array():
+class Fixed_array(object):
     def __init__(self, d):
         raise NotImplementedError
 
@@ -252,7 +255,7 @@ class Fixed_array():
         raise NotImplementedError
 
 
-class Optional():
+class Optional(object):
     def __init__(self, d):
         self.data = d
 
@@ -271,7 +274,7 @@ class Optional():
         return not bool(bytes(self.data))
 
 
-class Static_variant():
+class Static_variant(object):
     def __init__(self, d, type_id):
         self.data = d
         self.type_id = type_id
@@ -283,7 +286,7 @@ class Static_variant():
         return json.dumps([self.type_id, self.data.json()])
 
 
-class Map():
+class Map(object):
     def __init__(self, data):
         self.data = data
 
@@ -301,7 +304,7 @@ class Map():
         return json.dumps(r)
 
 
-class Id():
+class Id(object):
     def __init__(self, d):
         self.data = Varint32(d)
 
@@ -312,7 +315,7 @@ class Id():
         return str(self.data)
 
 
-class VoteId():
+class VoteId(object):
     def __init__(self, vote):
         parts = vote.split(":")
         assert len(parts) == 2
@@ -327,7 +330,7 @@ class VoteId():
         return "%d:%d" % (self.type, self.instance)
 
 
-class ObjectId():
+class ObjectId(object):
     """ Encodes protocol ids - serializes to the *instance* only!
     """
     def __init__(self, object_str, type_verify=None):
@@ -352,7 +355,7 @@ class ObjectId():
         return self.Id
 
 
-class FullObjectId():
+class FullObjectId(object):
     """ Encodes object ids - serializes to a full object id
     """
     def __init__(self, object_str):

@@ -1,3 +1,10 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import bytes
+from builtins import str
+from builtins import object
 from collections import OrderedDict
 import json
 from beemgraphenebase.types import (
@@ -15,7 +22,7 @@ from .chains import default_prefix
 from .operationids import operations
 
 
-class Operation():
+class Operation(object):
     def __init__(self, op):
         if isinstance(op, list) and len(op) == 2:
             if isinstance(op[0], int):
@@ -77,7 +84,7 @@ class GrapheneObject(object):
         if self.data is None:
             return bytes()
         b = b""
-        for name, value in self.data.items():
+        for name, value in list(self.data.items()):
             if isinstance(value, str):
                 b += bytes(value, 'utf-8')
             else:
@@ -88,7 +95,7 @@ class GrapheneObject(object):
         if self.data is None:
             return {}
         d = {}  # JSON output is *not* ordered
-        for name, value in self.data.items():
+        for name, value in list(self.data.items()):
             if isinstance(value, Optional) and value.isempty():
                 continue
 

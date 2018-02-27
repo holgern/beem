@@ -1,3 +1,10 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import str
+from builtins import bytes
+from builtins import object
 import json
 from collections import OrderedDict
 from beemgraphenebase.types import (
@@ -50,7 +57,7 @@ class ObjectId(GPHObjectId):
             raise Exception("Object id is invalid")
 
 
-class Amount():
+class Amount(object):
     def __init__(self, d):
         if isinstance(d, str):
             self.amount, self.asset = d.strip().split(" ")
