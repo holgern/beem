@@ -56,6 +56,27 @@ class Testcases(unittest.TestCase):
         self.assertEqual(str(account), "<Account test>")
         self.assertIsInstance(Account(account), Account)
 
+    def test_account_props(self):
+        account = Account("test", full=True)
+        rep = account.reputation()
+        self.assertTrue(isinstance(rep, float))
+        vp = account.voting_power()
+        self.assertTrue(vp >= 0)
+        self.assertTrue(vp <= 100)
+        sp = account.steem_power()
+        self.assertTrue(sp >= 0)
+        vv = account.get_voting_value_SBD()
+        self.assertTrue(vv >= 0)
+        bw = account.get_bandwidth()
+        self.assertTrue(bw['used'] <= bw['allocated'])
+        followers = account.get_followers()
+        self.assertTrue(isinstance(followers, list))
+        following = account.get_following()
+        self.assertTrue(isinstance(following, list))
+        count = account.get_follow_count()
+        self.assertEqual(count['follower_count'], len(followers))
+        self.assertEqual(count['following_count'], len(following))
+
     def test_withdraw_vesting(self):
         bts = self.bts
         w = Account("test", steem_instance=bts)

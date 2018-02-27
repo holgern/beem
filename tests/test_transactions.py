@@ -553,6 +553,19 @@ class Testcases(unittest.TestCase):
                    "1bf633505a2a66cac65555b0ac535ca5ee5a61")
         self.doit()
 
+    def test_delete_comment(self):
+        self.op = operations.Delete_comment(
+            **{
+                "author": "turbot",
+                "permlink": "testpost",
+            })
+
+        self.cm = ("f68585abf4dce7c80457011106747572626f740874657374706f73"
+                   "7400011f0d413176d24455d6d9b5b9416384fcf63f080a70d8b243"
+                   "c579f996ce8c116ce0583b433d4ce9107438b72d39eb6195027880"
+                   "54b97abc20bf86b17a11d3eb8351")
+        self.doit()
+
     def test_witness_update(self):
         self.op = operations.Witness_update(
             **{

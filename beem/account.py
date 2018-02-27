@@ -3,7 +3,7 @@ from .exceptions import AccountDoesNotExistsException
 from .blockchainobject import BlockchainObject
 from .utils import formatTimeString
 from beem.amount import Amount
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from beembase import operations
 from beembase.account import PrivateKey, PublicKey
 import json
@@ -47,7 +47,6 @@ class Account(BlockchainObject):
     def __init__(
         self,
         account,
-        id_item="name",
         full=True,
         lazy=False,
         steem_instance=None
@@ -77,6 +76,7 @@ class Account(BlockchainObject):
         if not account:
             raise AccountDoesNotExistsException(self.identifier)
         self.identifier = account["name"]
+        self.steem.refresh_data()
 
         super(Account, self).__init__(account, id_item="name")
 
@@ -87,6 +87,8 @@ class Account(BlockchainObject):
 
     @property
     def name(self):
+        """ Returns the account name
+        """
         return self["name"]
 
     @property
@@ -97,6 +99,8 @@ class Account(BlockchainObject):
 
     @property
     def rep(self):
+        """ Returns the account reputation
+        """
         return self.reputation()
 
     def print_info(self, force_refresh=False, return_str=False):
@@ -111,28 +115,34 @@ class Account(BlockchainObject):
         ret += str(round(self.steem_power(), 2)) + " SP, "
         ret += str(self.balances["available"][0]) + ", " + str(self.balances["available"][1])
         bandwidth = self.get_bandwidth()
-        ret += "\n"
-        ret += "Remaining Bandwidth: " + str(round(100 - bandwidth["used"] / bandwidth["allocated"] * 100, 2)) + " %"
-        ret += " (" + str(round(bandwidth["used"] / 1024)) + " kb of " + str(round(bandwidth["allocated"] / 1024 / 1024)) + " mb)"
+        if bandwidth["allocated"] > 0:
+            ret += "\n"
+            ret += "Remaining Bandwidth: " + str(round(100 - bandwidth["used"] / bandwidth["allocated"] * 100, 2)) + " %"
+            ret += " (" + str(round(bandwidth["used"] / 1024)) + " kb of " + str(round(bandwidth["allocated"] / 1024 / 1024)) + " mb)"
         if return_str:
             return ret
         print(ret)
 
     def reputation(self, precision=2):
+        """ Returns the account reputation
+        """
         rep = int(self['reputation'])
         if rep == 0:
-            return 25
-        score = max([math.log10(abs(rep)) - 9, 0]) * 9 + 25
+            return 25.
+        score = max([math.log10(abs(rep)) - 9, 0])
         if rep < 0:
-            score = 50 - score
+            score *= -1
+        score = (score * 9.) + 25.
         if precision is not None:
             return round(score, precision)
         else:
             return score
 
     def voting_power(self, precision=2, with_regeneration=True):
+        """ Returns the account voting power
+        """
         if with_regeneration:
-            diff_in_seconds = (datetime.utcnow() - formatTimeString(self["last_vote_time"])).total_seconds()
+            diff_in_seconds = (datetime.utcnow().replace(tzinfo=timezone.utc) - formatTimeString(self["last_vote_time"])).total_seconds()
             regenerated_vp = diff_in_seconds * 10000 / 86400 / 5 / 100
         else:
             regenerated_vp = 0
@@ -147,6 +157,8 @@ class Account(BlockchainObject):
             return total_vp
 
     def steem_power(self, onlyOwnSP=False):
+        """ Returns the account steem power
+        """
         if onlyOwnSP:
             vests = Amount(self["vesting_shares"])
         else:
@@ -154,7 +166,8 @@ class Account(BlockchainObject):
         return self.steem.vests_to_sp(vests)
 
     def get_voting_value_SBD(self, voting_weight=100, voting_power=None, steem_power=None, precision=2):
-
+        """ Returns the account voting value in SBD
+        """
         if voting_power is None:
             voting_power = self.voting_power()
         if steem_power is None:
@@ -166,11 +179,15 @@ class Account(BlockchainObject):
         return round(VoteValue, precision)
 
     def get_recharge_time_str(self, voting_power_goal=100):
+        """ Returns the account recharge time
+        """
         hours = math.floor(self.get_recharge_hours(voting_power_goal=voting_power_goal, precision=3))
         minutes = math.floor(self.get_recharge_reminder_minutes(voting_power_goal=voting_power_goal, precision=0))
         return str(hours) + ":" + str(minutes).zfill(2)
 
     def get_recharge_hours(self, voting_power_goal=100, precision=2):
+        """ Returns the account voting power recharge time in hours
+        """
         missing_vp = voting_power_goal - self.voting_power(precision=10)
         if missing_vp < 0:
             return 0
@@ -178,21 +195,95 @@ class Account(BlockchainObject):
         return round(recharge_seconds / 60 / 60, precision)
 
     def get_recharge_reminder_minutes(self, voting_power_goal=100, precision=0):
+        """ Returns the account voting power recharge time in minutes
+        """
         hours = self.get_recharge_hours(voting_power_goal=voting_power_goal, precision=5)
         reminder_in_minuts = (hours - math.floor(hours)) * 60
         return round(reminder_in_minuts, precision)
 
-    def get_followers(self):
-        return [
-            x['follower'] for x in self._get_followers(direction="follower")
-        ]
+    def get_feed(self, entryId=0, limit=100, raw_data=True, account=None):
+        if account is None:
+            account = self["name"]
+        self.steem.register_apis(["follow"])
+        if raw_data:
+            return [
+                c for c in self.steem.rpc.get_feed(account, entryId, limit, api='follow')
+            ]
+        else:
+            from .comment import Comment
+            return [
+                Comment(c['comment'], steem_instance=self.steem) for c in self.steem.rpc.get_feed(account, entryId, limit, api='follow')
+            ]
 
-    def get_following(self):
-        return [
-            x['following'] for x in self._get_followers(direction="following")
-        ]
+    def get_blog_entries(self, entryId=0, limit=100, raw_data=True, account=None):
+        if account is None:
+            account = self["name"]
+        self.steem.register_apis(["follow"])
+        if raw_data:
+            return [
+                c for c in self.steem.rpc.get_blog_entries(account, entryId, limit, api='follow')
+            ]
+        else:
+            from .comment import Comment
+            return [
+                Comment(c, steem_instance=self.steem) for c in self.steem.rpc.get_blog_entries(account, entryId, limit, api='follow')
+            ]
+
+    def get_blog(self, entryId=0, limit=100, raw_data=True, account=None):
+        if account is None:
+            account = self["name"]
+        self.steem.register_apis(["follow"])
+        if raw_data:
+            return [
+                c for c in self.steem.rpc.get_blog(account, entryId, limit, api='follow')
+            ]
+        else:
+            from .comment import Comment
+            return [
+                Comment(c["comment"], steem_instance=self.steem) for c in self.steem.rpc.get_blog(account, entryId, limit, api='follow')
+            ]
+
+    def get_blog_account(self, account=None):
+        if account is None:
+            account = self["name"]
+        self.steem.register_apis(["follow"])
+        return self.steem.rpc.get_blog_authors(account, api='follow')
+
+    def get_follow_count(self, account=None):
+        """ get_follow_count """
+        if account is None:
+            account = self["name"]
+        self.steem.register_apis(["follow"])
+        return self.steem.rpc.get_follow_count(account, api='follow')
+
+    def get_followers(self, raw_data=True):
+        """ Returns the account followers as list
+        """
+        if raw_data:
+            return [
+                x['follower'] for x in self._get_followers(direction="follower")
+            ]
+        else:
+            return [
+                Account(x['follower'], steem_instance=self.steem) for x in self._get_followers(direction="follower")
+            ]
+
+    def get_following(self, raw_data=True):
+        """ Returns who the account is following as list
+        """
+        if raw_data:
+            return [
+                x['following'] for x in self._get_followers(direction="following")
+            ]
+        else:
+            return [
+                Account(x['following'], steem_instance=self.steem) for x in self._get_followers(direction="following")
+            ]
 
     def _get_followers(self, direction="follower", last_user=""):
+        """ Help function, used in get_followers and get_following
+        """
+        self.steem.register_apis(["follow"])
         if direction == "follower":
             followers = self.steem.rpc.get_followers(self.name, last_user, "blog", 100, api='follow')
         elif direction == "following":
@@ -291,7 +382,7 @@ class Account(BlockchainObject):
             "interest": interest_amount,
             "last_payment": last_payment,
             "next_payment": next_payment,
-            "next_payment_duration": next_payment - datetime.now(),
+            "next_payment_duration": next_payment - datetime.now(timezone.utc),
             "interest_rate": interest_rate,
         }
 
@@ -323,7 +414,7 @@ class Account(BlockchainObject):
 
             total_seconds = 604800
             date_bandwidth = formatTimeString(self["last_bandwidth_update"])
-            seconds_since_last_update = datetime.utcnow() - date_bandwidth
+            seconds_since_last_update = datetime.utcnow().replace(tzinfo=timezone.utc) - date_bandwidth
             seconds_since_last_update = seconds_since_last_update.total_seconds()
             average_bandwidth = float(self["average_bandwidth"])
             used_bandwidth = 0
@@ -342,23 +433,28 @@ class Account(BlockchainObject):
             account = self["name"]
         return self.steem.rpc.get_owner_history(account)
 
+    def get_conversion_requests(self, account=None):
+        """ get_owner_history """
+        if account is None:
+            account = self["name"]
+        return self.steem.rpc.get_conversion_requests(account)
+
     def get_recovery_request(self, account=None):
         """ get_recovery_request """
         if account is None:
             account = self["name"]
         return self.steem.rpc.get_recovery_request(account)
 
-    def get_follow_count(self, account=None):
-        """ get_follow_count """
-        if account is None:
-            account = self["name"]
-        return self.steem.rpc.get_follow_count(account, api="follow")
-
     def verify_account_authority(self, keys, account=None):
         """ verify_account_authority """
         if account is None:
             account = self["name"]
         return self.steem.rpc.verify_account_authority(account, keys)
+
+    def get_account_votes(self, account=None):
+        if account is None:
+            account = self["name"]
+        return self.steem.rpc.get_account_votes(account)
 
     def history(
         self, limit=100,

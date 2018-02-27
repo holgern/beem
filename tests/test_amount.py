@@ -94,14 +94,14 @@ class Testcases(unittest.TestCase):
         self.assertEqual(
             amount.json(),
             {
-                "asset_id": self.asset["id"],
+                "symbol": self.asset["symbol"],
                 "amount": 1 * 10 ** self.precision
             })
 
     def test_string(self):
         self.assertEqual(
-            str(Amount("1", self.symbol)),
-            "1.000 {}".format(self.symbol))
+            str(Amount("10000", self.symbol)),
+            "10000.000 {}".format(self.symbol))
 
     def test_int(self):
         self.assertEqual(
@@ -117,6 +117,7 @@ class Testcases(unittest.TestCase):
         a1 = Amount(1, self.symbol)
         a2 = Amount(2, self.symbol)
         self.dotest(a1 + a2, 3, self.symbol)
+        self.dotest(a1 + 2, 3, self.symbol)
         with self.assertRaises(Exception):
             a1 + Amount(1, asset=self.asset2)
         # inline
@@ -156,6 +157,9 @@ class Testcases(unittest.TestCase):
         a2 = Amount(2, self.symbol)
         a2 *= 5
         self.dotest(a2, 10, self.symbol)
+        a2 = Amount(2, self.symbol)
+        a2 *= a1
+        self.dotest(a2, 10, self.symbol)
         with self.assertRaises(Exception):
             a1 *= Amount(2, asset=self.asset2)
 
@@ -177,7 +181,9 @@ class Testcases(unittest.TestCase):
 
     def test_mod(self):
         a1 = Amount(15, self.symbol)
+        a2 = Amount(3, self.symbol)
         self.dotest(a1 % 3, 0, self.symbol)
+        self.dotest(a1 % a2, 0, self.symbol)
         self.dotest(a1 % 2, 1, self.symbol)
         with self.assertRaises(Exception):
             a1 % Amount(1, asset=self.asset2)
@@ -190,7 +196,9 @@ class Testcases(unittest.TestCase):
 
     def test_pow(self):
         a1 = Amount(15, self.symbol)
+        a2 = Amount(3, self.symbol)
         self.dotest(a1 ** 3, 15 ** 3, self.symbol)
+        self.dotest(a1 ** a2, 15 ** 3, self.symbol)
         self.dotest(a1 ** 2, 15 ** 2, self.symbol)
         with self.assertRaises(Exception):
             a1 ** Amount(1, asset=self.asset2)

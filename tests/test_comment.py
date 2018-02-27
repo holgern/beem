@@ -39,6 +39,12 @@ class Testcases(unittest.TestCase):
             "test",
             op["voter"])
 
+    def test_export(self):
+        bts = self.bts
+        content = bts.rpc.get_content("gtg", "witness-gtg-log")
+        c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
+        self.assertEqual(content, c.json())
+
     def test_resteem(self):
         bts = self.bts
         c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
@@ -59,4 +65,17 @@ class Testcases(unittest.TestCase):
         op = tx["operations"][0][1]
         self.assertIn(
             "test",
+            op["author"])
+
+    def test_delete(self):
+        bts = self.bts
+        c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
+        tx = c.delete(account="test")
+        self.assertEqual(
+            (tx["operations"][0][0]),
+            "delete_comment"
+        )
+        op = tx["operations"][0][1]
+        self.assertIn(
+            "gtg",
             op["author"])

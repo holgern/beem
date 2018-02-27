@@ -315,7 +315,7 @@ class Price(dict):
     def __lt__(self, other):
         if isinstance(other, Price):
             assert other["base"]["symbol"] == self["base"]["symbol"]
-            assert other["quote"]["symbol"] == self["base"]["symbol"]
+            assert other["quote"]["symbol"] == self["quote"]["symbol"]
             return self["price"] < other["price"]
         else:
             return self["price"] < float(other or 0)
@@ -323,7 +323,7 @@ class Price(dict):
     def __le__(self, other):
         if isinstance(other, Price):
             assert other["base"]["symbol"] == self["base"]["symbol"]
-            assert other["quote"]["symbol"] == self["base"]["symbol"]
+            assert other["quote"]["symbol"] == self["quote"]["symbol"]
             return self["price"] <= other["price"]
         else:
             return self["price"] <= float(other or 0)
@@ -331,7 +331,7 @@ class Price(dict):
     def __eq__(self, other):
         if isinstance(other, Price):
             assert other["base"]["symbol"] == self["base"]["symbol"]
-            assert other["quote"]["symbol"] == self["base"]["symbol"]
+            assert other["quote"]["symbol"] == self["quote"]["symbol"]
             return self["price"] == other["price"]
         else:
             return self["price"] == float(other or 0)
@@ -339,7 +339,7 @@ class Price(dict):
     def __ne__(self, other):
         if isinstance(other, Price):
             assert other["base"]["symbol"] == self["base"]["symbol"]
-            assert other["quote"]["symbol"] == self["base"]["symbol"]
+            assert other["quote"]["symbol"] == self["quote"]["symbol"]
             return self["price"] != other["price"]
         else:
             return self["price"] != float(other or 0)
@@ -347,7 +347,7 @@ class Price(dict):
     def __ge__(self, other):
         if isinstance(other, Price):
             assert other["base"]["symbol"] == self["base"]["symbol"]
-            assert other["quote"]["symbol"] == self["base"]["symbol"]
+            assert other["quote"]["symbol"] == self["quote"]["symbol"]
             return self["price"] >= other["price"]
         else:
             return self["price"] >= float(other or 0)
@@ -355,7 +355,7 @@ class Price(dict):
     def __gt__(self, other):
         if isinstance(other, Price):
             assert other["base"]["symbol"] == self["base"]["symbol"]
-            assert other["quote"]["symbol"] == self["base"]["symbol"]
+            assert other["quote"]["symbol"] == self["quote"]["symbol"]
             return self["price"] > other["price"]
         else:
             return self["price"] > float(other or 0)
@@ -368,7 +368,7 @@ class Price(dict):
     def market(self):
         """ Open the corresponding market
 
-            :returns: Instance of :class:`steem.market.Market` for the
+            :returns: Instance of :class:`beem.market.Market` for the
                       corresponding pair of assets.
         """
         from .market import Market
@@ -380,12 +380,12 @@ class Price(dict):
 
 
 class Order(Price):
-    """ This class inherits :class:`steem.price.Price` but has the ``base``
+    """ This class inherits :class:`beem.price.Price` but has the ``base``
         and ``quote`` Amounts not only be used to represent the price (as a
         ratio of base and quote) but instead has those amounts represent the
         amounts of an actual order!
 
-        :param steem.steem.Steem steem_instance: Steem instance
+        :param beem.steem.Steem steem_instance: Steem instance
 
         .. note::
 
@@ -401,7 +401,7 @@ class Order(Price):
             len(args) == 1 and
             isinstance(args[0], str)
         ):
-            order = self.steem.rpc.get_objects([args[0]])[0]
+            order = self.beem.rpc.get_objects([args[0]])[0]
             if order:
                 super(Order, self).__init__(order["sell_price"])
                 self["seller"] = order["seller"]
@@ -454,12 +454,12 @@ class Order(Price):
 
 
 class FilledOrder(Price):
-    """ This class inherits :class:`steem.price.Price` but has the ``base``
+    """ This class inherits :class:`beem.price.Price` but has the ``base``
         and ``quote`` Amounts not only be used to represent the price (as a
         ratio of base and quote) but instead has those amounts represent the
         amounts of an actually filled order!
 
-        :param steem.steem.Steem steem_instance: Steem instance
+        :param beem.steem.Steem steem_instance: Steem instance
 
         .. note:: Instances of this class come with an additional ``time`` key
                   that shows when the order has been filled!
@@ -512,11 +512,11 @@ class FilledOrder(Price):
 
 
 class UpdateCallOrder(Price):
-    """ This class inherits :class:`steem.price.Price` but has the ``base``
+    """ This class inherits :class:`beem.price.Price` but has the ``base``
         and ``quote`` Amounts not only be used to represent the **call
         price** (as a ratio of base and quote).
 
-        :param steem.steem.Steem steem_instance: Steem instance
+        :param beem.steem.Steem steem_instance: Steem instance
     """
     def __init__(self, call, steem_instance=None, **kwargs):
 
@@ -554,7 +554,7 @@ class PriceFeed(dict):
         * a settlement price, and
         * a date
 
-        :param steem.steem.Steem steem_instance: Steem instance
+        :param beem.steem.Steem steem_instance: Steem instance
 
     """
     def __init__(self, feed, steem_instance=None):

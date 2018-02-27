@@ -4,6 +4,7 @@ from beem.instance import shared_steem_instance
 from beembase.operationids import getOperationNameForId
 from .amount import Amount
 from datetime import datetime
+import math
 
 
 class Blockchain(object):
@@ -54,7 +55,7 @@ class Blockchain(object):
             raise ValueError("invalid value for 'mode'!")
 
     def get_current_block_num(self):
-        """ This call returns the current block
+        """ This call returns the current block number
 
             .. note:: The block number returned depends on the ``mode`` used
                       when instanciating from this class.
@@ -71,6 +72,29 @@ class Blockchain(object):
             self.get_current_block_num(),
             steem_instance=self.steem
         )
+
+    def get_estimated_block_num(self, date, estimateForwards=False):
+        """ This call estimates the block number based on a given date
+
+            :param datetime date: block time for which a block number is estimated
+
+            .. note:: The block number returned depends on the ``mode`` used
+                      when instanciating from this class.
+        """
+        block_time_seconds = 3
+        if estimateForwards:
+            block_offset = 10
+            first_block = Block(block_offset, steem_instance=self.steem)
+            time_diff = date - first_block.time()
+            return math.floor(time_diff.total_seconds() / block_time_seconds + block_offset.identifier)
+        else:
+            last_block = self.get_current_block()
+            time_diff = last_block.time() - date
+            block_number = math.floor(last_block.identifier - time_diff.total_seconds() / block_time_seconds)
+            if block_number > last_block.identifier:
+                return last_block.identifier
+            else:
+                block_number
 
     def block_time(self, block_num):
         """ Returns a datetime of the block with the given block
@@ -220,7 +244,7 @@ class Blockchain(object):
             included into a block
 
             .. note:: If you want instant confirmation, you need to instantiate
-                      class:`steem.blockchain.Blockchain` with
+                      class:`beem.blockchain.Blockchain` with
                       ``mode="head"``, otherwise, the call will wait until
                       confirmed in an irreversible block.
 

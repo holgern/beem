@@ -142,11 +142,11 @@ class Amount(dict):
     def json(self):
         return {
             "amount": int(self),
-            "asset_id": self["asset"]["id"]
+            "symbol": self["asset"]["symbol"]
         }
 
     def __str__(self):
-        return "{:,.{prec}f} {}".format(
+        return "{:.{prec}f} {}".format(
             self["amount"],
             self["symbol"],
             prec=self["asset"]["precision"]

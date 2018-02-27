@@ -1,6 +1,7 @@
 from .instance import shared_steem_instance
 from .account import Account
-from .utils import resolve_authorperm, construct_authorperm, derive_permlink, keep_in_dict, make_patch
+from .amount import Amount
+from .utils import resolve_authorperm, construct_authorperm, derive_permlink, keep_in_dict, make_patch, formatTimeString
 from .blockchainobject import BlockchainObject
 from .exceptions import ContentDoesNotExistsException, VotingInvalidOnArchivedPost
 from beembase import operations
@@ -8,6 +9,7 @@ import json
 import re
 import logging
 import difflib
+from datetime import datetime
 log = logging.getLogger(__name__)
 
 
@@ -30,12 +32,13 @@ class Comment(BlockchainObject):
         self.full = full
         if isinstance(authorperm, str) and authorperm != "":
             [author, permlink] = resolve_authorperm(authorperm)
+            self["id"] = 0
             self["author"] = author
             self["permlink"] = permlink
             self["authorperm"] = construct_authorperm(author, permlink)
         elif isinstance(authorperm, dict) and "author" in authorperm and "permlink" in authorperm:
-            self["author"] = authorperm["author"]
-            self["permlink"] = authorperm["permlink"]
+            # self["author"] = authorperm["author"]
+            # self["permlink"] = authorperm["permlink"]
             self["authorperm"] = construct_authorperm(authorperm["author"], authorperm["permlink"])
         super().__init__(
             authorperm,
@@ -45,6 +48,36 @@ class Comment(BlockchainObject):
             steem_instance=steem_instance
         )
         self.identifier = self["authorperm"]
+        parse_times = [
+            "active", "cashout_time", "created", "last_payout", "last_update",
+            "max_cashout_time"
+        ]
+        for p in parse_times:
+            if p in self and isinstance(self.get(p), str):
+                self[p] = formatTimeString(self.get(p, "1970-01-01T00:00:00"))
+        # Parse Amounts
+        sbd_amounts = [
+            "total_payout_value",
+            "max_accepted_payout",
+            "pending_payout_value",
+            "curator_payout_value",
+            "total_pending_payout_value",
+            "promoted",
+        ]
+        for p in sbd_amounts:
+            if p in self and isinstance(self.get(p), str):
+                self[p] = Amount(self.get(p, "0.000 SBD"))
+
+        # turn json_metadata into python dict
+        meta_str = self.get("json_metadata", "{}")
+        if isinstance(meta_str, (str, bytes, bytearray)):
+            self['json_metadata'] = json.loads(meta_str)
+        self["tags"] = []
+        if "tags" in self['json_metadata']:
+            self["tags"] = self['json_metadata']["tags"]
+        self['community'] = ''
+        if 'community' in self['json_metadata']:
+            self['community'] = self['json_metadata']['community']
 
     def refresh(self):
         [author, permlink] = resolve_authorperm(self.identifier)
@@ -54,11 +87,70 @@ class Comment(BlockchainObject):
         super(Comment, self).__init__(content, id_item="authorperm", steem_instance=self.steem)
         self["authorperm"] = construct_authorperm(self["author"], self["permlink"])
         self.identifier = self["authorperm"]
+        parse_times = [
+            "active", "cashout_time", "created", "last_payout", "last_update",
+            "max_cashout_time"
+        ]
+        for p in parse_times:
+            if p in self and isinstance(self.get(p), str):
+                self[p] = formatTimeString(self.get(p, "1970-01-01T00:00:00"))
+        # Parse Amounts
+        sbd_amounts = [
+            "total_payout_value",
+            "max_accepted_payout",
+            "pending_payout_value",
+            "curator_payout_value",
+            "total_pending_payout_value",
+            "promoted",
+        ]
+        for p in sbd_amounts:
+            if p in self and isinstance(self.get(p), str):
+                self[p] = Amount(self.get(p, "0.000 SBD"))
+        # turn json_metadata into python dict
+
+        meta_str = self.get("json_metadata", "{}")
+        if isinstance(meta_str, (str, bytes, bytearray)):
+            self['json_metadata'] = json.loads(meta_str)
+        self["tags"] = []
+        if "tags" in self['json_metadata']:
+            self["tags"] = self['json_metadata']["tags"]
+        self['community'] = ''
+        if 'community' in self['json_metadata']:
+            if p in self:
+                self['community'] = self['json_metadata']['community']
 
     def json(self):
-        output = self
+        output = self.copy()
         if "authorperm" in output:
             output.pop("authorperm")
+        if 'json_metadata' in output:
+            output["json_metadata"] = json.dumps(output["json_metadata"], separators=[',', ':'])
+        if "tags" in output:
+            output.pop("tags")
+        if "community" in output:
+            output.pop("community")
+        parse_times = [
+            "active", "cashout_time", "created", "last_payout", "last_update",
+            "max_cashout_time"
+        ]
+        for p in parse_times:
+            if p in output:
+                date = output.get(p, datetime(1970, 1, 1, 0, 0))
+                if isinstance(date, datetime):
+                    output[p] = formatTimeString(date)
+                else:
+                    output[p] = date
+        sbd_amounts = [
+            "total_payout_value",
+            "max_accepted_payout",
+            "pending_payout_value",
+            "curator_payout_value",
+            "total_pending_payout_value",
+            "promoted",
+        ]
+        for p in sbd_amounts:
+            if p in output:
+                output[p] = str(output.get(p, Amount("0.000 SBD")))
         return json.loads(str(json.dumps(output)))
 
     @property
@@ -110,6 +202,15 @@ class Comment(BlockchainObject):
         """ Retuns True if post is a comment
         """
         return self['depth'] > 0
+
+    def get_reblogged_by(self, identifier=None):
+        if not identifier:
+            post_author = self["author"]
+            post_permlink = self["permlink"]
+        else:
+            [post_author, post_permlink] = resolve_authorperm(identifier)
+        self.steem.register_apis(["follow"])
+        return self.steem.rpc.get_reblogged_by(post_author, post_permlink, api="follow")
 
     def upvote(self, weight=+100, voter=None):
         """ Upvote the post
@@ -227,6 +328,30 @@ class Comment(BlockchainObject):
             json_metadata=meta,
             author=author,
             reply_identifier=self.identifier)
+
+    def delete(self, account=None, identifier=None):
+        """ Delete an existing post/comment
+            :param str identifier: Identifier for the post to upvote Takes
+                                   the form ``@author/permlink``
+            :param str account: Voter to use for voting. (Optional)
+            If ``voter`` is not defines, the ``default_account`` will be taken
+            or a ValueError will be raised
+        """
+        if not account:
+            if "default_account" in self.steem.config:
+                account = self.steem.config["default_account"]
+        if not account:
+            raise ValueError("You need to provide an account")
+        account = Account(account, steem_instance=self.steem)
+        if not identifier:
+            post_author = self["author"]
+            post_permlink = self["permlink"]
+        else:
+            [post_author, post_permlink] = resolve_authorperm(identifier)
+        op = operations.Delete_comment(
+            **{"author": post_author,
+               "permlink": post_permlink})
+        return self.steem.finalizeOp(op, account, "posting")
 
     def post(self,
              title=None,

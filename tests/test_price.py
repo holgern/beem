@@ -73,3 +73,24 @@ class Testcases(unittest.TestCase):
         p3 = p1 / p2
         self.assertTrue(isinstance(p3, (float, int)))
         self.assertEqual(float(p3), 2.0)
+
+    def test_ltge(self):
+        p1 = Price(10.0, "STEEM/SBD")
+        p2 = Price(5.0, "STEEM/SBD")
+
+        self.assertTrue(p1 > p2)
+        self.assertTrue(p2 < p1)
+
+    def test_leeq(self):
+        p1 = Price(10.0, "STEEM/SBD")
+        p2 = Price(5.0, "STEEM/SBD")
+
+        self.assertTrue(p1 >= p2)
+        self.assertTrue(p2 <= p1)
+
+    def test_ne(self):
+        p1 = Price(10.0, "STEEM/SBD")
+        p2 = Price(5.0, "STEEM/SBD")
+
+        self.assertTrue(p1 != p2)
+        self.assertTrue(p1 == p1)
