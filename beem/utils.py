@@ -6,7 +6,8 @@ from __future__ import unicode_literals
 from builtins import next
 import re
 import time
-from datetime import datetime, timezone
+from datetime import datetime, tzinfo
+import pytz
 import difflib
 from .exceptions import ObjectNotInProposalBuffer
 
@@ -27,7 +28,8 @@ def formatTimeString(t):
     """
     if isinstance(t, datetime):
         return t.strftime(timeFormat)
-    return datetime.strptime(t, timeFormat).replace(tzinfo=timezone.utc)
+    utc = pytz.timezone('UTC')
+    return utc.localize(datetime.strptime(t, timeFormat))
 
 
 def formatTimeFromNow(secs=0):
@@ -47,7 +49,8 @@ def parse_time(block_time):
     """Take a string representation of time from the blockchain, and parse it
        into datetime object.
     """
-    return datetime.strptime(block_time, timeFormat).replace(tzinfo=timezone.utc)
+    utc = pytz.timezone('UTC')
+    return utc.localize(datetime.strptime(block_time, timeFormat))
 
 
 def assets_from_string(text):
@@ -108,7 +111,7 @@ def construct_authorperm(*args):
             construct_authorperm({'author': 'username',
                 'permlink': 'permlink'})
     """
-    username_prefix='@'
+    username_prefix = '@'
     if len(args) == 1:
         op = args[0]
         author, permlink = op['author'], op['permlink']
@@ -155,7 +158,7 @@ def construct_authorpermvoter(*args):
             construct_authorpermvoter({'author': 'username',
                 'permlink': 'permlink', 'voter': 'voter'})
     """
-    username_prefix='@'
+    username_prefix = '@'
     if len(args) == 1:
         op = args[0]
         if "authorperm" in op:

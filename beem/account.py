@@ -10,7 +10,8 @@ from .exceptions import AccountDoesNotExistsException
 from .blockchainobject import BlockchainObject
 from .utils import formatTimeString
 from beem.amount import Amount
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+import pytz
 from beembase import operations
 from beembase.account import PrivateKey, PublicKey
 import json
@@ -149,7 +150,8 @@ class Account(BlockchainObject):
         """ Returns the account voting power
         """
         if with_regeneration:
-            diff_in_seconds = (datetime.utcnow().replace(tzinfo=timezone.utc) - formatTimeString(self["last_vote_time"])).total_seconds()
+            utc = pytz.timezone('UTC')
+            diff_in_seconds = (utc.localize(datetime.utcnow()) - formatTimeString(self["last_vote_time"])).total_seconds()
             regenerated_vp = diff_in_seconds * 10000 / 86400 / 5 / 100
         else:
             regenerated_vp = 0
@@ -384,12 +386,12 @@ class Account(BlockchainObject):
             "sbd_interest_rate"] / 100  # percent
         interest_amount = (interest_rate / 100) * int(
             int(self["sbd_seconds"]) / (60 * 60 * 24 * 356)) * 10**-3
-
+        utc = pytz.timezone('UTC')
         return {
             "interest": interest_amount,
             "last_payment": last_payment,
             "next_payment": next_payment,
-            "next_payment_duration": next_payment - datetime.now(timezone.utc),
+            "next_payment_duration": next_payment - utc.localize(datetime.now()),
             "interest_rate": interest_rate,
         }
 
@@ -421,7 +423,8 @@ class Account(BlockchainObject):
 
             total_seconds = 604800
             date_bandwidth = formatTimeString(self["last_bandwidth_update"])
-            seconds_since_last_update = datetime.utcnow().replace(tzinfo=timezone.utc) - date_bandwidth
+            utc = pytz.timezone('UTC')
+            seconds_since_last_update = utc.localize(datetime.utcnow()) - date_bandwidth
             seconds_since_last_update = seconds_since_last_update.total_seconds()
             average_bandwidth = float(self["average_bandwidth"])
             used_bandwidth = 0
