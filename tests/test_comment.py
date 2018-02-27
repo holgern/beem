@@ -45,8 +45,10 @@ class Testcases(unittest.TestCase):
         c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
         keys = content.keys()
         json_content = c.json()
+
         for k in keys:
-            self.assertEqual(content[k], json_content[k])
+            if k not in "json_metadata":
+                self.assertEqual(content[k], json_content[k])
 
     def test_resteem(self):
         bts = self.bts
