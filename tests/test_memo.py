@@ -1,3 +1,4 @@
+# This Python file uses the following encoding: utf-8
 import unittest
 import os
 from pprint import pprint
@@ -38,7 +39,7 @@ test_cases = [
     {'from': 'GPH7FPzbN7hnRk24T3Nh9MYM1xBaF5xyRYu8WtyTrtLoUG8cUtszM',
      'message': '1566da5b57e8e0fd9f530a352812a4197b8113df6495efdb246909c6ee1ffea6',
      'nonce': '16332877645293003478',
-     'plain': 'äöüß€@$²³',
+     'plain': 'Ã¤Ã¶Ã¼ÃŸâ‚¬@$Â²Â³',
      'to': 'GPH6HAMuJRkjGJkj6cZWBbTU13gkUhBep383prqRdExXsZsYTrWT5',
      'wif': '5Jpkeq1jiNE8Pe24GxFWTsyWbcP59Qq4cD7qg3Wgd6JFJqJkoG8'}
 ]

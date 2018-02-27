@@ -1,3 +1,4 @@
+# This Python file uses the following encoding: utf-8
 import unittest
 from beemgraphenebase.account import PrivateKey
 from beemgraphenebase.bip38 import encrypt, decrypt

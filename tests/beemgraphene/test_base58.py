@@ -1,3 +1,4 @@
+# This Python file uses the following encoding: utf-8
 import unittest
 from beemgraphenebase.base58 import (
     Base58,
