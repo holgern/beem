@@ -69,7 +69,7 @@ class Price(dict):
     """
     def __init__(
         self,
-        *args,
+        price,
         base=None,
         quote=None,
         base_asset=None,  # to identify sell/buy
@@ -77,10 +77,11 @@ class Price(dict):
     ):
 
         self.steem = steem_instance or shared_steem_instance()
-
-        if (len(args) == 1 and isinstance(args[0], str) and not base and not quote):
+        if price is "":
+            price = None
+        if (isinstance(price, str) and not base and not quote):
             import re
-            price, assets = args[0].split(" ")
+            price, assets = price.split(" ")
             base_symbol, quote_symbol = assets_from_string(assets)
             base = Asset(base_symbol, steem_instance=self.steem)
             quote = Asset(quote_symbol, steem_instance=self.steem)
@@ -88,56 +89,51 @@ class Price(dict):
             self["quote"] = Amount(amount=frac.denominator, asset=quote, steem_instance=self.steem)
             self["base"] = Amount(amount=frac.numerator, asset=base, steem_instance=self.steem)
 
-        elif (len(args) == 1 and isinstance(args[0], dict) and
-                "base" in args[0] and
-                "quote" in args[0]):
-            assert "price" not in args[0], "You cannot provide a 'price' this way"
+        elif (isinstance(price, dict) and
+                "base" in price and
+                "quote" in price):
+            assert "price" not in price, "You cannot provide a 'price' this way"
             # Regular 'price' objects according to steem-core
-            base_id = args[0]["base"]["asset_id"]
-            if args[0]["base"]["asset_id"] == base_id:
-                self["base"] = Amount(args[0]["base"], steem_instance=self.steem)
-                self["quote"] = Amount(args[0]["quote"], steem_instance=self.steem)
+            base_id = price["base"]["asset_id"]
+            if price["base"]["asset_id"] == base_id:
+                self["base"] = Amount(price["base"], steem_instance=self.steem)
+                self["quote"] = Amount(price["quote"], steem_instance=self.steem)
             else:
-                self["quote"] = Amount(args[0]["base"], steem_instance=self.steem)
-                self["base"] = Amount(args[0]["quote"], steem_instance=self.steem)
+                self["quote"] = Amount(price["base"], steem_instance=self.steem)
+                self["base"] = Amount(price["quote"], steem_instance=self.steem)
 
-        elif len(args) == 1 and (isinstance(base, Asset) and isinstance(quote, Asset)):
-            price = args[0]
+        elif (price is not None and isinstance(base, Asset) and isinstance(quote, Asset)):
             frac = Fraction(float(price)).limit_denominator(10 ** base["precision"])
             self["quote"] = Amount(amount=frac.denominator, asset=quote, steem_instance=self.steem)
             self["base"] = Amount(amount=frac.numerator, asset=base, steem_instance=self.steem)
 
-        elif (len(args) == 1 and isinstance(base, str) and isinstance(quote, str)):
-            price = args[0]
+        elif (price is not None and isinstance(base, str) and isinstance(quote, str)):
             base = Asset(base, steem_instance=self.steem)
             quote = Asset(quote, steem_instance=self.steem)
             frac = Fraction(float(price)).limit_denominator(10 ** base["precision"])
             self["quote"] = Amount(amount=frac.denominator, asset=quote, steem_instance=self.steem)
             self["base"] = Amount(amount=frac.numerator, asset=base, steem_instance=self.steem)
 
-        elif (len(args) == 0 and isinstance(base, str) and isinstance(quote, str)):
+        elif (price is None and isinstance(base, str) and isinstance(quote, str)):
             self["quote"] = Amount(quote, steem_instance=self.steem)
             self["base"] = Amount(base, steem_instance=self.steem)
-
+        elif (price is not None and isinstance(price, str) and isinstance(base, str)):
+            self["quote"] = Amount(price, steem_instance=self.steem)
+            self["base"] = Amount(base, steem_instance=self.steem)
         # len(args) > 1
-        elif len(args) == 2 and isinstance(args[0], str) and isinstance(args[1], str):
-            self["base"] = Amount(args[1], steem_instance=self.steem)
-            self["quote"] = Amount(args[0], steem_instance=self.steem)
 
-        elif len(args) == 2 and isinstance(args[0], Amount) and isinstance(args[1], Amount):
-            self["quote"], self["base"] = args[0], args[1]
+        elif isinstance(price, Amount) and isinstance(base, Amount):
+            self["quote"], self["base"] = price, base
 
         # len(args) == 0
-        elif (isinstance(base, Amount) and isinstance(quote, Amount)):
+        elif (price is None and isinstance(base, Amount) and isinstance(quote, Amount)):
             self["quote"] = quote
             self["base"] = base
 
-        elif (len(args) == 2 and
-                (isinstance(args[0], float) or isinstance(args[0], int)) and
-                isinstance(args[1], str)):
+        elif ((isinstance(price, float) or isinstance(price, int)) and
+                isinstance(base, str)):
             import re
-            price = args[0]
-            base_symbol, quote_symbol = assets_from_string(args[1])
+            base_symbol, quote_symbol = assets_from_string(base)
             base = Asset(base_symbol, steem_instance=self.steem)
             quote = Asset(quote_symbol, steem_instance=self.steem)
             frac = Fraction(float(price)).limit_denominator(10 ** base["precision"])
@@ -158,6 +154,7 @@ class Price(dict):
 
     def copy(self):
         return Price(
+            None,
             base=self["base"].copy(),
             quote=self["quote"].copy())
 
@@ -287,11 +284,11 @@ class Price(dict):
             else:
                 raise InvalidAssetException
             a["base"] = Amount(
-                float(self["quote"] / other["quote"]), other["quote"]["symbol"],
+                float(self["base"].amount / other["base"].amount), other["quote"]["symbol"],
                 steem_instance=self.steem
             )
             a["quote"] = Amount(
-                float(self["base"] / other["base"]), self["quote"]["symbol"],
+                float(self["quote"].amount / other["quote"].amount), self["quote"]["symbol"],
                 steem_instance=self.steem
             )
         elif isinstance(other, Amount):

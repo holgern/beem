@@ -33,7 +33,7 @@ class Testcases(unittest.TestCase):
         Price({
             "base": {"amount": 1, "asset_id": "SBD"},
             "quote": {"amount": 10, "asset_id": "STEEM"}})
-        Price(quote="10 SBD", base="1 STEEM")
+        Price("", quote="10 SBD", base="1 STEEM")
         Price("10 SBD", "1 STEEM")
         Price(Amount("10 SBD"), Amount("1 STEEM"))
 
