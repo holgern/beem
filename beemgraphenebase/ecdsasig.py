@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from builtins import bytes
+from builtins import bytes, str
 from builtins import chr
 from builtins import range
 import sys
@@ -37,10 +37,7 @@ def compressedPubkey(pk):
     order = pk.curve.generator.order()
     p = pk.pubkey.point
     x_str = ecdsa.util.number_to_string(p.x(), order)
-    if sys.version > '3':
-        return bytes(chr(2 + (p.y() & 1)), 'ascii') + x_str
-    else:
-        return bytes(chr(2 + (p.y() & 1))).encode("ascii") + x_str
+    return bytes(chr(2 + (p.y() & 1)), 'ascii') + x_str
 
 
 def recover_public_key(digest, signature, i):
@@ -99,11 +96,8 @@ def sign_message(message, wif, hashfn=hashlib.sha256):
         message = bytes(message, "utf-8")
 
     digest = hashfn(message).digest()
-
-    if sys.version > '3':
-        p = bytes(PrivateKey(wif))
-    else:
-        p = bytes(PrivateKey(wif).__bytes__())
+    p = PrivateKey(wif).to_bytes()
+        
 
     if USE_SECP256K1:
         ndata = secp256k1.ffi.new("const int *ndata")

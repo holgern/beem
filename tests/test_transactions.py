@@ -23,7 +23,7 @@ from binascii import hexlify
 
 TEST_AGAINST_CLI_WALLET = False
 
-prefix = "STEEM"
+prefix = u"STEEM"
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 ref_block_num = 34294
 ref_block_prefix = 3707022213
@@ -41,7 +41,7 @@ class Testcases(unittest.TestCase):
                                 operations=ops)
         tx = tx.sign([wif], chain=prefix)
         tx.verify([PrivateKey(wif).pubkey], prefix)
-        txWire = hexlify(bytes(tx)).decode("ascii")
+        txWire = hexlify((tx.to_bytes())).decode("ascii")
         if printWire:
             print()
             print(txWire)
@@ -58,7 +58,7 @@ class Testcases(unittest.TestCase):
             self.assertEqual(self.cm[:-130], txWire[:-130])
 
     def test_Empty_Op(self):
-        self.cm = ("f68585abf4dce7c8045700000120020c2218cd5bcbaf3bdaba2f192a7"
+        self.cm = (u"f68585abf4dce7c8045700000120020c2218cd5bcbaf3bdaba2f192a7"
                    "a69cb2307fcc6be2c09e45e204d175fc5fb715df86fcccfa1235babe6"
                    "09461cc9fdfadbae06381d711576fb4265bd832008")
         self.doit(ops=[])
@@ -70,7 +70,7 @@ class Testcases(unittest.TestCase):
             "amount": Amount("111.110 STEEM"),
             "memo": "Fooo"
         })
-        self.cm = ("f68585abf4dce7c80457010203666f6f046261617206b201000000"
+        self.cm = (u"f68585abf4dce7c80457010203666f6f046261617206b201000000"
                    "000003535445454d000004466f6f6f00012025416c234dd5ff15d8"
                    "b45486833443c128002bcafa57269cada3ad213ef88adb5831f63a"
                    "58d8b81bbdd92d494da01eeb13ee1786d02ce075228b25d7132f8f"
@@ -131,7 +131,7 @@ class Testcases(unittest.TestCase):
                 }
             })
 
-        self.cm = ("f68585abf4dce7c804570109102700000000000003535445454d000"
+        self.cm = (u"f68585abf4dce7c804570109102700000000000003535445454d000"
                    "0057865726f63086673616661617366010000000002026f6231b8ed"
                    "1c5e964b42967759757f8bb879d68e7b09d9ea6eedec21de6fa4c40"
                    "1000314aa202c9158990b3ec51a1aa49b2ab5d300c97b391df3beb3"
@@ -155,7 +155,7 @@ class Testcases(unittest.TestCase):
             "amount": "111.110 STEEM",
         })
 
-        self.cm = ("f68585abf4dce7c80457010303666f6f046261617206b201000000"
+        self.cm = (u"f68585abf4dce7c80457010303666f6f046261617206b201000000"
                    "000003535445454d00000001203a34cd45fb4a2585514614be2c1"
                    "ba2365257ce5470d20c6c6abda39204eeba0b7e057d889ca8b1b1"
                    "406f1441520a25d32df2ab9fdb532c3377dc66d0fe41bb3d")
@@ -168,7 +168,7 @@ class Testcases(unittest.TestCase):
         })
 
         self.cm = (
-            "f68585abf4dce7c80457010403666f6f00e1f5050000000006564553545300000"
+            u"f68585abf4dce7c80457010403666f6f00e1f5050000000006564553545300000"
             "00120772da57b15b62780ee3d8afedd8d46ffafb8c62788eab5ce01435df99e1d"
             "36de549f260444866ff4e228cac445548060e018a872e7ee99ace324af9844f4c"
             "50a")
@@ -188,7 +188,7 @@ class Testcases(unittest.TestCase):
                 }
             })
 
-        self.cm = ("f68585abf4dce7c80457010107666f6f6261726107666f6f626172620"
+        self.cm = (u"f68585abf4dce7c80457010107666f6f6261726107666f6f626172620"
                    "7666f6f6261726307666f6f6261726407666f6f6261726507666f6f62"
                    "6172660e7b22666f6f223a2022626172227d00011f34a882f3b06894c"
                    "29f52e06b8a28187b84b817c0e40f124859970b32511a778736d682f2"
@@ -203,7 +203,7 @@ class Testcases(unittest.TestCase):
                 "permlink": "foobard",
                 "weight": 1000
             })
-        self.cm = ("f68585abf4dce7c80457010007666f6f6261726107666f6f62617263"
+        self.cm = (u"f68585abf4dce7c80457010007666f6f6261726107666f6f62617263"
                    "07666f6f62617264e8030001202e09123f732a438ef6d6138484d7ad"
                    "edfdcf4a4f3d171f7fcafe836efa2a3c8877290bd34c67eded824ac0"
                    "cc39e33d154d0617f64af936a83c442f62aef08fec")
@@ -218,7 +218,7 @@ class Testcases(unittest.TestCase):
                 "memo": "testmemo",
             })
         self.cm = (
-            "f68585abf4dce7c804570120087465737475736572087465737475736572e8030"
+            u"f68585abf4dce7c804570120087465737475736572087465737475736572e8030"
             "0000000000003535445454d000008746573746d656d6f00011f4df74457bf8824"
             "c02da6a722a7c604676c97aad1a51ebcfb7086b0b7c1f19f9257388a06b3c24ae"
             "51d97c9eee5e0ecb7b6c32a29af6f56697f0c7516e70a75ce")
@@ -234,7 +234,7 @@ class Testcases(unittest.TestCase):
                 "memo": "memohere",
             })
         self.cm = (
-            "f68585abf4dce7c804570121087465737475736572292300000774657374736"
+            u"f68585abf4dce7c804570121087465737475736572292300000774657374736"
             "572a0860100000000000353424400000000086d656d6f6865726500012058760"
             "45f4869b6459438019d71d25bdea461899e0a96635c05f19caf424fa1453fc1fe"
             "103d9ca6470d629b9971adddf757c829bb47cc96b29662f294bebb4fb2")
@@ -247,7 +247,7 @@ class Testcases(unittest.TestCase):
         })
 
         self.cm = (
-            "f68585abf4dce7c8045701220774657375736572292300000001200942474f672"
+            u"f68585abf4dce7c8045701220774657375736572292300000001200942474f672"
             "3937b88e19fb8cade26cc97f68cb626362d0764d134fe837df5262200b5e71bec"
             "13a0673995a584a47674897e959d8c1f83389505895fb64ceda5")
         self.doit()
@@ -263,7 +263,7 @@ class Testcases(unittest.TestCase):
                 "expiration": "2016-12-31T23:59:59"
             })
 
-        self.cm = ("f68585abf4dce7c8045701050000000000000000000000000003535"
+        self.cm = (u"f68585abf4dce7c8045701050000000000000000000000000003535"
                    "445454d0000000000000000000003535445454d0000007f46685800"
                    "011f28a2fc52dcfc19378c5977917b158dfab93e7760259aab7ecdb"
                    "cb82df7b22e1a5527e02fd3aab7d64302ec550c3edcbba29d73226c"
@@ -317,7 +317,7 @@ class Testcases(unittest.TestCase):
                 ""
             })
 
-        self.cm = ("f68585abf4dce7c80457010a0973747265656d69616e01010000"
+        self.cm = (u"f68585abf4dce7c80457010a0973747265656d69616e01010000"
                    "00000202bbcf38855c9ae9d55704ee50ff56552af1242266c105"
                    "44a75b61005e17fa78a601000389d28937022880a7f0c7deaa6f"
                    "46b4d87ce08bd5149335cb39b5a8e9b04981c201000102000000"
@@ -340,7 +340,7 @@ class Testcases(unittest.TestCase):
             "orderid": 2141244,
         })
 
-        self.cm = ("f68585abf4dce7c804570106003cac20000001206c9888d0c2c3"
+        self.cm = (u"f68585abf4dce7c804570106003cac20000001206c9888d0c2c3"
                    "1dba1302566f524dfac01a15760b93a8726241a7ae6ba00edfd"
                    "e5b83edaf94a4bd35c2957ded6023576dcbe936338fb9d340e2"
                    "1b5dad6f0028f6")
@@ -355,7 +355,7 @@ class Testcases(unittest.TestCase):
                 "auto_vest": False
             })
 
-        self.cm = ("f68585abf4dce7c804570114057865726f63057865726f63e803"
+        self.cm = (u"f68585abf4dce7c804570114057865726f63057865726f63e803"
                    "0000011f12d2b8f93f9528f31979e0e1f59a6d45346a88c02ab2"
                    "c4115b10c9e273fc1e99621af0c2188598c84762b7e99ca63f6b"
                    "6be6fca318dd85b0d7a4f09f95579290")
@@ -368,7 +368,7 @@ class Testcases(unittest.TestCase):
             "amount": "100.000 SBD"
         })
 
-        self.cm = ("f68585abf4dce7c804570108057865726f6343529d8ba0860100000"
+        self.cm = (u"f68585abf4dce7c804570108057865726f6343529d8ba0860100000"
                    "00000035342440000000000011f3d22eb66e5cddcc90f5d6ca0bd7a"
                    "43e0ab811ecd480022af8a847c45eac720b342188d55643d8cb1711"
                    "f516e9879be2fa7dfa329b518f19df4afaaf4f41f7715")
@@ -386,7 +386,7 @@ class Testcases(unittest.TestCase):
                 "json_metadata": {}
             })
 
-        self.cm = ("f68585abf4dce7c804570101000001610161012dec1f75303030307"
+        self.cm = (u"f68585abf4dce7c804570101000001610161012dec1f75303030307"
                    "5303030317530303032753030303375303030347530303035753030"
                    "3036753030303762090a7530303062660d753030306575303030667"
                    "5303031307530303131753030313275303031337530303134753030"
@@ -550,7 +550,7 @@ class Testcases(unittest.TestCase):
                 }
             })
 
-        self.cm = ("f68585abf4dce7c804570107057865726f63e803000000000"
+        self.cm = (u"f68585abf4dce7c804570107057865726f63e803000000000"
                    "00003534244000000001b1000000000000003535445454d00"
                    "000001203847a02aa76964cacfb41565c23286cc64b18f6bb"
                    "9260832823839b3b90dff18738e1b686ad22f79c42fca73e6"
@@ -564,7 +564,7 @@ class Testcases(unittest.TestCase):
                 "permlink": "testpost",
             })
 
-        self.cm = ("f68585abf4dce7c80457011106747572626f740874657374706f73"
+        self.cm = (u"f68585abf4dce7c80457011106747572626f740874657374706f73"
                    "7400011f0d413176d24455d6d9b5b9416384fcf63f080a70d8b243"
                    "c579f996ce8c116ce0583b433d4ce9107438b72d39eb6195027880"
                    "54b97abc20bf86b17a11d3eb8351")
@@ -588,7 +588,7 @@ class Testcases(unittest.TestCase):
                 "10.000 STEEM",
             })
 
-        self.cm = ("f68585abf4dce7c80457010b057865726f6308666f6f6f6f6261"
+        self.cm = (u"f68585abf4dce7c80457010b057865726f6308666f6f6f6f6261"
                    "720314aa202c9158990b3ec51a1aa49b2ab5d300c97b391df3be"
                    "b34bb74f3c62699e102700000000000003535445454d000047f4"
                    "1000e803102700000000000003535445454d00000001206adca4"
@@ -604,7 +604,7 @@ class Testcases(unittest.TestCase):
             "approve": True,
         })
 
-        self.cm = ("f68585abf4dce7c80457010c057865726f630a636"
+        self.cm = (u"f68585abf4dce7c80457010c057865726f630a636"
                    "861696e73717561640100011f16b43411e11f4739"
                    "4c1624a3c4d3cf4daba700b8690f494e6add7ad9b"
                    "ac735ce7775d823aa66c160878cb3348e6857c531"
@@ -629,7 +629,7 @@ class Testcases(unittest.TestCase):
                 "follow"
             })
 
-        self.cm = ("f68585abf4dce7c8045701120001057865726f6306666f6c6c"
+        self.cm = (u"f68585abf4dce7c8045701120001057865726f6306666f6c6c"
                    "6f777f5b227265626c6f67222c207b226163636f756e74223a"
                    "20227865726f63222c2022617574686f72223a202263686169"
                    "6e7371756164222c20227065726d6c696e6b223a2022737472"
@@ -664,7 +664,7 @@ class Testcases(unittest.TestCase):
                 }],
             })
 
-        self.cm = ("f68585abf4dce7c804570113057865726f6306706973746f6e"
+        self.cm = (u"f68585abf4dce7c804570113057865726f6306706973746f6e"
                    "00ca9a3b000000000353424400000000102701010100020a67"
                    "6f6f642d6b61726d61d007046e756c6c881300011f59634e65"
                    "55fec7c01cb7d4921601c37c250c6746022cc35eaefdd90405"

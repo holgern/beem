@@ -3,6 +3,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+from builtins import bytes, int, str
+import six
 from beem.instance import shared_steem_instance
 from beem.asset import Asset
 
@@ -61,7 +63,7 @@ class Amount(dict):
             self["symbol"] = amount["symbol"]
             self["asset"] = amount["asset"]
 
-        elif amount and asset is None and isinstance(amount, str):
+        elif amount is not None and asset is None and isinstance(amount, six.string_types):
             self["amount"], self["symbol"] = amount.split(" ")
             self["asset"] = Asset(self["symbol"], steem_instance=self.steem)
 
@@ -86,19 +88,19 @@ class Amount(dict):
             self["symbol"] = asset["symbol"]
             self["asset"] = asset
 
-        elif amount and asset and isinstance(asset, str):
+        elif amount and asset and isinstance(asset, six.string_types):
             self["amount"] = amount
             self["asset"] = Asset(asset, steem_instance=self.steem)
             self["symbol"] = self["asset"]["symbol"]
-        elif isinstance(amount, (int, float)) and asset and isinstance(asset, Asset):
+        elif isinstance(amount, (six.integer_types, float)) and asset and isinstance(asset, Asset):
             self["amount"] = amount
             self["asset"] = asset
             self["symbol"] = self["asset"]["symbol"]
-        elif isinstance(amount, (int, float)) and asset and isinstance(asset, dict):
+        elif isinstance(amount, (six.integer_types, float)) and asset and isinstance(asset, dict):
             self["amount"] = amount
             self["asset"] = asset
             self["symbol"] = self["asset"]["symbol"]
-        elif isinstance(amount, (int, float)) and asset and isinstance(asset, str):
+        elif isinstance(amount, (six.integer_types, float)) and asset and isinstance(asset, six.string_types):
             self["amount"] = amount
             self["asset"] = Asset(asset, steem_instance=self.steem)
             self["symbol"] = asset

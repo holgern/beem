@@ -12,3 +12,4 @@ pytest-mock
 coverage
 mock
 appdirs
+six

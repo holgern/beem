@@ -4,6 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import bytes, int, str
 from builtins import super
+import six
 from collections import OrderedDict
 import json
 from beemgraphenebase.types import (
@@ -57,7 +58,7 @@ class Transfer(GrapheneObject):
                 if isinstance(kwargs["memo"], dict):
                     kwargs["memo"]["prefix"] = prefix
                     memo = Optional(Memo(**kwargs["memo"]))
-                elif isinstance(kwargs["memo"], str):
+                elif isinstance(kwargs["memo"], six.string_types):
                     memo = (String(kwargs["memo"]))
                 else:
                     memo = Optional(Memo(kwargs["memo"]))

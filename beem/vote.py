@@ -5,6 +5,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
 from builtins import super
+import six
 from .instance import shared_steem_instance
 from .account import Account
 from .exceptions import VoteDoesNotExistsException
@@ -39,7 +40,7 @@ class Vote(BlockchainObject):
         steem_instance=None
     ):
         self.full = full
-        if isinstance(voter, str) and authorperm is not None:
+        if isinstance(voter, six.string_types) and authorperm is not None:
             [author, permlink] = resolve_authorperm(authorperm)
             self["voter"] = voter
             self["author"] = author
@@ -129,7 +130,7 @@ class ActiveVotes(list):
     def __init__(self, authorperm, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         votes = None
-        if isinstance(authorperm, str):
+        if isinstance(authorperm, six.string_types):
             [author, permlink] = resolve_authorperm(authorperm)
             votes = self.steem.rpc.get_active_votes(author, permlink)
         elif isinstance(authorperm, list):

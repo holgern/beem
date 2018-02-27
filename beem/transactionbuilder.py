@@ -4,6 +4,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
+import six
 from .account import Account
 from beembase.objects import Operation
 from beembase.account import PrivateKey, PublicKey
@@ -166,7 +167,7 @@ class TransactionBuilder(dict):
                     )
                 )
             else:
-                if isinstance(account, str):
+                if isinstance(account, six.string_types):
                     account = Account(account, steem_instance=self.steem)
                 assert permission in account, "Could not access permission"
                 required_treshold = account[permission]["weight_threshold"]
@@ -231,7 +232,7 @@ class TransactionBuilder(dict):
 
         # We need to set the default prefix, otherwise pubkeys are
         # presented wrongly!
-        if self.steem.rpc:
+        if self.steem.rpc is not None:
             operations.default_prefix = (
                 self.steem.rpc.chain_params["prefix"])
         elif "blockchain" in self:

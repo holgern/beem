@@ -34,10 +34,7 @@ class PasswordKey(object):
         """ Derive private key from the brain key and the current sequence
             number
         """
-        if sys.version > '3':
-            a = bytes(self.account + self.role + self.password, 'utf8')
-        else:
-            a = bytes(self.account + self.role + self.password).encode('utf8')
+        a = bytes(self.account + self.role + self.password, 'utf8')
         s = hashlib.sha256(a).digest()
         return PrivateKey(hexlify(s).decode('ascii'))
 
@@ -102,10 +99,7 @@ class BrainKey(object):
             number
         """
         encoded = "%s %d" % (self.brainkey, self.sequence)
-        if sys.version > '3':
-            a = bytes(encoded, 'ascii')
-        else:
-            a = bytes(encoded).encode('ascii')
+        a = bytes(encoded, 'ascii')
         s = hashlib.sha256(hashlib.sha512(a).digest()).digest()
         return PrivateKey(hexlify(s).decode('ascii'))
 
@@ -196,12 +190,12 @@ class Address(object):
         else:
             return format(self._address, _format)
 
-    def __bytes__(self):
+    def to_bytes(self):
         """ Returns the raw content of the ``Base58CheckEncoded`` address """
         if self._address is None:
-            return bytes(self.derivesha512address())
+            return (self.derivesha512address().to_bytes())
         else:
-            return bytes(self._address)
+            return (self._address.to_bytes())
 
 
 class PublicKey(Address):
@@ -279,9 +273,9 @@ class PublicKey(Address):
         """ Formats the instance of:doc:`Base58 <base58>` according to ``_format`` """
         return format(self._pk, _format)
 
-    def __bytes__(self):
+    def to_bytes(self):
         """ Returns the raw public key (has length 33)"""
-        return bytes(self._pk)
+        return (self._pk.to_bytes())
 
 
 class PrivateKey(PublicKey):
@@ -329,10 +323,8 @@ class PrivateKey(PublicKey):
         p = ecdsa.SigningKey.from_string(secret, curve=ecdsa.SECP256k1).verifying_key.pubkey.point
         x_str = ecdsa.util.number_to_string(p.x(), order)
         y_str = ecdsa.util.number_to_string(p.y(), order)
-        compressed = hexlify(
-            chr(2 + (p.y() & 1)).encode('ascii') + x_str).decode('ascii')
-        uncompressed = hexlify(
-            chr(4).encode('ascii') + x_str + y_str).decode('ascii')
+        compressed = hexlify(bytes(chr(2 + (p.y() & 1)), 'ascii') + x_str).decode('ascii')
+        uncompressed = hexlify(bytes(chr(4), 'ascii') + x_str + y_str).decode('ascii')
         return([compressed, uncompressed])
 
     def __format__(self, _format):
@@ -351,9 +343,9 @@ class PrivateKey(PublicKey):
         """
         return format(self._wif, "WIF")
 
-    def __bytes__(self):
+    def to_bytes(self):
         """ Returns the raw private key """
-        if sys.version > '3':
-            return bytes(self._wif)
-        else:
-            return self._wif.__bytes__()
+        return (self._wif.to_bytes())
+
+    def __bytes__(self):
+        assert False

@@ -59,11 +59,12 @@ def encrypt(privkey, passphrase):
     """
     privkeyhex = repr(privkey)   # hex
     addr = format(privkey.uncompressed.address, "BTC")
-    if sys.version > '3':
-        a = bytes(addr, 'ascii')
-    else:
-        a = bytes(addr).encode('ascii')
+    a = bytes(addr, 'ascii')
     salt = hashlib.sha256(hashlib.sha256(a).digest()).digest()[0:4]
+    if sys.version < '3':
+        if isinstance(passphrase, unicode):
+            passphrase = passphrase.encode("utf-8")
+
     if SCRYPT_MODULE == "scrypt":
         key = scrypt.hash(passphrase, salt, 16384, 8, 8)
     elif SCRYPT_MODULE == "pylibscrypt":
@@ -101,6 +102,9 @@ def decrypt(encrypted_privkey, passphrase):
     assert flagbyte == b'\xc0', "Flagbyte has to be 0xc0"
     salt = d[0:4]
     d = d[4:-4]
+    if sys.version < '3':
+        if isinstance(passphrase, unicode):
+            passphrase = passphrase.encode("utf-8")    
     if SCRYPT_MODULE == "scrypt":
         key = scrypt.hash(passphrase, salt, 16384, 8, 8)
     elif SCRYPT_MODULE == "pylibscrypt":
@@ -121,10 +125,7 @@ def decrypt(encrypted_privkey, passphrase):
     """ Verify Salt """
     privkey = PrivateKey(format(wif, "wif"))
     addr = format(privkey.uncompressed.address, "BTC")
-    if sys.version > '3':
-        a = bytes(addr, 'ascii')
-    else:
-        a = bytes(addr).encode('ascii')
+    a = bytes(addr, 'ascii')
     saltverify = hashlib.sha256(hashlib.sha256(a).digest()).digest()[0:4]
     if saltverify != salt:
         raise SaltException('checksum verification failed! Password may be incorrect.')

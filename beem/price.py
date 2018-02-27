@@ -69,7 +69,7 @@ class Price(dict):
     """
     def __init__(
         self,
-        price,
+        price=None,
         base=None,
         quote=None,
         base_asset=None,  # to identify sell/buy
@@ -79,7 +79,7 @@ class Price(dict):
         self.steem = steem_instance or shared_steem_instance()
         if price is "":
             price = None
-        if (isinstance(price, str) and not base and not quote):
+        if (price is not None and isinstance(price, str) and not base and not quote):
             import re
             price, assets = price.split(" ")
             base_symbol, quote_symbol = assets_from_string(assets)
@@ -89,7 +89,7 @@ class Price(dict):
             self["quote"] = Amount(amount=frac.denominator, asset=quote, steem_instance=self.steem)
             self["base"] = Amount(amount=frac.numerator, asset=base, steem_instance=self.steem)
 
-        elif (isinstance(price, dict) and
+        elif (price is not None and isinstance(price, dict) and
                 "base" in price and
                 "quote" in price):
             assert "price" not in price, "You cannot provide a 'price' this way"

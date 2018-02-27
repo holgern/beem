@@ -2,10 +2,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+from builtins import super
 from builtins import bytes
 from builtins import str
 from builtins import object
 from collections import OrderedDict
+import six
 import json
 from beemgraphenebase.types import (
     Uint8, Int16, Uint16, Uint32, Uint64,
@@ -25,7 +27,7 @@ from .operationids import operations
 class Operation(object):
     def __init__(self, op):
         if isinstance(op, list) and len(op) == 2:
-            if isinstance(op[0], int):
+            if isinstance(op[0], six.integer_types):
                 self.opId = op[0]
                 name = self.getOperationNameForId(self.opId)
             else:
@@ -60,8 +62,8 @@ class Operation(object):
         class_ = getattr(module, name)
         return class_
 
-    def __bytes__(self):
-        return bytes(Id(self.opId)) + bytes(self.op)
+    def to_bytes(self):
+        return (Id(self.opId).to_bytes()) + (self.op.to_bytes())
 
     def __str__(self):
         return json.dumps([self.opId, self.op.toJson()])
@@ -80,15 +82,17 @@ class GrapheneObject(object):
     def __init__(self, data=None):
         self.data = data
 
-    def __bytes__(self):
+    def to_bytes(self):
         if self.data is None:
             return bytes()
         b = b""
         for name, value in list(self.data.items()):
-            if isinstance(value, str):
+            if isinstance(value, six.string_types):
                 b += bytes(value, 'utf-8')
-            else:
+            elif isinstance(value, (list, dict)):
                 b += bytes(value)
+            else:
+                b += (value.to_bytes())
         return b
 
     def __json__(self):

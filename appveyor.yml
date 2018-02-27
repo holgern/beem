@@ -60,7 +60,7 @@ install:
   - conda info -a
   - conda install --yes nose conda-build setuptools pip numpy pytest-pylint
   - conda install --yes pycryptodomex scrypt pyyaml pytest pytest-mock coverage mock appdirs
-  - conda install --yes ecdsa requests future websocket-client pytz
+  - conda install --yes ecdsa requests future websocket-client pytz six
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.

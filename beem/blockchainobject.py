@@ -8,6 +8,7 @@ from builtins import super
 from beem.instance import shared_steem_instance
 from datetime import datetime, timedelta
 import json
+import six
 
 
 class ObjectCache(dict):
@@ -84,7 +85,7 @@ class BlockchainObject(dict):
             raise ValueError(
                 "Cannot interpret lists! Please load elements individually!")
 
-        if id_item and isinstance(id_item, str):
+        if id_item and isinstance(id_item, six.string_types):
             self.id_item = id_item
         else:
             self.id_item = "id"
@@ -94,7 +95,7 @@ class BlockchainObject(dict):
         elif isinstance(data, dict):
             self.identifier = data.get(self.id_item)
             super().__init__(data)
-        elif isinstance(data, int):
+        elif isinstance(data, six.integer_types):
             # This is only for block number bascially
             self.identifier = data
             if not lazy and not self.cached:
@@ -103,7 +104,7 @@ class BlockchainObject(dict):
             self[self.id_item] = str(data)
             # Set identifier again as it is overwritten in super() in refresh()
             self.identifier = data
-        elif isinstance(data, str):
+        elif isinstance(data, six.string_types):
             self.identifier = data
             if not lazy and not self.cached:
                 self.refresh()
@@ -129,9 +130,9 @@ class BlockchainObject(dict):
             BlockchainObject._cache.clear()
 
     def test_valid_objectid(self, i):
-        if isinstance(i, str):
+        if isinstance(i, six.string_types):
             return True
-        elif isinstance(i, int):
+        elif isinstance(i, six.integer_types):
             return True
         else:
             return False

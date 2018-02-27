@@ -2,7 +2,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from builtins import bytes
+from builtins import bytes, str, int
+from builtins import super
 import ecdsa
 import hashlib
 from binascii import hexlify, unhexlify
@@ -84,7 +85,7 @@ class Signed_Transaction(GrapheneObject):
         self.data.pop("signatures", None)
 
         # Generage Hash of the seriliazed version
-        h = hashlib.sha256(bytes(self)).digest()
+        h = hashlib.sha256(self.to_bytes()).digest()
 
         # recover signatures
         self.data["signatures"] = sigs
@@ -134,7 +135,7 @@ class Signed_Transaction(GrapheneObject):
         # Get message to sign
         #   bytes(self) will give the wire formated data according to
         #   GrapheneObject and the data given in __init__()
-        self.message = unhexlify(self.chainid) + bytes(self)
+        self.message = unhexlify(self.chainid) + self.to_bytes()
         self.digest = hashlib.sha256(self.message).digest()
 
         # restore signatures
@@ -151,7 +152,7 @@ class Signed_Transaction(GrapheneObject):
         for signature in signatures:
             p = verify_message(
                 self.message,
-                bytes(signature)
+                (signature.to_bytes())
             )
             phex = hexlify(p).decode('ascii')
             pubKeysFound.append(phex)

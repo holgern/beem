@@ -14,6 +14,7 @@ from .exceptions import ContentDoesNotExistsException, VotingInvalidOnArchivedPo
 from beembase import operations
 import json
 import re
+import six
 import logging
 import difflib
 from datetime import datetime
@@ -37,7 +38,7 @@ class Comment(BlockchainObject):
         steem_instance=None
     ):
         self.full = full
-        if isinstance(authorperm, str) and authorperm != "":
+        if isinstance(authorperm, six.string_types) and authorperm != "":
             [author, permlink] = resolve_authorperm(authorperm)
             self["id"] = 0
             self["author"] = author
@@ -72,12 +73,12 @@ class Comment(BlockchainObject):
             "promoted",
         ]
         for p in sbd_amounts:
-            if p in self and isinstance(self.get(p), str):
+            if p in self and isinstance(self.get(p), six.string_types):
                 self[p] = Amount(self.get(p, "0.000 SBD"))
 
         # turn json_metadata into python dict
         meta_str = self.get("json_metadata", "{}")
-        if isinstance(meta_str, (str, bytes, bytearray)):
+        if isinstance(meta_str, (six.string_types, bytes, bytearray)):
             self['json_metadata'] = json.loads(meta_str)
         self["tags"] = []
         if "tags" in self['json_metadata']:
@@ -99,7 +100,7 @@ class Comment(BlockchainObject):
             "max_cashout_time"
         ]
         for p in parse_times:
-            if p in self and isinstance(self.get(p), str):
+            if p in self and isinstance(self.get(p), six.string_types):
                 self[p] = formatTimeString(self.get(p, "1970-01-01T00:00:00"))
         # Parse Amounts
         sbd_amounts = [
@@ -111,12 +112,12 @@ class Comment(BlockchainObject):
             "promoted",
         ]
         for p in sbd_amounts:
-            if p in self and isinstance(self.get(p), str):
+            if p in self and isinstance(self.get(p), six.string_types):
                 self[p] = Amount(self.get(p, "0.000 SBD"))
         # turn json_metadata into python dict
 
         meta_str = self.get("json_metadata", "{}")
-        if isinstance(meta_str, (str, bytes, bytearray)):
+        if isinstance(meta_str, (six.string_types, bytes, bytearray)):
             self['json_metadata'] = json.loads(meta_str)
         self["tags"] = []
         if "tags" in self['json_metadata']:

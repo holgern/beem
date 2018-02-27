@@ -6,11 +6,18 @@ from builtins import str
 from builtins import bytes
 from builtins import object
 from binascii import hexlify, unhexlify
+import six
 import hashlib
 import sys
 import string
 import logging
 log = logging.getLogger(__name__)
+_bchr = chr
+_bord = ord
+if sys.version > '3':
+    long = int
+    _bchr = lambda x: bytes([x])
+    _bord = lambda x: x
 
 """ Default Prefix """
 PREFIX = "GPH"
@@ -100,6 +107,8 @@ class Base58(object):
         return gphBase58CheckEncode(self._hex)
 
     def __bytes__(self):
+        assert False
+    def to_bytes(self):
         """ Return raw bytes
 
             :return: Raw bytes of instance
@@ -114,14 +123,14 @@ BASE58_ALPHABET = b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 
 def base58decode(base58_str):
-    if sys.version > '3':
-        base58_text = bytes(base58_str, "ascii")
-    else:
-        base58_text = base58_str.encode("ascii")
+    base58_text = bytes(base58_str, "ascii")
     n = 0
     leading_zeroes_count = 0
     for b in base58_text:
-        n = n * 58 + BASE58_ALPHABET.find(b)
+        if isinstance(b, six.integer_types):
+            n = n * 58 + BASE58_ALPHABET.find(_bchr(b))
+        else:
+            n = n * 58 + BASE58_ALPHABET.find(b)
         if n == 0:
             leading_zeroes_count += 1
     res = bytearray()
@@ -135,10 +144,7 @@ def base58decode(base58_str):
 
 
 def base58encode(hexstring):
-    if sys.version > '3':
-        byteseq = bytes(unhexlify(bytes(hexstring, 'ascii')))
-    else:
-        byteseq = bytearray(unhexlify(hexstring.decode("ascii")))
+    byteseq = bytes(unhexlify(bytes(hexstring, 'ascii')))
     n = 0
     leading_zeroes_count = 0
     for c in byteseq:

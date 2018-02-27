@@ -1,3 +1,4 @@
+# encoding=utf8
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -8,6 +9,7 @@ from builtins import bytes
 from builtins import object
 import json
 import struct
+import sys
 import time
 from calendar import timegm
 from datetime import datetime
@@ -59,7 +61,7 @@ class Uint8(object):
     def __init__(self, d):
         self.data = int(d)
 
-    def __bytes__(self):
+    def to_bytes(self):
         return struct.pack("<B", self.data)
 
     def __str__(self):
@@ -70,7 +72,7 @@ class Int16(object):
     def __init__(self, d):
         self.data = int(d)
 
-    def __bytes__(self):
+    def to_bytes(self):
         return struct.pack("<h", int(self.data))
 
     def __str__(self):
@@ -81,7 +83,7 @@ class Uint16(object):
     def __init__(self, d):
         self.data = int(d)
 
-    def __bytes__(self):
+    def to_bytes(self):
         return struct.pack("<H", self.data)
 
     def __str__(self):
@@ -92,7 +94,7 @@ class Uint32(object):
     def __init__(self, d):
         self.data = int(d)
 
-    def __bytes__(self):
+    def to_bytes(self):
         return struct.pack("<I", self.data)
 
     def __str__(self):
@@ -103,7 +105,7 @@ class Uint64(object):
     def __init__(self, d):
         self.data = int(d)
 
-    def __bytes__(self):
+    def to_bytes(self):
         return struct.pack("<Q", self.data)
 
     def __str__(self):
@@ -114,7 +116,7 @@ class Varint32(object):
     def __init__(self, d):
         self.data = int(d)
 
-    def __bytes__(self):
+    def to_bytes(self):
         return varint(self.data)
 
     def __str__(self):
@@ -125,7 +127,7 @@ class Int64(object):
     def __init__(self, d):
         self.data = int(d)
 
-    def __bytes__(self):
+    def to_bytes(self):
         return struct.pack("<q", self.data)
 
     def __str__(self):
@@ -136,7 +138,7 @@ class String(object):
     def __init__(self, d):
         self.data = d
 
-    def __bytes__(self):
+    def to_bytes(self):
         d = self.unicodify()
         return varint(len(d)) + d
 
@@ -176,7 +178,7 @@ class Bytes(object):
         else:
             self.length = len(self.data)
 
-    def __bytes__(self):
+    def to_bytes(self):
         # FIXME constraint data to self.length
         d = unhexlify(bytes(self.data, 'utf-8'))
         return varint(len(d)) + d
@@ -189,7 +191,7 @@ class Void(object):
     def __init__(self):
         pass
 
-    def __bytes__(self):
+    def to_bytes(self):
         return b''
 
     def __str__(self):
@@ -201,8 +203,8 @@ class Array(object):
         self.data = d
         self.length = Varint32(len(self.data))
 
-    def __bytes__(self):
-        return bytes(self.length) + b"".join([bytes(a) for a in self.data])
+    def to_bytes(self):
+        return (self.length.to_bytes()) + b"".join([(a.to_bytes()) for a in self.data])
 
     def __str__(self):
         r = []
@@ -218,9 +220,11 @@ class PointInTime(object):
     def __init__(self, d):
         self.data = d
 
-    def __bytes__(self):
-        return struct.pack("<I", timegm(time.strptime((self.data + "UTC"), timeformat)))
-
+    def to_bytes(self):
+        if sys.version > '3':
+            return struct.pack("<I", timegm(time.strptime((self.data + "UTC"), timeformat)))
+        else:
+            return struct.pack("<I", timegm(time.strptime((self.data + "UTC"), timeformat.encode("utf-8"))))
     def __str__(self):
         return self.data
 
@@ -229,7 +233,7 @@ class Signature(object):
     def __init__(self, d):
         self.data = d
 
-    def __bytes__(self):
+    def to_bytes(self):
         return self.data
 
     def __str__(self):
@@ -253,7 +257,7 @@ class Fixed_array(object):
     def __init__(self, d):
         raise NotImplementedError
 
-    def __bytes__(self):
+    def to_bytes(self):
         raise NotImplementedError
 
     def __str__(self):
@@ -264,11 +268,11 @@ class Optional(object):
     def __init__(self, d):
         self.data = d
 
-    def __bytes__(self):
+    def to_bytes(self):
         if not self.data:
-            return bytes(Bool(0))
+            return Bool(0).to_bytes()
         else:
-            return bytes(Bool(1)) + bytes(self.data) if bytes(self.data) else bytes(Bool(0))
+            return Bool(1).to_bytes() + self.data.to_bytes() if self.data.to_bytes() else Bool(0).to_bytes()
 
     def __str__(self):
         return str(self.data)
@@ -276,7 +280,7 @@ class Optional(object):
     def isempty(self):
         if not self.data:
             return True
-        return not bool(bytes(self.data))
+        return not bool(self.data.to_bytes())
 
 
 class Static_variant(object):
@@ -284,8 +288,8 @@ class Static_variant(object):
         self.data = d
         self.type_id = type_id
 
-    def __bytes__(self):
-        return varint(self.type_id) + bytes(self.data)
+    def to_bytes(self):
+        return varint(self.type_id) + self.data.to_bytes()
 
     def __str__(self):
         return json.dumps([self.type_id, self.data.json()])
@@ -295,11 +299,11 @@ class Map(object):
     def __init__(self, data):
         self.data = data
 
-    def __bytes__(self):
+    def to_bytes(self):
         b = b""
         b += varint(len(self.data))
         for e in self.data:
-            b += bytes(e[0]) + bytes(e[1])
+            b += (e[0].to_bytes()) + (e[1].to_bytes())
         return b
 
     def __str__(self):
@@ -313,8 +317,8 @@ class Id(object):
     def __init__(self, d):
         self.data = Varint32(d)
 
-    def __bytes__(self):
-        return bytes(self.data)
+    def to_bytes(self):
+        return (self.data.to_bytes())
 
     def __str__(self):
         return str(self.data)
@@ -327,7 +331,7 @@ class VoteId(object):
         self.type = int(parts[0])
         self.instance = int(parts[1])
 
-    def __bytes__(self):
+    def to_bytes(self):
         binary = (self.type & 0xff) | (self.instance << 8)
         return struct.pack("<I", binary)
 
@@ -353,8 +357,8 @@ class ObjectId(object):
         else:
             raise Exception("Object id is invalid")
 
-    def __bytes__(self):
-        return bytes(self.instance)  # only yield instance
+    def to_bytes(self):
+        return (self.instance.to_bytes())  # only yield instance
 
     def __str__(self):
         return self.Id
@@ -374,7 +378,7 @@ class FullObjectId(object):
         else:
             raise Exception("Object id is invalid")
 
-    def __bytes__(self):
+    def to_bytes(self):
         return (
             self.space << 56 | self.type << 48 | self.id
         ).to_bytes(8, byteorder="little", signed=False)

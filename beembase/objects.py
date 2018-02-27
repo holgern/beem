@@ -6,6 +6,7 @@ from builtins import bytes, int, str
 from builtins import object
 from builtins import super
 import json
+import six
 from collections import OrderedDict
 from beemgraphenebase.types import (
     Uint8, Int16, Uint16, Uint32, Uint64,
@@ -59,7 +60,7 @@ class ObjectId(GPHObjectId):
 
 class Amount(object):
     def __init__(self, d):
-        if isinstance(d, str):
+        if isinstance(d, six.string_types):
             self.amount, self.asset = d.strip().split(" ")
             self.amount = float(self.amount)
 
@@ -72,7 +73,7 @@ class Amount(object):
             self.asset = d.symbol
             self.precision = d.asset.precision
 
-    def __bytes__(self):
+    def to_bytes(self):
         # padding
         asset = self.asset + "\x00" * (7 - len(self.asset))
         amount = round(float(self.amount) * 10**self.precision)
@@ -107,8 +108,8 @@ class Operation(GPHOperation):
         return json.loads(str(self))
         # return json.loads(str(json.dumps([self.name, self.op.toJson()])))
 
-    def __bytes__(self):
-        return bytes(Id(self.opId)) + bytes(self.op)
+    def to_bytes(self):
+        return (Id(self.opId).to_bytes()) + (self.op.to_bytes())
 
     def __str__(self):
         return json.dumps([self.name.lower(), self.op.toJson()])

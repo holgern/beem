@@ -5,6 +5,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
 from builtins import super
+import six
 from beem.instance import shared_steem_instance
 from .account import Account
 from .amount import Amount
@@ -80,14 +81,14 @@ class Witness(BlockchainObject):
         account = Account(account, steem_instance=self.steem)
         if isinstance(base, Amount):
             base = Amount(base, steem_instance=self.steem)
-        elif isinstance(base, str):
+        elif isinstance(base, six.string_types):
             base = Amount(base, steem_instance=self.steem)
         else:
             base = Amount(base, "SBD", steem_instance=self.steem)
 
         if isinstance(quote, Amount):
             quote = Amount(quote, steem_instance=self.steem)
-        elif isinstance(quote, str):
+        elif isinstance(quote, six.string_types):
             quote = Amount(quote, steem_instance=self.steem)
         else:
             quote = Amount(quote, "STEEM", steem_instance=self.steem)

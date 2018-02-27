@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from builtins import str
+from builtins import str, bytes
 from builtins import object
 import logging
 import os
@@ -236,11 +236,10 @@ class Wallet(object):
     def purgeWallet(self):
         """ Purge all data in wallet database
         """
-        if self.MasterPassword:
-            self.MasterPassword.purge(self.MasterPassword)
+        if self.MasterPassword is not None:
+            self.configStorage.delete(self.MasterPassword.config_key)
         for key in self.keyStorage.getPublicKeys():
             self.keyStorage.delete(key)
-        self.configStorage.delete(self.MasterPassword.config_key)
 
     def encrypt_wif(self, wif):
         """ Encrypt a wif key
