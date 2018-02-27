@@ -32,6 +32,8 @@ if __name__ == '__main__':
     write_version_py('beem/version.py')
     write_version_py('beembase/version.py')
     write_version_py('beemapi/version.py')
+    write_version_py('beemgrapheneapi/version.py')
+    write_version_py('beemgraphenebase/version.py')
 
     setup(
         name='beem',
@@ -48,7 +50,9 @@ if __name__ == '__main__':
         packages=[
             "beem",
             "beemapi",
-            "beembase"
+            "beembase",
+            "beemgraphenebase",
+            "beemgrapheneapi"
         ],
         classifiers=[
             'License :: OSI Approved :: MIT License',
@@ -60,12 +64,14 @@ if __name__ == '__main__':
             'Topic :: Office/Business :: Financial',
         ],
         install_requires=[
-            "graphenelib>=0.5.9",
+            "ecdsa",
+            "requests",
+            "websocket-client",
             "websockets",
             "appdirs",
             "Events",
             "scrypt",
-            "pycryptodome",  # for AES, installed through graphenelib already
+            "pycryptodomex",  # for AES, installed through graphenelib already
         ],
         setup_requires=['pytest-runner'],
         tests_require=['pytest'],

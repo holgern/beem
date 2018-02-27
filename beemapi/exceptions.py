@@ -1,5 +1,5 @@
 import re
-from grapheneapi.graphenewsrpc import RPCError
+from beemgrapheneapi.graphenewsrpc import RPCError
 
 
 def decodeRPCErrorMsg(e):

@@ -1,4 +1,4 @@
-from graphenebase.signedtransactions import Signed_Transaction as GrapheneSigned_Transaction
+from beemgraphenebase.signedtransactions import Signed_Transaction as GrapheneSigned_Transaction
 from .operations import Operation
 from .chains import known_chains
 import logging

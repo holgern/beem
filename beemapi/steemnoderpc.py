@@ -6,7 +6,7 @@ import ssl
 import json
 import time
 from itertools import cycle
-from grapheneapi.graphenewsrpc import GrapheneWebsocketRPC
+from beemgrapheneapi.graphenewsrpc import GrapheneWebsocketRPC
 from beembase.chains import known_chains
 from . import exceptions
 import logging

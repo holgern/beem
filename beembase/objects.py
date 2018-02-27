@@ -1,6 +1,6 @@
 import json
 from collections import OrderedDict
-from graphenebase.types import (
+from beemgraphenebase.types import (
     Uint8, Int16, Uint16, Uint32, Uint64,
     Varint32, Int64, String, Bytes, Void,
     Array, PointInTime, Signature, Bool,
@@ -8,10 +8,10 @@ from graphenebase.types import (
     Map, Id, VoteId,
     ObjectId as GPHObjectId
 )
-from graphenebase.objects import GrapheneObject, isArgsThisClass
+from beemgraphenebase.objects import GrapheneObject, isArgsThisClass
 from .objecttypes import object_type
 from .account import PublicKey
-from graphenebase.objects import Operation as GPHOperation
+from beemgraphenebase.objects import Operation as GPHOperation
 from .operationids import operations
 import struct
 default_prefix = "STM"

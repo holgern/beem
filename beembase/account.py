@@ -1,4 +1,4 @@
-from graphenebase.account import (
+from beemgraphenebase.account import (
     PasswordKey as GPHPasswordKey,
     BrainKey as GPHBrainKey,
     Address as GPHAddress,

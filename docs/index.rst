@@ -142,6 +142,22 @@ beemapi
    :maxdepth: 3
 
    beemapi
+
+beemgraphenebase
+~~~~~~~~~~~~~~~~
+
+.. toctree::
+   :maxdepth: 3
+
+   beemgraphenebase
+
+beemgrapheneapi
+~~~~~~~~~~~~~~~
+
+.. toctree::
+   :maxdepth: 3
+
+   beemgrapheneapi
    
 Glossary
 ========

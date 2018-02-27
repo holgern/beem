@@ -1,6 +1,6 @@
 from collections import OrderedDict
 import json
-from graphenebase.types import (
+from beemgraphenebase.types import (
     Uint8, Int16, Uint16, Uint32, Uint64,
     Varint32, Int64, String, Bytes, Void,
     Array, PointInTime, Signature, Bool,

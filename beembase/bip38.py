@@ -1,4 +1,4 @@
-from graphenebase.bip38 import (
+from beemgraphenebase.bip38 import (
     encrypt as GPHencrypt,
     decrypt as GPHdecrypt
 )

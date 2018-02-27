@@ -43,7 +43,10 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         content = bts.rpc.get_content("gtg", "witness-gtg-log")
         c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
-        self.assertEqual(content, c.json())
+        keys = content.keys()
+        json_content = c.json()
+        for k in keys:
+            self.assertEqual(content[k], json_content[k]
 
     def test_resteem(self):
         bts = self.bts

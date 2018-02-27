@@ -1,6 +1,6 @@
 import logging
 import os
-from graphenebase import bip38
+from beemgraphenebase import bip38
 from beembase.account import PrivateKey, GPHPrivateKey
 from .account import Account
 from .exceptions import (
