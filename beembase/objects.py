@@ -2,8 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from builtins import str
-from builtins import bytes
+from builtins import bytes, int, str
 from builtins import object
 from builtins import super
 import json
