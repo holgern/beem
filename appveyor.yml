@@ -50,15 +50,16 @@ install:
   - conda config --add channels wheeler-microfluidics
   - conda update -q conda
   - conda info -a
-  - conda install --yes nose conda-build pycrypto setuptools pip numpy pytest-pylint
+  - conda install --yes nose conda-build setuptools pip numpy pytest-pylint
   - conda install --yes pycryptodomex scrypt pyyaml pytest pytest-mock coverage mock appdirs
+  - conda install --yes ecdsa request websocket-client
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
   #- "pip install --disable-pip-version-check --user --upgrade pip"
   #- "python -m pip install -U pip setuptools"
   #- "pip install --user pycrypto Paramiko"
-  - "pip install --user --upgrade graphenelib"
+  # - "pip install --user --upgrade graphenelib"
 
 build_script:
   # Build the compiled extension

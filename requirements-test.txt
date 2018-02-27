@@ -1,5 +1,7 @@
-graphenelib
 pycryptodomex>=3.4.6
+ecdsa
+requests
+websocket-client
 scrypt>=0.8.0
 Events>=0.2.2
 pyyaml
