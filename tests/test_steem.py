@@ -1,3 +1,4 @@
+from builtins import range
 import mock
 import string
 import unittest

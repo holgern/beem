@@ -1,4 +1,7 @@
 # This Python file uses the following encoding: utf-8
+from builtins import bytes
+from builtins import chr
+from builtins import range
 import unittest
 import os
 from pprint import pprint
@@ -37,7 +40,7 @@ test_cases = [
      'to': 'GPH6HAMuJRkjGJkj6cZWBbTU13gkUhBep383prqRdExXsZsYTrWT5',
      'wif': '5Jpkeq1jiNE8Pe24GxFWTsyWbcP59Qq4cD7qg3Wgd6JFJqJkoG8'},
     {'from': 'GPH7FPzbN7hnRk24T3Nh9MYM1xBaF5xyRYu8WtyTrtLoUG8cUtszM',
-     'message': '1566da5b57e8e0fd9f530a352812a4197b8113df6495efdb246909c6ee1ffea6',
+     'message': 'db059f7a0f9053b041cd95c373ed9dff3445491d03ef17c490870ebcfcc6ec61a53718ec6cc8f5d81da6fcaa77b40d19',
      'nonce': '16332877645293003478',
      'plain': 'Ã¤Ã¶Ã¼ÃŸâ‚¬@$Â²Â³',
      'to': 'GPH6HAMuJRkjGJkj6cZWBbTU13gkUhBep383prqRdExXsZsYTrWT5',

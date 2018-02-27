@@ -1,3 +1,4 @@
+# This Python file uses the following encoding: utf-8
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -52,10 +53,7 @@ def init_aes(shared_secret, nonce):
     " Shared Secret "
     ss = hashlib.sha512(unhexlify(shared_secret)).digest()
     " Seed "
-    if sys.version > '3':
-        seed = bytes(str(nonce), 'ascii') + hexlify(ss)
-    else:
-        seed = bytes(str(nonce)).encode('ascii') + hexlify(ss)
+    seed = bytes(str(nonce), 'ascii') + hexlify(ss)
     seed_digest = hexlify(hashlib.sha512(seed).digest()).decode('ascii')
     " AES "
     key = unhexlify(seed_digest[0:64])
@@ -69,14 +67,9 @@ def _pad(s, BS):
 
 
 def _unpad(s, BS):
-    if sys.version > '3':
-        count = int(struct.unpack('B', bytes(s[-1], 'ascii'))[0])
-        if bytes(s[-count::], 'ascii') == count * struct.pack('B', count):
-            return s[:-count]
-    else:
-        count = int(struct.unpack('B', bytes(s[-1]).encode('ascii'))[0])
-        if bytes(s[-count::]).encode('ascii') == count * struct.pack('B', count):
-            return s[:-count]
+    count = int(struct.unpack('B', bytes(s[-1], 'ascii'))[0])
+    if bytes(s[-count::], 'ascii') == count * struct.pack('B', count):
+        return s[:-count]
     return s
 
 
@@ -122,10 +115,7 @@ def decode_memo(priv, pub, nonce, message):
     shared_secret = get_shared_secret(priv, pub)
     aes = init_aes(shared_secret, nonce)
     " Encryption "
-    if sys.version > '3':
-        raw = bytes(message, 'ascii')
-    else:
-        raw = bytes(message).encode('ascii')
+    raw = bytes(message, 'ascii')
     cleartext = aes.decrypt(unhexlify(raw))
     " TODO, verify checksum "
     message = cleartext[4:]

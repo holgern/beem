@@ -1,3 +1,5 @@
+from builtins import bytes
+from builtins import range
 import string
 import random
 import unittest

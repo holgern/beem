@@ -1,3 +1,4 @@
+from builtins import str
 import time
 import unittest
 from beem import Steem, exceptions

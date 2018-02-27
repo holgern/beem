@@ -1,3 +1,4 @@
+from builtins import str
 import unittest
 import mock
 from pprint import pprint
@@ -48,7 +49,7 @@ class Testcases(unittest.TestCase):
 
         # BlockchainObjects method
         account.cached = False
-        self.assertTrue(account.items())
+        self.assertTrue(list(account.items()))
         account.cached = False
         self.assertIn("id", account)
         account.cached = False

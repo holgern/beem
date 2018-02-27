@@ -43,7 +43,7 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         content = bts.rpc.get_content("gtg", "witness-gtg-log")
         c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
-        keys = content.keys()
+        keys = list(content.keys())
         json_content = c.json()
 
         for k in keys:
