@@ -4,6 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import bytes, int, str
 from builtins import super
+import six
 import sys
 import logging
 import hashlib
@@ -62,7 +63,7 @@ def encrypt(privkey, passphrase):
     a = bytes(addr, 'ascii')
     salt = hashlib.sha256(hashlib.sha256(a).digest()).digest()[0:4]
     if sys.version < '3':
-        if isinstance(passphrase, unicode):
+        if isinstance(passphrase, six.text_type):
             passphrase = passphrase.encode("utf-8")
 
     if SCRYPT_MODULE == "scrypt":
@@ -103,8 +104,8 @@ def decrypt(encrypted_privkey, passphrase):
     salt = d[0:4]
     d = d[4:-4]
     if sys.version < '3':
-        if isinstance(passphrase, unicode):
-            passphrase = passphrase.encode("utf-8")    
+        if isinstance(passphrase, six.text_type):
+            passphrase = passphrase.encode("utf-8")
     if SCRYPT_MODULE == "scrypt":
         key = scrypt.hash(passphrase, salt, 16384, 8, 8)
     elif SCRYPT_MODULE == "pylibscrypt":

@@ -97,7 +97,6 @@ def sign_message(message, wif, hashfn=hashlib.sha256):
 
     digest = hashfn(message).digest()
     p = PrivateKey(wif).to_bytes()
-        
 
     if USE_SECP256K1:
         ndata = secp256k1.ffi.new("const int *ndata")

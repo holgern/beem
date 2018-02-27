@@ -225,6 +225,7 @@ class PointInTime(object):
             return struct.pack("<I", timegm(time.strptime((self.data + "UTC"), timeformat)))
         else:
             return struct.pack("<I", timegm(time.strptime((self.data + "UTC"), timeformat.encode("utf-8"))))
+
     def __str__(self):
         return self.data
 

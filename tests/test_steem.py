@@ -15,8 +15,6 @@ from beem.instance import set_shared_steem_instance
 # Py3 compatibility
 import sys
 
-
-
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 core_unit = "STM"
 nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
@@ -186,7 +184,7 @@ class Testcases(unittest.TestCase):
         if sys.version > '3':
             _assertRaisesRegex = self.assertRaisesRegex
         else:
-            _assertRaisesRegex = self.assertRaisesRegexp        
+            _assertRaisesRegex = self.assertRaisesRegexp
         with _assertRaisesRegex(ValueError, ".*Changes nothing.*"):
             bts.disallow(
                 "STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n",

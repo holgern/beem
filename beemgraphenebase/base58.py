@@ -12,12 +12,14 @@ import sys
 import string
 import logging
 log = logging.getLogger(__name__)
+
 _bchr = chr
-_bord = ord
 if sys.version > '3':
     long = int
-    _bchr = lambda x: bytes([x])
-    _bord = lambda x: x
+
+    def _bchr(x):
+        return bytes([x])
+
 
 """ Default Prefix """
 PREFIX = "GPH"
@@ -106,8 +108,6 @@ class Base58(object):
         """
         return gphBase58CheckEncode(self._hex)
 
-    def __bytes__(self):
-        assert False
     def to_bytes(self):
         """ Return raw bytes
 
