@@ -1,3 +1,4 @@
+# This Python file uses the following encoding: utf-8
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -98,7 +99,7 @@ def resolve_authorperm(identifier):
     return match.group(1), match.group(2)
 
 
-def construct_authorperm(*args, username_prefix='@'):
+def construct_authorperm(*args):
     """ Create a post identifier from comment/post object or arguments.
     Examples:
 
@@ -107,6 +108,7 @@ def construct_authorperm(*args, username_prefix='@'):
             construct_authorperm({'author': 'username',
                 'permlink': 'permlink'})
     """
+    username_prefix='@'
     if len(args) == 1:
         op = args[0]
         author, permlink = op['author'], op['permlink']
@@ -144,7 +146,7 @@ def resolve_authorpermvoter(identifier):
     return author, permlink, identifier[pos + 1:]
 
 
-def construct_authorpermvoter(*args, username_prefix='@'):
+def construct_authorpermvoter(*args):
     """ Create a vote identifier from vote object or arguments.
     Examples:
 
@@ -153,6 +155,7 @@ def construct_authorpermvoter(*args, username_prefix='@'):
             construct_authorpermvoter({'author': 'username',
                 'permlink': 'permlink', 'voter': 'voter'})
     """
+    username_prefix='@'
     if len(args) == 1:
         op = args[0]
         if "authorperm" in op:

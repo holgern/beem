@@ -78,6 +78,16 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.7
+------
+* works on python 2.7
+* can be installed besides steem-python
+* graphenelib included
+* unit tests added
+* comment and account improved
+* timezone added
+* Delete_comment added
+
 0.19.6
 ------
 * Small bug-fix
