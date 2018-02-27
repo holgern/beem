@@ -1,3 +1,4 @@
+from builtins import super
 import unittest
 from pprint import pprint
 from beem import Steem

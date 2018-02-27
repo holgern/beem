@@ -1,4 +1,5 @@
 from builtins import range
+from builtins import super
 import mock
 import string
 import unittest

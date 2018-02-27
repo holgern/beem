@@ -1,3 +1,4 @@
+from builtins import super
 import unittest
 import mock
 from beem import Steem

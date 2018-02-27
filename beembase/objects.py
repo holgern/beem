@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 from builtins import str
 from builtins import bytes
 from builtins import object
+from builtins import super
 import json
 from collections import OrderedDict
 from beemgraphenebase.types import (

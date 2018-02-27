@@ -1,3 +1,4 @@
+from builtins import super
 import unittest
 from beem import Steem
 from beembase import operations
