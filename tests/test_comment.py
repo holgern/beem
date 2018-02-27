@@ -46,7 +46,7 @@ class Testcases(unittest.TestCase):
         keys = content.keys()
         json_content = c.json()
         for k in keys:
-            self.assertEqual(content[k], json_content[k]
+            self.assertEqual(content[k], json_content[k])
 
     def test_resteem(self):
         bts = self.bts
