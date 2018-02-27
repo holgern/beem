@@ -51,62 +51,57 @@ class Amount(dict):
             a /= 2.0
 
     """
-    def __init__(self, *args, amount=None, asset=None, steem_instance=None):
+    def __init__(self, amount, asset=None, steem_instance=None):
         self["asset"] = {}
 
         self.steem = steem_instance or shared_steem_instance()
-
-        if len(args) == 1 and isinstance(args[0], Amount):
+        if amount and asset is None and isinstance(amount, Amount):
             # Copy Asset object
-            self["amount"] = args[0]["amount"]
-            self["symbol"] = args[0]["symbol"]
-            self["asset"] = args[0]["asset"]
+            self["amount"] = amount["amount"]
+            self["symbol"] = amount["symbol"]
+            self["asset"] = amount["asset"]
 
-        elif len(args) == 1 and isinstance(args[0], str):
-            self["amount"], self["symbol"] = args[0].split(" ")
+        elif amount and asset is None and isinstance(amount, str):
+            self["amount"], self["symbol"] = amount.split(" ")
             self["asset"] = Asset(self["symbol"], steem_instance=self.steem)
 
-        elif (len(args) == 1 and
-                isinstance(args[0], dict) and
-                "amount" in args[0] and
-                "asset_id" in args[0]):
-            self["asset"] = Asset(args[0]["asset_id"], steem_instance=self.steem)
+        elif (amount and asset is None and
+                isinstance(amount, dict) and
+                "amount" in amount and
+                "asset_id" in amount):
+            self["asset"] = Asset(amount["asset_id"], steem_instance=self.steem)
             self["symbol"] = self["asset"]["symbol"]
-            self["amount"] = int(args[0]["amount"]) / 10 ** self["asset"]["precision"]
+            self["amount"] = int(amount["amount"]) / 10 ** self["asset"]["precision"]
 
-        elif (len(args) == 1 and
-                isinstance(args[0], dict) and
-                "amount" in args[0] and
-                "asset" in args[0]):
-            self["asset"] = Asset(args[0]["asset"], steem_instance=self.steem)
+        elif (amount and asset is None and
+                isinstance(amount, dict) and
+                "amount" in amount and
+                "asset" in amount):
+            self["asset"] = Asset(amount["asset"], steem_instance=self.steem)
             self["symbol"] = self["asset"]["symbol"]
-            self["amount"] = int(args[0]["amount"]) / 10 ** self["asset"]["precision"]
+            self["amount"] = int(amount["amount"]) / 10 ** self["asset"]["precision"]
 
-        elif len(args) == 2 and isinstance(args[1], Asset):
-            self["amount"] = args[0]
-            self["symbol"] = args[1]["symbol"]
-            self["asset"] = args[1]
+        elif amount and asset and isinstance(asset, Asset):
+            self["amount"] = amount
+            self["symbol"] = asset["symbol"]
+            self["asset"] = asset
 
-        elif len(args) == 2 and isinstance(args[1], str):
-            self["amount"] = args[0]
-            self["asset"] = Asset(args[1], steem_instance=self.steem)
+        elif amount and asset and isinstance(asset, str):
+            self["amount"] = amount
+            self["asset"] = Asset(asset, steem_instance=self.steem)
             self["symbol"] = self["asset"]["symbol"]
-
         elif isinstance(amount, (int, float)) and asset and isinstance(asset, Asset):
             self["amount"] = amount
             self["asset"] = asset
             self["symbol"] = self["asset"]["symbol"]
-
         elif isinstance(amount, (int, float)) and asset and isinstance(asset, dict):
             self["amount"] = amount
             self["asset"] = asset
             self["symbol"] = self["asset"]["symbol"]
-
         elif isinstance(amount, (int, float)) and asset and isinstance(asset, str):
             self["amount"] = amount
             self["asset"] = Asset(asset, steem_instance=self.steem)
             self["symbol"] = asset
-
         else:
             raise ValueError
 
@@ -193,6 +188,7 @@ class Amount(dict):
     def __floordiv__(self, other):
         a = self.copy()
         if isinstance(other, Amount):
+            assert other["asset"] == self["asset"]
             from .price import Price
             return Price(self, other)
         else:
@@ -202,6 +198,7 @@ class Amount(dict):
     def __div__(self, other):
         a = self.copy()
         if isinstance(other, Amount):
+            assert other["asset"] == self["asset"]
             from .price import Price
             return Price(self, other)
         else:
@@ -211,6 +208,7 @@ class Amount(dict):
     def __mod__(self, other):
         a = self.copy()
         if isinstance(other, Amount):
+            assert other["asset"] == self["asset"]
             a["amount"] %= other["amount"]
         else:
             a["amount"] %= other
@@ -219,6 +217,7 @@ class Amount(dict):
     def __pow__(self, other):
         a = self.copy()
         if isinstance(other, Amount):
+            assert other["asset"] == self["asset"]
             a["amount"] **= other["amount"]
         else:
             a["amount"] **= other
@@ -265,6 +264,7 @@ class Amount(dict):
 
     def __imod__(self, other):
         if isinstance(other, Amount):
+            assert other["asset"] == self["asset"]
             self["amount"] %= other["amount"]
         else:
             self["amount"] %= other
