@@ -1,9 +1,9 @@
-beem - Unofficial Python 3 Library for Steem
+beem - Unofficial Python Library for Steem
 ===============================================
 
 !!!Alpha-State, be carefull!!!
 
-beem is an unofficial python 3 library for steem, which is created new from scratch from https://github.com/xeroc/python-bitshares.
+beem is an unofficial python library for steem, which is created new from scratch from https://github.com/xeroc/python-bitshares.
 The library name is derived from a beam maschine, similar to the analogy between steem and steam. beem depends on https://github.com/xeroc/python-graphenelib.
 
 .. image:: https://img.shields.io/pypi/v/beem.svg
@@ -27,10 +27,9 @@ The library name is derived from a beam maschine, similar to the analogy between
 
 Installation
 ============
-The minimal working python version 3.4.x.
+The minimal working python version is 2.7.x. or 3.4.x
 
-Warning: install beem will install pycrytodome which is not compatible to pycryto which is need for python-steem.
-At the moment, either beem or steem can be install at one maschine!
+beem can be installed parallel to python-steem.
 
 For Debian and Ubuntu, please ensure that the following packages are installed:
         

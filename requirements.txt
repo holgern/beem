@@ -1,3 +1,4 @@
+future
 ecdsa
 requests
 websocket-client

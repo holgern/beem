@@ -69,6 +69,7 @@ if __name__ == '__main__':
             'Topic :: Office/Business :: Financial',
         ],
         install_requires=[
+            "future",
             "ecdsa",
             "requests",
             "websocket-client",

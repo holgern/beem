@@ -1,3 +1,4 @@
+future
 pycryptodomex>=3.4.6
 ecdsa
 requests
