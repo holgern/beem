@@ -110,11 +110,11 @@ class Wallet(object):
         self.configStorage = configStorage
 
         # RPC static variable
-        if rpc:
+        if rpc is not None:
             Wallet.rpc = rpc
 
         # Prefix?
-        if Wallet.rpc:
+        if Wallet.rpc is not None:
             self.prefix = Wallet.rpc.chain_params["prefix"]
         else:
             # If not connected, load prefix from config
