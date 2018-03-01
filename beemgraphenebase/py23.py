@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from builtins import bytes, int, str
+from builtins import bytes, int, str, chr
 import sys
 
 PY2 = sys.version_info[0] == 2
@@ -31,3 +31,10 @@ def py23_bytes(item, encoding=None):
             return bytes(item, encoding)
         else:
             return bytes(item)
+
+
+def py23_chr(item):
+    if PY2:
+        return chr(item)
+    else:
+        return bytes([item])

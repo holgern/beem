@@ -7,6 +7,7 @@ import pytest
 import unittest
 from beemgraphenebase.py23 import (
     py23_bytes,
+    py23_chr,
     bytes_types,
     integer_types,
     string_types,
@@ -105,10 +106,14 @@ class Testcases(unittest.TestCase):
     def test_string_types(self):
         a = 'abc'
         b = u'abc'
-        c = b'abc'
         self.assertTrue(isinstance(a, string_types))
         self.assertTrue(isinstance(b, string_types))
-        self.assertTrue(isinstance(c, string_types))
+
+    def test_chr(self):
+        BASE58_ALPHABET = b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+        self.assertEqual(BASE58_ALPHABET.find(py23_chr(4)), -1)
+        self.assertEqual(BASE58_ALPHABET.find(b"Z"), 32)
+        self.assertEqual(BASE58_ALPHABET.find(py23_bytes("Z", "ascii")), 32)
 
 
 if __name__ == '__main__':

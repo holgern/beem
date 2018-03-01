@@ -8,7 +8,7 @@ from builtins import object
 from builtins import chr
 from future.utils import python_2_unicode_compatible
 from binascii import hexlify, unhexlify
-from .py23 import py23_bytes, bytes_types, integer_types, string_types, text_type
+from .py23 import py23_bytes, py23_chr, bytes_types, integer_types, string_types, text_type
 import hashlib
 import sys
 import string
@@ -124,7 +124,7 @@ def base58decode(base58_str):
     leading_zeroes_count = 0
     for b in base58_text:
         if isinstance(b, integer_types):
-            n = n * 58 + BASE58_ALPHABET.find(chr(b))
+            n = n * 58 + BASE58_ALPHABET.find(py23_chr(b))
         else:
             n = n * 58 + BASE58_ALPHABET.find(b)
         if n == 0:
