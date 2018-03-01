@@ -42,12 +42,6 @@ class Steem(object):
             wallet database *(optional)*
         :param bool offline: Boolean to prevent connecting to network (defaults
             to ``False``) *(optional)*
-        :param str proposer: Propose a transaction using this proposer
-            *(optional)*
-        :param int proposal_expiration: Expiration time (in seconds) for the
-            proposal *(optional)*
-        :param int proposal_review: Review period (in seconds) for the proposal
-            *(optional)*
         :param int expiration: Delay in seconds until transactions are supposed
             to expire *(optional)*
         :param str blocking: Wait for broadcasted transactions to be included
@@ -69,17 +63,16 @@ class Steem(object):
         * **Force keys**: This more is for advanced users and
           requires that you know what you are doing. Here, the
           ``keys`` parameter is a dictionary that overwrite the
-          ``active``, ``owner``, or ``memo`` keys for
+          ``active``, ``owner``, ``posting`` or ``memo`` keys for
           any account. This mode is only used for *foreign*
           signatures!
 
-        If no node is provided, it will connect to the node of
-        http://uptick.rocks. It is **highly** recommended that you
-        pick your own node instead. Default settings can be changed with:
+        If no node is provided, it will connect to default nodes of
+        http://geo.steem.pl. Default settings can be changed with:
 
         .. code-block:: python
 
-            uptick set node <host>
+            steem = Steem(<host>)
 
         where ``<host>`` starts with ``ws://`` or ``wss://``.
 
@@ -93,19 +86,6 @@ class Steem(object):
             from beem import Steem
             steem = Steem()
             print(steem.info())
-
-        All that is requires is for the user to have added a key with
-        ``uptick``
-
-        .. code-block:: bash
-
-            uptick addkey
-
-        and setting a default author:
-
-        .. code-block:: bash
-
-            uptick set default_account xeroc
 
         This class also deals with edits, votes and reading content.
     """
@@ -189,16 +169,26 @@ class Steem(object):
         self.rpc = SteemNodeRPC(node, rpcuser, rpcpassword, **kwargs)
 
     def register_apis(self, apis=["network_broadcast", "account_by_key", "follow", "market_history"]):
-
+        if self.offline:
+            return
         # Try Optional APIs
         try:
             self.rpc.register_apis(apis)
         except NoAccessApi as e:
             log.info(str(e))
 
-    def refresh_data(self, force_refresh=False):
+    def refresh_data(self, force_refresh=False, data_refresh_time_seconds=None):
+        """
+        Read and stores steem blockchain parameters
+        If the last data refresh is older than data_refresh_time_seconds, data will be refreshed
+
+            :param bool force_refresh: if True, data are forced to refreshed
+            :param float data_refresh_time_seconds: set a new minimal refresh time in seconds
+        """
         if self.offline:
             return
+        if data_refresh_time_seconds is not None:
+            self.data_refresh_time_seconds = data_refresh_time_seconds
         if self.data['last_refresh'] is not None and not force_refresh:
             if (datetime.now() - self.data['last_refresh']).total_seconds() < self.data_refresh_time_seconds:
                 return
@@ -215,6 +205,8 @@ class Steem(object):
 
     def get_dynamic_global_properties(self, use_stored_data=True):
         """ This call returns the *dynamic global properties*
+            :param bool use_stored_data: if True, stored data will be returned. If stored data are
+            empty or old, refresh_data() is used.
         """
         if use_stored_data:
             self.refresh_data()
@@ -224,6 +216,8 @@ class Steem(object):
 
     def get_feed_history(self, use_stored_data=True):
         """ Returns the feed_history
+            :param bool use_stored_data: if True, stored data will be returned. If stored data are
+            empty or old, refresh_data() is used.
         """
         if use_stored_data:
             self.refresh_data()
@@ -233,6 +227,8 @@ class Steem(object):
 
     def get_reward_fund(self, fund_name="post", use_stored_data=True):
         """ Get details for a reward fund.
+            :param bool use_stored_data: if True, stored data will be returned. If stored data are
+            empty or old, refresh_data() is used.
         """
         if use_stored_data:
             self.refresh_data()
@@ -242,6 +238,8 @@ class Steem(object):
 
     def get_current_median_history_price(self, use_stored_data=True):
         """ Returns the current median price
+            :param bool use_stored_data: if True, stored data will be returned. If stored data are
+            empty or old, refresh_data() is used.
         """
         if use_stored_data:
             self.refresh_data()
@@ -251,6 +249,8 @@ class Steem(object):
 
     def get_next_scheduled_hardfork(self, use_stored_data=True):
         """ Returns Hardfork and live_time of the hardfork
+            :param bool use_stored_data: if True, stored data will be returned. If stored data are
+            empty or old, refresh_data() is used.
         """
         if use_stored_data:
             self.refresh_data()
@@ -260,6 +260,8 @@ class Steem(object):
 
     def get_hardfork_version(self, use_stored_data=True):
         """ Current Hardfork Version as String
+            :param bool use_stored_data: if True, stored data will be returned. If stored data are
+            empty or old, refresh_data() is used.
         """
         if use_stored_data:
             self.refresh_data()
@@ -269,6 +271,8 @@ class Steem(object):
 
     def get_network(self, use_stored_data=True):
         """ Identify the network
+            :param bool use_stored_data: if True, stored data will be returned. If stored data are
+            empty or old, refresh_data() is used.
 
             :returns: Network parameters
             :rtype: dict
@@ -280,6 +284,8 @@ class Steem(object):
             return self.rpc.get_network()
 
     def get_median_price(self):
+        """ Returns the current median history price as Price
+        """
         median_price = self.get_current_median_history_price()
         a = Price(
             None,
@@ -288,18 +294,26 @@ class Steem(object):
         )
         return a.as_base("SBD")
 
-    def get_payout_from_rshares(self, rshares):
+    def rshares_to_sbd(self, rshares):
+        """ Calculates the SBD amount of a vote
+        """
+        payout = float(rshares) * self.get_sbd_per_rshares()
+        return payout
+
+    def get_sbd_per_rshares(self):
+        """ Returns the current rshares to SBD ratio
+        """
         reward_fund = self.get_reward_fund()
         reward_balance = Amount(reward_fund["reward_balance"]).amount
         recent_claims = float(reward_fund["recent_claims"])
 
         fund_per_share = reward_balance / (recent_claims)
         SBD_price = (self.get_median_price() * Amount("1 STEEM")).amount
-        payout = float(rshares) * fund_per_share * SBD_price
-        return payout
+        return fund_per_share * SBD_price
 
     def get_steem_per_mvest(self, time_stamp=None):
-
+        """ Returns the current mvest to steem ratio
+        """
         if time_stamp is not None:
             a = 2.1325476281078992e-05
             b = -31099.685481490847
@@ -639,7 +653,7 @@ class Steem(object):
         # creator = Account(creator, steem_instance=self)
 
         " Generate new keys from password"
-        from beembase.account import PasswordKey, PublicKey
+        from beembase.account import PasswordKey
         if password:
             active_key = PasswordKey(account_name, password, role="active")
             owner_key = PasswordKey(account_name, password, role="owner")
@@ -721,6 +735,7 @@ class Steem(object):
                         'weight_threshold': 1},
             'memo_key': memo,
             "json_metadata": {},
+            "prefix": self.prefix,
         }
         op = operations.Account_create(**op)
         return self.finalizeOp(op, creator, "active", **kwargs)
@@ -741,157 +756,6 @@ class Steem(object):
             raise ValueError("Threshold too restrictive!")
         if authority["weight_threshold"] == 0:
             raise ValueError("Cannot have threshold of 0")
-
-    def allow(
-        self, foreign, weight=None, permission="posting",
-        account=None, threshold=None, **kwargs
-    ):
-        """ Give additional access to an account by some other public
-            key or account.
-
-            :param str foreign: The foreign account that will obtain access
-            :param int weight: (optional) The weight to use. If not
-                define, the threshold will be used. If the weight is
-                smaller than the threshold, additional signatures will
-                be required. (defaults to threshold)
-            :param str permission: (optional) The actual permission to
-                modify (defaults to ``active``)
-            :param str account: (optional) the account to allow access
-                to (defaults to ``default_account``)
-            :param int threshold: The threshold that needs to be reached
-                by signatures to be able to interact
-        """
-        from copy import deepcopy
-        if not account:
-            if "default_account" in config:
-                account = config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-
-        if permission not in ["owner", "posting", "active"]:
-            raise ValueError(
-                "Permission needs to be either 'owner', 'posting', or 'active"
-            )
-        account = Account(account, steem_instance=self)
-
-        if permission not in account:
-            account = Account(account, steem_instance=self, lazy=False, full=True)
-            account.clear_cache()
-            account.refresh()
-        if permission not in account:
-            account = Account(account, steem_instance=self.steem)
-        assert permission in account, "Could not access permission"
-
-        if not weight:
-            weight = account[permission]["weight_threshold"]
-
-        authority = deepcopy(account[permission])
-        try:
-            pubkey = PublicKey(foreign, prefix=self.prefix)
-            authority["key_auths"].append([
-                str(pubkey),
-                weight
-            ])
-        except:
-            try:
-                foreign_account = Account(foreign, steem_instance=self)
-                authority["account_auths"].append([
-                    foreign_account["name"],
-                    weight
-                ])
-            except:
-                raise ValueError(
-                    "Unknown foreign account or invalid public key"
-                )
-        if threshold:
-            authority["weight_threshold"] = threshold
-            self._test_weights_treshold(authority)
-
-        op = operations.Account_update(**{
-            "account": account["name"],
-            permission: authority,
-            "memo_key": account["memo_key"],
-            "json_metadata": account["json_metadata"],
-        })
-        if permission == "owner":
-            return self.finalizeOp(op, account, "owner", **kwargs)
-        else:
-            return self.finalizeOp(op, account, "active", **kwargs)
-
-    def disallow(
-        self, foreign, permission="posting",
-        account=None, threshold=None, **kwargs
-    ):
-        """ Remove additional access to an account by some other public
-            key or account.
-
-            :param str foreign: The foreign account that will obtain access
-            :param str permission: (optional) The actual permission to
-                modify (defaults to ``active``)
-            :param str account: (optional) the account to allow access
-                to (defaults to ``default_account``)
-            :param int threshold: The threshold that needs to be reached
-                by signatures to be able to interact
-        """
-        if not account:
-            if "default_account" in config:
-                account = config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-
-        if permission not in ["owner", "active", "posting"]:
-            raise ValueError(
-                "Permission needs to be either 'owner', 'posting', or 'active"
-            )
-        account = Account(account, steem_instance=self)
-        authority = account[permission]
-
-        try:
-            pubkey = PublicKey(foreign, prefix=self.prefix)
-            affected_items = list(
-                [x for x in authority["key_auths"] if x[0] == str(pubkey)])
-            authority["key_auths"] = list([x for x in authority["key_auths"] if x[0] != str(pubkey)])
-        except:
-            try:
-                foreign_account = Account(foreign, steem_instance=self)
-                affected_items = list(
-                    [x for x in authority["account_auths"] if x[0] == foreign_account["name"]])
-                authority["account_auths"] = list([x for x in authority["account_auths"] if x[0] != foreign_account["name"]])
-            except:
-                raise ValueError(
-                    "Unknown foreign account or unvalid public key"
-                )
-
-        if not affected_items:
-            raise ValueError("Changes nothing!")
-        removed_weight = affected_items[0][1]
-
-        # Define threshold
-        if threshold:
-            authority["weight_threshold"] = threshold
-
-        # Correct threshold (at most by the amount removed from the
-        # authority)
-        try:
-            self.self.cm(authority)
-        except:
-            log.critical(
-                "The account's threshold will be reduced by %d"
-                % (removed_weight)
-            )
-            authority["weight_threshold"] -= removed_weight
-            self.self.cm(authority)
-
-        op = operations.Account_update(**{
-            "account": account["name"],
-            permission: authority,
-            "memo_key": account["memo_key"],
-            "json_metadata": account["json_metadata"]
-        })
-        if permission == "owner":
-            return self.finalizeOp(op, account, "owner", **kwargs)
-        else:
-            return self.finalizeOp(op, account, "active", **kwargs)
 
     def custom_json(self,
                     id,
@@ -918,6 +782,7 @@ class Steem(object):
                 "json": json_data,
                 "required_auths": required_auths,
                 "required_posting_auths": required_posting_auths,
-                "id": id
+                "id": id,
+                "prefix": self.prefix,
             })
         return self.finalizeOp(op, account, "posting")

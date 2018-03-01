@@ -3,7 +3,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import bytes, str, int
-from builtins import super
+from beemgraphenebase.py23 import py23_bytes, bytes_types
 import ecdsa
 import hashlib
 from binascii import hexlify, unhexlify
@@ -66,7 +66,7 @@ class Signed_Transaction(GrapheneObject):
                 else:
                     kwargs['operations'] = Array(kwargs["operations"])
 
-            super().__init__(OrderedDict([
+            super(Signed_Transaction, self).__init__(OrderedDict([
                 ('ref_block_num', Uint16(kwargs['ref_block_num'])),
                 ('ref_block_prefix', Uint32(kwargs['ref_block_prefix'])),
                 ('expiration', PointInTime(kwargs['expiration'])),
@@ -85,7 +85,7 @@ class Signed_Transaction(GrapheneObject):
         self.data.pop("signatures", None)
 
         # Generage Hash of the seriliazed version
-        h = hashlib.sha256(self.to_bytes()).digest()
+        h = hashlib.sha256(py23_bytes(self)).digest()
 
         # recover signatures
         self.data["signatures"] = sigs
@@ -135,7 +135,7 @@ class Signed_Transaction(GrapheneObject):
         # Get message to sign
         #   bytes(self) will give the wire formated data according to
         #   GrapheneObject and the data given in __init__()
-        self.message = unhexlify(self.chainid) + self.to_bytes()
+        self.message = unhexlify(self.chainid) + py23_bytes(self)
         self.digest = hashlib.sha256(self.message).digest()
 
         # restore signatures
@@ -152,7 +152,7 @@ class Signed_Transaction(GrapheneObject):
         for signature in signatures:
             p = verify_message(
                 self.message,
-                (signature.to_bytes())
+                py23_bytes(signature)
             )
             phex = hexlify(p).decode('ascii')
             pubKeysFound.append(phex)

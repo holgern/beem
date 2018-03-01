@@ -4,9 +4,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
-from builtins import super
-import six
 from beem.instance import shared_steem_instance
+from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from .account import Account
 from .amount import Amount
 from .exceptions import WitnessDoesNotExistsException
@@ -15,6 +14,7 @@ from .utils import formatTimeString, parse_time
 from datetime import datetime, timedelta
 from beembase import transactions, operations
 from beembase.account import PrivateKey, PublicKey
+import pytz
 
 
 class Witness(BlockchainObject):
@@ -35,13 +35,12 @@ class Witness(BlockchainObject):
     def __init__(
         self,
         owner,
-        id_item="owner",
         full=False,
         lazy=False,
         steem_instance=None
     ):
         self.full = full
-        super().__init__(
+        super(Witness, self).__init__(
             owner,
             lazy=lazy,
             full=full,
@@ -81,14 +80,14 @@ class Witness(BlockchainObject):
         account = Account(account, steem_instance=self.steem)
         if isinstance(base, Amount):
             base = Amount(base, steem_instance=self.steem)
-        elif isinstance(base, six.string_types):
+        elif isinstance(base, string_types):
             base = Amount(base, steem_instance=self.steem)
         else:
             base = Amount(base, "SBD", steem_instance=self.steem)
 
         if isinstance(quote, Amount):
             quote = Amount(quote, steem_instance=self.steem)
-        elif isinstance(quote, six.string_types):
+        elif isinstance(quote, string_types):
             quote = Amount(quote, steem_instance=self.steem)
         else:
             quote = Amount(quote, "STEEM", steem_instance=self.steem)
@@ -102,7 +101,8 @@ class Witness(BlockchainObject):
                 "exchange_rate": {
                     "base": base,
                     "quote": quote,
-                }
+                },
+                "prefix": self.steem.prefix,
             })
         return self.steem.finalizeOp(op, account, "active")
 
@@ -138,19 +138,20 @@ class Witness(BlockchainObject):
                 "block_signing_key": signing_key,
                 "props": props,
                 "fee": "0.000 STEEM",
-                "prefix": self.steem.chain_params["prefix"]
+                "prefix": self.steem.prefix,
             })
         return self.steem.finalizeOp(op, account, "active")
 
 
 class WitnessesObject(list):
     def printAsTable(self, sort_key="votes", reverse=True):
+        utc = pytz.timezone('UTC')
         if sort_key == 'base':
             sortedList = sorted(self, key=lambda self: self['sbd_exchange_rate']['base'], reverse=reverse)
         elif sort_key == 'quote':
             sortedList = sorted(self, key=lambda self: self['sbd_exchange_rate']['quote'], reverse=reverse)
         elif sort_key == 'last_sbd_exchange_update':
-            sortedList = sorted(self, key=lambda self: (datetime.now() - formatTimeString(self['last_sbd_exchange_update'])).total_seconds(), reverse=reverse)
+            sortedList = sorted(self, key=lambda self: (utc.localize(datetime.now()) - formatTimeString(self['last_sbd_exchange_update'])).total_seconds(), reverse=reverse)
         elif sort_key == 'account_creation_fee':
             sortedList = sorted(self, key=lambda self: self['props']['account_creation_fee'], reverse=reverse)
         elif sort_key == 'sbd_interest_rate':
@@ -165,7 +166,7 @@ class WitnessesObject(list):
             outstr = ''
             outstr += witness['owner'][:15].ljust(15) + " \t " + str(round(int(witness['votes']) / 1e15, 2)).ljust(5) + " PV - " + str(witness['total_missed']).ljust(5)
             outstr += " missed - feed:" + witness['sbd_exchange_rate']['base'] + "/" + witness['sbd_exchange_rate']['quote']
-            td = datetime.now() - formatTimeString(witness['last_sbd_exchange_update'])
+            td = utc.localize(datetime.now()) - formatTimeString(witness['last_sbd_exchange_update'])
             outstr += " " + str(td.days) + " days " + str(td.seconds // 3600) + ":" + str((td.seconds // 60) % 60) + " \t "
             outstr += str(witness['props']['account_creation_fee']) + " " + str(witness['props']['maximum_block_size']) + " Blocks "
             outstr += str(witness['props']['sbd_interest_rate']) + " \t " + witness['running_version']

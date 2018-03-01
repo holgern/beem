@@ -3,11 +3,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+from future.utils import python_2_unicode_compatible
 from builtins import str
 from builtins import range
 from builtins import object
 import time
 from .block import Block
+from .blockchainobject import BlockchainObject
 from beem.instance import shared_steem_instance
 from beembase.operationids import getOperationNameForId
 from .amount import Amount
@@ -15,6 +17,7 @@ from datetime import datetime
 import math
 
 
+@python_2_unicode_compatible
 class Blockchain(object):
     """ This class allows to access the blockchain and read data
         from it
@@ -34,7 +37,7 @@ class Blockchain(object):
         Read current block and blockchain info
         .. code-block:: python
             print(chain.get_current_block())
-            print(chain.info())
+            print(chain.steem.info())
 
         Monitor for new blocks ..
         .. code-block:: python

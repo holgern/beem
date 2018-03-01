@@ -4,7 +4,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
-import six
+from future.utils import python_2_unicode_compatible
+from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from .account import Account
 from beembase.objects import Operation
 from beembase.account import PrivateKey, PublicKey
@@ -21,6 +22,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
+@python_2_unicode_compatible
 class TransactionBuilder(dict):
     """ This class simplifies the creation of transactions by adding
         operations and signers.
@@ -167,7 +169,7 @@ class TransactionBuilder(dict):
                     )
                 )
             else:
-                if isinstance(account, six.string_types):
+                if isinstance(account, string_types):
                     account = Account(account, steem_instance=self.steem)
                 assert permission in account, "Could not access permission"
                 required_treshold = account[permission]["weight_threshold"]
@@ -184,7 +186,7 @@ class TransactionBuilder(dict):
         """
         if wif:
             try:
-                PrivateKey(wif)
+                PrivateKey(wif, prefix=self.steem.prefix)
                 self.wifs.add(wif)
             except:
                 raise InvalidWifError

@@ -5,6 +5,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import bytes
 from builtins import object
+from beemgraphenebase.py23 import py23_bytes, bytes_types
 import shutil
 import time
 import os
@@ -435,7 +436,7 @@ class MasterPassword(object):
     def deriveChecksum(self, s):
         """ Derive the checksum
         """
-        checksum = hashlib.sha256(bytes(s, "ascii")).hexdigest()
+        checksum = hashlib.sha256(py23_bytes(s, "ascii")).hexdigest()
         return checksum[:4]
 
     def getEncryptedMaster(self):

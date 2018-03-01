@@ -5,21 +5,15 @@ from __future__ import unicode_literals
 from builtins import str
 from builtins import bytes
 from builtins import object
+from builtins import chr
+from future.utils import python_2_unicode_compatible
 from binascii import hexlify, unhexlify
-import six
+from .py23 import py23_bytes, bytes_types, integer_types, string_types, text_type
 import hashlib
 import sys
 import string
 import logging
 log = logging.getLogger(__name__)
-
-_bchr = chr
-if sys.version > '3':
-    long = int
-
-    def _bchr(x):
-        return bytes([x])
-
 
 """ Default Prefix """
 PREFIX = "GPH"
@@ -30,11 +24,13 @@ known_prefixes = [
     "MUSE",
     "TEST",
     "STM",
+    "STX",
     "GLX",
     "GLS",
 ]
 
 
+@python_2_unicode_compatible
 class Base58(object):
     """Base58 base class
 
@@ -108,7 +104,7 @@ class Base58(object):
         """
         return gphBase58CheckEncode(self._hex)
 
-    def to_bytes(self):
+    def __bytes__(self):
         """ Return raw bytes
 
             :return: Raw bytes of instance
@@ -123,12 +119,12 @@ BASE58_ALPHABET = b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 
 def base58decode(base58_str):
-    base58_text = bytes(base58_str, "ascii")
+    base58_text = py23_bytes(base58_str, "ascii")
     n = 0
     leading_zeroes_count = 0
     for b in base58_text:
-        if isinstance(b, six.integer_types):
-            n = n * 58 + BASE58_ALPHABET.find(_bchr(b))
+        if isinstance(b, integer_types):
+            n = n * 58 + BASE58_ALPHABET.find(chr(b))
         else:
             n = n * 58 + BASE58_ALPHABET.find(b)
         if n == 0:
@@ -144,7 +140,7 @@ def base58decode(base58_str):
 
 
 def base58encode(hexstring):
-    byteseq = bytes(unhexlify(bytes(hexstring, 'ascii')))
+    byteseq = py23_bytes(unhexlify(py23_bytes(hexstring, 'ascii')))
     n = 0
     leading_zeroes_count = 0
     for c in byteseq:

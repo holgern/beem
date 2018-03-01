@@ -4,7 +4,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import bytes, int, str
-from builtins import super
+from beemgraphenebase.py23 import py23_bytes, bytes_types
 import sys
 import hashlib
 from binascii import hexlify, unhexlify
@@ -53,7 +53,7 @@ def init_aes(shared_secret, nonce):
     " Shared Secret "
     ss = hashlib.sha512(unhexlify(shared_secret)).digest()
     " Seed "
-    seed = bytes(str(nonce), 'ascii') + hexlify(ss)
+    seed = py23_bytes(str(nonce), 'ascii') + hexlify(ss)
     seed_digest = hexlify(hashlib.sha512(seed).digest()).decode('ascii')
     " AES "
     key = unhexlify(seed_digest[0:64])
@@ -67,8 +67,8 @@ def _pad(s, BS):
 
 
 def _unpad(s, BS):
-    count = int(struct.unpack('B', bytes(s[-1], 'ascii'))[0])
-    if bytes(s[-count::], 'ascii') == count * struct.pack('B', count):
+    count = int(struct.unpack('B', py23_bytes(s[-1], 'ascii'))[0])
+    if py23_bytes(s[-count::], 'ascii') == count * struct.pack('B', count):
         return s[:-count]
     return s
 
@@ -87,7 +87,7 @@ def encode_memo(priv, pub, nonce, message):
     shared_secret = get_shared_secret(priv, pub)
     aes = init_aes(shared_secret, nonce)
     " Checksum "
-    raw = bytes(message, 'utf8')
+    raw = py23_bytes(message, 'utf8')
     checksum = hashlib.sha256(raw).digest()
     raw = (checksum[0:4] + raw)
     " Padding "
@@ -115,7 +115,7 @@ def decode_memo(priv, pub, nonce, message):
     shared_secret = get_shared_secret(priv, pub)
     aes = init_aes(shared_secret, nonce)
     " Encryption "
-    raw = bytes(message, 'ascii')
+    raw = py23_bytes(message, 'ascii')
     cleartext = aes.decrypt(unhexlify(raw))
     " TODO, verify checksum "
     message = cleartext[4:]

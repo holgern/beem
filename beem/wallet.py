@@ -8,6 +8,7 @@ import logging
 import os
 from beemgraphenebase import bip38
 from beembase.account import PrivateKey, GPHPrivateKey
+from beem.instance import shared_steem_instance
 from .account import Account
 from .exceptions import (
     KeyNotFound,
@@ -149,7 +150,7 @@ class Wallet(object):
 
         for wif in loadkeys:
             try:
-                key = PrivateKey(wif)
+                key = PrivateKey(wif, prefix=self.prefix)
             except:
                 raise InvalidWifError
             Wallet.keys[format(key.pubkey, self.prefix)] = str(key)
@@ -240,20 +241,22 @@ class Wallet(object):
             self.configStorage.delete(self.MasterPassword.config_key)
         for key in self.keyStorage.getPublicKeys():
             self.keyStorage.delete(key)
+        Wallet.keys = {}
+        Wallet.keyMap = {}
 
     def encrypt_wif(self, wif):
         """ Encrypt a wif key
         """
         assert not self.locked()
         return format(
-            bip38.encrypt(PrivateKey(wif), self.masterpassword), "encwif")
+            bip38.encrypt(PrivateKey(wif, prefix=self.prefix), self.masterpassword), "encwif")
 
     def decrypt_wif(self, encwif):
         """ decrypt a wif key
         """
         try:
             # Try to decode as wif
-            PrivateKey(encwif)
+            PrivateKey(encwif, prefix=self.prefix)
             return encwif
         except:
             pass
@@ -331,7 +334,9 @@ class Wallet(object):
             account = self.rpc.get_account(name)
             if not account:
                 return
-            for authority in account["owner"]["key_auths"]:
+            if len(account) == 0:
+                return
+            for authority in account[0]["owner"]["key_auths"]:
                 key = self.getPrivateKeyForPublicKey(authority[0])
                 if key:
                     return key
@@ -346,8 +351,10 @@ class Wallet(object):
             account = self.rpc.get_account(name)
             if not account:
                 return
+            if len(account) == 0:
+                return
             key = self.getPrivateKeyForPublicKey(
-                account["memo_key"])
+                account[0]["memo_key"])
             if key:
                 return key
             return False
@@ -361,7 +368,26 @@ class Wallet(object):
             account = self.rpc.get_account(name)
             if not account:
                 return
-            for authority in account["active"]["key_auths"]:
+            if len(account) == 0:
+                return
+            for authority in account[0]["active"]["key_auths"]:
+                key = self.getPrivateKeyForPublicKey(authority[0])
+                if key:
+                    return key
+            return False
+
+    def getPostingKeyForAccount(self, name):
+        """ Obtain owner Posting Key for an account from the wallet database
+        """
+        if "posting" in Wallet.keyMap:
+            return Wallet.keyMap.get("posting")
+        else:
+            account = self.rpc.get_account(name)
+            if not account:
+                return
+            if len(account) == 0:
+                return
+            for authority in account[0]["posting"]["key_auths"]:
                 key = self.getPrivateKeyForPublicKey(authority[0])
                 if key:
                     return key
@@ -405,9 +431,9 @@ class Wallet(object):
         """ Get the account data for a public key (all accounts found for this
             public key)
         """
-        for id in self.getAccountsFromPublicKey(pub):
+        for name in self.getAccountsFromPublicKey(pub):
             try:
-                account = Account(id)   # FIXME: self.steem is not available in wallet!
+                account = Account(name)   # FIXME: self.steem is not available in wallet!
             except:
                 continue
             yield {"name": account["name"],

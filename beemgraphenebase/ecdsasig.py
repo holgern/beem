@@ -13,6 +13,7 @@ import struct
 import logging
 from binascii import hexlify
 from .account import PrivateKey
+from .py23 import py23_bytes, bytes_types
 log = logging.getLogger(__name__)
 
 try:
@@ -37,7 +38,7 @@ def compressedPubkey(pk):
     order = pk.curve.generator.order()
     p = pk.pubkey.point
     x_str = ecdsa.util.number_to_string(p.x(), order)
-    return bytes(chr(2 + (p.y() & 1)), 'ascii') + x_str
+    return py23_bytes(chr(2 + (p.y() & 1)), 'ascii') + x_str
 
 
 def recover_public_key(digest, signature, i):
@@ -92,11 +93,11 @@ def sign_message(message, wif, hashfn=hashlib.sha256):
         :param str wif: Private key in
     """
 
-    if not isinstance(message, bytes):
-        message = bytes(message, "utf-8")
+    if not isinstance(message, bytes_types):
+        message = py23_bytes(message, "utf-8")
 
     digest = hashfn(message).digest()
-    p = PrivateKey(wif).to_bytes()
+    p = py23_bytes(PrivateKey(wif))
 
     if USE_SECP256K1:
         ndata = secp256k1.ffi.new("const int *ndata")
@@ -173,12 +174,12 @@ def sign_message(message, wif, hashfn=hashlib.sha256):
 
 
 def verify_message(message, signature, hashfn=hashlib.sha256):
-    if not isinstance(message, bytes):
-        message = bytes(message, "utf-8")
-    if not isinstance(signature, bytes):
-        signature = bytes(signature, "utf-8")
-    assert isinstance(message, bytes)
-    assert isinstance(signature, bytes)
+    if not isinstance(message, bytes_types):
+        message = py23_bytes(message, "utf-8")
+    if not isinstance(signature, bytes_types):
+        signature = py23_bytes(signature, "utf-8")
+    assert isinstance(message, bytes_types)
+    assert isinstance(signature, bytes_types)
     digest = hashfn(message).digest()
     sig = signature[1:]
     recoverParameter = bytearray(signature)[0] - 4 - 27  # recover parameter only

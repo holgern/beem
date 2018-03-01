@@ -4,7 +4,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import bytes, int, str
-from builtins import super
 from beem.instance import shared_steem_instance
 from .exceptions import AccountDoesNotExistsException
 from .blockchainobject import BlockchainObject
@@ -17,13 +16,15 @@ from beembase.account import PrivateKey, PublicKey
 import json
 import math
 import random
+import logging
+log = logging.getLogger(__name__)
 
 
 class Account(BlockchainObject):
     """ This class allows to easily access Account data
 
         :param str account_name: Name of the account
-        :param steem.steem.Steem steem_instance: Steem
+        :param beem.steem.Steem steem_instance: Steem
                instance
         :param bool lazy: Use lazy loading
         :param bool full: Obtain all account data including orders, positions,
@@ -60,7 +61,7 @@ class Account(BlockchainObject):
         steem_instance=None
     ):
         self.full = full
-        super().__init__(
+        super(Account, self).__init__(
             account,
             lazy=lazy,
             full=full,
@@ -210,7 +211,7 @@ class Account(BlockchainObject):
         reminder_in_minuts = (hours - math.floor(hours)) * 60
         return round(reminder_in_minuts, precision)
 
-    def get_feed(self, entryId=0, limit=100, raw_data=True, account=None):
+    def get_feed(self, entryId=0, limit=100, raw_data=False, account=None):
         if account is None:
             account = self["name"]
         self.steem.register_apis(["follow"])
@@ -224,7 +225,7 @@ class Account(BlockchainObject):
                 Comment(c['comment'], steem_instance=self.steem) for c in self.steem.rpc.get_feed(account, entryId, limit, api='follow')
             ]
 
-    def get_blog_entries(self, entryId=0, limit=100, raw_data=True, account=None):
+    def get_blog_entries(self, entryId=0, limit=100, raw_data=False, account=None):
         if account is None:
             account = self["name"]
         self.steem.register_apis(["follow"])
@@ -238,7 +239,7 @@ class Account(BlockchainObject):
                 Comment(c, steem_instance=self.steem) for c in self.steem.rpc.get_blog_entries(account, entryId, limit, api='follow')
             ]
 
-    def get_blog(self, entryId=0, limit=100, raw_data=True, account=None):
+    def get_blog(self, entryId=0, limit=100, raw_data=False, account=None):
         if account is None:
             account = self["name"]
         self.steem.register_apis(["follow"])
@@ -571,7 +572,7 @@ class Account(BlockchainObject):
                 to (defaults to ``default_account``)
         """
         if not account:
-            account = self["name"]
+            account = self
         if not account:
             raise ValueError("You need to provide an account")
         account = Account(account, steem_instance=self.steem)
@@ -579,9 +580,10 @@ class Account(BlockchainObject):
             **{
                 "account": account["name"],
                 "memo_key": account["memo_key"],
-                "json_metadata": profile
+                "json_metadata": profile,
+                "prefix": self.steem.prefix,
             })
-        return self.steem.finalizeOp(op, account["name"], "active")
+        return self.steem.finalizeOp(op, account, "active")
 
     # -------------------------------------------------------------------------
     #  Approval and Disapproval of witnesses
@@ -608,7 +610,8 @@ class Account(BlockchainObject):
         op = operations.Account_witness_vote(**{
             "account": account["name"],
             "witness": witness,
-            "approve": approve
+            "approve": approve,
+            "prefix": self.steem.prefix,
         })
         return self.steem.finalizeOp(op, account["name"], "active", **kwargs)
 
@@ -644,7 +647,8 @@ class Account(BlockchainObject):
         op = operations.Account_update(**{
             "account": account["name"],
             "memo_key": account["memo_key"],
-            "json_metadata": account["json_metadata"]
+            "json_metadata": account["json_metadata"],
+            "prefix": self.steem.prefix,
         })
         return self.steem.finalizeOp(op, account["name"], "active", **kwargs)
 
@@ -682,6 +686,7 @@ class Account(BlockchainObject):
             "to": to["name"],
             "memo": memoObj.encrypt(memo),
             "from": account["name"],
+            "prefix": self.steem.prefix,
         })
         return self.steem.finalizeOp(op, account, "active", **kwargs)
 
@@ -713,6 +718,7 @@ class Account(BlockchainObject):
             "from": account["name"],
             "to": to["name"],
             "amount": amount,
+            "prefix": self.steem.prefix,
         })
         return self.steem.finalizeOp(op, account, "active", **kwargs)
 
@@ -744,7 +750,8 @@ class Account(BlockchainObject):
             **{
                 "owner": account["name"],
                 "requestid": request_id,
-                "amount": amount
+                "amount": amount,
+                "prefix": self.steem.prefix,
             })
 
         return self.steem.finalizeOp(op, account, "active")
@@ -776,6 +783,7 @@ class Account(BlockchainObject):
                 "to": to["name"],
                 "amount": amount,
                 "memo": memo,
+                "prefix": self.steem.prefix,
             })
         return self.steem.finalizeOp(op, account, "active")
 
@@ -819,6 +827,7 @@ class Account(BlockchainObject):
                 "to": to["name"],
                 "amount": amount,
                 "memo": memo,
+                "prefix": self.steem.prefix,
             })
         return self.steem.finalizeOp(op, account, "active")
 
@@ -837,6 +846,7 @@ class Account(BlockchainObject):
         op = operations.Cancel_transfer_from_savings(**{
             "from": account["name"],
             "request_id": request_id,
+            "prefix": self.steem.prefix,
         })
         return self.steem.finalizeOp(op, account, "active")
 
@@ -899,6 +909,7 @@ class Account(BlockchainObject):
                 "reward_steem": reward_steem,
                 "reward_sbd": reward_sbd,
                 "reward_vests": reward_vests,
+                "prefix": self.steem.prefix,
             })
         return self.steem.finalizeOp(op, account, "posting")
 
@@ -930,6 +941,7 @@ class Account(BlockchainObject):
                 "delegator": account,
                 "delegatee": to_account,
                 "vesting_shares": vesting_shares,
+                "prefix": self.steem.prefix,
             })
         return self.steem.finalizeOp(op, account, "active")
 
@@ -941,7 +953,7 @@ class Account(BlockchainObject):
             if not ``default_account``
     """
         if not account:
-            account = self["name"]
+            account = self
         if not account:
             raise ValueError("You need to provide an account")
         account = Account(account, steem_instance=self.steem)
@@ -956,6 +968,158 @@ class Account(BlockchainObject):
             **{
                 "account": account["name"],
                 "vesting_shares": amount,
+                "prefix": self.steem.prefix,
             })
 
         return self.steem.finalizeOp(op, account, "active")
+
+    def allow(
+        self, foreign, weight=None, permission="posting",
+        account=None, threshold=None, **kwargs
+    ):
+        """ Give additional access to an account by some other public
+            key or account.
+
+            :param str foreign: The foreign account that will obtain access
+            :param int weight: (optional) The weight to use. If not
+                define, the threshold will be used. If the weight is
+                smaller than the threshold, additional signatures will
+                be required. (defaults to threshold)
+            :param str permission: (optional) The actual permission to
+                modify (defaults to ``active``)
+            :param str account: (optional) the account to allow access
+                to (defaults to ``default_account``)
+            :param int threshold: The threshold that needs to be reached
+                by signatures to be able to interact
+        """
+        from copy import deepcopy
+        if not account:
+            account = self
+        if not account:
+            raise ValueError("You need to provide an account")
+
+        if permission not in ["owner", "posting", "active"]:
+            raise ValueError(
+                "Permission needs to be either 'owner', 'posting', or 'active"
+            )
+        account = Account(account, steem_instance=self.steem)
+
+        if permission not in account:
+            account = Account(account, steem_instance=self.steem, lazy=False, full=True)
+            account.clear_cache()
+            account.refresh()
+        if permission not in account:
+            account = Account(account, steem_instance=self.steem)
+        assert permission in account, "Could not access permission"
+
+        if not weight:
+            weight = account[permission]["weight_threshold"]
+
+        authority = deepcopy(account[permission])
+        try:
+            pubkey = PublicKey(foreign, prefix=self.steem.prefix)
+            authority["key_auths"].append([
+                str(pubkey),
+                weight
+            ])
+        except:
+            try:
+                foreign_account = Account(foreign, steem_instance=self.steem)
+                authority["account_auths"].append([
+                    foreign_account["name"],
+                    weight
+                ])
+            except:
+                raise ValueError(
+                    "Unknown foreign account or invalid public key"
+                )
+        if threshold:
+            authority["weight_threshold"] = threshold
+            self.steem._test_weights_treshold(authority)
+
+        op = operations.Account_update(**{
+            "account": account["name"],
+            permission: authority,
+            "memo_key": account["memo_key"],
+            "json_metadata": account["json_metadata"],
+            "prefix": self.steem.prefix
+        })
+        if permission == "owner":
+            return self.steem.finalizeOp(op, account, "owner", **kwargs)
+        else:
+            return self.steem.finalizeOp(op, account, "active", **kwargs)
+
+    def disallow(
+        self, foreign, permission="posting",
+        account=None, threshold=None, **kwargs
+    ):
+        """ Remove additional access to an account by some other public
+            key or account.
+
+            :param str foreign: The foreign account that will obtain access
+            :param str permission: (optional) The actual permission to
+                modify (defaults to ``active``)
+            :param str account: (optional) the account to allow access
+                to (defaults to ``default_account``)
+            :param int threshold: The threshold that needs to be reached
+                by signatures to be able to interact
+        """
+        if not account:
+            account = self
+        if not account:
+            raise ValueError("You need to provide an account")
+
+        if permission not in ["owner", "active", "posting"]:
+            raise ValueError(
+                "Permission needs to be either 'owner', 'posting', or 'active"
+            )
+        account = Account(account, steem_instance=self.steem)
+        authority = account[permission]
+
+        try:
+            pubkey = PublicKey(foreign, prefix=self.steem.prefix)
+            affected_items = list(
+                [x for x in authority["key_auths"] if x[0] == str(pubkey)])
+            authority["key_auths"] = list([x for x in authority["key_auths"] if x[0] != str(pubkey)])
+        except:
+            try:
+                foreign_account = Account(foreign, steem_instance=self.steem)
+                affected_items = list(
+                    [x for x in authority["account_auths"] if x[0] == foreign_account["name"]])
+                authority["account_auths"] = list([x for x in authority["account_auths"] if x[0] != foreign_account["name"]])
+            except:
+                raise ValueError(
+                    "Unknown foreign account or unvalid public key"
+                )
+
+        if not affected_items:
+            raise ValueError("Changes nothing!")
+        removed_weight = affected_items[0][1]
+
+        # Define threshold
+        if threshold:
+            authority["weight_threshold"] = threshold
+
+        # Correct threshold (at most by the amount removed from the
+        # authority)
+        try:
+            self.steem._test_weights_treshold(authority)
+        except:
+            log.critical(
+                "The account's threshold will be reduced by %d"
+                % (removed_weight)
+            )
+            authority["weight_threshold"] -= removed_weight
+            self.steem._test_weights_treshold(authority)
+
+        op = operations.Account_update(**{
+            "account": account["name"],
+            permission: authority,
+            "memo_key": account["memo_key"],
+            "json_metadata": account["json_metadata"],
+            "prefix": self.steem.prefix,
+        })
+        if permission == "owner":
+            return self.steem.finalizeOp(op, account, "owner", **kwargs)
+        else:
+            return self.steem.finalizeOp(op, account, "active", **kwargs)

@@ -16,19 +16,18 @@ from beem.instance import set_shared_steem_instance
 import sys
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-core_unit = "STM"
-nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
-         "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
-         "wss://steemd.minnowsupportproject.org"]
+core_unit = "STX"
 
 
 class Testcases(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        bts = Steem()
+        bts.wallet.purge()
+        set_shared_steem_instance(None)
         self.bts = Steem(
-            node=nodes,
+            node=["wss://testnet.steem.vc"],
             nobroadcast=True,
             keys={"active": wif, "owner": wif, "memo": wif},
         )
@@ -39,8 +38,10 @@ class Testcases(unittest.TestCase):
 
     def test_transfer(self):
         bts = self.bts
+        bts.wallet.setKeys({"active": wif, "owner": wif, "memo": wif})
         # bts.prefix ="STX"
         acc = Account("test", steem_instance=bts)
+        acc.steem = bts
         tx = acc.transfer(
             "test", 1.33, "SBD", memo="Foobar", account="test1")
         self.assertEqual(
@@ -56,6 +57,7 @@ class Testcases(unittest.TestCase):
 
     def test_create_account(self):
         bts = self.bts
+        bts.wallet.setKeys({"active": wif, "owner": wif, "memo": wif})
         name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
         key1 = PrivateKey()
         key2 = PrivateKey()
@@ -105,7 +107,9 @@ class Testcases(unittest.TestCase):
             "test")
 
     def test_connect(self):
-        self.bts.connect()
+        self.bts.connect(node=["wss://testnet.steem.vc"])
+        bts = self.bts
+        self.assertEqual(bts.prefix, "STX")
 
     def test_set_default_account(self):
         self.bts.set_default_account("test")
@@ -144,15 +148,15 @@ class Testcases(unittest.TestCase):
         auth = {'account_auths': [['test', 1]],
                 'extensions': [],
                 'key_auths': [
-                    ['STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n', 1],
-                    ['STM7GM9YXcsoAJAgKbqW2oVj7bnNXFNL4pk9NugqKWPmuhoEDbkDv', 1]],
+                    ['STX55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n', 1],
+                    ['STX7GM9YXcsoAJAgKbqW2oVj7bnNXFNL4pk9NugqKWPmuhoEDbkDv', 1]],
                 'weight_threshold': 3}  # threshold fine
         bts._test_weights_treshold(auth)
         auth = {'account_auths': [['test', 1]],
                 'extensions': [],
                 'key_auths': [
-                    ['STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n', 1],
-                    ['STM7GM9YXcsoAJAgKbqW2oVj7bnNXFNL4pk9NugqKWPmuhoEDbkDv', 1]],
+                    ['STX55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n', 1],
+                    ['STX7GM9YXcsoAJAgKbqW2oVj7bnNXFNL4pk9NugqKWPmuhoEDbkDv', 1]],
                 'weight_threshold': 4}  # too high
 
         with self.assertRaises(ValueError):
@@ -160,10 +164,13 @@ class Testcases(unittest.TestCase):
 
     def test_allow(self):
         bts = self.bts
-        self.assertIn(bts.prefix, "STM")
+        bts.wallet.setKeys({"active": wif, "owner": wif, "memo": wif})
+        self.assertIn(bts.prefix, "STX")
         acc = Account("test", steem_instance=bts)
+        acc.steem = bts
+        self.assertIn(acc.steem.prefix, "STX")
         tx = acc.allow(
-            "STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n",
+            "STX55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n",
             account="test",
             weight=1,
             threshold=1,
@@ -176,27 +183,29 @@ class Testcases(unittest.TestCase):
         op = tx["operations"][0][1]
         self.assertIn("owner", op)
         self.assertIn(
-            ["STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n", '1'],
+            ["STX55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n", '1'],
             op["owner"]["key_auths"])
         self.assertEqual(op["owner"]["weight_threshold"], 1)
 
     def test_disallow(self):
         bts = self.bts
+        bts.wallet.setKeys({"active": wif, "owner": wif, "memo": wif})
         acc = Account("test", steem_instance=bts)
+        acc.steem = bts
         if sys.version > '3':
             _assertRaisesRegex = self.assertRaisesRegex
         else:
             _assertRaisesRegex = self.assertRaisesRegexp
         with _assertRaisesRegex(ValueError, ".*Changes nothing.*"):
             acc.disallow(
-                "STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n",
+                "STX55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n",
                 weight=1,
                 threshold=1,
                 permission="owner"
             )
         with _assertRaisesRegex(ValueError, ".*Changes nothing!.*"):
             acc.disallow(
-                "STM6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
+                "STX6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
                 weight=1,
                 threshold=1,
                 permission="owner"
@@ -204,8 +213,12 @@ class Testcases(unittest.TestCase):
 
     def test_update_memo_key(self):
         bts = self.bts
-        acc = Account("test1", steem_instance=bts)
-        tx = acc.update_memo_key("STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n")
+        bts.wallet.setKeys({"active": wif, "owner": wif, "memo": wif})
+        set_shared_steem_instance(bts)
+        self.assertEqual(bts.prefix, "STX")
+        acc = Account("test", steem_instance=bts)
+        acc.steem = bts
+        tx = acc.update_memo_key("STX55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n")
         self.assertEqual(
             (tx["operations"][0][0]),
             "account_update"
@@ -213,11 +226,13 @@ class Testcases(unittest.TestCase):
         op = tx["operations"][0][1]
         self.assertEqual(
             op["memo_key"],
-            "STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n")
+            "STX55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n")
 
     def test_approvewitness(self):
         bts = self.bts
+        bts.wallet.setKeys({"active": wif, "owner": wif, "memo": wif})
         w = Account("test", steem_instance=bts)
+        w.steem = bts
         tx = w.approvewitness("test1")
         self.assertEqual(
             (tx["operations"][0][0]),

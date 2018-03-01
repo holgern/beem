@@ -4,7 +4,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
-from builtins import super
 from .instance import shared_steem_instance
 from .account import Account
 from .amount import Amount
@@ -12,9 +11,9 @@ from .utils import resolve_authorperm, construct_authorperm, derive_permlink, ke
 from .blockchainobject import BlockchainObject
 from .exceptions import ContentDoesNotExistsException, VotingInvalidOnArchivedPost
 from beembase import operations
+from beemgraphenebase.py23 import py23_bytes, bytes_types, integer_types, string_types, text_type
 import json
 import re
-import six
 import logging
 import difflib
 from datetime import datetime
@@ -38,7 +37,7 @@ class Comment(BlockchainObject):
         steem_instance=None
     ):
         self.full = full
-        if isinstance(authorperm, six.string_types) and authorperm != "":
+        if isinstance(authorperm, string_types) and authorperm != "":
             [author, permlink] = resolve_authorperm(authorperm)
             self["id"] = 0
             self["author"] = author
@@ -48,7 +47,7 @@ class Comment(BlockchainObject):
             # self["author"] = authorperm["author"]
             # self["permlink"] = authorperm["permlink"]
             self["authorperm"] = construct_authorperm(authorperm["author"], authorperm["permlink"])
-        super().__init__(
+        super(Comment, self).__init__(
             authorperm,
             id_item="authorperm",
             lazy=lazy,
@@ -73,12 +72,12 @@ class Comment(BlockchainObject):
             "promoted",
         ]
         for p in sbd_amounts:
-            if p in self and isinstance(self.get(p), six.string_types):
+            if p in self and isinstance(self.get(p), string_types):
                 self[p] = Amount(self.get(p, "0.000 SBD"))
 
         # turn json_metadata into python dict
         meta_str = self.get("json_metadata", "{}")
-        if isinstance(meta_str, (six.string_types, bytes, bytearray)):
+        if isinstance(meta_str, (string_types, bytes_types, bytearray)):
             self['json_metadata'] = json.loads(meta_str)
         self["tags"] = []
         if "tags" in self['json_metadata']:
@@ -100,7 +99,7 @@ class Comment(BlockchainObject):
             "max_cashout_time"
         ]
         for p in parse_times:
-            if p in self and isinstance(self.get(p), six.string_types):
+            if p in self and isinstance(self.get(p), string_types):
                 self[p] = formatTimeString(self.get(p, "1970-01-01T00:00:00"))
         # Parse Amounts
         sbd_amounts = [
@@ -112,12 +111,12 @@ class Comment(BlockchainObject):
             "promoted",
         ]
         for p in sbd_amounts:
-            if p in self and isinstance(self.get(p), six.string_types):
+            if p in self and isinstance(self.get(p), string_types):
                 self[p] = Amount(self.get(p, "0.000 SBD"))
         # turn json_metadata into python dict
 
         meta_str = self.get("json_metadata", "{}")
-        if isinstance(meta_str, (six.string_types, bytes, bytearray)):
+        if isinstance(meta_str, (string_types, bytes_types, bytearray)):
             self['json_metadata'] = json.loads(meta_str)
         self["tags"] = []
         if "tags" in self['json_metadata']:
@@ -219,6 +218,10 @@ class Comment(BlockchainObject):
             [post_author, post_permlink] = resolve_authorperm(identifier)
         self.steem.register_apis(["follow"])
         return self.steem.rpc.get_reblogged_by(post_author, post_permlink, api="follow")
+
+    def get_votes(self):
+        from .vote import ActiveVotes
+        return ActiveVotes(self)
 
     def upvote(self, weight=+100, voter=None):
         """ Upvote the post

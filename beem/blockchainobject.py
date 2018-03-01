@@ -4,17 +4,18 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
-from builtins import super
+from future.utils import python_2_unicode_compatible
+from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from beem.instance import shared_steem_instance
 from datetime import datetime, timedelta
 import json
-import six
 
 
+@python_2_unicode_compatible
 class ObjectCache(dict):
 
     def __init__(self, initial_data={}, default_expiration=10):
-        super().__init__(initial_data)
+        super(ObjectCache, self).__init__(initial_data)
         self.default_expiration = default_expiration
 
     def clear(self):
@@ -85,17 +86,17 @@ class BlockchainObject(dict):
             raise ValueError(
                 "Cannot interpret lists! Please load elements individually!")
 
-        if id_item and isinstance(id_item, six.string_types):
+        if id_item and isinstance(id_item, string_types):
             self.id_item = id_item
         else:
             self.id_item = "id"
         if klass and isinstance(data, klass):
             self.identifier = data.get(self.id_item)
-            super().__init__(data)
+            super(BlockchainObject, self).__init__(data)
         elif isinstance(data, dict):
             self.identifier = data.get(self.id_item)
-            super().__init__(data)
-        elif isinstance(data, six.integer_types):
+            super(BlockchainObject, self).__init__(data)
+        elif isinstance(data, integer_types):
             # This is only for block number bascially
             self.identifier = data
             if not lazy and not self.cached:
@@ -104,7 +105,7 @@ class BlockchainObject(dict):
             self[self.id_item] = str(data)
             # Set identifier again as it is overwritten in super() in refresh()
             self.identifier = data
-        elif isinstance(data, six.string_types):
+        elif isinstance(data, string_types):
             self.identifier = data
             if not lazy and not self.cached:
                 self.refresh()
@@ -116,7 +117,7 @@ class BlockchainObject(dict):
                 # Here we assume we deal with an id
                 self.testid(self.identifier)
             if self.iscached(data):
-                super().__init__(self.getcache(data))
+                super(BlockchainObject, self).__init__(self.getcache(data))
             elif not lazy and not self.cached:
                 self.refresh()
 
@@ -130,9 +131,9 @@ class BlockchainObject(dict):
             BlockchainObject._cache.clear()
 
     def test_valid_objectid(self, i):
-        if isinstance(i, six.string_types):
+        if isinstance(i, string_types):
             return True
-        elif isinstance(i, six.integer_types):
+        elif isinstance(i, integer_types):
             return True
         else:
             return False
@@ -158,17 +159,17 @@ class BlockchainObject(dict):
     def __getitem__(self, key):
         if not self.cached:
             self.refresh()
-        return super().__getitem__(key)
+        return super(BlockchainObject, self).__getitem__(key)
 
     def items(self):
         if not self.cached:
             self.refresh()
-        return list(super().items())
+        return list(super(BlockchainObject, self).items())
 
     def __contains__(self, key):
         if not self.cached:
             self.refresh()
-        return super().__contains__(key)
+        return super(BlockchainObject, self).__contains__(key)
 
     def __repr__(self):
         return "<%s %s>" % (

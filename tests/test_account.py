@@ -26,7 +26,7 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
-            nodes,
+            node=nodes,
             nobroadcast=True,
             bundle=False,
             # Overwrite wallet to use this list of wifs only
@@ -47,6 +47,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual(account.name, "test")
         self.assertEqual(account["name"], account.name)
         self.assertIsInstance(account.balance("available", "SBD"), Amount)
+        account.print_info()
         # self.assertIsInstance(account.balance({"symbol": symbol}), Amount)
         self.assertIsInstance(account.available_balances, list)
         for h in account.history(limit=1):

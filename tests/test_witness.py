@@ -6,7 +6,7 @@ from builtins import super
 import unittest
 from pprint import pprint
 from beem import Steem
-from beem.witness import Witness
+from beem.witness import Witness, Witnesses, WitnessesVotedByAccount, WitnessesRankedByVote
 from beembase.operationids import getOperationNameForId
 from beem.instance import set_shared_steem_instance
 
@@ -22,7 +22,7 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
-            nodes,
+            node=nodes,
             nobroadcast=True,
             keys={"active": wif},
         )
@@ -56,3 +56,24 @@ class Testcases(unittest.TestCase):
         self.assertIn(
             "gtg",
             op["owner"])
+
+    def test_witnesses(self):
+        bts = self.bts
+        w = Witnesses(steem_instance=bts)
+        w.printAsTable()
+        self.assertTrue(len(w) > 0)
+        self.assertTrue(isinstance(w[0], Witness))
+
+    def test_WitnessesVotedByAccount(self):
+        bts = self.bts
+        w = WitnessesVotedByAccount("gtg", steem_instance=bts)
+        w.printAsTable()
+        self.assertTrue(len(w) > 0)
+        self.assertTrue(isinstance(w[0], Witness))
+
+    def test_WitnessesRankedByVote(self):
+        bts = self.bts
+        w = WitnessesRankedByVote(steem_instance=bts)
+        w.printAsTable()
+        self.assertTrue(len(w) > 0)
+        self.assertTrue(isinstance(w[0], Witness))

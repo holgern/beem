@@ -3,10 +3,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from builtins import super
 from builtins import str
 from builtins import bytes
 from builtins import object
+from future.utils import python_2_unicode_compatible
 import json
 import struct
 import sys
@@ -16,6 +16,7 @@ from datetime import datetime
 from binascii import hexlify, unhexlify
 from collections import OrderedDict
 from .objecttypes import object_type
+from .py23 import py23_bytes
 
 timeformat = '%Y-%m-%dT%H:%M:%S%Z'
 
@@ -57,88 +58,96 @@ def JsonObj(data):
     return json.loads(str(data))
 
 
+@python_2_unicode_compatible
 class Uint8(object):
     def __init__(self, d):
         self.data = int(d)
 
-    def to_bytes(self):
+    def __bytes__(self):
         return struct.pack("<B", self.data)
 
     def __str__(self):
         return '%d' % self.data
 
 
+@python_2_unicode_compatible
 class Int16(object):
     def __init__(self, d):
         self.data = int(d)
 
-    def to_bytes(self):
+    def __bytes__(self):
         return struct.pack("<h", int(self.data))
 
     def __str__(self):
         return '%d' % self.data
 
 
+@python_2_unicode_compatible
 class Uint16(object):
     def __init__(self, d):
         self.data = int(d)
 
-    def to_bytes(self):
+    def __bytes__(self):
         return struct.pack("<H", self.data)
 
     def __str__(self):
         return '%d' % self.data
 
 
+@python_2_unicode_compatible
 class Uint32(object):
     def __init__(self, d):
         self.data = int(d)
 
-    def to_bytes(self):
+    def __bytes__(self):
         return struct.pack("<I", self.data)
 
     def __str__(self):
         return '%d' % self.data
 
 
+@python_2_unicode_compatible
 class Uint64(object):
     def __init__(self, d):
         self.data = int(d)
 
-    def to_bytes(self):
+    def __bytes__(self):
         return struct.pack("<Q", self.data)
 
     def __str__(self):
         return '%d' % self.data
 
 
+@python_2_unicode_compatible
 class Varint32(object):
     def __init__(self, d):
         self.data = int(d)
 
-    def to_bytes(self):
+    def __bytes__(self):
         return varint(self.data)
 
     def __str__(self):
         return '%d' % self.data
 
 
+@python_2_unicode_compatible
 class Int64(object):
     def __init__(self, d):
         self.data = int(d)
 
-    def to_bytes(self):
+    def __bytes__(self):
         return struct.pack("<q", self.data)
 
     def __str__(self):
         return '%d' % self.data
 
 
+@python_2_unicode_compatible
 class String(object):
     def __init__(self, d):
         self.data = d
 
-    def to_bytes(self):
+    def __bytes__(self):
         d = self.unicodify()
         return varint(len(d)) + d
 
@@ -170,6 +179,7 @@ class String(object):
         return bytes("".join(r), "utf-8")
 
 
+@python_2_unicode_compatible
 class Bytes(object):
     def __init__(self, d, length=None):
         self.data = d
@@ -178,7 +188,7 @@ class Bytes(object):
         else:
             self.length = len(self.data)
 
-    def to_bytes(self):
+    def __bytes__(self):
         # FIXME constraint data to self.length
         d = unhexlify(bytes(self.data, 'utf-8'))
         return varint(len(d)) + d
@@ -187,24 +197,26 @@ class Bytes(object):
         return str(self.data)
 
 
+@python_2_unicode_compatible
 class Void(object):
     def __init__(self):
         pass
 
-    def to_bytes(self):
+    def __bytes__(self):
         return b''
 
     def __str__(self):
         return ""
 
 
+@python_2_unicode_compatible
 class Array(object):
     def __init__(self, d):
         self.data = d
         self.length = Varint32(len(self.data))
 
-    def to_bytes(self):
-        return (self.length.to_bytes()) + b"".join([(a.to_bytes()) for a in self.data])
+    def __bytes__(self):
+        return py23_bytes(self.length) + b"".join([py23_bytes(a) for a in self.data])
 
     def __str__(self):
         r = []
@@ -216,11 +228,12 @@ class Array(object):
         return json.dumps(r)
 
 
+@python_2_unicode_compatible
 class PointInTime(object):
     def __init__(self, d):
         self.data = d
 
-    def to_bytes(self):
+    def __bytes__(self):
         if sys.version > '3':
             return struct.pack("<I", timegm(time.strptime((self.data + "UTC"), timeformat)))
         else:
@@ -230,20 +243,22 @@ class PointInTime(object):
         return self.data
 
 
+@python_2_unicode_compatible
 class Signature(object):
     def __init__(self, d):
         self.data = d
 
-    def to_bytes(self):
+    def __bytes__(self):
         return self.data
 
     def __str__(self):
         return json.dumps(hexlify(self.data).decode('ascii'))
 
 
+@python_2_unicode_compatible
 class Bool(Uint8):  # Bool = Uint8
     def __init__(self, d):
-        super().__init__(d)
+        super(Bool, self).__init__(d)
 
     def __str__(self):
         return json.dumps(True) if self.data else json.dumps(False)
@@ -251,29 +266,31 @@ class Bool(Uint8):  # Bool = Uint8
 
 class Set(Array):  # Set = Array
     def __init__(self, d):
-        super().__init__(d)
+        super(Set, self).__init__(d)
 
 
+@python_2_unicode_compatible
 class Fixed_array(object):
     def __init__(self, d):
         raise NotImplementedError
 
-    def to_bytes(self):
+    def __bytes__(self):
         raise NotImplementedError
 
     def __str__(self):
         raise NotImplementedError
 
 
+@python_2_unicode_compatible
 class Optional(object):
     def __init__(self, d):
         self.data = d
 
-    def to_bytes(self):
+    def __bytes__(self):
         if not self.data:
-            return Bool(0).to_bytes()
+            return py23_bytes(Bool(0))
         else:
-            return Bool(1).to_bytes() + self.data.to_bytes() if self.data.to_bytes() else Bool(0).to_bytes()
+            return py23_bytes(Bool(1)) + py23_bytes(self.data) if py23_bytes(self.data) else py23_bytes(Bool(0))
 
     def __str__(self):
         return str(self.data)
@@ -281,30 +298,32 @@ class Optional(object):
     def isempty(self):
         if not self.data:
             return True
-        return not bool(self.data.to_bytes())
+        return not bool(py23_bytes(self.data))
 
 
+@python_2_unicode_compatible
 class Static_variant(object):
     def __init__(self, d, type_id):
         self.data = d
         self.type_id = type_id
 
-    def to_bytes(self):
-        return varint(self.type_id) + self.data.to_bytes()
+    def __bytes__(self):
+        return varint(self.type_id) + py23_bytes(self.data)
 
     def __str__(self):
         return json.dumps([self.type_id, self.data.json()])
 
 
+@python_2_unicode_compatible
 class Map(object):
     def __init__(self, data):
         self.data = data
 
-    def to_bytes(self):
+    def __bytes__(self):
         b = b""
         b += varint(len(self.data))
         for e in self.data:
-            b += (e[0].to_bytes()) + (e[1].to_bytes())
+            b += py23_bytes(e[0]) + py23_bytes(e[1])
         return b
 
     def __str__(self):
@@ -314,17 +333,19 @@ class Map(object):
         return json.dumps(r)
 
 
+@python_2_unicode_compatible
 class Id(object):
     def __init__(self, d):
         self.data = Varint32(d)
 
-    def to_bytes(self):
-        return (self.data.to_bytes())
+    def __bytes__(self):
+        return py23_bytes(self.data)
 
     def __str__(self):
         return str(self.data)
 
 
+@python_2_unicode_compatible
 class VoteId(object):
     def __init__(self, vote):
         parts = vote.split(":")
@@ -332,7 +353,7 @@ class VoteId(object):
         self.type = int(parts[0])
         self.instance = int(parts[1])
 
-    def to_bytes(self):
+    def __bytes__(self):
         binary = (self.type & 0xff) | (self.instance << 8)
         return struct.pack("<I", binary)
 
@@ -340,6 +361,7 @@ class VoteId(object):
         return "%d:%d" % (self.type, self.instance)
 
 
+@python_2_unicode_compatible
 class ObjectId(object):
     """ Encodes protocol ids - serializes to the *instance* only!
     """
@@ -358,13 +380,14 @@ class ObjectId(object):
         else:
             raise Exception("Object id is invalid")
 
-    def to_bytes(self):
-        return (self.instance.to_bytes())  # only yield instance
+    def __bytes__(self):
+        return py23_bytes(self.instance)  # only yield instance
 
     def __str__(self):
         return self.Id
 
 
+@python_2_unicode_compatible
 class FullObjectId(object):
     """ Encodes object ids - serializes to a full object id
     """
@@ -379,7 +402,7 @@ class FullObjectId(object):
         else:
             raise Exception("Object id is invalid")
 
-    def to_bytes(self):
+    def __bytes__(self):
         return (
             self.space << 56 | self.type << 48 | self.id
         ).to_bytes(8, byteorder="little", signed=False)
@@ -388,6 +411,7 @@ class FullObjectId(object):
         return self.Id
 
 
+@python_2_unicode_compatible
 class Enum8(Uint8):
     def __init__(self, selection):
         assert selection in self.options or \

@@ -4,6 +4,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
+from future.utils import python_2_unicode_compatible
+from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from fractions import Fraction
 from beem.instance import shared_steem_instance
 from .exceptions import InvalidAssetException
@@ -14,6 +16,7 @@ from .utils import formatTimeString
 from .utils import parse_time, assets_from_string
 
 
+@python_2_unicode_compatible
 class Price(dict):
     """ This class deals with all sorts of prices of any pair of assets to
         simplify dealing with the tuple::
@@ -79,7 +82,7 @@ class Price(dict):
         self.steem = steem_instance or shared_steem_instance()
         if price is "":
             price = None
-        if (price is not None and isinstance(price, str) and not base and not quote):
+        if (price is not None and isinstance(price, string_types) and not base and not quote):
             import re
             price, assets = price.split(" ")
             base_symbol, quote_symbol = assets_from_string(assets)
@@ -107,17 +110,17 @@ class Price(dict):
             self["quote"] = Amount(amount=frac.denominator, asset=quote, steem_instance=self.steem)
             self["base"] = Amount(amount=frac.numerator, asset=base, steem_instance=self.steem)
 
-        elif (price is not None and isinstance(base, str) and isinstance(quote, str)):
+        elif (price is not None and isinstance(base, string_types) and isinstance(quote, string_types)):
             base = Asset(base, steem_instance=self.steem)
             quote = Asset(quote, steem_instance=self.steem)
             frac = Fraction(float(price)).limit_denominator(10 ** base["precision"])
             self["quote"] = Amount(amount=frac.denominator, asset=quote, steem_instance=self.steem)
             self["base"] = Amount(amount=frac.numerator, asset=base, steem_instance=self.steem)
 
-        elif (price is None and isinstance(base, str) and isinstance(quote, str)):
+        elif (price is None and isinstance(base, string_types) and isinstance(quote, string_types)):
             self["quote"] = Amount(quote, steem_instance=self.steem)
             self["base"] = Amount(base, steem_instance=self.steem)
-        elif (price is not None and isinstance(price, str) and isinstance(base, str)):
+        elif (price is not None and isinstance(price, string_types) and isinstance(base, string_types)):
             self["quote"] = Amount(price, steem_instance=self.steem)
             self["base"] = Amount(base, steem_instance=self.steem)
         # len(args) > 1
@@ -130,8 +133,8 @@ class Price(dict):
             self["quote"] = quote
             self["base"] = base
 
-        elif ((isinstance(price, float) or isinstance(price, int)) and
-                isinstance(base, str)):
+        elif ((isinstance(price, float) or isinstance(price, integer_types)) and
+                isinstance(base, string_types)):
             import re
             base_symbol, quote_symbol = assets_from_string(base)
             base = Asset(base_symbol, steem_instance=self.steem)

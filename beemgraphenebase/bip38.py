@@ -3,14 +3,13 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import bytes, int, str
-from builtins import super
-import six
 import sys
 import logging
 import hashlib
 from binascii import hexlify, unhexlify
 from .account import PrivateKey
 from .base58 import Base58, base58decode
+from .py23 import py23_bytes, bytes_types, integer_types, string_types, text_type
 log = logging.getLogger(__name__)
 
 try:
@@ -60,16 +59,16 @@ def encrypt(privkey, passphrase):
     """
     privkeyhex = repr(privkey)   # hex
     addr = format(privkey.uncompressed.address, "BTC")
-    a = bytes(addr, 'ascii')
+    a = py23_bytes(addr, 'ascii')
     salt = hashlib.sha256(hashlib.sha256(a).digest()).digest()[0:4]
     if sys.version < '3':
-        if isinstance(passphrase, six.text_type):
+        if isinstance(passphrase, text_type):
             passphrase = passphrase.encode("utf-8")
 
     if SCRYPT_MODULE == "scrypt":
         key = scrypt.hash(passphrase, salt, 16384, 8, 8)
     elif SCRYPT_MODULE == "pylibscrypt":
-        key = scrypt.scrypt(bytes(passphrase, "utf-8"), salt, 16384, 8, 8)
+        key = scrypt.scrypt(py23_bytes(passphrase, "utf-8"), salt, 16384, 8, 8)
     else:
         raise ValueError("No scrypt module loaded")
     (derived_half1, derived_half2) = (key[:32], key[32:])
@@ -104,12 +103,12 @@ def decrypt(encrypted_privkey, passphrase):
     salt = d[0:4]
     d = d[4:-4]
     if sys.version < '3':
-        if isinstance(passphrase, six.text_type):
+        if isinstance(passphrase, text_type):
             passphrase = passphrase.encode("utf-8")
     if SCRYPT_MODULE == "scrypt":
         key = scrypt.hash(passphrase, salt, 16384, 8, 8)
     elif SCRYPT_MODULE == "pylibscrypt":
-        key = scrypt.scrypt(bytes(passphrase, "utf-8"), salt, 16384, 8, 8)
+        key = scrypt.scrypt(py23_bytes(passphrase, "utf-8"), salt, 16384, 8, 8)
     else:
         raise ValueError("No scrypt module loaded")
     derivedhalf1 = key[0:32]
@@ -126,7 +125,7 @@ def decrypt(encrypted_privkey, passphrase):
     """ Verify Salt """
     privkey = PrivateKey(format(wif, "wif"))
     addr = format(privkey.uncompressed.address, "BTC")
-    a = bytes(addr, 'ascii')
+    a = py23_bytes(addr, 'ascii')
     saltverify = hashlib.sha256(hashlib.sha256(a).digest()).digest()[0:4]
     if saltverify != salt:
         raise SaltException('checksum verification failed! Password may be incorrect.')

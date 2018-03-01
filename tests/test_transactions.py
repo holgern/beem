@@ -14,6 +14,7 @@ from beembase.objects import Operation
 from beembase.signedtransactions import Signed_Transaction
 from beembase.account import PrivateKey
 from beembase.operationids import getOperationNameForId
+from beemgraphenebase.py23 import py23_bytes, bytes_types
 from beem.amount import Amount
 from beem.asset import Asset
 import random
@@ -24,6 +25,7 @@ from binascii import hexlify
 TEST_AGAINST_CLI_WALLET = False
 
 prefix = u"STEEM"
+default_prefix = u"STM"
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 ref_block_num = 34294
 ref_block_prefix = 3707022213
@@ -40,8 +42,8 @@ class Testcases(unittest.TestCase):
                                 expiration=expiration,
                                 operations=ops)
         tx = tx.sign([wif], chain=prefix)
-        tx.verify([PrivateKey(wif).pubkey], prefix)
-        txWire = hexlify((tx.to_bytes())).decode("ascii")
+        tx.verify([PrivateKey(wif, prefix=u"STM").pubkey], prefix)
+        txWire = hexlify(py23_bytes(tx)).decode("ascii")
         if printWire:
             print()
             print(txWire)
@@ -68,7 +70,8 @@ class Testcases(unittest.TestCase):
             "from": "foo",
             "to": "baar",
             "amount": Amount("111.110 STEEM"),
-            "memo": "Fooo"
+            "memo": "Fooo",
+            "prefix": default_prefix
         })
         self.cm = (u"f68585abf4dce7c80457010203666f6f046261617206b201000000"
                    "000003535445454d000004466f6f6f00012025416c234dd5ff15d8"
@@ -128,7 +131,8 @@ class Testcases(unittest.TestCase):
                     ]],
                     'weight_threshold':
                     1
-                }
+                },
+                "prefix": default_prefix
             })
 
         self.cm = (u"f68585abf4dce7c804570109102700000000000003535445454d000"
@@ -153,6 +157,7 @@ class Testcases(unittest.TestCase):
             "from": "foo",
             "to": "baar",
             "amount": "111.110 STEEM",
+            "prefix": default_prefix
         })
 
         self.cm = (u"f68585abf4dce7c80457010303666f6f046261617206b201000000"
@@ -165,6 +170,7 @@ class Testcases(unittest.TestCase):
         self.op = operations.Withdraw_vesting(**{
             "account": "foo",
             "vesting_shares": "100 VESTS",
+            "prefix": default_prefix
         })
 
         self.cm = (
@@ -185,7 +191,8 @@ class Testcases(unittest.TestCase):
                 "body": "foobarf",
                 "json_metadata": {
                     "foo": "bar"
-                }
+                },
+                "prefix": default_prefix
             })
 
         self.cm = (u"f68585abf4dce7c80457010107666f6f6261726107666f6f626172620"
@@ -201,7 +208,8 @@ class Testcases(unittest.TestCase):
                 "voter": "foobara",
                 "author": "foobarc",
                 "permlink": "foobard",
-                "weight": 1000
+                "weight": 1000,
+                "prefix": default_prefix
             })
         self.cm = (u"f68585abf4dce7c80457010007666f6f6261726107666f6f62617263"
                    "07666f6f62617264e8030001202e09123f732a438ef6d6138484d7ad"
@@ -216,6 +224,7 @@ class Testcases(unittest.TestCase):
                 "to": "testuser",
                 "amount": "1.000 STEEM",
                 "memo": "testmemo",
+                "prefix": default_prefix
             })
         self.cm = (
             u"f68585abf4dce7c804570120087465737475736572087465737475736572e8030"
@@ -232,6 +241,7 @@ class Testcases(unittest.TestCase):
                 "to": "testser",
                 "amount": "100.000 SBD",
                 "memo": "memohere",
+                "prefix": default_prefix
             })
         self.cm = (
             u"f68585abf4dce7c804570121087465737475736572292300000774657374736"
@@ -244,6 +254,7 @@ class Testcases(unittest.TestCase):
         self.op = operations.Cancel_transfer_from_savings(**{
             "from": "tesuser",
             "request_id": 9001,
+            "prefix": default_prefix
         })
 
         self.cm = (
@@ -260,7 +271,8 @@ class Testcases(unittest.TestCase):
                 "amount_to_sell": "0.000 STEEM",
                 "min_to_receive": "0.000 STEEM",
                 "fill_or_kill": False,
-                "expiration": "2016-12-31T23:59:59"
+                "expiration": "2016-12-31T23:59:59",
+                "prefix": default_prefix
             })
 
         self.cm = (u"f68585abf4dce7c8045701050000000000000000000000000003535"
@@ -314,7 +326,8 @@ class Testcases(unittest.TestCase):
                 "memo_key":
                 "STM728uLvStTeAkYJsQefks3FX8yfmpFHp8wXw3RY3kwey2JGDooR",
                 "json_metadata":
-                ""
+                "",
+                "prefix": default_prefix
             })
 
         self.cm = (u"f68585abf4dce7c80457010a0973747265656d69616e01010000"
@@ -338,6 +351,7 @@ class Testcases(unittest.TestCase):
         self.op = operations.Limit_order_cancel(**{
             "owner": "",
             "orderid": 2141244,
+            "prefix": default_prefix
         })
 
         self.cm = (u"f68585abf4dce7c804570106003cac20000001206c9888d0c2c3"
@@ -352,7 +366,8 @@ class Testcases(unittest.TestCase):
                 "from_account": "xeroc",
                 "to_account": "xeroc",
                 "percent": 1000,
-                "auto_vest": False
+                "auto_vest": False,
+                "prefix": default_prefix
             })
 
         self.cm = (u"f68585abf4dce7c804570114057865726f63057865726f63e803"
@@ -365,7 +380,8 @@ class Testcases(unittest.TestCase):
         self.op = operations.Convert(**{
             "owner": "xeroc",
             "requestid": 2342343235,
-            "amount": "100.000 SBD"
+            "amount": "100.000 SBD",
+            "prefix": default_prefix
         })
 
         self.cm = (u"f68585abf4dce7c804570108057865726f6343529d8ba0860100000"
@@ -383,7 +399,8 @@ class Testcases(unittest.TestCase):
                 "permlink": "a",
                 "title": "-",
                 "body": "".join([chr(i) for i in range(0, 2048)]),
-                "json_metadata": {}
+                "json_metadata": {},
+                "prefix": default_prefix
             })
 
         self.cm = (u"f68585abf4dce7c804570101000001610161012dec1f75303030307"
@@ -547,7 +564,8 @@ class Testcases(unittest.TestCase):
                 "exchange_rate": {
                     "base": "1.000 SBD",
                     "quote": "4.123 STEEM"
-                }
+                },
+                "prefix": default_prefix
             })
 
         self.cm = (u"f68585abf4dce7c804570107057865726f63e803000000000"
@@ -562,6 +580,7 @@ class Testcases(unittest.TestCase):
             **{
                 "author": "turbot",
                 "permlink": "testpost",
+                "prefix": default_prefix
             })
 
         self.cm = (u"f68585abf4dce7c80457011106747572626f740874657374706f73"
@@ -586,6 +605,7 @@ class Testcases(unittest.TestCase):
                 },
                 "fee":
                 "10.000 STEEM",
+                "prefix": default_prefix
             })
 
         self.cm = (u"f68585abf4dce7c80457010b057865726f6308666f6f6f6f6261"
@@ -602,6 +622,7 @@ class Testcases(unittest.TestCase):
             "account": "xeroc",
             "witness": "chainsquad",
             "approve": True,
+            "prefix": default_prefix
         })
 
         self.cm = (u"f68585abf4dce7c80457010c057865726f630a636"
@@ -626,7 +647,8 @@ class Testcases(unittest.TestCase):
                 "required_auths": [],
                 "required_posting_auths": ["xeroc"],
                 "id":
-                "follow"
+                "follow",
+                "prefix": default_prefix
             })
 
         self.cm = (u"f68585abf4dce7c8045701120001057865726f6306666f6c6c"
@@ -662,6 +684,7 @@ class Testcases(unittest.TestCase):
                     "weight": 5000,
                     "account": "null"
                 }],
+                "prefix": default_prefix
             })
 
         self.cm = (u"f68585abf4dce7c804570113057865726f6306706973746f6e"

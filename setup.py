@@ -14,7 +14,7 @@ except LookupError:
     ascii = codecs.lookup('ascii')
     codecs.register(lambda name, enc=ascii: {True: enc}.get(name == 'mbcs'))
 
-VERSION = '0.19.7'
+VERSION = '0.19.8'
 
 
 def write_version_py(filename):
@@ -78,7 +78,6 @@ if __name__ == '__main__':
             "scrypt",
             "pycryptodomex",
             "pytz",
-            "six",
         ],
         setup_requires=['pytest-runner'],
         tests_require=['pytest'],

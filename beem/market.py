@@ -243,8 +243,8 @@ class Market(dict):
             start = stop - timedelta(hours=24)
         self.steem.register_apis(["market_history"])
         orders = self.steem.rpc.get_trade_history(
-            formatTimeFromNow(start),
-            formatTimeFromNow(stop),
+            formatTimeString(start),
+            formatTimeString(stop),
             limit, api="market_history")
         if raw_data:
             return orders
@@ -384,6 +384,7 @@ class Market(dict):
             ),
             "expiration": formatTimeFromNow(expiration),
             "fill_or_kill": killfill,
+            "prefix": self.steem.prefix,
         })
 
         if returnOrderId:
@@ -465,6 +466,7 @@ class Market(dict):
             ),
             "expiration": formatTimeFromNow(expiration),
             "fill_or_kill": killfill,
+            "prefix": self.steem.prefix,
         })
         if returnOrderId:
             # Make blocking broadcasts
@@ -500,5 +502,6 @@ class Market(dict):
             op.append(
                 operations.Limit_order_cancel(**{
                     "owner": account["name"],
-                    "orderid": order}))
+                    "orderid": order,
+                    "prefix": self.steem.prefix}))
         return self.steem.finalizeOp(op, account["name"], "active", **kwargs)

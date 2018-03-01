@@ -3,7 +3,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from builtins import super
 import json
 from .exceptions import AssetDoesNotExistsException
 from .blockchainobject import BlockchainObject
@@ -34,7 +33,7 @@ class Asset(BlockchainObject):
         steem_instance=None
     ):
         self.full = full
-        super().__init__(
+        super(Asset, self).__init__(
             asset,
             lazy=lazy,
             full=full,

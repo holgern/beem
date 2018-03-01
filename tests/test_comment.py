@@ -18,7 +18,7 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
-            nodes,
+            node=nodes,
             nobroadcast=True,
             keys={"active": wif},
         )

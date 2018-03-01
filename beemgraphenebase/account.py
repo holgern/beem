@@ -6,6 +6,7 @@ from builtins import bytes
 from builtins import chr
 from builtins import range
 from builtins import object
+from future.utils import python_2_unicode_compatible
 import hashlib
 import sys
 import re
@@ -14,6 +15,7 @@ import os
 from binascii import hexlify, unhexlify
 from .base58 import ripemd160, Base58
 from .dictionary import words as BrainKeyDictionary
+from .py23 import py23_bytes
 
 import ecdsa
 
@@ -34,7 +36,7 @@ class PasswordKey(object):
         """ Derive private key from the brain key and the current sequence
             number
         """
-        a = bytes(self.account + self.role + self.password, 'utf8')
+        a = py23_bytes(self.account + self.role + self.password, 'utf8')
         s = hashlib.sha256(a).digest()
         return PrivateKey(hexlify(s).decode('ascii'))
 
@@ -48,6 +50,7 @@ class PasswordKey(object):
         return self.get_public()
 
 
+@python_2_unicode_compatible
 class BrainKey(object):
     """Brainkey implementation similar to the graphene-ui web-wallet.
 
@@ -99,7 +102,7 @@ class BrainKey(object):
             number
         """
         encoded = "%s %d" % (self.brainkey, self.sequence)
-        a = bytes(encoded, 'ascii')
+        a = py23_bytes(encoded, 'ascii')
         s = hashlib.sha256(hashlib.sha512(a).digest()).digest()
         return PrivateKey(hexlify(s).decode('ascii'))
 
@@ -128,6 +131,7 @@ class BrainKey(object):
         return " ".join(brainkey).upper()
 
 
+@python_2_unicode_compatible
 class Address(object):
     """ Address class
 
@@ -170,7 +174,10 @@ class Address(object):
         """ Gives the hex representation of the ``GrapheneBase58CheckEncoded``
             Graphene address.
         """
-        return repr(self.derivesha512address())
+        if self._address is None:
+            return repr(self.derivesha512address())
+        else:
+            return repr(self._address)
 
     def __str__(self):
         """ Returns the readable Graphene address. This call is equivalent to
@@ -190,14 +197,15 @@ class Address(object):
         else:
             return format(self._address, _format)
 
-    def to_bytes(self):
+    def __bytes__(self):
         """ Returns the raw content of the ``Base58CheckEncoded`` address """
         if self._address is None:
-            return (self.derivesha512address().to_bytes())
+            return py23_bytes(self.derivesha512address())
         else:
-            return (self._address.to_bytes())
+            return py23_bytes(self._address)
 
 
+@python_2_unicode_compatible
 class PublicKey(Address):
     """ This class deals with Public Keys and inherits ``Address``.
 
@@ -236,10 +244,10 @@ class PublicKey(Address):
     def compressed(self):
         """ Derive compressed public key """
         order = ecdsa.SECP256k1.generator.order()
-        p = ecdsa.VerifyingKey.from_string(bytes(self), curve=ecdsa.SECP256k1).pubkey.point
+        p = ecdsa.VerifyingKey.from_string(py23_bytes(self), curve=ecdsa.SECP256k1).pubkey.point
         x_str = ecdsa.util.number_to_string(p.x(), order)
         # y_str = ecdsa.util.number_to_string(p.y(), order)
-        compressed = hexlify(bytes(chr(2 + (p.y() & 1)), 'ascii') + x_str).decode('ascii')
+        compressed = hexlify(py23_bytes(chr(2 + (p.y() & 1)), 'ascii') + x_str).decode('ascii')
         return(compressed)
 
     def unCompressed(self):
@@ -273,11 +281,12 @@ class PublicKey(Address):
         """ Formats the instance of:doc:`Base58 <base58>` according to ``_format`` """
         return format(self._pk, _format)
 
-    def to_bytes(self):
+    def __bytes__(self):
         """ Returns the raw public key (has length 33)"""
-        return (self._pk.to_bytes())
+        return py23_bytes(self._pk)
 
 
+@python_2_unicode_compatible
 class PrivateKey(PublicKey):
     """ Derives the compressed and uncompressed public keys and
         constructs two instances of ``PublicKey``:
@@ -323,8 +332,8 @@ class PrivateKey(PublicKey):
         p = ecdsa.SigningKey.from_string(secret, curve=ecdsa.SECP256k1).verifying_key.pubkey.point
         x_str = ecdsa.util.number_to_string(p.x(), order)
         y_str = ecdsa.util.number_to_string(p.y(), order)
-        compressed = hexlify(bytes(chr(2 + (p.y() & 1)), 'ascii') + x_str).decode('ascii')
-        uncompressed = hexlify(bytes(chr(4), 'ascii') + x_str + y_str).decode('ascii')
+        compressed = hexlify(py23_bytes(chr(2 + (p.y() & 1)), 'ascii') + x_str).decode('ascii')
+        uncompressed = hexlify(py23_bytes(chr(4), 'ascii') + x_str + y_str).decode('ascii')
         return([compressed, uncompressed])
 
     def __format__(self, _format):
@@ -343,9 +352,6 @@ class PrivateKey(PublicKey):
         """
         return format(self._wif, "WIF")
 
-    def to_bytes(self):
-        """ Returns the raw private key """
-        return (self._wif.to_bytes())
-
     def __bytes__(self):
-        assert False
+        """ Returns the raw private key """
+        return py23_bytes(self._wif)

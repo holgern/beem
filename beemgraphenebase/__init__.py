@@ -15,4 +15,5 @@ __all__ = ['account',
            'objects',
            'operations',
            'signedtransactions',
-           'objecttypes']
+           'objecttypes',
+           'py23']

@@ -2,7 +2,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from builtins import super
 from collections import OrderedDict
 import json
 from .types import (
@@ -26,7 +25,7 @@ class Demooepration(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
-            super().__init__(OrderedDict([
+            super(Demooepration, self).__init__(OrderedDict([
                 ('string', String(kwargs["string"], "account")),
                 ('extensions', Set([])),
             ]))

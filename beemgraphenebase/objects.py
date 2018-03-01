@@ -2,12 +2,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from builtins import super
 from builtins import bytes
 from builtins import str
 from builtins import object
+from future.utils import python_2_unicode_compatible
 from collections import OrderedDict
-import six
 import json
 from beemgraphenebase.types import (
     Uint8, Int16, Uint16, Uint32, Uint64,
@@ -17,6 +16,7 @@ from beemgraphenebase.types import (
     Map, Id, VoteId, ObjectId,
     JsonObj
 )
+from .py23 import py23_bytes, bytes_types, integer_types, string_types
 from .chains import known_chains
 from .objecttypes import object_type
 from .account import PublicKey
@@ -24,10 +24,11 @@ from .chains import default_prefix
 from .operationids import operations
 
 
+@python_2_unicode_compatible
 class Operation(object):
     def __init__(self, op):
         if isinstance(op, list) and len(op) == 2:
-            if isinstance(op[0], six.integer_types):
+            if isinstance(op[0], integer_types):
                 self.opId = op[0]
                 name = self.getOperationNameForId(self.opId)
             else:
@@ -62,13 +63,14 @@ class Operation(object):
         class_ = getattr(module, name)
         return class_
 
-    def to_bytes(self):
-        return (Id(self.opId).to_bytes()) + (self.op.to_bytes())
+    def __bytes__(self):
+        return py23_bytes(Id(self.opId)) + py23_bytes(self.op)
 
     def __str__(self):
         return json.dumps([self.opId, self.op.toJson()])
 
 
+@python_2_unicode_compatible
 class GrapheneObject(object):
     """ Core abstraction class
 
@@ -82,17 +84,15 @@ class GrapheneObject(object):
     def __init__(self, data=None):
         self.data = data
 
-    def to_bytes(self):
+    def __bytes__(self):
         if self.data is None:
-            return bytes()
+            return py23_bytes()
         b = b""
         for name, value in list(self.data.items()):
-            if isinstance(value, six.string_types):
-                b += bytes(value, 'utf-8')
-            elif isinstance(value, (list, dict)):
-                b += bytes(value)
+            if isinstance(value, string_types):
+                b += py23_bytes(value, 'utf-8')
             else:
-                b += (value.to_bytes())
+                b += py23_bytes(value)
         return b
 
     def __json__(self):

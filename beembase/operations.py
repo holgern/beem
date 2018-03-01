@@ -3,8 +3,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import bytes, int, str
-from builtins import super
-import six
+from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from collections import OrderedDict
 import json
 from beemgraphenebase.types import (
@@ -58,13 +57,13 @@ class Transfer(GrapheneObject):
                 if isinstance(kwargs["memo"], dict):
                     kwargs["memo"]["prefix"] = prefix
                     memo = Optional(Memo(**kwargs["memo"]))
-                elif isinstance(kwargs["memo"], six.string_types):
+                elif isinstance(kwargs["memo"], string_types):
                     memo = (String(kwargs["memo"]))
                 else:
                     memo = Optional(Memo(kwargs["memo"]))
             else:
                 memo = Optional(None)
-            super().__init__(OrderedDict([
+            super(Transfer, self).__init__(OrderedDict([
                 ('from', String(kwargs["from"])),
                 ('to', String(kwargs["to"])),
                 ('amount', Amount(kwargs["amount"])),
@@ -79,7 +78,7 @@ class Vote(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
-            super().__init__(OrderedDict([
+            super(Vote, self).__init__(OrderedDict([
                 ('voter', String(kwargs["voter"])),
                 ('author', String(kwargs["author"])),
                 ('permlink', String(kwargs["permlink"])),
@@ -94,7 +93,7 @@ class Transfer_to_vesting(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
-            super().__init__(OrderedDict([
+            super(Transfer_to_vesting, self).__init__(OrderedDict([
                 ('from', String(kwargs["from"])),
                 ('to', String(kwargs["to"])),
                 ('amount', Amount(kwargs["amount"])),
@@ -108,7 +107,7 @@ class Withdraw_vesting(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
-            super().__init__(OrderedDict([
+            super(Withdraw_vesting, self).__init__(OrderedDict([
                 ('account', String(kwargs["account"])),
                 ('vesting_shares', Amount(kwargs["vesting_shares"])),
             ]))
@@ -121,7 +120,7 @@ class Account_witness_vote(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
-            super().__init__(OrderedDict([
+            super(Account_witness_vote, self).__init__(OrderedDict([
                 ('account', String(kwargs["account"])),
                 ('witness', String(kwargs["witness"])),
                 ('approve', Bool(bool(kwargs["approve"]))),
@@ -135,7 +134,7 @@ class Op_wrapper(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
-            super().__init__(OrderedDict([
+            super(Op_wrapper, self).__init__(OrderedDict([
                 ('op', Operation(kwargs["op"])),
             ]))
 
@@ -161,7 +160,7 @@ class Account_create(GrapheneObject):
                 else:
                     meta = kwargs["json_metadata"]
 
-            super().__init__(OrderedDict([
+            super(Account_create, self).__init__(OrderedDict([
                 ('fee', Amount(kwargs["fee"])),
                 ('creator', String(kwargs["creator"])),
                 ('new_account_name', String(kwargs["new_account_name"])),
@@ -205,7 +204,7 @@ class Account_update(GrapheneObject):
                 else:
                     meta = kwargs["json_metadata"]
 
-            super().__init__(OrderedDict([
+            super(Account_update, self).__init__(OrderedDict([
                 ('account', String(kwargs["account"])),
                 ('owner', owner),
                 ('active', active),
@@ -228,9 +227,9 @@ class Witness_update(GrapheneObject):
                 block_signing_key = (PublicKey(kwargs["block_signing_key"], prefix=prefix))
             else:
                 block_signing_key = PublicKey(
-                    "STM1111111111111111111111111111111114T1Anm", prefix=prefix)
+                    prefix + "1111111111111111111111111111111114T1Anm", prefix=prefix)
 
-            super().__init__(OrderedDict([
+            super(Witness_update, self).__init__(OrderedDict([
                 ('owner', String(kwargs["owner"])),
                 ('url', String(kwargs["url"])),
                 ('block_signing_key', block_signing_key),
@@ -253,7 +252,7 @@ class Comment(GrapheneObject):
                 else:
                     meta = kwargs["json_metadata"]
 
-            super().__init__(
+            super(Comment, self).__init__(
                 OrderedDict([
                     ('parent_author', String(kwargs["parent_author"])),
                     ('parent_permlink', String(kwargs["parent_permlink"])),
@@ -281,7 +280,7 @@ class Custom_json(GrapheneObject):
             if len(kwargs["id"]) > 32:
                 raise Exception("'id' too long")
 
-            super().__init__(
+            super(Custom_json, self).__init__(
                 OrderedDict([
                     ('required_auths',
                      Array([String(o) for o in kwargs["required_auths"]])),
@@ -310,7 +309,7 @@ class Comment_options(GrapheneObject):
                 ext = CommentOptionExtensions(ext_obj)
                 extensions = Array([ext])
 
-            super().__init__(
+            super(Comment_options, self).__init__(
                 OrderedDict([
                     ('author', String(kwargs["author"])),
                     ('permlink', String(kwargs["permlink"])),
@@ -332,7 +331,7 @@ class Delete_comment(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
-            super().__init__(
+            super(Delete_comment, self).__init__(
                 OrderedDict([
                     ('author', String(kwargs["author"])),
                     ('permlink', String(kwargs["permlink"])),
@@ -346,7 +345,7 @@ class Feed_publish(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
-            super().__init__(
+            super(Feed_publish, self).__init__(
                 OrderedDict([
                     ('publisher', String(kwargs["publisher"])),
                     ('exchange_rate', ExchangeRate(kwargs["exchange_rate"])),
@@ -360,7 +359,7 @@ class Convert(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
-            super().__init__(
+            super(Convert, self).__init__(
                 OrderedDict([
                     ('owner', String(kwargs["owner"])),
                     ('requestid', Uint32(kwargs["requestid"])),
@@ -375,7 +374,7 @@ class Set_withdraw_vesting_route(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
-            super().__init__(
+            super(Set_withdraw_vesting_route, self).__init__(
                 OrderedDict([
                     ('from_account', String(kwargs["from_account"])),
                     ('to_account', String(kwargs["to_account"])),
@@ -391,7 +390,7 @@ class Limit_order_cancel(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
-            super().__init__(
+            super(Limit_order_cancel, self).__init__(
                 OrderedDict([
                     ('owner', String(kwargs["owner"])),
                     ('orderid', Uint32(int(kwargs["orderid"]))),
@@ -405,7 +404,7 @@ class Delegate_vesting_shares(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
-            super().__init__(
+            super(Delegate_vesting_shares, self).__init__(
                 OrderedDict([
                     ('delegator', String(kwargs["delegator"])),
                     ('delegatee', String(kwargs["delegatee"])),
@@ -420,7 +419,7 @@ class Limit_order_create(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
-            super().__init__(
+            super(Limit_order_create, self).__init__(
                 OrderedDict([
                     ('owner', String(kwargs["owner"])),
                     ('orderid', Uint32(int(kwargs["orderid"]))),
@@ -441,7 +440,7 @@ class Transfer_from_savings(GrapheneObject):
             if "memo" not in kwargs:
                 kwargs["memo"] = ""
 
-            super().__init__(
+            super(Transfer_from_savings, self).__init__(
                 OrderedDict([
                     ('from', String(kwargs["from"])),
                     ('request_id', Uint32(int(kwargs["request_id"]))),
@@ -458,7 +457,7 @@ class Cancel_transfer_from_savings(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
-            super().__init__(
+            super(Cancel_transfer_from_savings, self).__init__(
                 OrderedDict([
                     ('from', String(kwargs["from"])),
                     ('request_id', Uint32(int(kwargs["request_id"]))),
@@ -472,7 +471,7 @@ class Claim_reward_balance(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
-            super().__init__(
+            super(Claim_reward_balance, self).__init__(
                 OrderedDict([
                     ('account', String(kwargs["account"])),
                     ('reward_steem', Amount(kwargs["reward_steem"])),
@@ -490,7 +489,7 @@ class Transfer_to_savings(GrapheneObject):
                 kwargs = args[0]
             if "memo" not in kwargs:
                 kwargs["memo"] = ""
-            super().__init__(
+            super(Transfer_to_savings, self).__init__(
                 OrderedDict([
                     ('from', String(kwargs["from"])),
                     ('to', String(kwargs["to"])),

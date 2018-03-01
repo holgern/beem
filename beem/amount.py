@@ -4,11 +4,13 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import bytes, int, str
-import six
+from future.utils import python_2_unicode_compatible
+from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from beem.instance import shared_steem_instance
 from beem.asset import Asset
 
 
+@python_2_unicode_compatible
 class Amount(dict):
     """ This class deals with Amounts of any asset to simplify dealing with the tuple::
 
@@ -63,7 +65,7 @@ class Amount(dict):
             self["symbol"] = amount["symbol"]
             self["asset"] = amount["asset"]
 
-        elif amount is not None and asset is None and isinstance(amount, six.string_types):
+        elif amount is not None and asset is None and isinstance(amount, string_types):
             self["amount"], self["symbol"] = amount.split(" ")
             self["asset"] = Asset(self["symbol"], steem_instance=self.steem)
 
@@ -88,19 +90,19 @@ class Amount(dict):
             self["symbol"] = asset["symbol"]
             self["asset"] = asset
 
-        elif amount and asset and isinstance(asset, six.string_types):
+        elif amount and asset and isinstance(asset, string_types):
             self["amount"] = amount
             self["asset"] = Asset(asset, steem_instance=self.steem)
             self["symbol"] = self["asset"]["symbol"]
-        elif isinstance(amount, (six.integer_types, float)) and asset and isinstance(asset, Asset):
+        elif isinstance(amount, (integer_types, float)) and asset and isinstance(asset, Asset):
             self["amount"] = amount
             self["asset"] = asset
             self["symbol"] = self["asset"]["symbol"]
-        elif isinstance(amount, (six.integer_types, float)) and asset and isinstance(asset, dict):
+        elif isinstance(amount, (integer_types, float)) and asset and isinstance(asset, dict):
             self["amount"] = amount
             self["asset"] = asset
             self["symbol"] = self["asset"]["symbol"]
-        elif isinstance(amount, (six.integer_types, float)) and asset and isinstance(asset, six.string_types):
+        elif isinstance(amount, (integer_types, float)) and asset and isinstance(asset, string_types):
             self["amount"] = amount
             self["asset"] = Asset(asset, steem_instance=self.steem)
             self["symbol"] = asset

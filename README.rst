@@ -10,6 +10,8 @@ The library name is derived from a beam maschine, similar to the analogy between
     :target: https://pypi.python.org/pypi/beem/
     :alt: Latest Version
 
+.. image:: https://img.shields.io/pypi/pyversions/beem.svg
+
 .. image:: https://travis-ci.org/holgern/beem.svg?branch=master
     :target: https://travis-ci.org/holgern/beem
 

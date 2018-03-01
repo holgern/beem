@@ -4,9 +4,9 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import bytes, int, str
 from builtins import object
-from builtins import super
+from future.utils import python_2_unicode_compatible
 import json
-import six
+from beemgraphenebase.py23 import py23_bytes, bytes_types, integer_types, string_types, text_type
 from collections import OrderedDict
 from beemgraphenebase.types import (
     Uint8, Int16, Uint16, Uint32, Uint64,
@@ -58,9 +58,10 @@ class ObjectId(GPHObjectId):
             raise Exception("Object id is invalid")
 
 
+@python_2_unicode_compatible
 class Amount(object):
     def __init__(self, d):
-        if isinstance(d, six.string_types):
+        if isinstance(d, string_types):
             self.amount, self.asset = d.strip().split(" ")
             self.amount = float(self.amount)
 
@@ -73,17 +74,18 @@ class Amount(object):
             self.asset = d.symbol
             self.precision = d.asset.precision
 
-    def to_bytes(self):
+    def __bytes__(self):
         # padding
         asset = self.asset + "\x00" * (7 - len(self.asset))
         amount = round(float(self.amount) * 10**self.precision)
         return (struct.pack("<q", amount) + struct.pack("<b", self.precision) +
-                bytes(asset, "ascii"))
+                py23_bytes(asset, "ascii"))
 
     def __str__(self):
         return '{:.{}f} {}'.format(self.amount, self.precision, self.asset)
 
 
+@python_2_unicode_compatible
 class Operation(GPHOperation):
     def __init__(self, *args, **kwargs):
         super(Operation, self).__init__(*args, **kwargs)
@@ -108,8 +110,8 @@ class Operation(GPHOperation):
         return json.loads(str(self))
         # return json.loads(str(json.dumps([self.name, self.op.toJson()])))
 
-    def to_bytes(self):
-        return (Id(self.opId).to_bytes()) + (self.op.to_bytes())
+    def __bytes__(self):
+        return py23_bytes(Id(self.opId)) + py23_bytes(self.op)
 
     def __str__(self):
         return json.dumps([self.name.lower(), self.op.toJson()])
@@ -124,14 +126,14 @@ class Memo(GrapheneObject):
                 kwargs = args[0]
             prefix = kwargs.pop("prefix", default_prefix)
             if "message" in kwargs and kwargs["message"]:
-                super().__init__(OrderedDict([
+                super(Memo, self).__init__(OrderedDict([
                     ('from', PublicKey(kwargs["from"], prefix=prefix)),
                     ('to', PublicKey(kwargs["to"], prefix=prefix)),
                     ('nonce', Uint64(int(kwargs["nonce"]))),
                     ('message', Bytes(kwargs["message"]))
                 ]))
             else:
-                super().__init__(None)
+                super(Memo, self).__init__(None)
 
 
 class WitnessProps(GrapheneObject):
@@ -141,7 +143,7 @@ class WitnessProps(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
-            super().__init__(OrderedDict([
+            super(WitnessProps, self).__init__(OrderedDict([
                 ('account_creation_fee', Amount(kwargs["account_creation_fee"])),
                 ('maximum_block_size', Uint32(kwargs["maximum_block_size"])),
                 ('sbd_interest_rate', Uint16(kwargs["sbd_interest_rate"])),
@@ -155,7 +157,7 @@ class Price(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
-            super().__init__(OrderedDict([
+            super(Price, self).__init__(OrderedDict([
                 ('base', Amount(kwargs["base"])),
                 ('quote', Amount(kwargs["quote"]))
             ]))
@@ -191,7 +193,7 @@ class Permission(GrapheneObject):
                 [PublicKey(e[0], prefix=prefix), Uint16(e[1])]
                 for e in kwargs["key_auths"]
             ])
-            super().__init__(OrderedDict([
+            super(Permission, self).__init__(OrderedDict([
                 ('weight_threshold', Uint32(int(kwargs["weight_threshold"]))),
                 ('account_auths', accountAuths),
                 ('key_auths', keyAuths),
@@ -215,7 +217,7 @@ class AccountOptions(GrapheneObject):
                 kwargs["votes"],
                 key=lambda x: float(x.split(":")[1]),
             )
-            super().__init__(OrderedDict([
+            super(AccountOptions, self).__init__(OrderedDict([
                 ('memo_key', PublicKey(kwargs["memo_key"], prefix=prefix)),
                 ('voting_account', ObjectId(kwargs["voting_account"], "account")),
                 ('num_witness', Uint16(kwargs["num_witness"])),
@@ -224,6 +226,7 @@ class AccountOptions(GrapheneObject):
             ]))
 
 
+@python_2_unicode_compatible
 class Extension(Array):
     def __str__(self):
         """ We overload the __str__ function because the json
@@ -240,7 +243,7 @@ class ExchangeRate(GrapheneObject):
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
 
-            super().__init__(
+            super(ExchangeRate, self).__init__(
                 OrderedDict([
                     ('base', Amount(kwargs["base"])),
                     ('quote', Amount(kwargs["quote"])),
@@ -254,7 +257,7 @@ class Beneficiary(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
-        super().__init__(
+        super(Beneficiary, self).__init__(
             OrderedDict([
                 ('account', String(kwargs["account"])),
                 ('weight', Int16(kwargs["weight"])),
@@ -269,7 +272,7 @@ class Beneficiaries(GrapheneObject):
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
 
-        super().__init__(
+        super(Beneficiaries, self).__init__(
             OrderedDict([
                 ('beneficiaries',
                  Array([Beneficiary(o) for o in kwargs["beneficiaries"]])),
@@ -294,4 +297,4 @@ class CommentOptionExtensions(Static_variant):
             data = (Beneficiaries(data))
         else:
             raise Exception("Unknown CommentOptionExtension")
-        super().__init__(data, type_id)
+        super(CommentOptionExtensions, self).__init__(data, type_id)
