@@ -3,8 +3,8 @@ beem - Unofficial Python Library for Steem
 
 !!!Alpha-State, be carefull!!!
 
-beem is an unofficial python library for steem, which is created new from scratch from https://github.com/xeroc/python-bitshares.
-The library name is derived from a beam maschine, similar to the analogy between steem and steam. beem depends on https://github.com/xeroc/python-graphenelib.
+beem is an unofficial python library for steem, which is created new from scratch from `python-bitshares`_
+The library name is derived from a beam maschine, similar to the analogy between steem and steam. beem includes `python-graphenelib`_.
 
 .. image:: https://img.shields.io/pypi/v/beem.svg
     :target: https://pypi.python.org/pypi/beem/
@@ -175,4 +175,10 @@ This library is licensed under the MIT License.
 
 Acknowledgements
 ================
-https://github.com/xeroc/python-bitshares and https://github.com/xeroc/python-graphenelib were created by Fabian Schuh (xeroc).
+`python-bitshares`_ and `python-graphenelib`_ were created by Fabian Schuh (xeroc).
+
+
+.. _python-graphenelib: https://github.com/xeroc/python-graphenelib
+.. _python-bitshares: https://github.com/xeroc/python-bitshares
+.. _Python: http://python.org
+.. _Anaconda: https://www.continuum.io
