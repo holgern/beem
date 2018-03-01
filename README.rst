@@ -11,6 +11,19 @@ The library name is derived from a beam maschine, similar to the analogy between
     :alt: Latest Version
 
 .. image:: https://img.shields.io/pypi/pyversions/beem.svg
+    :target: https://pypi.python.org/pypi/beem/
+    :alt: Python Versions
+    
+
+.. image:: https://anaconda.org/conda-forge/beem/badges/version.svg   
+    :target: https://anaconda.org/conda-forge/beem
+  
+.. image:: https://anaconda.org/conda-forge/beem/badges/downloads.svg   
+    :target: https://anaconda.org/conda-forge/beem
+
+
+Current build status
+--------------------
 
 .. image:: https://travis-ci.org/holgern/beem.svg?branch=master
     :target: https://travis-ci.org/holgern/beem
@@ -73,6 +86,24 @@ but possibly non-compiling version::
 Run tests after install::
 
     pytest
+    
+    
+Installing beem with conda-forge
+--------------------------------
+
+Installing beem from the conda-forge channel can be achieved by adding conda-forge to your channels with:
+
+    conda config --add channels conda-forge
+    
+Once the conda-forge channel has been enabled, beem can be installed with:
+
+    conda install beem
+
+CLI tool bundled
+----------------
+I started to work on a CLI tool:
+
+    beempy
 
 Documentation
 =============
@@ -80,6 +111,13 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.8
+------
+* bug fixes
+* CLI tool added
+* beem added to conda-forge
+* more unittests
+
 0.19.7
 ------
 * works on python 2.7

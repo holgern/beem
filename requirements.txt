@@ -12,4 +12,5 @@ pytest-mock
 coverage
 mock
 appdirs
-
+Click
+prettytable

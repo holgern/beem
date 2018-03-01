@@ -78,7 +78,14 @@ if __name__ == '__main__':
             "scrypt",
             "pycryptodomex",
             "pytz",
+            "Click",
+            "prettytable"
         ],
+        entry_points={
+            'console_scripts': [
+                'beempy=beem.cli:cli',
+            ],
+        },
         setup_requires=['pytest-runner'],
         tests_require=['pytest'],
         include_package_data=True,
