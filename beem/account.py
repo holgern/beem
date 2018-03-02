@@ -671,7 +671,7 @@ class Account(BlockchainObject):
             :param str account: (optional) the source account for the transfer
                 if not ``default_account``
         """
-        
+
         if not account:
             account = self
         if not account:

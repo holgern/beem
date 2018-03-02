@@ -3,7 +3,6 @@ import unittest
 from pprint import pprint
 from beem import Steem
 from beem.comment import Comment
-from beembase.operationids import getOperationNameForId
 from beem.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"

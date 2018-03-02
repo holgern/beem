@@ -177,7 +177,7 @@ class Memo(object):
         )
         if not memo_wif:
             raise MissingKeyError("Memo key for %s missing!" % self.from_account["name"])
-        
+
         if bts_encrypt:
             enc = BtsMemo.encode_memo_bts(
                 PrivateKey(memo_wif),
@@ -188,7 +188,7 @@ class Memo(object):
                 nonce,
                 memo
             )
-    
+
             return {
                 "message": enc,
                 "nonce": nonce,
@@ -206,7 +206,7 @@ class Memo(object):
                 memo,
                 prefix=self.steem.prefix
             )
-    
+
             return {
                 "message": enc,
                 "from": self.from_account["memo_key"],
@@ -236,7 +236,7 @@ class Memo(object):
             nonce = memo.get("nonce")
         else:
             nonce = ""
-        
+
         try:
             memo_wif = self.steem.wallet.getPrivateKeyForPublicKey(
                 memo_to["memo_key"]

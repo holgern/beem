@@ -60,7 +60,7 @@ def init_aes_bts(shared_secret, nonce):
     seed_digest = hexlify(hashlib.sha512(seed).digest()).decode('ascii')
     " Check'sum' "
     check = hashlib.sha256(unhexlify(seed_digest)).digest()
-    check = struct.unpack_from("<I", check[:4])[0]    
+    check = struct.unpack_from("<I", check[:4])[0]
     " AES "
     key = unhexlify(seed_digest[0:64])
     iv = unhexlify(seed_digest[64:96])
@@ -162,7 +162,7 @@ def encode_memo(priv, pub, nonce, message, **kwargs):
         :rtype: hex
     """
     shared_secret = get_shared_secret(priv, pub)
-    
+
     aes, check = init_aes(shared_secret, nonce)
     raw = py23_bytes(message, 'utf8')
     " Padding "

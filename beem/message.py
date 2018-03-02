@@ -113,13 +113,13 @@ class Message(object):
         meta = dict(re.findall(r'(\S+)=(.*)', parts[1]))
 
         # Ensure we have all the data in meta
-        if not "account" in meta:
+        if "account" not in meta:
             raise AssertionError()
-        if not "memokey" in meta:
+        if "memokey" not in meta:
             raise AssertionError()
-        if not "block" in meta:
+        if "block" not in meta:
             raise AssertionError()
-        if not "timestamp" in meta:
+        if "timestamp" not in meta:
             raise AssertionError()
 
         # Load account from blockchain

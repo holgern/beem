@@ -13,7 +13,7 @@ from beembase.memo import (
     encode_memo,
     decode_memo,
     encode_memo_bts,
-    decode_memo_bts    
+    decode_memo_bts
 )
 
 test_cases = [
@@ -79,17 +79,17 @@ class Testcases(unittest.TestCase):
     def test_decrypt_bts(self):
         for memo in test_cases:
             dec = decode_memo_bts(PrivateKey(memo["wif"]),
-                              PublicKey(memo["to"], prefix="GPH"),
-                              memo["nonce"],
-                              memo["message_bts"])
+                                  PublicKey(memo["to"], prefix="GPH"),
+                                  memo["nonce"],
+                                  memo["message_bts"])
             self.assertEqual(memo["plain"], dec)
 
     def test_encrypt_bts(self):
         for memo in test_cases:
             enc = encode_memo_bts(PrivateKey(memo["wif"]),
-                              PublicKey(memo["to"], prefix="GPH"),
-                              memo["nonce"],
-                              memo["plain"])
+                                  PublicKey(memo["to"], prefix="GPH"),
+                                  memo["nonce"],
+                                  memo["plain"])
             self.assertEqual(memo["message_bts"], enc)
 
     def test_decrypt(self):

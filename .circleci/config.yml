@@ -30,14 +30,12 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install -r requirements.txt
-            pip install --upgrade pycodestyle pyflakes coverage tox codacy-coverage
+            sudo python -m pip install --upgrade pip setuptools wheel
+            sudo python -m pip install -r requirements.txt
+            sudo python -m pip install --upgrade pycodestyle pyflakes coverage tox codacy-coverage virtualenv
 
       - save_cache:
           paths:
-            - ./venv
           key: v1-dependencies-{{ checksum "requirements.txt" }}
         
       # run tests!
@@ -48,8 +46,7 @@ jobs:
       - run:
           name: run tests
           command: |
-            . venv/bin/activate
-            python setup.py test
+            {envpython} setup.py test
 
       - store_artifacts:
           path: test-reports
@@ -59,6 +56,5 @@ jobs:
           name: Push coverage
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              . venv/bin/activate
               tox -e upload_coverage
             fi

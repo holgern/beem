@@ -6,7 +6,6 @@ import unittest
 import random
 from pprint import pprint
 from beem import Steem
-from beembase.operationids import getOperationNameForId
 from beem.amount import Amount
 from beem.witness import Witness
 from beem.account import Account
