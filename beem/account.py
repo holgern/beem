@@ -719,7 +719,8 @@ class Account(BlockchainObject):
             amount = Amount(amount, steem_instance=self.steem)
         else:
             amount = Amount(amount, "STEEM", steem_instance=self.steem)
-        assert amount["symbol"] == "STEEM"
+        if not amount["symbol"] == "STEEM":
+            raise AssertionError()
         to = Account(to, steem_instance=self.steem)
 
         op = operations.Transfer_to_vesting(**{
@@ -749,7 +750,8 @@ class Account(BlockchainObject):
             amount = Amount(amount, steem_instance=self.steem)
         else:
             amount = Amount(amount, "SBD", steem_instance=self.steem)
-        assert amount["symbol"] == "SBD"
+        if not amount["symbol"] == "SBD":
+            raise AssertionError()
         if request_id:
             request_id = int(request_id)
         else:

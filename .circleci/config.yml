@@ -33,7 +33,7 @@ jobs:
             python3 -m venv venv
             . venv/bin/activate
             pip install -r requirements.txt
-            pip install --upgrade pycodestyle pyflakes coverage tox
+            pip install --upgrade pycodestyle pyflakes coverage tox codacy-coverage
 
       - save_cache:
           paths:

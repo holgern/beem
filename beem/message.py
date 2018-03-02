@@ -104,7 +104,8 @@ class Message(object):
         parts = re.split("|".join(MESSAGE_SPLIT), self.message)
         parts = [x for x in parts if x.strip()]
 
-        assert len(parts) > 2, "Incorrect number of message parts"
+        if not len(parts) > 2:
+            raise AssertionError("Incorrect number of message parts")
 
         message = parts[0].strip()
         signature = parts[2].strip()
@@ -112,10 +113,14 @@ class Message(object):
         meta = dict(re.findall(r'(\S+)=(.*)', parts[1]))
 
         # Ensure we have all the data in meta
-        assert "account" in meta
-        assert "memokey" in meta
-        assert "block" in meta
-        assert "timestamp" in meta
+        if not "account" in meta:
+            raise AssertionError()
+        if not "memokey" in meta:
+            raise AssertionError()
+        if not "block" in meta:
+            raise AssertionError()
+        if not "timestamp" in meta:
+            raise AssertionError()
 
         # Load account from blockchain
         account = Account(

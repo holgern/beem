@@ -165,7 +165,8 @@ class Amount(dict):
     def __add__(self, other):
         a = self.copy()
         if isinstance(other, Amount):
-            assert other["asset"] == self["asset"]
+            if not other["asset"] == self["asset"]:
+                raise AssertionError()
             a["amount"] += other["amount"]
         else:
             a["amount"] += float(other)
@@ -174,7 +175,8 @@ class Amount(dict):
     def __sub__(self, other):
         a = self.copy()
         if isinstance(other, Amount):
-            assert other["asset"] == self["asset"]
+            if not other["asset"] == self["asset"]:
+                raise AssertionError()
             a["amount"] -= other["amount"]
         else:
             a["amount"] -= float(other)
@@ -183,7 +185,8 @@ class Amount(dict):
     def __mul__(self, other):
         a = self.copy()
         if isinstance(other, Amount):
-            assert other["asset"] == self["asset"]
+            if not other["asset"] == self["asset"]:
+                raise AssertionError()
             a["amount"] *= other["amount"]
         else:
             a["amount"] *= other
@@ -192,7 +195,8 @@ class Amount(dict):
     def __floordiv__(self, other):
         a = self.copy()
         if isinstance(other, Amount):
-            assert other["asset"] == self["asset"]
+            if not other["asset"] == self["asset"]:
+                raise AssertionError()
             from .price import Price
             return Price(self, other)
         else:
@@ -202,7 +206,8 @@ class Amount(dict):
     def __div__(self, other):
         a = self.copy()
         if isinstance(other, Amount):
-            assert other["asset"] == self["asset"]
+            if not other["asset"] == self["asset"]:
+                raise AssertionError()
             from .price import Price
             return Price(self, other)
         else:
@@ -212,7 +217,8 @@ class Amount(dict):
     def __mod__(self, other):
         a = self.copy()
         if isinstance(other, Amount):
-            assert other["asset"] == self["asset"]
+            if not other["asset"] == self["asset"]:
+                raise AssertionError()
             a["amount"] %= other["amount"]
         else:
             a["amount"] %= other
@@ -221,7 +227,8 @@ class Amount(dict):
     def __pow__(self, other):
         a = self.copy()
         if isinstance(other, Amount):
-            assert other["asset"] == self["asset"]
+            if not other["asset"] == self["asset"]:
+                raise AssertionError()
             a["amount"] **= other["amount"]
         else:
             a["amount"] **= other
@@ -229,7 +236,8 @@ class Amount(dict):
 
     def __iadd__(self, other):
         if isinstance(other, Amount):
-            assert other["asset"] == self["asset"]
+            if not other["asset"] == self["asset"]:
+                raise AssertionError()
             self["amount"] += other["amount"]
         else:
             self["amount"] += other
@@ -237,7 +245,8 @@ class Amount(dict):
 
     def __isub__(self, other):
         if isinstance(other, Amount):
-            assert other["asset"] == self["asset"]
+            if not other["asset"] == self["asset"]:
+                raise AssertionError()
             self["amount"] -= other["amount"]
         else:
             self["amount"] -= other
@@ -245,7 +254,8 @@ class Amount(dict):
 
     def __imul__(self, other):
         if isinstance(other, Amount):
-            assert other["asset"] == self["asset"]
+            if not other["asset"] == self["asset"]:
+                raise AssertionError()
             self["amount"] *= other["amount"]
         else:
             self["amount"] *= other
@@ -253,7 +263,8 @@ class Amount(dict):
 
     def __idiv__(self, other):
         if isinstance(other, Amount):
-            assert other["asset"] == self["asset"]
+            if not other["asset"] == self["asset"]:
+                raise AssertionError()
             return self["amount"] / other["amount"]
         else:
             self["amount"] /= other
@@ -268,7 +279,8 @@ class Amount(dict):
 
     def __imod__(self, other):
         if isinstance(other, Amount):
-            assert other["asset"] == self["asset"]
+            if not other["asset"] == self["asset"]:
+                raise AssertionError()
             self["amount"] %= other["amount"]
         else:
             self["amount"] %= other
@@ -280,42 +292,48 @@ class Amount(dict):
 
     def __lt__(self, other):
         if isinstance(other, Amount):
-            assert other["asset"] == self["asset"]
+            if not other["asset"] == self["asset"]:
+                raise AssertionError()
             return self["amount"] < other["amount"]
         else:
             return self["amount"] < float(other or 0)
 
     def __le__(self, other):
         if isinstance(other, Amount):
-            assert other["asset"] == self["asset"]
+            if not other["asset"] == self["asset"]:
+                raise AssertionError()
             return self["amount"] <= other["amount"]
         else:
             return self["amount"] <= float(other or 0)
 
     def __eq__(self, other):
         if isinstance(other, Amount):
-            assert other["asset"] == self["asset"]
+            if not other["asset"] == self["asset"]:
+                raise AssertionError()
             return self["amount"] == other["amount"]
         else:
             return self["amount"] == float(other or 0)
 
     def __ne__(self, other):
         if isinstance(other, Amount):
-            assert other["asset"] == self["asset"]
+            if not other["asset"] == self["asset"]:
+                raise AssertionError()
             return self["amount"] != other["amount"]
         else:
             return self["amount"] != float(other or 0)
 
     def __ge__(self, other):
         if isinstance(other, Amount):
-            assert other["asset"] == self["asset"]
+            if not other["asset"] == self["asset"]:
+                raise AssertionError()
             return self["amount"] >= other["amount"]
         else:
             return self["amount"] >= float(other or 0)
 
     def __gt__(self, other):
         if isinstance(other, Amount):
-            assert other["asset"] == self["asset"]
+            if not other["asset"] == self["asset"]:
+                raise AssertionError()
             return self["amount"] > other["amount"]
         else:
             return self["amount"] > float(other or 0)

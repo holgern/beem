@@ -363,9 +363,9 @@ class Market(dict):
 
         if isinstance(amount, Amount):
             amount = Amount(amount, steem_instance=self.steem)
-            assert(amount["asset"]["symbol"] == self["quote"]["symbol"]), \
-                "Price: {} does not match amount: {}".format(
-                    str(price), str(amount))
+            if not amount["asset"]["symbol"] == self["quote"]["symbol"]:
+                raise AssertionError("Price: {} does not match amount: {}".format(
+                    str(price), str(amount)))
         elif isinstance(amount, str):
             amount = Amount(amount, steem_instance=self.steem)
         else:
@@ -445,9 +445,9 @@ class Market(dict):
 
         if isinstance(amount, Amount):
             amount = Amount(amount, steem_instance=self.steem)
-            assert(amount["asset"]["symbol"] == self["quote"]["symbol"]), \
-                "Price: {} does not match amount: {}".format(
-                    str(price), str(amount))
+            if not amount["asset"]["symbol"] == self["quote"]["symbol"]:
+                raise AssertionError("Price: {} does not match amount: {}".format(
+                    str(price), str(amount)))
         elif isinstance(amount, str):
             amount = Amount(amount, steem_instance=self.steem)
         else:
