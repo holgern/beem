@@ -111,6 +111,12 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.9
+------
+* CLI tool improved
+* bug fixes
+* more unittests
+
 0.19.8
 ------
 * bug fixes

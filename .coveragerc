@@ -1,0 +1,8 @@
+[run]
+omit = 
+     */.eggs/*
+     */.tox/*
+[report]
+omit = 
+     */.eggs/*
+     */.tox/*
