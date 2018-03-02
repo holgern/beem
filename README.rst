@@ -38,10 +38,10 @@ Current build status
   :target: https://codecov.io/gh/holgern/beem
 
 .. image:: https://coveralls.io/repos/github/holgern/beem/badge.svg?branch=master
-:target: https://coveralls.io/github/holgern/beem?branch=master
+    :target: https://coveralls.io/github/holgern/beem?branch=master
 
 .. image:: https://api.codacy.com/project/badge/Grade/e5476faf97df4c658697b8e7a7efebd7    
-:target: https://www.codacy.com/app/holgern/beem?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=holgern/beem&amp;utm_campaign=Badge_Grade
+    :target: https://www.codacy.com/app/holgern/beem?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=holgern/beem&amp;utm_campaign=Badge_Grade
   
 .. image:: https://readthedocs.org/projects/beem/badge/?version=latest
   :target: http://beem.readthedocs.org/en/latest/?badge=latest
