@@ -42,7 +42,7 @@ jobs:
       - run:
           name: run tests
           command: |
-            {envpython} setup.py test
+            python setup.py test
 
       - store_artifacts:
           path: test-reports
