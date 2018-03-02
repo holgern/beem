@@ -979,7 +979,7 @@ class Account(BlockchainObject):
             amount = Amount(amount, steem_instance=self.steem)
         else:
             amount = Amount(amount, "VESTS", steem_instance=self.steem)
-        if amount["symbol"] == "VESTS":
+        if not amount["symbol"] == "VESTS":
             raise AssertionError()
         op = operations.Withdraw_vesting(
             **{
