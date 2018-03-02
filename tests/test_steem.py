@@ -73,11 +73,63 @@ class Testcases(unittest.TestCase):
             additional_active_keys=[format(key5.pubkey, core_unit)],
             additional_owner_accounts=["test1"],  # 1.2.0
             additional_active_accounts=["test1"],
-            storekeys=False
+            storekeys=False,
+            delegation_fee_steem="0 STEEM"
         )
         self.assertEqual(
             tx["operations"][0][0],
             "account_create"
+        )
+        op = tx["operations"][0][1]
+        role = "active"
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            "test1",
+            [x[0] for x in op[role]["account_auths"]])
+        role = "owner"
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            "test1",
+            [x[0] for x in op[role]["account_auths"]])
+        self.assertEqual(
+            op["creator"],
+            "test")
+
+    def test_create_account_with_delegation(self):
+        bts = self.bts
+        name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
+        key1 = PrivateKey()
+        key2 = PrivateKey()
+        key3 = PrivateKey()
+        key4 = PrivateKey()
+        key5 = PrivateKey()
+        tx = bts.create_account(
+            name,
+            creator="test",   # 1.2.7
+            owner_key=format(key1.pubkey, core_unit),
+            active_key=format(key2.pubkey, core_unit),
+            posting_key=format(key3.pubkey, core_unit),
+            memo_key=format(key4.pubkey, core_unit),
+            additional_owner_keys=[format(key5.pubkey, core_unit)],
+            additional_active_keys=[format(key5.pubkey, core_unit)],
+            additional_owner_accounts=["test1"],  # 1.2.0
+            additional_active_accounts=["test1"],
+            storekeys=False,
+            delegation_fee_steem="1 STEEM"
+        )
+        self.assertEqual(
+            tx["operations"][0][0],
+            "account_create_with_delegation"
         )
         op = tx["operations"][0][1]
         role = "active"

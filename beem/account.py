@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 import pytz
 from beembase import operations
 from beembase.account import PrivateKey, PublicKey
+from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 import json
 import math
 import random
@@ -110,7 +111,15 @@ class Account(BlockchainObject):
     def rep(self):
         """ Returns the account reputation
         """
-        return self.reputation()
+        return self.get_reputation()
+
+    @property
+    def sp(self):
+        return self.get_steem_power()
+
+    @property
+    def vp(self):
+        return self.get_voting_power()
 
     def print_info(self, force_refresh=False, return_str=False):
         """ Prints import information about the account
@@ -118,21 +127,21 @@ class Account(BlockchainObject):
         if force_refresh:
             self.refresh()
             self.steem.refresh_data(True)
-        ret = self.name + " (" + str(round(self.rep, 3)) + ") "
-        ret += str(self.voting_power()) + "%, full in " + self.get_recharge_time_str()
-        ret += " VP = " + str(self.get_voting_value_SBD()) + "$\n"
-        ret += str(round(self.steem_power(), 2)) + " SP, "
-        ret += str(self.balances["available"][0]) + ", " + str(self.balances["available"][1])
+        ret = self.name + " (%.2f) " % (self.rep)
+        ret += "%.2f %%, full in %s" % (self.get_voting_power(), self.get_recharge_time_str())
+        ret += " VP = %.2f $\n" % (self.get_voting_value_SBD())
+        ret += "%.2f SP, " % (self.get_steem_power())
+        ret += "%.3f, %.3f" % (self.balances["available"][0], self.balances["available"][1])
         bandwidth = self.get_bandwidth()
         if bandwidth["allocated"] > 0:
             ret += "\n"
-            ret += "Remaining Bandwidth: " + str(round(100 - bandwidth["used"] / bandwidth["allocated"] * 100, 2)) + " %"
-            ret += " (" + str(round(bandwidth["used"] / 1024)) + " kb of " + str(round(bandwidth["allocated"] / 1024 / 1024)) + " mb)"
+            ret += "Remaining Bandwidth: %.2f %%" % (100 - bandwidth["used"] / bandwidth["allocated"] * 100)
+            ret += " (%.0f kb of %.0f mb)" % (bandwidth["used"] / 1024, bandwidth["allocated"] / 1024 / 1024)
         if return_str:
             return ret
         print(ret)
 
-    def reputation(self, precision=2):
+    def get_reputation(self):
         """ Returns the account reputation
         """
         rep = int(self['reputation'])
@@ -142,12 +151,9 @@ class Account(BlockchainObject):
         if rep < 0:
             score *= -1
         score = (score * 9.) + 25.
-        if precision is not None:
-            return round(score, precision)
-        else:
-            return score
+        return score
 
-    def voting_power(self, precision=2, with_regeneration=True):
+    def get_voting_power(self, with_regeneration=True):
         """ Returns the account voting power
         """
         if with_regeneration:
@@ -161,12 +167,9 @@ class Account(BlockchainObject):
             return 100
         if total_vp < 0:
             return 0
-        if precision is not None:
-            return round(total_vp, precision)
-        else:
-            return total_vp
+        return total_vp
 
-    def steem_power(self, onlyOwnSP=False):
+    def get_steem_power(self, onlyOwnSP=False):
         """ Returns the account steem power
         """
         if onlyOwnSP:
@@ -175,41 +178,43 @@ class Account(BlockchainObject):
             vests = Amount(self["vesting_shares"]) - Amount(self["delegated_vesting_shares"]) + Amount(self["received_vesting_shares"])
         return self.steem.vests_to_sp(vests)
 
-    def get_voting_value_SBD(self, voting_weight=100, voting_power=None, steem_power=None, precision=2):
+    def get_voting_value_SBD(self, voting_weight=100, voting_power=None, steem_power=None):
         """ Returns the account voting value in SBD
         """
         if voting_power is None:
-            voting_power = self.voting_power()
+            voting_power = self.get_voting_power()
         if steem_power is None:
-            sp = self.steem_power()
+            sp = self.get_steem_power()
         else:
             sp = steem_power
 
         VoteValue = self.steem.sp_to_sbd(sp, voting_power=voting_power * 100, vote_pct=voting_weight * 100)
-        return round(VoteValue, precision)
+        return VoteValue
 
     def get_recharge_time_str(self, voting_power_goal=100):
         """ Returns the account recharge time
         """
-        hours = math.floor(self.get_recharge_hours(voting_power_goal=voting_power_goal, precision=3))
-        minutes = math.floor(self.get_recharge_reminder_minutes(voting_power_goal=voting_power_goal, precision=0))
-        return str(hours) + ":" + str(minutes).zfill(2)
+        remainingTime = self.get_recharge_timedelta(voting_power_goal=voting_power_goal)
+        days, seconds = remainingTime.days, remainingTime.seconds
+        hours = days * 24 + seconds // 3600
+        minutes = (seconds % 3600) // 60
+        seconds = (seconds % 60)
+        return "%d:%s.%s" % (hours, str(minutes).zfill(2), str(seconds).zfill(2))
 
-    def get_recharge_hours(self, voting_power_goal=100, precision=2):
-        """ Returns the account voting power recharge time in hours
+    def get_recharge_timedelta(self, voting_power_goal=100):
+        """ Returns the account voting power recharge time as timedelta object
         """
-        missing_vp = voting_power_goal - self.voting_power(precision=10)
+        missing_vp = voting_power_goal - self.get_voting_power()
         if missing_vp < 0:
             return 0
         recharge_seconds = missing_vp * 100 * 5 * 86400 / 10000
-        return round(recharge_seconds / 60 / 60, precision)
+        return timedelta(seconds=recharge_seconds)
 
-    def get_recharge_reminder_minutes(self, voting_power_goal=100, precision=0):
+    def get_recharge_time(self, voting_power_goal=100):
         """ Returns the account voting power recharge time in minutes
         """
-        hours = self.get_recharge_hours(voting_power_goal=voting_power_goal, precision=5)
-        reminder_in_minuts = (hours - math.floor(hours)) * 60
-        return round(reminder_in_minuts, precision)
+        utc = pytz.timezone('UTC')
+        return utc.localize(datetime.utcnow()) + self.get_recharge_timedelta(voting_power_goal)
 
     def get_feed(self, entryId=0, limit=100, raw_data=False, account=None):
         if account is None:
@@ -336,11 +341,11 @@ class Account(BlockchainObject):
     @property
     def total_balances(self):
         return [
-            self.balance(self.available_balances, "STEEM") + self.balance(self.saving_balances, "STEEM") +
-            self.balance(self.reward_balances, "STEEM"),
-            self.balance(self.available_balances, "SBD") + self.balance(self.saving_balances, "SBD") +
-            self.balance(self.reward_balances, "SBD"),
-            self.balance(self.available_balances, "VESTS") + self.balance(self.reward_balances, "VESTS"),
+            self.get_balance(self.available_balances, "STEEM") + self.get_balance(self.saving_balances, "STEEM") +
+            self.get_balance(self.reward_balances, "STEEM"),
+            self.get_balance(self.available_balances, "SBD") + self.get_balance(self.saving_balances, "SBD") +
+            self.get_balance(self.reward_balances, "SBD"),
+            self.get_balance(self.available_balances, "VESTS") + self.get_balance(self.reward_balances, "VESTS"),
         ]
 
     @property
@@ -353,11 +358,11 @@ class Account(BlockchainObject):
             'total': self.total_balances,
         }
 
-    def balance(self, balances, symbol):
+    def get_balance(self, balances, symbol):
         """ Obtain the balance of a specific Asset. This call returns instances of
             :class:`steem.amount.Amount`.
         """
-        if isinstance(balances, str):
+        if isinstance(balances, string_types):
             if balances == "available":
                 balances = self.available_balances
             elif balances == "saving":
@@ -705,7 +710,7 @@ class Account(BlockchainObject):
         if not to:
             to = account  # powerup on the same account
         account = Account(account, steem_instance=self.steem)
-        if isinstance(amount, str):
+        if isinstance(amount, string_types):
             amount = Amount(amount, steem_instance=self.steem)
         elif isinstance(amount, Amount):
             amount = Amount(amount, steem_instance=self.steem)
@@ -735,7 +740,7 @@ class Account(BlockchainObject):
         if not account:
             raise ValueError("You need to provide an account")
         account = Account(account, steem_instance=self.steem)
-        if isinstance(amount, str):
+        if isinstance(amount, string_types):
             amount = Amount(amount, steem_instance=self.steem)
         elif isinstance(amount, Amount):
             amount = Amount(amount, steem_instance=self.steem)
@@ -875,7 +880,7 @@ class Account(BlockchainObject):
 
         # if no values were set by user, claim all outstanding balances on
         # account
-        if isinstance(reward_steem, str):
+        if isinstance(reward_steem, string_types):
             reward_steem = Amount(reward_steem, steem_instance=self.steem)
         elif isinstance(reward_steem, Amount):
             reward_steem = Amount(reward_steem, steem_instance=self.steem)
@@ -883,7 +888,7 @@ class Account(BlockchainObject):
             reward_steem = Amount(reward_steem, "STEEM", steem_instance=self.steem)
         assert reward_steem["symbol"] == "STEEM"
 
-        if isinstance(reward_sbd, str):
+        if isinstance(reward_sbd, string_types):
             reward_sbd = Amount(reward_sbd, steem_instance=self.steem)
         elif isinstance(reward_sbd, Amount):
             reward_sbd = Amount(reward_sbd, steem_instance=self.steem)
@@ -891,7 +896,7 @@ class Account(BlockchainObject):
             reward_sbd = Amount(reward_sbd, "SBD", steem_instance=self.steem)
         assert reward_sbd["symbol"] == "SBD"
 
-        if isinstance(reward_vests, str):
+        if isinstance(reward_vests, string_types):
             reward_vests = Amount(reward_vests, steem_instance=self.steem)
         elif isinstance(reward_vests, Amount):
             reward_vests = Amount(reward_vests, steem_instance=self.steem)
@@ -929,7 +934,7 @@ class Account(BlockchainObject):
         if not account:
             raise ValueError("You need to provide an account")
         account = Account(account, steem_instance=self.steem)
-        if isinstance(vesting_shares, str):
+        if isinstance(vesting_shares, string_types):
             vesting_shares = Amount(vesting_shares, steem_instance=self.steem)
         elif isinstance(vesting_shares, Amount):
             vesting_shares = Amount(vesting_shares, steem_instance=self.steem)
@@ -957,7 +962,7 @@ class Account(BlockchainObject):
         if not account:
             raise ValueError("You need to provide an account")
         account = Account(account, steem_instance=self.steem)
-        if isinstance(amount, str):
+        if isinstance(amount, string_types):
             amount = Amount(amount, steem_instance=self.steem)
         elif isinstance(amount, Amount):
             amount = Amount(amount, steem_instance=self.steem)

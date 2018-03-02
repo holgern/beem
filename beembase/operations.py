@@ -172,6 +172,41 @@ class Account_create(GrapheneObject):
             ]))
 
 
+class Account_create_with_delegation(GrapheneObject):
+
+    def __init__(self, *args, **kwargs):
+        # Allow for overwrite of prefix
+        if isArgsThisClass(self, args):
+            self.data = args[0].data
+        else:
+            if len(args) == 1 and len(kwargs) == 0:
+                kwargs = args[0]
+            prefix = kwargs.get("prefix", default_prefix)
+
+            assert len(kwargs["new_account_name"]
+                       ) <= 16, "Account name must be at most 16 chars long"
+
+            meta = ""
+            if "json_metadata" in kwargs and kwargs["json_metadata"]:
+                if isinstance(kwargs["json_metadata"], dict):
+                    meta = json.dumps(kwargs["json_metadata"])
+                else:
+                    meta = kwargs["json_metadata"]
+
+            super(Account_create_with_delegation, self).__init__(OrderedDict([
+                ('fee', Amount(kwargs["fee"])),
+                ('delegation', Amount(kwargs["delegation"])),
+                ('creator', String(kwargs["creator"])),
+                ('new_account_name', String(kwargs["new_account_name"])),
+                ('owner', Permission(kwargs["owner"], prefix=prefix)),
+                ('active', Permission(kwargs["active"], prefix=prefix)),
+                ('posting', Permission(kwargs["posting"], prefix=prefix)),
+                ('memo_key', PublicKey(kwargs["memo_key"], prefix=prefix)),
+                ('json_metadata', String(meta)),
+                ('extensions', Array([])),
+            ]))
+
+
 class Account_update(GrapheneObject):
     def __init__(self, *args, **kwargs):
         # Allow for overwrite of prefix

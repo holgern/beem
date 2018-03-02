@@ -42,3 +42,18 @@ class Testcases(unittest.TestCase):
         runner = CliRunner()
         result = runner.invoke(cli, ['balance', '-atest'])
         self.assertEqual(result.exit_code, 0)
+
+    def test_config(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['config'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_listkeys(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['listkeys'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_listaccounts(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['listaccounts'])
+        self.assertEqual(result.exit_code, 0)

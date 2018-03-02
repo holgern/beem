@@ -72,7 +72,7 @@ class Amount(object):
         else:
             self.amount = d.amount
             self.asset = d.symbol
-            self.precision = d.asset.precision
+            self.precision = d.asset["precision"]
 
     def __bytes__(self):
         # padding

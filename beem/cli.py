@@ -20,7 +20,15 @@ import math
 import random
 import logging
 import click
+click.disable_unicode_literals_warning = True
 log = logging.getLogger(__name__)
+
+
+availableConfigurationKeys = [
+    "default_account",
+    "default_vote_weight",
+    "nodes",
+]
 
 
 @click.group(chain=True)
@@ -60,8 +68,139 @@ def cli(node, offline, nobroadcast, unsigned, blocking, bundle, expiration, debu
 
 @cli.command()
 @click.option(
+    '--account', '-a', multiple=False)
+@click.option(
+    '--node', '-n', multiple=True)
+def set(account, node):
+    """ Set configuration
+    """
+    stm = shared_steem_instance()
+    if account:
+        stm.set_default_account(account)
+    if len(node) > 0:
+        nodes = []
+        for n in node:
+            nodes.append(n)
+        if "node" in stm.config:
+            stm.config["node"] = nodes
+
+
+@cli.command()
+def config():
+    """ Shows local configuration
+    """
+    stm = shared_steem_instance()
+    t = PrettyTable(["Key", "Value"])
+    t.align = "l"
+    for key in stm.config:
+        # hide internal config data
+        if key in availableConfigurationKeys:
+            t.add_row([key, stm.config[key]])
+    t.add_row(["nodes", stm.config.nodes])
+    t.add_row(["data_dir", stm.config.data_dir])
+    print(t)
+
+
+@cli.command()
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=True)
+@click.option(
+    '--purge', is_flag=True, default=False,
+    help="Delete old wallet. All wallet data are deleted!")
+def createwallet(password, purge):
+    """ Create new wallet with password
+    """
+    stm = shared_steem_instance()
+    if purge:
+        stm.wallet.purge()
+    stm.wallet.create(password)
+    set_shared_steem_instance(stm)
+
+
+@cli.command()
+def walletinfo():
+    """ Show info about wallet
+    """
+    stm = shared_steem_instance()
+    t = PrettyTable(["Key", "Value"])
+    t.align = "l"
+    t.add_row(["created", stm.wallet.created()])
+    t.add_row(["locked", stm.wallet.locked()])
+    # t.add_row(["getAccounts", str(stm.wallet.getAccounts())])
+    # t.add_row(["getPublicKeys", str(stm.wallet.getPublicKeys())])
+    print(t)
+
+
+@cli.command()
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False)
+@click.option('--key')
+def addkey(password, key):
+    """ Add key to wallet
+    """
+    stm = shared_steem_instance()
+    if not stm.wallet.locked():
+        return
+    stm.wallet.unlock(password)
+    if stm.wallet.locked():
+        print("Could not be unlocked!")
+    else:
+        print("Unlocked!")
+        stm.wallet.addPrivateKey(key)
+    set_shared_steem_instance(stm)
+
+
+@cli.command()
+def listkeys():
+    """ Show stored keys
+    """
+    stm = shared_steem_instance()
+    t = PrettyTable(["Available Key", "Account", "Type"])
+    t.align = "l"
+    for key in stm.wallet.getPublicKeys():
+        account = stm.wallet.getAccount(key)
+        if account["name"] is None:
+            accountName = ""
+            keyType = "Memo"
+        else:
+            accountName = account["name"]
+            keyType = account["type"]
+        # keyType = stm.wallet.getKeyType(account, key)
+        t.add_row([key, accountName, keyType])
+    print(t)
+
+
+@cli.command()
+def listaccounts():
+    """ Show stored accounts
+    """
+    stm = shared_steem_instance()
+    t = PrettyTable(["Name", "Type", "Available Key"])
+    t.align = "l"
+    for account in stm.wallet.getAccounts():
+        t.add_row([
+            account["name"] or "n/a", account["type"] or "n/a",
+            account["pubkey"]
+        ])
+    print(t)
+
+
+@cli.command()
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=True)
+def changewalletpassphrase(password):
+    """ Change wallet password
+    """
+    stm = shared_steem_instance()
+    stm.wallet.changePassphrase(password)
+
+
+@cli.command()
+@click.option(
     '--account', '-a', multiple=True)
 def balance(account):
+    """ Shows balance
+    """
     stm = shared_steem_instance()
     if len(account) == 0:
         if "default_account" in stm.config:
@@ -102,6 +241,8 @@ def balance(account):
 @click.option(
     '--account', '-a', multiple=True)
 def info(account):
+    """ Show info
+    """
     stm = shared_steem_instance()
     for name in account:
         a = Account(name, steem_instance=stm)
