@@ -122,18 +122,20 @@ class Memo(GrapheneObject):
         if isArgsThisClass(self, args):
                 self.data = args[0].data
         else:
-            if len(args) == 1 and len(kwargs) == 0:
-                kwargs = args[0]
             prefix = kwargs.pop("prefix", default_prefix)
-            if "message" in kwargs and kwargs["message"]:
-                super(Memo, self).__init__(OrderedDict([
-                    ('from', PublicKey(kwargs["from"], prefix=prefix)),
-                    ('to', PublicKey(kwargs["to"], prefix=prefix)),
-                    ('nonce', Uint64(int(kwargs["nonce"]))),
-                    ('message', Bytes(kwargs["message"]))
-                ]))
-            else:
+            if "encrypted" not in kwargs or not kwargs["encrypted"]:
                 super(Memo, self).__init__(None)
+            else:
+                if len(args) == 1 and len(kwargs) == 0:
+                    kwargs = args[0]
+                if "encrypted" in kwargs and kwargs["encrypted"]:
+                    super(Memo, self).__init__(OrderedDict([
+                        ('from', PublicKey(kwargs["from"], prefix=prefix)),
+                        ('to', PublicKey(kwargs["to"], prefix=prefix)),
+                        ('nonce', Uint64(int(kwargs["nonce"]))),
+                        ('check', Uint32(int(kwargs["check"]))),
+                        ('encrypted', Bytes(kwargs["encrypted"]))
+                    ]))
 
 
 class WitnessProps(GrapheneObject):

@@ -11,36 +11,43 @@ from beembase.memo import (
     _pad,
     _unpad,
     encode_memo,
-    decode_memo
+    decode_memo,
+    encode_memo_bts,
+    decode_memo_bts    
 )
 
 test_cases = [
     {'from': 'GPH7FPzbN7hnRk24T3Nh9MYM1xBaF5xyRYu8WtyTrtLoUG8cUtszM',
-     'message': '688fe6c97f78ad2d3c5a82d9aa61bc23',
+     'message_bts': '688fe6c97f78ad2d3c5a82d9aa61bc23',
+     'message': '#FYu8pMPJxTv7q2geNLSQC8dm47uqdNtFLCoDY5yZWjAz2R4wNyHEwQ48hPWm9SuAZ6fCFmjQrFCBVQFSP7EkobrWWRGaeqH6msKkPjRsMd6UUaNva1nmtLc55RAzqPLht',
      'nonce': '16332877645293003478',
      'plain': u'I am this!',
      'to': 'GPH6HAMuJRkjGJkj6cZWBbTU13gkUhBep383prqRdExXsZsYTrWT5',
      'wif': '5Jpkeq1jiNE8Pe24GxFWTsyWbcP59Qq4cD7qg3Wgd6JFJqJkoG8'},
     {'from': 'GPH7FPzbN7hnRk24T3Nh9MYM1xBaF5xyRYu8WtyTrtLoUG8cUtszM',
-     'message': 'db7ab7dfefee3ffa2394ec438601ceff',
+     'message_bts': 'db7ab7dfefee3ffa2394ec438601ceff',
+     'message': '#FYu8pMPJxTv7q2geNLSQC8dm47uqdNtFLCoDY5yZWjAz2R4wNyHEwQ48hPWm9SuAZ6fCFmjQrFCBVQFSP7EkobrWWRGaeqH6msKkPjRsMd6pNxowQQGhkWuR9z5W1aLau',
      'nonce': '16332877645293003478',
      'plain': u'Hello World',
      'to': 'GPH6HAMuJRkjGJkj6cZWBbTU13gkUhBep383prqRdExXsZsYTrWT5',
      'wif': '5Jpkeq1jiNE8Pe24GxFWTsyWbcP59Qq4cD7qg3Wgd6JFJqJkoG8'},
     {'from': 'GPH7FPzbN7hnRk24T3Nh9MYM1xBaF5xyRYu8WtyTrtLoUG8cUtszM',
-     'message': '01b6616cbd10bdd0743c82c2bd580651f3e852360a739e7d11c45f483871dc45',
+     'message_bts': '01b6616cbd10bdd0743c82c2bd580651f3e852360a739e7d11c45f483871dc45',
+     'message': '#FYu8pMPJxTv7q2geNLSQC8dm47uqdNtFLCoDY5yZWjAz2R4wNyHEwQ48hPWm9SuAZ6fCFmjQrFCBVQFSP7EkobrWWRGaeqH6msKkPjRsMd6iKUwipf3H34zh3CAZVHNDy',
      'nonce': '16332877645293003478',
      'plain': u'Daniel Larimer',
      'to': 'GPH6HAMuJRkjGJkj6cZWBbTU13gkUhBep383prqRdExXsZsYTrWT5',
      'wif': '5Jpkeq1jiNE8Pe24GxFWTsyWbcP59Qq4cD7qg3Wgd6JFJqJkoG8'},
     {'from': 'GPH7FPzbN7hnRk24T3Nh9MYM1xBaF5xyRYu8WtyTrtLoUG8cUtszM',
-     'message': '24702af49bc82e06eb74a4acd91b18c389b13a6c9850a0fd3f728f486fe6daf4',
+     'message_bts': '24702af49bc82e06eb74a4acd91b18c389b13a6c9850a0fd3f728f486fe6daf4',
+     'message': '#FYu8pMPJxTv7q2geNLSQC8dm47uqdNtFLCoDY5yZWjAz2R4wNyHEwQ48hPWm9SuAZ6fCFmjQrFCBVQFSP7EkobrWWRGaeqH6msKkPjRsMd6QyDwh8a4rxrSLnY2H4ztCK',
      'nonce': '16332877645293003478',
      'plain': u'Thanks you, sir!',
      'to': 'GPH6HAMuJRkjGJkj6cZWBbTU13gkUhBep383prqRdExXsZsYTrWT5',
      'wif': '5Jpkeq1jiNE8Pe24GxFWTsyWbcP59Qq4cD7qg3Wgd6JFJqJkoG8'},
     {'from': 'GPH7FPzbN7hnRk24T3Nh9MYM1xBaF5xyRYu8WtyTrtLoUG8cUtszM',
-     'message': 'db059f7a0f9053b041cd95c373ed9dff3445491d03ef17c490870ebcfcc6ec61a53718ec6cc8f5d81da6fcaa77b40d19',
+     'message_bts': 'db059f7a0f9053b041cd95c373ed9dff3445491d03ef17c490870ebcfcc6ec61a53718ec6cc8f5d81da6fcaa77b40d19',
+     'message': '#5Kh3GamVLQtmU7PRHr6gyvAXqKtcRUaDy7Yp4BWqFuNeRq88ioc6rTGMGc7bRC1PtUV2LAeqsiQtbuRgPFSppVXPccS5BSWfqSxMF7ytAbmafekm2DweU1F2nqYwFgWYVe8wsHQdZVpzCdm8BJUY4xBCEU2xrB8nX4559EKag5BuU',
      'nonce': '16332877645293003478',
      'plain': u'Ã¤Ã¶Ã¼ÃŸâ‚¬@$Â²Â³',
      'to': 'GPH6HAMuJRkjGJkj6cZWBbTU13gkUhBep383prqRdExXsZsYTrWT5',
@@ -69,11 +76,25 @@ class Testcases(unittest.TestCase):
             padded = _pad(s, 16).decode('utf-8')
             self.assertEqual(s.decode('utf-8'), _unpad(padded, 16))
 
+    def test_decrypt_bts(self):
+        for memo in test_cases:
+            dec = decode_memo_bts(PrivateKey(memo["wif"]),
+                              PublicKey(memo["to"], prefix="GPH"),
+                              memo["nonce"],
+                              memo["message_bts"])
+            self.assertEqual(memo["plain"], dec)
+
+    def test_encrypt_bts(self):
+        for memo in test_cases:
+            enc = encode_memo_bts(PrivateKey(memo["wif"]),
+                              PublicKey(memo["to"], prefix="GPH"),
+                              memo["nonce"],
+                              memo["plain"])
+            self.assertEqual(memo["message_bts"], enc)
+
     def test_decrypt(self):
         for memo in test_cases:
             dec = decode_memo(PrivateKey(memo["wif"]),
-                              PublicKey(memo["to"], prefix="GPH"),
-                              memo["nonce"],
                               memo["message"])
             self.assertEqual(memo["plain"], dec)
 
@@ -82,7 +103,7 @@ class Testcases(unittest.TestCase):
             enc = encode_memo(PrivateKey(memo["wif"]),
                               PublicKey(memo["to"], prefix="GPH"),
                               memo["nonce"],
-                              memo["plain"])
+                              memo["plain"], prefix="GPH")
             self.assertEqual(memo["message"], enc)
 
     def test_shared_secret(self):

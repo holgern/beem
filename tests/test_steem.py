@@ -8,6 +8,7 @@ from pprint import pprint
 from beem import Steem
 from beembase.operationids import getOperationNameForId
 from beem.amount import Amount
+from beem.memo import Memo
 from beem.witness import Witness
 from beem.account import Account
 from beembase.account import PrivateKey
@@ -49,6 +50,30 @@ class Testcases(unittest.TestCase):
         )
         op = tx["operations"][0][1]
         self.assertIn("memo", op)
+        self.assertEqual(op["memo"], "Foobar")
+        self.assertEqual(op["from"], "test1")
+        self.assertEqual(op["to"], "test")
+        amount = Amount(op["amount"])
+        self.assertEqual(float(amount), 1.33)
+
+    def test_transfer_memo(self):
+        bts = self.bts
+        # bts.prefix ="STX"
+        acc = Account("test", steem_instance=bts)
+        tx = acc.transfer(
+            "test", 1.33, "SBD", memo="#Foobar", account="test1")
+        self.assertEqual(
+            tx["operations"][0][0],
+            "transfer"
+        )
+        op = tx["operations"][0][1]
+        self.assertIn("memo", op)
+        self.assertIn("#", op["memo"])
+        m = Memo(from_account=op["from"],
+            to_account=op["to"], steem_instance=bts)
+        memo = m.decrypt(op["memo"])
+        self.assertEqual(memo, "Foobar")
+        
         self.assertEqual(op["from"], "test1")
         self.assertEqual(op["to"], "test")
         amount = Amount(op["amount"])

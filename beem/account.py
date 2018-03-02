@@ -671,7 +671,7 @@ class Account(BlockchainObject):
             :param str account: (optional) the source account for the transfer
                 if not ``default_account``
         """
-        from .memo import Memo
+        
         if not account:
             account = self
         if not account:
@@ -680,16 +680,19 @@ class Account(BlockchainObject):
         account = Account(account, steem_instance=self.steem)
         amount = Amount(amount, asset, steem_instance=self.steem)
         to = Account(to, steem_instance=self.steem)
+        if memo and memo[0] == "#":
+            from .memo import Memo
+            memoObj = Memo(
+                from_account=account,
+                to_account=to,
+                steem_instance=self.steem
+            )
+            memo = memoObj.encrypt(memo[1:])["message"]
 
-        memoObj = Memo(
-            from_account=account,
-            to_account=to,
-            steem_instance=self.steem
-        )
         op = operations.Transfer(**{
             "amount": amount,
             "to": to["name"],
-            "memo": memoObj.encrypt(memo),
+            "memo": memo,
             "from": account["name"],
             "prefix": self.steem.prefix,
         })

@@ -9,6 +9,7 @@ from beem.instance import shared_steem_instance
 import random
 from beembase import memo as BtsMemo
 from beembase.account import PrivateKey, PublicKey
+from beemgraphenebase.base58 import base58decode
 from .account import Account
 from .exceptions import MissingKeyError, KeyNotFound
 
@@ -44,7 +45,7 @@ class Memo(object):
             from beem.memo import Memo
             m = Memo()
             m.steem.wallet.unlock("secret")
-            print(memo.decrypt(op_data["memo"]))
+            print(m.decrypt(op_data["memo"]))
 
         if ``op_data`` being the payload of a transfer operation.
 
@@ -137,7 +138,7 @@ class Memo(object):
 
              # Decode memo
              # Raises exception if required keys not available in the wallet
-             print(memo.decrypt(op_data["memo"]))
+             print(memo.decrypt(op_data["transfer"]))
 
     """
     def __init__(
@@ -160,7 +161,7 @@ class Memo(object):
         self.steem.wallet.unlock(*args, **kwargs)
         return self
 
-    def encrypt(self, memo):
+    def encrypt(self, memo, bts_encrypt=False):
         """ Encrypt a memo
 
             :param str memo: clear text memo message
@@ -176,23 +177,41 @@ class Memo(object):
         )
         if not memo_wif:
             raise MissingKeyError("Memo key for %s missing!" % self.from_account["name"])
-
-        enc = BtsMemo.encode_memo(
-            PrivateKey(memo_wif),
-            PublicKey(
-                self.to_account["memo_key"],
+        
+        if bts_encrypt:
+            enc = BtsMemo.encode_memo_bts(
+                PrivateKey(memo_wif),
+                PublicKey(
+                    self.to_account["memo_key"],
+                    prefix=self.steem.prefix
+                ),
+                nonce,
+                memo
+            )
+    
+            return {
+                "message": enc,
+                "nonce": nonce,
+                "from": self.from_account["memo_key"],
+                "to": self.to_account["memo_key"]
+            }
+        else:
+            enc = BtsMemo.encode_memo(
+                PrivateKey(memo_wif),
+                PublicKey(
+                    self.to_account["memo_key"],
+                    prefix=self.steem.prefix
+                ),
+                nonce,
+                memo,
                 prefix=self.steem.prefix
-            ),
-            nonce,
-            memo
-        )
-
-        return {
-            "message": enc,
-            "nonce": nonce,
-            "from": self.from_account["memo_key"],
-            "to": self.to_account["memo_key"]
-        }
+            )
+    
+            return {
+                "message": enc,
+                "from": self.from_account["memo_key"],
+                "to": self.to_account["memo_key"]
+            }
 
     def decrypt(self, memo):
         """ Decrypt a memo
@@ -205,28 +224,47 @@ class Memo(object):
             return None
 
         # We first try to decode assuming we received the memo
+        if isinstance(memo, dict) and "to" in memo and "from" in memo and "memo" in memo:
+            memo_to = Account(memo["to"], steem_instance=self.steem)
+            memo_from = Account(memo["from"], steem_instance=self.steem)
+            message = memo["memo"]
+        else:
+            memo_to = self.to_account
+            memo_from = self.from_account
+            message = memo
+        if isinstance(memo, dict) and "nonce" in memo:
+            nonce = memo.get("nonce")
+        else:
+            nonce = ""
+        
         try:
             memo_wif = self.steem.wallet.getPrivateKeyForPublicKey(
-                memo["to"]
+                memo_to["memo_key"]
             )
-            pubkey = memo["from"]
+            pubkey = memo_from["memo_key"]
         except KeyNotFound:
             try:
                 # if that failed, we assume that we have sent the memo
                 memo_wif = self.steem.wallet.getPrivateKeyForPublicKey(
-                    memo["from"]
+                    memo_from["memo_key"]
                 )
-                pubkey = memo["to"]
+                pubkey = memo_to["memo_key"]
             except KeyNotFound:
                 # if all fails, raise exception
                 raise MissingKeyError(
                     "Non of the required memo keys are installed!"
                     "Need any of {}".format(
-                    [memo["to"], memo["from"]]))
+                    [memo_to["name"], memo_from["name"]]))
 
-        return BtsMemo.decode_memo(
-            PrivateKey(memo_wif),
-            PublicKey(pubkey, prefix=self.steem.prefix),
-            memo.get("nonce"),
-            memo.get("message")
-        )
+        if message[0] == '#':
+            return BtsMemo.decode_memo(
+                PrivateKey(memo_wif),
+                message
+            )
+        else:
+            return BtsMemo.decode_memo_bts(
+                PrivateKey(memo_wif),
+                PublicKey(pubkey, prefix=self.steem.prefix),
+                nonce,
+                message
+            )

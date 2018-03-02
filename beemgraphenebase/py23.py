@@ -23,7 +23,9 @@ else:
     binary_type = str
 
 
-def py23_bytes(item, encoding=None):
+def py23_bytes(item=None, encoding=None):
+    if item is None:
+        return b''
     if hasattr(item, '__bytes__'):
         return item.__bytes__()
     else:

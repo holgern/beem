@@ -63,6 +63,10 @@ class Testcases(unittest.TestCase):
         self.assertTrue(py23_bytes(b) is b)
         self.assertEqual(repr(py23_bytes(b)), "b'ABC'")
 
+    def test_empty_bytes(self):
+        b = py23_bytes()
+        self.assertEqual(b, b'')
+
     def test_isinstance_bytes(self):
         self.assertTrue(isinstance(py23_bytes(b'blah'), bytes_types))
 
