@@ -42,7 +42,7 @@ jobs:
       - run:
           name: run tests
           command: |
-            python setup.py test
+            tox -e py36,pyflakes,coverage
 
       - store_artifacts:
           path: test-reports

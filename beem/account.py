@@ -776,7 +776,8 @@ class Account(BlockchainObject):
             :param str account: (optional) the source account for the transfer
             if not ``default_account``
         """
-        assert asset in ['STEEM', 'SBD']
+        if asset not in ['STEEM', 'SBD']:
+            raise AssertionError()
 
         if not account:
             account = self
@@ -815,7 +816,8 @@ class Account(BlockchainObject):
             :param str account: (optional) the source account for the transfer
             if not ``default_account``
         """
-        assert asset in ['STEEM', 'SBD']
+        if asset not in ['STEEM', 'SBD']:
+            raise AssertionError()
 
         if not account:
             account = self
@@ -891,7 +893,8 @@ class Account(BlockchainObject):
             reward_steem = Amount(reward_steem, steem_instance=self.steem)
         else:
             reward_steem = Amount(reward_steem, "STEEM", steem_instance=self.steem)
-        assert reward_steem["symbol"] == "STEEM"
+        if not reward_steem["symbol"] == "STEEM":
+            raise AssertionError()
 
         if isinstance(reward_sbd, string_types):
             reward_sbd = Amount(reward_sbd, steem_instance=self.steem)
@@ -899,7 +902,8 @@ class Account(BlockchainObject):
             reward_sbd = Amount(reward_sbd, steem_instance=self.steem)
         else:
             reward_sbd = Amount(reward_sbd, "SBD", steem_instance=self.steem)
-        assert reward_sbd["symbol"] == "SBD"
+        if not reward_sbd["symbol"] == "SBD":
+            raise AssertionError()
 
         if isinstance(reward_vests, string_types):
             reward_vests = Amount(reward_vests, steem_instance=self.steem)
@@ -907,7 +911,8 @@ class Account(BlockchainObject):
             reward_vests = Amount(reward_vests, steem_instance=self.steem)
         else:
             reward_vests = Amount(reward_vests, "VESTS", steem_instance=self.steem)
-        assert reward_vests["symbol"] == "VESTS"
+        if not reward_vests["symbol"] == "VESTS":
+            raise AssertionError()
         if reward_steem.amount == 0 and reward_sbd.amount == 0 and reward_vests.amount == 0:
             reward_steem = account.balances["rewards"][0]
             reward_sbd = account.balances["rewards"][1]
@@ -945,7 +950,8 @@ class Account(BlockchainObject):
             vesting_shares = Amount(vesting_shares, steem_instance=self.steem)
         else:
             vesting_shares = Amount(vesting_shares, "VESTS", steem_instance=self.steem)
-        assert vesting_shares["symbol"] == "VESTS"
+        if not vesting_shares["symbol"] == "VESTS":
+            raise AssertionError()
         op = operations.Delegate_vesting_shares(
             **{
                 "delegator": account,
@@ -973,7 +979,8 @@ class Account(BlockchainObject):
             amount = Amount(amount, steem_instance=self.steem)
         else:
             amount = Amount(amount, "VESTS", steem_instance=self.steem)
-        assert amount["symbol"] == "VESTS"
+        if amount["symbol"] == "VESTS":
+            raise AssertionError()
         op = operations.Withdraw_vesting(
             **{
                 "account": account["name"],
@@ -1020,7 +1027,8 @@ class Account(BlockchainObject):
             account.refresh()
         if permission not in account:
             account = Account(account, steem_instance=self.steem)
-        assert permission in account, "Could not access permission"
+        if permission not in account:
+            raise AssertionError("Could not access permission")
 
         if not weight:
             weight = account[permission]["weight_threshold"]
