@@ -117,6 +117,10 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.10
+-------
+* Memo encryption/decryption fixed
+
 0.19.9
 ------
 * CLI tool improved

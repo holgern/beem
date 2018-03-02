@@ -92,8 +92,10 @@ class Witness(BlockchainObject):
         else:
             quote = Amount(quote, "STEEM", steem_instance=self.steem)
 
-        assert base.symbol == "SBD"
-        assert quote.symbol == "STEEM"
+        if not base.symbol == "SBD":
+            raise AssertionError()
+        if not quote.symbol == "STEEM":
+            raise AssertionError()
 
         op = operations.Feed_publish(
             **{

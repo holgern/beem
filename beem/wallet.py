@@ -200,7 +200,8 @@ class Wallet(object):
     def changePassphrase(self, new_pwd):
         """ Change the passphrase for the wallet database
         """
-        assert not self.locked()
+        if self.locked():
+            raise AssertionError()
         self.masterpwd.changePassword(new_pwd)
 
     def created(self):
@@ -247,7 +248,8 @@ class Wallet(object):
     def encrypt_wif(self, wif):
         """ Encrypt a wif key
         """
-        assert not self.locked()
+        if self.locked():
+            raise AssertionError()
         return format(
             bip38.encrypt(PrivateKey(wif, prefix=self.prefix), self.masterpassword), "encwif")
 
@@ -260,7 +262,8 @@ class Wallet(object):
             return encwif
         except:
             pass
-        assert not self.locked()
+        if self.locked():
+            raise AssertionError()
         return format(bip38.decrypt(encwif, self.masterpassword), "wif")
 
     def addPrivateKey(self, wif):

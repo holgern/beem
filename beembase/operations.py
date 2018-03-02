@@ -150,8 +150,8 @@ class Account_create(GrapheneObject):
                 kwargs = args[0]
             prefix = kwargs.get("prefix", default_prefix)
 
-            assert len(kwargs["new_account_name"]
-                       ) <= 16, "Account name must be at most 16 chars long"
+            if not len(kwargs["new_account_name"]) <= 16:
+                raise AssertionError("Account name must be at most 16 chars long")
 
             meta = ""
             if "json_metadata" in kwargs and kwargs["json_metadata"]:
@@ -183,8 +183,8 @@ class Account_create_with_delegation(GrapheneObject):
                 kwargs = args[0]
             prefix = kwargs.get("prefix", default_prefix)
 
-            assert len(kwargs["new_account_name"]
-                       ) <= 16, "Account name must be at most 16 chars long"
+            if not len(kwargs["new_account_name"]) <= 16:
+                raise AssertionError("Account name must be at most 16 chars long")
 
             meta = ""
             if "json_metadata" in kwargs and kwargs["json_metadata"]:
