@@ -44,10 +44,6 @@ jobs:
           command: |
             tox -e py36,pyflakes,coverage
 
-      - store_artifacts:
-          path: test-reports
-          destination: test-reports
-
       - deploy:
           name: Push coverage
           command: |

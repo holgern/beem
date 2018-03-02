@@ -95,7 +95,8 @@ class Price(dict):
         elif (price is not None and isinstance(price, dict) and
                 "base" in price and
                 "quote" in price):
-            assert "price" not in price, "You cannot provide a 'price' this way"
+            if "price" in price:
+                raise AssertionError("You cannot provide a 'price' this way")
             # Regular 'price' objects according to steem-core
             base_id = price["base"]["asset_id"]
             if price["base"]["asset_id"] == base_id:
@@ -257,7 +258,8 @@ class Price(dict):
             else:
                 raise ValueError("Wrong rotation of prices")
         elif isinstance(other, Amount):
-            assert other["asset"]["id"] == self["quote"]["asset"]["id"]
+            if not other["asset"]["id"] == self["quote"]["asset"]["id"]:
+                raise AssertionError()
             a = other.copy() * self["price"]
             a["asset"] = self["base"]["asset"].copy()
             a["symbol"] = self["base"]["asset"]["symbol"]
@@ -295,7 +297,8 @@ class Price(dict):
                 steem_instance=self.steem
             )
         elif isinstance(other, Amount):
-            assert other["asset"]["id"] == self["quote"]["asset"]["id"]
+            if not other["asset"]["id"] == self["quote"]["asset"]["id"]:
+                raise AssertionError()
             a = other.copy() / self["price"]
             a["asset"] = self["base"]["asset"].copy()
             a["symbol"] = self["base"]["asset"]["symbol"]
@@ -320,48 +323,60 @@ class Price(dict):
 
     def __lt__(self, other):
         if isinstance(other, Price):
-            assert other["base"]["symbol"] == self["base"]["symbol"]
-            assert other["quote"]["symbol"] == self["quote"]["symbol"]
+            if not other["base"]["symbol"] == self["base"]["symbol"]:
+                raise AssertionError()
+            if not other["quote"]["symbol"] == self["quote"]["symbol"]:
+                raise AssertionError()
             return self["price"] < other["price"]
         else:
             return self["price"] < float(other or 0)
 
     def __le__(self, other):
         if isinstance(other, Price):
-            assert other["base"]["symbol"] == self["base"]["symbol"]
-            assert other["quote"]["symbol"] == self["quote"]["symbol"]
+            if not other["base"]["symbol"] == self["base"]["symbol"]:
+                raise AssertionError()
+            if not other["quote"]["symbol"] == self["quote"]["symbol"]:
+                raise AssertionError()
             return self["price"] <= other["price"]
         else:
             return self["price"] <= float(other or 0)
 
     def __eq__(self, other):
         if isinstance(other, Price):
-            assert other["base"]["symbol"] == self["base"]["symbol"]
-            assert other["quote"]["symbol"] == self["quote"]["symbol"]
+            if not other["base"]["symbol"] == self["base"]["symbol"]:
+                raise AssertionError()
+            if not other["quote"]["symbol"] == self["quote"]["symbol"]:
+                raise AssertionError()
             return self["price"] == other["price"]
         else:
             return self["price"] == float(other or 0)
 
     def __ne__(self, other):
         if isinstance(other, Price):
-            assert other["base"]["symbol"] == self["base"]["symbol"]
-            assert other["quote"]["symbol"] == self["quote"]["symbol"]
+            if not other["base"]["symbol"] == self["base"]["symbol"]:
+                raise AssertionError()
+            if not other["quote"]["symbol"] == self["quote"]["symbol"]:
+                raise AssertionError()
             return self["price"] != other["price"]
         else:
             return self["price"] != float(other or 0)
 
     def __ge__(self, other):
         if isinstance(other, Price):
-            assert other["base"]["symbol"] == self["base"]["symbol"]
-            assert other["quote"]["symbol"] == self["quote"]["symbol"]
+            if not other["base"]["symbol"] == self["base"]["symbol"]:
+                raise AssertionError()
+            if not other["quote"]["symbol"] == self["quote"]["symbol"]:
+                raise AssertionError()
             return self["price"] >= other["price"]
         else:
             return self["price"] >= float(other or 0)
 
     def __gt__(self, other):
         if isinstance(other, Price):
-            assert other["base"]["symbol"] == self["base"]["symbol"]
-            assert other["quote"]["symbol"] == self["quote"]["symbol"]
+            if not other["base"]["symbol"] == self["base"]["symbol"]:
+                raise AssertionError()
+            if not other["quote"]["symbol"] == self["quote"]["symbol"]:
+                raise AssertionError()
             return self["price"] > other["price"]
         else:
             return self["price"] > float(other or 0)
