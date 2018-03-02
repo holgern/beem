@@ -34,10 +34,6 @@ jobs:
             sudo python -m pip install -r requirements.txt
             sudo python -m pip install --upgrade pycodestyle pyflakes coverage tox codacy-coverage virtualenv
 
-      - save_cache:
-          paths:
-          key: v1-dependencies-{{ checksum "requirements.txt" }}
-        
       # run tests!
       # this example uses Django's built-in test-runner
       # other common Python testing frameworks include pytest and nose
