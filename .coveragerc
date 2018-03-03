@@ -1,5 +1,11 @@
 [run]
 branch = True
+source =
+    beem/
+    beembase
+    beemapi/
+    beemgrapheneapi
+    beemgraphenebase
 omit = 
      */.eggs/*
      */.tox/*
