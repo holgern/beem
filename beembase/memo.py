@@ -216,7 +216,8 @@ def decode_memo(priv, message):
     aes, checksum = init_aes(shared_secret, nonce)
 
     # Check
-    assert check == checksum, "Checksum failure"
+    if not check == checksum:
+        raise AssertionError("Checksum failure")
 
     # Encryption
     # remove the varint prefix (FIXME, long messages!)

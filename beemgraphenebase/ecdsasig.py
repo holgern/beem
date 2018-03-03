@@ -113,7 +113,8 @@ def sign_message(message, wif, hashfn=hashlib.sha256):
                 secp256k1.ffi.NULL,
                 ndata
             )
-            assert signed == 1
+            if not signed == 1:
+                raise AssertionError()
             signature, i = privkey.ecdsa_recoverable_serialize(sig)
             if _is_canonical(signature):
                 i += 4   # compressed
@@ -177,8 +178,10 @@ def verify_message(message, signature, hashfn=hashlib.sha256):
         message = py23_bytes(message, "utf-8")
     if not isinstance(signature, bytes_types):
         signature = py23_bytes(signature, "utf-8")
-    assert isinstance(message, bytes_types)
-    assert isinstance(signature, bytes_types)
+    if not isinstance(message, bytes_types):
+        raise AssertionError()
+    if not isinstance(signature, bytes_types):
+        raise AssertionError()
     digest = hashfn(message).digest()
     sig = signature[1:]
     recoverParameter = bytearray(signature)[0] - 4 - 27  # recover parameter only

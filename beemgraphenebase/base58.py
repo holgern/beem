@@ -184,7 +184,8 @@ def base58CheckDecode(s):
     s = unhexlify(base58decode(s))
     dec = hexlify(s[:-4]).decode('ascii')
     checksum = doublesha256(dec)[:4]
-    assert(s[-4:] == checksum)
+    if not (s[-4:] == checksum):
+        raise AssertionError()
     return dec[2:]
 
 
@@ -198,5 +199,6 @@ def gphBase58CheckDecode(s):
     s = unhexlify(base58decode(s))
     dec = hexlify(s[:-4]).decode('ascii')
     checksum = ripemd160(dec)[:4]
-    assert(s[-4:] == checksum)
+    if not (s[-4:] == checksum):
+        raise AssertionError()
     return dec

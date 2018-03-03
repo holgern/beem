@@ -122,7 +122,8 @@ class BrainKey(object):
         word_count = 16
         brainkey = [None] * word_count
         dict_lines = BrainKeyDictionary.split(',')
-        assert len(dict_lines) == 49744
+        if not len(dict_lines) == 49744:
+            raise AssertionError()
         for j in range(0, word_count):
             num = int.from_bytes(os.urandom(2), byteorder="little")
             rndMult = num / 2 ** 16  # returns float between 0..1 (inclusive)
@@ -256,7 +257,8 @@ class PublicKey(Address):
         prefix = public_key[0:2]
         if prefix == "04":
             return public_key
-        assert prefix == "02" or prefix == "03"
+        if not (prefix == "02" or prefix == "03"):
+            raise AssertionError()
         x = int(public_key[2:], 16)
         y = self._derive_y_from_x(x, (prefix == "02"))
         key = '04' + '%064x' % x + '%064x' % y

@@ -102,7 +102,8 @@ class Signed_Transaction(GrapheneObject):
         s, junk = ecdsa.der.remove_sequence(unhexlify(s))
         if junk:
             log.debug('JUNK: %s', hexlify(junk).decode('ascii'))
-        assert(junk == b'')
+        if not (junk == b''):
+            raise AssertionError()
         x, s = ecdsa.der.remove_integer(s)
         y, s = ecdsa.der.remove_integer(s)
         return '%064x%064x' % (x, y)

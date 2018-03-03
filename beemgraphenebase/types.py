@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from builtins import str
 from builtins import bytes
 from builtins import object
+from builtins import int
 from future.utils import python_2_unicode_compatible
 import json
 import struct
@@ -349,7 +350,8 @@ class Id(object):
 class VoteId(object):
     def __init__(self, vote):
         parts = vote.split(":")
-        assert len(parts) == 2
+        if not len(parts) == 2:
+            raise AssertionError()
         self.type = int(parts[0])
         self.instance = int(parts[1])
 
@@ -373,10 +375,10 @@ class ObjectId(object):
             self.instance = Id(int(id))
             self.Id = object_str
             if type_verify:
-                assert object_type[type_verify] == int(type),\
-                    "Object id does not match object type! " +\
-                    "Excpected %d, got %d" %\
-                    (object_type[type_verify], int(type))
+                if not object_type[type_verify] == int(type):
+                    raise AssertionError("Object id does not match object type! " +\
+                        "Excpected %d, got %d" %\
+                        (object_type[type_verify], int(type)))
         else:
             raise Exception("Object id is invalid")
 
@@ -414,10 +416,10 @@ class FullObjectId(object):
 @python_2_unicode_compatible
 class Enum8(Uint8):
     def __init__(self, selection):
-        assert selection in self.options or \
-            isinstance(selection, int) and len(self.options) < selection, \
-            "Options are %s. Given '%s'" % (
-                self.options, selection)
+        if selection not in self.options and \
+            not (isinstance(selection, int) and len(self.options) < selection):
+            raise AssertionError("Options are %s. Given '%s'" % (
+                self.options, selection))
         if selection in self.options:
             super(Enum8, self).__init__(self.options.index(selection))
         else:

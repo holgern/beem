@@ -3,7 +3,6 @@
 import os
 import sys
 import io
-import subprocess
 from setuptools import setup
 
 # Work around mbcs bug in distutils.
@@ -19,7 +18,7 @@ VERSION = '0.19.11'
 
 tests_require = ['mock >= 2.0.0', 'pytest', 'pytest-mock']
 
-requires = [            
+requires = [
     "future",
     "ecdsa",
     "requests",
@@ -50,7 +49,6 @@ def get_long_description():
         with io.open(fname, encoding='utf-8') as f:
             descr.append(f.read())
     return '\n\n'.join(descr)
-
 
 
 if __name__ == '__main__':
