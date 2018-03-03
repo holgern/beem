@@ -60,7 +60,7 @@ before_install:
   - pip install --upgrade pip
   - pip install --upgrade wheel
   # Set numpy version first, other packages link against it
-  - pip install six nose coverage codecov tox-travis pytest pytest-cov coveralls
+  - pip install six nose coverage codecov tox-travis pytest pytest-cov coveralls codacy-coverage
 
 script:
  - tox
@@ -68,3 +68,4 @@ script:
 after_success:
   - codecov
   - coveralls
+  - python-codacy-coverage -r coverage.xml
