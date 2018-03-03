@@ -1,62 +1,73 @@
+"""graphennewsrpc."""
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 from builtins import next
 from builtins import object
+from itertools import cycle
+import json
+import logging
+import ssl
 import sys
 import threading
-import websocket
-import ssl
-import json
 import time
-from itertools import cycle
 import warnings
-import logging
+
+import websocket
 log = logging.getLogger(__name__)
 
 
 class RPCError(Exception):
+    """RPCError Exception."""
+
     pass
 
 
 class NumRetriesReached(Exception):
+    """NumRetriesReached Exception."""
+
     pass
 
 
 class GrapheneWebsocketRPC(object):
-    """ This class allows to call API methods synchronously, without
-        callbacks. It logs in and registers to the APIs:
+    """
+    This class allows to call API methods synchronously, without callbacks.
 
-        * database
-        * history
+    It logs in and registers to the APIs:
 
-        :param str urls: Either a single Websocket URL, or a list of URLs
-        :param str user: Username for Authentication
-        :param str password: Password for Authentication
-        :param Array apis: List of APIs to register to (default: ["database", "network_broadcast"])
-        :param int num_retries: Try x times to num_retries to a node on disconnect, -1 for indefinitely
+    * database
+    * history
 
-        Available APIs
+    :param str urls: Either a single Websocket URL, or a list of URLs
+    :param str user: Username for Authentication
+    :param str password: Password for Authentication
+    :param Array apis: List of APIs to register to (default: ["database", "network_broadcast"])
+    :param int num_retries: Try x times to num_retries to a node on disconnect, -1 for indefinitely
 
-              * database
-              * network_node
-              * network_broadcast
-              * history
+    Available APIs
 
-        Usage:
+          * database
+          * network_node
+          * network_broadcast
+          * history
 
-        .. code-block:: python
+    Usage:
 
-            ws = GrapheneWebsocketRPC("ws://10.0.0.16:8090","","")
-            print(ws.get_account_count())
+    .. code-block:: python
 
-        .. note:: This class allows to call methods available via
-                  websocket. If you want to use the notification
-                  subsystem, please use ``GrapheneWebsocket`` instead.
+        ws = GrapheneWebsocketRPC("ws://10.0.0.16:8090","","")
+        print(ws.get_account_count())
+
+    .. note:: This class allows to call methods available via
+              websocket. If you want to use the notification
+              subsystem, please use ``GrapheneWebsocket`` instead.
 
     """
+
     def __init__(self, urls, user="", password="", **kwargs):
+        """Init."""
         self.api_id = {}
         self._request_id = 0
         if isinstance(urls, list):
@@ -71,10 +82,12 @@ class GrapheneWebsocketRPC(object):
         self.register_apis()
 
     def get_request_id(self):
+        """Get request id."""
         self._request_id += 1
         return self._request_id
 
     def wsconnect(self):
+        """Connect to Websocket in a loop."""
         cnt = 0
         while True:
             cnt += 1
@@ -105,17 +118,18 @@ class GrapheneWebsocketRPC(object):
         self.login(self.user, self.password, api_id=1)
 
     def register_apis(self):
+        """Register apis."""
         self.api_id["database"] = self.database(api_id=1)
         self.api_id["history"] = self.history(api_id=1)
         self.api_id["network_broadcast"] = self.network_broadcast(api_id=1)
 
-    # RPC Calls
     def rpcexec(self, payload):
-        """ Execute a call by sending the payload
+        """
+        Execute a call by sending the payload.
 
-            :param json payload: Payload data
-            :raises ValueError: if the server does not respond in proper JSON format
-            :raises RPCError: if the server returns an error
+        :param json payload: Payload data
+        :raises ValueError: if the server does not respond in proper JSON format
+        :raises RPCError: if the server returns an error
         """
         log.debug(json.dumps(payload))
         cnt = 0
@@ -169,8 +183,7 @@ class GrapheneWebsocketRPC(object):
     # End of Deprecated methods
     ####################################################################
     def __getattr__(self, name):
-        """ Map all methods to RPC calls and pass through the arguments
-        """
+        """Map all methods to RPC calls and pass through the arguments."""
         def method(*args, **kwargs):
 
             # Sepcify the api to talk to

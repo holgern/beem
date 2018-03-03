@@ -1,30 +1,32 @@
+"""types."""
 # encoding=utf8
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from builtins import str
+
 from builtins import bytes
+from builtins import str
 from builtins import object
 from builtins import int
-from future.utils import python_2_unicode_compatible
 import json
 import struct
 import sys
 import time
 from calendar import timegm
-from datetime import datetime
 from binascii import hexlify, unhexlify
+from datetime import datetime
 from collections import OrderedDict
 from .objecttypes import object_type
+
+from future.utils import python_2_unicode_compatible
 from .py23 import py23_bytes
 
 timeformat = '%Y-%m-%dT%H:%M:%S%Z'
 
 
 def varint(n):
-    """ Varint encoding
-    """
+    """Varint encoding."""
     data = b''
     while n >= 0x80:
         data += bytes([(n & 0x7f) | 0x80])
@@ -34,8 +36,7 @@ def varint(n):
 
 
 def varintdecode(data):
-    """ Varint decoding
-    """
+    """Varint decoding."""
     shift = 0
     result = 0
     for c in data:
@@ -48,35 +49,42 @@ def varintdecode(data):
 
 
 def variable_buffer(s):
-    """ Encode variable length buffer
-    """
+    """Encodes variable length buffer."""
     return varint(len(s)) + s
 
 
 def JsonObj(data):
-    """ Returns json object from data
-    """
+    """Returns json object from data."""
     return json.loads(str(data))
 
 
 @python_2_unicode_compatible
 class Uint8(object):
+    """Uint8."""
+
     def __init__(self, d):
+        """init."""
         self.data = int(d)
 
     def __bytes__(self):
+        """Returns bytes."""
         return struct.pack("<B", self.data)
 
     def __str__(self):
+        """Returns str"""
         return '%d' % self.data
 
 
 @python_2_unicode_compatible
 class Int16(object):
+    """Int16."""
+
     def __init__(self, d):
+        """init."""
         self.data = int(d)
 
     def __bytes__(self):
+        """Returns bytes."""
         return struct.pack("<h", int(self.data))
 
     def __str__(self):
@@ -89,6 +97,7 @@ class Uint16(object):
         self.data = int(d)
 
     def __bytes__(self):
+        """Returns bytes."""
         return struct.pack("<H", self.data)
 
     def __str__(self):
@@ -101,9 +110,11 @@ class Uint32(object):
         self.data = int(d)
 
     def __bytes__(self):
+        """Returns bytes."""
         return struct.pack("<I", self.data)
 
     def __str__(self):
+        """Returns data as string."""
         return '%d' % self.data
 
 
@@ -113,9 +124,11 @@ class Uint64(object):
         self.data = int(d)
 
     def __bytes__(self):
+        """Returns bytes."""
         return struct.pack("<Q", self.data)
 
     def __str__(self):
+        """Returns data as string."""
         return '%d' % self.data
 
 
@@ -125,9 +138,11 @@ class Varint32(object):
         self.data = int(d)
 
     def __bytes__(self):
+        """Returns bytes."""
         return varint(self.data)
 
     def __str__(self):
+        """Returns data as string."""
         return '%d' % self.data
 
 
@@ -137,9 +152,11 @@ class Int64(object):
         self.data = int(d)
 
     def __bytes__(self):
+        """Returns bytes."""
         return struct.pack("<q", self.data)
 
     def __str__(self):
+        """Returns data as string."""
         return '%d' % self.data
 
 
@@ -149,10 +166,12 @@ class String(object):
         self.data = d
 
     def __bytes__(self):
+        """Returns bytes representation."""
         d = self.unicodify()
         return varint(len(d)) + d
 
     def __str__(self):
+        """Returns data as string."""
         return '%s' % str(self.data)
 
     def unicodify(self):
@@ -190,11 +209,13 @@ class Bytes(object):
             self.length = len(self.data)
 
     def __bytes__(self):
+        """Returns data as bytes."""
         # FIXME constraint data to self.length
         d = unhexlify(bytes(self.data, 'utf-8'))
         return varint(len(d)) + d
 
     def __str__(self):
+        """Returns data as string."""
         return str(self.data)
 
 
@@ -204,9 +225,11 @@ class Void(object):
         pass
 
     def __bytes__(self):
+        """Returns bytes representation."""
         return b''
 
     def __str__(self):
+        """Returns data as string."""
         return ""
 
 
@@ -217,9 +240,11 @@ class Array(object):
         self.length = Varint32(len(self.data))
 
     def __bytes__(self):
+        """Returns bytes representation."""
         return py23_bytes(self.length) + b"".join([py23_bytes(a) for a in self.data])
 
     def __str__(self):
+        """Returns data as string."""
         r = []
         for a in self.data:
             try:
@@ -235,12 +260,14 @@ class PointInTime(object):
         self.data = d
 
     def __bytes__(self):
+        """Returns bytes representation."""
         if sys.version > '3':
             return struct.pack("<I", timegm(time.strptime((self.data + "UTC"), timeformat)))
         else:
             return struct.pack("<I", timegm(time.strptime((self.data + "UTC"), timeformat.encode("utf-8"))))
 
     def __str__(self):
+        """Returns data as string."""
         return self.data
 
 
@@ -250,9 +277,11 @@ class Signature(object):
         self.data = d
 
     def __bytes__(self):
+        """Returns bytes representation."""
         return self.data
 
     def __str__(self):
+        """Returns data as string."""
         return json.dumps(hexlify(self.data).decode('ascii'))
 
 
@@ -262,6 +291,7 @@ class Bool(Uint8):  # Bool = Uint8
         super(Bool, self).__init__(d)
 
     def __str__(self):
+        """Returns data as string."""
         return json.dumps(True) if self.data else json.dumps(False)
 
 
@@ -276,9 +306,11 @@ class Fixed_array(object):
         raise NotImplementedError
 
     def __bytes__(self):
+        """Returns bytes representation."""
         raise NotImplementedError
 
     def __str__(self):
+        """Returns data as string."""
         raise NotImplementedError
 
 
@@ -288,12 +320,14 @@ class Optional(object):
         self.data = d
 
     def __bytes__(self):
+        """Returns data as bytes."""
         if not self.data:
             return py23_bytes(Bool(0))
         else:
             return py23_bytes(Bool(1)) + py23_bytes(self.data) if py23_bytes(self.data) else py23_bytes(Bool(0))
 
     def __str__(self):
+        """Returns data as string."""
         return str(self.data)
 
     def isempty(self):
@@ -309,9 +343,11 @@ class Static_variant(object):
         self.type_id = type_id
 
     def __bytes__(self):
+        """Returns bytes representation."""
         return varint(self.type_id) + py23_bytes(self.data)
 
     def __str__(self):
+        """Returns data as string."""
         return json.dumps([self.type_id, self.data.json()])
 
 
@@ -321,6 +357,7 @@ class Map(object):
         self.data = data
 
     def __bytes__(self):
+        """Returns bytes representation."""
         b = b""
         b += varint(len(self.data))
         for e in self.data:
@@ -328,6 +365,7 @@ class Map(object):
         return b
 
     def __str__(self):
+        """Returns data as string."""
         r = []
         for e in self.data:
             r.append([str(e[0]), str(e[1])])
@@ -340,9 +378,11 @@ class Id(object):
         self.data = Varint32(d)
 
     def __bytes__(self):
+        """Returns bytes representation."""
         return py23_bytes(self.data)
 
     def __str__(self):
+        """Returns data as string."""
         return str(self.data)
 
 
@@ -356,10 +396,12 @@ class VoteId(object):
         self.instance = int(parts[1])
 
     def __bytes__(self):
+        """Returns bytes representation."""
         binary = (self.type & 0xff) | (self.instance << 8)
         return struct.pack("<I", binary)
 
     def __str__(self):
+        """Returns data as string."""
         return "%d:%d" % (self.type, self.instance)
 
 
@@ -383,9 +425,11 @@ class ObjectId(object):
             raise Exception("Object id is invalid")
 
     def __bytes__(self):
+        """Returns bytes representation."""
         return py23_bytes(self.instance)  # only yield instance
 
     def __str__(self):
+        """Returns data as string."""
         return self.Id
 
 
@@ -405,11 +449,13 @@ class FullObjectId(object):
             raise Exception("Object id is invalid")
 
     def __bytes__(self):
+        """Returns bytes representation."""
         return (
             self.space << 56 | self.type << 48 | self.id
         ).to_bytes(8, byteorder="little", signed=False)
 
     def __str__(self):
+        """Returns data as string."""
         return self.Id
 
 
@@ -426,4 +472,5 @@ class Enum8(Uint8):
             super(Enum8, self).__init__(selection)
 
     def __str__(self):
+        """Returns data as string."""
         return str(self.options[self.data])

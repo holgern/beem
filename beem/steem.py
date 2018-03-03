@@ -131,6 +131,7 @@ class Steem(object):
         self.register_apis()
 
         self.wallet = Wallet(self.rpc, **kwargs)
+        self.wallet.steem = self
 
         self.data = {'last_refresh': None, 'dynamic_global_properties': None, 'feed_history': None,
                      'current_median_history_price': None, 'next_scheduled_hardfork': None,

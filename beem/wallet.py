@@ -95,6 +95,7 @@ class Wallet(object):
     """
     keys = []
     rpc = None
+    steem = None
     masterpassword = None
 
     # Keys from database
@@ -436,7 +437,7 @@ class Wallet(object):
         """
         for name in self.getAccountsFromPublicKey(pub):
             try:
-                account = Account(name)   # FIXME: self.steem is not available in wallet!
+                account = Account(name, steem_instance=self.steem)
             except:
                 continue
             yield {"name": account["name"],
@@ -453,7 +454,7 @@ class Wallet(object):
             return {"name": None, "type": None, "pubkey": pub}
         else:
             try:
-                account = Account(name)   # FIXME: self.steem is not available in wallet!
+                account = Account(name, steem_instance=self.steem)
             except:
                 return
             return {"name": account["name"],

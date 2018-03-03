@@ -12,10 +12,31 @@ log = logging.getLogger(__name__)
 
 
 class Query(dict):
-    def __init__(self, limit=0, tag="", truncate_body=0):
+    """
+    :param int limit
+    :param str tag
+    :param int truncate_body
+    :param array filter_tags
+    :param array select_authors
+    :param array select_tags
+    :param str start_author
+    :param str start_permlink
+    :param str parent_author
+    :param str parent_permlink
+    """
+    def __init__(self, limit=0, tag="", truncate_body=0, 
+                 filter_tags=[""], select_authors=[""], select_tags=[""], 
+                 start_author=None, start_permlink=None, parent_author=None, parent_permlink=None):
         self["limit"] = limit
         self["truncate_body"] = truncate_body
         self["tag"] = tag
+        self["filter_tags"] = filter_tags
+        self["select_authors"] = select_authors
+        self["select_tags"] = select_tags
+        self["start_author"] = start_author
+        self["start_permlink"] = start_permlink
+        self["parent_author"] = parent_author
+        self["parent_permlink"] = parent_permlink
 
 
 class Discussions_by_trending(list):
@@ -104,8 +125,9 @@ class Discussions_by_active(list):
 
 
 class Discussions_by_cashout(list):
-    """ get_discussions_by_cashout
-
+    """ get_discussions_by_cashout. This query seems to be broken at the moment.
+        The output is always empty.
+    
         :param str discussion_query
         :param steem steem_instance: Steem() instance to use when accesing a RPC
     """
@@ -196,10 +218,16 @@ class Discussions_by_feed(list):
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
-        posts = self.steem.rpc.get_discussions_by_feed(discussion_query)
+
+        self.steem.register_apis(["follow"])
+        limit = discussion_query["limit"]
+        account = discussion_query["tag"]
+        entryId = 0
+        posts = self.steem.rpc.get_feed(account, entryId, limit, api='follow')
+        # posts = self.steem.rpc.get_discussions_by_feed(discussion_query, api='follow')
         super(Discussions_by_feed, self).__init__(
             [
-                Comment(x)
+                Comment(x["comment"])
                 for x in posts
             ]
         )
@@ -213,10 +241,15 @@ class Discussions_by_blog(list):
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
-        posts = self.steem.rpc.get_discussions_by_blog(discussion_query)
+        self.steem.register_apis(["follow"])
+        limit = discussion_query["limit"]
+        account = discussion_query["tag"]
+        entryId = 0
+        posts = self.steem.rpc.get_feed(account, entryId, limit, api='follow')
+        # posts = self.steem.rpc.get_discussions_by_blog(discussion_query)
         super(Discussions_by_blog, self).__init__(
             [
-                Comment(x)
+                Comment(x["comment"])
                 for x in posts
             ]
         )

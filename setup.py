@@ -36,11 +36,8 @@ requires = [
 
 
 def write_version_py(filename):
-    """ Write version
-    """
-    cnt = """
-\""" THIS FILE IS GENERATED FROM beem SETUP.PY
-\"""
+    """Write version."""
+    cnt = """\"""THIS FILE IS GENERATED FROM beem SETUP.PY.\"""
 version = '%(version)s'
 """
     with open(filename, 'w') as a:

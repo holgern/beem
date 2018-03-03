@@ -223,6 +223,12 @@ class Price(dict):
     def __float__(self):
         return self["price"]
 
+    def _check_other(self, other):
+        if not other["base"]["symbol"] == self["base"]["symbol"]:
+            raise AssertionError()
+        if not other["quote"]["symbol"] == self["quote"]["symbol"]:
+            raise AssertionError()    
+
     def __mul__(self, other):
         a = self.copy()
         if isinstance(other, Price):
@@ -323,60 +329,42 @@ class Price(dict):
 
     def __lt__(self, other):
         if isinstance(other, Price):
-            if not other["base"]["symbol"] == self["base"]["symbol"]:
-                raise AssertionError()
-            if not other["quote"]["symbol"] == self["quote"]["symbol"]:
-                raise AssertionError()
+            self._check_other(other)
             return self["price"] < other["price"]
         else:
             return self["price"] < float(other or 0)
 
     def __le__(self, other):
         if isinstance(other, Price):
-            if not other["base"]["symbol"] == self["base"]["symbol"]:
-                raise AssertionError()
-            if not other["quote"]["symbol"] == self["quote"]["symbol"]:
-                raise AssertionError()
+            self._check_other(other)
             return self["price"] <= other["price"]
         else:
             return self["price"] <= float(other or 0)
 
     def __eq__(self, other):
         if isinstance(other, Price):
-            if not other["base"]["symbol"] == self["base"]["symbol"]:
-                raise AssertionError()
-            if not other["quote"]["symbol"] == self["quote"]["symbol"]:
-                raise AssertionError()
+            self._check_other(other)
             return self["price"] == other["price"]
         else:
             return self["price"] == float(other or 0)
 
     def __ne__(self, other):
         if isinstance(other, Price):
-            if not other["base"]["symbol"] == self["base"]["symbol"]:
-                raise AssertionError()
-            if not other["quote"]["symbol"] == self["quote"]["symbol"]:
-                raise AssertionError()
+            self._check_other(other)
             return self["price"] != other["price"]
         else:
             return self["price"] != float(other or 0)
 
     def __ge__(self, other):
         if isinstance(other, Price):
-            if not other["base"]["symbol"] == self["base"]["symbol"]:
-                raise AssertionError()
-            if not other["quote"]["symbol"] == self["quote"]["symbol"]:
-                raise AssertionError()
+            self._check_other(other)
             return self["price"] >= other["price"]
         else:
             return self["price"] >= float(other or 0)
 
     def __gt__(self, other):
         if isinstance(other, Price):
-            if not other["base"]["symbol"] == self["base"]["symbol"]:
-                raise AssertionError()
-            if not other["quote"]["symbol"] == self["quote"]["symbol"]:
-                raise AssertionError()
+            self._check_other(other)
             return self["price"] > other["price"]
         else:
             return self["price"] > float(other or 0)

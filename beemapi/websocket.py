@@ -62,11 +62,11 @@ class SteemWebsocket(Events):
         urls,
         user="",
         password="",
-        *args,
         only_block_id=False,
         on_block=None,
         keep_alive=25,
         num_retries=-1,
+        *args,
         **kwargs
     ):
 
@@ -245,8 +245,13 @@ class SteemWebsocket(Events):
             except websocket.WebSocketException as exc:
                 if (self.num_retries >= 0 and cnt > self.num_retries):
                     raise NumRetriesReached()
-
-                sleeptime = (cnt - 1) * 2 if cnt < 10 else 10
+                
+                if cnt < 0:
+                    seeptime = 0
+                elif cnt < 10:
+                    sleeptime = (cnt - 1) * 2
+                else:
+                    sleeptime = 10
                 if sleeptime:
                     log.warning(
                         "Lost connection to node during wsconnect(): %s (%d/%d) "
