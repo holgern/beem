@@ -8,13 +8,7 @@ matrix:
     - os: linux
       python: 3.6
       env:
-        - PYFLAKES=1
-        - PEP8=1
-      before_install:
-        - pip install pep8==1.6.2
-        - pip install flake8
-      script:
-        - flake8
+        - TOXENV=pylint
     - os: linux
       python: 2.7
       env:

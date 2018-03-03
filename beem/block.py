@@ -45,10 +45,6 @@ class Block(BlockchainObject):
         """
         return parse_time(self['timestamp'])
 
-    def change_block_number(self, number):
-        self.identifier = number
-        self.refresh()
-
     def ops(self):
         ops = []
         for tx in self["transactions"]:

@@ -6,7 +6,7 @@ from builtins import super
 import unittest
 from pprint import pprint
 from beem import Steem
-from beem.block import Block
+from beem.discussions import Query, Discussions_by_trending
 from datetime import datetime
 from beem.instance import set_shared_steem_instance
 
@@ -31,17 +31,9 @@ class Testcases(unittest.TestCase):
         set_shared_steem_instance(self.bts)
         self.bts.set_default_account("test")
 
-    def test_block(self):
+    def test_trending(self):
         bts = self.bts
-        block = Block(1, steem_instance=bts)
-        self.assertEqual(block.identifier, 1)
-        self.assertTrue(isinstance(block.time(), datetime))
-
-        block2 = Block(2, steem_instance=bts)
-        self.assertTrue(block2.time() > block.time())
-
-    def test_block_ops(self):
-        bts = self.bts
-        block = Block(20000000, steem_instance=bts)
-        self.assertTrue(len(block.ops))
-        self.assertTrue(isinstance(block.ops_statistics(), dict))
+        query = Query()
+        query["limit"] = 10
+        d = Discussions_by_trending(query, steem_instance=bts)
+        self.assertEqual(len(d), 10)

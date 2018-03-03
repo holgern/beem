@@ -454,7 +454,8 @@ class Steem(object):
             # Append to the append_to and return
             append_to = kwargs["append_to"]
             parent = append_to.get_parent()
-            assert isinstance(append_to, (TransactionBuilder))
+            if not isinstance(append_to, (TransactionBuilder)):
+                raise AssertionError()
             append_to.appendOps(ops)
             # Add the signer to the buffer so we sign the tx properly
             parent.appendSigner(account, permission)
@@ -677,7 +678,8 @@ class Steem(object):
             delegation_fee_steem = Amount(delegation_fee_steem, steem_instance=self)
         else:
             delegation_fee_steem = Amount(delegation_fee_steem, "STEEM", steem_instance=self)
-        assert delegation_fee_steem["symbol"] == "STEEM"
+        if not delegation_fee_steem["symbol"] == "STEEM":
+            raise AssertionError()
 
         " Generate new keys from password"
         from beembase.account import PasswordKey
