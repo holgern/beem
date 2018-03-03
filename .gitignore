@@ -8,6 +8,8 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+.coverage
+coverage.xml
 env/
 build/
 develop-eggs/
