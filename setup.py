@@ -1,13 +1,15 @@
-#!/usr/bin/env python3
-
+# -*- coding: utf-8 -*-
+"""Packaging logic for beem."""
+import codecs
+import io
 import os
 import sys
-import io
+
 from setuptools import setup
 
 # Work around mbcs bug in distutils.
 # http://bugs.python.org/issue10945
-import codecs
+
 try:
     codecs.lookup('mbcs')
 except LookupError:
@@ -34,8 +36,11 @@ requires = [
 
 
 def write_version_py(filename):
+    """ Write version
+    """
     cnt = """
-# THIS FILE IS GENERATED FROM beem SETUP.PY
+\""" THIS FILE IS GENERATED FROM beem SETUP.PY
+\"""
 version = '%(version)s'
 """
     with open(filename, 'w') as a:

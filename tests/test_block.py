@@ -43,5 +43,5 @@ class Testcases(unittest.TestCase):
     def test_block_ops(self):
         bts = self.bts
         block = Block(20000000, steem_instance=bts)
-        self.assertTrue(len(block.ops))
+        self.assertTrue(len(block.ops()))
         self.assertTrue(isinstance(block.ops_statistics(), dict))
