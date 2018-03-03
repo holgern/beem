@@ -42,7 +42,7 @@ jobs:
       - run:
           name: run tests
           command: |
-            tox -e py36,pyflakes,coverage
+            tox -e py36,pyflakes
 
       - deploy:
           name: Push coverage
