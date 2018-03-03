@@ -12,7 +12,6 @@ from pprint import pprint
 from beem import Steem, exceptions
 from beem.account import Account
 from beem.amount import Amount
-from beem.asset import Asset
 from beem.cli import cli, balance
 from beem.instance import set_shared_steem_instance
 from beembase.operationids import getOperationNameForId

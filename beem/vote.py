@@ -4,7 +4,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
-from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
+from beemgraphenebase.py23 import integer_types, string_types, text_type
 from .instance import shared_steem_instance
 from .account import Account
 from .exceptions import VoteDoesNotExistsException

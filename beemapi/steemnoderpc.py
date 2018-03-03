@@ -9,7 +9,6 @@ import threading
 import websocket
 import ssl
 import json
-import time
 from itertools import cycle
 from beemgrapheneapi.graphenewsrpc import GrapheneWebsocketRPC
 from beembase.chains import known_chains

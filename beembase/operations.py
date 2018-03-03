@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from builtins import bytes, int, str
+from builtins import int, str
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from collections import OrderedDict
 import json

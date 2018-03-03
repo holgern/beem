@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 from builtins import super
 import unittest
 from beem import Steem
-from beembase import operations
 from beem.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"

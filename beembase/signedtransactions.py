@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from builtins import bytes, int, str
+from builtins import int, str
 from beemgraphenebase.signedtransactions import Signed_Transaction as GrapheneSigned_Transaction
 from .operations import Operation
 from .chains import known_chains

@@ -3,7 +3,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from builtins import str, bytes
 import unittest
 from beemgraphenebase.base58 import Base58
 from beemgraphenebase.account import BrainKey, Address, PublicKey, PrivateKey, PasswordKey

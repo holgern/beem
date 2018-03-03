@@ -3,14 +3,12 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
-from builtins import bytes
 from builtins import object
 from builtins import chr
 from future.utils import python_2_unicode_compatible
 from binascii import hexlify, unhexlify
 from .py23 import py23_bytes, py23_chr, bytes_types, integer_types, string_types, text_type
 import hashlib
-import sys
 import string
 import logging
 log = logging.getLogger(__name__)

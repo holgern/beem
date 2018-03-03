@@ -2,6 +2,7 @@
 
 import os
 import sys
+import io
 import subprocess
 from setuptools import setup
 
@@ -16,6 +17,22 @@ except LookupError:
 
 VERSION = '0.19.11'
 
+tests_require = ['mock >= 2.0.0', 'pytest', 'pytest-mock']
+
+requires = [            
+    "future",
+    "ecdsa",
+    "requests",
+    "websocket-client",
+    "appdirs",
+    "Events",
+    "scrypt",
+    "pycryptodomex",
+    "pytz",
+    "Click",
+    "prettytable"
+]
+
 
 def write_version_py(filename):
     cnt = """
@@ -24,6 +41,16 @@ version = '%(version)s'
 """
     with open(filename, 'w') as a:
         a.write(cnt % {'version': VERSION})
+
+
+def get_long_description():
+    """Generate a long description from the README file."""
+    descr = []
+    for fname in ('README.rst',):
+        with io.open(fname, encoding='utf-8') as f:
+            descr.append(f.read())
+    return '\n\n'.join(descr)
+
 
 
 if __name__ == '__main__':
@@ -39,7 +66,7 @@ if __name__ == '__main__':
         name='beem',
         version=VERSION,
         description='Unofficial Python library for STEEM',
-        long_description=open('README.rst').read(),
+        long_description=get_long_description(),
         download_url='https://github.com/holgern/beem/tarball/' + VERSION,
         author='Holger Nahrstaedt',
         author_email='holger@nahrstaedt.de',
@@ -68,25 +95,13 @@ if __name__ == '__main__':
             'Intended Audience :: Financial and Insurance Industry',
             'Topic :: Office/Business :: Financial',
         ],
-        install_requires=[
-            "future",
-            "ecdsa",
-            "requests",
-            "websocket-client",
-            "appdirs",
-            "Events",
-            "scrypt",
-            "pycryptodomex",
-            "pytz",
-            "Click",
-            "prettytable"
-        ],
+        install_requires=requires,
         entry_points={
             'console_scripts': [
                 'beempy=beem.cli:cli',
             ],
         },
         setup_requires=['pytest-runner'],
-        tests_require=['pytest', 'pytest-mock', 'coverage', 'mock'],
+        tests_require=tests_require,
         include_package_data=True,
     )

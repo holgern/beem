@@ -109,8 +109,7 @@ class GrapheneWebsocketRPC(object):
         self.api_id["history"] = self.history(api_id=1)
         self.api_id["network_broadcast"] = self.network_broadcast(api_id=1)
 
-    """ RPC Calls
-    """
+    # RPC Calls
     def rpcexec(self, payload):
         """ Execute a call by sending the payload
 

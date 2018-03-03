@@ -13,11 +13,9 @@ from beemapi.steemnoderpc import SteemNodeRPC
 from beemapi.exceptions import NoAccessApi
 from beembase.account import PrivateKey, PublicKey
 from beembase import transactions, operations
-from .asset import Asset
 from .account import Account
 from .amount import Amount
 from .price import Price
-from .witness import Witness
 from .storage import configStorage as config
 from .exceptions import (
     AccountExistsException,

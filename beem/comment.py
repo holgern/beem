@@ -15,7 +15,6 @@ from beemgraphenebase.py23 import py23_bytes, bytes_types, integer_types, string
 import json
 import re
 import logging
-import difflib
 from datetime import datetime
 log = logging.getLogger(__name__)
 
@@ -309,7 +308,6 @@ class Comment(BlockchainObject):
         new_meta = {}
         if meta:
             if original_post["json_metadata"]:
-                import json
                 new_meta = original_post["json_metadata"].update(meta)
             else:
                 new_meta = meta

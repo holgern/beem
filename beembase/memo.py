@@ -53,15 +53,15 @@ def init_aes_bts(shared_secret, nonce):
         :rtype: AES
 
     """
-    " Shared Secret "
+    # Shared Secret
     ss = hashlib.sha512(unhexlify(shared_secret)).digest()
-    " Seed "
+    # Seed
     seed = py23_bytes(str(nonce), 'ascii') + hexlify(ss)
     seed_digest = hexlify(hashlib.sha512(seed).digest()).decode('ascii')
-    " Check'sum' "
+    # Check'sum'
     check = hashlib.sha256(unhexlify(seed_digest)).digest()
     check = struct.unpack_from("<I", check[:4])[0]
-    " AES "
+    # AES
     key = unhexlify(seed_digest[0:64])
     iv = unhexlify(seed_digest[64:96])
     return AES.new(key, AES.MODE_CBC, iv)
@@ -75,14 +75,14 @@ def init_aes(shared_secret, nonce):
         :rtype: length 2 tuple
     """
     shared_secret = hashlib.sha512(unhexlify(shared_secret)).hexdigest()
-    " Seed "
+    # Seed
     ss = unhexlify(shared_secret)
     n = struct.pack("<Q", int(nonce))
     encryption_key = hashlib.sha512(n + ss).hexdigest()
-    " Check'sum' "
+    # Check'sum'
     check = hashlib.sha256(unhexlify(encryption_key)).digest()
     check = struct.unpack_from("<I", check[:4])[0]
-    " AES "
+    # AES
     key = unhexlify(encryption_key[0:64])
     iv = unhexlify(encryption_key[64:96])
     return AES.new(key, AES.MODE_CBC, iv), check
@@ -113,16 +113,16 @@ def encode_memo_bts(priv, pub, nonce, message):
     """
     shared_secret = get_shared_secret(priv, pub)
     aes = init_aes_bts(shared_secret, nonce)
-    " Checksum "
+    # Checksum
     raw = py23_bytes(message, 'utf8')
     checksum = hashlib.sha256(raw).digest()
     raw = (checksum[0:4] + raw)
-    " Padding "
+    # Padding
     BS = 16
-    " FIXME: this adds 16 bytes even if not required "
+    # FIXME: this adds 16 bytes even if not required
     if len(raw) % BS:
         raw = _pad(raw, BS)
-    " Encryption "
+    # Encryption
     return hexlify(aes.encrypt(raw)).decode('ascii')
 
 
@@ -141,14 +141,14 @@ def decode_memo_bts(priv, pub, nonce, message):
     """
     shared_secret = get_shared_secret(priv, pub)
     aes = init_aes_bts(shared_secret, nonce)
-    " Encryption "
+    # Encryption
     raw = py23_bytes(message, 'ascii')
     cleartext = aes.decrypt(unhexlify(raw))
-    " TODO, verify checksum "
+    # TODO, verify checksum
     message = cleartext[4:]
     try:
         return _unpad(message.decode('utf8'), 16)
-    except Exception as e:
+    except Exception:
         raise ValueError(message)
 
 
@@ -165,11 +165,11 @@ def encode_memo(priv, pub, nonce, message, **kwargs):
 
     aes, check = init_aes(shared_secret, nonce)
     raw = py23_bytes(message, 'utf8')
-    " Padding "
+    # Padding
     BS = 16
     if len(raw) % BS:
         raw = _pad(raw, BS)
-    " Encryption "
+    # Encryption
     cipher = hexlify(aes.encrypt(raw)).decode('ascii')
     prefix = kwargs.pop("prefix", default_prefix)
     s = {
@@ -193,7 +193,7 @@ def decode_memo(priv, message):
         :raise ValueError: if message cannot be decoded as valid UTF-8
                string
     """
-    " decode structure "
+    # decode structure
     raw = base58decode(message[1:])
     from_key = PublicKey(raw[:66])
     raw = raw[66:]
@@ -212,13 +212,13 @@ def decode_memo(priv, message):
     else:
         raise ValueError("Incorrect PrivateKey")
 
-    " Init encryption "
+    # Init encryption
     aes, checksum = init_aes(shared_secret, nonce)
 
-    " Check "
+    # Check
     assert check == checksum, "Checksum failure"
 
-    " Encryption "
+    # Encryption
     # remove the varint prefix (FIXME, long messages!)
     message = cipher[2:]
     message = aes.decrypt(unhexlify(py23_bytes(message, 'ascii')))

@@ -312,7 +312,6 @@ class PrivateKey(PublicKey):
     """
     def __init__(self, wif=None, prefix="GPH"):
         if wif is None:
-            import os
             self._wif = Base58(hexlify(os.urandom(32)).decode('ascii'))
         elif isinstance(wif, Base58):
             self._wif = wif

@@ -10,7 +10,7 @@ from .account import Account
 from .amount import Amount
 from .exceptions import WitnessDoesNotExistsException
 from .blockchainobject import BlockchainObject
-from .utils import formatTimeString, parse_time
+from .utils import formatTimeString
 from datetime import datetime, timedelta
 from beembase import transactions, operations
 from beembase.account import PrivateKey, PublicKey

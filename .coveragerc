@@ -1,8 +1,26 @@
 [run]
+branch = True
+source =
+    beem
+    beembase
+    beemapi
+    beemgrapheneapi
+    beemgraphenebase
 omit = 
      */.eggs/*
      */.tox/*
+
 [report]
 omit = 
      */.eggs/*
      */.tox/*
+
+[paths]
+source =
+    beem
+    beembase
+    beemapi
+    beemgrapheneapi
+    beemgraphenebase
+    .tox/*/lib/python*/site-packages/beem
+    .tox/pypy/site-packages/beem

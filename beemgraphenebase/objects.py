@@ -2,7 +2,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from builtins import bytes
 from builtins import str
 from builtins import object
 from future.utils import python_2_unicode_compatible
@@ -19,7 +18,6 @@ from beemgraphenebase.types import (
 from .py23 import py23_bytes, bytes_types, integer_types, string_types
 from .chains import known_chains
 from .objecttypes import object_type
-from .account import PublicKey
 from .chains import default_prefix
 from .operationids import operations
 

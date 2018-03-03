@@ -11,7 +11,6 @@ import ecdsa
 import hashlib
 import struct
 import logging
-from binascii import hexlify
 from .account import PrivateKey
 from .py23 import py23_bytes, bytes_types
 log = logging.getLogger(__name__)
