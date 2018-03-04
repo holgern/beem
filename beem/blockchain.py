@@ -102,10 +102,7 @@ class Blockchain(object):
             last_block = self.get_current_block()
             time_diff = last_block.time() - date
             block_number = math.floor(last_block.identifier - time_diff.total_seconds() / block_time_seconds)
-            if block_number > last_block.identifier:
-                return last_block.identifier
-            else:
-                block_number
+            return block_number
 
     def block_time(self, block_num):
         """ Returns a datetime of the block with the given block

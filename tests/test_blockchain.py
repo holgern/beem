@@ -4,11 +4,12 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import super
 import unittest
+from datetime import datetime, timedelta
+import pytz
 from pprint import pprint
 from beem import Steem
 from beem.blockchain import Blockchain
 from beem.block import Block
-from datetime import datetime
 from beem.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
@@ -40,3 +41,13 @@ class Testcases(unittest.TestCase):
         block = b.get_current_block()
         self.assertTrue(isinstance(block, Block))
         self.assertEqual(num, block.identifier)
+
+    def test_estimate_block_num(self):
+        bts = self.bts
+        b = Blockchain(steem_instance=bts)
+        last_block = b.get_current_block()
+        num = last_block.identifier
+        now = last_block.time()
+        date = now - timedelta(seconds=60 * 3)
+        est_block_num = b.get_estimated_block_num(date)
+        self.assertEqual(est_block_num, num - 60)
