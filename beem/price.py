@@ -227,7 +227,7 @@ class Price(dict):
         if not other["base"]["symbol"] == self["base"]["symbol"]:
             raise AssertionError()
         if not other["quote"]["symbol"] == self["quote"]["symbol"]:
-            raise AssertionError()    
+            raise AssertionError()
 
     def __mul__(self, other):
         a = self.copy()

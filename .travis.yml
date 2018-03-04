@@ -10,6 +10,10 @@ matrix:
       env:
         - TOXENV=pylint
     - os: linux
+      python: 3.6
+      env:
+        - TOXENV=flake8
+    - os: linux
       python: 2.7
       env:
         - TOXENV=py27

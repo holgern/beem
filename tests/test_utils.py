@@ -3,7 +3,9 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import unittest
+from datetime import datetime
 from beem.utils import (
+    formatTimedelta,
     assets_from_string,
     resolve_authorperm,
     resolve_authorpermvoter,
@@ -58,3 +60,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual(make_patch("aa", "ab"), '@@ -1 +1 @@\n-aa\n+ab\n')
         self.assertEqual(make_patch("Hello!\n Das ist ein Test!\nEnd.\n", "Hello!\n This is a Test\nEnd.\n"),
                          '@@ -1,3 +1,3 @@\n Hello!\n- Das ist ein Test!\n+ This is a Test\n End.\n')
+
+    def test_formatTimedelta(self):
+        now = datetime.now()
+        self.assertEqual(formatTimedelta(now-now), '0:00.00')

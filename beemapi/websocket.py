@@ -147,7 +147,13 @@ class SteemWebsocket(Events):
             we call the ``on_block`` slot.
         """
         # id = data["id"]
+        if "result" not in data:
+            return
         block = data["result"]
+        if block is None:
+            return
+        if isinstance(block, (bool, int)):
+            return
         if "previous" in block:
             block_id = block["previous"]
             block_number = int(block_id[:8], base=16)
@@ -165,13 +171,12 @@ class SteemWebsocket(Events):
         """
         log.debug("Received message: %s" % str(reply))
         data = {}
-        # print(reply)
         try:
             data = json.loads(reply, strict=False)
         except ValueError:
             raise ValueError("API node returned invalid format. Expected JSON!")
 
-        if data.get("method") == "notice":
+        if "method" in data and data.get("method") == "notice":
             id = data["params"][0]
             # print(data)
 
@@ -245,9 +250,9 @@ class SteemWebsocket(Events):
             except websocket.WebSocketException as exc:
                 if (self.num_retries >= 0 and cnt > self.num_retries):
                     raise NumRetriesReached()
-                
+
                 if cnt < 0:
-                    seeptime = 0
+                    sleeptime = 0
                 elif cnt < 10:
                     sleeptime = (cnt - 1) * 2
                 else:

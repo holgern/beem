@@ -7,7 +7,7 @@ from builtins import bytes, int, str
 from beem.instance import shared_steem_instance
 from .exceptions import AccountDoesNotExistsException
 from .blockchainobject import BlockchainObject
-from .utils import formatTimeString
+from .utils import formatTimeString, formatTimedelta
 from beem.amount import Amount
 from datetime import datetime, timedelta
 import pytz
@@ -195,11 +195,7 @@ class Account(BlockchainObject):
         """ Returns the account recharge time
         """
         remainingTime = self.get_recharge_timedelta(voting_power_goal=voting_power_goal)
-        days, seconds = remainingTime.days, remainingTime.seconds
-        hours = days * 24 + seconds // 3600
-        minutes = (seconds % 3600) // 60
-        seconds = (seconds % 60)
-        return "%d:%s.%s" % (hours, str(minutes).zfill(2), str(seconds).zfill(2))
+        return formatTimedelta(remainingTime)
 
     def get_recharge_timedelta(self, voting_power_goal=100):
         """ Returns the account voting power recharge time as timedelta object

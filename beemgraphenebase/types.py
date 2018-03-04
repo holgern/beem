@@ -418,9 +418,8 @@ class ObjectId(object):
             self.Id = object_str
             if type_verify:
                 if not object_type[type_verify] == int(type):
-                    raise AssertionError("Object id does not match object type! " +\
-                        "Excpected %d, got %d" %\
-                        (object_type[type_verify], int(type)))
+                    raise AssertionError("Object id does not match object type! " +
+                                         "Excpected %d, got %d" % (object_type[type_verify], int(type)))
         else:
             raise Exception("Object id is invalid")
 
@@ -463,7 +462,7 @@ class FullObjectId(object):
 class Enum8(Uint8):
     def __init__(self, selection):
         if selection not in self.options and \
-            not (isinstance(selection, int) and len(self.options) < selection):
+                not (isinstance(selection, int) and len(self.options) < selection):
             raise AssertionError("Options are %s. Given '%s'" % (
                 self.options, selection))
         if selection in self.options:

@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from builtins import next
 import re
 import time
-from datetime import datetime, tzinfo
+from datetime import datetime, tzinfo, timedelta
 import pytz
 import difflib
 from .exceptions import ObjectNotInProposalBuffer
@@ -43,6 +43,18 @@ def formatTimeFromNow(secs=0):
     """
     return datetime.utcfromtimestamp(
         time.time() + int(secs)).strftime(timeFormat)
+
+
+def formatTimedelta(td):
+    """Format timedelta to String
+    """
+    if not isinstance(td, timedelta):
+        return ""
+    days, seconds = td.days, td.seconds
+    hours = days * 24 + seconds // 3600
+    minutes = (seconds % 3600) // 60
+    seconds = (seconds % 60)
+    return "%d:%s.%s" % (hours, str(minutes).zfill(2), str(seconds).zfill(2))
 
 
 def parse_time(block_time):

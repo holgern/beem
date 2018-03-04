@@ -24,8 +24,8 @@ class Query(dict):
     :param str parent_author
     :param str parent_permlink
     """
-    def __init__(self, limit=0, tag="", truncate_body=0, 
-                 filter_tags=[""], select_authors=[""], select_tags=[""], 
+    def __init__(self, limit=0, tag="", truncate_body=0,
+                 filter_tags=[""], select_authors=[""], select_tags=[""],
                  start_author=None, start_permlink=None, parent_author=None, parent_permlink=None):
         self["limit"] = limit
         self["truncate_body"] = truncate_body
@@ -127,7 +127,7 @@ class Discussions_by_active(list):
 class Discussions_by_cashout(list):
     """ get_discussions_by_cashout. This query seems to be broken at the moment.
         The output is always empty.
-    
+
         :param str discussion_query
         :param steem steem_instance: Steem() instance to use when accesing a RPC
     """
