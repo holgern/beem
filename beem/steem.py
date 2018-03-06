@@ -216,7 +216,7 @@ class Steem(object):
             self.refresh_data()
             return self.data['dynamic_global_properties']
         else:
-            if not self.rpc:
+            if self.rpc is None:
                 return None
             if self.rpc.get_use_appbase():
                 return self.rpc.get_dynamic_global_properties(api="database")
@@ -232,7 +232,7 @@ class Steem(object):
             self.refresh_data()
             return self.data['reserve_ratio']
         else:
-            if not self.rpc:
+            if self.rpc is None:
                 return None
             if self.rpc.get_use_appbase():
                 return self.rpc.get_reserve_ratio(api="witness")
@@ -251,7 +251,7 @@ class Steem(object):
             self.refresh_data()
             return self.data['feed_history']
         else:
-            if not self.rpc:
+            if self.rpc is None:
                 return None
             if self.rpc.get_use_appbase():
                 return self.rpc.get_feed_history(api="database")
@@ -267,7 +267,7 @@ class Steem(object):
             self.refresh_data()
             return self.data['reward_funds']
         else:
-            if not self.rpc:
+            if self.rpc is None:
                 return None
             if self.rpc.get_use_appbase():
                 funds = self.rpc.get_reward_funds(api="database")['funds']
@@ -286,7 +286,7 @@ class Steem(object):
             self.refresh_data()
             return self.data['get_feed_history']['current_median_history']
         else:
-            if not self.rpc:
+            if self.rpc is None:
                 return None
             if self.rpc.get_use_appbase():
                 return self.rpc.get_feed_history(api="database")['current_median_history']
@@ -302,7 +302,7 @@ class Steem(object):
             self.refresh_data()
             return self.data['hardfork_properties']
         else:
-            if not self.rpc:
+            if self.rpc is None:
                 return None
             if self.rpc.get_use_appbase():
                 return self.rpc.get_hardfork_properties(api="database")
@@ -321,7 +321,7 @@ class Steem(object):
             self.refresh_data()
             return self.data['network']
         else:
-            if not self.rpc:
+            if self.rpc is None:
                 return None
             return self.rpc.get_network()
 
@@ -437,7 +437,7 @@ class Steem(object):
             self.refresh_data()
             return self.data['witness_schedule']
         else:
-            if not self.rpc:
+            if self.rpc is None:
                 return None
             if self.rpc.get_use_appbase():
                 return self.rpc.get_witness_schedule(api="database")
@@ -451,7 +451,7 @@ class Steem(object):
             self.refresh_data()
             return self.data['config']
         else:
-            if not self.rpc:
+            if self.rpc is None:
                 return None
             if self.rpc.get_use_appbase():
                 return self.rpc.get_config(api="database")

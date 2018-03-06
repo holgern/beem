@@ -99,6 +99,7 @@ class SteemWebsocket(Events):
         #     self.on_account += on_account
 
     def cancel_subscriptions(self):
+        """cancel_all_subscriptions removed from api"""
         # self.cancel_all_subscriptions()
         # api call removed in 0.19.1
         log.exception("cancel_all_subscriptions removed from api")
@@ -121,10 +122,12 @@ class SteemWebsocket(Events):
         self.keepalive.start()
 
     def reset_subscriptions(self, accounts=[]):
+        """Reset subscriptions"""
         # self.subscription_accounts = accounts
         self.__set_subscriptions()
 
     def __set_subscriptions(self):
+        """set subscriptions ot on_block function"""
         # self.cancel_all_subscriptions()
         # Subscribe to events on the Backend and give them a
         # callback number that allows us to identify the event
@@ -136,6 +139,7 @@ class SteemWebsocket(Events):
                 self.__events__.index('on_block'))
 
     def _ping(self):
+        """Send keep_alive request"""
         # We keep the connetion alive by requesting a short object
         def ping(self):
             while not self.run_event.wait(self.keep_alive):
@@ -273,6 +277,7 @@ class SteemWebsocket(Events):
                 log.critical("{}\n\n{}".format(str(e), traceback.format_exc()))
 
     def get_request_id(self):
+        """Generates next request id"""
         self._request_id += 1
         return self._request_id
 

@@ -173,7 +173,8 @@ class TransactionBuilder(dict):
             else:
                 if isinstance(account, string_types):
                     account = Account(account, steem_instance=self.steem)
-                assert permission in account, "Could not access permission"
+                if permission not in account:
+                    raise AssertionError("Could not access permission")
                 required_treshold = account[permission]["weight_threshold"]
                 keys = fetchkeys(account, permission)
                 if permission != "owner":
