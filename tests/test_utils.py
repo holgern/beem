@@ -14,7 +14,8 @@ from beem.utils import (
     sanitize_permlink,
     derive_permlink,
     resolve_root_identifier,
-    make_patch
+    make_patch,
+    remove_from_dict
 )
 
 
@@ -64,3 +65,13 @@ class Testcases(unittest.TestCase):
     def test_formatTimedelta(self):
         now = datetime.now()
         self.assertEqual(formatTimedelta(now-now), '0:00.00')
+
+    def test_remove_from_dict(self):
+        a = {'a':1, 'b':2}
+        b = {'b':2}
+        self.assertEqual(remove_from_dict(a, ['b'], keep_keys=True), {'b':2})
+        self.assertEqual(remove_from_dict(a, ['a'], keep_keys=False), {'b':2})
+        self.assertEqual(remove_from_dict(b, ['b'], keep_keys=True), {'b':2})
+        self.assertEqual(remove_from_dict(b, ['a'], keep_keys=False), {'b':2})
+        self.assertEqual(remove_from_dict(b, [], keep_keys=True), {})
+        self.assertEqual(remove_from_dict(a, ['a','b'], keep_keys=False), {})

@@ -7,7 +7,7 @@ from builtins import str
 from .instance import shared_steem_instance
 from .account import Account
 from .amount import Amount
-from .utils import resolve_authorperm, construct_authorperm, derive_permlink, keep_in_dict, make_patch, formatTimeString
+from .utils import resolve_authorperm, construct_authorperm, derive_permlink, remove_from_dict, make_patch, formatTimeString
 from .blockchainobject import BlockchainObject
 from .exceptions import ContentDoesNotExistsException, VotingInvalidOnArchivedPost
 from beembase import operations
@@ -510,10 +510,10 @@ class Comment(BlockchainObject):
 
         # if comment_options are used, add a new op to the transaction
         if comment_options or beneficiaries:
-            options = keep_in_dict(comment_options or {}, [
+            options = remove_from_dict(comment_options or {}, [
                 'max_accepted_payout', 'percent_steem_dollars', 'allow_votes',
                 'allow_curation_rewards', 'extensions'
-            ])
+            ], keep_keys=True)
             # override beneficiaries extension
             if beneficiaries:
                 # validate schema

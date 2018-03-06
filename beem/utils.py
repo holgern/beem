@@ -217,26 +217,18 @@ def test_proposal_in_buffer(buf, operation_name, id):
         )
 
 
-def keep_in_dict(obj, allowed_keys=list()):
-    """ Prune a class or dictionary of all but allowed keys.
+def remove_from_dict(obj, keys=list(), keep_keys=True):
+    """ Prune a class or dictionary of all but keys (keep_keys=True).
+        Prune a class or dictionary of specified keys.(keep_keys=False).
     """
     if type(obj) == dict:
         items = list(obj.items())
     else:
         items = list(obj.__dict__.items())
-
-    return {k: v for k, v in items if k in allowed_keys}
-
-
-def remove_from_dict(obj, remove_keys=list()):
-    """ Prune a class or dictionary of specified keys.
-    """
-    if type(obj) == dict:
-        items = list(obj.items())
+    if keep_keys:
+        return {k: v for k, v in items if k in keys}
     else:
-        items = list(obj.__dict__.items())
-
-    return {k: v for k, v in items if k not in remove_keys}
+        return {k: v for k, v in items if k not in keys}
 
 
 def make_patch(a, b, n=3):
