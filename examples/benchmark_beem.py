@@ -16,8 +16,8 @@ from beem.utils import parse_time, formatTimedelta
 
 if __name__ == "__main__":
     # stm = Steem(node="https://api.steemit.com")
-    # stm = Steem(node="https://api.steemitstage.com", appbase=True)
-    # stm = Steem(node="wss://appbasetest.timcliff.com", appbase=False)
+    # stm = Steem(node="https://api.steemitstage.com")
+    # stm = Steem(node="wss://appbasetest.timcliff.com")
     stm = Steem()
     blockchain = Blockchain(steem_instance=stm)
     last_block_id = 19273700

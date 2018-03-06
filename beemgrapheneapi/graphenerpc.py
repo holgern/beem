@@ -229,6 +229,11 @@ class GrapheneRPC(object):
                          "params": [api_name, name, list(args)],
                          "jsonrpc": "2.0",
                          "id": self.get_request_id()}
+            elif api_name == "condenser_api":
+                query = {"method": api_name + "." + name,
+                         "jsonrpc": "2.0",
+                         "params": [],
+                         "id": self.get_request_id()}            
             else:
                 query = {"method": api_name + "." + name,
                          "jsonrpc": "2.0",
@@ -241,7 +246,7 @@ class GrapheneRPC(object):
             # Sepcify the api to talk to
             if "api_id" not in kwargs:
                 if ("api" in kwargs):
-                    api_name = kwargs["api"] + "_api"
+                    api_name = kwargs["api"].replace("_api", "") + "_api"
                 else:
                     api_id = 0
                     api_name = None
@@ -253,7 +258,7 @@ class GrapheneRPC(object):
             if "api_id" not in kwargs:
                 if ("api" in kwargs):
                     if kwargs["api"] != "jsonrpc":
-                        api_name = kwargs["api"] + "_api"
+                        api_name = kwargs["api"].replace("_api", "") + "_api"
                     else:
                         api_name = kwargs["api"]
                 else:
