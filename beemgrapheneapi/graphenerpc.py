@@ -233,7 +233,7 @@ class GrapheneRPC(object):
                 query = {"method": api_name + "." + name,
                          "jsonrpc": "2.0",
                          "params": [],
-                         "id": self.get_request_id()}            
+                         "id": self.get_request_id()}
             else:
                 query = {"method": api_name + "." + name,
                          "jsonrpc": "2.0",
