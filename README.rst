@@ -46,6 +46,11 @@ Current build status
 .. image:: https://readthedocs.org/projects/beem/badge/?version=latest
   :target: http://beem.readthedocs.org/en/latest/?badge=latest
 
+.. image:: https://api.codeclimate.com/v1/badges/e7bdb5b4aa7ab160a780/test_coverage
+   :target: https://codeclimate.com/github/holgern/beem/test_coverage
+   :alt: Test Coverage
+
+
 Installation
 ============
 The minimal working python version is 2.7.x. or 3.4.x
