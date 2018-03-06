@@ -40,32 +40,29 @@ class Asset(BlockchainObject):
             steem_instance=steem_instance
         )
         self.refresh()
+        if not self["asset"]:
+            raise AssetDoesNotExistsException(self.identifier)
 
     def refresh(self):
         """ Refresh the data from the API server
         """
         self.chain_params = self.steem.chain_params
-        if self.identifier == "sbd_symbol" or self.identifier == self.chain_params["sbd_symbol"] or self.identifier == 0:
-            self["asset"] = "sbd_symbol"
-            self["precision"] = 3
-            self["id"] = 0
-            self["symbol"] = self.chain_params["sbd_symbol"]
-        elif self.identifier == "steem_symbol" or self.identifier == self.chain_params["steem_symbol"] or self.identifier == 1:
-            self["asset"] = "steem_symbol"
-            self["precision"] = 3
-            self["id"] = 1
-            self["symbol"] = self.chain_params["steem_symbol"]
-        elif self.identifier == "vests_symbol" or self.identifier == self.chain_params["vests_symbol"] or self.identifier == 2:
-            self["asset"] = "vests_symbol"
-            self["precision"] = 6
-            self["id"] = 2
-            self["symbol"] = self.chain_params["vests_symbol"]
-        else:
-            raise AssetDoesNotExistsException(self.identifier)
+        self["asset"] = ""
+        for asset in self.chain_params["chain_assets"]:
+            if self.identifier in [asset["symbol"], asset["asset"], asset["id"]]:
+                self["asset"] = asset["asset"]
+                self["precision"] = asset["precision"]
+                self["id"] = asset["id"]
+                self["symbol"] = asset["symbol"]
+                break
 
     @property
     def symbol(self):
         return self["symbol"]
+
+    @property
+    def asset(self):
+        return self["asset"]
 
     @property
     def precision(self):

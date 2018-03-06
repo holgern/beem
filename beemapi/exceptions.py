@@ -4,7 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
 import re
-from beemgrapheneapi.graphenewsrpc import RPCError
+from beemgrapheneapi.graphenerpc import RPCError
 
 
 def decodeRPCErrorMsg(e):

@@ -15,6 +15,9 @@ from beem.utils import parse_time, formatTimedelta
 
 
 if __name__ == "__main__":
+    # stm = Steem(node="https://api.steemit.com")
+    # stm = Steem(node="https://api.steemitstage.com", appbase=True)
+    # stm = Steem(node="wss://appbasetest.timcliff.com", appbase=False)
     stm = Steem()
     blockchain = Blockchain(steem_instance=stm)
     last_block_id = 19273700
@@ -29,13 +32,24 @@ if __name__ == "__main__":
     start_time = time.time()
     last_node = blockchain.steem.rpc.url
     print("Current node:", last_node)
-    for entry in blockchain.blocks(start=last_block_id):
-        block_no = entry["block_num"]
+    for entry in blockchain.blocks(start=last_block_id, threading=True, thread_num=8):
+        if "id" in entry:
+            block_no = entry["id"]
+        else:
+            block_no = entry["block_num"]
+        if "block" in entry:
+            trxs = entry["block"]["transactions"]
+        else:
+            trxs = entry["transactions"]
 
-        for tx in entry["transactions"]:
+        for tx in trxs:
             for op in tx["operations"]:
                 total_transaction += 1
-        block_time = parse_time(entry["timestamp"])
+        if "block" in entry:
+            block_time = parse_time(entry["block"]["timestamp"])
+        else:
+            block_time = parse_time(entry["timestamp"])
+
         if block_time > stopTime:
             total_duration = formatTimedelta(datetime.now() - startTime)
             last_block_id = block_no

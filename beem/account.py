@@ -73,27 +73,54 @@ class Account(BlockchainObject):
     def refresh(self):
         """ Refresh/Obtain an account's data from the API server
         """
-        if self.full:
-            account = self.steem.rpc.get_accounts(
-                [self.identifier])
+        if self.steem.rpc.get_use_appbase():
+                account = self.steem.rpc.find_accounts({'accounts': [self.identifier]}, api="database")
         else:
-            account = self.steem.rpc.lookup_account_names(
-                [self.identifier])
+            if self.full:
+                account = self.steem.rpc.get_accounts(
+                    [self.identifier])
+            else:
+                account = self.steem.rpc.lookup_account_names(
+                    [self.identifier])
         if not account:
             raise AccountDoesNotExistsException(self.identifier)
+        elif self.steem.rpc.get_use_appbase():
+            account = account["accounts"][0]
         else:
             account = account[0]
         if not account:
             raise AccountDoesNotExistsException(self.identifier)
         self.identifier = account["name"]
+        # Parse Amounts
+        amounts = [
+            "balance",
+            "savings_balance",
+            "sbd_balance",
+            "savings_sbd_balance",
+            "reward_sbd_balance",
+            "reward_steem_balance",
+            "reward_vesting_balance",
+            "reward_vesting_steem",
+            "vesting_shares",
+            "delegated_vesting_shares",
+            "received_vesting_shares"
+        ]
+        for p in amounts:
+            if p in account and isinstance(account.get(p), (string_types, list)):
+                account[p] = Amount(account[p])
         self.steem.refresh_data()
 
-        super(Account, self).__init__(account, id_item="name")
+        super(Account, self).__init__(account, id_item="name", steem_instance=self.steem)
 
     def getSimilarAccountNames(self, limit=5):
         """ Returns limit similar accounts with name as array
         """
-        return self.steem.rpc.lookup_accounts(self.name, limit)
+        if self.steem.rpc.get_use_appbase():
+            account = self.steem.rpc.list_accounts({'start': self.name, 'limit': limit}, api="database")
+            if account:
+                return account["accounts"]
+        else:
+            return self.steem.rpc.lookup_accounts(self.name, limit)
 
     @property
     def name(self):
@@ -144,7 +171,12 @@ class Account(BlockchainObject):
     def get_reputation(self):
         """ Returns the account reputation
         """
-        rep = int(self['reputation'])
+        if self.steem.rpc.get_use_appbase():
+            rep = self.steem.rpc.get_account_reputations({'account_lower_bound': self["name"], 'limit': 1}, api="follow")['reputations']
+            if len(rep) > 0:
+                rep = int(rep[0]['reputation'])
+        else:
+            rep = int(self['reputation'])
         if rep == 0:
             return 25.
         score = max([math.log10(abs(rep)) - 9, 0])
@@ -173,9 +205,9 @@ class Account(BlockchainObject):
         """ Returns the account steem power
         """
         if onlyOwnSP:
-            vests = Amount(self["vesting_shares"])
+            vests = (self["vesting_shares"])
         else:
-            vests = Amount(self["vesting_shares"]) - Amount(self["delegated_vesting_shares"]) + Amount(self["received_vesting_shares"])
+            vests = (self["vesting_shares"]) - (self["delegated_vesting_shares"]) + (self["received_vesting_shares"])
         return self.steem.vests_to_sp(vests)
 
     def get_voting_value_SBD(self, voting_weight=100, voting_power=None, steem_power=None):
@@ -216,9 +248,18 @@ class Account(BlockchainObject):
         if account is None:
             account = self["name"]
         self.steem.register_apis(["follow"])
-        if raw_data:
+        if raw_data and self.steem.rpc.get_use_appbase():
+            return [
+                c for c in self.steem.rpc.get_feed({'account': account, 'start_entry_id': entryId, 'limit': limit}, api='follow')["feed"]
+            ]
+        elif raw_data and not self.steem.rpc.get_use_appbase():
             return [
                 c for c in self.steem.rpc.get_feed(account, entryId, limit, api='follow')
+            ]
+        elif not raw_data and self.steem.rpc.get_use_appbase():
+            from .comment import Comment
+            return [
+                Comment(c['comment'], steem_instance=self.steem) for c in self.steem.rpc.get_feed({'account': account, 'start_entry_id': entryId, 'limit': limit}, api='follow')["feed"]
             ]
         else:
             from .comment import Comment
@@ -230,9 +271,18 @@ class Account(BlockchainObject):
         if account is None:
             account = self["name"]
         self.steem.register_apis(["follow"])
-        if raw_data:
+        if raw_data and self.steem.rpc.get_use_appbase():
+            return [
+                c for c in self.steem.rpc.get_blog_entries({'account': account, 'start_entry_id': entryId, 'limit': limit}, api='follow')["blog"]
+            ]
+        elif raw_data and not self.steem.rpc.get_use_appbase():
             return [
                 c for c in self.steem.rpc.get_blog_entries(account, entryId, limit, api='follow')
+            ]
+        elif not raw_data and self.steem.rpc.get_use_appbase():
+            from .comment import Comment
+            return [
+                Comment(c, steem_instance=self.steem) for c in self.steem.rpc.get_blog_entries({'account': account, 'start_entry_id': entryId, 'limit': limit}, api='follow')["blog"]
             ]
         else:
             from .comment import Comment
@@ -244,9 +294,18 @@ class Account(BlockchainObject):
         if account is None:
             account = self["name"]
         self.steem.register_apis(["follow"])
-        if raw_data:
+        if raw_data and self.steem.rpc.get_use_appbase():
+            return [
+                c for c in self.steem.rpc.get_blog({'account': account, 'start_entry_id': entryId, 'limit': limit}, api='follow')["blog"]
+            ]
+        elif raw_data and not self.steem.rpc.get_use_appbase():
             return [
                 c for c in self.steem.rpc.get_blog(account, entryId, limit, api='follow')
+            ]
+        elif not raw_data and self.steem.rpc.get_use_appbase():
+            from .comment import Comment
+            return [
+                Comment(c["comment"], steem_instance=self.steem) for c in self.steem.rpc.get_blog({'account': account, 'start_entry_id': entryId, 'limit': limit}, api='follow')["blog"]
             ]
         else:
             from .comment import Comment
@@ -257,15 +316,21 @@ class Account(BlockchainObject):
     def get_blog_account(self, account=None):
         if account is None:
             account = self["name"]
-        self.steem.register_apis(["follow"])
-        return self.steem.rpc.get_blog_authors(account, api='follow')
+        if self.steem.rpc.get_use_appbase():
+            return self.steem.rpc.get_blog_authors({'blog_account': account}, api='follow')['blog_authors']
+        else:
+            self.steem.register_apis(["follow"])
+            return self.steem.rpc.get_blog_authors(account, api='follow')
 
     def get_follow_count(self, account=None):
         """ get_follow_count """
         if account is None:
             account = self["name"]
-        self.steem.register_apis(["follow"])
-        return self.steem.rpc.get_follow_count(account, api='follow')
+        if self.steem.rpc.get_use_appbase():
+            return self.steem.rpc.get_follow_count({'account': account}, api='follow')
+        else:
+            self.steem.register_apis(["follow"])
+            return self.steem.rpc.get_follow_count(account, api='follow')
 
     def get_followers(self, raw_data=True):
         """ Returns the account followers as list
@@ -294,11 +359,18 @@ class Account(BlockchainObject):
     def _get_followers(self, direction="follower", last_user=""):
         """ Help function, used in get_followers and get_following
         """
-        self.steem.register_apis(["follow"])
-        if direction == "follower":
-            followers = self.steem.rpc.get_followers(self.name, last_user, "blog", 100, api='follow')
-        elif direction == "following":
-            followers = self.steem.rpc.get_following(self.name, last_user, "blog", 100, api='follow')
+        if self.steem.rpc.get_use_appbase():
+            if direction == "follower":
+                followers = self.steem.rpc.get_followers({'account': self.name, 'start': last_user, 'type': "blog", 'limit': 100}, api='follow')['followers']
+            elif direction == "following":
+                followers = self.steem.rpc.get_following({'account': self.name, 'start': last_user, 'type': "blog", 'limit': 100}, api='follow')['following']
+        else:
+            self.steem.register_apis(["follow"])
+            if direction == "follower":
+                followers = self.steem.rpc.get_followers(self.name, last_user, "blog", 100, api='follow')
+            elif direction == "following":
+                followers = self.steem.rpc.get_following(self.name, last_user, "blog", 100, api='follow')
+
         if len(followers) >= 100:
             followers += self._get_followers(
                 direction=direction, last_user=followers[-1][direction])[1:]
@@ -309,30 +381,18 @@ class Account(BlockchainObject):
         """ List balances of an account. This call returns instances of
             :class:`steem.amount.Amount`.
         """
-        from .amount import Amount
-        available_str = [self["balance"], self["sbd_balance"], self["vesting_shares"]]
-        return [
-            Amount(b, steem_instance=self.steem)
-            for b in available_str  # if int(b["amount"]) > 0
-        ]
+        available_amount = [self["balance"], self["sbd_balance"], self["vesting_shares"]]
+        return available_amount
 
     @property
     def saving_balances(self):
-        from .amount import Amount
-        savings_str = [self["savings_balance"], self["savings_sbd_balance"]]
-        return [
-            Amount(b, steem_instance=self.steem)
-            for b in savings_str  # if int(b["amount"]) > 0
-        ]
+        savings_amount = [self["savings_balance"], self["savings_sbd_balance"]]
+        return savings_amount
 
     @property
     def reward_balances(self):
-        from .amount import Amount
-        rewards_str = [self["reward_steem_balance"], self["reward_sbd_balance"], self["reward_vesting_balance"]]
-        return [
-            Amount(b, steem_instance=self.steem)
-            for b in rewards_str  # if int(b["amount"]) > 0
-        ]
+        rewards_amount = [self["reward_steem_balance"], self["reward_sbd_balance"], self["reward_vesting_balance"]]
+        return rewards_amount
 
     @property
     def total_balances(self):
@@ -376,7 +436,7 @@ class Account(BlockchainObject):
         for b in balances:
             if b["symbol"] == symbol:
                 return b
-        return Amount(0, symbol)
+        return Amount(0, symbol, steem_instance=self.steem)
 
     def interest(self):
         """ Caluclate interest for an account
@@ -412,17 +472,22 @@ class Account(BlockchainObject):
         """ get_account_bandwidth """
         if account is None:
             account = self["name"]
-        if raw_data:
+        if raw_data and self.steem.rpc.get_use_appbase():
+            return self.steem.rpc.get_account_bandwidth({'account': account, 'type': 'post'}, api="witness")
+        elif raw_data and not self.steem.rpc.get_use_appbase():
             return self.steem.rpc.get_account_bandwidth(account, bandwidth_type)
         else:
             global_properties = self.steem.get_dynamic_global_properties()
-            received_vesting_shares = Amount(self["received_vesting_shares"]).amount
-            vesting_shares = Amount(self["vesting_shares"]).amount
-            max_virtual_bandwidth = float(global_properties["max_virtual_bandwidth"])
-            total_vesting_shares = Amount(global_properties["total_vesting_shares"]).amount
+            reserve_ratio = self.steem.get_reserve_ratio()
+            received_vesting_shares = self["received_vesting_shares"].amount
+            vesting_shares = self["vesting_shares"].amount
+            max_virtual_bandwidth = float(reserve_ratio["max_virtual_bandwidth"])
+            total_vesting_shares = Amount(global_properties["total_vesting_shares"], steem_instance=self.steem).amount
             allocated_bandwidth = (max_virtual_bandwidth * (vesting_shares + received_vesting_shares) / total_vesting_shares)
             allocated_bandwidth = round(allocated_bandwidth / 1000000)
-
+            if self.steem.rpc.get_use_appbase():
+                return {"used": 0,
+                        "allocated": allocated_bandwidth}
             total_seconds = 604800
             date_bandwidth = formatTimeString(self["last_bandwidth_update"])
             utc = pytz.timezone('UTC')
@@ -443,30 +508,45 @@ class Account(BlockchainObject):
         """ get_owner_history """
         if account is None:
             account = self["name"]
-        return self.steem.rpc.get_owner_history(account)
+        if self.steem.rpc.get_use_appbase():
+            return self.steem.rpc.find_owner_histories({'owner': account}, api="database")['owner_auths']
+        else:
+            return self.steem.rpc.get_owner_history(account)
 
     def get_conversion_requests(self, account=None):
         """ get_owner_history """
         if account is None:
             account = self["name"]
-        return self.steem.rpc.get_conversion_requests(account)
+        if self.steem.rpc.get_use_appbase():
+            return self.steem.rpc.find_sbd_conversion_requests({'account': account}, api="database")['requests']
+        else:
+            return self.steem.rpc.get_conversion_requests(account)
 
     def get_recovery_request(self, account=None):
         """ get_recovery_request """
         if account is None:
             account = self["name"]
-        return self.steem.rpc.get_recovery_request(account)
+        if self.steem.rpc.get_use_appbase():
+            return self.steem.rpc.find_account_recovery_requests({'account': account}, api="database")['requests']
+        else:
+            return self.steem.rpc.get_recovery_request(account)
 
     def verify_account_authority(self, keys, account=None):
         """ verify_account_authority """
         if account is None:
             account = self["name"]
-        return self.steem.rpc.verify_account_authority(account, keys)
+        if self.steem.rpc.get_use_appbase():
+            return self.steem.rpc.verify_account_authority({'account': account, 'signers': keys}, api="database")
+        else:
+            return self.steem.rpc.verify_account_authority(account, keys)
 
     def get_account_votes(self, account=None):
         if account is None:
             account = self["name"]
-        return self.steem.rpc.get_account_votes(account)
+        if self.steem.rpc.get_use_appbase():
+            return self.steem.rpc.find_votes({'author': account["name"], 'permlink': ''}, api="database")['votes']
+        else:
+            return self.steem.rpc.get_account_votes(account)
 
     def history(
         self, limit=100,

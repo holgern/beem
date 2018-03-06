@@ -30,7 +30,7 @@ class Testcases(unittest.TestCase):
             Asset("FOObarNonExisting", full=False)
 
     def test_properties(self):
-        asset = Asset("sbd_symbol", full=False)
+        asset = Asset("SBD", full=False)
         self.assertIsInstance(asset.symbol, str)
         self.assertIsInstance(asset.precision, int)
 

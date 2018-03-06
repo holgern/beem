@@ -51,7 +51,12 @@ class Witness(BlockchainObject):
     def refresh(self):
         if not self.identifier:
             return
-        witness = self.steem.rpc.get_witness_by_account(self.identifier)
+        if self.steem.rpc.get_use_appbase():
+            witness = self.steem.rpc.find_witnesses({'owners': [self.identifier]}, api="database")['witnesses']
+            if len(witness) > 0:
+                witness = witness[0]
+        else:
+            witness = self.steem.rpc.get_witness_by_account(self.identifier)
         if not witness:
             raise WitnessDoesNotExistsException
         super(Witness, self).__init__(witness, id_item="owner", steem_instance=self.steem)
@@ -183,9 +188,13 @@ class Witnesses(WitnessesObject):
     """
     def __init__(self, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
-        self.active_witnessess = self.steem.rpc.get_active_witnesses()
-        self.schedule = self.steem.rpc.get_witness_schedule()
-        self.witness_count = self.steem.rpc.get_witness_count()
+        if self.steem.rpc.get_use_appbase():
+            self.active_witnessess = self.steem.rpc.find_witnesses(api="database")['witnesses']
+            self.schedule = self.steem.rpc.get_witness_schedule(api="database")
+        else:
+            self.active_witnessess = self.steem.rpc.get_active_witnesses()
+            self.schedule = self.steem.rpc.get_witness_schedule()
+            self.witness_count = self.steem.rpc.get_witness_count()
 
         super(Witnesses, self).__init__(
             [
@@ -241,8 +250,10 @@ class WitnessesRankedByVote(WitnessesObject):
                 last_account = witnessList[-1]["owner"]
         if (last_limit < limit):
             last_limit += 1
-
-        witnessess = self.steem.rpc.get_witnesses_by_vote(last_account, last_limit)
+        if self.steem.rpc.get_use_appbase():
+            witnessess = self.steem.rpc.list_witness_votes({'start': last_account, 'limit': last_limit, 'order': 'by_votes'}, api="database")['votes']
+        else:
+            witnessess = self.steem.rpc.get_witnesses_by_vote(last_account, last_limit)
         # self.witness_count = len(self.voted_witnessess)
         if (last_limit < limit):
             witnessess = witnessess[1:]
@@ -254,27 +265,7 @@ class WitnessesRankedByVote(WitnessesObject):
         super(WitnessesRankedByVote, self).__init__(witnessList)
 
 
-class WitnessesByIds(WitnessesObject):
-    """ Obtain a list of witnesses which have been voted by an account
-
-        :param list witness_ids: list of witness_ids
-        :param steem steem_instance: Steem() instance to use when
-            accesing a RPC
-    """
-    def __init__(self, witness_ids, steem_instance=None):
-        self.steem = steem_instance or shared_steem_instance()
-        witnessess = self.steem.rpc.get_witnesses(witness_ids)
-        if len(witnessess) == 0:
-            return
-        super(WitnessesByIds, self).__init__(
-            [
-                Witness(x, lazy=True, steem_instance=self.steem)
-                for x in witnessess
-            ]
-        )
-
-
-class LookupWitnesses(WitnessesObject):
+class ListWitnesses(WitnessesObject):
     """ Obtain a list of witnesses which have been voted by an account
 
         :param str from_account: Account name
@@ -283,10 +274,13 @@ class LookupWitnesses(WitnessesObject):
     """
     def __init__(self, from_account, limit, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
-        witnessess = self.steem.rpc.lookup_witness_accounts(from_account, limit)
+        if self.steem.rpc.get_use_appbase():
+            witnessess = self.steem.rpc.list_witnesses({'start': from_account, 'limit': limit, 'order': 'by_name'}, api="database")['witnesses']
+        else:
+            witnessess = self.steem.rpc.lookup_witness_accounts(from_account, limit)
         if len(witnessess) == 0:
             return
-        super(LookupWitnesses, self).__init__(
+        super(ListWitnesses, self).__init__(
             [
                 Witness(x, lazy=True, steem_instance=self.steem)
                 for x in witnessess

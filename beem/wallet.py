@@ -335,7 +335,10 @@ class Wallet(object):
         if "owner" in Wallet.keyMap:
             return Wallet.keyMap.get("owner")
         else:
-            account = self.rpc.get_account(name)
+            if self.rpc.get_use_appbase():
+                account = self.rpc.find_accounts({'accounts': [name]}, api="database")['accounts']
+            else:
+                account = self.rpc.get_account(name)
             if not account:
                 return
             if len(account) == 0:
@@ -352,7 +355,10 @@ class Wallet(object):
         if "memo" in Wallet.keyMap:
             return Wallet.keyMap.get("memo")
         else:
-            account = self.rpc.get_account(name)
+            if self.rpc.get_use_appbase():
+                account = self.rpc.find_accounts({'accounts': [name]}, api="database")['accounts']
+            else:
+                account = self.rpc.get_account(name)
             if not account:
                 return
             if len(account) == 0:
@@ -369,7 +375,10 @@ class Wallet(object):
         if "active" in Wallet.keyMap:
             return Wallet.keyMap.get("active")
         else:
-            account = self.rpc.get_account(name)
+            if self.rpc.get_use_appbase():
+                account = self.rpc.find_accounts({'accounts': [name]}, api="database")['accounts']
+            else:
+                account = self.rpc.get_account(name)
             if not account:
                 return
             if len(account) == 0:
@@ -386,7 +395,10 @@ class Wallet(object):
         if "posting" in Wallet.keyMap:
             return Wallet.keyMap.get("posting")
         else:
-            account = self.rpc.get_account(name)
+            if self.rpc.get_use_appbase():
+                account = self.rpc.find_accounts({'accounts': [name]}, api="database")['accounts']
+            else:
+                account = self.rpc.get_account(name)
             if not account:
                 return
             if len(account) == 0:
@@ -406,11 +418,14 @@ class Wallet(object):
     def getAccountsFromPublicKey(self, pub):
         """ Obtain all accounts associated with a public key
         """
-        try:
-            self.rpc.register_apis(["account_by_key"])
-        except NoAccessApi as e:
-            print(str(e))
-        names = self.rpc.get_key_references([pub], api="account_by_key")
+        if self.rpc.get_use_appbase():
+            names = self.rpc.get_key_references({'keys': [pub]}, api="account_by_key")["accounts"]
+        else:
+            try:
+                self.rpc.register_apis(["account_by_key"])
+            except NoAccessApi as e:
+                print(str(e))
+            names = self.rpc.get_key_references([pub], api="account_by_key")
         for name in names:
             for i in name:
                 yield i
@@ -421,11 +436,14 @@ class Wallet(object):
         # FIXME, this only returns the first associated key.
         # If the key is used by multiple accounts, this
         # will surely lead to undesired behavior
-        try:
-            self.rpc.register_apis(["account_by_key"])
-        except NoAccessApi as e:
-            print(str(e))
-        names = self.rpc.get_key_references([pub], api="account_by_key")[0]
+        if self.rpc.get_use_appbase():
+            names = self.rpc.get_key_references({'keys': [pub]}, api="account_by_key")["accounts"][0]
+        else:
+            try:
+                self.rpc.register_apis(["account_by_key"])
+            except NoAccessApi as e:
+                print(str(e))
+            names = self.rpc.get_key_references([pub], api="account_by_key")[0]
         if not names:
             return None
         else:

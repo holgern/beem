@@ -64,6 +64,11 @@ class Amount(dict):
             self["amount"] = amount["amount"]
             self["symbol"] = amount["symbol"]
             self["asset"] = amount["asset"]
+        elif amount and asset is None and isinstance(amount, list) and len(amount) == 3:
+            # Copy Asset object
+            self["amount"] = int(amount[0]) / (10 ** amount[1])
+            self["asset"] = Asset(amount[2], steem_instance=self.steem)
+            self["symbol"] = self["asset"]["symbol"]
 
         elif amount is not None and asset is None and isinstance(amount, string_types):
             self["amount"], self["symbol"] = amount.split(" ")

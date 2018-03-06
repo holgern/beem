@@ -10,7 +10,7 @@ import websocket
 import ssl
 import json
 from itertools import cycle
-from beemgrapheneapi.graphenewsrpc import GrapheneWebsocketRPC
+from beemgrapheneapi.graphenerpc import GrapheneRPC
 from beembase.chains import known_chains
 from . import exceptions
 import logging
@@ -21,9 +21,9 @@ class NumRetriesReached(Exception):
     pass
 
 
-class SteemNodeRPC(GrapheneWebsocketRPC):
-    """ This class allows to call API methods exposed by the witness node via
-        websockets.
+class SteemNodeRPC(GrapheneRPC):
+    """This class allows to call API methods exposed by the witness node via
+       websockets / rpc-json.
 
     """
 
@@ -33,9 +33,12 @@ class SteemNodeRPC(GrapheneWebsocketRPC):
             "apis",
             ["database", "network_broadcast"]
         )
+        self.appbase = kwargs.get("appbase", False)
         self.chain_params = self.get_network()
 
     def register_apis(self, apis=None):
+        if self.current_rpc >= 2:
+            return
         if apis is None:
             return
         for api in (apis):
@@ -43,6 +46,9 @@ class SteemNodeRPC(GrapheneWebsocketRPC):
             self.api_id[api] = self.get_api_by_name("%s_api" % api, api_id=1)
             if not self.api_id[api] and not isinstance(self.api_id[api], int):
                 raise exceptions.NoAccessApi("No permission to access %s API. " % api)
+
+    def get_use_appbase(self):
+        return self.appbase and self.current_rpc >= 2
 
     def rpcexec(self, payload):
         """ Execute a call by sending the payload.
@@ -83,9 +89,19 @@ class SteemNodeRPC(GrapheneWebsocketRPC):
         """ Identify the connected network. This call returns a
             dictionary with keys chain_id, core_symbol and prefix
         """
-        props = self.get_config()
-        chain_id = props["STEEMIT_CHAIN_ID"]
+        try:
+            props = self.get_config(api="database")
+        except:
+            props = self.get_config()
+        if "STEEMIT_CHAIN_ID" in props:
+            chain_id = props["STEEMIT_CHAIN_ID"]
+            network_version = props['STEEMIT_BLOCKCHAIN_VERSION']
+        elif "STEEM_CHAIN_ID" in props:
+            chain_id = props["STEEM_CHAIN_ID"]
+            network_version = props['STEEM_BLOCKCHAIN_VERSION']
+        else:
+            raise("Connecting to unknown network!")
         for k, v in list(known_chains.items()):
-            if v["chain_id"] == chain_id:
+            if v["chain_id"] == chain_id and v["min_version"] <= network_version:
                 return v
         raise("Connecting to unknown network!")

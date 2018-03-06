@@ -6,8 +6,7 @@ Submodules
 
 .. toctree::
 
-   beemgrapheneapi.grapheneapi
-   beemgrapheneapi.graphenenewsrpc
+   beemgrapheneapi.graphenenerpc
 
 Module contents
 ---------------

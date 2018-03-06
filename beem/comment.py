@@ -72,22 +72,26 @@ class Comment(BlockchainObject):
         ]
         for p in sbd_amounts:
             if p in self and isinstance(self.get(p), string_types):
-                self[p] = Amount(self.get(p, "0.000 SBD"))
+                self[p] = Amount(self.get(p, "0.000 SBD"), steem_instance=self.steem)
 
         # turn json_metadata into python dict
         meta_str = self.get("json_metadata", "{}")
         if isinstance(meta_str, (string_types, bytes_types, bytearray)):
             self['json_metadata'] = json.loads(meta_str)
         self["tags"] = []
-        if "tags" in self['json_metadata']:
-            self["tags"] = self['json_metadata']["tags"]
         self['community'] = ''
-        if 'community' in self['json_metadata']:
-            self['community'] = self['json_metadata']['community']
+        if isinstance(self['json_metadata'], dict):
+            if "tags" in self['json_metadata']:
+                self["tags"] = self['json_metadata']["tags"]
+            if 'community' in self['json_metadata']:
+                self['community'] = self['json_metadata']['community']
 
     def refresh(self):
         [author, permlink] = resolve_authorperm(self.identifier)
-        content = self.steem.rpc.get_content(author, permlink)
+        if self.steem.rpc.get_use_appbase():
+            content = self.steem.rpc.get_discussion({'author': author, 'permlink': permlink}, tag="tags")
+        else:
+            content = self.steem.rpc.get_content(author, permlink)
         if not content:
             raise ContentDoesNotExistsException
         super(Comment, self).__init__(content, id_item="authorperm", steem_instance=self.steem)
@@ -111,19 +115,25 @@ class Comment(BlockchainObject):
         ]
         for p in sbd_amounts:
             if p in self and isinstance(self.get(p), string_types):
-                self[p] = Amount(self.get(p, "0.000 SBD"))
+                self[p] = Amount(self.get(p, "0.000 SBD"), steem_instance=self.steem)
         # turn json_metadata into python dict
 
         meta_str = self.get("json_metadata", "{}")
         if isinstance(meta_str, (string_types, bytes_types, bytearray)):
-            self['json_metadata'] = json.loads(meta_str)
+            try:
+                self['json_metadata'] = json.loads(meta_str)
+            except:
+                self['json_metadata'] = {}
+        else:
+            self['json_metadata'] = {}
         self["tags"] = []
-        if "tags" in self['json_metadata']:
-            self["tags"] = self['json_metadata']["tags"]
         self['community'] = ''
-        if 'community' in self['json_metadata']:
-            if p in self:
-                self['community'] = self['json_metadata']['community']
+        if isinstance(self['json_metadata'], dict):
+            if "tags" in self['json_metadata']:
+                self["tags"] = self['json_metadata']["tags"]
+            if 'community' in self['json_metadata']:
+                if p in self:
+                    self['community'] = self['json_metadata']['community']
 
     def json(self):
         output = self.copy()
@@ -156,7 +166,7 @@ class Comment(BlockchainObject):
         ]
         for p in sbd_amounts:
             if p in output:
-                output[p] = str(output.get(p, Amount("0.000 SBD")))
+                output[p] = str(output.get(p, Amount("0.000 SBD", steem_instance=self.steem)))
         return json.loads(str(json.dumps(output)))
 
     @property
@@ -215,8 +225,11 @@ class Comment(BlockchainObject):
             post_permlink = self["permlink"]
         else:
             [post_author, post_permlink] = resolve_authorperm(identifier)
-        self.steem.register_apis(["follow"])
-        return self.steem.rpc.get_reblogged_by(post_author, post_permlink, api="follow")
+        if self.steem.rpc.get_use_appbase():
+            return self.steem.rpc.get_reblogged_by({'author': post_author, 'permlink': post_permlink}, api="follow")
+        else:
+            self.steem.register_apis(["follow"])
+            return self.steem.rpc.get_reblogged_by(post_author, post_permlink, api="follow")
 
     def get_votes(self):
         from .vote import ActiveVotes

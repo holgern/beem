@@ -81,7 +81,10 @@ class Vote(BlockchainObject):
         if self.identifier is None:
             return
         [author, permlink, voter] = resolve_authorpermvoter(self.identifier)
-        votes = self.steem.rpc.get_active_votes(author, permlink)
+        if self.steem.rpc.get_use_appbase():
+            votes = self.steem.rpc.get_active_votes({'author': author, 'permlink': permlink}, api="tags")['votes']
+        else:
+            votes = self.steem.rpc.get_active_votes(author, permlink)
         if not votes:
             self["voter"] = voter
             return
@@ -181,11 +184,21 @@ class ActiveVotes(VotesObject):
         self.steem = steem_instance or shared_steem_instance()
         votes = None
         if isinstance(authorperm, Comment) and 'active_votes' not in authorperm:
-            votes = self.steem.rpc.get_active_votes(authorperm["author"], authorperm["permlink"])
+            if self.steem.rpc.get_use_appbase():
+                votes = self.steem.rpc.get_active_votes({'author': authorperm["author"],
+                                                         'permlink': authorperm["permlink"]},
+                                                        api="tags")['votes']
+            else:
+                votes = self.steem.rpc.get_active_votes(authorperm["author"], authorperm["permlink"])
             authorperm = authorperm["authorperm"]
         elif isinstance(authorperm, string_types):
             [author, permlink] = resolve_authorperm(authorperm)
-            votes = self.steem.rpc.get_active_votes(author, permlink)
+            if self.steem.rpc.get_use_appbase():
+                votes = self.steem.rpc.get_active_votes({'author': author,
+                                                         'permlink': permlink},
+                                                        api="tags")['votes']
+            else:
+                votes = self.steem.rpc.get_active_votes(author, permlink)
         elif isinstance(authorperm, list):
             votes = authorperm
             authorperm = None
@@ -217,7 +230,10 @@ class AccountVotes(VotesObject):
         self.steem = steem_instance or shared_steem_instance()
 
         account = Account(account, steem_instance=self.steem)
-        votes = self.steem.rpc.get_account_votes(account["name"])
+        if self.steem.rpc.get_use_appbase():
+            votes = self.steem.rpc.find_votes({'author': account["name"], 'permlink': ''}, api="database")['votes']
+        else:
+            votes = self.steem.rpc.get_account_votes(account["name"])
 
         super(AccountVotes, self).__init__(
             [

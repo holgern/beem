@@ -7,13 +7,14 @@ from future.utils import python_2_unicode_compatible
 from builtins import str
 from builtins import range
 from builtins import object
+from concurrent.futures import ThreadPoolExecutor, wait, as_completed
 import time
 from .block import Block
 from .blockchainobject import BlockchainObject
 from beem.instance import shared_steem_instance
 from beembase.operationids import getOperationNameForId
 from .amount import Amount
-from datetime import datetime
+from datetime import datetime, timedelta
 import math
 
 
@@ -84,7 +85,7 @@ class Blockchain(object):
             steem_instance=self.steem
         )
 
-    def get_estimated_block_num(self, date, estimateForwards=False):
+    def get_estimated_block_num(self, date, estimateForwards=False, accurate=False):
         """ This call estimates the block number based on a given date
 
             :param datetime date: block time for which a block number is estimated
@@ -97,12 +98,23 @@ class Blockchain(object):
             block_offset = 10
             first_block = Block(block_offset, steem_instance=self.steem)
             time_diff = date - first_block.time()
-            return math.floor(time_diff.total_seconds() / block_time_seconds + block_offset.identifier)
+            block_number = math.floor(time_diff.total_seconds() / block_time_seconds + block_offset.identifier)
         else:
             last_block = self.get_current_block()
             time_diff = last_block.time() - date
             block_number = math.floor(last_block.identifier - time_diff.total_seconds() / block_time_seconds)
-            return block_number
+
+        if accurate:
+            block_time_diff = timedelta(seconds=10)
+            while block_time_diff.total_seconds() > 3 or block_time_diff.total_seconds() < -3:
+                block = Block(block_number, steem_instance=self.steem)
+                if block.time() > date:
+                    block_number -= 1
+                else:
+                    block_number += 1
+                block_time_diff = date - block.time()
+
+        return block_number
 
     def block_time(self, block_num):
         """ Returns a datetime of the block with the given block
@@ -126,7 +138,20 @@ class Blockchain(object):
             steem_instance=self.steem
         ).time().timestamp())
 
-    def blocks(self, start=None, stop=None):
+    def block(self, blocknum):
+        if self.steem.rpc.get_use_appbase():
+            block = self.steem.rpc.get_block({"block_num": blocknum}, api="block")
+        else:
+            block = self.steem.rpc.get_block(blocknum)
+        if "id" in block and "block" in block:
+            blockid = block["id"]
+            block = block["block"]
+            block.update({"block_num": blockid})
+        else:
+            block.update({"block_num": blocknum})
+        return block
+
+    def blocks(self, start=None, stop=None, threading=False, thread_num=8):
         """ Yields blocks starting from ``start``.
 
             :param int start: Starting block
@@ -136,7 +161,13 @@ class Blockchain(object):
              confirmed by 2/3 of all block producers and is thus irreversible)
         """
         # Let's find out how often blocks are generated!
-        block_interval = self.steem.get_config().get("STEEMIT_BLOCK_INTERVAL")
+        props = self.steem.get_config()
+        if "STEEMIT_BLOCK_INTERVAL" in props:
+            block_interval = props["STEEMIT_BLOCK_INTERVAL"]
+        elif "STEEM_BLOCK_INTERVAL" in props:
+            block_interval = props["STEEM_BLOCK_INTERVAL"]
+        else:
+            block_interval = 3
 
         if not start:
             start = self.get_current_block_num()
@@ -149,13 +180,35 @@ class Blockchain(object):
                 head_block = stop
             else:
                 head_block = self.get_current_block_num()
-
-            # Blocks from start until head block
-            for blocknum in range(start, head_block + 1):
-                # Get full block
-                block = self.steem.rpc.get_block(blocknum)
-                block.update({"block_num": blocknum})
-                yield block
+            if threading:
+                pool = ThreadPoolExecutor(2)
+                latest_block = 0
+                for blocknum in range(start, head_block + 1, thread_num):
+                    futures = []
+                    i = blocknum
+                    while i <= blocknum + thread_num and i <= head_block:
+                        futures.append(pool.submit(self.block, i))
+                        i += 1
+                    results = [r.result() for r in as_completed(futures)]
+                    block_nums = []
+                    for b in results:
+                        block_nums.append(b["block_num"])
+                        if latest_block < b["block_num"]:
+                            latest_block = b["block_num"]
+                    from operator import itemgetter
+                    blocks = sorted(results, key=itemgetter('block_num'))
+                    for b in blocks:
+                        yield b
+                if latest_block < head_block:
+                    for blocknum in range(latest_block, head_block + 1):
+                        block = self.block(blocknum)
+                        yield block
+            else:
+                # Blocks from start until head block
+                for blocknum in range(start, head_block + 1):
+                    # Get full block
+                    block = self.block(blocknum)
+                    yield block
             # Set new start
             start = head_block + 1
 
@@ -192,7 +245,7 @@ class Blockchain(object):
                         "timestamp": block["timestamp"]
                     }
 
-    def ops_statistics(self, start, stop=None, add_to_ops_stat=None, verbose=True):
+    def ops_statistics(self, start, stop=None, add_to_ops_stat=None, verbose=False):
         """ Generates a statistics for all operations (including virtual operations) starting from
             ``start``.
 
@@ -275,7 +328,7 @@ class Blockchain(object):
                 raise Exception(
                     "The operation has not been added after 10 blocks!")
 
-    def get_all_accounts(self, start='', stop='', steps=1e3, **kwargs):
+    def get_all_accounts(self, start='', stop='', steps=1e3, limit=-1, **kwargs):
         """ Yields account names between start and stop.
 
             :param str start: Start at this account name
@@ -283,11 +336,16 @@ class Blockchain(object):
             :param int steps: Obtain ``steps`` ret with a single call from RPC
         """
         lastname = start
+        cnt = 1
         while True:
-            ret = self.steem.rpc.lookup_accounts(lastname, steps)
+            if self.steem.rpc.get_use_appbase():
+                ret = self.steem.rpc.list_accounts({'start': lastname, 'limit': steps, 'order': 'by_name'}, api="database")
+            else:
+                ret = self.steem.rpc.lookup_accounts(lastname, steps)
             for account in ret:
                 yield account
-                if account == stop:
+                cnt += 1
+                if account == stop or (limit > 0 and cnt > limit):
                     raise StopIteration
             if lastname == ret[-1]:
                 raise StopIteration

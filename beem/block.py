@@ -31,11 +31,16 @@ class Block(BlockchainObject):
                   refreshed with ``Account.refresh()``.
 
     """
+
     def refresh(self):
         """ Even though blocks never change, you freshly obtain its contents
             from an API with this method
         """
-        block = self.steem.rpc.get_block(self.identifier)
+        if self.steem.rpc.get_use_appbase():
+            block = self.steem.rpc.get_block({"block_num": self.identifier}, api="block")
+        else:
+            block = self.steem.rpc.get_block(self.identifier)
+
         if not block:
             raise BlockDoesNotExistsException
         super(Block, self).__init__(block, steem_instance=self.steem)
@@ -43,11 +48,18 @@ class Block(BlockchainObject):
     def time(self):
         """ Return a datatime instance for the timestamp of this block
         """
-        return parse_time(self['timestamp'])
+        if self.steem.rpc.get_use_appbase():
+            return parse_time(self['block']['timestamp'])
+        else:
+            return parse_time(self['timestamp'])
 
     def ops(self):
         ops = []
-        for tx in self["transactions"]:
+        if self.steem.rpc.get_use_appbase():
+            trxs = self["block"]["transactions"]
+        else:
+            trxs = self["transactions"]
+        for tx in trxs:
             for op in tx["operations"]:
                 # Replace opid by op name
                 # op[0] = getOperationNameForId(op[0])
@@ -62,8 +74,11 @@ class Block(BlockchainObject):
                 ops_stat[key] = 0
         else:
             ops_stat = add_to_ops_stat.copy()
-
-        for tx in self["transactions"]:
+        if self.steem.rpc.get_use_appbase():
+            trxs = self["block"]["transactions"]
+        else:
+            trxs = self["transactions"]
+        for tx in trxs:
             for op in tx["operations"]:
                 ops_stat[op[0]] += 1
         return ops_stat
@@ -74,7 +89,10 @@ class BlockHeader(BlockchainObject):
         """ Even though blocks never change, you freshly obtain its contents
             from an API with this method
         """
-        block = self.steem.rpc.get_block_header(self.identifier)
+        if self.steem.rpc.get_use_appbase():
+            block = self.steem.rpc.get_block_header({"block_num": self.identifier}, api="block")
+        else:
+            block = self.steem.rpc.get_block_header(self.identifier)
         if not block:
             raise BlockDoesNotExistsException
         super(BlockHeader, self).__init__(
@@ -85,4 +103,7 @@ class BlockHeader(BlockchainObject):
     def time(self):
         """ Return a datatime instance for the timestamp of this block
         """
-        return parse_time(self['timestamp'])
+        if self.steem.rpc.get_use_appbase():
+            return parse_time(self['block']['timestamp'])
+        else:
+            return parse_time(self['timestamp'])

@@ -140,7 +140,7 @@ class SteemWebsocket(Events):
         def ping(self):
             while not self.run_event.wait(self.keep_alive):
                 log.debug('Sending ping')
-                self.get_chain_properties()
+                self.get_witness_schedule()
 
     def process_block(self, data):
         """ This method is called on notices that need processing. Here,

@@ -47,6 +47,8 @@ class Steem(object):
             "irrversible")
         :param bool bundle: Do not broadcast transactions right away, but allow
             to bundle operations *(optional)*
+        :param bool appbase: Use the new appbase rpc protocol on nodes with version
+            0.19.4 or higher. The settings has no effect on nodes with version of 0.19.3 or lower.
 
         Three wallet operation modes are possible:
 
@@ -126,6 +128,7 @@ class Steem(object):
                          rpcuser=rpcuser,
                          rpcpassword=rpcpassword,
                          **kwargs)
+            self.rpc.appbase = kwargs.get("appbase", True)
 
         # Try Optional APIs
         self.register_apis()
@@ -134,9 +137,9 @@ class Steem(object):
         self.wallet.steem = self
 
         self.data = {'last_refresh': None, 'dynamic_global_properties': None, 'feed_history': None,
-                     'current_median_history_price': None, 'next_scheduled_hardfork': None,
-                     'hardfork_version': None, 'network': None, 'chain_properties': None,
-                     'config': None, 'reward_fund': None}
+                     'get_feed_history': None, 'hardfork_properties': None,
+                     'network': None, 'witness_schedule': None, 'reserve_ratio': None,
+                     'config': None, 'reward_funds': None}
         self.data_refresh_time_seconds = data_refresh_time_seconds
         # self.refresh_data()
 
@@ -170,6 +173,8 @@ class Steem(object):
     def register_apis(self, apis=["network_broadcast", "account_by_key", "follow", "market_history"]):
         if self.offline:
             return
+        if self.rpc.appbase:
+            return
         # Try Optional APIs
         try:
             self.rpc.register_apis(apis)
@@ -194,13 +199,13 @@ class Steem(object):
         self.data['last_refresh'] = datetime.now()
         self.data["dynamic_global_properties"] = self.get_dynamic_global_properties(False)
         self.data['feed_history'] = self.get_feed_history(False)
-        self.data['current_median_history_price'] = self.get_current_median_history_price(False)
-        self.data['next_scheduled_hardfork'] = self.get_next_scheduled_hardfork(False)
-        self.data['hardfork_version'] = self.get_hardfork_version(False)
+        self.data['get_feed_history'] = self.get_feed_history(False)
+        self.data['hardfork_properties'] = self.get_hardfork_properties(False)
         self.data['network'] = self.get_network(False)
-        self.data['chain_properties'] = self.get_chain_properties(False)
+        self.data['witness_schedule'] = self.get_witness_schedule(False)
         self.data['config'] = self.get_config(False)
-        self.data['reward_fund'] = {"post": self.get_reward_fund("post", False)}
+        self.data['reward_funds'] = self.get_reward_funds(False)
+        self.data['reserve_ratio'] = self.get_reserve_ratio(False)
 
     def get_dynamic_global_properties(self, use_stored_data=True):
         """ This call returns the *dynamic global properties*
@@ -211,7 +216,31 @@ class Steem(object):
             self.refresh_data()
             return self.data['dynamic_global_properties']
         else:
-            return self.rpc.get_dynamic_global_properties()
+            if not self.rpc:
+                return None
+            if self.rpc.get_use_appbase():
+                return self.rpc.get_dynamic_global_properties(api="database")
+            else:
+                return self.rpc.get_dynamic_global_properties()
+
+    def get_reserve_ratio(self, use_stored_data=True):
+        """ This call returns the *dynamic global properties*
+            :param bool use_stored_data: if True, stored data will be returned. If stored data are
+            empty or old, refresh_data() is used.
+        """
+        if use_stored_data:
+            self.refresh_data()
+            return self.data['reserve_ratio']
+        else:
+            if not self.rpc:
+                return None
+            if self.rpc.get_use_appbase():
+                return self.rpc.get_reserve_ratio(api="witness")
+            else:
+                props = self.get_dynamic_global_properties()
+                return {'id': 0, 'average_block_size': props['average_block_size'],
+                        'current_reserve_ratio': props['current_reserve_ratio'],
+                        'max_virtual_bandwidth': props['max_virtual_bandwidth']}
 
     def get_feed_history(self, use_stored_data=True):
         """ Returns the feed_history
@@ -222,51 +251,63 @@ class Steem(object):
             self.refresh_data()
             return self.data['feed_history']
         else:
-            return self.rpc.get_feed_history()
+            if not self.rpc:
+                return None
+            if self.rpc.get_use_appbase():
+                return self.rpc.get_feed_history(api="database")
+            else:
+                return self.rpc.get_feed_history()
 
-    def get_reward_fund(self, fund_name="post", use_stored_data=True):
+    def get_reward_funds(self, use_stored_data=True):
         """ Get details for a reward fund.
             :param bool use_stored_data: if True, stored data will be returned. If stored data are
             empty or old, refresh_data() is used.
         """
         if use_stored_data:
             self.refresh_data()
-            return self.data['reward_fund'][fund_name]
+            return self.data['reward_funds']
         else:
-            return self.rpc.get_reward_fund(fund_name)
+            if not self.rpc:
+                return None
+            if self.rpc.get_use_appbase():
+                funds = self.rpc.get_reward_funds(api="database")['funds']
+                if len(funds) > 0:
+                    funds = funds[0]
+                return funds
+            else:
+                return self.rpc.get_reward_fund("post")
 
-    def get_current_median_history_price(self, use_stored_data=True):
+    def get_current_median_history(self, use_stored_data=True):
         """ Returns the current median price
             :param bool use_stored_data: if True, stored data will be returned. If stored data are
             empty or old, refresh_data() is used.
         """
         if use_stored_data:
             self.refresh_data()
-            return self.data['current_median_history_price']
+            return self.data['get_feed_history']['current_median_history']
         else:
-            return self.rpc.get_current_median_history_price()
+            if not self.rpc:
+                return None
+            if self.rpc.get_use_appbase():
+                return self.rpc.get_feed_history(api="database")['current_median_history']
+            else:
+                return self.rpc.get_current_median_history_price()['current_median_history']
 
-    def get_next_scheduled_hardfork(self, use_stored_data=True):
+    def get_hardfork_properties(self, use_stored_data=True):
         """ Returns Hardfork and live_time of the hardfork
             :param bool use_stored_data: if True, stored data will be returned. If stored data are
             empty or old, refresh_data() is used.
         """
         if use_stored_data:
             self.refresh_data()
-            return self.data['next_scheduled_hardfork']
+            return self.data['hardfork_properties']
         else:
-            return self.rpc.get_next_scheduled_hardfork()
-
-    def get_hardfork_version(self, use_stored_data=True):
-        """ Current Hardfork Version as String
-            :param bool use_stored_data: if True, stored data will be returned. If stored data are
-            empty or old, refresh_data() is used.
-        """
-        if use_stored_data:
-            self.refresh_data()
-            return self.data['hardfork_version']
-        else:
-            return self.rpc.get_hardfork_version()
+            if not self.rpc:
+                return None
+            if self.rpc.get_use_appbase():
+                return self.rpc.get_hardfork_properties(api="database")
+            else:
+                return self.rpc.get_next_scheduled_hardfork()
 
     def get_network(self, use_stored_data=True):
         """ Identify the network
@@ -280,16 +321,18 @@ class Steem(object):
             self.refresh_data()
             return self.data['network']
         else:
+            if not self.rpc:
+                return None
             return self.rpc.get_network()
 
     def get_median_price(self):
         """ Returns the current median history price as Price
         """
-        median_price = self.get_current_median_history_price()
+        median_price = self.get_current_median_history()
         a = Price(
             None,
-            base=Amount(median_price['base']),
-            quote=Amount(median_price['quote']),
+            base=Amount(median_price['base'], steem_instance=self),
+            quote=Amount(median_price['quote'], steem_instance=self),
         )
         return a.as_base("SBD")
 
@@ -302,12 +345,12 @@ class Steem(object):
     def get_sbd_per_rshares(self):
         """ Returns the current rshares to SBD ratio
         """
-        reward_fund = self.get_reward_fund()
-        reward_balance = Amount(reward_fund["reward_balance"]).amount
+        reward_fund = self.get_reward_funds()
+        reward_balance = Amount(reward_fund["reward_balance"], steem_instance=self).amount
         recent_claims = float(reward_fund["recent_claims"])
 
         fund_per_share = reward_balance / (recent_claims)
-        SBD_price = (self.get_median_price() * Amount("1 STEEM")).amount
+        SBD_price = (self.get_median_price() * Amount("1 STEEM", steem_instance=self.steem)).amount
         return fund_per_share * SBD_price
 
     def get_steem_per_mvest(self, time_stamp=None):
@@ -326,8 +369,8 @@ class Steem(object):
         global_properties = self.get_dynamic_global_properties()
 
         return (
-            Amount(global_properties['total_vesting_fund_steem']).amount /
-            (Amount(global_properties['total_vesting_shares']).amount / 1e6)
+            Amount(global_properties['total_vesting_fund_steem'], steem_instance=self).amount /
+            (Amount(global_properties['total_vesting_shares'], steem_instance=self).amount / 1e6)
         )
 
     def vests_to_sp(self, vests, timestamp=None):
@@ -339,14 +382,14 @@ class Steem(object):
         return sp * 1e6 / self.get_steem_per_mvest(timestamp)
 
     def sp_to_sbd(self, sp, voting_power=10000, vote_pct=10000):
-        reward_fund = self.get_reward_fund()
-        reward_balance = Amount(reward_fund["reward_balance"]).amount
+        reward_fund = self.get_reward_funds()
+        reward_balance = Amount(reward_fund["reward_balance"], steem_instance=self).amount
         recent_claims = float(reward_fund["recent_claims"])
         reward_share = reward_balance / recent_claims
 
         resulting_vote = ((voting_power * (vote_pct) / 10000) + 49) / 50
         vesting_shares = int(self.sp_to_vests(sp))
-        SBD_price = (self.get_median_price() * Amount("1 STEEM")).amount
+        SBD_price = (self.get_median_price() * Amount("1 STEEM", steem_instance=self)).amount
         VoteValue = (vesting_shares * resulting_vote * 100) * reward_share * SBD_price
         return VoteValue
 
@@ -379,18 +422,27 @@ class Steem(object):
                 {'account_creation_fee': '30.000 STEEM',
                  'maximum_block_size': 65536,
                  'sbd_interest_rate': 250}
+        """
+        if use_stored_data:
+            self.refresh_data()
+            return self.data['witness_schedule']['median_props']
+        else:
+            return self.get_witness_schedule(use_stored_data)['median_props']
+
+    def get_witness_schedule(self, use_stored_data=True):
+        """ Return witness elected chain properties
 
         """
         if use_stored_data:
             self.refresh_data()
-            return self.data['chain_properties']
+            return self.data['witness_schedule']
         else:
-            return self.rpc.get_chain_properties()
-
-    def get_state(self, path="value"):
-        """ get_state
-        """
-        return self.rpc.get_state(path)
+            if not self.rpc:
+                return None
+            if self.rpc.get_use_appbase():
+                return self.rpc.get_witness_schedule(api="database")
+            else:
+                return self.rpc.get_witness_schedule()
 
     def get_config(self, use_stored_data=True):
         """ Returns internal chain configuration.
@@ -399,7 +451,12 @@ class Steem(object):
             self.refresh_data()
             return self.data['config']
         else:
-            return self.rpc.get_config()
+            if not self.rpc:
+                return None
+            if self.rpc.get_use_appbase():
+                return self.rpc.get_config(api="database")
+            else:
+                return self.rpc.get_config()
 
     @property
     def chain_params(self):
@@ -514,7 +571,7 @@ class Steem(object):
     def info(self):
         """ Returns the global properties
         """
-        return self.rpc.get_dynamic_global_properties()
+        return self.get_dynamic_global_properties()
 
     # -------------------------------------------------------------------------
     # Wallet stuff
@@ -748,7 +805,7 @@ class Steem(object):
             posting_accounts_authority.append([addaccount["name"], 1])
 
         props = self.get_chain_properties()
-        required_fee_steem = Amount(props["account_creation_fee"]) * 30
+        required_fee_steem = Amount(props["account_creation_fee"], steem_instance=self) * 30
         if delegation_fee_steem.amount:
             # creating accounts without delegation requires 30x
             # account_creation_fee creating account with delegation allows one
@@ -766,7 +823,7 @@ class Steem(object):
             remaining_fee = required_fee_steem - delegation_fee_steem
             if remaining_fee.amount > 0:
                 required_sp = remaining_fee.amount * delegated_sp_fee_mult
-                required_fee_vests = Amount(self.sp_to_vests(required_sp) + 1, "VESTS")
+                required_fee_vests = Amount(self.sp_to_vests(required_sp) + 1, "VESTS", steem_instance=self)
             op = {
                 "fee": delegation_fee_steem,
                 'delegation': required_fee_vests,
