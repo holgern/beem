@@ -7,15 +7,20 @@ from future.utils import python_2_unicode_compatible
 from builtins import str
 from builtins import range
 from builtins import object
-from concurrent.futures import ThreadPoolExecutor, wait, as_completed
 import time
 from .block import Block
 from .blockchainobject import BlockchainObject
 from beem.instance import shared_steem_instance
-from beembase.operationids import getOperationNameForId
 from .amount import Amount
 from datetime import datetime, timedelta
 import math
+FUTURES_MODULE = None
+if not FUTURES_MODULE:
+    try:
+        from concurrent.futures import ThreadPoolExecutor, wait, as_completed
+        FUTURES_MODULE = "futures"
+    except ImportError:
+        FUTURES_MODULE = None
 
 
 @python_2_unicode_compatible
@@ -180,7 +185,7 @@ class Blockchain(object):
                 head_block = stop
             else:
                 head_block = self.get_current_block_num()
-            if threading:
+            if threading and FUTURES_MODULE:
                 pool = ThreadPoolExecutor(2)
                 latest_block = 0
                 for blocknum in range(start, head_block + 1, thread_num):

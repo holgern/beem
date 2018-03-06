@@ -117,6 +117,13 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.11
+-------
+* beem is appbase ready
+* more examples added
+* print_appbase_calls added
+* https nodes can be used
+
 0.19.10
 -------
 * Memo encryption/decryption fixed
