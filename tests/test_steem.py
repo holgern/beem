@@ -7,23 +7,25 @@ from builtins import super
 import mock
 import string
 import unittest
+from parameterized import parameterized
 import random
 from pprint import pprint
 from beem import Steem
 from beem.amount import Amount
 from beem.memo import Memo
+from beem.wallet import Wallet
 from beem.witness import Witness
 from beem.account import Account
 from beembase.account import PrivateKey
 from beem.instance import set_shared_steem_instance
 # Py3 compatibility
 import sys
-
-wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 core_unit = "STM"
+wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
          "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
          "wss://steemd.minnowsupportproject.org"]
+nodes_appbase = ["https://api.steemitstage.com", "wss://appbasetest.timcliff.com"]
 
 
 class Testcases(unittest.TestCase):
@@ -34,16 +36,27 @@ class Testcases(unittest.TestCase):
         self.bts = Steem(
             node=nodes,
             nobroadcast=True,
-            keys={"active": wif, "owner": wif, "memo": wif},
+            keys={"active": wif, "owner": wif, "memo": wif}
+        )
+        self.appbase = Steem(
+            node=nodes_appbase,
+            nobroadcast=True,
+            keys={"active": wif, "owner": wif, "memo": wif}
         )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(self.bts)
         self.bts.set_default_account("test")
 
-    def test_transfer(self):
-        bts = self.bts
-        # bts.prefix ="STX"
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_transfer(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        elif node_param == "appbase":
+            bts = self.appbase
         acc = Account("test", steem_instance=bts)
         tx = acc.transfer(
             "test", 1.33, "SBD", memo="Foobar", account="test1")
@@ -56,12 +69,18 @@ class Testcases(unittest.TestCase):
         self.assertEqual(op["memo"], "Foobar")
         self.assertEqual(op["from"], "test1")
         self.assertEqual(op["to"], "test")
-        amount = Amount(op["amount"])
+        amount = Amount(op["amount"], steem_instance=bts)
         self.assertEqual(float(amount), 1.33)
 
-    def test_transfer_memo(self):
-        bts = self.bts
-        # bts.prefix ="STX"
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_transfer_memo(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        elif node_param == "appbase":
+            bts = self.appbase
         acc = Account("test", steem_instance=bts)
         tx = acc.transfer(
             "test", 1.33, "SBD", memo="#Foobar", account="test1")
@@ -78,11 +97,18 @@ class Testcases(unittest.TestCase):
 
         self.assertEqual(op["from"], "test1")
         self.assertEqual(op["to"], "test")
-        amount = Amount(op["amount"])
+        amount = Amount(op["amount"], steem_instance=bts)
         self.assertEqual(float(amount), 1.33)
 
-    def test_create_account(self):
-        bts = self.bts
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_create_account(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        elif node_param == "appbase":
+            bts = self.appbase
         name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
         key1 = PrivateKey()
         key2 = PrivateKey()
@@ -132,8 +158,15 @@ class Testcases(unittest.TestCase):
             op["creator"],
             "test")
 
-    def test_create_account_with_delegation(self):
-        bts = self.bts
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_create_account_with_delegation(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        elif node_param == "appbase":
+            bts = self.appbase
         name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
         key1 = PrivateKey()
         key2 = PrivateKey()
@@ -183,14 +216,38 @@ class Testcases(unittest.TestCase):
             op["creator"],
             "test")
 
-    def test_connect(self):
-        self.bts.connect()
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_connect(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        elif node_param == "appbase":
+            bts = self.appbase
+        bts.connect()
 
-    def test_set_default_account(self):
-        self.bts.set_default_account("test")
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_set_default_account(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        elif node_param == "appbase":
+            bts = self.appbase
+        bts.set_default_account("test")
 
-    def test_info(self):
-        info = self.bts.info()
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_info(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        elif node_param == "appbase":
+            bts = self.appbase
+        info = bts.info()
         for key in ['current_witness',
                     'head_block_id',
                     'head_block_number',
@@ -201,8 +258,15 @@ class Testcases(unittest.TestCase):
                     'time']:
             self.assertTrue(key in info)
 
-    def test_finalizeOps(self):
-        bts = self.bts
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_finalizeOps(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        elif node_param == "appbase":
+            bts = self.appbase
         tx1 = bts.new_tx()
         tx2 = bts.new_tx()
 
@@ -217,8 +281,15 @@ class Testcases(unittest.TestCase):
         self.assertEqual(len(ops1), 2)
         self.assertEqual(len(ops2), 1)
 
-    def test_weight_threshold(self):
-        bts = self.bts
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_weight_threshold(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        elif node_param == "appbase":
+            bts = self.appbase
 
         auth = {'account_auths': [['test', 1]],
                 'extensions': [],
@@ -237,8 +308,15 @@ class Testcases(unittest.TestCase):
         with self.assertRaises(ValueError):
             bts._test_weights_treshold(auth)
 
-    def test_allow(self):
-        bts = self.bts
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_allow(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        elif node_param == "appbase":
+            bts = self.appbase
         self.assertIn(bts.prefix, "STM")
         acc = Account("test", steem_instance=bts)
         tx = acc.allow(
@@ -259,8 +337,15 @@ class Testcases(unittest.TestCase):
             op["owner"]["key_auths"])
         self.assertEqual(op["owner"]["weight_threshold"], 1)
 
-    def test_disallow(self):
-        bts = self.bts
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_disallow(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        elif node_param == "appbase":
+            bts = self.appbase
         acc = Account("test", steem_instance=bts)
         if sys.version > '3':
             _assertRaisesRegex = self.assertRaisesRegex
@@ -281,8 +366,15 @@ class Testcases(unittest.TestCase):
                 permission="owner"
             )
 
-    def test_update_memo_key(self):
-        bts = self.bts
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_update_memo_key(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        elif node_param == "appbase":
+            bts = self.appbase
         acc = Account("test1", steem_instance=bts)
         tx = acc.update_memo_key("STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n")
         self.assertEqual(
@@ -294,8 +386,15 @@ class Testcases(unittest.TestCase):
             op["memo_key"],
             "STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n")
 
-    def test_approvewitness(self):
-        bts = self.bts
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_approvewitness(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        elif node_param == "appbase":
+            bts = self.appbase
         w = Account("test", steem_instance=bts)
         tx = w.approvewitness("test1")
         self.assertEqual(

@@ -48,7 +48,7 @@ class Blockchain(object):
         Monitor for new blocks ..
         .. code-block:: python
             for block in chain.blocks():
-                print(block)
+                print(block["block"])
 
         or each operation individually:
         .. code-block:: python
@@ -143,19 +143,6 @@ class Blockchain(object):
             steem_instance=self.steem
         ).time().timestamp())
 
-    def block(self, blocknum):
-        if self.steem.rpc.get_use_appbase():
-            block = self.steem.rpc.get_block({"block_num": blocknum}, api="block")
-        else:
-            block = self.steem.rpc.get_block(blocknum)
-        if "id" in block and "block" in block:
-            blockid = block["id"]
-            block = block["block"]
-            block.update({"block_num": blockid})
-        else:
-            block.update({"block_num": blocknum})
-        return block
-
     def blocks(self, start=None, stop=None, threading=False, thread_num=8):
         """ Yields blocks starting from ``start``.
 
@@ -192,27 +179,27 @@ class Blockchain(object):
                     futures = []
                     i = blocknum
                     while i <= blocknum + thread_num and i <= head_block:
-                        futures.append(pool.submit(self.block, i))
+                        futures.append(pool.submit(Block, i, steem_instance=self.steem))
                         i += 1
                     results = [r.result() for r in as_completed(futures)]
                     block_nums = []
                     for b in results:
-                        block_nums.append(b["block_num"])
-                        if latest_block < b["block_num"]:
-                            latest_block = b["block_num"]
+                        block_nums.append(int(b["id"]))
+                        if latest_block < int(b["id"]):
+                            latest_block = int(b["id"])
                     from operator import itemgetter
-                    blocks = sorted(results, key=itemgetter('block_num'))
+                    blocks = sorted(results, key=itemgetter('id'))
                     for b in blocks:
                         yield b
                 if latest_block < head_block:
                     for blocknum in range(latest_block, head_block + 1):
-                        block = self.block(blocknum)
+                        block = Block(blocknum, steem_instance=self.steem)
                         yield block
             else:
                 # Blocks from start until head block
                 for blocknum in range(start, head_block + 1):
                     # Get full block
-                    block = self.block(blocknum)
+                    block = Block(blocknum, steem_instance=self.steem)
                     yield block
             # Set new start
             start = head_block + 1
@@ -240,14 +227,14 @@ class Blockchain(object):
         """
 
         for block in self.blocks(start=start, stop=stop, **kwargs):
-            for tx in block["transactions"]:
+            for tx in block["block"]["transactions"]:
                 for op in tx["operations"]:
                     # Replace opid by op name
                     # op[0] = getOperationNameForId(op[0])
                     yield {
-                        "block_num": block["block_num"],
+                        "block_num": int(block["id"]),
                         "op": op,
-                        "timestamp": block["timestamp"]
+                        "timestamp": block["block"]["timestamp"]
                     }
 
     def ops_statistics(self, start, stop=None, add_to_ops_stat=None, verbose=False):
@@ -274,8 +261,8 @@ class Blockchain(object):
             stop = current_block
         for block in self.blocks(start=start, stop=stop):
             if verbose:
-                print(str(block["block_num"]) + " " + block["timestamp"])
-            for tx in block["transactions"]:
+                print(block["id"] + " " + block["block"]["timestamp"])
+            for tx in block["block"]["transactions"]:
                 for op in tx["operations"]:
                     ops_stat[op[0]] += 1
         return ops_stat
@@ -324,7 +311,7 @@ class Blockchain(object):
         counter = 10
         for block in self.blocks():
             counter += 1
-            for tx in block["transactions"]:
+            for tx in block["block"]["transactions"]:
                 if sorted(
                     tx["signatures"]
                 ) == sorted(transaction["signatures"]):
@@ -344,7 +331,7 @@ class Blockchain(object):
         cnt = 1
         while True:
             if self.steem.rpc.get_use_appbase():
-                ret = self.steem.rpc.list_accounts({'start': lastname, 'limit': steps, 'order': 'by_name'}, api="database")
+                ret = self.steem.rpc.list_accounts({'start': lastname, 'limit': steps, 'order': 'by_name'}, api="database")["accounts"]
             else:
                 ret = self.steem.rpc.lookup_accounts(lastname, steps)
             for account in ret:

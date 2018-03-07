@@ -6,6 +6,7 @@ from builtins import str
 from builtins import super
 import unittest
 import mock
+from parameterized import parameterized
 from pprint import pprint
 from beem import Steem, exceptions
 from beem.account import Account
@@ -17,6 +18,7 @@ wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
          "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
          "wss://steemd.minnowsupportproject.org"]
+nodes_appbase = ["https://api.steemitstage.com", "wss://appbasetest.timcliff.com"]
 
 
 class Testcases(unittest.TestCase):
@@ -31,18 +33,33 @@ class Testcases(unittest.TestCase):
             # Overwrite wallet to use this list of wifs only
             wif={"active": wif}
         )
+        self.appbase = Steem(
+            node=nodes_appbase,
+            nobroadcast=True,
+            bundle=False,
+            # Overwrite wallet to use this list of wifs only
+            wif={"active": wif}
+        )
         self.bts.set_default_account("test")
         set_shared_steem_instance(self.bts)
 
-    def test_account(self):
-        Account("test")
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_account(self, node_param):
+        if node_param == "non_appbase":
+            stm = self.bts
+        else:
+            stm = self.appbase
+        Account("test", steem_instance=stm)
         with self.assertRaises(
             exceptions.AccountDoesNotExistsException
         ):
-            Account("DoesNotExistsXXX")
+            Account("DoesNotExistsXXX", steem_instance=stm)
         # asset = Asset("1.3.0")
         # symbol = asset["symbol"]
-        account = Account("test", full=True)
+        account = Account("test", full=True, steem_instance=stm)
         self.assertEqual(account.name, "test")
         self.assertEqual(account["name"], account.name)
         self.assertIsInstance(account.get_balance("available", "SBD"), Amount)
@@ -62,8 +79,16 @@ class Testcases(unittest.TestCase):
         self.assertEqual(str(account), "<Account test>")
         self.assertIsInstance(Account(account), Account)
 
-    def test_account_props(self):
-        account = Account("test", full=True)
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_account_props(self, node_param):
+        if node_param == "non_appbase":
+            stm = self.bts
+        else:
+            stm = self.appbase
+        account = Account("test", full=True, steem_instance=stm)
         rep = account.get_reputation()
         self.assertTrue(isinstance(rep, float))
         vp = account.get_voting_power()

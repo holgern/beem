@@ -473,7 +473,7 @@ class Steem(object):
     def set_default_account(self, account):
         """ Set the default account to be used
         """
-        Account(account)
+        Account(account, steem_instance=self)
         config["default_account"] = account
 
     def finalizeOp(self, ops, account, permission, **kwargs):

@@ -53,7 +53,7 @@ class Discussions_by_trending(list):
             posts = self.steem.rpc.get_discussions_by_trending(discussion_query)
         super(Discussions_by_trending, self).__init__(
             [
-                Comment(x)
+                Comment(x, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -73,7 +73,7 @@ class Comment_discussions_by_payout(list):
             posts = self.steem.rpc.get_comment_discussions_by_payout(discussion_query)
         super(Comment_discussions_by_payout, self).__init__(
             [
-                Comment(x)
+                Comment(x, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -93,7 +93,7 @@ class Post_discussions_by_payout(list):
             posts = self.steem.rpc.get_post_discussions_by_payout(discussion_query)
         super(Post_discussions_by_payout, self).__init__(
             [
-                Comment(x)
+                Comment(x, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -113,7 +113,7 @@ class Discussions_by_created(list):
             posts = self.steem.rpc.get_discussions_by_created(discussion_query)
         super(Discussions_by_created, self).__init__(
             [
-                Comment(x)
+                Comment(x, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -133,7 +133,7 @@ class Discussions_by_active(list):
             posts = self.steem.rpc.get_discussions_by_active(discussion_query)
         super(Discussions_by_active, self).__init__(
             [
-                Comment(x)
+                Comment(x, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -154,27 +154,7 @@ class Discussions_by_cashout(list):
             posts = self.steem.rpc.get_discussions_by_cashout(discussion_query)
         super(Discussions_by_cashout, self).__init__(
             [
-                Comment(x)
-                for x in posts
-            ]
-        )
-
-
-class Discussions_by_payout(list):
-    """ get_discussions_by_payout
-
-        :param str discussion_query
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
-    """
-    def __init__(self, discussion_query, steem_instance=None):
-        self.steem = steem_instance or shared_steem_instance()
-        if self.steem.rpc.get_use_appbase():
-            posts = self.steem.rpc.get_discussions_by_payout(discussion_query, api="tags")['discussions']
-        else:
-            posts = self.steem.rpc.get_discussions_by_payout(discussion_query)
-        super(Discussions_by_payout, self).__init__(
-            [
-                Comment(x)
+                Comment(x, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -194,7 +174,7 @@ class Discussions_by_votes(list):
             posts = self.steem.rpc.get_discussions_by_votes(discussion_query)
         super(Discussions_by_votes, self).__init__(
             [
-                Comment(x)
+                Comment(x, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -214,7 +194,7 @@ class Discussions_by_children(list):
             posts = self.steem.rpc.get_discussions_by_children(discussion_query)
         super(Discussions_by_children, self).__init__(
             [
-                Comment(x)
+                Comment(x, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -234,7 +214,7 @@ class Discussions_by_hot(list):
             posts = self.steem.rpc.get_discussions_by_hot(discussion_query)
         super(Discussions_by_hot, self).__init__(
             [
-                Comment(x)
+                Comment(x, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -251,15 +231,15 @@ class Discussions_by_feed(list):
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_feed(discussion_query, api="tags")['discussions']
         else:
-            self.steem.register_apis(["follow"])
-            limit = discussion_query["limit"]
-            account = discussion_query["tag"]
-            entryId = 0
-            posts = self.steem.rpc.get_feed(account, entryId, limit, api='follow')
-            # posts = self.steem.rpc.get_discussions_by_feed(discussion_query, api='follow')
+            # self.steem.register_apis(["follow"])
+            # limit = discussion_query["limit"]
+            # account = discussion_query["tag"]
+            # entryId = 0
+            # posts = self.steem.rpc.get_feed(account, entryId, limit, api='follow')["comment"]
+            posts = self.steem.rpc.get_discussions_by_feed(discussion_query)
         super(Discussions_by_feed, self).__init__(
             [
-                Comment(x["comment"])
+                Comment(x, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -276,15 +256,15 @@ class Discussions_by_blog(list):
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_blog(discussion_query, api="tags")['discussions']
         else:
-            self.steem.register_apis(["follow"])
-            limit = discussion_query["limit"]
-            account = discussion_query["tag"]
-            entryId = 0
-            posts = self.steem.rpc.get_feed(account, entryId, limit, api='follow')
-            # posts = self.steem.rpc.get_discussions_by_blog(discussion_query)
+            # self.steem.register_apis(["follow"])
+            # limit = discussion_query["limit"]
+            # account = discussion_query["tag"]
+            # entryId = 0
+            # posts = self.steem.rpc.get_feed(account, entryId, limit, api='follow')
+            posts = self.steem.rpc.get_discussions_by_blog(discussion_query)
         super(Discussions_by_blog, self).__init__(
             [
-                Comment(x["comment"])
+                Comment(x, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -304,7 +284,7 @@ class Discussions_by_comments(list):
             posts = self.steem.rpc.get_discussions_by_comments(discussion_query)
         super(Discussions_by_comments, self).__init__(
             [
-                Comment(x)
+                Comment(x, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -324,7 +304,7 @@ class Discussions_by_promoted(list):
             posts = self.steem.rpc.get_discussions_by_promoted(discussion_query)
         super(Discussions_by_promoted, self).__init__(
             [
-                Comment(x)
+                Comment(x, steem_instance=self.steem)
                 for x in posts
             ]
         )

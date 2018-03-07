@@ -33,6 +33,10 @@ class NoMethodWithName(RPCError):
     pass
 
 
+class NoApiWithName(RPCError):
+    pass
+
+
 class UnhandledRPCError(RPCError):
     pass
 

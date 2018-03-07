@@ -18,7 +18,7 @@ except LookupError:
 
 VERSION = '0.19.13'
 
-tests_require = ['mock >= 2.0.0', 'pytest', 'pytest-mock']
+tests_require = ['mock >= 2.0.0', 'pytest', 'pytest-mock', 'parameterized']
 
 requires = [
     "future",
@@ -90,7 +90,7 @@ if __name__ == '__main__':
             'Programming Language :: Python :: 3.4',
             'Programming Language :: Python :: 3.5',
             'Programming Language :: Python :: 3.6',
-            'Development Status :: 3 - Alpha',
+            'Development Status :: 4 - Beta',
             'Intended Audience :: Developers',
             'Intended Audience :: Financial and Insurance Industry',
             'Topic :: Office/Business :: Financial',

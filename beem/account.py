@@ -82,10 +82,10 @@ class Account(BlockchainObject):
             else:
                 account = self.steem.rpc.lookup_account_names(
                     [self.identifier])
+        if self.steem.rpc.get_use_appbase():
+            account = account["accounts"]
         if not account:
             raise AccountDoesNotExistsException(self.identifier)
-        elif self.steem.rpc.get_use_appbase():
-            account = account["accounts"][0]
         else:
             account = account[0]
         if not account:
@@ -107,7 +107,7 @@ class Account(BlockchainObject):
         ]
         for p in amounts:
             if p in account and isinstance(account.get(p), (string_types, list)):
-                account[p] = Amount(account[p])
+                account[p] = Amount(account[p], steem_instance=self.steem)
         self.steem.refresh_data()
 
         super(Account, self).__init__(account, id_item="name", steem_instance=self.steem)

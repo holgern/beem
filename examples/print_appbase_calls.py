@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 if __name__ == "__main__":
     stm = Steem(node="https://api.steemitstage.com")
     all_calls = stm.rpc.get_methods(api="jsonrpc")
-    t = PrettyTable(["method", "signature"])
+    t = PrettyTable(["method", "args", "ret"])
     t.align = "l"
     include_condenser_methods = False
     for call in all_calls:
@@ -25,7 +25,8 @@ if __name__ == "__main__":
             ret = stm.rpc.get_signature({'method': call}, api="jsonrpc")
             t.add_row([
                 call,
-                ret
+                ret['args'],
+                ret['ret']
             ])
     print(t)
     with open('print_appbase.txt', 'w') as w:

@@ -4,6 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import super
 import unittest
+from parameterized import parameterized
 from pprint import pprint
 from beem import Steem
 from beem.comment import Comment
@@ -13,6 +14,7 @@ wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
          "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
          "wss://steemd.minnowsupportproject.org"]
+nodes_appbase = ["https://api.steemitstage.com", "wss://appbasetest.timcliff.com"]
 
 
 class Testcases(unittest.TestCase):
@@ -25,13 +27,25 @@ class Testcases(unittest.TestCase):
             nobroadcast=True,
             keys={"active": wif},
         )
+        self.appbase = Steem(
+            node=nodes_appbase,
+            nobroadcast=True,
+            keys={"active": wif},
+        )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(self.bts)
         self.bts.set_default_account("test")
 
-    def test_vote(self):
-        bts = self.bts
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_vote(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        else:
+            bts = self.appbase
         c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
         tx = c.vote(100, account="test")
         self.assertEqual(
@@ -43,9 +57,18 @@ class Testcases(unittest.TestCase):
             "test",
             op["voter"])
 
-    def test_export(self):
-        bts = self.bts
-        content = bts.rpc.get_content("gtg", "witness-gtg-log")
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_export(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+            content = bts.rpc.get_content("gtg", "witness-gtg-log")
+        else:
+            bts = self.appbase
+            content = bts.rpc.get_discussion({'author': 'gtg', 'permlink': 'witness-gtg-log'}, api="tags")
+
         c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
         keys = list(content.keys())
         json_content = c.json()

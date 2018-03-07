@@ -68,6 +68,10 @@ class SteemNodeRPC(GrapheneRPC):
                 raise exceptions.MissingRequiredActiveAuthority
             elif re.match("^no method with name.*", msg):
                 raise exceptions.NoMethodWithName(msg)
+            elif re.search("Could not find method", msg):
+                raise exceptions.NoMethodWithName(msg)
+            elif re.search("Could not find API", msg):
+                raise exceptions.NoApiWithName(msg)
             elif msg:
                 raise exceptions.UnhandledRPCError(msg)
             else:

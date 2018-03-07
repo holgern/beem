@@ -89,7 +89,7 @@ class Comment(BlockchainObject):
     def refresh(self):
         [author, permlink] = resolve_authorperm(self.identifier)
         if self.steem.rpc.get_use_appbase():
-            content = self.steem.rpc.get_discussion({'author': author, 'permlink': permlink}, tag="tags")
+            content = self.steem.rpc.get_discussion({'author': author, 'permlink': permlink}, api="tags")
         else:
             content = self.steem.rpc.get_content(author, permlink)
         if not content:

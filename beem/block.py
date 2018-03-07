@@ -24,7 +24,8 @@ class Block(BlockchainObject):
 
             from beem.block import Block
             block = Block(1)
-            print(block)
+            print(block["block"])
+            print(block["id])
 
         .. note:: This class comes with its own caching function to reduce the
                   load on the API server. Instances of this class can be
@@ -39,26 +40,32 @@ class Block(BlockchainObject):
         if self.steem.rpc.get_use_appbase():
             block = self.steem.rpc.get_block({"block_num": self.identifier}, api="block")
         else:
-            block = self.steem.rpc.get_block(self.identifier)
+            block = {'block': self.steem.rpc.get_block(self.identifier), 'id': str(self.identifier)}
 
-        if not block:
+        if not block or not block['block']:
             raise BlockDoesNotExistsException
         super(Block, self).__init__(block, steem_instance=self.steem)
+
+    @property
+    def block(self):
+        """ Returns the block data
+        """
+        return self["block"]
+
+    @property
+    def id(self):
+        """ Returns the block id
+        """
+        return int(self["id"])
 
     def time(self):
         """ Return a datatime instance for the timestamp of this block
         """
-        if self.steem.rpc.get_use_appbase():
-            return parse_time(self['block']['timestamp'])
-        else:
-            return parse_time(self['timestamp'])
+        return parse_time(self['block']['timestamp'])
 
     def ops(self):
         ops = []
-        if self.steem.rpc.get_use_appbase():
-            trxs = self["block"]["transactions"]
-        else:
-            trxs = self["transactions"]
+        trxs = self["block"]["transactions"]
         for tx in trxs:
             for op in tx["operations"]:
                 # Replace opid by op name
@@ -74,10 +81,7 @@ class Block(BlockchainObject):
                 ops_stat[key] = 0
         else:
             ops_stat = add_to_ops_stat.copy()
-        if self.steem.rpc.get_use_appbase():
-            trxs = self["block"]["transactions"]
-        else:
-            trxs = self["transactions"]
+        trxs = self["block"]["transactions"]
         for tx in trxs:
             for op in tx["operations"]:
                 ops_stat[op[0]] += 1
@@ -92,8 +96,8 @@ class BlockHeader(BlockchainObject):
         if self.steem.rpc.get_use_appbase():
             block = self.steem.rpc.get_block_header({"block_num": self.identifier}, api="block")
         else:
-            block = self.steem.rpc.get_block_header(self.identifier)
-        if not block:
+            block = {'header': self.steem.rpc.get_block_header(self.identifier), 'id': str(self.identifier)}
+        if not block or not block['header']:
             raise BlockDoesNotExistsException
         super(BlockHeader, self).__init__(
             block,
@@ -103,7 +107,16 @@ class BlockHeader(BlockchainObject):
     def time(self):
         """ Return a datatime instance for the timestamp of this block
         """
-        if self.steem.rpc.get_use_appbase():
-            return parse_time(self['block']['timestamp'])
-        else:
-            return parse_time(self['timestamp'])
+        return parse_time(self['header']['timestamp'])
+
+    @property
+    def header(self):
+        """ Returns the block header
+        """
+        return self["header"]
+
+    @property
+    def id(self):
+        """ Returns the block id
+        """
+        return int(self["id"])
