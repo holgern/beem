@@ -166,7 +166,10 @@ class Comment(BlockchainObject):
         ]
         for p in sbd_amounts:
             if p in output:
-                output[p] = str(output.get(p, Amount("0.000 SBD", steem_instance=self.steem)))
+                if self.steem.rpc.get_use_appbase():
+                    output[p] = (output.get(p, Amount("0.000 SBD", steem_instance=self.steem)))
+                else:
+                    output[p] = str(output.get(p, Amount("0.000 SBD", steem_instance=self.steem)))
         return json.loads(str(json.dumps(output)))
 
     @property
