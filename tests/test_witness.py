@@ -20,7 +20,7 @@ nodes_appbase = ["https://api.steemitstage.com", "wss://appbasetest.timcliff.com
 class Testcases(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs).i
+        super().__init__(*args, **kwargs)
 
         self.bts = Steem(
             node=nodes,

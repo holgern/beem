@@ -116,11 +116,11 @@ class Vote(BlockchainObject):
 
     @property
     def sbd(self):
-        return self.steem.rshares_to_sbd(self["rshares"])
+        return self.steem.rshares_to_sbd(int(self["rshares"]))
 
     @property
     def rshares(self):
-        return self["rshares"]
+        return int(self["rshares"])
 
     @property
     def percent(self):
@@ -213,7 +213,7 @@ class ActiveVotes(VotesObject):
 
         super(ActiveVotes, self).__init__(
             [
-                Vote(x, authorperm=authorperm)
+                Vote(x, authorperm=authorperm, lazy=True, steem_instance=self.steem)
                 for x in votes
             ]
         )
@@ -231,13 +231,13 @@ class AccountVotes(VotesObject):
 
         account = Account(account, steem_instance=self.steem)
         if self.steem.rpc.get_use_appbase():
-            votes = self.steem.rpc.find_votes({'author': account["name"], 'permlink': ''}, api="database")['votes']
+            votes = self.steem.rpc.get_account_votes(account["name"])
         else:
             votes = self.steem.rpc.get_account_votes(account["name"])
 
         super(AccountVotes, self).__init__(
             [
-                Vote(x, authorperm=account["name"])
+                Vote(x, authorperm=account["name"], steem_instance=self.steem)
                 for x in votes
             ]
         )
