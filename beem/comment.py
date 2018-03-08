@@ -293,7 +293,7 @@ class Comment(BlockchainObject):
                 "voter": account["name"],
                 "author": post_author,
                 "permlink": post_permlink,
-                "weight": int(weight * STEEMIT_1_PERCENT)
+                "weight": vote_weight
             })
 
         return self.steem.finalizeOp(op, account, "posting", **kwargs)

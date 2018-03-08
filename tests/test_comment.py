@@ -92,6 +92,13 @@ class Testcases(unittest.TestCase):
             "test",
             op["voter"])
 
+        tx = c.upvote(weight=150, voter="test")
+        op = tx["operations"][0][1]
+        self.assertEqual(op["weight"], 10000)
+        tx = c.downvote(weight=-150, voter="test")
+        op = tx["operations"][0][1]
+        self.assertEqual(op["weight"], -10000)
+
     @parameterized.expand([
         ("non_appbase"),
         ("appbase"),
@@ -146,3 +153,32 @@ class Testcases(unittest.TestCase):
         self.assertIn(
             "gtg",
             op["author"])
+
+    def test_edit(self):
+        bts = self.bts
+        c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
+        body = c.body + "test"
+        tx = c.edit(body, replace=False)
+        self.assertEqual(
+            (tx["operations"][0][0]),
+            "comment"
+        )
+        op = tx["operations"][0][1]
+        self.assertIn(
+            "gtg",
+            op["author"])
+
+    def test_edit_replace(self):
+        bts = self.bts
+        c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
+        body = c.body + "test"
+        tx = c.edit(body, replace=True)
+        self.assertEqual(
+            (tx["operations"][0][0]),
+            "comment"
+        )
+        op = tx["operations"][0][1]
+        self.assertIn(
+            "gtg",
+            op["author"])
+        self.assertEqual(body, op["body"])
