@@ -7,7 +7,7 @@ from builtins import str
 from beem.instance import shared_steem_instance
 from datetime import datetime, timedelta
 from .utils import (
-    formatTimeFromNow, formatTime, formatTimeString, assets_from_string)
+    formatTimeFromNow, formatTime, formatTimeString, assets_from_string, parse_time)
 from .asset import Asset
 from .amount import Amount
 from .price import Price, Order, FilledOrder
@@ -230,14 +230,8 @@ class Market(dict):
             orders = self.steem.rpc.get_recent_trades(limit, api="market_history")
         if raw_data:
             return orders
-        data_order = list([Order(
-            Amount(x["open_pays"], steem_instance=self.steem),
-            Amount(x["current_pays"], steem_instance=self.steem),
-            steem_instance=self.steem) for x in orders])
-
-        data_date = list([formatTimeString(x["date"]) for x in orders])
-
-        return {'date': data_date, 'order': data_order}
+        filled_order = list([FilledOrder(x, steem_instance=self.steem) for x in orders])
+        return filled_order
 
     def trades(self, limit=25, start=None, stop=None, raw_data=False):
         """ Returns your trade history for a given market.
@@ -265,14 +259,8 @@ class Market(dict):
                 limit, api="market_history")
         if raw_data:
             return orders
-        data_order = list([Order(
-            Amount(x["open_pays"], steem_instance=self.steem),
-            Amount(x["current_pays"], steem_instance=self.steem),
-            steem_instance=self.steem) for x in orders])
-
-        data_date = list([formatTimeString(x["date"]) for x in orders])
-
-        return {'date': data_date, 'order': data_order}
+        filled_order = list([FilledOrder(x, steem_instance=self.steem) for x in orders])
+        return filled_order
 
     def market_history_buckets(self):
         if self.steem.rpc.get_use_appbase():

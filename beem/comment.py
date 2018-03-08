@@ -92,7 +92,7 @@ class Comment(BlockchainObject):
             content = self.steem.rpc.get_discussion({'author': author, 'permlink': permlink}, api="tags")
         else:
             content = self.steem.rpc.get_content(author, permlink)
-        if not content:
+        if not content or not content['author']:
             raise ContentDoesNotExistsException
         super(Comment, self).__init__(content, id_item="authorperm", steem_instance=self.steem)
         self["authorperm"] = construct_authorperm(self["author"], self["permlink"])
@@ -229,14 +229,14 @@ class Comment(BlockchainObject):
         else:
             [post_author, post_permlink] = resolve_authorperm(identifier)
         if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.get_reblogged_by({'author': post_author, 'permlink': post_permlink}, api="follow")
+            return self.steem.rpc.get_reblogged_by({'author': post_author, 'permlink': post_permlink}, api="follow")['accounts']
         else:
             self.steem.register_apis(["follow"])
             return self.steem.rpc.get_reblogged_by(post_author, post_permlink, api="follow")
 
     def get_votes(self):
         from .vote import ActiveVotes
-        return ActiveVotes(self)
+        return ActiveVotes(self, steem_instance=self.steem)
 
     def upvote(self, weight=+100, voter=None):
         """ Upvote the post

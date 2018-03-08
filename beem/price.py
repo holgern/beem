@@ -453,45 +453,39 @@ class FilledOrder(Price):
 
         :param beem.steem.Steem steem_instance: Steem instance
 
-        .. note:: Instances of this class come with an additional ``time`` key
+        .. note:: Instances of this class come with an additional ``date`` key
                   that shows when the order has been filled!
     """
 
     def __init__(self, order, steem_instance=None, **kwargs):
 
         self.steem = steem_instance or shared_steem_instance()
-
-        if isinstance(order, dict) and "price" in order:
-            super(FilledOrder, self).__init__(
-                order.get("price"),
-                base=kwargs.get("base"),
-                quote=kwargs.get("quote"),
-            )
-            self["time"] = formatTimeString(order["date"])
-            self["side1_account_id"] = order["side1_account_id"]
-            self["side2_account_id"] = order["side2_account_id"]
-
-        elif isinstance(order, dict):
+        if isinstance(order, dict) and "current_pays" in order and "open_pays" in order:
             # filled orders from account history
             if "op" in order:
                 order = order["op"]
-            base_asset = kwargs.get("base_asset", order["receives"]["asset_id"])
+
             super(FilledOrder, self).__init__(
-                order,
-                base_asset=base_asset,
+                Amount(order["open_pays"], steem_instance=self.steem),
+                Amount(order["current_pays"], steem_instance=self.steem),
             )
-            if "time" in order:
-                self["time"] = formatTimeString(order["time"])
-            if "account_id" in order:
-                self["account_id"] = order["account_id"]
+            if "date" in order:
+                self["date"] = formatTimeString(order["date"])
 
         else:
             raise ValueError("Couldn't parse 'Price'.")
 
+    def json(self):
+        return {
+            "date": formatTimeString(self["date"]),
+            "current_pays": self["base"].json(),
+            "open_pays": self["quote"].json(),
+        }
+
     def __repr__(self):
         t = ""
-        if "time" in self and self["time"]:
-            t += "(%s) " % self["time"]
+        if "date" in self and self["date"]:
+            t += "(%s) " % self["date"]
         if "type" in self and self["type"]:
             t += "%s " % str(self["type"])
         if "quote" in self and self["quote"]:
@@ -501,73 +495,3 @@ class FilledOrder(Price):
         return t + "@ " + Price.__repr__(self)
 
     __str__ = __repr__
-
-
-class UpdateCallOrder(Price):
-    """ This class inherits :class:`beem.price.Price` but has the ``base``
-        and ``quote`` Amounts not only be used to represent the **call
-        price** (as a ratio of base and quote).
-
-        :param beem.steem.Steem steem_instance: Steem instance
-    """
-    def __init__(self, call, steem_instance=None, **kwargs):
-
-        self.steem = steem_instance or shared_steem_instance()
-
-        if isinstance(call, dict) and "call_price" in call:
-            super(UpdateCallOrder, self).__init__(
-                call.get("call_price"),
-                base=call["call_price"].get("base"),
-                quote=call["call_price"].get("quote"),
-            )
-
-        else:
-            raise ValueError("Couldn't parse 'Call'.")
-
-    def __repr__(self):
-        t = "Margin Call: "
-        if "quote" in self and self["quote"]:
-            t += "%s " % str(self["quote"])
-        if "base" in self and self["base"]:
-            t += "%s " % str(self["base"])
-        return t + "@ " + Price.__repr__(self)
-
-    __str__ = __repr__
-
-
-class PriceFeed(dict):
-    """ This class is used to represent a price feed consisting of
-
-        * a witness,
-        * a symbol,
-        * a core exchange rate,
-        * the maintenance collateral ratio,
-        * the max short squeeze ratio,
-        * a settlement price, and
-        * a date
-
-        :param beem.steem.Steem steem_instance: Steem instance
-
-    """
-    def __init__(self, feed, steem_instance=None):
-        self.steem = steem_instance or shared_steem_instance()
-        if len(feed) == 2:
-            super(PriceFeed, self).__init__({
-                "producer": Account(
-                    feed[0],
-                    lazy=True,
-                    steem_instance=self.steem
-                ),
-                "date": parse_time(feed[1][0]),
-                "maintenance_collateral_ratio": feed[1][1]["maintenance_collateral_ratio"],
-                "maximum_short_squeeze_ratio": feed[1][1]["maximum_short_squeeze_ratio"],
-                "settlement_price": Price(feed[1][1]["settlement_price"]),
-                "core_exchange_rate": Price(feed[1][1]["core_exchange_rate"])
-            })
-        else:
-            super(PriceFeed, self).__init__({
-                "maintenance_collateral_ratio": feed["maintenance_collateral_ratio"],
-                "maximum_short_squeeze_ratio": feed["maximum_short_squeeze_ratio"],
-                "settlement_price": Price(feed["settlement_price"]),
-                "core_exchange_rate": Price(feed["core_exchange_rate"])
-            })

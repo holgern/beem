@@ -4,6 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import super
 import unittest
+from parameterized import parameterized
 from beem import Steem
 from beem.amount import Amount
 from beem.asset import Asset
@@ -11,6 +12,7 @@ from beem.instance import set_shared_steem_instance, SharedInstance
 nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
          "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
          "wss://steemd.minnowsupportproject.org"]
+nodes_appbase = ["https://api.steemitstage.com", "wss://appbasetest.timcliff.com"]
 
 
 class Testcases(unittest.TestCase):
@@ -20,6 +22,10 @@ class Testcases(unittest.TestCase):
 
         self.bts = Steem(
             node=nodes,
+            nobroadcast=True,
+        )
+        self.appbase = Steem(
+            node=nodes_appbase,
             nobroadcast=True,
         )
         set_shared_steem_instance(self.bts)
@@ -34,48 +40,59 @@ class Testcases(unittest.TestCase):
         self.assertIsInstance(ret["asset"], dict)
         self.assertIsInstance(ret["amount"], float)
 
-    def test_init(self):
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_init(self, node_param):
+        if node_param == "non_appbase":
+            stm = self.bts
+        else:
+            stm = self.appbase
         # String init
-        amount = Amount("1 {}".format(self.symbol))
-        self.dotest(amount, 1, self.symbol)
+        asset = Asset("SBD", steem_instance=stm)
+        symbol = asset["symbol"]
+        precision = asset["precision"]
+        amount = Amount("1 {}".format(symbol), steem_instance=stm)
+        self.dotest(amount, 1, symbol)
 
         # Amount init
-        amount = Amount(amount)
-        self.dotest(amount, 1, self.symbol)
+        amount = Amount(amount, steem_instance=stm)
+        self.dotest(amount, 1, symbol)
 
         # blockchain dict init
         amount = Amount({
-            "amount": 1 * 10 ** self.precision,
-            "asset_id": self.asset["id"]
-        })
-        self.dotest(amount, 1, self.symbol)
+            "amount": 1 * 10 ** precision,
+            "asset_id": asset["id"]
+        }, steem_instance=stm)
+        self.dotest(amount, 1, symbol)
 
         # API dict init
         amount = Amount({
-            "amount": 1.3 * 10 ** self.precision,
-            "asset": self.asset["id"]
-        })
-        self.dotest(amount, 1.3, self.symbol)
+            "amount": 1.3 * 10 ** precision,
+            "asset": asset["id"]
+        }, steem_instance=stm)
+        self.dotest(amount, 1.3, symbol)
 
         # Asset as symbol
-        amount = Amount(1.3, Asset("SBD"))
-        self.dotest(amount, 1.3, self.symbol)
+        amount = Amount(1.3, Asset("SBD"), steem_instance=stm)
+        self.dotest(amount, 1.3, symbol)
 
         # Asset as symbol
-        amount = Amount(1.3, self.symbol)
-        self.dotest(amount, 1.3, self.symbol)
+        amount = Amount(1.3, symbol, steem_instance=stm)
+        self.dotest(amount, 1.3, symbol)
 
         # keyword inits
-        amount = Amount(amount=1.3, asset=Asset("SBD"))
-        self.dotest(amount, 1.3, self.symbol)
+        amount = Amount(amount=1.3, asset=Asset("SBD", steem_instance=stm), steem_instance=stm)
+        self.dotest(amount, 1.3, symbol)
 
         # keyword inits
-        amount = Amount(amount=1.3, asset=dict(Asset("SBD")))
-        self.dotest(amount, 1.3, self.symbol)
+        amount = Amount(amount=1.3, asset=dict(Asset("SBD", steem_instance=stm)), steem_instance=stm)
+        self.dotest(amount, 1.3, symbol)
 
         # keyword inits
-        amount = Amount(amount=1.3, asset=self.symbol)
-        self.dotest(amount, 1.3, self.symbol)
+        amount = Amount(amount=1.3, asset=symbol, steem_instance=stm)
+        self.dotest(amount, 1.3, symbol)
 
     def test_copy(self):
         amount = Amount("1", self.symbol)
@@ -98,10 +115,19 @@ class Testcases(unittest.TestCase):
         amount = Amount("1", self.symbol)
         self.assertEqual(
             amount.json(),
-            {
-                "symbol": self.asset["symbol"],
-                "amount": 1 * 10 ** self.precision
-            })
+            "{:.{prec}f} {}".format(
+                1,
+                self.asset["symbol"],
+                prec=self.precision
+            )
+        )
+
+    def test_json_appbase(self):
+        asset = Asset("SBD", steem_instance=self.appbase)
+        amount = Amount("1", asset, steem_instance=self.appbase)
+        self.assertEqual(
+            amount.json(),
+            [str(1 * 10 ** asset.precision), asset.precision, asset.asset])
 
     def test_string(self):
         self.assertEqual(

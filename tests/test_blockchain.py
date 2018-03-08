@@ -7,6 +7,7 @@ import unittest
 from parameterized import parameterized
 from datetime import datetime, timedelta
 import pytz
+import time
 from pprint import pprint
 from beem import Steem
 from beem.blockchain import Blockchain
@@ -41,7 +42,7 @@ class Testcases(unittest.TestCase):
         self.bts.set_default_account("test")
         b = Blockchain(steem_instance=self.bts)
         num = b.get_current_block_num()
-        self.start = num - 100
+        self.start = num - 25
         self.stop = num
 
     @parameterized.expand([
@@ -59,6 +60,10 @@ class Testcases(unittest.TestCase):
         block = b.get_current_block()
         self.assertTrue(isinstance(block, Block))
         self.assertEqual(num, block.identifier)
+        block_time = b.block_time(block.id)
+        self.assertEqual(block.time(), block_time)
+        block_timestamp = b.block_timestamp(block.id)
+        self.assertEqual(block.time().timestamp(), block_timestamp)
 
     @parameterized.expand([
         ("non_appbase"),
@@ -72,10 +77,15 @@ class Testcases(unittest.TestCase):
         b = Blockchain(steem_instance=bts)
         last_block = b.get_current_block()
         num = last_block.identifier
-        now = last_block.time()
-        date = now - timedelta(seconds=60 * 3)
-        est_block_num = b.get_estimated_block_num(date)
-        self.assertEqual(est_block_num, num - 60)
+        old_block = Block(num - 60, steem_instance=bts)
+        date = old_block.time()
+        est_block_num = b.get_estimated_block_num(date, accurate=False)
+        self.assertTrue((est_block_num - (old_block.id)) < 2)
+        est_block_num = b.get_estimated_block_num(date, accurate=True)
+        self.assertEqual(est_block_num, old_block.id)
+        est_block_num = b.get_estimated_block_num(date, estimateForwards=True, accurate=True)
+        self.assertEqual(est_block_num, old_block.id)
+        est_block_num = b.get_estimated_block_num(date, estimateForwards=True, accurate=False)
 
     @parameterized.expand([
         ("non_appbase"),
@@ -91,6 +101,23 @@ class Testcases(unittest.TestCase):
         for acc in b.get_all_accounts(steps=100, limit=100):
             accounts.append(acc)
         self.assertEqual(len(accounts), 100)
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_awaitTX(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        else:
+            bts = self.appbase
+        b = Blockchain(steem_instance=bts)
+        last_block = b.get_current_block()
+        time.sleep(4)
+        with self.assertRaises(
+            Exception
+        ):
+            b.awaitTxConfirmation(last_block["block"]["transactions"][0])
 
     @parameterized.expand([
         ("non_appbase"),
@@ -145,3 +172,9 @@ class Testcases(unittest.TestCase):
             self.assertTrue(block.id <= self.stop)
         self.assertEqual(op_stat["transfer"], op_stat4["transfer"])
         self.assertEqual(op_stat["vote"], op_stat4["vote"])
+
+        ops_blocks = []
+        for op in b.blocks():
+            ops_blocks.append(op)
+            break
+        self.assertTrue(len(ops_blocks) == 1)

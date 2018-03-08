@@ -8,7 +8,7 @@ from events import Events
 from beemapi.websocket import SteemWebsocket
 from beem.instance import shared_steem_instance
 from beem.blockchain import Blockchain
-from beem.price import Order, FilledOrder, UpdateCallOrder
+from beem.price import Order, FilledOrder
 log = logging.getLogger(__name__)
 # logging.basicConfig(level=logging.DEBUG)
 

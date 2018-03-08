@@ -149,10 +149,10 @@ class Amount(dict):
         return self["asset"]
 
     def json(self):
-        return {
-            "amount": int(self),
-            "symbol": self["asset"]["symbol"]
-        }
+        if self.steem.rpc.get_use_appbase():
+            return [str(int(self)), self["asset"]["precision"], self["asset"]["asset"]]
+        else:
+            return str(self)
 
     def __str__(self):
         return "{:.{prec}f} {}".format(

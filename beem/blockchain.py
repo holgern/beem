@@ -90,7 +90,7 @@ class Blockchain(object):
             steem_instance=self.steem
         )
 
-    def get_estimated_block_num(self, date, estimateForwards=False, accurate=False):
+    def get_estimated_block_num(self, date, estimateForwards=False, accurate=True):
         """ This call estimates the block number based on a given date
 
             :param datetime date: block time for which a block number is estimated
@@ -99,25 +99,26 @@ class Blockchain(object):
                       when instanciating from this class.
         """
         block_time_seconds = 3
+        last_block = self.get_current_block()
         if estimateForwards:
             block_offset = 10
             first_block = Block(block_offset, steem_instance=self.steem)
             time_diff = date - first_block.time()
-            block_number = math.floor(time_diff.total_seconds() / block_time_seconds + block_offset.identifier)
+            block_number = math.floor(time_diff.total_seconds() / block_time_seconds + block_offset)
         else:
-            last_block = self.get_current_block()
             time_diff = last_block.time() - date
             block_number = math.floor(last_block.identifier - time_diff.total_seconds() / block_time_seconds)
 
         if accurate:
+            if block_number > last_block.id:
+                block_number = last_block.id
             block_time_diff = timedelta(seconds=10)
             while block_time_diff.total_seconds() > 3 or block_time_diff.total_seconds() < -3:
                 block = Block(block_number, steem_instance=self.steem)
-                if block.time() > date:
-                    block_number -= 1
-                else:
-                    block_number += 1
                 block_time_diff = date - block.time()
+                block_number += block_time_diff.total_seconds() // block_time_seconds
+                if block_number > last_block.id:
+                    break
 
         return block_number
 

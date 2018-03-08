@@ -6,8 +6,9 @@ from builtins import super
 import unittest
 from parameterized import parameterized
 from pprint import pprint
-from beem import Steem
+from beem import Steem, exceptions
 from beem.comment import Comment
+from beem.vote import Vote
 from beem.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
@@ -36,6 +37,40 @@ class Testcases(unittest.TestCase):
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(self.bts)
         self.bts.set_default_account("test")
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_comment(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        else:
+            bts = self.appbase
+        with self.assertRaises(
+            exceptions.ContentDoesNotExistsException
+        ):
+            Comment("@abcdef/abcdef", steem_instance=bts)
+        c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
+        self.assertTrue(isinstance(c.id, int))
+        self.assertTrue(c.id > 0)
+        self.assertEqual(c.author, "gtg")
+        self.assertEqual(c.permlink, "witness-gtg-log")
+        self.assertEqual(c.authorperm, "@gtg/witness-gtg-log")
+        self.assertEqual(c.category, 'witness-category')
+        self.assertEqual(c.parent_author, '')
+        self.assertEqual(c.parent_permlink, 'witness-category')
+        self.assertEqual(c.title, 'witness gtg log')
+        self.assertTrue(len(c.body) > 0)
+        self.assertEqual(list(c.json_metadata.keys()), ['tags', 'users', 'image', 'links', 'app', 'format'])
+        self.assertTrue(c.is_main_post())
+        self.assertFalse(c.is_comment())
+        self.assertTrue(isinstance(c.get_reblogged_by(), list))
+        self.assertTrue(len(c.get_reblogged_by()) > 0)
+        self.assertTrue(isinstance(c.get_votes(), list))
+        if node_param == "appbase":
+            self.assertTrue(len(c.get_votes()) > 0)
+            self.assertTrue(isinstance(c.get_votes()[0], Vote))
 
     @parameterized.expand([
         ("non_appbase"),

@@ -181,8 +181,11 @@ class ActiveVotes(VotesObject):
     def __init__(self, authorperm, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         votes = None
-        if isinstance(authorperm, Comment) and 'active_votes' not in authorperm:
-            if self.steem.rpc.get_use_appbase():
+
+        if isinstance(authorperm, Comment):
+            if 'active_votes' in authorperm and len(authorperm["active_votes"]) > 0:
+                votes = authorperm["active_votes"]
+            elif self.steem.rpc.get_use_appbase():
                 votes = self.steem.rpc.get_active_votes({'author': authorperm["author"],
                                                          'permlink': authorperm["permlink"]},
                                                         api="tags")['votes']
@@ -200,9 +203,6 @@ class ActiveVotes(VotesObject):
         elif isinstance(authorperm, list):
             votes = authorperm
             authorperm = None
-        elif isinstance(authorperm, Comment):
-            votes = authorperm["active_votes"]
-            authorperm = authorperm["authorperm"]
         elif isinstance(authorperm, dict):
             votes = authorperm["active_votes"]
             authorperm = authorperm["authorperm"]

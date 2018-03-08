@@ -108,8 +108,9 @@ class Testcases(unittest.TestCase):
             bts = self.appbase
         m = Market(steem_instance=bts)
         recenttrades = m.recent_trades(limit=10)
-        self.assertEqual(len(recenttrades['date']), 10)
-        self.assertEqual(len(recenttrades['order']), 10)
+        recenttrades_raw = m.recent_trades(limit=10, raw_data=True)
+        self.assertEqual(len(recenttrades), 10)
+        self.assertEqual(recenttrades[0].json(), recenttrades_raw[0])
 
     @parameterized.expand([
         ("non_appbase"),
@@ -122,8 +123,9 @@ class Testcases(unittest.TestCase):
             bts = self.appbase
         m = Market(steem_instance=bts)
         trades = m.trades(limit=10)
-        self.assertEqual(len(trades['date']), 10)
-        self.assertEqual(len(trades['order']), 10)
+        trades_raw = m.trades(limit=10, raw_data=True)
+        self.assertEqual(len(trades), 10)
+        self.assertEqual(trades[0].json(), trades_raw[0])
 
     @parameterized.expand([
         ("non_appbase"),
