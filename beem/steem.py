@@ -350,7 +350,7 @@ class Steem(object):
         recent_claims = float(reward_fund["recent_claims"])
 
         fund_per_share = reward_balance / (recent_claims)
-        SBD_price = (self.get_median_price() * Amount("1 STEEM", steem_instance=self.steem)).amount
+        SBD_price = (self.get_median_price() * Amount("1 STEEM", steem_instance=self)).amount
         return fund_per_share * SBD_price
 
     def get_steem_per_mvest(self, time_stamp=None):

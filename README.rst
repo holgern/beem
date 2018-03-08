@@ -120,6 +120,12 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.13
+-------
+* beem is now in the beta state, as now 270 unit tests exists
+* unit tests added for appbase
+* bug fixes for appbase-api calls
+
 0.19.12
 -------
 * bug fix release for condenser_api

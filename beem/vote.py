@@ -50,23 +50,21 @@ class Vote(BlockchainObject):
             authorpermvoter = construct_authorpermvoter(author, permlink, voter)
             self["authorpermvoter"] = authorpermvoter
         elif isinstance(voter, dict) and "author" in voter and "permlink" in voter and "voter" in voter:
-            self["author"] = voter["author"]
-            self["permlink"] = voter["permlink"]
-            authorpermvoter = construct_authorpermvoter(voter["author"], voter["permlink"], voter["voter"])
-            self["authorpermvoter"] = authorpermvoter
+            authorpermvoter = voter
+            authorpermvoter["authorpermvoter"] = construct_authorpermvoter(voter["author"], voter["permlink"], voter["voter"])
         elif isinstance(voter, dict) and "authorperm" in voter and authorperm is not None:
             [author, permlink] = resolve_authorperm(voter["authorperm"])
-            self["voter"] = authorperm
-            self["author"] = author
-            self["permlink"] = permlink
-            authorpermvoter = construct_authorpermvoter(author, permlink, authorperm)
-            self["authorpermvoter"] = authorpermvoter
+            authorpermvoter = voter
+            authorpermvoter["voter"] = authorperm
+            authorpermvoter["author"] = author
+            authorpermvoter["permlink"] = permlink
+            authorpermvoter["authorpermvoter"] = construct_authorpermvoter(author, permlink, authorperm)
         elif isinstance(voter, dict) and "voter" in voter and authorperm is not None:
             [author, permlink] = resolve_authorperm(authorperm)
-            self["author"] = author
-            self["permlink"] = permlink
-            authorpermvoter = construct_authorpermvoter(author, permlink, voter["voter"])
-            self["authorpermvoter"] = authorpermvoter
+            authorpermvoter = voter
+            authorpermvoter["author"] = author
+            authorpermvoter["permlink"] = permlink
+            authorpermvoter["authorpermvoter"] = construct_authorpermvoter(author, permlink, voter["voter"])
         else:
             authorpermvoter = voter
         super(Vote, self).__init__(
@@ -150,7 +148,7 @@ class VotesObject(list):
     def printAsTable(self, sort_key="sbd", reverse=True):
         utc = pytz.timezone('UTC')
         if sort_key == 'sbd':
-            sortedList = sorted(self, key=lambda self: self['rshares'], reverse=reverse)
+            sortedList = sorted(self, key=lambda self: int(self['rshares']), reverse=reverse)
         elif sort_key == 'voter':
             sortedList = sorted(self, key=lambda self: self[sort_key], reverse=reverse)
         elif sort_key == 'time':
