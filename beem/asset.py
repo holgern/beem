@@ -40,7 +40,7 @@ class Asset(BlockchainObject):
             steem_instance=steem_instance
         )
         self.refresh()
-        if not self["asset"]:
+        if "asset" not in self or self["asset"] is None or len(self["asset"]) == 0:
             raise AssetDoesNotExistsException(self.identifier)
 
     def refresh(self):
