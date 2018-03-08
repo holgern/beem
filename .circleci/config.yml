@@ -47,7 +47,7 @@ jobs:
           name: run tests
           command: |
             ./cc-test-reporter before-build
-            tox -e py36,pylint
+            tox -e py36
             ./cc-test-reporter after-build --exit-code $?
 
       - deploy:

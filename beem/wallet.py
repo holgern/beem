@@ -262,7 +262,7 @@ class Wallet(object):
             # Try to decode as wif
             PrivateKey(encwif, prefix=self.prefix)
             return encwif
-        except ValueError:
+        except (ValueError, AssertionError):
             pass
         if self.locked():
             raise AssertionError()
