@@ -150,7 +150,7 @@ class TransactionBuilder(dict):
                     wif = self.steem.wallet.getPrivateKeyForPublicKey(
                         authority[0])
                     r.append([wif, authority[1]])
-                except Exception:
+                except ValueError:
                     pass
 
             if sum([x[1] for x in r]) < required_treshold:

@@ -41,7 +41,7 @@ class Asset(BlockchainObject):
         )
         self.refresh()
         if "asset" not in self or self["asset"] is None or len(self["asset"]) == 0:
-            raise AssetDoesNotExistsException(self.identifier+" "+self.steem.chain_params["chain_assets"])
+            raise AssetDoesNotExistsException(self.identifier + " chain_assets:" + str(self.steem.chain_params["chain_assets"]))
 
     def refresh(self):
         """ Refresh the data from the API server

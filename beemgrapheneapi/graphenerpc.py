@@ -293,6 +293,7 @@ class GrapheneRPC(object):
                         cnt > self.num_retries):
                     raise NumRetriesReached()
                 sleeptime = (cnt - 1) * 2 if cnt < 10 else 10
+                self.rpcclose()
                 if sleeptime:
                     log.warning(
                         "Lost connection to node during rpcexec(): %s (%d/%d) "
@@ -302,13 +303,8 @@ class GrapheneRPC(object):
                     time.sleep(sleeptime)
 
                 # retry
-                try:
-                    self.rpcclose()
-                    time.sleep(sleeptime)
-                    self.rpcconnect()
-                    self.register_apis()
-                except Exception:
-                    pass
+                self.rpcconnect()
+                self.register_apis()
 
         ret = {}
         try:

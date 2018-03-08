@@ -18,6 +18,7 @@ from .exceptions import (
     WrongMasterPasswordException,
     NoWalletException,
     RPCConnectionRequired,
+    AccountDoesNotExistsException,
 )
 from beemapi.exceptions import NoAccessApi
 
@@ -261,7 +262,7 @@ class Wallet(object):
             # Try to decode as wif
             PrivateKey(encwif, prefix=self.prefix)
             return encwif
-        except:
+        except ValueError:
             pass
         if self.locked():
             raise AssertionError()
@@ -456,7 +457,7 @@ class Wallet(object):
         for name in self.getAccountsFromPublicKey(pub):
             try:
                 account = Account(name, steem_instance=self.steem)
-            except:
+            except AccountDoesNotExistsException:
                 continue
             yield {"name": account["name"],
                    "account": account,

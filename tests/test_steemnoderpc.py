@@ -12,6 +12,7 @@ import random
 import itertools
 from pprint import pprint
 from beem import Steem
+from beemapi.steemnoderpc import SteemNodeRPC
 from beemapi.websocket import SteemWebsocket
 from beemapi import exceptions
 from beem.instance import set_shared_steem_instance
@@ -24,6 +25,8 @@ nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.s
          "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
          "wss://steemd.minnowsupportproject.org"]
 nodes_appbase = ["https://api.steemitstage.com", "wss://appbasetest.timcliff.com"]
+test_list = ["wss://steemd.doesnot.exists", "wss://api.steemit.com", "wss://steemd.pevo.science", "wss://gtg.steem.house:8090",
+             "https://api.steemit.com", "https://api.steemitstage.com", "wss://appbasetest.timcliff.com"]
 
 
 class Testcases(unittest.TestCase):
@@ -70,3 +73,11 @@ class Testcases(unittest.TestCase):
         ):
             bts.rpc.get_config_abc()
         bts.rpc.register_apis(apis=["database"])
+
+    def test_connect_test_node(self):
+        rpc = SteemNodeRPC(urls=test_list)
+        self.assertIn(rpc.url, nodes + nodes_appbase)
+        rpc.rpcclose()
+        rpc.rpcconnect()
+        rpc.register_apis()
+        self.assertIn(rpc.url, nodes + nodes_appbase)

@@ -105,7 +105,14 @@ class SteemNodeRPC(GrapheneRPC):
             network_version = props['STEEM_BLOCKCHAIN_VERSION']
         else:
             raise("Connecting to unknown network!")
+        highest_version_chain = None
         for k, v in list(known_chains.items()):
             if v["chain_id"] == chain_id and v["min_version"] <= network_version:
-                return v
-        raise("Connecting to unknown network!")
+                if highest_version_chain is None:
+                    highest_version_chain = v
+                elif v["min_version"] > highest_version_chain["min_version"]:
+                    highest_version_chain = v
+        if highest_version_chain is None:
+            raise("Connecting to unknown network!")
+        else:
+            return highest_version_chain
