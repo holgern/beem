@@ -113,7 +113,7 @@ class Testcases(unittest.TestCase):
             bts = self.appbase
         b = Blockchain(steem_instance=bts)
         last_block = b.get_current_block()
-        time.sleep(4)
+        time.sleep(10)
         with self.assertRaises(
             Exception
         ):
