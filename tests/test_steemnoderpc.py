@@ -24,6 +24,7 @@ core_unit = "STM"
 nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
          "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
          "wss://steemd.minnowsupportproject.org"]
+nodes_https = ["https://api.steemit.com"]
 nodes_appbase = ["https://api.steemitstage.com", "wss://appbasetest.timcliff.com"]
 test_list = ["wss://steemd.doesnot.exists", "wss://api.steemit.com", "wss://steemd.pevo.science", "wss://gtg.steem.house:8090",
              "https://api.steemit.com", "https://api.steemitstage.com", "wss://appbasetest.timcliff.com"]
@@ -76,8 +77,8 @@ class Testcases(unittest.TestCase):
 
     def test_connect_test_node(self):
         rpc = SteemNodeRPC(urls=test_list)
-        self.assertIn(rpc.url, nodes + nodes_appbase)
+        self.assertIn(rpc.url, nodes + nodes_appbase + nodes_https)
         rpc.rpcclose()
         rpc.rpcconnect()
         rpc.register_apis()
-        self.assertIn(rpc.url, nodes + nodes_appbase)
+        self.assertIn(rpc.url, nodes + nodes_appbase + nodes_https)
