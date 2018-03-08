@@ -19,6 +19,7 @@ from .price import Price
 from .storage import configStorage as config
 from .exceptions import (
     AccountExistsException,
+    AccountDoesNotExistsException
 )
 from .wallet import Wallet
 from .transactionbuilder import TransactionBuilder
@@ -726,7 +727,7 @@ class Steem(object):
         try:
             Account(account_name, steem_instance=self)
             raise AccountExistsException
-        except:
+        except AccountDoesNotExistsException:
             pass
 
         # creator = Account(creator, steem_instance=self)

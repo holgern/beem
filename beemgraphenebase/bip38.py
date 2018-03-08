@@ -99,7 +99,8 @@ def decrypt(encrypted_privkey, passphrase):
     d = d[2:]   # remove trailing 0x01 and 0x42
     flagbyte = d[0:1]  # get flag byte
     d = d[1:]   # get payload
-    assert flagbyte == b'\xc0', "Flagbyte has to be 0xc0"
+    if not flagbyte == b'\xc0':
+        raise AssertionError("Flagbyte has to be 0xc0")
     salt = d[0:4]
     d = d[4:-4]
     if sys.version < '3':

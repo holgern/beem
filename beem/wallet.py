@@ -194,7 +194,7 @@ class Wallet(object):
             return False
         try:
             self.tryUnlockFromEnv()
-        except:
+        except WrongMasterPasswordException:
             pass
         return not bool(self.masterpassword)
 

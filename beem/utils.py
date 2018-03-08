@@ -194,7 +194,8 @@ def construct_authorpermvoter(*args):
 def test_proposal_in_buffer(buf, operation_name, id):
     from .transactionbuilder import ProposalBuilder
     from peerplaysbase.operationids import operations
-    assert isinstance(buf, ProposalBuilder)
+    if not isinstance(buf, ProposalBuilder):
+        raise AssertionError()
 
     operationid = operations.get(operation_name)
     _, _, j = id.split(".")

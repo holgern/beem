@@ -122,9 +122,8 @@ class Key(DataDir):
     def exists_table(self):
         """ Check if the database table exists
         """
-        query = ("SELECT name FROM sqlite_master " +
-                 "WHERE type='table' AND name=?",
-                 (self.__tablename__, ))
+        query = ("SELECT name FROM sqlite_master "
+                 "WHERE type='table' AND name=?", (self.__tablename__, ))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
         cursor.execute(*query)
@@ -133,11 +132,10 @@ class Key(DataDir):
     def create_table(self):
         """ Create the new table in the SQLite database
         """
-        query = ('CREATE TABLE %s (' % self.__tablename__ +
-                 'id INTEGER PRIMARY KEY AUTOINCREMENT,' +
-                 'pub STRING(256),' +
-                 'wif STRING(256)' +
-                 ')')
+        query = ("CREATE TABLE {0} ("
+                 "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                 "pub STRING(256),"
+                 "wif STRING(256))".format(self.__tablename__))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
         cursor.execute(query)
@@ -146,7 +144,7 @@ class Key(DataDir):
     def getPublicKeys(self):
         """ Returns the public keys stored in the database
         """
-        query = ("SELECT pub from %s " % (self.__tablename__))
+        query = ("SELECT pub from {0} ".format(self.__tablename__))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
         cursor.execute(query)
@@ -161,9 +159,7 @@ class Key(DataDir):
 
            The encryption scheme is BIP38
         """
-        query = ("SELECT wif from %s " % (self.__tablename__) +
-                 "WHERE pub=?",
-                 (pub,))
+        query = ("SELECT wif from {0} WHERE pub=?".format(self.__tablename__), (pub,))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
         cursor.execute(*query)
@@ -179,9 +175,7 @@ class Key(DataDir):
            :param str pub: Public key
            :param str wif: Private key
         """
-        query = ("UPDATE %s " % self.__tablename__ +
-                 "SET wif=? WHERE pub=?",
-                 (wif, pub))
+        query = ("UPDATE {0} SET wif=? WHERE pub=?".format(self.__tablename__), (wif, pub))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
         cursor.execute(*query)
@@ -196,9 +190,7 @@ class Key(DataDir):
         """
         if self.getPrivateKeyForPublicKey(pub):
             raise ValueError("Key already in storage")
-        query = ('INSERT INTO %s (pub, wif) ' % self.__tablename__ +
-                 'VALUES (?, ?)',
-                 (pub, wif))
+        query = ("INSERT INTO {0} (pub, wif) VALUES (?, ?)".format(self.__tablename__), (pub, wif))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
         cursor.execute(*query)
@@ -209,9 +201,7 @@ class Key(DataDir):
 
            :param str pub: Public key
         """
-        query = ("DELETE FROM %s " % (self.__tablename__) +
-                 "WHERE pub=?",
-                 (pub,))
+        query = ("DELETE FROM {0} WHERE pub=?".format(self.__tablename__), (pub,))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
         cursor.execute(*query)
@@ -241,9 +231,8 @@ class Configuration(DataDir):
     def exists_table(self):
         """ Check if the database table exists
         """
-        query = ("SELECT name FROM sqlite_master " +
-                 "WHERE type='table' AND name=?",
-                 (self.__tablename__, ))
+        query = ("SELECT name FROM sqlite_master "
+                 "WHERE type='table' AND name=?", (self.__tablename__,))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
         cursor.execute(*query)
@@ -252,11 +241,10 @@ class Configuration(DataDir):
     def create_table(self):
         """ Create the new table in the SQLite database
         """
-        query = ('CREATE TABLE %s (' % self.__tablename__ +
-                 'id INTEGER PRIMARY KEY AUTOINCREMENT,' +
-                 'key STRING(256),' +
-                 'value STRING(256)' +
-                 ')')
+        query = ("CREATE TABLE {0} ("
+                 "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                 "key STRING(256),"
+                 "value STRING(256))".format(self.__tablename__))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
         cursor.execute(query)
@@ -283,10 +271,7 @@ class Configuration(DataDir):
     def _haveKey(self, key):
         """ Is the key `key` available int he configuration?
         """
-        query = ("SELECT value FROM %s " % (self.__tablename__) +
-                 "WHERE key=?",
-                 (key,)
-                 )
+        query = ("SELECT value FROM {0} WHERE key=?".format(self.__tablename__), (key,))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
         cursor.execute(*query)
@@ -296,10 +281,7 @@ class Configuration(DataDir):
         """ This method behaves differently from regular `dict` in that
             it returns `None` if a key is not found!
         """
-        query = ("SELECT value FROM %s " % (self.__tablename__) +
-                 "WHERE key=?",
-                 (key,)
-                 )
+        query = ("SELECT value FROM {0} WHERE key=?".format(self.__tablename__), (key,))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
         cursor.execute(*query)
@@ -328,13 +310,9 @@ class Configuration(DataDir):
 
     def __setitem__(self, key, value):
         if self._haveKey(key):
-            query = ("UPDATE %s " % self.__tablename__ +
-                     "SET value=? WHERE key=?",
-                     (value, key))
+            query = ("UPDATE {0} SET value=? WHERE key=?".format(self.__tablename__), (value, key))
         else:
-            query = ("INSERT INTO %s " % self.__tablename__ +
-                     "(key, value) VALUES (?, ?)",
-                     (key, value))
+            query = ("INSERT INTO {0} (key, value) VALUES (?, ?)".format(self.__tablename__), (key, value))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
         cursor.execute(*query)
@@ -343,9 +321,7 @@ class Configuration(DataDir):
     def delete(self, key):
         """ Delete a key from the configuration store
         """
-        query = ("DELETE FROM %s " % (self.__tablename__) +
-                 "WHERE key=?",
-                 (key,))
+        query = ("DELETE FROM {0} WHERE key=?".format(self.__tablename__), (key,))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
         cursor.execute(*query)
@@ -355,7 +331,7 @@ class Configuration(DataDir):
         return iter(list(self.items()))
 
     def items(self):
-        query = ("SELECT key, value from %s " % (self.__tablename__))
+        query = ("SELECT key, value from {0} ".format(self.__tablename__))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
         cursor.execute(query)
@@ -365,7 +341,7 @@ class Configuration(DataDir):
         return r
 
     def __len__(self):
-        query = ("SELECT id from %s " % (self.__tablename__))
+        query = ("SELECT id from {0} ".format(self.__tablename__))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
         cursor.execute(query)
@@ -378,7 +354,7 @@ class MasterPassword(object):
         of the password
     """
 
-    password = ""
+    password = ""  # nosec
     decrypted_master = ""
 
     #: This key identifies the encrypted master password stored in the confiration
