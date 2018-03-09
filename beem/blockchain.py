@@ -113,10 +113,15 @@ class Blockchain(object):
             if block_number > last_block.id:
                 block_number = last_block.id
             block_time_diff = timedelta(seconds=10)
-            while block_time_diff.total_seconds() > 3 or block_time_diff.total_seconds() < -3:
+            while block_time_diff.total_seconds() > block_time_seconds or block_time_diff.total_seconds() < -block_time_seconds:
                 block = Block(block_number, steem_instance=self.steem)
                 block_time_diff = date - block.time()
-                block_number += block_time_diff.total_seconds() // block_time_seconds
+                delta = block_time_diff.total_seconds() // block_time_seconds
+                if delta == 0 and block_time_diff.total_seconds() < 0:
+                    delta = -1
+                elif delta == 0 and block_time_diff.total_seconds() > 0:
+                    delta = 1
+                block_number += delta
                 if block_number > last_block.id:
                     break
 
