@@ -13,7 +13,11 @@ import logging
 import websocket
 from itertools import cycle
 from threading import Thread
-from .exceptions import NumRetriesReached
+from beemgrapheneapi.rpcutils import (
+    is_network_appbase_ready, sleep_and_check_retries,
+    get_api_name, get_query, UnauthorizedError,
+    RPCConnection, RPCError, NumRetriesReached
+)
 from events import Events
 
 log = logging.getLogger(__name__)
@@ -252,23 +256,7 @@ class SteemWebsocket(Events):
                 )
                 self.ws.run_forever()
             except websocket.WebSocketException as exc:
-                if (self.num_retries >= 0 and cnt > self.num_retries):
-                    raise NumRetriesReached()
-
-                if cnt < 0:
-                    sleeptime = 0
-                elif cnt < 10:
-                    sleeptime = (cnt - 1) * 2
-                else:
-                    sleeptime = 10
-                if sleeptime:
-                    log.warning(
-                        "Lost connection to node during wsconnect(): %s (%d/%d) "
-                        % (self.url, cnt, self.num_retries) +
-                        "Retrying in %d seconds" % sleeptime
-                    )
-                    time.sleep(sleeptime)
-
+                sleep_and_check_retries(self.num_retries, cnt, self.url)
             except KeyboardInterrupt:
                 self.ws.keep_running = False
                 raise
@@ -281,6 +269,11 @@ class SteemWebsocket(Events):
         self._request_id += 1
         return self._request_id
 
+    def stop(self):
+        """Stop running Websocket"""
+        self.ws.keep_running = False
+        self.close()
+
     def close(self):
         """ Closes the websocket connection and waits for the ping thread to close
         """
@@ -290,14 +283,13 @@ class SteemWebsocket(Events):
         if self.keepalive and self.keepalive.is_alive():
             self.keepalive.join()
 
-    """ RPC Calls
-    """
     def rpcexec(self, payload):
-        """ Execute a call by sending the payload
+        """
+        Execute a call by sending the payload.
 
-            :param json payload: Payload data
-            :raises ValueError: if the server does not respond in proper JSON format
-            :raises RPCError: if the server returns an error
+        :param json payload: Payload data
+        :raises ValueError: if the server does not respond in proper JSON format
+        :raises RPCError: if the server returns an error
         """
         log.debug(json.dumps(payload))
         self.ws.send(json.dumps(payload, ensure_ascii=False).encode('utf8'))
@@ -309,31 +301,10 @@ class SteemWebsocket(Events):
             return getattr(self.events, name)
 
         def method(*args, **kwargs):
-
-            # Sepcify the api to talk to
-            if "api_id" not in kwargs:
-                if ("api" in kwargs):
-                    if (kwargs["api"] in self.api_id and
-                            self.api_id[kwargs["api"]]):
-                        api_id = self.api_id[kwargs["api"]]
-                    else:
-                        raise ValueError(
-                            "Unknown API! "
-                            "Verify that you have registered to %s"
-                            % kwargs["api"]
-                        )
-                else:
-                    api_id = 0
-            else:
-                api_id = kwargs["api_id"]
-
+            api_name = get_api_name(False, *args, **kwargs)
             # let's be able to define the num_retries per query
             self.num_retries = kwargs.get("num_retries", self.num_retries)
-
-            query = {"method": "call",
-                     "params": [api_id, name, list(args)],
-                     "jsonrpc": "2.0",
-                     "id": self.get_request_id()}
+            query = get_query(False, self.get_request_id(), api_name, name, args)
             r = self.rpcexec(query)
             return r
         return method

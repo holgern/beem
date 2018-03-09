@@ -63,7 +63,8 @@ class Testcases(unittest.TestCase):
         block_time = b.block_time(block.id)
         self.assertEqual(block.time(), block_time)
         block_timestamp = b.block_timestamp(block.id)
-        self.assertEqual(block.time().timestamp(), block_timestamp)
+        timestamp = int(time.mktime(block.time().timetuple()))
+        self.assertEqual(block_timestamp, timestamp)
 
     @parameterized.expand([
         ("non_appbase"),

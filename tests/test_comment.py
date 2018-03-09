@@ -62,7 +62,8 @@ class Testcases(unittest.TestCase):
         self.assertEqual(c.parent_permlink, 'witness-category')
         self.assertEqual(c.title, 'witness gtg log')
         self.assertTrue(len(c.body) > 0)
-        self.assertEqual(list(c.json_metadata.keys()), ['tags', 'users', 'image', 'links', 'app', 'format'])
+        for key in ['tags', 'users', 'image', 'links', 'app', 'format']:
+            self.assertIn(key, list(c.json_metadata.keys()))
         self.assertTrue(c.is_main_post())
         self.assertFalse(c.is_comment())
         self.assertTrue(isinstance(c.get_reblogged_by(), list))

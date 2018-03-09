@@ -37,7 +37,7 @@ class SteemNodeRPC(GrapheneRPC):
         self.chain_params = self.get_network()
 
     def register_apis(self, apis=None):
-        if self.current_rpc >= 2:
+        if self.is_appbase_ready():
             return
         if apis is None:
             return
@@ -48,7 +48,8 @@ class SteemNodeRPC(GrapheneRPC):
                 raise exceptions.NoAccessApi("No permission to access %s API. " % api)
 
     def get_use_appbase(self):
-        return self.appbase and self.current_rpc >= 2
+        """Returns True if appbase ready and appbase calls are set"""
+        return self.appbase and self.is_appbase_ready()
 
     def rpcexec(self, payload):
         """ Execute a call by sending the payload.

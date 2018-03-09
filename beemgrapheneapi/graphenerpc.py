@@ -14,6 +14,11 @@ import sys
 import threading
 import time
 import warnings
+from .rpcutils import (
+    is_network_appbase_ready, sleep_and_check_retries,
+    get_api_name, get_query, UnauthorizedError,
+    RPCConnection, RPCError, NumRetriesReached
+)
 
 WEBSOCKET_MODULE = None
 if not WEBSOCKET_MODULE:
@@ -32,30 +37,6 @@ if not REQUEST_MODULE:
 
 
 log = logging.getLogger(__name__)
-
-
-class UnauthorizedError(Exception):
-    """UnauthorizedError Exception."""
-
-    pass
-
-
-class RPCConnection(Exception):
-    """RPCConnection Exception."""
-
-    pass
-
-
-class RPCError(Exception):
-    """RPCError Exception."""
-
-    pass
-
-
-class NumRetriesReached(Exception):
-    """NumRetriesReached Exception."""
-
-    pass
 
 
 class GrapheneRPC(object):
@@ -101,13 +82,16 @@ class GrapheneRPC(object):
     def __init__(self, urls, user="", password="", **kwargs):
         """Init."""
         self.api_id = {}
-        self.rpc_methods = {'ws': 0, 'jsonrpc': 1, 'appbase': 2, 'wsappbase': 3}
+        self.rpc_methods = {'offline': -1, 'ws': 0, 'jsonrpc': 1, 'appbase': 2, 'wsappbase': 3}
         self.current_rpc = self.rpc_methods["ws"]
         self._request_id = 0
         if isinstance(urls, list):
             self.urls = cycle(urls)
-        else:
+        elif urls is not None:
             self.urls = cycle([urls])
+        else:
+            self.urls = None
+            self.current_rpc = self.rpc_methods["offline"]
         self.user = user
         self.password = password
         self.ws = None
@@ -121,9 +105,15 @@ class GrapheneRPC(object):
         self._request_id += 1
         return self._request_id
 
+    def is_appbase_ready(self):
+        """Check if node is appbase ready"""
+        return self.current_rpc >= 2
+
     def rpcconnect(self):
         """Connect to next url in a loop."""
         cnt = 0
+        if self.urls is None:
+            return
         while True:
             cnt += 1
             self.url = next(self.urls)
@@ -156,17 +146,7 @@ class GrapheneRPC(object):
             except KeyboardInterrupt:
                 raise
             except Exception:
-                if (self.num_retries >= 0 and cnt > self.num_retries):
-                    raise NumRetriesReached()
-
-                sleeptime = (cnt - 1) * 2 if cnt < 10 else 10
-                if sleeptime:
-                    log.warning(
-                        "Lost connection to node during wsconnect(): %s (%d/%d) "
-                        % (self.url, cnt, self.num_retries) +
-                        "Retrying in %d seconds" % sleeptime
-                    )
-                    time.sleep(sleeptime)
+                sleep_and_check_retries(self.num_retries, cnt, self.url)
         try:
             props = self.get_config(api="database")
         except:
@@ -175,24 +155,26 @@ class GrapheneRPC(object):
             else:
                 self.current_rpc = self.rpc_methods["appbase"]
             props = self.get_config(api="database")
-        if "STEEMIT_CHAIN_ID" in props:
-            network_version = props['STEEMIT_BLOCKCHAIN_VERSION']
-        elif "STEEM_CHAIN_ID" in props:
-            network_version = props['STEEM_BLOCKCHAIN_VERSION']
-        if self.ws and network_version >= '0.19.4':
-            self.current_rpc = self.rpc_methods["wsappbase"]
-        elif not self.ws and network_version >= '0.19.4':
-            self.current_rpc = self.rpc_methods["appbase"]
+        if is_network_appbase_ready(props):
+            if self.ws:
+                self.current_rpc = self.rpc_methods["wsappbase"]
+            else:
+                self.current_rpc = self.rpc_methods["appbase"]
+        self.rpclogin(self.user, self.password)
+
+    def rpclogin(self, user, password):
+        """Login into Websocket"""
         if self.ws and self.current_rpc == 0:
-            self.login(self.user, self.password, api_id=1)
+            self.login(user, password, api_id=1)
 
     def rpcclose(self):
+        """Close Websocket"""
         if self.ws:
             self.ws.close()
 
     def register_apis(self):
         """Register apis."""
-        if self.current_rpc < 2:
+        if self.current_rpc >= 0 and self.current_rpc < 2:
             self.api_id["database"] = self.get_api_by_name("database_api", api_id=1)
             self.api_id["network_broadcast"] = self.get_api_by_name("network_broadcast_api", api_id=1)
 
@@ -209,63 +191,6 @@ class GrapheneRPC(object):
         self.ws.send(payload)
         reply = self.ws.recv()
         return reply
-
-    def get_query(self, api_name, name, args):
-        if self.current_rpc < 2:
-            query = {"method": "call",
-                     "params": [api_name, name, list(args)],
-                     "jsonrpc": "2.0",
-                     "id": self.get_request_id()}
-        else:
-            args = json.loads(json.dumps(args))
-            # print(args)
-            if len(args) == 1 and isinstance(args[0], dict):
-                query = {"method": api_name + "." + name,
-                         "params": args[0],
-                         "jsonrpc": "2.0",
-                         "id": self.get_request_id()}
-            elif args:
-                query = {"method": "call",
-                         "params": [api_name, name, list(args)],
-                         "jsonrpc": "2.0",
-                         "id": self.get_request_id()}
-            elif api_name == "condenser_api":
-                query = {"method": api_name + "." + name,
-                         "jsonrpc": "2.0",
-                         "params": [],
-                         "id": self.get_request_id()}
-            else:
-                query = {"method": api_name + "." + name,
-                         "jsonrpc": "2.0",
-                         "params": {},
-                         "id": self.get_request_id()}
-        return query
-
-    def get_api_name(self, *args, **kwargs):
-        if self.current_rpc < 2:
-            # Sepcify the api to talk to
-            if "api_id" not in kwargs:
-                if ("api" in kwargs):
-                    api_name = kwargs["api"].replace("_api", "") + "_api"
-                else:
-                    api_id = 0
-                    api_name = None
-            else:
-                api_id = kwargs["api_id"]
-                api_name = api_id
-        else:
-            # Sepcify the api to talk to
-            if "api_id" not in kwargs:
-                if ("api" in kwargs):
-                    if kwargs["api"] != "jsonrpc":
-                        api_name = kwargs["api"].replace("_api", "") + "_api"
-                    else:
-                        api_name = kwargs["api"]
-                else:
-                    api_name = "condenser_api"
-            else:
-                api_name = "condenser_api"
-        return api_name
 
     def rpcexec(self, payload):
         """
@@ -289,19 +214,7 @@ class GrapheneRPC(object):
             except KeyboardInterrupt:
                 raise
             except Exception:
-                if (self.num_retries > -1 and
-                        cnt > self.num_retries):
-                    raise NumRetriesReached()
-                sleeptime = (cnt - 1) * 2 if cnt < 10 else 10
-                self.rpcclose()
-                if sleeptime:
-                    log.warning(
-                        "Lost connection to node during rpcexec(): %s (%d/%d) "
-                        % (self.url, cnt, self.num_retries) +
-                        "Retrying in %d seconds" % sleeptime
-                    )
-                    time.sleep(sleeptime)
-
+                sleep_and_check_retries(self.num_retries, cnt, self.url)
                 # retry
                 self.rpcconnect()
                 self.register_apis()
@@ -328,11 +241,11 @@ class GrapheneRPC(object):
         """Map all methods to RPC calls and pass through the arguments."""
         def method(*args, **kwargs):
 
-            api_name = self.get_api_name(*args, **kwargs)
+            api_name = get_api_name(self.is_appbase_ready(), *args, **kwargs)
 
             # let's be able to define the num_retries per query
             self.num_retries = kwargs.get("num_retries", self.num_retries)
-            query = self.get_query(api_name, name, args)
+            query = get_query(self.is_appbase_ready(), self.get_request_id(), api_name, name, args)
             r = self.rpcexec(query)
             return r
         return method

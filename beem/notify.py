@@ -49,7 +49,7 @@ class Notify(Events):
         keep_alive=25
     ):
         # Events
-        super(Notify, self).__init__()
+        Events.__init__(self)
         self.events = Events()
 
         # Steem instance

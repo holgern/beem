@@ -33,10 +33,8 @@ if __name__ == "__main__":
     last_node = blockchain.steem.rpc.url
     print("Current node:", last_node)
     for entry in blockchain.blocks(start=last_block_id, threading=True, thread_num=8):
-        if "id" in entry:
-            block_no = entry["id"]
-        else:
-            block_no = entry["block_num"]
+        block_no = entry.id
+
         if "block" in entry:
             trxs = entry["block"]["transactions"]
         else:

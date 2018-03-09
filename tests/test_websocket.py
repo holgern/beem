@@ -21,7 +21,20 @@ core_unit = "STM"
 nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
          "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
          "wss://steemd.minnowsupportproject.org"]
-nodes_appbase = ["https://api.steemitstage.com", "wss://appbasetest.timcliff.com"]
+nodes_appbase = ["wss://appbasetest.timcliff.com"]
+
+
+class TestBot:
+    def init(self):
+        self.ws = None
+        self.blocks = 0
+
+    def new_block(self, block):
+        chunk = 5
+        self.blocks = self.blocks + 1
+        print(str(self.blocks))
+        if self.blocks % chunk == 0:
+            self.ws.stop()
 
 
 class Testcases(unittest.TestCase):
@@ -34,7 +47,9 @@ class Testcases(unittest.TestCase):
         )
 
     def test_connect(self):
-        self.assertIn(next(self.ws.urls), nodes)
-        self.assertIn(next(self.ws.urls), nodes)
-        self.assertIn(next(self.ws.urls), nodes)
-        self.assertIn(next(self.ws.urls), nodes)
+        tb = TestBot()
+        tb.init()
+        tb.ws = self.ws
+        self.ws.on_block += tb.new_block
+        self.ws.run_forever()
+        self.assertEqual(tb.blocks, 5)

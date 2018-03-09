@@ -144,10 +144,11 @@ class Blockchain(object):
 
             :param int block_num: Block number
         """
-        return int(Block(
+        block_time = Block(
             block_num,
             steem_instance=self.steem
-        ).time().timestamp())
+        ).time()
+        return int(time.mktime(block_time.timetuple()))
 
     def blocks(self, start=None, stop=None, threading=False, thread_num=8):
         """ Yields blocks starting from ``start``.
