@@ -2,10 +2,10 @@
 branch = True
 source =
     beem/
-    beembase
+    beembase/
     beemapi/
-    beemgrapheneapi
-    beemgraphenebase
+    beemgrapheneapi/
+    beemgraphenebase/
 omit = 
      */.eggs/*
      */.tox/*
