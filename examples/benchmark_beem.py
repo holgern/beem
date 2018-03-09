@@ -17,33 +17,33 @@ logging.basicConfig(level=logging.INFO)
 
 
 if __name__ == "__main__":
-    node_setup = 2
+    node_setup = 3
     how_many_hours = 1
     if node_setup == 0:
         stm = Steem(node="https://api.steemit.com", num_retries=10)
-        max_batch_size=None
-        threading=True
-        thread_num=8
+        max_batch_size = None
+        threading = True
+        thread_num = 8
     elif node_setup == 1:
         stm = Steem(node="https://api.steemitstage.com", num_retries=10)
-        max_batch_size=16
-        threading=False
-        thread_num=8
+        max_batch_size = None
+        threading = False
+        thread_num = 8
     elif node_setup == 2:
         stm = Steem(node="https://api.steemitstage.com", num_retries=10)
-        max_batch_size=None
-        threading=True
-        thread_num=8
-    elif node_setup == 3:        
+        max_batch_size = None
+        threading = True
+        thread_num = 8
+    elif node_setup == 3:
         stm = Steem(num_retries=10)
-        max_batch_size=None
-        threading=True
-        thread_num=8        
+        max_batch_size = None
+        threading = True
+        thread_num = 16
     blockchain = Blockchain(steem_instance=stm)
     last_block_id = 19273700
     last_block = Block(last_block_id, steem_instance=stm)
     startTime = datetime.now()
-    
+
     stopTime = last_block.time() + timedelta(seconds=how_many_hours * 60 * 60)
     ltime = time.time()
     cnt = 0

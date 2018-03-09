@@ -217,7 +217,6 @@ class GrapheneRPC(object):
             except KeyboardInterrupt:
                 raise
             except Exception as e:
-                print("error "+str(e))
                 log.critical("Error: {}n\n".format(str(e)))
                 sleep_and_check_retries(self.num_retries, cnt, self.url)
                 # retry
