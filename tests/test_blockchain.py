@@ -83,9 +83,9 @@ class Testcases(unittest.TestCase):
         est_block_num = b.get_estimated_block_num(date, accurate=False)
         self.assertTrue((est_block_num - (old_block.id)) < 2)
         est_block_num = b.get_estimated_block_num(date, accurate=True)
-        self.assertEqual(est_block_num, old_block.id)
+        self.assertTrue((est_block_num - (old_block.id)) < 2)
         est_block_num = b.get_estimated_block_num(date, estimateForwards=True, accurate=True)
-        self.assertEqual(est_block_num, old_block.id)
+        self.assertTrue((est_block_num - (old_block.id)) < 2)
         est_block_num = b.get_estimated_block_num(date, estimateForwards=True, accurate=False)
 
     @parameterized.expand([
