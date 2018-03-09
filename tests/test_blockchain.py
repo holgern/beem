@@ -60,9 +60,9 @@ class Testcases(unittest.TestCase):
         block = b.get_current_block()
         self.assertTrue(isinstance(block, Block))
         self.assertEqual(num, block.identifier)
-        block_time = b.block_time(block.id)
+        block_time = b.block_time(block.identifier)
         self.assertEqual(block.time(), block_time)
-        block_timestamp = b.block_timestamp(block.id)
+        block_timestamp = b.block_timestamp(block.identifier)
         timestamp = int(time.mktime(block.time().timetuple()))
         self.assertEqual(block_timestamp, timestamp)
 
@@ -81,11 +81,11 @@ class Testcases(unittest.TestCase):
         old_block = Block(num - 60, steem_instance=bts)
         date = old_block.time()
         est_block_num = b.get_estimated_block_num(date, accurate=False)
-        self.assertTrue((est_block_num - (old_block.id)) < 2)
+        self.assertTrue((est_block_num - (old_block.identifier)) < 2)
         est_block_num = b.get_estimated_block_num(date, accurate=True)
-        self.assertTrue((est_block_num - (old_block.id)) < 2)
+        self.assertTrue((est_block_num - (old_block.identifier)) < 2)
         est_block_num = b.get_estimated_block_num(date, estimateForwards=True, accurate=True)
-        self.assertTrue((est_block_num - (old_block.id)) < 2)
+        self.assertTrue((est_block_num - (old_block.identifier)) < 2)
         est_block_num = b.get_estimated_block_num(date, estimateForwards=True, accurate=False)
 
     @parameterized.expand([
@@ -168,12 +168,12 @@ class Testcases(unittest.TestCase):
         op_stat4 = {"transfer": 0, "vote": 0}
         self.assertTrue(len(ops_blocks) > 0)
         for block in ops_blocks:
-            for tran in block["block"]["transactions"]:
+            for tran in block["transactions"]:
                 for op in tran['operations']:
                     if op[0] in opNames:
                         op_stat4[op[0]] += 1
-            self.assertTrue(block.id >= self.start)
-            self.assertTrue(block.id <= self.stop)
+            self.assertTrue(block.identifier >= self.start)
+            self.assertTrue(block.identifier <= self.stop)
         self.assertEqual(op_stat["transfer"], op_stat4["transfer"])
         self.assertEqual(op_stat["vote"], op_stat4["vote"])
 

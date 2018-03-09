@@ -102,7 +102,7 @@ class BlockchainObject(dict):
             if not lazy and not self.cached:
                 self.refresh()
             # make sure to store the blocknumber for caching
-            self[self.id_item] = str(data)
+            self[self.id_item] = (data)
             # Set identifier again as it is overwritten in super() in refresh()
             self.identifier = data
         elif isinstance(data, string_types):

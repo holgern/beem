@@ -95,6 +95,7 @@ class GrapheneRPC(object):
         self.user = user
         self.password = password
         self.ws = None
+        self.rpc_queue = []
         self.num_retries = kwargs.get("num_retries", -1)
 
         self.rpcconnect()
@@ -122,12 +123,12 @@ class GrapheneRPC(object):
                 if WEBSOCKET_MODULE is None:
                     raise Exception()
                 sslopt_ca_certs = {'cert_reqs': ssl.CERT_NONE}
-                self.ws = websocket.WebSocket(sslopt=sslopt_ca_certs)
+                self.ws = websocket.WebSocket(sslopt=sslopt_ca_certs, enable_multithread=True)
                 self.current_rpc = self.rpc_methods["ws"]
             elif self.url[:3] == "ws":
                 if WEBSOCKET_MODULE is None:
                     raise Exception()
-                self.ws = websocket.WebSocket()
+                self.ws = websocket.WebSocket(enable_multithread=True)
                 self.current_rpc = self.rpc_methods["ws"]
             else:
                 if REQUEST_MODULE is None:
@@ -145,7 +146,8 @@ class GrapheneRPC(object):
                     break
             except KeyboardInterrupt:
                 raise
-            except Exception:
+            except Exception as e:
+                log.critical("Error: {}n\n".format(str(e)))
                 sleep_and_check_retries(self.num_retries, cnt, self.url)
         try:
             props = self.get_config(api="database")
@@ -202,6 +204,7 @@ class GrapheneRPC(object):
         """
         log.debug(json.dumps(payload))
         cnt = 0
+        reply = {}
         while True:
             cnt += 1
 
@@ -213,7 +216,9 @@ class GrapheneRPC(object):
                 break
             except KeyboardInterrupt:
                 raise
-            except Exception:
+            except Exception as e:
+                print("error "+str(e))
+                log.critical("Error: {}n\n".format(str(e)))
                 sleep_and_check_retries(self.num_retries, cnt, self.url)
                 # retry
                 self.rpcconnect()
@@ -233,7 +238,19 @@ class GrapheneRPC(object):
             else:
                 raise RPCError(ret['error']['message'])
         else:
-            return ret["result"]
+            if isinstance(ret, list):
+                ret_list = []
+                for r in ret:
+                    if 'error' in ret:
+                        if 'detail' in ret['error']:
+                            raise RPCError(ret['error']['detail'])
+                        else:
+                            raise RPCError(ret['error']['message'])
+                    else:
+                        ret_list.append(r["result"])
+                return ret_list
+            else:
+                return ret["result"]
 
     # End of Deprecated methods
     ####################################################################
@@ -245,7 +262,17 @@ class GrapheneRPC(object):
 
             # let's be able to define the num_retries per query
             self.num_retries = kwargs.get("num_retries", self.num_retries)
+            add_to_queue = kwargs.get("add_to_queue", False)
             query = get_query(self.is_appbase_ready(), self.get_request_id(), api_name, name, args)
+            if add_to_queue:
+                self.rpc_queue.append(query)
+                return None
+            elif len(self.rpc_queue) > 0:
+                self.rpc_queue.append(query)
+                query = self.rpc_queue
+                self.rpc_queue = []
+            if isinstance(query, list):
+                self._request_id += len(query) - 1
             r = self.rpcexec(query)
             return r
         return method

@@ -20,12 +20,13 @@ class Block(BlockchainObject):
         methods (see below) that allow dealing with a block and it's
         corresponding functions.
 
+        Additionally to the block data, the block number is stored as self["id"] or self.identifier.
+
         .. code-block:: python
 
             from beem.block import Block
             block = Block(1)
-            print(block["block"])
-            print(block["id])
+            print(block)
 
         .. note:: This class comes with its own caching function to reduce the
                   load on the API server. Instances of this class can be
@@ -37,35 +38,31 @@ class Block(BlockchainObject):
         """ Even though blocks never change, you freshly obtain its contents
             from an API with this method
         """
+        if not isinstance(self.identifier, int):
+            self.identifier = int(self.identifier)
         if self.steem.rpc.get_use_appbase():
             block = self.steem.rpc.get_block({"block_num": self.identifier}, api="block")
+            if "block" in block:
+                block = block["block"]
         else:
-            block = {'block': self.steem.rpc.get_block(self.identifier), 'id': str(self.identifier)}
-
-        if not block or not block['block']:
+            block = self.steem.rpc.get_block(self.identifier)
+        if not block:
             raise BlockDoesNotExistsException
         super(Block, self).__init__(block, steem_instance=self.steem)
 
     @property
-    def block(self):
-        """ Returns the block data
-        """
-        return self["block"]
-
-    @property
-    def id(self):
-        """ Returns the block id
-        """
-        return int(self["id"])
+    def block_num(self):
+        """Returns the block number"""
+        return self.identifier
 
     def time(self):
-        """ Return a datatime instance for the timestamp of this block
-        """
-        return parse_time(self['block']['timestamp'])
+        """Return a datatime instance for the timestamp of this block"""
+        return parse_time(self['timestamp'])
 
     def ops(self):
+        """Returns all block operations"""
         ops = []
-        trxs = self["block"]["transactions"]
+        trxs = self["transactions"]
         for tx in trxs:
             for op in tx["operations"]:
                 # Replace opid by op name
@@ -74,6 +71,7 @@ class Block(BlockchainObject):
         return ops
 
     def ops_statistics(self, add_to_ops_stat=None):
+        """Retuns a statistic with the occurance of the different operation types"""
         if add_to_ops_stat is None:
             import beembase.operationids
             ops_stat = beembase.operationids.operations.copy()
@@ -81,7 +79,7 @@ class Block(BlockchainObject):
                 ops_stat[key] = 0
         else:
             ops_stat = add_to_ops_stat.copy()
-        trxs = self["block"]["transactions"]
+        trxs = self["transactions"]
         for tx in trxs:
             for op in tx["operations"]:
                 ops_stat[op[0]] += 1
@@ -95,9 +93,11 @@ class BlockHeader(BlockchainObject):
         """
         if self.steem.rpc.get_use_appbase():
             block = self.steem.rpc.get_block_header({"block_num": self.identifier}, api="block")
+            if "header" in block:
+                block = block["header"]
         else:
-            block = {'header': self.steem.rpc.get_block_header(self.identifier), 'id': str(self.identifier)}
-        if not block or not block['header']:
+            block = self.steem.rpc.get_block_header(self.identifier)
+        if not block:
             raise BlockDoesNotExistsException
         super(BlockHeader, self).__init__(
             block,
@@ -107,16 +107,9 @@ class BlockHeader(BlockchainObject):
     def time(self):
         """ Return a datatime instance for the timestamp of this block
         """
-        return parse_time(self['header']['timestamp'])
+        return parse_time(self['timestamp'])
 
     @property
-    def header(self):
-        """ Returns the block header
-        """
-        return self["header"]
-
-    @property
-    def id(self):
-        """ Returns the block id
-        """
-        return int(self["id"])
+    def block_num(self):
+        """Retuns the block number"""
+        return self.identifier

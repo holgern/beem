@@ -46,6 +46,7 @@ def is_network_appbase_ready(props):
 
 
 def get_query(appbase, request_id, api_name, name, args):
+    query = []
     if not appbase:
         query = {"method": "call",
                  "params": [api_name, name, list(args)],
@@ -54,16 +55,24 @@ def get_query(appbase, request_id, api_name, name, args):
     else:
         args = json.loads(json.dumps(args))
         # print(args)
-        if len(args) == 1 and isinstance(args[0], dict):
+        if len(args) > 0 and isinstance(args, list) and isinstance(args[0], dict):
             query = {"method": api_name + "." + name,
                      "params": args[0],
                      "jsonrpc": "2.0",
                      "id": request_id}
+        elif len(args) > 0 and isinstance(args, list) and len(args[0]) > 0 and isinstance(args[0], list) and isinstance(args[0][0], dict):
+            for a in args[0]:
+                query.append({"method": api_name + "." + name,
+                              "params": a,
+                              "jsonrpc": "2.0",
+                              "id": request_id})
+                request_id += 1
         elif args:
             query = {"method": "call",
                      "params": [api_name, name, list(args)],
                      "jsonrpc": "2.0",
                      "id": request_id}
+            request_id += 1
         elif api_name == "condenser_api":
             query = {"method": api_name + "." + name,
                      "jsonrpc": "2.0",

@@ -37,7 +37,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual(query["id"], 1)
         self.assertTrue(isinstance(query["params"], dict))
 
-        args = [{"a": "b"}]
+        args = ({"a": "b"},)
         query = get_query(True, 1, "test_api", "test", args=args)
         self.assertEqual(query["method"], 'test_api.test')
         self.assertEqual(query["jsonrpc"], '2.0')
@@ -45,13 +45,28 @@ class Testcases(unittest.TestCase):
         self.assertTrue(isinstance(query["params"], dict))
         self.assertEqual(query["params"], args[0])
 
-        args = ["b"]
+        args = ([{"a": "b"}, {"a": "c"}],)
+        query_list = get_query(True, 1, "test_api", "test", args=args)
+        query = query_list[0]
+        self.assertEqual(query["method"], 'test_api.test')
+        self.assertEqual(query["jsonrpc"], '2.0')
+        self.assertEqual(query["id"], 1)
+        self.assertTrue(isinstance(query["params"], dict))
+        self.assertEqual(query["params"], args[0][0])
+        query = query_list[1]
+        self.assertEqual(query["method"], 'test_api.test')
+        self.assertEqual(query["jsonrpc"], '2.0')
+        self.assertEqual(query["id"], 2)
+        self.assertTrue(isinstance(query["params"], dict))
+        self.assertEqual(query["params"], args[0][1])
+
+        args = ("b",)
         query = get_query(True, 1, "test_api", "test", args=args)
         self.assertEqual(query["method"], 'call')
         self.assertEqual(query["jsonrpc"], '2.0')
         self.assertEqual(query["id"], 1)
         self.assertTrue(isinstance(query["params"], list))
-        self.assertEqual(query["params"], ["test_api", "test", args])
+        self.assertEqual(query["params"], ["test_api", "test", ["b"]])
 
         query = get_query(True, 1, "condenser_api", "test", args="")
         self.assertEqual(query["method"], 'condenser_api.test')
@@ -59,13 +74,13 @@ class Testcases(unittest.TestCase):
         self.assertEqual(query["id"], 1)
         self.assertTrue(isinstance(query["params"], list))
 
-        args = ["b"]
+        args = ("b",)
         query = get_query(False, 1, "test_api", "test", args=args)
         self.assertEqual(query["method"], 'call')
         self.assertEqual(query["jsonrpc"], '2.0')
         self.assertEqual(query["id"], 1)
         self.assertTrue(isinstance(query["params"], list))
-        self.assertEqual(query["params"], ["test_api", "test", args])
+        self.assertEqual(query["params"], ["test_api", "test", ["b"]])
 
     def test_sleep_and_check_retries(self):
         sleep_and_check_retries(-1, 0, "test")

@@ -12,18 +12,38 @@ from beem.blockchain import Blockchain
 from beem.block import Block
 from beem.steem import Steem
 from beem.utils import parse_time, formatTimedelta
+log = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 if __name__ == "__main__":
-    # stm = Steem(node="https://api.steemit.com")
-    # stm = Steem(node="https://api.steemitstage.com")
-    # stm = Steem(node="wss://appbasetest.timcliff.com")
-    stm = Steem()
+    node_setup = 2
+    how_many_hours = 1
+    if node_setup == 0:
+        stm = Steem(node="https://api.steemit.com", num_retries=10)
+        max_batch_size=None
+        threading=True
+        thread_num=8
+    elif node_setup == 1:
+        stm = Steem(node="https://api.steemitstage.com", num_retries=10)
+        max_batch_size=16
+        threading=False
+        thread_num=8
+    elif node_setup == 2:
+        stm = Steem(node="https://api.steemitstage.com", num_retries=10)
+        max_batch_size=None
+        threading=True
+        thread_num=8
+    elif node_setup == 3:        
+        stm = Steem(num_retries=10)
+        max_batch_size=None
+        threading=True
+        thread_num=8        
     blockchain = Blockchain(steem_instance=stm)
     last_block_id = 19273700
     last_block = Block(last_block_id, steem_instance=stm)
     startTime = datetime.now()
-    how_many_hours = 1
+    
     stopTime = last_block.time() + timedelta(seconds=how_many_hours * 60 * 60)
     ltime = time.time()
     cnt = 0
@@ -32,9 +52,8 @@ if __name__ == "__main__":
     start_time = time.time()
     last_node = blockchain.steem.rpc.url
     print("Current node:", last_node)
-    for entry in blockchain.blocks(start=last_block_id, threading=True, thread_num=8):
-        block_no = entry.id
-
+    for entry in blockchain.blocks(start=last_block_id, max_batch_size=max_batch_size, threading=threading, thread_num=thread_num):
+        block_no = entry.identifier
         if "block" in entry:
             trxs = entry["block"]["transactions"]
         else:

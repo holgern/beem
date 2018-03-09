@@ -49,9 +49,8 @@ class Testcases(unittest.TestCase):
             bts = self.appbase
         block = Block(1, steem_instance=bts)
         self.assertEqual(block.identifier, 1)
-        self.assertEqual(block.id, 1)
         self.assertTrue(isinstance(block.time(), datetime))
-        self.assertTrue(isinstance(block["block"], dict))
+        self.assertTrue(isinstance(block, dict))
 
         block2 = Block(2, steem_instance=bts)
         self.assertTrue(block2.time() > block.time())
@@ -71,9 +70,8 @@ class Testcases(unittest.TestCase):
             bts = self.appbase
         block = BlockHeader(1, steem_instance=bts)
         self.assertEqual(block.identifier, 1)
-        self.assertEqual(block.id, 1)
         self.assertTrue(isinstance(block.time(), datetime))
-        self.assertTrue(isinstance(block["header"], dict))
+        self.assertTrue(isinstance(block, dict))
 
         block2 = BlockHeader(2, steem_instance=bts)
         self.assertTrue(block2.time() > block.time())
