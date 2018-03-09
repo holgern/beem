@@ -112,12 +112,15 @@ class Testcases(unittest.TestCase):
         else:
             bts = self.appbase
         b = Blockchain(steem_instance=bts)
-        last_block = b.get_current_block()
-        time.sleep(10)
+        trans = {'ref_block_num': 3855, 'ref_block_prefix': 1730859721,
+                 'expiration': '2018-03-09T06:21:06', 'operations': [],
+                 'extensions': [], 'signatures':
+                 ['2033a872a8ad33c7d5b946871e4c9cc8f08a5809258355fc909058eac83'
+                  '20ac2a872517a52b51522930d93dd2c1d5eb9f90b070f75f838c881ff29b11af98d6a1b']}
         with self.assertRaises(
             Exception
         ):
-            b.awaitTxConfirmation(last_block["block"]["transactions"][0])
+            b.awaitTxConfirmation(trans)
 
     @parameterized.expand([
         ("non_appbase"),

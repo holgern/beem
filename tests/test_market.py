@@ -110,7 +110,7 @@ class Testcases(unittest.TestCase):
         recenttrades = m.recent_trades(limit=10)
         recenttrades_raw = m.recent_trades(limit=10, raw_data=True)
         self.assertEqual(len(recenttrades), 10)
-        # self.assertEqual(recenttrades[0].json(), recenttrades_raw[0])
+        self.assertEqual(len(recenttrades_raw), 10)
 
     @parameterized.expand([
         ("non_appbase"),
@@ -125,7 +125,7 @@ class Testcases(unittest.TestCase):
         trades = m.trades(limit=10)
         trades_raw = m.trades(limit=10, raw_data=True)
         self.assertEqual(len(trades), 10)
-        # self.assertEqual(trades[0].json(), trades_raw[0])
+        self.assertEqual(len(trades_raw), 10)
 
     @parameterized.expand([
         ("non_appbase"),
