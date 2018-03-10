@@ -81,7 +81,7 @@ class Testcases(unittest.TestCase):
         old_block = Block(num - 60, steem_instance=bts)
         date = old_block.time()
         est_block_num = b.get_estimated_block_num(date, accurate=False)
-        self.assertTrue((est_block_num - (old_block.identifier)) < 2)
+        self.assertTrue((est_block_num - (old_block.identifier)) < 10)
         est_block_num = b.get_estimated_block_num(date, accurate=True)
         self.assertTrue((est_block_num - (old_block.identifier)) < 2)
         est_block_num = b.get_estimated_block_num(date, estimateForwards=True, accurate=True)

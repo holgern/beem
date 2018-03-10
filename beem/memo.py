@@ -8,7 +8,7 @@ from builtins import object
 from beem.instance import shared_steem_instance
 import random
 from beembase import memo as BtsMemo
-from beembase.account import PrivateKey, PublicKey
+from beemgraphenebase.account import PrivateKey, PublicKey
 from .account import Account
 from .exceptions import MissingKeyError, KeyNotFound
 

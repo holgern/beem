@@ -125,8 +125,8 @@ def sleep_and_check_retries(num_retries, cnt, url):
     else:
         sleeptime = 10
     if sleeptime:
-        log.warning("Lost connection to node during wsconnect(): %s (%d/%d) "
+        log.warning("\nLost connection to node during wsconnect(): %s (%d/%d) "
                     % (url, cnt, num_retries) +
-                    "Retrying in %d seconds" % sleeptime
+                    "Retrying in %d seconds\n" % sleeptime
                     )
         time.sleep(sleeptime)

@@ -11,7 +11,7 @@ from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text
 from datetime import datetime, timedelta
 from beemapi.steemnoderpc import SteemNodeRPC
 from beemapi.exceptions import NoAccessApi
-from beembase.account import PrivateKey, PublicKey
+from beemgraphenebase.account import PrivateKey, PublicKey
 from beembase import transactions, operations
 from .account import Account
 from .amount import Amount
@@ -652,7 +652,7 @@ class Steem(object):
         """ Create new account on Steem
 
             The brainkey/password can be used to recover all generated keys
-            (see `beembase.account` for more details.
+            (see `beemgraphenebase.account` for more details.
 
             By default, this call will use ``default_account`` to
             register a new name ``account_name`` with all keys being
@@ -730,7 +730,7 @@ class Steem(object):
         except AccountDoesNotExistsException:
             pass
 
-        # creator = Account(creator, steem_instance=self)
+        creator = Account(creator, steem_instance=self)
         if isinstance(delegation_fee_steem, string_types):
             delegation_fee_steem = Amount(delegation_fee_steem, steem_instance=self)
         elif isinstance(delegation_fee_steem, Amount):
@@ -741,12 +741,12 @@ class Steem(object):
             raise AssertionError()
 
         " Generate new keys from password"
-        from beembase.account import PasswordKey
+        from beemgraphenebase.account import PasswordKey
         if password:
-            active_key = PasswordKey(account_name, password, role="active")
-            owner_key = PasswordKey(account_name, password, role="owner")
-            posting_key = PasswordKey(account_name, password, role="posting")
-            memo_key = PasswordKey(account_name, password, role="memo")
+            active_key = PasswordKey(account_name, password, role="active", prefix=self.prefix)
+            owner_key = PasswordKey(account_name, password, role="owner", prefix=self.prefix)
+            posting_key = PasswordKey(account_name, password, role="posting", prefix=self.prefix)
+            memo_key = PasswordKey(account_name, password, role="memo", prefix=self.prefix)
             active_pubkey = active_key.get_public_key()
             owner_pubkey = owner_key.get_public_key()
             posting_pubkey = posting_key.get_public_key()
@@ -756,12 +756,16 @@ class Steem(object):
             owner_privkey = owner_key.get_private_key()
             memo_privkey = memo_key.get_private_key()
             # store private keys
-            if storekeys:
-                if store_owner_key:
-                    self.wallet.addPrivateKey(owner_privkey)
-                self.wallet.addPrivateKey(active_privkey)
-                self.wallet.addPrivateKey(memo_privkey)
-                self.wallet.addPrivateKey(posting_privkey)
+            try:
+                if storekeys:
+                    if store_owner_key:
+                        self.wallet.addPrivateKey(owner_privkey)
+                    self.wallet.addPrivateKey(active_privkey)
+                    self.wallet.addPrivateKey(memo_privkey)
+                    self.wallet.addPrivateKey(posting_privkey)
+            except ValueError as e:
+                log.info(str(e))
+
         elif (owner_key and active_key and memo_key and posting_key):
             active_pubkey = PublicKey(
                 active_key, prefix=self.prefix)
@@ -828,7 +832,7 @@ class Steem(object):
             op = {
                 "fee": delegation_fee_steem,
                 'delegation': required_fee_vests,
-                "creator": creator,
+                "creator": creator["name"],
                 "new_account_name": account_name,
                 'owner': {'account_auths': owner_accounts_authority,
                           'key_auths': owner_key_authority,
@@ -850,7 +854,7 @@ class Steem(object):
         else:
             op = {
                 "fee": required_fee_steem,
-                "creator": creator,
+                "creator": creator["name"],
                 "new_account_name": account_name,
                 'owner': {'account_auths': owner_accounts_authority,
                           'key_auths': owner_key_authority,

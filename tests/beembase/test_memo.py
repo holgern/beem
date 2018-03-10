@@ -9,7 +9,7 @@ from builtins import range
 import unittest
 import os
 from pprint import pprint
-from beembase.account import BrainKey, Address, PublicKey, PrivateKey
+from beemgraphenebase.account import BrainKey, Address, PublicKey, PrivateKey
 from beembase.memo import (
     get_shared_secret,
     _pad,

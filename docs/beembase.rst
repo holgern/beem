@@ -6,8 +6,6 @@ Submodules
 
 .. toctree::
 
-   beembase.account
-   beembase.bip38
    beembase.chains
    beembase.memo
    beembase.objects

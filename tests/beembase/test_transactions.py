@@ -8,14 +8,14 @@ from builtins import range
 from beembase import (
     transactions,
     memo,
-    account,
     operations,
     objects
 )
 from collections import OrderedDict
 from beembase.objects import Operation
 from beembase.signedtransactions import Signed_Transaction
-from beembase.account import PrivateKey
+from beemgraphenebase.account import PrivateKey
+from beemgraphenebase import account
 from beembase.operationids import getOperationNameForId
 from beemgraphenebase.py23 import py23_bytes, bytes_types
 from beem.amount import Amount

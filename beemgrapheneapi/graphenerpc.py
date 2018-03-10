@@ -135,7 +135,7 @@ class GrapheneRPC(object):
                     raise Exception()
                 self.ws = None
                 self.current_rpc = self.rpc_methods["jsonrpc"]
-                self.headers = {'User-Agent': 'beem v0.19.11',
+                self.headers = {'User-Agent': 'beem v0.19.14',
                                 'content-type': 'application/json'}
 
             try:
@@ -147,7 +147,7 @@ class GrapheneRPC(object):
             except KeyboardInterrupt:
                 raise
             except Exception as e:
-                log.critical("Error: {}n\n".format(str(e)))
+                log.critical("Error: {}\n".format(str(e)))
                 sleep_and_check_retries(self.num_retries, cnt, self.url)
         try:
             props = self.get_config(api="database")
@@ -217,7 +217,7 @@ class GrapheneRPC(object):
             except KeyboardInterrupt:
                 raise
             except Exception as e:
-                log.critical("Error: {}n\n".format(str(e)))
+                log.critical("Error: {}\n".format(str(e)))
                 sleep_and_check_retries(self.num_retries, cnt, self.url)
                 # retry
                 self.rpcconnect()

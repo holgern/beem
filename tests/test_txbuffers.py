@@ -6,6 +6,9 @@ from builtins import super
 import unittest
 from beem import Steem
 from beem.instance import set_shared_steem_instance
+from beem.transactionbuilder import TransactionBuilder
+from beembase.operations import Transfer
+from beem.wallet import Wallet
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
@@ -18,13 +21,25 @@ class Testcases(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.bts = Steem(
+        self.stm = Steem(
             node=nodes,
             nobroadcast=True,
-            keys={"active": wif}
         )
-        set_shared_steem_instance(self.bts)
-        self.bts.set_default_account("test")
+        set_shared_steem_instance(self.stm)
+        self.stm.set_default_account("test")
+
+    def test_appendSigner(self):
+        stm = self.stm
+        tx = TransactionBuilder(steem_instance=stm)
+        tx.appendOps(Transfer(**{
+                 "from": "test",
+                 "to": "test1",
+                 "amount": "1 STEEM",
+                 "memo": ""
+             }))
+        tx.appendWif(wif)
+        tx.sign()
+        self.assertTrue(len(tx["signatures"]) > 0)
 
 
 """

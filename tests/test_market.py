@@ -10,7 +10,6 @@ from beem import Steem
 from beem.market import Market
 from beem.price import Price
 from beem.amount import Amount
-from beembase.operationids import getOperationNameForId
 from beem.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"

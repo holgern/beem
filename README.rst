@@ -120,6 +120,12 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.14
+-------
+* batched api calls possible
+* Threading added for websockets
+* bug fixes
+
 0.19.13
 -------
 * beem is now in the beta state, as now 270 unit tests exists

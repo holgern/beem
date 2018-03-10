@@ -13,7 +13,7 @@ from beem import Steem
 from beem.amount import Amount
 from beem.witness import Witness
 from beem.account import Account
-from beembase.account import PrivateKey
+from beemgraphenebase.account import PrivateKey
 from beem.instance import set_shared_steem_instance
 # Py3 compatibility
 import sys

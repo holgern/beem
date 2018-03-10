@@ -18,7 +18,7 @@ from beemgraphenebase.types import (
 )
 from beemgraphenebase.objects import GrapheneObject, isArgsThisClass
 from .objecttypes import object_type
-from .account import PublicKey
+from beemgraphenebase.account import PublicKey
 from beemgraphenebase.objects import Operation as GPHOperation
 from .operationids import operations
 import struct

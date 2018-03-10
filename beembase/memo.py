@@ -16,7 +16,7 @@ except ImportError:
         from Crypto.Cipher import AES
     except ImportError:
         raise ImportError("Missing dependency: pyCryptodome")
-from .account import PrivateKey, PublicKey
+from beemgraphenebase.account import PrivateKey, PublicKey
 from .objects import Memo
 import struct
 default_prefix = "STM"

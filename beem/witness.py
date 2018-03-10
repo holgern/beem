@@ -13,7 +13,7 @@ from .blockchainobject import BlockchainObject
 from .utils import formatTimeString
 from datetime import datetime, timedelta
 from beembase import transactions, operations
-from beembase.account import PrivateKey, PublicKey
+from beemgraphenebase.account import PrivateKey, PublicKey
 import pytz
 
 

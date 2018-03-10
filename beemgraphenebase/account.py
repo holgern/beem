@@ -27,10 +27,11 @@ class PasswordKey(object):
         passphrase only.
     """
 
-    def __init__(self, account, password, role="active"):
+    def __init__(self, account, password, role="active", prefix="STM"):
         self.account = account
         self.role = role
         self.password = password
+        self.prefix = prefix
 
     def get_private(self):
         """ Derive private key from the brain key and the current sequence
@@ -38,7 +39,7 @@ class PasswordKey(object):
         """
         a = py23_bytes(self.account + self.role + self.password, 'utf8')
         s = hashlib.sha256(a).digest()
-        return PrivateKey(hexlify(s).decode('ascii'))
+        return PrivateKey(hexlify(s).decode('ascii'), prefix = self.prefix)
 
     def get_public(self):
         return self.get_private().pubkey
@@ -140,14 +141,14 @@ class Address(object):
 
         :param str address: Base58 encoded address (defaults to ``None``)
         :param str pubkey: Base58 encoded pubkey (defaults to ``None``)
-        :param str prefix: Network prefix (defaults to ``GPH``)
+        :param str prefix: Network prefix (defaults to ``STM``)
 
         Example::
 
-           Address("GPHFN9r6VYzBK8EKtMewfNbfiGCr56pHDBFi")
+           Address("STMFN9r6VYzBK8EKtMewfNbfiGCr56pHDBFi")
 
     """
-    def __init__(self, address=None, pubkey=None, prefix="GPH"):
+    def __init__(self, address=None, pubkey=None, prefix="STM"):
         self.prefix = prefix
         if pubkey is not None:
             self._pubkey = Base58(pubkey, prefix=prefix)
@@ -182,7 +183,7 @@ class Address(object):
 
     def __str__(self):
         """ Returns the readable Graphene address. This call is equivalent to
-            ``format(Address, "GPH")``
+            ``format(Address, "STM")``
         """
         return format(self, self.prefix)
 
@@ -211,11 +212,11 @@ class PublicKey(Address):
     """ This class deals with Public Keys and inherits ``Address``.
 
         :param str pk: Base58 encoded public key
-        :param str prefix: Network prefix (defaults to ``GPH``)
+        :param str prefix: Network prefix (defaults to ``STM``)
 
         Example:::
 
-           PublicKey("GPH6UtYWWs3rkZGV8JA86qrgkG6tyFksgECefKE1MiH4HkLD8PFGL")
+           PublicKey("STM6UtYWWs3rkZGV8JA86qrgkG6tyFksgECefKE1MiH4HkLD8PFGL")
 
         .. note:: By default, graphene-based networks deal with **compressed**
                   public keys. If an **uncompressed** key is required, the
@@ -224,7 +225,7 @@ class PublicKey(Address):
                       PublicKey("xxxxx").unCompressed()
 
     """
-    def __init__(self, pk, prefix="GPH"):
+    def __init__(self, pk, prefix="STM"):
         self.prefix = prefix
         self._pk = Base58(pk, prefix=prefix)
         self.address = Address(pubkey=pk, prefix=prefix)
@@ -275,7 +276,7 @@ class PublicKey(Address):
 
     def __str__(self):
         """ Returns the readable Graphene public key. This call is equivalent to
-            ``format(PublicKey, "GPH")``
+            ``format(PublicKey, "STM")``
         """
         return format(self._pk, self.prefix)
 
@@ -294,7 +295,7 @@ class PrivateKey(PublicKey):
         constructs two instances of ``PublicKey``:
 
         :param str wif: Base58check-encoded wif key
-        :param str prefix: Network prefix (defaults to ``GPH``)
+        :param str prefix: Network prefix (defaults to ``STM``)
 
         Example:::
 
@@ -312,13 +313,13 @@ class PrivateKey(PublicKey):
             Instance of ``Address`` using uncompressed key.
 
     """
-    def __init__(self, wif=None, prefix="GPH"):
+    def __init__(self, wif=None, prefix="STM"):
         if wif is None:
-            self._wif = Base58(hexlify(os.urandom(32)).decode('ascii'))
+            self._wif = Base58(hexlify(os.urandom(32)).decode('ascii'), prefix=prefix)
         elif isinstance(wif, Base58):
             self._wif = wif
         else:
-            self._wif = Base58(wif)
+            self._wif = Base58(wif, prefix=prefix)
         # compress pubkeys only
         self._pubkeyhex, self._pubkeyuncompressedhex = self.compressedpubkey()
         self.pubkey = PublicKey(self._pubkeyhex, prefix=prefix)
@@ -329,6 +330,8 @@ class PrivateKey(PublicKey):
     def compressedpubkey(self):
         """ Derive uncompressed public key """
         secret = unhexlify(repr(self._wif))
+        if not len(secret) == ecdsa.SECP256k1.baselen:
+            raise ValueError("{} != {}".format(len(secret), ecdsa.SECP256k1.baselen))
         order = ecdsa.SigningKey.from_string(secret, curve=ecdsa.SECP256k1).curve.generator.order()
         p = ecdsa.SigningKey.from_string(secret, curve=ecdsa.SECP256k1).verifying_key.pubkey.point
         x_str = ecdsa.util.number_to_string(p.x(), order)

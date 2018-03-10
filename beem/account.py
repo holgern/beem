@@ -12,7 +12,7 @@ from beem.amount import Amount
 from datetime import datetime, timedelta
 import pytz
 from beembase import operations
-from beembase.account import PrivateKey, PublicKey
+from beemgraphenebase.account import PrivateKey, PublicKey
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 import json
 import math

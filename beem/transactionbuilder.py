@@ -8,7 +8,7 @@ from future.utils import python_2_unicode_compatible
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from .account import Account
 from beembase.objects import Operation
-from beembase.account import PrivateKey, PublicKey
+from beemgraphenebase.account import PrivateKey, PublicKey
 from beembase.signedtransactions import Signed_Transaction
 from beembase import transactions, operations
 from .exceptions import (
@@ -177,8 +177,8 @@ class TransactionBuilder(dict):
                     raise AssertionError("Could not access permission")
                 required_treshold = account[permission]["weight_threshold"]
                 keys = fetchkeys(account, permission)
-                if permission != "owner":
-                    keys.extend(fetchkeys(account, "owner"))
+                # if permission != "owner":
+                #     keys.extend(fetchkeys(account, "owner"))
                 for x in keys:
                     self.wifs.add(x[0])
 

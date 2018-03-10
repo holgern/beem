@@ -8,7 +8,7 @@ import re
 import logging
 from binascii import hexlify, unhexlify
 from beemgraphenebase.ecdsasig import verify_message, sign_message
-from beembase.account import PublicKey
+from beemgraphenebase.account import PublicKey
 from beem.instance import shared_steem_instance
 from beem.account import Account
 from .exceptions import InvalidMessageSignature

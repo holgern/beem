@@ -13,7 +13,7 @@ from beem.version import version as __version__
 from datetime import datetime, timedelta
 import pytz
 from beembase import operations
-from beembase.account import PrivateKey, PublicKey
+from beemgraphenebase.account import PrivateKey, PublicKey
 import json
 from prettytable import PrettyTable
 import math
@@ -158,6 +158,8 @@ def listkeys():
     t = PrettyTable(["Available Key", "Account", "Type"])
     t.align = "l"
     for key in stm.wallet.getPublicKeys():
+        if key[0:2] != stm.prefix:
+            continue
         account = stm.wallet.getAccount(key)
         if account["name"] is None:
             accountName = ""

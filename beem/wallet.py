@@ -7,7 +7,7 @@ from builtins import object
 import logging
 import os
 from beemgraphenebase import bip38
-from beembase.account import PrivateKey, GPHPrivateKey
+from beemgraphenebase.account import PrivateKey
 from beem.instance import shared_steem_instance
 from .account import Account
 from .exceptions import (
@@ -242,8 +242,9 @@ class Wallet(object):
         """
         if self.MasterPassword is not None:
             self.configStorage.delete(self.MasterPassword.config_key)
-        for key in self.keyStorage.getPublicKeys():
-            self.keyStorage.delete(key)
+        if self.keyStorage is not None:
+            for key in self.keyStorage.getPublicKeys():
+                self.keyStorage.delete(key)
         Wallet.keys = {}
         Wallet.keyMap = {}
 
@@ -273,10 +274,10 @@ class Wallet(object):
         """
         # it could be either graphenebase or peerplaysbase so we can't check
         # the type directly
-        if isinstance(wif, PrivateKey) or isinstance(wif, GPHPrivateKey):
+        if isinstance(wif, PrivateKey):
             wif = str(wif)
         try:
-            pub = format(PrivateKey(wif).pubkey, self.prefix)
+            pub = format(PrivateKey(wif, prefix=self.prefix).pubkey, self.prefix)
         except:
             raise InvalidWifError(
                 "Invalid Private Key Format. Please use WIF!")
@@ -413,7 +414,7 @@ class Wallet(object):
     def getAccountFromPrivateKey(self, wif):
         """ Obtain account name from private key
         """
-        pub = format(PrivateKey(wif).pubkey, self.prefix)
+        pub = format(PrivateKey(wif, prefix=self.prefix).pubkey, self.prefix)
         return self.getAccountFromPublicKey(pub)
 
     def getAccountsFromPublicKey(self, pub):

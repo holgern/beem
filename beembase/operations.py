@@ -14,7 +14,7 @@ from beemgraphenebase.types import (
     Map, Id, VoteId
 )
 from .objects import GrapheneObject, isArgsThisClass
-from .account import PublicKey
+from beemgraphenebase.account import PublicKey
 from .operationids import operations
 from .objects import (
     Operation,
