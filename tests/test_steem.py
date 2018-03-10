@@ -64,6 +64,7 @@ class Testcases(unittest.TestCase):
             tx["operations"][0][0],
             "transfer"
         )
+        self.assertEqual(len(tx["operations"]), 1)
         op = tx["operations"][0][1]
         self.assertIn("memo", op)
         self.assertEqual(op["memo"], "Foobar")

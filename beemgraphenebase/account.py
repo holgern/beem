@@ -39,7 +39,7 @@ class PasswordKey(object):
         """
         a = py23_bytes(self.account + self.role + self.password, 'utf8')
         s = hashlib.sha256(a).digest()
-        return PrivateKey(hexlify(s).decode('ascii'), prefix = self.prefix)
+        return PrivateKey(hexlify(s).decode('ascii'), prefix=self.prefix)
 
     def get_public(self):
         return self.get_private().pubkey

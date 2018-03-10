@@ -12,7 +12,7 @@ from beem.blockchain import Blockchain
 from beem.block import Block
 from beem.account import Account
 from beem.amount import Amount
-from beembase.account import PasswordKey, PrivateKey, PublicKey
+from beemgraphenebase.account import PasswordKey, PrivateKey, PublicKey
 from beem.steem import Steem
 from beem.utils import parse_time, formatTimedelta
 from beemgrapheneapi.rpcutils import NumRetriesReached
@@ -25,6 +25,7 @@ password1 = "4JkeGCG3HghMMdwCpHyXpiZqoXbWuv"
 if __name__ == "__main__":
     stm = Steem(node=["wss://testnet.steem.vc"])
     prefix = stm.prefix
+    # curl --data "username=beem&password=yfABsiDXWcCVyDC2udXGYD2psFUiQy" https://testnet.steem.vc/create
     account = Account("beem", steem_instance=stm)
     stm.wallet.purge()
     stm.wallet.create("123")
@@ -42,20 +43,19 @@ if __name__ == "__main__":
     posting_privkey = posting_key.get_private_key()
     owner_privkey = owner_key.get_private_key()
     memo_privkey = memo_key.get_private_key()
-    
+
     stm.wallet.addPrivateKey(owner_privkey)
     stm.wallet.addPrivateKey(active_privkey)
     stm.wallet.addPrivateKey(memo_privkey)
     stm.wallet.addPrivateKey(posting_privkey)
-    
+
     stm.wallet.getAccountFromPrivateKey(str(active_privkey))
 
-    
     # stm.create_account("beem1", creator=account, password=password1)
-    
+
     account1 = Account("beem1", steem_instance=stm)
     b = Blockchain(steem_instance=stm)
     blocknum = b.get_current_block().identifier
-  
+
     account.transfer("beem1", 1, "SBD", "test")
-    b1 = Block(blocknum, steem_instance=stm)    
+    b1 = Block(blocknum, steem_instance=stm)
