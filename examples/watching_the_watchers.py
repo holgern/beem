@@ -89,9 +89,9 @@ class WatchingTheWatchersBot:
                 for index in range(0, len(accounts)):
                     a = accounts[index]
                     account = acclist[index]
-                    vp = (float(a["vesting_shares"].split()[0]) +
-                          float(a["received_vesting_shares"].split()[0]) -
-                          float(a["delegated_vesting_shares"].split()[0])) / 1000000.0
+                    vp = (a["vesting_shares"].amount +
+                          a["received_vesting_shares"].amount -
+                          a["delegated_vesting_shares"].amount) / 1000000.0
                     fish = "redfish"
                     if vp >= 1.0:
                         fish = "minnow"
@@ -139,10 +139,12 @@ if __name__ == "__main__":
     wtw = WatchingTheWatchers()
     tb = WatchingTheWatchersBot(wtw)
     blockchain = Blockchain()
+    threading = True
+    thread_num = 16    
     cur_block = blockchain.get_current_block()
     stop = cur_block.identifier
     startdate = cur_block.time() - timedelta(days=1)
     start = blockchain.get_estimated_block_num(startdate, accurate=True)
-    for vote in blockchain.stream(opNames=["vote"], start=start, stop=stop):
+    for vote in blockchain.stream(opNames=["vote"], start=start, stop=stop, threading=threading, thread_num=thread_num):
         tb.vote(vote)
     wtw.report()

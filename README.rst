@@ -120,6 +120,11 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.15
+-------
+* bugfixes for testnet operations
+* refactoring
+
 0.19.14
 -------
 * batched api calls possible

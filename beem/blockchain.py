@@ -77,7 +77,7 @@ class Blockchain(object):
             .. note:: The block number returned depends on the ``mode`` used
                       when instanciating from this class.
         """
-        return self.steem.get_dynamic_global_properties(False).get(self.mode)
+        return int(self.steem.get_dynamic_global_properties(False).get(self.mode))
 
     def get_current_block(self):
         """ This call returns the current block
@@ -125,7 +125,7 @@ class Blockchain(object):
                 if block_number > last_block.identifier:
                     break
 
-        return block_number
+        return int(block_number)
 
     def block_time(self, block_num):
         """ Returns a datetime of the block with the given block

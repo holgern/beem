@@ -57,6 +57,7 @@ class Testcases(unittest.TestCase):
         b = Blockchain(steem_instance=bts)
         num = b.get_current_block_num()
         self.assertTrue(num > 0)
+        self.assertTrue(isinstance(num, int))
         block = b.get_current_block()
         self.assertTrue(isinstance(block, Block))
         self.assertEqual(num, block.identifier)
