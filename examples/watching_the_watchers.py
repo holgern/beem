@@ -140,7 +140,7 @@ if __name__ == "__main__":
     tb = WatchingTheWatchersBot(wtw)
     blockchain = Blockchain()
     threading = True
-    thread_num = 16    
+    thread_num = 16
     cur_block = blockchain.get_current_block()
     stop = cur_block.identifier
     startdate = cur_block.time() - timedelta(days=1)
