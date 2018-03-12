@@ -8,6 +8,7 @@ from beem.instance import set_shared_steem_instance, shared_steem_instance
 from beem.amount import Amount
 from beem.account import Account
 from beem.steem import Steem
+from beem.comment import Comment
 from beem.storage import configStorage
 from beem.version import version as __version__
 from datetime import datetime, timedelta
@@ -68,21 +69,24 @@ def cli(node, offline, nobroadcast, unsigned, blocking, bundle, expiration, debu
 
 @cli.command()
 @click.option(
-    '--account', '-a', multiple=False)
+    '--account', '-a', multiple=False, help="Set default account")
 @click.option(
-    '--node', '-n', multiple=True)
-def set(account, node):
+    '--weight', '-w', multiple=False, help="Set your default vote weight")
+@click.option(
+    '--node', '-n', multiple=True, help="Set nodes")
+def set(account, weight, node):
     """ Set configuration
     """
     stm = shared_steem_instance()
     if account:
         stm.set_default_account(account)
+    if weight:
+        configStorage["default_vote_weight"] = weight
     if len(node) > 0:
         nodes = []
         for n in node:
             nodes.append(n)
-        if "node" in stm.config:
-            stm.config["node"] = nodes
+        configStorage["node"] = nodes
 
 
 @cli.command()
@@ -96,7 +100,8 @@ def config():
         # hide internal config data
         if key in availableConfigurationKeys:
             t.add_row([key, stm.config[key]])
-    t.add_row(["nodes", stm.config.nodes])
+    for node in stm.config.nodes:
+        t.add_row(["node", node])
     t.add_row(["data_dir", stm.config.data_dir])
     print(t)
 
@@ -174,8 +179,7 @@ def listkeys():
 
 @cli.command()
 def listaccounts():
-    """ Show stored accounts
-    """
+    """Show stored accounts"""
     stm = shared_steem_instance()
     t = PrettyTable(["Name", "Type", "Available Key"])
     t.align = "l"
@@ -185,6 +189,20 @@ def listaccounts():
             account["pubkey"]
         ])
     print(t)
+
+
+@cli.command()
+@click.argument('post', nargs=1)
+@click.option('--account', '-a')
+@click.option('--weight', '-w', default=100.0, help='Vote weight (from 0.1 to 100.0)')
+def upvote(post, account, weight):
+    """Upvote a post/comment"""
+    if not weight:
+        weight = configStorage["default_vote_weight"]
+    if not account:
+        account = configStorage["default_account"]
+    post = Comment(post)
+    post.upvote(weight, voter=account)
 
 
 @cli.command()
@@ -240,14 +258,26 @@ def balance(account):
 
 
 @cli.command()
-@click.option(
-    '--account', '-a', multiple=True)
-def info(account):
+@click.argument('objects', nargs=-1)
+def info(objects):
     """ Show info
     """
     stm = shared_steem_instance()
-    for name in account:
-        a = Account(name, steem_instance=stm)
+    if not objects:
+        t = PrettyTable(["Key", "Value"])
+        t.align = "l"
+        info = stm.get_dynamic_global_properties()
+        median_price = stm.get_current_median_history()
+        steem_per_mvest = stm.get_steem_per_mvest()
+        price = (Amount(median_price["base"]).amount / Amount(
+            median_price["quote"]).amount)
+        for key in info:
+            t.add_row([key, info[key]])
+        t.add_row(["steem per mvest", steem_per_mvest])
+        t.add_row(["internal price", price])
+        print(t.get_string(sortby="Key"))
+    for o in objects:
+        a = Account(o, steem_instance=stm)
         a.print_info()
         print("\n")
 

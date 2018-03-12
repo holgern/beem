@@ -16,14 +16,6 @@ environment:
       PYTHON_ARCH: "64"
       MINICONDA: C:\Miniconda-x64
 
-    - PYTHON: "C:\\Python35"
-      PYTHON_ARCH: "32"
-      MINICONDA: C:\Miniconda35
-
-    - PYTHON: "C:\\Python35-x64"
-      PYTHON_ARCH: "64"
-      MINICONDA: C:\Miniconda35-x64
-
     - PYTHON: "C:\\Python36"
       PYTHON_ARCH: "32"
       MINICONDA: C:\Miniconda36

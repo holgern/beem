@@ -66,9 +66,17 @@ class Testcases(unittest.TestCase):
         account.print_info()
         # self.assertIsInstance(account.balance({"symbol": symbol}), Amount)
         self.assertIsInstance(account.available_balances, list)
-        for h in account.history(limit=1):
-            pass
-
+        self.assertTrue(account.virtual_op_count() > 0)
+        h_list = []
+        for h in account.history(stop=10, batch_size=11, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(h_list[0][0], 0)
+        self.assertEqual(h_list[-1][0], 10)
+        h_list = []
+        for h in account.history_reverse(start=10, stop=0, batch_size=11, raw_output=False):
+            h_list.append(h)
+        self.assertEqual(h_list[0]['index'], 10)
+        self.assertEqual(h_list[-1]['index'], 0)
         # BlockchainObjects method
         account.cached = False
         self.assertTrue(list(account.items()))

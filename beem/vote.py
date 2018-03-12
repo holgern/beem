@@ -228,10 +228,7 @@ class AccountVotes(VotesObject):
         self.steem = steem_instance or shared_steem_instance()
 
         account = Account(account, steem_instance=self.steem)
-        if self.steem.rpc.get_use_appbase():
-            votes = self.steem.rpc.get_account_votes(account["name"])
-        else:
-            votes = self.steem.rpc.get_account_votes(account["name"])
+        votes = account.get_account_votes()
 
         super(AccountVotes, self).__init__(
             [

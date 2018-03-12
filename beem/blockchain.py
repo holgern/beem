@@ -8,12 +8,15 @@ from builtins import str
 from builtins import range
 from builtins import object
 import time
+import hashlib
+import json
+import math
+from datetime import datetime, timedelta
 from .block import Block
 from .blockchainobject import BlockchainObject
+from beemgraphenebase.py23 import py23_bytes
 from beem.instance import shared_steem_instance
 from .amount import Amount
-from datetime import datetime, timedelta
-import math
 FUTURES_MODULE = None
 if not FUTURES_MODULE:
     try:
@@ -98,7 +101,7 @@ class Blockchain(object):
             .. note:: The block number returned depends on the ``mode`` used
                       when instanciating from this class.
         """
-        block_time_seconds = 3
+        block_time_seconds = self.steem.get_block_interval()
         last_block = self.get_current_block()
         if estimateForwards:
             block_offset = 10
@@ -160,13 +163,7 @@ class Blockchain(object):
              confirmed by 2/3 of all block producers and is thus irreversible)
         """
         # Let's find out how often blocks are generated!
-        props = self.steem.get_config()
-        if "STEEMIT_BLOCK_INTERVAL" in props:
-            block_interval = props["STEEMIT_BLOCK_INTERVAL"]
-        elif "STEEM_BLOCK_INTERVAL" in props:
-            block_interval = props["STEEM_BLOCK_INTERVAL"]
-        else:
-            block_interval = 3
+        block_interval = self.steem.get_block_interval()
 
         if not start:
             start = self.get_current_block_num()
@@ -357,6 +354,12 @@ class Blockchain(object):
             if counter > limit:
                 raise Exception(
                     "The operation has not been added after 10 blocks!")
+
+    @staticmethod
+    def hash_op(event):
+        """ This method generates a hash of blockchain operation. """
+        data = json.dumps(event, sort_keys=True)
+        return hashlib.sha1(py23_bytes(data, 'utf-8')).hexdigest()
 
     def get_all_accounts(self, start='', stop='', steps=1e3, limit=-1, **kwargs):
         """ Yields account names between start and stop.

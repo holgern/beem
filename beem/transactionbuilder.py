@@ -296,6 +296,7 @@ class TransactionBuilder(dict):
                 self.steem.rpc.broadcast_transaction(
                     ret, api="network_broadcast")
         except Exception as e:
+            self.clear()
             raise e
 
         self.clear()

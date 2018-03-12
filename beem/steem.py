@@ -337,6 +337,17 @@ class Steem(object):
         )
         return a.as_base("SBD")
 
+    def get_block_interval(self):
+        """Returns the block intervall in seconds"""
+        props = self.get_config()
+        if "STEEMIT_BLOCK_INTERVAL" in props:
+            block_interval = props["STEEMIT_BLOCK_INTERVAL"]
+        elif "STEEM_BLOCK_INTERVAL" in props:
+            block_interval = props["STEEM_BLOCK_INTERVAL"]
+        else:
+            block_interval = 3
+        return block_interval
+
     def rshares_to_sbd(self, rshares):
         """ Calculates the SBD amount of a vote
         """

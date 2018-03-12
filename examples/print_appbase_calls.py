@@ -16,6 +16,7 @@ logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
     stm = Steem(node="https://api.steemitstage.com")
+    # stm = Steem(node="wss://appbasetest.timcliff.com")
     all_calls = stm.rpc.get_methods(api="jsonrpc")
     t = PrettyTable(["method", "args", "ret"])
     t.align = "l"

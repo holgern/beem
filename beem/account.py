@@ -4,20 +4,21 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import bytes, int, str
-from beem.instance import shared_steem_instance
-from .exceptions import AccountDoesNotExistsException
-from .blockchainobject import BlockchainObject
-from .utils import formatTimeString, formatTimedelta
-from beem.amount import Amount
-from datetime import datetime, timedelta
 import pytz
-from beembase import operations
-from beemgraphenebase.account import PrivateKey, PublicKey
-from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 import json
+from datetime import datetime, timedelta
 import math
 import random
 import logging
+from beem.instance import shared_steem_instance
+from .exceptions import AccountDoesNotExistsException
+from .blockchainobject import BlockchainObject
+from .blockchain import Blockchain
+from .utils import formatTimeString, formatTimedelta, remove_from_dict
+from beem.amount import Amount
+from beembase import operations
+from beemgraphenebase.account import PrivateKey, PublicKey
+from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 log = logging.getLogger(__name__)
 
 
@@ -360,10 +361,11 @@ class Account(BlockchainObject):
         """ Help function, used in get_followers and get_following
         """
         if self.steem.rpc.get_use_appbase():
+            query = {'account': self.name, 'start': last_user, 'type': "blog", 'limit': 100}
             if direction == "follower":
-                followers = self.steem.rpc.get_followers({'account': self.name, 'start': last_user, 'type': "blog", 'limit': 100}, api='follow')['followers']
+                followers = self.steem.rpc.get_followers(query, api='follow')['followers']
             elif direction == "following":
-                followers = self.steem.rpc.get_following({'account': self.name, 'start': last_user, 'type': "blog", 'limit': 100}, api='follow')['following']
+                followers = self.steem.rpc.get_following(query, api='follow')['following']
         else:
             self.steem.register_apis(["follow"])
             if direction == "follower":
@@ -406,6 +408,9 @@ class Account(BlockchainObject):
 
     @property
     def balances(self):
+        return self.get_balances()
+
+    def get_balances(self):
 
         return {
             'available': self.available_balances,
@@ -522,6 +527,15 @@ class Account(BlockchainObject):
         else:
             return self.steem.rpc.get_conversion_requests(account)
 
+    def get_withdraw_routes(self, account=None):
+        """Returns withdraw_routes """
+        if account is None:
+            account = self["name"]
+        if self.steem.rpc.get_use_appbase():
+            return self.steem.rpc.find_withdraw_vesting_routes({'account': account, 'order': 'by_withdraw_route'}, api="database")['routes']
+        else:
+            return self.steem.rpc.get_withdraw_routes(account, 'all')
+
     def get_recovery_request(self, account=None):
         """ get_recovery_request """
         if account is None:
@@ -541,74 +555,287 @@ class Account(BlockchainObject):
             return self.steem.rpc.verify_account_authority(account, keys)
 
     def get_account_votes(self, account=None):
+        """Returns all votes that the account has done"""
         if account is None:
-            account = self["name"]
-        if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.find_votes({'author': account["name"], 'permlink': ''}, api="database")['votes']
+            account = self
         else:
-            return self.steem.rpc.get_account_votes(account)
+            account = Account(account, steem_instance=self.steem)
+        if self.steem.rpc.get_use_appbase():
+            vote_hist = account.history(only_ops=["vote"], batch_size=1000)
+            votes = []
+            for vote in vote_hist:
+                votes.append(vote[1]["op"][1])
+            return votes
+        else:
+            return self.steem.rpc.get_account_votes(account["name"])
 
-    def history(
-        self, limit=100,
-        only_ops=[], exclude_ops=[]
-    ):
-        """ Returns a generator for individual account transactions. The
-            latest operation will be first. This call can be used in a
+    def get_vote(self, comment):
+        """Returns a vote if the account has already voted for comment.
+
+            :param str/Comment comment: can be a Comment object or a authorpermlink
+        """
+        from beem.comment import Comment
+        c = Comment(comment, steem_instance=self.steem)
+        for v in c["active_votes"]:
+            if v["voter"] == self["name"]:
+                return v
+        return None
+
+    def has_voted(self, comment):
+        """Returns if the account has already voted for comment
+
+            :param str/Comment comment: can be a Comment object or a authorpermlink
+        """
+        from beem.comment import Comment
+        c = Comment(comment, steem_instance=self.steem)
+        active_votes = {v["voter"]: v for v in c["active_votes"]}
+        return self["name"] in active_votes
+
+    def virtual_op_count(self, until=None):
+        """Returns the number of individual account transactions"""
+        if until is not None and isinstance(until, datetime):
+            limit = until
+            last_gen = self.history_reverse(limit=limit)
+            last_item = 0
+            for item in last_gen:
+                last_item = item[0]
+            return last_item
+        else:
+            try:
+                if self.steem.rpc.get_use_appbase():
+                    return self.steem.rpc.get_account_history(self["name"], -1, 0)[0][0]
+                else:
+                    return self.steem.rpc.get_account_history(self["name"], -1, 0, api="database")[0][0]
+            except IndexError:
+                return 0
+
+    def get_curation_reward(self, days=7):
+        """Returns the curation reward of the last `days` days
+
+            :param int days: limit number of days to be included int the return value
+        """
+        timedelta(days=days)
+        utc = pytz.timezone('UTC')
+        stop = utc.localize(datetime.utcnow()) - timedelta(days=days)
+        reward_vests = Amount("0 VESTS")
+        for reward in self.history_reverse(stop=stop, only_ops=["curation_reward"]):
+            reward_vests += Amount(reward['reward'])
+        return self.steem.vests_to_sp(reward_vests.amount)
+
+    def curation_stats(self):
+        return {"24hr": self.get_curation_reward(days=1),
+                "7d": self.get_curation_reward(days=7),
+                "avg": self.get_curation_reward(days=7) / 7}
+
+    def get_account_history(self, index, limit, start=None, stop=None, order=-1, only_ops=[], exclude_ops=[], raw_output=False):
+        """ Returns a generator for individual account transactions. This call can be used in a
             ``for`` loop.
-
-            :param int/datetime limit: limit number of transactions to
+            :param int index: first number of transactions to
+                return
+            :param int limit: limit number of transactions to
+                return
+            :param int/datetime start: start number/date of transactions to
+                return (*optional*)
+            :param int/datetime stop: stop number/date of transactions to
                 return (*optional*)
             :param array only_ops: Limit generator by these
                 operations (*optional*)
             :param array exclude_ops: Exclude thse operations from
                 generator (*optional*)
+            :param int batch_size: internal api call batch size (*optional*)
+            :param (-1, 1) order: 1 for chronological, -1 for reverse order
         """
-        _limit = 100
-        cnt = 0
+        if order != -1 and order != 1:
+            raise ValueError("order must be -1 or 1!")
+        if self.steem.rpc.get_use_appbase():
+            txs = self.steem.rpc.get_account_history(self["name"], index, limit)
+        else:
+            txs = self.steem.rpc.get_account_history(self["name"], index, limit, api="database")
 
-        mostrecent = self.steem.rpc.get_account_history(
-            self["name"],
-            -1,
-            1
-        )
-        if not mostrecent:
+        if start and isinstance(start, datetime) and start.tzinfo is None:
+            utc = pytz.timezone('UTC')
+            start = utc.localize(start)
+        if stop and isinstance(stop, datetime) and stop.tzinfo is None:
+            utc = pytz.timezone('UTC')
+            stop = utc.localize(stop)
+
+        if order == -1:
+            txs_list = reversed(txs)
+        else:
+            txs_list = txs
+        for item in txs_list:
+            item_index, event = item
+            if start and isinstance(start, datetime):
+                timediff = start - formatTimeString(event["timestamp"])
+                if timediff.total_seconds() * float(order) > 0:
+                    continue
+            elif start and order == 1 and item_index < start:
+                continue
+            elif start and order == -1 and item_index > start:
+                continue
+            if stop and isinstance(stop, datetime):
+                timediff = stop - formatTimeString(event["timestamp"])
+                if timediff.total_seconds() * float(order) < 0:
+                    return
+            elif stop and order == 1 and item_index > stop:
+                return
+            elif stop and order == -1 and item_index < stop:
+                return
+            op_type, op = event['op']
+            block_props = remove_from_dict(event, keys=['op'], keep_keys=False)
+
+            def construct_op(account_name):
+                # verbatim output from steemd
+                if raw_output:
+                    return item
+
+                # index can change during reindexing in
+                # future hard-forks. Thus we cannot take it for granted.
+                immutable = op.copy()
+                immutable.update(block_props)
+                immutable.update({
+                    'account': account_name,
+                    'type': op_type,
+                })
+                _id = Blockchain.hash_op(immutable)
+                immutable.update({
+                    '_id': _id,
+                    'index': item_index,
+                })
+                return immutable
+
+            if exclude_ops and op_type in exclude_ops:
+                continue
+            if not only_ops or op_type in only_ops:
+                yield construct_op(self["name"])
+
+    def history(
+        self, start=None, stop=None,
+        only_ops=[], exclude_ops=[], batch_size=1000, raw_output=False
+    ):
+        """ Returns a generator for individual account transactions. The
+            earlist operation will be first. This call can be used in a
+            ``for`` loop.
+
+            :param int/datetime start: start number/date of transactions to
+                return (*optional*)
+            :param int/datetime stop: stop number/date of transactions to
+                return (*optional*)
+            :param array only_ops: Limit generator by these
+                operations (*optional*)
+            :param array exclude_ops: Exclude thse operations from
+                generator (*optional*)
+            :param int batch_size: internal api call batch size (*optional*)
+        """
+        _limit = batch_size
+        max_index = self.virtual_op_count()
+        if not max_index:
             return
-        if limit < 2:
-            yield mostrecent
+        if start is None:
+            start_index = 0
+        else:
+            if isinstance(start, datetime):
+                start_index = 0
+            else:
+                start_index = start
+
+        first = start_index + _limit
+        while True:
+            # RPC call
+            for item in self.get_account_history(first, _limit, start=start, stop=stop, order=1, raw_output=raw_output):
+                if raw_output:
+                    item_index, event = item
+                    op_type, op = event['op']
+                    timestamp = event["timestamp"]
+                else:
+                    item_index = item['index']
+                    op_type = item['type']
+                    timestamp = item["timestamp"]
+                if start and isinstance(start, datetime):
+                    timediff = start - formatTimeString(timestamp)
+                    if timediff.total_seconds() > 0:
+                        continue
+                elif start and item_index < start:
+                    continue
+                if exclude_ops and op_type in exclude_ops:
+                    continue
+                if not only_ops or op_type in only_ops:
+                    yield item
+                if stop and isinstance(stop, datetime):
+                    timediff = stop - formatTimeString(timestamp)
+                    if timediff.total_seconds() < 0:
+                        first = max_index + _limit
+                        return
+                elif stop and item_index >= stop:
+                    first = max_index + _limit
+                    return
+            first += (_limit + 1)
+            if first >= max_index + _limit:
+                break
+
+    def history_reverse(
+        self, start=None, stop=None,
+        only_ops=[], exclude_ops=[], batch_size=1000, raw_output=False
+    ):
+        """ Returns a generator for individual account transactions. The
+            latest operation will be first. This call can be used in a
+            ``for`` loop.
+
+            :param int/datetime start: start number/date of transactions to
+                return. If negative the virtual_op_count is added. (*optional*)
+            :param int/datetime stop: stop number/date of transactions to
+                return. If negative the virtual_op_count is added. (*optional*)
+            :param array only_ops: Limit generator by these
+                operations (*optional*)
+            :param array exclude_ops: Exclude thse operations from
+                generator (*optional*)
+            :param int batch_size: internal api call batch size (*optional*)
+        """
+        _limit = batch_size
+        first = self.virtual_op_count()
+        if not first:
             return
-        first = int(mostrecent[0][0])
+        if start is not None and isinstance(start, int) and start < 0:
+            start += first
+        elif not isinstance(start, datetime):
+            first = start
+        if stop is not None and isinstance(stop, int) and stop < 0:
+            stop += first
 
         while True:
             # RPC call
-            txs = self.steem.rpc.get_account_history(
-                self["name"],
-                first,
-                _limit,
-            )
-            for i in reversed(txs):
-                if exclude_ops and i[1]["op"][0] in exclude_ops:
+            if first - _limit < 0:
+                _limit = first
+            for item in self.get_account_history(first, _limit, start=start, stop=stop, order=-1, only_ops=only_ops, exclude_ops=exclude_ops, raw_output=raw_output):
+                if raw_output:
+                    item_index, event = item
+                    op_type, op = event['op']
+                    timestamp = event["timestamp"]
+                else:
+                    item_index = item['index']
+                    op_type = item['type']
+                    timestamp = item["timestamp"]
+                if start and isinstance(start, datetime):
+                    timediff = start - formatTimeString(timestamp)
+                    if timediff.total_seconds() < 0:
+                        continue
+                elif start and item_index > start:
                     continue
-                if not only_ops or i[1]["op"][0] in only_ops:
-                    cnt += 1
-                    if isinstance(limit, datetime):
-                        timediff = limit - formatTimeString(i[1]["timestamp"])
-                        if timediff.total_seconds() > 0:
-                            return
-                        yield i
-                    else:
-                        yield i
-                        if limit >= 0 and cnt >= limit:
-                            return
-            if not txs:
+                if exclude_ops and op_type in exclude_ops:
+                    continue
+                if not only_ops or op_type in only_ops:
+                    yield item            
+                if stop and isinstance(stop, datetime):
+                    timediff = stop - formatTimeString(timestamp)
+                    if timediff.total_seconds() > 0:
+                        first = 0
+                        return
+                elif stop and item_index < stop:
+                    first = 0
+                    return
+            first -= (_limit + 1)
+            if first < 1:
                 break
-            if len(txs) < _limit:
-                break
-            # first = int(txs[-1]["id"].split(".")[2])
-            first = txs[0][0]
-            if first < 2:
-                break
-            if first < _limit:
-                _limit = first - 1
 
     def unfollow(self, unfollow, what=["blog"], account=None):
         """ Unfollow another account's blog
@@ -694,7 +921,7 @@ class Account(BlockchainObject):
             "approve": approve,
             "prefix": self.steem.prefix,
         })
-        return self.steem.finalizeOp(op, account["name"], "active", **kwargs)
+        return self.steem.finalizeOp(op, account, "active", **kwargs)
 
     def disapprovewitness(self, witness, account=None, **kwargs):
         """ Disapprove a witness
@@ -731,7 +958,7 @@ class Account(BlockchainObject):
             "json_metadata": account["json_metadata"],
             "prefix": self.steem.prefix,
         })
-        return self.steem.finalizeOp(op, account["name"], "active", **kwargs)
+        return self.steem.finalizeOp(op, account, "active", **kwargs)
 
     # -------------------------------------------------------------------------
     # Simple Transfer
@@ -789,9 +1016,7 @@ class Account(BlockchainObject):
         if not to:
             to = account  # powerup on the same account
         account = Account(account, steem_instance=self.steem)
-        if isinstance(amount, string_types):
-            amount = Amount(amount, steem_instance=self.steem)
-        elif isinstance(amount, Amount):
+        if isinstance(amount, (string_types, Amount)):
             amount = Amount(amount, steem_instance=self.steem)
         else:
             amount = Amount(amount, "STEEM", steem_instance=self.steem)
@@ -820,9 +1045,7 @@ class Account(BlockchainObject):
         if not account:
             raise ValueError("You need to provide an account")
         account = Account(account, steem_instance=self.steem)
-        if isinstance(amount, string_types):
-            amount = Amount(amount, steem_instance=self.steem)
-        elif isinstance(amount, Amount):
+        if isinstance(amount, (string_types, Amount)):
             amount = Amount(amount, steem_instance=self.steem)
         else:
             amount = Amount(amount, "SBD", steem_instance=self.steem)
@@ -963,27 +1186,21 @@ class Account(BlockchainObject):
 
         # if no values were set by user, claim all outstanding balances on
         # account
-        if isinstance(reward_steem, string_types):
-            reward_steem = Amount(reward_steem, steem_instance=self.steem)
-        elif isinstance(reward_steem, Amount):
+        if isinstance(reward_steem, (string_types, Amount)):
             reward_steem = Amount(reward_steem, steem_instance=self.steem)
         else:
             reward_steem = Amount(reward_steem, "STEEM", steem_instance=self.steem)
         if not reward_steem["symbol"] == "STEEM":
             raise AssertionError()
 
-        if isinstance(reward_sbd, string_types):
-            reward_sbd = Amount(reward_sbd, steem_instance=self.steem)
-        elif isinstance(reward_sbd, Amount):
+        if isinstance(reward_sbd, (string_types, Amount)):
             reward_sbd = Amount(reward_sbd, steem_instance=self.steem)
         else:
             reward_sbd = Amount(reward_sbd, "SBD", steem_instance=self.steem)
         if not reward_sbd["symbol"] == "SBD":
             raise AssertionError()
 
-        if isinstance(reward_vests, string_types):
-            reward_vests = Amount(reward_vests, steem_instance=self.steem)
-        elif isinstance(reward_vests, Amount):
+        if isinstance(reward_vests, (string_types, Amount)):
             reward_vests = Amount(reward_vests, steem_instance=self.steem)
         else:
             reward_vests = Amount(reward_vests, "VESTS", steem_instance=self.steem)
@@ -1020,9 +1237,7 @@ class Account(BlockchainObject):
         if not account:
             raise ValueError("You need to provide an account")
         account = Account(account, steem_instance=self.steem)
-        if isinstance(vesting_shares, string_types):
-            vesting_shares = Amount(vesting_shares, steem_instance=self.steem)
-        elif isinstance(vesting_shares, Amount):
+        if isinstance(vesting_shares, (string_types, Amount)):
             vesting_shares = Amount(vesting_shares, steem_instance=self.steem)
         else:
             vesting_shares = Amount(vesting_shares, "VESTS", steem_instance=self.steem)
@@ -1049,9 +1264,7 @@ class Account(BlockchainObject):
         if not account:
             raise ValueError("You need to provide an account")
         account = Account(account, steem_instance=self.steem)
-        if isinstance(amount, string_types):
-            amount = Amount(amount, steem_instance=self.steem)
-        elif isinstance(amount, Amount):
+        if isinstance(amount, (string_types, Amount)):
             amount = Amount(amount, steem_instance=self.steem)
         else:
             amount = Amount(amount, "VESTS", steem_instance=self.steem)

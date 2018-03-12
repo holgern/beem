@@ -49,6 +49,8 @@ if __name__ == "__main__":
     stm.wallet.addPrivateKey(memo_privkey)
     stm.wallet.addPrivateKey(posting_privkey)
 
+    account.allow('beem1', weight=1, permission='posting', account=None)
+
     stm.wallet.getAccountFromPrivateKey(str(active_privkey))
 
     # stm.create_account("beem1", creator=account, password=password1)

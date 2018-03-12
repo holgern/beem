@@ -24,6 +24,7 @@ WEBSOCKET_MODULE = None
 if not WEBSOCKET_MODULE:
     try:
         import websocket
+        from websocket._exceptions import WebSocketConnectionClosedException
         WEBSOCKET_MODULE = "websocket"
     except ImportError:
         WEBSOCKET_MODULE = None
@@ -110,33 +111,34 @@ class GrapheneRPC(object):
         """Check if node is appbase ready"""
         return self.current_rpc >= 2
 
-    def rpcconnect(self):
+    def rpcconnect(self, next_url=True):
         """Connect to next url in a loop."""
         cnt = 0
         if self.urls is None:
             return
         while True:
-            cnt += 1
-            self.url = next(self.urls)
-            log.debug("Trying to connect to node %s" % self.url)
-            if self.url[:3] == "wss":
-                if WEBSOCKET_MODULE is None:
-                    raise Exception()
-                sslopt_ca_certs = {'cert_reqs': ssl.CERT_NONE}
-                self.ws = websocket.WebSocket(sslopt=sslopt_ca_certs, enable_multithread=True)
-                self.current_rpc = self.rpc_methods["ws"]
-            elif self.url[:3] == "ws":
-                if WEBSOCKET_MODULE is None:
-                    raise Exception()
-                self.ws = websocket.WebSocket(enable_multithread=True)
-                self.current_rpc = self.rpc_methods["ws"]
-            else:
-                if REQUEST_MODULE is None:
-                    raise Exception()
-                self.ws = None
-                self.current_rpc = self.rpc_methods["jsonrpc"]
-                self.headers = {'User-Agent': 'beem v0.19.14',
-                                'content-type': 'application/json'}
+            cnt += 1 
+            if next_url:                
+                self.url = next(self.urls)
+                log.debug("Trying to connect to node %s" % self.url)
+                if self.url[:3] == "wss":
+                    if WEBSOCKET_MODULE is None:
+                        raise Exception()
+                    sslopt_ca_certs = {'cert_reqs': ssl.CERT_NONE}
+                    self.ws = websocket.WebSocket(sslopt=sslopt_ca_certs, enable_multithread=True)
+                    self.current_rpc = self.rpc_methods["ws"]
+                elif self.url[:3] == "ws":
+                    if WEBSOCKET_MODULE is None:
+                        raise Exception()
+                    self.ws = websocket.WebSocket(enable_multithread=True)
+                    self.current_rpc = self.rpc_methods["ws"]
+                else:
+                    if REQUEST_MODULE is None:
+                        raise Exception()
+                    self.ws = None
+                    self.current_rpc = self.rpc_methods["jsonrpc"]
+                    self.headers = {'User-Agent': 'beem v0.19.14',
+                                    'content-type': 'application/json'}
 
             try:
                 if not self.ws:
@@ -149,6 +151,7 @@ class GrapheneRPC(object):
             except Exception as e:
                 log.critical("Error: {}\n".format(str(e)))
                 sleep_and_check_retries(self.num_retries, cnt, self.url)
+                next_url = True
         try:
             props = self.get_config(api="database")
         except:
@@ -216,6 +219,9 @@ class GrapheneRPC(object):
                 break
             except KeyboardInterrupt:
                 raise
+            except WebSocketConnectionClosedException:
+                self.rpcconnect(next_url=False)
+                self.register_apis()                
             except Exception as e:
                 log.critical("Error: {}\n".format(str(e)))
                 sleep_and_check_retries(self.num_retries, cnt, self.url)
