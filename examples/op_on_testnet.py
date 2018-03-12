@@ -19,14 +19,15 @@ from beemgrapheneapi.rpcutils import NumRetriesReached
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-password = "yfABsiDXWcCVyDC2udXGYD2psFUiQy"
-password1 = "4JkeGCG3HghMMdwCpHyXpiZqoXbWuv"
+password = "secretPassword"
+username = "beem"
+
 
 if __name__ == "__main__":
     stm = Steem(node=["wss://testnet.steem.vc"])
     prefix = stm.prefix
-    # curl --data "username=beem&password=yfABsiDXWcCVyDC2udXGYD2psFUiQy" https://testnet.steem.vc/create
-    account = Account("beem", steem_instance=stm)
+    # curl --data "username=username&password=secretPassword" https://testnet.steem.vc/create
+    account = Account(username, steem_instance=stm)
     stm.wallet.purge()
     stm.wallet.create("123")
     stm.wallet.unlock("123")

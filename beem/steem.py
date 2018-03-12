@@ -99,7 +99,7 @@ class Steem(object):
                  data_refresh_time_seconds=900,
                  **kwargs):
         """Init steem
-        
+
             :param str node: Node to connect to *(optional)*
             :param str rpcuser: RPC user *(optional)*
             :param str rpcpassword: RPC password *(optional)*

@@ -80,7 +80,7 @@ class GrapheneRPC(object):
 
     """
 
-    def __init__(self, urls, user="", password="", **kwargs):
+    def __init__(self, urls, user=None, password=None, **kwargs):
         """Init."""
         self.api_id = {}
         self.rpc_methods = {'offline': -1, 'ws': 0, 'jsonrpc': 1, 'appbase': 2, 'wsappbase': 3}
@@ -117,8 +117,8 @@ class GrapheneRPC(object):
         if self.urls is None:
             return
         while True:
-            cnt += 1 
-            if next_url:                
+            cnt += 1
+            if next_url:
                 self.url = next(self.urls)
                 log.debug("Trying to connect to node %s" % self.url)
                 if self.url[:3] == "wss":
@@ -169,7 +169,7 @@ class GrapheneRPC(object):
 
     def rpclogin(self, user, password):
         """Login into Websocket"""
-        if self.ws and self.current_rpc == 0:
+        if self.ws and self.current_rpc == 0 and user and password:
             self.login(user, password, api_id=1)
 
     def rpcclose(self):
@@ -221,7 +221,7 @@ class GrapheneRPC(object):
                 raise
             except WebSocketConnectionClosedException:
                 self.rpcconnect(next_url=False)
-                self.register_apis()                
+                self.register_apis()
             except Exception as e:
                 log.critical("Error: {}\n".format(str(e)))
                 sleep_and_check_retries(self.num_retries, cnt, self.url)
