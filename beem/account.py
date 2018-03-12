@@ -561,10 +561,10 @@ class Account(BlockchainObject):
         else:
             account = Account(account, steem_instance=self.steem)
         if self.steem.rpc.get_use_appbase():
-            vote_hist = account.history(only_ops=["vote"], batch_size=1000)
+            vote_hist = account.history_reverse(only_ops=["vote"], batch_size=1000)
             votes = []
             for vote in vote_hist:
-                votes.append(vote[1]["op"][1])
+                votes.append(vote)
             return votes
         else:
             return self.steem.rpc.get_account_votes(account["name"])
