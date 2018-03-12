@@ -98,6 +98,29 @@ class Steem(object):
                  debug=False,
                  data_refresh_time_seconds=900,
                  **kwargs):
+        """Init steem
+        
+            :param str node: Node to connect to *(optional)*
+            :param str rpcuser: RPC user *(optional)*
+            :param str rpcpassword: RPC password *(optional)*
+            :param bool nobroadcast: Do **not** broadcast a transaction!
+                *(optional)*
+            :param bool debug: Enable Debugging *(optional)*
+            :param array,dict,string keys: Predefine the wif keys to shortcut the
+                wallet database *(optional)*
+            :param bool offline: Boolean to prevent connecting to network (defaults
+                to ``False``) *(optional)*
+            :param int expiration: Delay in seconds until transactions are supposed
+                to expire *(optional)*
+            :param str blocking: Wait for broadcasted transactions to be included
+                in a block and return full transaction (can be "head" or
+                "irrversible")
+            :param bool bundle: Do not broadcast transactions right away, but allow
+                to bundle operations *(optional)*
+            :param bool appbase: Use the new appbase rpc protocol on nodes with version
+                0.19.4 or higher. The settings has no effect on nodes with version of 0.19.3 or lower.
+            :param int num_retries: Set the maximum number of reconnects to the nodes before NumRetriesReached is raised
+        """
 
         # More specific set of APIs to register to
         if "apis" not in kwargs:
@@ -120,6 +143,7 @@ class Steem(object):
         self.expiration = int(kwargs.get("expiration", 30))
         self.bundle = bool(kwargs.get("bundle", False))
         self.blocking = kwargs.get("blocking", False)
+        appbase = kwargs.get("appbase", True)
 
         # Store config for access through other Classes
         self.config = config
@@ -129,7 +153,7 @@ class Steem(object):
                          rpcuser=rpcuser,
                          rpcpassword=rpcpassword,
                          **kwargs)
-            self.rpc.appbase = kwargs.get("appbase", True)
+            self.rpc.appbase = appbase
 
         # Try Optional APIs
         self.register_apis()

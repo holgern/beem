@@ -62,6 +62,15 @@ class Account(BlockchainObject):
         lazy=False,
         steem_instance=None
     ):
+        """Initilize an account
+
+        :param str account: Name of the account
+        :param beem.steem.Steem steem_instance: Steem
+               instance
+        :param bool lazy: Use lazy loading
+        :param bool full: Obtain all account data including orders, positions,
+               etc.
+        """
         self.full = full
         super(Account, self).__init__(
             account,
@@ -561,10 +570,10 @@ class Account(BlockchainObject):
         else:
             account = Account(account, steem_instance=self.steem)
         if self.steem.rpc.get_use_appbase():
-            vote_hist = account.history_reverse(only_ops=["vote"], batch_size=1000)
+            vote_hist = account.history_reverse(only_ops=["vote"], batch_size=1000, raw_output=True)
             votes = []
             for vote in vote_hist:
-                votes.append(vote)
+                votes.append(vote[1]["op"][1])
             return votes
         else:
             return self.steem.rpc.get_account_votes(account["name"])
@@ -627,7 +636,7 @@ class Account(BlockchainObject):
                 "7d": self.get_curation_reward(days=7),
                 "avg": self.get_curation_reward(days=7) / 7}
 
-    def get_account_history(self, index, limit, start=None, stop=None, order=-1, only_ops=[], exclude_ops=[], raw_output=False):
+    def get_account_history(self, index, limit, order=-1, start=None, stop=None, only_ops=[], exclude_ops=[], raw_output=False):
         """ Returns a generator for individual account transactions. This call can be used in a
             ``for`` loop.
             :param int index: first number of transactions to
@@ -738,11 +747,17 @@ class Account(BlockchainObject):
                 start_index = 0
             else:
                 start_index = start
+        if start and isinstance(start, datetime) and start.tzinfo is None:
+            utc = pytz.timezone('UTC')
+            start = utc.localize(start)
+        if stop and isinstance(stop, datetime) and stop.tzinfo is None:
+            utc = pytz.timezone('UTC')
+            stop = utc.localize(stop)
 
         first = start_index + _limit
         while True:
             # RPC call
-            for item in self.get_account_history(first, _limit, start=start, stop=stop, order=1, raw_output=raw_output):
+            for item in self.get_account_history(first, _limit, start=None, stop=None, order=1, raw_output=raw_output):
                 if raw_output:
                     item_index, event = item
                     op_type, op = event['op']
@@ -757,18 +772,18 @@ class Account(BlockchainObject):
                         continue
                 elif start and item_index < start:
                     continue
-                if exclude_ops and op_type in exclude_ops:
-                    continue
-                if not only_ops or op_type in only_ops:
-                    yield item
                 if stop and isinstance(stop, datetime):
                     timediff = stop - formatTimeString(timestamp)
                     if timediff.total_seconds() < 0:
                         first = max_index + _limit
                         return
-                elif stop and item_index >= stop:
+                elif stop and item_index > stop:
                     first = max_index + _limit
                     return
+                if exclude_ops and op_type in exclude_ops:
+                    continue
+                if not only_ops or op_type in only_ops:
+                    yield item
             first += (_limit + 1)
             if first >= max_index + _limit:
                 break
@@ -793,20 +808,26 @@ class Account(BlockchainObject):
         """
         _limit = batch_size
         first = self.virtual_op_count()
-        if not first:
+        if not first or not batch_size:
             return
         if start is not None and isinstance(start, int) and start < 0:
             start += first
-        elif not isinstance(start, datetime):
+        elif start is not None and isinstance(start, int):
             first = start
         if stop is not None and isinstance(stop, int) and stop < 0:
             stop += first
+        if start and isinstance(start, datetime) and start.tzinfo is None:
+            utc = pytz.timezone('UTC')
+            start = utc.localize(start)
+        if stop and isinstance(stop, datetime) and stop.tzinfo is None:
+            utc = pytz.timezone('UTC')
+            stop = utc.localize(stop)
 
         while True:
             # RPC call
             if first - _limit < 0:
                 _limit = first
-            for item in self.get_account_history(first, _limit, start=start, stop=stop, order=-1, only_ops=only_ops, exclude_ops=exclude_ops, raw_output=raw_output):
+            for item in self.get_account_history(first, _limit, start=None, stop=None, order=-1, only_ops=only_ops, exclude_ops=exclude_ops, raw_output=raw_output):
                 if raw_output:
                     item_index, event = item
                     op_type, op = event['op']
@@ -821,10 +842,6 @@ class Account(BlockchainObject):
                         continue
                 elif start and item_index > start:
                     continue
-                if exclude_ops and op_type in exclude_ops:
-                    continue
-                if not only_ops or op_type in only_ops:
-                    yield item            
                 if stop and isinstance(stop, datetime):
                     timediff = stop - formatTimeString(timestamp)
                     if timediff.total_seconds() > 0:
@@ -833,6 +850,10 @@ class Account(BlockchainObject):
                 elif stop and item_index < stop:
                     first = 0
                     return
+                if exclude_ops and op_type in exclude_ops:
+                    continue
+                if not only_ops or op_type in only_ops:
+                    yield item
             first -= (_limit + 1)
             if first < 1:
                 break
