@@ -73,6 +73,8 @@ class SteemNodeRPC(GrapheneRPC):
                 raise exceptions.NoMethodWithName(msg)
             elif re.search("Could not find API", msg):
                 raise exceptions.NoApiWithName(msg)
+            elif re.search("Unable to acquire database lock", msg):
+                exceptions.NoAccessNodeDatabase(msg)
             elif msg:
                 raise exceptions.UnhandledRPCError(msg)
             else:

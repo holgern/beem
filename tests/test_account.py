@@ -12,6 +12,7 @@ from beem import Steem, exceptions
 from beem.account import Account
 from beem.amount import Amount
 from beem.asset import Asset
+from beem.utils import formatTimeString
 from beem.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
@@ -67,16 +68,7 @@ class Testcases(unittest.TestCase):
         # self.assertIsInstance(account.balance({"symbol": symbol}), Amount)
         self.assertIsInstance(account.available_balances, list)
         self.assertTrue(account.virtual_op_count() > 0)
-        h_list = []
-        for h in account.history(stop=10, batch_size=11, raw_output=True):
-            h_list.append(h)
-        self.assertEqual(h_list[0][0], 0)
-        self.assertEqual(h_list[-1][0], 10)
-        h_list = []
-        for h in account.history_reverse(start=10, stop=0, batch_size=11, raw_output=False):
-            h_list.append(h)
-        self.assertEqual(h_list[0]['index'], 10)
-        self.assertEqual(h_list[-1]['index'], 0)
+
         # BlockchainObjects method
         account.cached = False
         self.assertTrue(list(account.items()))
@@ -86,6 +78,85 @@ class Testcases(unittest.TestCase):
         # self.assertEqual(account["id"], "1.2.1")
         self.assertEqual(str(account), "<Account test>")
         self.assertIsInstance(Account(account), Account)
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_history(self, node_param):
+        if node_param == "non_appbase":
+            stm = self.bts
+        else:
+            stm = self.appbase
+        account = Account("test", full=True, steem_instance=stm)
+        h_list = []
+        for h in account.history(stop=10, batch_size=10, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(h_list[0][0], 0)
+        self.assertEqual(h_list[-1][0], 10)
+        h_list = []
+        for h in account.history(start=1, stop=9, batch_size=10, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(h_list[0][0], 1)
+        self.assertEqual(h_list[-1][0], 9)
+        start = formatTimeString(h_list[0][1]["timestamp"])
+        stop = formatTimeString(h_list[-1][1]["timestamp"])
+        h_list = []
+        for h in account.history(start=start, stop=stop, batch_size=10, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(h_list[0][0], 1)
+        self.assertEqual(h_list[-1][0], 9)
+        h_list = []
+        for h in account.history_reverse(start=10, stop=0, batch_size=10, raw_output=False):
+            h_list.append(h)
+        self.assertEqual(h_list[0]['index'], 10)
+        self.assertEqual(h_list[-1]['index'], 0)
+        h_list = []
+        for h in account.history_reverse(start=9, stop=1, batch_size=10, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(h_list[0][0], 9)
+        self.assertEqual(h_list[-1][0], 1)
+        start = formatTimeString(h_list[0][1]["timestamp"])
+        stop = formatTimeString(h_list[-1][1]["timestamp"])
+        h_list = []
+        for h in account.history_reverse(start=start, stop=stop, batch_size=10, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(h_list[0][0], 9)
+        self.assertEqual(h_list[-1][0], 1)
+        h_list = []
+        for h in account.get_account_history(10, 10, order=1, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(h_list[0][0], 0)
+        self.assertEqual(h_list[-1][0], 10)
+        h_list = []
+        for h in account.get_account_history(10, 10, start=1, stop=9, order=1, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(h_list[0][0], 1)
+        self.assertEqual(h_list[-1][0], 9)
+        start = formatTimeString(h_list[0][1]["timestamp"])
+        stop = formatTimeString(h_list[-1][1]["timestamp"])
+        h_list = []
+        for h in account.get_account_history(10, 10, start=start, stop=stop, order=1, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(h_list[0][0], 1)
+        self.assertEqual(h_list[-1][0], 9)
+        h_list = []
+        for h in account.get_account_history(10, 10, order=-1, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(h_list[0][0], 10)
+        self.assertEqual(h_list[-1][0], 0)
+        h_list = []
+        for h in account.get_account_history(10, 10, start=9, stop=1, order=-1, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(h_list[0][0], 9)
+        self.assertEqual(h_list[-1][0], 1)
+        start = formatTimeString(h_list[0][1]["timestamp"])
+        stop = formatTimeString(h_list[-1][1]["timestamp"])
+        h_list = []
+        for h in account.get_account_history(10, 10, start=start, stop=stop, order=-1, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(h_list[0][0], 9)
+        self.assertEqual(h_list[-1][0], 1)
 
     @parameterized.expand([
         ("non_appbase"),

@@ -43,3 +43,7 @@ class UnhandledRPCError(RPCError):
 
 class NoAccessApi(RPCError):
     pass
+
+
+class NoAccessNodeDatabase(RPCError):
+    pass

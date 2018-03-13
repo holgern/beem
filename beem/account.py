@@ -778,14 +778,15 @@ class Account(BlockchainObject):
                         first = max_index + _limit
                         return
                 elif stop and item_index > stop:
-                    first = max_index + _limit
                     return
                 if exclude_ops and op_type in exclude_ops:
                     continue
                 if not only_ops or op_type in only_ops:
                     yield item
             first += (_limit + 1)
-            if first >= max_index + _limit:
+            if stop and isinstance(stop, int) and first >= stop + _limit:
+                break
+            elif first >= max_index + _limit:
                 break
 
     def history_reverse(
