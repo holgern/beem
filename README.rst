@@ -120,6 +120,13 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.16
+-------
+* rename wallet.purge() and wallet.purgeWallet() to wallet.wipe()
+* Handle internal node errors
+* Account class improved
+* Several improvements
+
 0.19.15
 -------
 * bugfixes for testnet operations

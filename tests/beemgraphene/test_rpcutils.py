@@ -83,7 +83,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual(query["params"], ["test_api", "test", ["b"]])
 
     def test_sleep_and_check_retries(self):
-        sleep_and_check_retries(-1, 0, "test")
+        sleep_and_check_retries(-1, 0, "test", "error")
         sleep_and_check_retries(-1, -1, "test")
         with self.assertRaises(
             NumRetriesReached

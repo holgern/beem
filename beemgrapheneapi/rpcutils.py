@@ -113,9 +113,10 @@ def get_api_name(appbase, *args, **kwargs):
     return api_name
 
 
-def sleep_and_check_retries(num_retries, cnt, url, errorMsg):
+def sleep_and_check_retries(num_retries, cnt, url, errorMsg=None):
     """Sleep and check if num_retries is reached"""
-    log.warning("Error: {}\n".format(errorMsg))
+    if errorMsg:
+        log.warning("Error: {}\n".format(errorMsg))
     if (num_retries >= 0 and cnt > num_retries):
         raise NumRetriesReached()
 
