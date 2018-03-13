@@ -113,8 +113,9 @@ def get_api_name(appbase, *args, **kwargs):
     return api_name
 
 
-def sleep_and_check_retries(num_retries, cnt, url):
+def sleep_and_check_retries(num_retries, cnt, url, errorMsg):
     """Sleep and check if num_retries is reached"""
+    log.warning("Error: {}\n".format(errorMsg))
     if (num_retries >= 0 and cnt > num_retries):
         raise NumRetriesReached()
 
@@ -125,7 +126,7 @@ def sleep_and_check_retries(num_retries, cnt, url):
     else:
         sleeptime = 10
     if sleeptime:
-        log.warning("\nLost connection to node during wsconnect(): %s (%d/%d) "
+        log.warning("\nLost connection or internal error on node: %s (%d/%d) "
                     % (url, cnt, num_retries) +
                     "Retrying in %d seconds\n" % sleeptime
                     )

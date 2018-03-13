@@ -149,8 +149,7 @@ class GrapheneRPC(object):
             except KeyboardInterrupt:
                 raise
             except Exception as e:
-                log.critical("Error: {}\n".format(str(e)))
-                sleep_and_check_retries(self.num_retries, cnt, self.url)
+                sleep_and_check_retries(self.num_retries, cnt, self.url, str(e))
                 next_url = True
         try:
             props = self.get_config(api="database")
@@ -223,8 +222,7 @@ class GrapheneRPC(object):
                 self.rpcconnect(next_url=False)
                 self.register_apis()
             except Exception as e:
-                log.critical("Error: {}\n".format(str(e)))
-                sleep_and_check_retries(self.num_retries, cnt, self.url)
+                sleep_and_check_retries(self.num_retries, cnt, self.url, str(e))
                 # retry
                 self.rpcconnect()
                 self.register_apis()

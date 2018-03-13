@@ -21,21 +21,20 @@ logging.basicConfig(level=logging.INFO)
 
 password = "secretPassword"
 username = "beem"
-
+useWallet = False
 
 if __name__ == "__main__":
     stm = Steem(node=["wss://testnet.steem.vc"])
     prefix = stm.prefix
     # curl --data "username=username&password=secretPassword" https://testnet.steem.vc/create
-    account = Account(username, steem_instance=stm)
-    stm.wallet.purge()
-    stm.wallet.create("123")
-    stm.wallet.unlock("123")
-    account_name = account["name"]
-    active_key = PasswordKey(account_name, password, role="active", prefix=stm.prefix)
-    owner_key = PasswordKey(account_name, password, role="owner", prefix=stm.prefix)
-    posting_key = PasswordKey(account_name, password, role="posting", prefix=stm.prefix)
-    memo_key = PasswordKey(account_name, password, role="memo", prefix=stm.prefix)
+    stm.wallet.wipe(True)
+    if useWallet:
+        stm.wallet.create("123")
+        stm.wallet.unlock("123")
+    active_key = PasswordKey(username, password, role="active", prefix=prefix)
+    owner_key = PasswordKey(username, password, role="owner", prefix=prefix)
+    posting_key = PasswordKey(username, password, role="posting", prefix=prefix)
+    memo_key = PasswordKey(username, password, role="memo", prefix=prefix)
     active_pubkey = active_key.get_public_key()
     owner_pubkey = owner_key.get_public_key()
     posting_pubkey = posting_key.get_public_key()
@@ -44,15 +43,20 @@ if __name__ == "__main__":
     posting_privkey = posting_key.get_private_key()
     owner_privkey = owner_key.get_private_key()
     memo_privkey = memo_key.get_private_key()
-
-    stm.wallet.addPrivateKey(owner_privkey)
-    stm.wallet.addPrivateKey(active_privkey)
-    stm.wallet.addPrivateKey(memo_privkey)
-    stm.wallet.addPrivateKey(posting_privkey)
-
+    if useWallet:
+        stm.wallet.addPrivateKey(owner_privkey)
+        stm.wallet.addPrivateKey(active_privkey)
+        stm.wallet.addPrivateKey(memo_privkey)
+        stm.wallet.addPrivateKey(posting_privkey)
+    else:
+        stm = Steem(node=["wss://testnet.steem.vc"], wif={'active': str(active_privkey),
+                                                          'posting': str(posting_privkey),
+                                                          'memo': str(memo_privkey)})
+    account = Account(username, steem_instance=stm)
+    account.disallow("beem1", permission='posting')
     account.allow('beem1', weight=1, permission='posting', account=None)
-
-    stm.wallet.getAccountFromPrivateKey(str(active_privkey))
+    if useWallet:
+        stm.wallet.getAccountFromPrivateKey(str(active_privkey))
 
     # stm.create_account("beem1", creator=account, password=password1)
 

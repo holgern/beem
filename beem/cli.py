@@ -110,14 +110,14 @@ def config():
 @click.option('--password', prompt=True, hide_input=True,
               confirmation_prompt=True)
 @click.option(
-    '--purge', is_flag=True, default=False,
+    '--wipe', is_flag=True, default=False,
     help="Delete old wallet. All wallet data are deleted!")
 def createwallet(password, purge):
     """ Create new wallet with password
     """
     stm = shared_steem_instance()
-    if purge:
-        stm.wallet.purge()
+    if purge and click.confirm('Do you want to continue to wipe your Wallet?'):
+        stm.wallet.wipe(True)
     stm.wallet.create(password)
     set_shared_steem_instance(stm)
 

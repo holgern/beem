@@ -88,7 +88,7 @@ Quickstart
 
    from beem.steem import Steem
    stm = Steem()
-   stm.wallet.purge()
+   stm.wallet.wipe(True)
    stm.wallet.create("wallet-passphrase")
    stm.wallet.unlock("wallet-passphrase")
    stm.wallet.addPrivateKey("512345678")

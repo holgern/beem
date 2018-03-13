@@ -41,7 +41,7 @@ class Testcases(unittest.TestCase):
         set_shared_steem_instance(self.bts)
         self.bts.set_default_account("beem")
         stm = self.bts
-        stm.wallet.purge()
+        stm.wallet.wipe(True)
         stm.wallet.create("123")
         stm.wallet.unlock("123")
         account_name = "beem"

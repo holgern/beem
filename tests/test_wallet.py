@@ -42,7 +42,7 @@ class Testcases(unittest.TestCase):
         set_shared_steem_instance(self.stm)
         # self.stm.newWallet("TestingOneTwoThree")
         self.wallet = Wallet(rpc=self.stm.rpc)
-        self.wallet.purgeWallet()
+        self.wallet.wipe(True)
         self.wallet.newWallet(pwd="TestingOneTwoThree")
         self.wallet.unlock(pwd="TestingOneTwoThree")
         self.wallet.addPrivateKey(wif)

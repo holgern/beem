@@ -11,6 +11,7 @@ import ssl
 import json
 from itertools import cycle
 from beemgrapheneapi.graphenerpc import GrapheneRPC
+from beemgrapheneapi.rpcutils import sleep_and_check_retries
 from beembase.chains import known_chains
 from . import exceptions
 import logging
@@ -60,27 +61,36 @@ class SteemNodeRPC(GrapheneRPC):
             :raises ValueError: if the server does not respond in proper JSON format
             :raises RPCError: if the server returns an error
         """
-        try:
-            # Forward call to GrapheneWebsocketRPC and catch+evaluate errors
-            return super(SteemNodeRPC, self).rpcexec(payload)
-        except exceptions.RPCError as e:
-            msg = exceptions.decodeRPCErrorMsg(e).strip()
-            if msg == "missing required active authority":
-                raise exceptions.MissingRequiredActiveAuthority
-            elif re.match("^no method with name.*", msg):
-                raise exceptions.NoMethodWithName(msg)
-            elif re.search("Could not find method", msg):
-                raise exceptions.NoMethodWithName(msg)
-            elif re.search("Could not find API", msg):
-                raise exceptions.NoApiWithName(msg)
-            elif re.search("Unable to acquire database lock", msg):
-                exceptions.NoAccessNodeDatabase(msg)
-            elif msg:
-                raise exceptions.UnhandledRPCError(msg)
-            else:
+        doRetryCount = 0
+        doRetry = True
+        while doRetry and doRetryCount < 5:
+            try:
+                # Forward call to GrapheneWebsocketRPC and catch+evaluate errors
+                doRetry = False
+                doRetryCount += 1
+                return super(SteemNodeRPC, self).rpcexec(payload)
+            except exceptions.RPCError as e:
+                msg = exceptions.decodeRPCErrorMsg(e).strip()
+                if msg == "missing required active authority":
+                    raise exceptions.MissingRequiredActiveAuthority
+                elif re.match("^no method with name.*", msg):
+                    raise exceptions.NoMethodWithName(msg)
+                elif re.search("Could not find method", msg):
+                    raise exceptions.NoMethodWithName(msg)
+                elif re.search("Could not find API", msg):
+                    raise exceptions.NoApiWithName(msg)
+                elif re.search("Unable to acquire database lock", msg):
+                    sleep_and_check_retries(5, doRetryCount, self.url, str(msg))
+                    doRetry = True
+                elif re.search("Internal Error", msg):
+                    sleep_and_check_retries(5, doRetryCount, self.url, str(msg))
+                    doRetry = True
+                elif msg:
+                    raise exceptions.UnhandledRPCError(msg)
+                else:
+                    raise e
+            except Exception as e:
                 raise e
-        except Exception as e:
-            raise e
 
     def get_account(self, name, **kwargs):
         """ Get full account details from account name or id

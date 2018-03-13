@@ -93,8 +93,8 @@ class Steem(object):
 
     def __init__(self,
                  node="",
-                 rpcuser="",
-                 rpcpassword="",
+                 rpcuser=None,
+                 rpcpassword=None,
                  debug=False,
                  data_refresh_time_seconds=900,
                  **kwargs):

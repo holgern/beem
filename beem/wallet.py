@@ -223,11 +223,6 @@ class Wallet(object):
         """
         self.newWallet(pwd)
 
-    def purge(self):
-        """ Alias for purgeWallet()
-        """
-        self.purgeWallet()
-
     def newWallet(self, pwd):
         """ Create a new wallet database
         """
@@ -237,16 +232,25 @@ class Wallet(object):
         self.masterpassword = self.masterpwd.decrypted_master
         self.masterpwd.saveEncrytpedMaster()
 
-    def purgeWallet(self):
+    def wipe(self, sure=False):
         """ Purge all data in wallet database
         """
-        if self.MasterPassword is not None:
-            self.configStorage.delete(self.MasterPassword.config_key)
-        if self.keyStorage is not None:
-            for key in self.keyStorage.getPublicKeys():
-                self.keyStorage.delete(key)
-        Wallet.keys = {}
-        Wallet.keyMap = {}
+        if not sure:
+            log.error(
+                "You need to confirm that you are sure "
+                "and understand the implications of "
+                "wiping your wallet!"
+            )
+            return
+        else:
+            from .storage import (
+                keyStorage,
+                MasterPassword
+            )
+            MasterPassword.wipe(sure)
+            keyStorage.wipe(sure)
+            Wallet.keys = {}
+            Wallet.keyMap = {}
 
     def encrypt_wif(self, wif):
         """ Encrypt a wif key
