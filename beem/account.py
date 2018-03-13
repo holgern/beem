@@ -623,12 +623,11 @@ class Account(BlockchainObject):
 
             :param int days: limit number of days to be included int the return value
         """
-        timedelta(days=days)
         utc = pytz.timezone('UTC')
         stop = utc.localize(datetime.utcnow()) - timedelta(days=days)
-        reward_vests = Amount("0 VESTS")
+        reward_vests = Amount("0 VESTS", steem_instance=self.steem)
         for reward in self.history_reverse(stop=stop, only_ops=["curation_reward"]):
-            reward_vests += Amount(reward['reward'])
+            reward_vests += Amount(reward['reward'], steem_instance=self.steem)
         return self.steem.vests_to_sp(reward_vests.amount)
 
     def curation_stats(self):
