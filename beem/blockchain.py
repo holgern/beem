@@ -31,10 +31,11 @@ class Blockchain(object):
     """ This class allows to access the blockchain and read data
         from it
 
-        :param beem.steem.Steem steem_instance: Steem
-                 instance
+        :param beem.steem.Steem steem_instance: Steem instance
         :param str mode: (default) Irreversible block (``irreversible``) or
-                 actual head block (``head``)
+            actual head block (``head``)
+        :param int max_block_wait_repetition: (default) 3 maximum wait time for next block
+            is max_block_wait_repetition * block_interval
 
         This class let's you deal with blockchain related data and methods.
         Read blockchain related data:
@@ -63,6 +64,7 @@ class Blockchain(object):
         self,
         steem_instance=None,
         mode="irreversible",
+        max_block_wait_repetition=None,
         data_refresh_time_seconds=900,
     ):
         self.steem = steem_instance or shared_steem_instance()
@@ -73,6 +75,13 @@ class Blockchain(object):
             self.mode = "head_block_number"
         else:
             raise ValueError("invalid value for 'mode'!")
+        if max_block_wait_repetition:
+            self.max_block_wait_repetition = max_block_wait_repetition
+        else:
+            self.max_block_wait_repetition = 3
+
+    def is_irreversible_mode(self):
+        return self.mode == 'last_irreversible_block_num'
 
     def get_current_block_num(self):
         """ This call returns the current block number
@@ -163,7 +172,7 @@ class Blockchain(object):
              confirmed by 2/3 of all block producers and is thus irreversible)
         """
         # Let's find out how often blocks are generated!
-        block_interval = self.steem.get_block_interval()
+        self.block_interval = self.steem.get_block_interval()
 
         if not start:
             start = self.get_current_block_num()
@@ -234,7 +243,7 @@ class Blockchain(object):
                 # Blocks from start until head block
                 for blocknum in range(start, head_block + 1):
                     # Get full block
-                    block = Block(blocknum, steem_instance=self.steem)
+                    block = self.wait_for_and_get_block(blocknum)
                     yield block
             # Set new start
             start = head_block + 1
@@ -244,7 +253,35 @@ class Blockchain(object):
                 return
 
             # Sleep for one block
-            time.sleep(block_interval)
+            time.sleep(self.block_interval)
+
+    def wait_for_and_get_block(self, block_number, blocks_waiting_for=None):
+        """ Get the desired block from the chain, if the current head block is smaller (for both head and irreversible)
+            then we wait, but a maxmimum of blocks_waiting_for * max_block_wait_repetition time before failure.
+            :param int block_number: desired block number
+            :param int blocks_waiting_for: (default) difference between block_number and current head
+                                           how many blocks we are willing to wait, positive int
+        """
+        if not blocks_waiting_for:
+            blocks_waiting_for = max(1, block_number - self.get_current_block_num())
+
+        repetition = 0
+        # can't return the block before the chain has reached it (support future block_num)
+        while self.get_current_block_num() < block_number:
+            repetition += 1
+            time.sleep(self.block_interval)
+            if repetition > blocks_waiting_for * self.max_block_wait_repetition:
+                raise Exception("Wait time for new block exceeded, aborting")
+        # block has to be returned properly
+        block = Block(block_number, steem_instance=self.steem)
+        repetition = 0
+        while not block:
+            repetition += 1
+            time.sleep(self.block_interval)
+            if repetition > self.max_block_wait_repetition:
+                raise Exception("Wait time for new block exceeded, aborting")
+            block = Block(block_number, steem_instance=self.steem)
+        return block
 
     def ops(self, start=None, stop=None, **kwargs):
         """ Yields all operations (including virtual operations) starting from

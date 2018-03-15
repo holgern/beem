@@ -5,13 +5,19 @@ from __future__ import unicode_literals
 from builtins import bytes
 from builtins import chr
 from builtins import range
+from builtins import super
+import random
+import unittest
+from pprint import pprint
+from binascii import hexlify
+from collections import OrderedDict
+
 from beembase import (
     transactions,
     memo,
     operations,
     objects
 )
-from collections import OrderedDict
 from beembase.objects import Operation
 from beembase.signedtransactions import Signed_Transaction
 from beemgraphenebase.account import PrivateKey
@@ -20,10 +26,8 @@ from beembase.operationids import getOperationNameForId
 from beemgraphenebase.py23 import py23_bytes, bytes_types
 from beem.amount import Amount
 from beem.asset import Asset
-import random
-import unittest
-from pprint import pprint
-from binascii import hexlify
+from beem.steem import Steem
+
 
 TEST_AGAINST_CLI_WALLET = False
 
@@ -36,6 +40,12 @@ expiration = "2016-04-06T08:29:27"
 
 
 class Testcases(unittest.TestCase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.stm = Steem(
+            offline=True
+        )
 
     def doit(self, printWire=False, ops=None):
         if ops is None:
@@ -72,7 +82,7 @@ class Testcases(unittest.TestCase):
         self.op = operations.Transfer(**{
             "from": "foo",
             "to": "baar",
-            "amount": Amount("111.110 STEEM"),
+            "amount": Amount("111.110 STEEM", steem_instance=self.stm),
             "memo": "Fooo",
             "prefix": default_prefix
         })

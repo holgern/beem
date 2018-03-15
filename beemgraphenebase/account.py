@@ -11,13 +11,13 @@ import hashlib
 import sys
 import re
 import os
-
+import ecdsa
+import ctypes
 from binascii import hexlify, unhexlify
+
 from .base58 import ripemd160, Base58
 from .dictionary import words as BrainKeyDictionary
 from .py23 import py23_bytes
-
-import ecdsa
 
 
 class PasswordKey(object):
@@ -165,6 +165,18 @@ class Address(object):
         pkbin = unhexlify(repr(self._pubkey))
         addressbin = ripemd160(hexlify(hashlib.sha256(pkbin).digest()))
         return Base58(hexlify(addressbin).decode('ascii'))
+
+    def derive256address_with_version(self, version=56):
+        """ Derive address using ``RIPEMD160(SHA256(x))``
+            and adding version + checksum
+        """
+        pkbin = unhexlify(repr(self._pubkey))
+        addressbin = ripemd160(hexlify(hashlib.sha256(pkbin).digest()))
+        addr = py23_bytes(ctypes.c_uint8(version & 0xFF)) + addressbin
+        check = hashlib.sha256(addr).digest()
+        check = hashlib.sha256(check).digest()
+        buffer = addr + check[0:4]
+        return Base58(hexlify(ripemd160(hexlify(buffer))).decode('ascii'))
 
     def derivesha512address(self):
         """ Derive address using ``RIPEMD160(SHA512(x))`` """

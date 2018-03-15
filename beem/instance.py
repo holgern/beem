@@ -9,6 +9,7 @@ import beem as stm
 
 class SharedInstance(object):
     instance = None
+    config = {}
 
 
 def shared_steem_instance():
@@ -28,7 +29,7 @@ def shared_steem_instance():
     """
     if not SharedInstance.instance:
         clear_cache()
-        SharedInstance.instance = stm.Steem()
+        SharedInstance.instance = stm.Steem(**SharedInstance.config)
     return SharedInstance.instance
 
 
@@ -47,3 +48,13 @@ def clear_cache():
     """
     from .blockchainobject import BlockchainObject
     BlockchainObject.clear_cache()
+
+
+def set_shared_config(config):
+    """ This allows to set a config that will be used when calling
+        ``shared_steem_instance`` and allows to define the configuration
+        without requiring to actually create an instance
+    """
+    if not isinstance(config, dict):
+        raise AssertionError()
+    SharedInstance.config = config

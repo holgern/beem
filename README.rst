@@ -35,8 +35,9 @@ Current build status
 .. image:: https://codecov.io/gh/holgern/beem/branch/master/graph/badge.svg
   :target: https://codecov.io/gh/holgern/beem
 
-.. image:: https://coveralls.io/repos/github/holgern/beem/badge.svg?branch=master
-    :target: https://coveralls.io/github/holgern/beem?branch=master
+.. image:: https://coveralls.io/repos/github/holgern/beem/badge.svg
+:target: https://coveralls.io/github/holgern/beem
+
 
 .. image:: https://api.codacy.com/project/badge/Grade/e5476faf97df4c658697b8e7a7efebd7    
     :target: https://www.codacy.com/app/holgern/beem?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=holgern/beem&amp;utm_campaign=Badge_Grade
@@ -78,6 +79,12 @@ For Termux on Android, please install the following packages:
 .. code:: bash
 
     pkg install clang openssl-dev python-dev
+
+Signing and Verify can be fasten (200 %) by installing cryptography:
+
+.. code:: bash
+
+    pip install -U cryptography
     
 Install beem by pip::
 
@@ -108,9 +115,18 @@ Once the conda-forge channel has been enabled, beem can be installed with:
 
     conda install beem
 
+Signing and Verify can be fasten (200 %) by installing cryptography:
+
+.. code:: bash
+
+    conda install cryptography
+    
+
 CLI tool bundled
 ----------------
 I started to work on a CLI tool:
+
+.. code:: bash
 
     beempy
 
@@ -120,6 +136,14 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.17
+-------
+* GOLOS chain added
+* Huge speed improvements for all sign/verify operaions (around 200%)
+* Sign/verify speed can now be improved by installing cryptography
+* benchmark added
+* Example for speed comparison with steem-python added
+
 0.19.16
 -------
 * rename wallet.purge() and wallet.purgeWallet() to wallet.wipe()

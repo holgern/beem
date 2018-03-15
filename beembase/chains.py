@@ -39,9 +39,19 @@ known_chains = {
         "min_version": '0.0.0',
         "prefix": "TST",
         "chain_assets": [
-            {"asset": "TBD", "symbol": "SBD", "precision": 3, "id": 0},
-            {"asset": "TESTS", "symbol": "STEEM", "precision": 3, "id": 1},
+            {"asset": "SBD", "symbol": "TBD", "precision": 3, "id": 0},
+            {"asset": "STEEM", "symbol": "TESTS", "precision": 3, "id": 1},
             {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
+        ],
+    },
+    "GOLOS": {
+        "chain_id": "782a3039b478c839e4cb0c941ff4eaeb7df40bdd68bd441afd444b9da763de12",
+        "min_version": '0.0.0',
+        "prefix": "GLS",
+        "chain_assets": [
+            {"asset": "SBD", "symbol": "GBG", "precision": 3, "id": 0},
+            {"asset": "STEEM", "symbol": "GOLOS", "precision": 3, "id": 1},
+            {"asset": "VESTS", "symbol": "GESTS", "precision": 6, "id": 2}
         ],
     },
 }

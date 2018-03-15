@@ -240,13 +240,15 @@ class Steem(object):
         if use_stored_data:
             self.refresh_data()
             return self.data['dynamic_global_properties']
-        else:
-            if self.rpc is None:
-                return None
+        if self.rpc is None:
+            return None
+        try:
             if self.rpc.get_use_appbase():
                 return self.rpc.get_dynamic_global_properties(api="database")
             else:
                 return self.rpc.get_dynamic_global_properties()
+        except:
+            return None
 
     def get_reserve_ratio(self, use_stored_data=True):
         """ This call returns the *dynamic global properties*
@@ -256,9 +258,10 @@ class Steem(object):
         if use_stored_data:
             self.refresh_data()
             return self.data['reserve_ratio']
-        else:
-            if self.rpc is None:
-                return None
+
+        if self.rpc is None:
+            return None
+        try:
             if self.rpc.get_use_appbase():
                 return self.rpc.get_reserve_ratio(api="witness")
             else:
@@ -266,6 +269,8 @@ class Steem(object):
                 return {'id': 0, 'average_block_size': props['average_block_size'],
                         'current_reserve_ratio': props['current_reserve_ratio'],
                         'max_virtual_bandwidth': props['max_virtual_bandwidth']}
+        except:
+            return None
 
     def get_feed_history(self, use_stored_data=True):
         """ Returns the feed_history
@@ -275,13 +280,15 @@ class Steem(object):
         if use_stored_data:
             self.refresh_data()
             return self.data['feed_history']
-        else:
+        try:
             if self.rpc is None:
                 return None
             if self.rpc.get_use_appbase():
                 return self.rpc.get_feed_history(api="database")
             else:
                 return self.rpc.get_feed_history()
+        except:
+            return None
 
     def get_reward_funds(self, use_stored_data=True):
         """ Get details for a reward fund.
@@ -291,9 +298,10 @@ class Steem(object):
         if use_stored_data:
             self.refresh_data()
             return self.data['reward_funds']
-        else:
-            if self.rpc is None:
-                return None
+
+        if self.rpc is None:
+            return None
+        try:
             if self.rpc.get_use_appbase():
                 funds = self.rpc.get_reward_funds(api="database")['funds']
                 if len(funds) > 0:
@@ -301,6 +309,8 @@ class Steem(object):
                 return funds
             else:
                 return self.rpc.get_reward_fund("post")
+        except:
+            return None
 
     def get_current_median_history(self, use_stored_data=True):
         """ Returns the current median price
@@ -310,13 +320,15 @@ class Steem(object):
         if use_stored_data:
             self.refresh_data()
             return self.data['get_feed_history']['current_median_history']
-        else:
-            if self.rpc is None:
-                return None
+        if self.rpc is None:
+            return None
+        try:
             if self.rpc.get_use_appbase():
                 return self.rpc.get_feed_history(api="database")['current_median_history']
             else:
                 return self.rpc.get_current_median_history_price()['current_median_history']
+        except:
+            return None
 
     def get_hardfork_properties(self, use_stored_data=True):
         """ Returns Hardfork and live_time of the hardfork
@@ -326,13 +338,15 @@ class Steem(object):
         if use_stored_data:
             self.refresh_data()
             return self.data['hardfork_properties']
-        else:
-            if self.rpc is None:
-                return None
+        if self.rpc is None:
+            return None
+        try:
             if self.rpc.get_use_appbase():
                 return self.rpc.get_hardfork_properties(api="database")
             else:
                 return self.rpc.get_next_scheduled_hardfork()
+        except:
+            return None
 
     def get_network(self, use_stored_data=True):
         """ Identify the network
@@ -345,10 +359,13 @@ class Steem(object):
         if use_stored_data:
             self.refresh_data()
             return self.data['network']
-        else:
-            if self.rpc is None:
-                return None
+
+        if self.rpc is None:
+            return None
+        try:
             return self.rpc.get_network()
+        except:
+            return None
 
     def get_median_price(self):
         """ Returns the current median history price as Price
@@ -472,13 +489,16 @@ class Steem(object):
         if use_stored_data:
             self.refresh_data()
             return self.data['witness_schedule']
-        else:
-            if self.rpc is None:
-                return None
+
+        if self.rpc is None:
+            return None
+        try:
             if self.rpc.get_use_appbase():
                 return self.rpc.get_witness_schedule(api="database")
             else:
                 return self.rpc.get_witness_schedule()
+        except:
+            return None
 
     def get_config(self, use_stored_data=True):
         """ Returns internal chain configuration.
@@ -486,13 +506,15 @@ class Steem(object):
         if use_stored_data:
             self.refresh_data()
             return self.data['config']
-        else:
-            if self.rpc is None:
-                return None
+        if self.rpc is None:
+            return None
+        try:
             if self.rpc.get_use_appbase():
                 return self.rpc.get_config(api="database")
             else:
                 return self.rpc.get_config()
+        except:
+            return None
 
     @property
     def chain_params(self):

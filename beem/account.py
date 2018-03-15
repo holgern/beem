@@ -214,10 +214,9 @@ class Account(BlockchainObject):
     def get_steem_power(self, onlyOwnSP=False):
         """ Returns the account steem power
         """
-        if onlyOwnSP:
-            vests = (self["vesting_shares"])
-        else:
-            vests = (self["vesting_shares"]) - (self["delegated_vesting_shares"]) + (self["received_vesting_shares"])
+        vests = (self["vesting_shares"])
+        if not onlyOwnSP and "delegated_vesting_shares" in self and "received_vesting_shares" in self:
+            vests = vests - (self["delegated_vesting_shares"]) + (self["received_vesting_shares"])
         return self.steem.vests_to_sp(vests)
 
     def get_voting_value_SBD(self, voting_weight=100, voting_power=None, steem_power=None):
@@ -392,27 +391,40 @@ class Account(BlockchainObject):
         """ List balances of an account. This call returns instances of
             :class:`steem.amount.Amount`.
         """
-        available_amount = [self["balance"], self["sbd_balance"], self["vesting_shares"]]
+        amount_list = ["balance", "sbd_balance", "vesting_shares"]
+        available_amount = []
+        for amount in amount_list:
+            if amount in self:
+                available_amount.append(self[amount])
         return available_amount
 
     @property
     def saving_balances(self):
-        savings_amount = [self["savings_balance"], self["savings_sbd_balance"]]
+        savings_amount = []
+        amount_list = ["savings_balance", "savings_sbd_balance"]
+        for amount in amount_list:
+            if amount in self:
+                savings_amount.append(self[amount])        
         return savings_amount
 
     @property
     def reward_balances(self):
-        rewards_amount = [self["reward_steem_balance"], self["reward_sbd_balance"], self["reward_vesting_balance"]]
+        amount_list = ["reward_steem_balance", "reward_sbd_balance", "reward_vesting_balance"]
+        rewards_amount = []
+        for amount in amount_list:
+            if amount in self:
+                rewards_amount.append(self[amount])          
         return rewards_amount
 
     @property
     def total_balances(self):
+        symbols = [self.available_balances[0]["symbol"], self.available_balances[1]["symbol"], self.available_balances[2]["symbol"]]
         return [
-            self.get_balance(self.available_balances, "STEEM") + self.get_balance(self.saving_balances, "STEEM") +
-            self.get_balance(self.reward_balances, "STEEM"),
-            self.get_balance(self.available_balances, "SBD") + self.get_balance(self.saving_balances, "SBD") +
-            self.get_balance(self.reward_balances, "SBD"),
-            self.get_balance(self.available_balances, "VESTS") + self.get_balance(self.reward_balances, "VESTS"),
+            self.get_balance(self.available_balances, symbols[0]) + self.get_balance(self.saving_balances, symbols[0]) +
+            self.get_balance(self.reward_balances, symbols[0]),
+            self.get_balance(self.available_balances, symbols[1]) + self.get_balance(self.saving_balances, symbols[1]) +
+            self.get_balance(self.reward_balances, symbols[1]),
+            self.get_balance(self.available_balances, symbols[2]) + self.get_balance(self.reward_balances, symbols[2]),
         ]
 
     @property

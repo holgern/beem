@@ -7,9 +7,11 @@ from builtins import bytes
 from builtins import chr
 from builtins import range
 import unittest
+import hashlib
+from binascii import hexlify, unhexlify
 import os
 from pprint import pprint
-from beemgraphenebase.account import BrainKey, Address, PublicKey, PrivateKey
+from beemgraphenebase.account import BrainKey, Address, PublicKey, PrivateKey, PasswordKey
 from beembase.memo import (
     get_shared_secret,
     _pad,
@@ -109,6 +111,21 @@ class Testcases(unittest.TestCase):
                               memo["nonce"],
                               memo["plain"], prefix="GPH")
             self.assertEqual(memo["message"], enc)
+
+    def test_encrypt_decrypt(self):
+        base58 = u'#HU6pdQ4Hh8cFrDVooekRPVZu4BdrhAe9RxrWrei2CwfAApAPdM4PT5mSV9cV3tTuWKotYQF6suyM4JHFBZz4pcwyezPzuZ2na7uwhRcLqFotsqxWRBpaXkNks2QCnYLS8'
+        text = u'#爱'
+        nonce = u'1462976530069648'
+        wif = str(PasswordKey("", "", role="", prefix="STM").get_private_key())
+        private_key = PrivateKey(wif=wif, prefix="STM")
+        public_key = private_key.pubkey
+        cypertext = encode_memo(private_key,
+                                public_key,
+                                nonce,
+                                text, prefix="STM")
+        self.assertEqual(cypertext, base58)
+        plaintext = decode_memo(private_key, cypertext)
+        self.assertEqual(plaintext, text)
 
     def test_shared_secret(self):
         for s in test_shared_secrets:
