@@ -404,7 +404,7 @@ class Account(BlockchainObject):
         amount_list = ["savings_balance", "savings_sbd_balance"]
         for amount in amount_list:
             if amount in self:
-                savings_amount.append(self[amount])        
+                savings_amount.append(self[amount])
         return savings_amount
 
     @property
@@ -413,7 +413,7 @@ class Account(BlockchainObject):
         rewards_amount = []
         for amount in amount_list:
             if amount in self:
-                rewards_amount.append(self[amount])          
+                rewards_amount.append(self[amount])
         return rewards_amount
 
     @property
