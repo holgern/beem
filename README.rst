@@ -107,26 +107,22 @@ Run tests after install::
 Installing beem with conda-forge
 --------------------------------
 
-Installing beem from the conda-forge channel can be achieved by adding conda-forge to your channels with:
+Installing beem from the conda-forge channel can be achieved by adding conda-forge to your channels with::
 
     conda config --add channels conda-forge
     
-Once the conda-forge channel has been enabled, beem can be installed with:
+Once the conda-forge channel has been enabled, beem can be installed with::
 
     conda install beem
 
-Signing and Verify can be fasten (200 %) by installing cryptography:
-
-.. code:: bash
+Signing and Verify can be fasten (200 %) by installing cryptography::
 
     conda install cryptography
     
 
 CLI tool bundled
 ----------------
-I started to work on a CLI tool:
-
-.. code:: bash
+I started to work on a CLI tool::
 
     beempy
 
@@ -139,8 +135,7 @@ Changelog
 0.19.17
 -------
 * GOLOS chain added
-* Huge speed improvements for all sign/verify operations (around 200%) 
-    when secp256k1 can not be installed and cryptography is installed
+* Huge speed improvements for all sign/verify operations (around 200%) when secp256k1 can not be installed and cryptography is installed
 * benchmark added
 * Example for speed comparison with steem-python added
 * Several bug fixes and improvements
