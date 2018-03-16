@@ -579,7 +579,7 @@ class Steem(object):
             return append_to.get_parent()
             # Go forward to see what the other options do ...
         else:
-            # Append tot he default buffer
+            # Append to the default buffer
             self.txbuffer.appendOps(ops)
 
         # Add signing information, signer, sign and optionally broadcast

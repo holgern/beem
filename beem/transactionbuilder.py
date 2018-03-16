@@ -162,7 +162,7 @@ class TransactionBuilder(dict):
 
             return r
 
-        if account not in self.signing_accounts:
+        if account["name"] not in self.signing_accounts:
             # is the account an instance of public key?
             if isinstance(account, PublicKey):
                 self.wifs.add(
@@ -171,18 +171,16 @@ class TransactionBuilder(dict):
                     )
                 )
             else:
-                if isinstance(account, string_types):
-                    account = Account(account, steem_instance=self.steem)
                 if permission not in account:
                     raise AssertionError("Could not access permission")
                 required_treshold = account[permission]["weight_threshold"]
                 keys = fetchkeys(account, permission)
-                # if permission != "owner":
-                #     keys.extend(fetchkeys(account, "owner"))
+                if permission != "owner":
+                    keys.extend(fetchkeys(account, "owner"))
                 for x in keys:
                     self.wifs.add(x[0])
 
-            self.signing_accounts.append(account)
+            self.signing_accounts.append(account["name"])
 
     def appendWif(self, wif):
         """ Add a wif that should be used for signing of the transaction.
@@ -327,7 +325,7 @@ class TransactionBuilder(dict):
                 str(account)
             ]
         else:
-            accountObj = Account(account)
+            accountObj = Account(account, steem_instance=self.steem)
             authority = accountObj[permission]
             # We add a required_authorities to be able to identify
             # how to sign later. This is an array, because we
@@ -336,7 +334,7 @@ class TransactionBuilder(dict):
                 accountObj["name"]: authority
             }})
             for account_auth in authority["account_auths"]:
-                account_auth_account = Account(account_auth[0])
+                account_auth_account = Account(account_auth[0], steem_instance=self.steem)
                 self["required_authorities"].update({
                     account_auth[0]: account_auth_account.get(permission)
                 })
@@ -347,7 +345,7 @@ class TransactionBuilder(dict):
             ]
             # Add one recursion of keys from account_auths:
             for account_auth in authority["account_auths"]:
-                account_auth_account = Account(account_auth[0])
+                account_auth_account = Account(account_auth[0], steem_instance=self.steem)
                 self["missing_signatures"].extend(
                     [x[0] for x in account_auth_account[permission]["key_auths"]]
                 )

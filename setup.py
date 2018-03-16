@@ -18,7 +18,7 @@ except LookupError:
 
 VERSION = '0.19.17'
 
-tests_require = ['mock >= 2.0.0', 'pytest', 'pytest-mock', 'parameterized', 'secp256k1']
+tests_require = ['mock >= 2.0.0', 'pytest', 'pytest-mock', 'parameterized']
 
 requires = [
     "future",
@@ -27,7 +27,7 @@ requires = [
     "websocket-client",
     "appdirs",
     "Events",
-    "scrypt",
+    "pylibscrypt",
     "pycryptodomex",
     "pytz",
     "Click",

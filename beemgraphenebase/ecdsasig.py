@@ -20,17 +20,17 @@ SECP256K1_MODULE = None
 GMPY2_MODULE = False
 if not SECP256K1_MODULE:
     try:
-        from cryptography.hazmat.backends import default_backend
-        from cryptography.hazmat.primitives import hashes
-        from cryptography.hazmat.primitives.asymmetric import ec
-        from cryptography.hazmat.primitives.asymmetric.utils \
-            import decode_dss_signature, encode_dss_signature
-        from cryptography.exceptions import InvalidSignature
-        SECP256K1_MODULE = "cryptography"
+        import secp256k1
+        SECP256K1_MODULE = "secp256k1"
     except ImportError:
         try:
-            import secp256k1
-            SECP256K1_MODULE = "secp256k1"
+            from cryptography.hazmat.backends import default_backend
+            from cryptography.hazmat.primitives import hashes
+            from cryptography.hazmat.primitives.asymmetric import ec
+            from cryptography.hazmat.primitives.asymmetric.utils \
+                import decode_dss_signature, encode_dss_signature
+            from cryptography.exceptions import InvalidSignature
+            SECP256K1_MODULE = "cryptography"
         except ImportError:
             SECP256K1_MODULE = "ecdsa"
 
