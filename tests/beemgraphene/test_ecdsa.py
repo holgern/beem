@@ -29,22 +29,13 @@ class Testcases(unittest.TestCase):
     ])
     def test_sign_message(self, module):
         if module == "cryptography":
-            try:
-                from cryptography.hazmat.backends import default_backend
-                from cryptography.hazmat.primitives import hashes
-                from cryptography.hazmat.primitives.asymmetric import ec
-                from cryptography.hazmat.primitives.asymmetric.utils \
-                    import decode_dss_signature, encode_dss_signature
-                from cryptography.exceptions import InvalidSignature
-                ecda.SECP256K1_MODULE = "cryptography"
-            except ImportError:
+            if not ecda.CRYPTOGRAPHY_AVAILABLE:
                 return
+            ecda.SECP256K1_MODULE = "cryptography"
         elif module == "secp256k1":
-            try:
-                import secp256k1
-                ecda.SECP256K1_MODULE = "secp256k1"
-            except ImportError:
+            if not ecda.SECP256K1_AVAILABLE:
                 return
+            ecda.SECP256K1_MODULE = "secp256k1"
         else:
             ecda.SECP256K1_MODULE = module
         pub_key = py23_bytes(repr(PrivateKey(wif).pubkey), "latin")
@@ -58,22 +49,14 @@ class Testcases(unittest.TestCase):
     ])
     def test_sign_message_cross(self, module):
         if module == "cryptography":
-            try:
-                from cryptography.hazmat.backends import default_backend
-                from cryptography.hazmat.primitives import hashes
-                from cryptography.hazmat.primitives.asymmetric import ec
-                from cryptography.hazmat.primitives.asymmetric.utils \
-                    import decode_dss_signature, encode_dss_signature
-                from cryptography.exceptions import InvalidSignature
-                ecda.SECP256K1_MODULE = "cryptography"
-            except ImportError:
+            if not ecda.CRYPTOGRAPHY_AVAILABLE:
                 return
+            ecda.SECP256K1_MODULE = "cryptography"
         elif module == "secp256k1":
-            try:
-                import secp256k1
-                ecda.SECP256K1_MODULE = "secp256k1"
-            except ImportError:
+            if not ecda.SECP256K1_AVAILABLE:
                 return
+            ecda.SECP256K1_MODULE = "secp256k1"
+
         pub_key = py23_bytes(repr(PrivateKey(wif).pubkey), "latin")
         signature = ecda.sign_message("Foobar", wif)
         ecda.SECP256K1_MODULE = "ecdsa"
@@ -91,22 +74,13 @@ class Testcases(unittest.TestCase):
     ])
     def test_wrong_signature(self, module):
         if module == "cryptography":
-            try:
-                from cryptography.hazmat.backends import default_backend
-                from cryptography.hazmat.primitives import hashes
-                from cryptography.hazmat.primitives.asymmetric import ec
-                from cryptography.hazmat.primitives.asymmetric.utils \
-                    import decode_dss_signature, encode_dss_signature
-                from cryptography.exceptions import InvalidSignature
-                ecda.SECP256K1_MODULE = "cryptography"
-            except ImportError:
+            if not ecda.CRYPTOGRAPHY_AVAILABLE:
                 return
+            ecda.SECP256K1_MODULE = "cryptography"
         elif module == "secp256k1":
-            try:
-                import secp256k1
-                ecda.SECP256K1_MODULE = "secp256k1"
-            except ImportError:
+            if not ecda.SECP256K1_AVAILABLE:
                 return
+            ecda.SECP256K1_MODULE = "secp256k1"
         pub_key = py23_bytes(repr(PrivateKey(wif).pubkey), "latin")
         ecda.SECP256K1_MODULE = module
         signature = ecda.sign_message("Foobar", wif)

@@ -17,22 +17,33 @@ from .py23 import py23_bytes, bytes_types
 log = logging.getLogger(__name__)
 
 SECP256K1_MODULE = None
+SECP256K1_AVAILABLE = False
+CRYPTOGRAPHY_AVAILABLE = False
+SECP256K1_MODULE
 GMPY2_MODULE = False
 if not SECP256K1_MODULE:
     try:
         import secp256k1
         SECP256K1_MODULE = "secp256k1"
+        SECP256K1_AVAILABLE = True
     except ImportError:
         try:
-            from cryptography.hazmat.backends import default_backend
-            from cryptography.hazmat.primitives import hashes
-            from cryptography.hazmat.primitives.asymmetric import ec
-            from cryptography.hazmat.primitives.asymmetric.utils \
-                import decode_dss_signature, encode_dss_signature
-            from cryptography.exceptions import InvalidSignature
+            import cryptography
             SECP256K1_MODULE = "cryptography"
+            CRYPTOGRAPHY_AVAILABLE = True
         except ImportError:
             SECP256K1_MODULE = "ecdsa"
+
+    try:
+        from cryptography.hazmat.backends import default_backend
+        from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.primitives.asymmetric import ec
+        from cryptography.hazmat.primitives.asymmetric.utils \
+            import decode_dss_signature, encode_dss_signature
+        from cryptography.exceptions import InvalidSignature
+    except ImportError:
+        CRYPTOGRAPHY_AVAILABLE = False
+        log.debug("Cryptography not available")
 
 log.debug("Using SECP256K1 module: %s" % SECP256K1_MODULE)
 
