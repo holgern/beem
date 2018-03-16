@@ -172,7 +172,7 @@ class Address(object):
         """
         pkbin = unhexlify(repr(self._pubkey))
         addressbin = ripemd160(hexlify(hashlib.sha256(pkbin).digest()))
-        addr = py23_bytes(ctypes.c_uint8(version & 0xFF)) + addressbin
+        addr = py23_bytes(bytearray(ctypes.c_uint8(version & 0xFF))) + addressbin
         check = hashlib.sha256(addr).digest()
         check = hashlib.sha256(check).digest()
         buffer = addr + check[0:4]
