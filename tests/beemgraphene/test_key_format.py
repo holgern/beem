@@ -54,19 +54,19 @@ class Testcases(unittest.TestCase):
     def test_btc_uncompressed(self):
         public_key = PublicKey(key["public_key"])
         address = Address(address=None, pubkey=public_key.unCompressed())
-        self.assertEqual(str(key["Uncompressed_BTC"]), str(format(address.derive256address_with_version(0), "STM")))
+        self.assertEqual(str(key["Uncompressed_BTC"]), (format(address.derive256address_with_version(0), "STM")))
 
     def test_btc_compressed(self):
         public_key = PublicKey(key["public_key"])
         address = Address(address=None, pubkey=repr(public_key))
-        self.assertEqual(str(key["Compressed_BTC"]), str(format(address.derive256address_with_version(0), "STM")))
+        self.assertEqual(str(key["Compressed_BTC"]), (format(address.derive256address_with_version(0), "STM")))
 
     def test_pts_uncompressed(self):
         public_key = PublicKey(key["public_key"])
         address = Address(address=None, pubkey=public_key.unCompressed())
-        self.assertEqual(str(key["Uncompressed_PTS"]), str(format(address.derive256address_with_version(56), "STM")))
+        self.assertEqual(str(key["Uncompressed_PTS"]), (format(address.derive256address_with_version(56), "STM")))
 
     def test_pts_compressed(self):
         public_key = PublicKey(key["public_key"])
         address = Address(address=None, pubkey=repr(public_key))
-        self.assertEqual(str(key["Compressed_PTS"]), str(format(address.derive256address_with_version(56), "STM")))
+        self.assertEqual(str(key["Compressed_PTS"]), (format(address.derive256address_with_version(56), "STM")))
