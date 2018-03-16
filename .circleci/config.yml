@@ -34,7 +34,7 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            sudo python -m pip install --upgrade pip setuptools wheel mock pytest  pytest-cov parameterized cryptography
+            sudo python -m pip install --upgrade pip setuptools wheel mock pytest  pytest-cov parameterized secp256k1
             sudo python -m pip install -r requirements.txt
             sudo python -m pip install --upgrade pycodestyle pyflakes coverage tox codacy-coverage virtualenv
 

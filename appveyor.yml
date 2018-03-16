@@ -50,7 +50,7 @@ install:
   - conda config --add channels wheeler-microfluidics
   - conda update -q conda
   - conda info -a
-  - conda install --yes nose conda-build setuptools pip numpy pytest-pylint parameterized
+  - conda install --yes conda-build setuptools pip pytest-pylint parameterized cryptography
   - conda install --yes pycryptodomex scrypt pyyaml pytest pytest-mock coverage mock appdirs
   - conda install --yes ecdsa requests future websocket-client pytz six Click events prettytable 
 

@@ -27,7 +27,7 @@ requires = [
     "websocket-client",
     "appdirs",
     "Events",
-    "pylibscrypt",
+    "scrypt",
     "pycryptodomex",
     "pytz",
     "Click",
