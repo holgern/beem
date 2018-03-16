@@ -16,6 +16,7 @@ from beem.account import Account
 from beem.instance import set_shared_steem_instance
 from beem.blockchain import Blockchain
 from beem.block import Block
+from beem.wallet import Wallet
 from beemgraphenebase.account import PasswordKey, PrivateKey, PublicKey
 from beem.utils import parse_time, formatTimedelta
 from beemgrapheneapi.rpcutils import NumRetriesReached
@@ -23,6 +24,9 @@ from beemgrapheneapi.rpcutils import NumRetriesReached
 # Py3 compatibility
 import sys
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
+nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
+         "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
+         "wss://steemd.minnowsupportproject.org"]
 core_unit = "GLS"
 
 
@@ -30,9 +34,17 @@ class Testcases(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        set_shared_steem_instance(None)
+        self.stm = Steem(
+            node=nodes,
+            nobroadcast=True,
+            bundle=False,
+            # Overwrite wallet to use this list of wifs only
+            wif={"active": wif}
+        )
         self.bts = Steem(
             node=["wss://ws.golos.io"],
-            keys={"active": wif, "owner": wif, "memo": wif},
+            keys={"active": wif, "owner": wif, "posting": wif},
             nobroadcast=True,
         )
         # from getpass import getpass
