@@ -24,12 +24,13 @@ core_unit = "STM"
 nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
          "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
          "wss://steemd.minnowsupportproject.org"]
-nodes_https = ['https://api.steemit.com','https://steemd.privex.io','https://steemd.pevo.science','https://rpc.steemliberator.com',
-              'https://rpc.buildteam.io','https://steemd.minnowsupportproject.org','https://gtg.steem.house:8090','https://seed.bitcoiner.me']
+nodes_https = ['https://api.steemit.com', 'https://steemd.privex.io', 'https://steemd.pevo.science', 'https://rpc.steemliberator.com',
+               'https://rpc.buildteam.io', 'https://steemd.minnowsupportproject.org', 'https://gtg.steem.house:8090', 'https://seed.bitcoiner.me']
 nodes_appbase = ["https://api.steemitstage.com", "wss://appbasetest.timcliff.com"]
 test_list = ["wss://steemd.doesnot.exists", "wss://api.steemit.com", "wss://steemd.pevo.science", "wss://gtg.steem.house:8090",
-             "https://api.steemit.com", "https://api.steemitstage.com", "wss://appbasetest.timcliff.com",'https://steemd.privex.io','https://steemd.pevo.science','https://rpc.steemliberator.com',
-              'https://rpc.buildteam.io','https://steemd.minnowsupportproject.org','https://gtg.steem.house:8090','https://seed.bitcoiner.me']
+             "https://api.steemit.com", "https://api.steemitstage.com", "wss://appbasetest.timcliff.com", 'https://steemd.privex.io',
+             'https://steemd.pevo.science', 'https://rpc.steemliberator.com',
+             'https://rpc.buildteam.io', 'https://steemd.minnowsupportproject.org', 'https://gtg.steem.house:8090', 'https://seed.bitcoiner.me']
 
 
 class Testcases(unittest.TestCase):
