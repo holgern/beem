@@ -60,7 +60,7 @@ class Testcases(unittest.TestCase):
         self.assertTrue(isinstance(num, int))
         block = b.get_current_block()
         self.assertTrue(isinstance(block, Block))
-        self.assertEqual(num, block.identifier)
+        self.assertTrue((num - block.identifier) < 2)
         block_time = b.block_time(block.identifier)
         self.assertEqual(block.time(), block_time)
         block_timestamp = b.block_timestamp(block.identifier)
