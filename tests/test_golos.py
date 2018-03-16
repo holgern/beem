@@ -30,7 +30,6 @@ class Testcases(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        set_shared_steem_instance(None)
         self.bts = Steem(
             node=["wss://ws.golos.io"],
             keys={"active": wif, "owner": wif, "memo": wif},
@@ -38,8 +37,6 @@ class Testcases(unittest.TestCase):
         )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
-        set_shared_steem_instance(self.bts)
-        self.bts.set_default_account("test")
 
     def test_transfer(self):
         bts = self.bts
@@ -55,7 +52,7 @@ class Testcases(unittest.TestCase):
         self.assertIn("memo", op)
         self.assertEqual(op["from"], "test")
         self.assertEqual(op["to"], "test1")
-        amount = Amount(op["amount"])
+        amount = Amount(op["amount"], steem_instance=bts)
         self.assertEqual(float(amount), 1.33)
 
     def test_create_account(self):
@@ -111,9 +108,6 @@ class Testcases(unittest.TestCase):
     def test_connect(self):
         bts = self.bts
         self.assertEqual(bts.prefix, "GLS")
-
-    def test_set_default_account(self):
-        self.bts.set_default_account("test")
 
     def test_info(self):
         info = self.bts.info()

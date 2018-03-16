@@ -31,14 +31,12 @@ class Testcases(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        set_shared_steem_instance(None)
         self.bts = Steem(
             node=["wss://testnet.steem.vc"],
             nobroadcast=True,
         )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
-        set_shared_steem_instance(self.bts)
         self.bts.set_default_account("beem")
         stm = self.bts
         stm.wallet.wipe(True)
@@ -72,7 +70,7 @@ class Testcases(unittest.TestCase):
         self.assertIn("memo", op)
         self.assertEqual(op["from"], "beem")
         self.assertEqual(op["to"], "test1")
-        amount = Amount(op["amount"])
+        amount = Amount(op["amount"], steem_instance=bts)
         self.assertEqual(float(amount), 1.33)
 
     def test_create_account(self):
