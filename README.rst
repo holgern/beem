@@ -139,10 +139,11 @@ Changelog
 0.19.17
 -------
 * GOLOS chain added
-* Huge speed improvements for all sign/verify operaions (around 200%)
-* Sign/verify speed can now be improved by installing cryptography
+* Huge speed improvements for all sign/verify operations (around 200%) 
+    when secp256k1 can not be installed and cryptography is installed
 * benchmark added
 * Example for speed comparison with steem-python added
+* Several bug fixes and improvements
 
 0.19.16
 -------

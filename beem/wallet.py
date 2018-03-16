@@ -144,6 +144,7 @@ class Wallet(object):
         """
         log.debug(
             "Force setting of private keys. Not using the wallet database!")
+        self.clear_local_keys()
         if isinstance(loadkeys, dict):
             Wallet.keyMap = loadkeys
             loadkeys = list(loadkeys.values())
@@ -249,8 +250,12 @@ class Wallet(object):
             )
             MasterPassword.wipe(sure)
             keyStorage.wipe(sure)
-            Wallet.keys = {}
-            Wallet.keyMap = {}
+            self.clear_local_keys()
+
+    def clear_local_keys(self):
+        """Clear all manually provided keys"""
+        Wallet.keys = {}
+        Wallet.keyMap = {}
 
     def encrypt_wif(self, wif):
         """ Encrypt a wif key

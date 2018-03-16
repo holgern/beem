@@ -157,9 +157,7 @@ class Steem(object):
 
         # Try Optional APIs
         self.register_apis()
-        # Remove manually provided keys
-        Wallet.keys = {}
-        Wallet.keyMap = {}
+
         self.wallet = Wallet(self.rpc, **kwargs)
         self.wallet.steem = self
 

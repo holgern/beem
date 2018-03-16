@@ -582,11 +582,12 @@ class Account(BlockchainObject):
         else:
             account = Account(account, steem_instance=self.steem)
         if self.steem.rpc.get_use_appbase():
-            vote_hist = account.history_reverse(only_ops=["vote"], batch_size=1000, raw_output=True)
-            votes = []
-            for vote in vote_hist:
-                votes.append(vote[1]["op"][1])
-            return votes
+            return self.steem.rpc.get_account_votes(account["name"])
+            # vote_hist = account.history_reverse(only_ops=["vote"], batch_size=1000, raw_output=True)
+            # votes = []
+            # for vote in vote_hist:
+            #     votes.append(vote[1]["op"][1])
+            # return votes
         else:
             return self.steem.rpc.get_account_votes(account["name"])
 
@@ -624,7 +625,10 @@ class Account(BlockchainObject):
         else:
             try:
                 if self.steem.rpc.get_use_appbase():
-                    return self.steem.rpc.get_account_history(self["name"], -1, 0)[0][0]
+                    try:
+                        return self.steem.rpc.get_account_history({'account': self["name"], 'start': -1, 'limit': 0}, api="account_history")['history'][0][0]
+                    except:
+                        return self.steem.rpc.get_account_history(self["name"], -1, 0)[0][0]
                 else:
                     return self.steem.rpc.get_account_history(self["name"], -1, 0, api="database")[0][0]
             except IndexError:
@@ -668,7 +672,10 @@ class Account(BlockchainObject):
         if order != -1 and order != 1:
             raise ValueError("order must be -1 or 1!")
         if self.steem.rpc.get_use_appbase():
-            txs = self.steem.rpc.get_account_history(self["name"], index, limit)
+            try:
+                txs = self.steem.rpc.get_account_history({'account': self["name"], 'start': index, 'limit': limit}, api="account_history")['history']
+            except:
+                txs = self.steem.rpc.get_account_history(self["name"], index, limit)
         else:
             txs = self.steem.rpc.get_account_history(self["name"], index, limit, api="database")
 
