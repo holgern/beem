@@ -41,6 +41,7 @@ if not SECP256K1_MODULE:
         from cryptography.hazmat.primitives.asymmetric.utils \
             import decode_dss_signature, encode_dss_signature
         from cryptography.exceptions import InvalidSignature
+        CRYPTOGRAPHY_AVAILABLE = True
     except ImportError:
         CRYPTOGRAPHY_AVAILABLE = False
         log.debug("Cryptography not available")
