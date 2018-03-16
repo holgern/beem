@@ -36,7 +36,7 @@ Current build status
   :target: https://codecov.io/gh/holgern/beem
 
 .. image:: https://coveralls.io/repos/github/holgern/beem/badge.svg
-:target: https://coveralls.io/github/holgern/beem
+    :target: https://coveralls.io/github/holgern/beem
 
 
 .. image:: https://api.codacy.com/project/badge/Grade/e5476faf97df4c658697b8e7a7efebd7    
