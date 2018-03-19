@@ -19,7 +19,6 @@ log = logging.getLogger(__name__)
 SECP256K1_MODULE = None
 SECP256K1_AVAILABLE = False
 CRYPTOGRAPHY_AVAILABLE = False
-SECP256K1_MODULE
 GMPY2_MODULE = False
 if not SECP256K1_MODULE:
     try:

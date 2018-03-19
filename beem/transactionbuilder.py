@@ -149,7 +149,8 @@ class TransactionBuilder(dict):
                 try:
                     wif = self.steem.wallet.getPrivateKeyForPublicKey(
                         authority[0])
-                    r.append([wif, authority[1]])
+                    if wif:
+                        r.append([wif, authority[1]])
                 except ValueError:
                     pass
 
@@ -175,8 +176,8 @@ class TransactionBuilder(dict):
                     raise AssertionError("Could not access permission")
                 required_treshold = account[permission]["weight_threshold"]
                 keys = fetchkeys(account, permission)
-                if permission != "owner":
-                    keys.extend(fetchkeys(account, "owner"))
+                # if permission != "owner":
+                #    keys.extend(fetchkeys(account, "owner"))
                 for x in keys:
                     self.wifs.add(x[0])
 

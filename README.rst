@@ -132,6 +132,10 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.18
+-------
+* bug fix release
+
 0.19.17
 -------
 * GOLOS chain added

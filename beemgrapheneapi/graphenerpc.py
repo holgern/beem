@@ -252,8 +252,10 @@ class GrapheneRPC(object):
                     else:
                         ret_list.append(r["result"])
                 return ret_list
-            else:
+            elif "result" in ret:
                 return ret["result"]
+            else:
+                return ret
 
     # End of Deprecated methods
     ####################################################################
