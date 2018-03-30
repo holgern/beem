@@ -14,10 +14,12 @@ import sys
 import threading
 import time
 import warnings
+from .exceptions import (
+    UnauthorizedError, RPCConnection, RPCError, NumRetriesReached
+)
 from .rpcutils import (
     is_network_appbase_ready, sleep_and_check_retries,
-    get_api_name, get_query, UnauthorizedError,
-    RPCConnection, RPCError, NumRetriesReached
+    get_api_name, get_query
 )
 
 WEBSOCKET_MODULE = None
@@ -107,6 +109,16 @@ class GrapheneRPC(object):
         self._request_id += 1
         return self._request_id
 
+    def next(self):
+        """Switches to the next node url"""
+        if self.ws:
+            try:
+                self.ws.close()
+            except Exception as e:
+                log.warning(str(e))
+        self.rpcconnect()
+        self.register_apis()
+
     def is_appbase_ready(self):
         """Check if node is appbase ready"""
         return self.current_rpc >= 2
@@ -124,7 +136,8 @@ class GrapheneRPC(object):
                 if self.url[:3] == "wss":
                     if WEBSOCKET_MODULE is None:
                         raise Exception()
-                    sslopt_ca_certs = {'cert_reqs': ssl.CERT_NONE}
+                    ssl_defaults = ssl.get_default_verify_paths()
+                    sslopt_ca_certs = {'ca_certs': ssl_defaults.cafile}
                     self.ws = websocket.WebSocket(sslopt=sslopt_ca_certs, enable_multithread=True)
                     self.current_rpc = self.rpc_methods["ws"]
                 elif self.url[:3] == "ws":

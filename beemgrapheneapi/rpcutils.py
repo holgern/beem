@@ -6,33 +6,11 @@ from __future__ import unicode_literals
 import time
 import json
 import logging
-
+from .exceptions import (
+    UnauthorizedError, RPCConnection, RPCError, NumRetriesReached
+)
 
 log = logging.getLogger(__name__)
-
-
-class UnauthorizedError(Exception):
-    """UnauthorizedError Exception."""
-
-    pass
-
-
-class RPCConnection(Exception):
-    """RPCConnection Exception."""
-
-    pass
-
-
-class RPCError(Exception):
-    """RPCError Exception."""
-
-    pass
-
-
-class NumRetriesReached(Exception):
-    """NumRetriesReached Exception."""
-
-    pass
 
 
 def is_network_appbase_ready(props):
