@@ -67,25 +67,17 @@ def get_query(appbase, request_id, api_name, name, args):
 def get_api_name(appbase, *args, **kwargs):
     if not appbase:
         # Sepcify the api to talk to
-        if "api_id" not in kwargs:
-            if ("api" in kwargs) and len(kwargs["api"]) > 0:
-                api_name = kwargs["api"].replace("_api", "") + "_api"
-            else:
-                api_id = 0
-                api_name = None
+        if ("api" in kwargs) and len(kwargs["api"]) > 0:
+            api_name = kwargs["api"].replace("_api", "") + "_api"
         else:
-            api_id = kwargs["api_id"]
-            api_name = api_id
+            api_name = None
     else:
         # Sepcify the api to talk to
-        if "api_id" not in kwargs:
-            if ("api" in kwargs) and len(kwargs["api"]) > 0:
-                if kwargs["api"] != "jsonrpc":
-                    api_name = kwargs["api"].replace("_api", "") + "_api"
-                else:
-                    api_name = kwargs["api"]
+        if ("api" in kwargs) and len(kwargs["api"]) > 0:
+            if kwargs["api"] != "jsonrpc":
+                api_name = kwargs["api"].replace("_api", "") + "_api"
             else:
-                api_name = "condenser_api"
+                api_name = kwargs["api"]
         else:
             api_name = "condenser_api"
     return api_name

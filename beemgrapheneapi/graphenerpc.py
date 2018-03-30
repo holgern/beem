@@ -46,15 +46,11 @@ class GrapheneRPC(object):
     """
     This class allows to call API methods synchronously, without callbacks.
 
-    It logs in and registers to the APIs:
-
-    * database
-    * history
+    It logs warnings and errors.
 
     :param str urls: Either a single Websocket/Http URL, or a list of URLs
     :param str user: Username for Authentication
     :param str password: Password for Authentication
-    :param Array apis: List of APIs to register to (default: ["database", "network_broadcast"])
     :param int num_retries: Try x times to num_retries to a node on disconnect, -1 for indefinitely
 
     Available APIs
@@ -84,7 +80,6 @@ class GrapheneRPC(object):
 
     def __init__(self, urls, user=None, password=None, **kwargs):
         """Init."""
-        self.api_id = {}
         self.rpc_methods = {'offline': -1, 'ws': 0, 'jsonrpc': 1, 'appbase': 2, 'wsappbase': 3}
         self.current_rpc = self.rpc_methods["ws"]
         self._request_id = 0
@@ -102,7 +97,6 @@ class GrapheneRPC(object):
         self.num_retries = kwargs.get("num_retries", -1)
 
         self.rpcconnect()
-        self.register_apis()
 
     def get_request_id(self):
         """Get request id."""
@@ -117,7 +111,6 @@ class GrapheneRPC(object):
             except Exception as e:
                 log.warning(str(e))
         self.rpcconnect()
-        self.register_apis()
 
     def is_appbase_ready(self):
         """Check if node is appbase ready"""
@@ -182,18 +175,12 @@ class GrapheneRPC(object):
     def rpclogin(self, user, password):
         """Login into Websocket"""
         if self.ws and self.current_rpc == 0 and user and password:
-            self.login(user, password, api_id=1)
+            self.login(user, password, api="login_api")
 
     def rpcclose(self):
         """Close Websocket"""
         if self.ws:
             self.ws.close()
-
-    def register_apis(self):
-        """Register apis."""
-        if self.current_rpc >= 0 and self.current_rpc < 2:
-            self.api_id["database"] = self.get_api_by_name("database_api", api_id=1)
-            self.api_id["network_broadcast"] = self.get_api_by_name("network_broadcast_api", api_id=1)
 
     def request_send(self, payload):
         response = requests.post(self.url,
@@ -233,12 +220,10 @@ class GrapheneRPC(object):
                 raise
             except WebSocketConnectionClosedException:
                 self.rpcconnect(next_url=False)
-                self.register_apis()
             except Exception as e:
                 sleep_and_check_retries(self.num_retries, cnt, self.url, str(e))
                 # retry
                 self.rpcconnect()
-                self.register_apis()
 
         ret = {}
         try:

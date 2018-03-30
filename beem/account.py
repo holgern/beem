@@ -256,7 +256,6 @@ class Account(BlockchainObject):
     def get_feed(self, entryId=0, limit=100, raw_data=False, account=None):
         if account is None:
             account = self["name"]
-        self.steem.register_apis(["follow"])
         if raw_data and self.steem.rpc.get_use_appbase():
             return [
                 c for c in self.steem.rpc.get_feed({'account': account, 'start_entry_id': entryId, 'limit': limit}, api='follow')["feed"]
@@ -279,7 +278,6 @@ class Account(BlockchainObject):
     def get_blog_entries(self, entryId=0, limit=100, raw_data=False, account=None):
         if account is None:
             account = self["name"]
-        self.steem.register_apis(["follow"])
         if raw_data and self.steem.rpc.get_use_appbase():
             return [
                 c for c in self.steem.rpc.get_blog_entries({'account': account, 'start_entry_id': entryId, 'limit': limit}, api='follow')["blog"]
@@ -302,7 +300,6 @@ class Account(BlockchainObject):
     def get_blog(self, entryId=0, limit=100, raw_data=False, account=None):
         if account is None:
             account = self["name"]
-        self.steem.register_apis(["follow"])
         if raw_data and self.steem.rpc.get_use_appbase():
             return [
                 c for c in self.steem.rpc.get_blog({'account': account, 'start_entry_id': entryId, 'limit': limit}, api='follow')["blog"]
@@ -328,7 +325,6 @@ class Account(BlockchainObject):
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.get_blog_authors({'blog_account': account}, api='follow')['blog_authors']
         else:
-            self.steem.register_apis(["follow"])
             return self.steem.rpc.get_blog_authors(account, api='follow')
 
     def get_follow_count(self, account=None):
@@ -338,7 +334,6 @@ class Account(BlockchainObject):
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.get_follow_count({'account': account}, api='follow')
         else:
-            self.steem.register_apis(["follow"])
             return self.steem.rpc.get_follow_count(account, api='follow')
 
     def get_followers(self, raw_data=True):
@@ -375,7 +370,6 @@ class Account(BlockchainObject):
             elif direction == "following":
                 followers = self.steem.rpc.get_following(query, api='follow')['following']
         else:
-            self.steem.register_apis(["follow"])
             if direction == "follower":
                 followers = self.steem.rpc.get_followers(self.name, last_user, "blog", 100, api='follow')
             elif direction == "following":

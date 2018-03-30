@@ -231,7 +231,6 @@ class Comment(BlockchainObject):
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.get_reblogged_by({'author': post_author, 'permlink': post_permlink}, api="follow")['accounts']
         else:
-            self.steem.register_apis(["follow"])
             return self.steem.rpc.get_reblogged_by(post_author, post_permlink, api="follow")
 
     def get_votes(self):

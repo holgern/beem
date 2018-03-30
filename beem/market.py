@@ -101,7 +101,6 @@ class Market(dict):
         if self.steem.rpc.get_use_appbase():
             ticker = self.steem.rpc.get_ticker(api="market_history")
         else:
-            self.steem.register_apis(["market_history"])
             ticker = self.steem.rpc.get_ticker(api="market_history")
         if raw_data:
             return ticker
@@ -146,7 +145,6 @@ class Market(dict):
         if self.steem.rpc.get_use_appbase():
             volume = self.steem.rpc.get_volume(api="market_history")
         else:
-            self.steem.register_apis(["market_history"])
             volume = self.steem.rpc.get_volume(api="market_history")
         if raw_data:
             return volume
@@ -226,7 +224,6 @@ class Market(dict):
         if self.steem.rpc.get_use_appbase():
             orders = self.steem.rpc.get_recent_trades({'limit': limit}, api="market_history")['trades']
         else:
-            self.steem.register_apis(["market_history"])
             orders = self.steem.rpc.get_recent_trades(limit, api="market_history")
         if raw_data:
             return orders
@@ -252,7 +249,6 @@ class Market(dict):
                                                        'end': formatTimeString(stop),
                                                        'limit': limit}, api="market_history")['trades']
         else:
-            self.steem.register_apis(["market_history"])
             orders = self.steem.rpc.get_trade_history(
                 formatTimeString(start),
                 formatTimeString(stop),
@@ -266,12 +262,10 @@ class Market(dict):
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.get_market_history_buckets(api="market_history")['bucket_sizes']
         else:
-            self.steem.register_apis(["market_history"])
             return self.steem.rpc.get_market_history_buckets(api="market_history")
 
     def market_history(self, bucket_seconds=300, start_age=3600, end_age=0):
         buckets = self.market_history_buckets()
-        # self.steem.register_apis(["market_history"])
         if bucket_seconds < 5 and bucket_seconds >= 0:
             bucket_seconds = buckets[bucket_seconds]
         else:

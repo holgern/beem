@@ -432,10 +432,6 @@ class Wallet(object):
         if self.rpc.get_use_appbase():
             names = self.rpc.get_key_references({'keys': [pub]}, api="account_by_key")["accounts"]
         else:
-            try:
-                self.rpc.register_apis(["account_by_key"])
-            except NoAccessApi as e:
-                print(str(e))
             names = self.rpc.get_key_references([pub], api="account_by_key")
         for name in names:
             for i in name:

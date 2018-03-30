@@ -231,7 +231,6 @@ class Discussions_by_feed(list):
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_feed(discussion_query, api="tags")['discussions']
         else:
-            # self.steem.register_apis(["follow"])
             # limit = discussion_query["limit"]
             # account = discussion_query["tag"]
             # entryId = 0
@@ -256,7 +255,6 @@ class Discussions_by_blog(list):
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_blog(discussion_query, api="tags")['discussions']
         else:
-            # self.steem.register_apis(["follow"])
             # limit = discussion_query["limit"]
             # account = discussion_query["tag"]
             # entryId = 0

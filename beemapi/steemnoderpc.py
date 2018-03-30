@@ -18,10 +18,6 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class NumRetriesReached(Exception):
-    pass
-
-
 class SteemNodeRPC(GrapheneRPC):
     """This class allows to call API methods exposed by the witness node via
        websockets / rpc-json.
@@ -36,17 +32,6 @@ class SteemNodeRPC(GrapheneRPC):
         )
         self.appbase = kwargs.get("appbase", False)
         self.chain_params = self.get_network()
-
-    def register_apis(self, apis=None):
-        if self.is_appbase_ready():
-            return
-        if apis is None:
-            return
-        for api in (apis):
-            api = api.replace("_api", "")
-            self.api_id[api] = self.get_api_by_name("%s_api" % api, api_id=1)
-            if not self.api_id[api] and not isinstance(self.api_id[api], int):
-                raise exceptions.NoAccessApi("No permission to access %s API. " % api)
 
     def get_use_appbase(self):
         """Returns True if appbase ready and appbase calls are set"""

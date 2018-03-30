@@ -43,3 +43,11 @@ class UnhandledRPCError(RPCError):
 
 class NoAccessApi(RPCError):
     pass
+
+
+class NumRetriesReached(Exception):
+    pass
+
+
+class InvalidEndpointUrl(Exception):
+    pass

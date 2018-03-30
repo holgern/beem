@@ -122,18 +122,6 @@ class Steem(object):
             :param int num_retries: Set the maximum number of reconnects to the nodes before NumRetriesReached is raised
         """
 
-        # More specific set of APIs to register to
-        if "apis" not in kwargs:
-            kwargs["apis"] = [
-                "database",
-                "network_broadcast",
-                "market_history",
-                "follow",
-                "account_by_key",
-                # "tag",
-                # "raw_block"
-            ]
-
         self.rpc = None
         self.debug = debug
 
@@ -154,9 +142,6 @@ class Steem(object):
                          rpcpassword=rpcpassword,
                          **kwargs)
             self.rpc.appbase = appbase
-
-        # Try Optional APIs
-        self.register_apis()
 
         self.wallet = Wallet(self.rpc, **kwargs)
         self.wallet.steem = self
@@ -194,17 +179,6 @@ class Steem(object):
             rpcpassword = config["rpcpassword"]
 
         self.rpc = SteemNodeRPC(node, rpcuser, rpcpassword, **kwargs)
-
-    def register_apis(self, apis=["network_broadcast", "account_by_key", "follow", "market_history"]):
-        if self.offline:
-            return
-        if self.rpc.appbase:
-            return
-        # Try Optional APIs
-        try:
-            self.rpc.register_apis(apis)
-        except NoAccessApi as e:
-            log.info(str(e))
 
     def refresh_data(self, force_refresh=False, data_refresh_time_seconds=None):
         """
