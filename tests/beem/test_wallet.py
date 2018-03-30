@@ -41,7 +41,7 @@ class Testcases(unittest.TestCase):
         self.stm.set_default_account("test")
         set_shared_steem_instance(self.stm)
         # self.stm.newWallet("TestingOneTwoThree")
-        self.wallet = Wallet(rpc=self.stm.rpc)
+        self.wallet = Wallet(steem_instance=self.stm)
         self.wallet.wipe(True)
         self.wallet.newWallet(pwd="TestingOneTwoThree")
         self.wallet.unlock(pwd="TestingOneTwoThree")
@@ -49,7 +49,6 @@ class Testcases(unittest.TestCase):
 
     def test_wallet_lock(self):
         stm = self.stm
-        self.wallet.rpc = stm.rpc
         self.wallet.steem = stm
         self.wallet.unlock(pwd="TestingOneTwoThree")
         self.assertTrue(self.wallet.unlocked())
@@ -59,7 +58,6 @@ class Testcases(unittest.TestCase):
 
     def test_change_masterpassword(self):
         stm = self.stm
-        self.wallet.rpc = stm.rpc
         self.wallet.steem = stm
         self.wallet.unlock(pwd="TestingOneTwoThree")
         self.assertTrue(self.wallet.unlocked())
@@ -73,7 +71,6 @@ class Testcases(unittest.TestCase):
 
     def test_Keys(self):
         stm = self.stm
-        self.wallet.rpc = stm.rpc
         self.wallet.steem = stm
         self.wallet.unlock(pwd="TestingOneTwoThree")
         keys = self.wallet.getPublicKeys()
@@ -91,7 +88,6 @@ class Testcases(unittest.TestCase):
             stm = self.stm
         else:
             stm = self.appbase
-        self.wallet.rpc = stm.rpc
         self.wallet.steem = stm
         self.wallet.unlock(pwd="TestingOneTwoThree")
         acc = Account("steemit")
@@ -119,7 +115,6 @@ class Testcases(unittest.TestCase):
             stm = self.stm
         else:
             stm = self.appbase
-        self.wallet.rpc = stm.rpc
         self.wallet.steem = stm
         self.wallet.unlock(pwd="TestingOneTwoThree")
         with self.assertRaises(
@@ -141,7 +136,6 @@ class Testcases(unittest.TestCase):
 
     def test_encrypt(self):
         stm = self.stm
-        self.wallet.rpc = stm.rpc
         self.wallet.steem = stm
         self.wallet.unlock(pwd="TestingOneTwoThree")
         self.wallet.masterpassword = "TestingOneTwoThree"
@@ -156,7 +150,6 @@ class Testcases(unittest.TestCase):
 
     def test_deencrypt(self):
         stm = self.stm
-        self.wallet.rpc = stm.rpc
         self.wallet.steem = stm
         self.wallet.unlock(pwd="TestingOneTwoThree")
         self.wallet.masterpassword = "TestingOneTwoThree"
