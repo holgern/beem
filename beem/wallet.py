@@ -293,7 +293,8 @@ class Wallet(object):
     def addPrivateKey(self, wif):
         """Add a private key to the wallet database"""
         pub = self._get_pub_from_wif(wif)
-
+        if isinstance(wif, PrivateKey):
+            wif = str(wif)        
         if self.keyStorage:
             # Test if wallet exists
             if not self.created():
