@@ -5,10 +5,6 @@ from __future__ import unicode_literals
 from builtins import bytes, int, str
 import re
 import sys
-import threading
-import websocket
-import ssl
-import json
 from itertools import cycle
 from beemgrapheneapi.graphenerpc import GrapheneRPC
 from beemgrapheneapi.rpcutils import sleep_and_check_retries
@@ -26,10 +22,6 @@ class SteemNodeRPC(GrapheneRPC):
 
     def __init__(self, *args, **kwargs):
         super(SteemNodeRPC, self).__init__(*args, **kwargs)
-        self.apis = kwargs.pop(
-            "apis",
-            ["database", "network_broadcast"]
-        )
         self.appbase = kwargs.get("appbase", False)
         self.chain_params = self.get_network()
 

@@ -17,10 +17,11 @@ from .exceptions import (
     WalletLocked,
     WrongMasterPasswordException,
     NoWalletException,
-    RPCConnectionRequired,
+    OfflineHasNoRPCException,
     AccountDoesNotExistsException,
 )
 from beemapi.exceptions import NoAccessApi
+from .storage import configStorage as config
 
 log = logging.getLogger(__name__)
 
@@ -95,8 +96,6 @@ class Wallet(object):
 
     """
     keys = []
-    rpc = None
-    steem = None
     masterpassword = None
 
     # Keys from database
@@ -108,20 +107,8 @@ class Wallet(object):
     keys = {}  # struct with pubkey as key and wif as value
     keyMap = {}  # type:wif pairs to force certain keys
 
-    def __init__(self, rpc=None, *args, **kwargs):
-        from .storage import configStorage
-        self.configStorage = configStorage
-
-        # RPC static variable
-        if rpc is not None:
-            Wallet.rpc = rpc
-
-        # Prefix?
-        if Wallet.rpc is not None:
-            self.prefix = Wallet.rpc.chain_params["prefix"]
-        else:
-            # If not connected, load prefix from config
-            self.prefix = self.configStorage["prefix"]
+    def __init__(self, steem_instance=None, *args, **kwargs):
+        self.steem = steem_instance or shared_steem_instance()
 
         # Compatibility after name change from wif->keys
         if "wif" in kwargs and "keys" not in kwargs:
@@ -138,6 +125,21 @@ class Wallet(object):
             self.MasterPassword = MasterPassword
             self.keyStorage = keyStorage
 
+    @property
+    def prefix(self):
+        if self.steem.is_connected():
+            prefix = self.steem.prefix
+        else:
+            # If not connected, load prefix from config
+            prefix = config["prefix"]
+        return prefix or "STM"   # default prefix is STM
+
+    @property
+    def rpc(self):
+        if not self.steem.is_connected():
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
+        return self.steem.rpc
+
     def setKeys(self, loadkeys):
         """ This method is strictly only for in memory keys that are
             passed to Wallet/Steem with the ``keys`` argument
@@ -152,11 +154,8 @@ class Wallet(object):
             loadkeys = [loadkeys]
 
         for wif in loadkeys:
-            try:
-                key = PrivateKey(wif, prefix=self.prefix)
-            except:
-                raise InvalidWifError
-            Wallet.keys[format(key.pubkey, self.prefix)] = str(key)
+            pub = self._get_pub_from_wif(wif)
+            Wallet.keys[pub] = str(wif)
 
     def unlock(self, pwd=None):
         """ Unlock the wallet database
@@ -168,7 +167,7 @@ class Wallet(object):
             self.tryUnlockFromEnv()
         else:
             if (self.masterpassword is None and
-                    self.configStorage[self.MasterPassword.config_key]):
+                    config[self.MasterPassword.config_key]):
                 self.masterpwd = self.MasterPassword(pwd)
                 self.masterpassword = self.masterpwd.decrypted_master
 
@@ -213,7 +212,7 @@ class Wallet(object):
         if len(self.getPublicKeys()):
             # Already keys installed
             return True
-        elif self.MasterPassword.config_key in self.configStorage:
+        elif self.MasterPassword.config_key in config:
             # no keys but a master password
             return True
         else:
@@ -278,18 +277,22 @@ class Wallet(object):
             raise AssertionError()
         return format(bip38.decrypt(encwif, self.masterpassword), "wif")
 
-    def addPrivateKey(self, wif):
-        """ Add a private key to the wallet database
+    def _get_pub_from_wif(self, wif):
+        """ Get the pubkey as string, from the wif key as string
         """
-        # it could be either graphenebase or peerplaysbase so we can't check
+        # it could be either graphenebase or steem so we can't check
         # the type directly
         if isinstance(wif, PrivateKey):
             wif = str(wif)
         try:
-            pub = format(PrivateKey(wif, prefix=self.prefix).pubkey, self.prefix)
+            return format(PrivateKey(wif).pubkey, self.prefix)
         except:
             raise InvalidWifError(
                 "Invalid Private Key Format. Please use WIF!")
+
+    def addPrivateKey(self, wif):
+        """Add a private key to the wallet database"""
+        pub = self._get_pub_from_wif(wif)
 
         if self.keyStorage:
             # Test if wallet exists
@@ -423,16 +426,16 @@ class Wallet(object):
     def getAccountFromPrivateKey(self, wif):
         """ Obtain account name from private key
         """
-        pub = format(PrivateKey(wif, prefix=self.prefix).pubkey, self.prefix)
+        pub = self._get_pub_from_wif(wif)
         return self.getAccountFromPublicKey(pub)
 
     def getAccountsFromPublicKey(self, pub):
         """ Obtain all accounts associated with a public key
         """
-        if self.rpc.get_use_appbase():
-            names = self.rpc.get_key_references({'keys': [pub]}, api="account_by_key")["accounts"]
+        if self.steem.rpc.get_use_appbase():
+            names = self.steem.rpc.get_key_references({'keys': [pub]}, api="account_by_key")["accounts"]
         else:
-            names = self.rpc.get_key_references([pub], api="account_by_key")
+            names = self.steem.rpc.get_key_references([pub], api="account_by_key")
         for name in names:
             for i in name:
                 yield i
@@ -446,10 +449,6 @@ class Wallet(object):
         if self.rpc.get_use_appbase():
             names = self.rpc.get_key_references({'keys': [pub]}, api="account_by_key")["accounts"][0]
         else:
-            try:
-                self.rpc.register_apis(["account_by_key"])
-            except NoAccessApi as e:
-                print(str(e))
             names = self.rpc.get_key_references([pub], api="account_by_key")[0]
         if not names:
             return None

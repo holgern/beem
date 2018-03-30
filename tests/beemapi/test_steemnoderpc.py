@@ -76,12 +76,16 @@ class Testcases(unittest.TestCase):
             exceptions.NoMethodWithName
         ):
             bts.rpc.get_config_abc()
-        bts.rpc.register_apis(apis=["database"])
 
     def test_connect_test_node(self):
         rpc = SteemNodeRPC(urls=test_list)
         self.assertIn(rpc.url, nodes + nodes_appbase + nodes_https)
         rpc.rpcclose()
         rpc.rpcconnect()
-        rpc.register_apis()
+        self.assertIn(rpc.url, nodes + nodes_appbase + nodes_https)
+
+    def test_connect_test_node2(self):
+        rpc = SteemNodeRPC(urls=test_list)
+        self.assertIn(rpc.url, nodes + nodes_appbase + nodes_https)
+        rpc.next()
         self.assertIn(rpc.url, nodes + nodes_appbase + nodes_https)

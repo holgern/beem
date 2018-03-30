@@ -24,6 +24,12 @@ class RPCConnectionRequired(Exception):
     pass
 
 
+class OfflineHasNoRPCException(Exception):
+    """ When in offline mode, we don't have RPC
+    """
+    pass
+
+
 class AccountExistsException(Exception):
     """ The requested account already exists
     """
@@ -79,7 +85,7 @@ class BlockDoesNotExistsException(Exception):
 
 
 class NoWalletException(Exception):
-    """ No Wallet could be found, please use :func:`peerplays.wallet.create` to
+    """ No Wallet could be found, please use :func:`steem.wallet.create` to
         create a new wallet
     """
     pass

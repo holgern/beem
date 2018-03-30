@@ -143,9 +143,6 @@ class Steem(object):
                          **kwargs)
             self.rpc.appbase = appbase
 
-        self.wallet = Wallet(self.rpc, **kwargs)
-        self.wallet.steem = self
-
         self.data = {'last_refresh': None, 'dynamic_global_properties': None, 'feed_history': None,
                      'get_feed_history': None, 'hardfork_properties': None,
                      'network': None, 'witness_schedule': None, 'reserve_ratio': None,
@@ -155,6 +152,8 @@ class Steem(object):
 
         # txbuffers/propbuffer are initialized and cleared
         self.clear()
+
+        self.wallet = Wallet(steem_instance=self, **kwargs)
 
     # -------------------------------------------------------------------------
     # Basic Calls
@@ -179,6 +178,10 @@ class Steem(object):
             rpcpassword = config["rpcpassword"]
 
         self.rpc = SteemNodeRPC(node, rpcuser, rpcpassword, **kwargs)
+
+    def is_connected(self):
+        """Returns if rpc is connected"""
+        return bool(self.rpc)
 
     def refresh_data(self, force_refresh=False, data_refresh_time_seconds=None):
         """

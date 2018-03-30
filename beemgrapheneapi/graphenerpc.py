@@ -3,8 +3,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-
 from builtins import next
+from builtins import str
 from builtins import object
 from itertools import cycle
 import json
@@ -12,6 +12,7 @@ import logging
 import ssl
 import sys
 import threading
+import re
 import time
 import warnings
 from .exceptions import (
@@ -83,7 +84,9 @@ class GrapheneRPC(object):
         self.rpc_methods = {'offline': -1, 'ws': 0, 'jsonrpc': 1, 'appbase': 2, 'wsappbase': 3}
         self.current_rpc = self.rpc_methods["ws"]
         self._request_id = 0
-        if isinstance(urls, list):
+        if isinstance(urls, str):
+            self.urls = re.split(r",|;", urls)
+        elif isinstance(urls, (list, tuple, set)):
             self.urls = cycle(urls)
         elif urls is not None:
             self.urls = cycle([urls])
