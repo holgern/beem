@@ -12,8 +12,7 @@ from beemgraphenebase.types import (
     Varint32, Int64, String, Bytes, Void,
     Array, PointInTime, Signature, Bool,
     Set, Fixed_array, Optional, Static_variant,
-    Map, Id, VoteId, ObjectId,
-    JsonObj
+    Map, Id, JsonObj
 )
 from .py23 import py23_bytes, bytes_types, integer_types, string_types
 from .chains import known_chains

@@ -11,7 +11,7 @@ from beemgraphenebase.types import (
     Varint32, Int64, String, Bytes, Void,
     Array, PointInTime, Signature, Bool,
     Set, Fixed_array, Optional, Static_variant,
-    Map, Id, VoteId
+    Map, Id
 )
 from .objects import GrapheneObject, isArgsThisClass
 from beemgraphenebase.account import PublicKey
@@ -24,8 +24,6 @@ from .objects import (
     Price,
     WitnessProps,
     Permission,
-    AccountOptions,
-    ObjectId,
     ExchangeRate,
     Beneficiaries,
     Beneficiary,

@@ -13,8 +13,7 @@ from beemgraphenebase.types import (
     Varint32, Int64, String, Bytes, Void,
     Array, PointInTime, Signature, Bool,
     Set, Fixed_array, Optional, Static_variant,
-    Map, Id, VoteId,
-    ObjectId as GPHObjectId
+    Map, Id
 )
 from beemgraphenebase.objects import GrapheneObject, isArgsThisClass
 from .objecttypes import object_type
@@ -31,32 +30,6 @@ asset_precision = {
     "GBG": 3,
     "GOLOS": 3
 }
-
-
-def AssetId(asset):
-    return ObjectId(asset, "asset")
-
-
-def AccountId(asset):
-    return ObjectId(asset, "account")
-
-
-class ObjectId(GPHObjectId):
-    """ Encodes object/protocol ids
-    """
-    def __init__(self, object_str, type_verify=None):
-        if len(object_str.split(".")) == 3:
-            space, type, id = object_str.split(".")
-            self.space = int(space)
-            self.type = int(type)
-            self.instance = Id(int(id))
-            self.Id = object_str
-            if type_verify:
-                if not object_type[type_verify] == int(type):
-                    raise AssertionError("Object id does not match object type! "
-                                         "Excpected %d, got %d" % (object_type[type_verify], int(type)))
-        else:
-            raise Exception("Object id is invalid")
 
 
 @python_2_unicode_compatible
@@ -200,32 +173,6 @@ class Permission(GrapheneObject):
                 ('weight_threshold', Uint32(int(kwargs["weight_threshold"]))),
                 ('account_auths', accountAuths),
                 ('key_auths', keyAuths),
-            ]))
-
-
-class AccountOptions(GrapheneObject):
-    def __init__(self, *args, **kwargs):
-        # Allow for overwrite of prefix
-        prefix = kwargs.pop("prefix", default_prefix)
-
-        if isArgsThisClass(self, args):
-                self.data = args[0].data
-        else:
-            if len(args) == 1 and len(kwargs) == 0:
-                kwargs = args[0]
-            # remove dublicates
-            kwargs["votes"] = list(set(kwargs["votes"]))
-            # Sort votes
-            kwargs["votes"] = sorted(
-                kwargs["votes"],
-                key=lambda x: float(x.split(":")[1]),
-            )
-            super(AccountOptions, self).__init__(OrderedDict([
-                ('memo_key', PublicKey(kwargs["memo_key"], prefix=prefix)),
-                ('voting_account', ObjectId(kwargs["voting_account"], "account")),
-                ('num_witness', Uint16(kwargs["num_witness"])),
-                ('num_committee', Uint16(kwargs["num_committee"])),
-                ('votes', Array([VoteId(o) for o in kwargs["votes"]])),
             ]))
 
 
