@@ -9,7 +9,7 @@ from .types import (
     Varint32, Int64, String, Bytes, Void,
     Array, PointInTime, Signature, Bool,
     Set, Fixed_array, Optional, Static_variant,
-    Map, Id, VoteId, ObjectId,
+    Map, Id,
 )
 from .objects import GrapheneObject, isArgsThisClass
 from .account import PublicKey
