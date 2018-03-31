@@ -181,7 +181,7 @@ class Steem(object):
 
     def is_connected(self):
         """Returns if rpc is connected"""
-        return bool(self.rpc)
+        return self.rpc is not None
 
     def refresh_data(self, force_refresh=False, data_refresh_time_seconds=None):
         """
