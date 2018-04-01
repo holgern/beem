@@ -16,6 +16,8 @@ from beem.account import Account
 from beem.instance import set_shared_steem_instance
 from beem.blockchain import Blockchain
 from beem.block import Block
+from beem.transactionbuilder import TransactionBuilder
+from beembase.operations import Transfer
 from beemgraphenebase.account import PasswordKey, PrivateKey, PublicKey
 from beem.utils import parse_time, formatTimedelta
 from beemgrapheneapi.rpcutils import NumRetriesReached
@@ -72,6 +74,20 @@ class Testcases(unittest.TestCase):
         self.assertEqual(op["to"], "test1")
         amount = Amount(op["amount"], steem_instance=bts)
         self.assertEqual(float(amount), 1.33)
+
+    def test_verifyAuthority(self):
+        stm = self.bts
+        tx = TransactionBuilder(steem_instance=stm)
+        tx.appendOps(Transfer(**{"from": "beem",
+                                 "to": "test1",
+                                 "amount": "1.33 STEEM",
+                                 "memo": "Foobar"}))
+        account = Account("beem", steem_instance=stm)
+        tx.appendSigner(account, "active")
+        self.assertTrue(len(tx.wifs) > 0)
+        tx.sign()
+        tx.verify_authority()
+        self.assertTrue(len(tx["signatures"]) > 0)
 
     def test_create_account(self):
         bts = self.bts

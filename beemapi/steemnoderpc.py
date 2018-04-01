@@ -50,6 +50,8 @@ class SteemNodeRPC(GrapheneRPC):
                 msg = exceptions.decodeRPCErrorMsg(e).strip()
                 if msg == "missing required active authority":
                     raise exceptions.MissingRequiredActiveAuthority
+                elif re.search("missing required active authority", msg):
+                    raise exceptions.MissingRequiredActiveAuthority
                 elif re.match("^no method with name.*", msg):
                     raise exceptions.NoMethodWithName(msg)
                 elif re.search("Could not find method", msg):

@@ -257,10 +257,7 @@ class TransactionBuilder(dict):
         """ Verify the authority of the signed transaction
         """
         try:
-            if self.steem.rpc.get_use_appbase():
-                ret = self.steem.rpc.verify_authority(self.json(), api="database")
-            else:
-                ret = self.steem.rpc.verify_authority(self.json())
+            ret = self.steem.rpc.verify_authority(self.json(), api="database")
             if not ret:
                 raise InsufficientAuthorityError
         except Exception as e:

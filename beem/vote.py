@@ -67,6 +67,10 @@ class Vote(BlockchainObject):
             authorpermvoter["authorpermvoter"] = construct_authorpermvoter(author, permlink, voter["voter"])
         else:
             authorpermvoter = voter
+            [author, permlink, voter] = resolve_authorpermvoter(authorpermvoter)
+            self["author"] = author
+            self["permlink"] = permlink
+
         super(Vote, self).__init__(
             authorpermvoter,
             id_item="authorpermvoter",
