@@ -26,7 +26,7 @@ nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.s
          "wss://steemd.minnowsupportproject.org"]
 nodes_https = ['https://api.steemit.com', 'https://steemd.privex.io', 'https://steemd.pevo.science', 'https://rpc.steemliberator.com',
                'https://rpc.buildteam.io', 'https://steemd.minnowsupportproject.org', 'https://gtg.steem.house:8090', 'https://seed.bitcoiner.me']
-nodes_appbase = ["https://api.steemitstage.com", "wss://appbasetest.timcliff.com"]
+nodes_appbase = ["https://api.steemit.com", "wss://appbasetest.timcliff.com"]
 test_list = ["wss://steemd.doesnot.exists", "wss://api.steemit.com", "wss://steemd.pevo.science", "wss://gtg.steem.house:8090",
              "https://api.steemit.com", "https://api.steemitstage.com", "wss://appbasetest.timcliff.com", 'https://steemd.privex.io',
              'https://steemd.pevo.science', 'https://rpc.steemliberator.com',
