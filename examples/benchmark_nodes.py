@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import time
 import io
 import logging
-
+from prettytable import PrettyTable
 from beem.blockchain import Blockchain
 from beem.block import Block
 from beem.steem import Steem
@@ -17,21 +17,25 @@ log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
-         "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
+         "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org",
          "wss://steemd.minnowsupportproject.org", "https://api.steemitstage.com", "https://api.steemit.com", "https://rpc.buildteam.io",
          "https://steemd.minnowsupportproject.org", "https://steemd.pevo.science", "https://rpc.steemviz.com", "https://seed.bitcoiner.me",
-         "https://rpc.steemliberator.com", "https://api.steemit.com", "https://steemd.privex.io"]
+         "https://rpc.steemliberator.com", "https://steemd.privex.io", "https://gtg.steem.house:8090", "https://api.steem.house",
+         "https://rpc.curiesteem.com", "https://seed.bitcoiner.me"]
 
 if __name__ == "__main__":
     how_many_minutes = 10
     max_batch_size = None
     threading = False
     thread_num = 16
+    t = PrettyTable(["node", "10 blockchain minutes", "version"])
+    t.align = "l"
     for node in nodes:
         print("Current node:", node)
         try:
             stm = Steem(node=node, num_retries=2)
             blockchain = Blockchain(steem_instance=stm)
+            blockchain_version = stm.get_blockchain_version()
 
             last_block_id = 19273700
             last_block = Block(last_block_id, steem_instance=stm)
@@ -65,6 +69,12 @@ if __name__ == "__main__":
                     last_block_id = block_no
                     avtran = total_transaction / (last_block_id - 19273700)
                     print("* Processed %d blockchain minutes in %s" % (how_many_minutes, total_duration))
+                    print("* blockchain version: %s" % (blockchain_version))
+                    t.add_row([
+                        node,
+                        total_duration,
+                        blockchain_version
+                    ])
                     break
         except NumRetriesReached:
             print("NumRetriesReached")
@@ -72,3 +82,4 @@ if __name__ == "__main__":
         except Exception as e:
             print("Error: " + str(e))
             continue
+    print(t)

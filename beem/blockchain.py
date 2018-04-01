@@ -191,7 +191,7 @@ class Blockchain(object):
                 for blocknum in range(start, head_block + 1, thread_num):
                     futures = []
                     i = blocknum
-                    while i <= blocknum + thread_num and i <= head_block:
+                    while i < blocknum + thread_num and i <= head_block:
                         futures.append(pool.submit(Block, i, steem_instance=self.steem))
                         i += 1
                     results = [r.result() for r in as_completed(futures)]
@@ -214,14 +214,15 @@ class Blockchain(object):
                 for blocknumblock in range(start, head_block + 1, batches):
                     # Get full block
                     if (head_block - blocknumblock) < batches:
-                        batches = head_block - blocknumblock - 1
-                    for blocknum in range(blocknumblock, blocknumblock + batches):
+                        batches = head_block - blocknumblock + 1
+                    for blocknum in range(blocknumblock, blocknumblock + batches - 1):
                         if self.steem.rpc.get_use_appbase():
                             self.steem.rpc.get_block({"block_num": blocknum}, api="block", add_to_queue=True)
                         else:
                             self.steem.rpc.get_block(blocknum, add_to_queue=True)
                         latest_block = blocknum
-                    latest_block += 1
+                    if batches > 1:
+                        latest_block += 1
                     if latest_block <= head_block:
                         if self.steem.rpc.get_use_appbase():
                             block_batch = self.steem.rpc.get_block({"block_num": latest_block}, api="block", add_to_queue=False)
@@ -233,11 +234,8 @@ class Blockchain(object):
                         for block in block_batch:
                             if self.steem.rpc.get_use_appbase():
                                 block = block["block"]
-                                block["id"] = blocknum
-                                yield Block(block, steem_instance=self.steem)
-                            else:
-                                block["id"] = blocknum
-                                yield Block(block, steem_instance=self.steem)
+                            block["id"] = blocknum
+                            yield Block(block, steem_instance=self.steem)
                             blocknum += 1
             else:
                 # Blocks from start until head block

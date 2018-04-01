@@ -22,7 +22,7 @@ core_unit = "STM"
 nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
          "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
          "wss://steemd.minnowsupportproject.org"]
-nodes_appbase = ["https://api.steemitstage.com", "wss://appbasetest.timcliff.com"]
+nodes_appbase = ["https://api.steemit.com", "https://api.steemitstage.com", "wss://appbasetest.timcliff.com"]
 
 
 class TestBot:

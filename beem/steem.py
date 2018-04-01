@@ -366,6 +366,17 @@ class Steem(object):
             block_interval = 3
         return block_interval
 
+    def get_blockchain_version(self):
+        """Returns the blockchain version"""
+        props = self.get_config()
+        if "STEEMIT_BLOCKCHAIN_VERSION" in props:
+            blockchain_version = props["STEEMIT_BLOCKCHAIN_VERSION"]
+        elif "STEEM_BLOCKCHAIN_VERSION" in props:
+            blockchain_version = props["STEEM_BLOCKCHAIN_VERSION"]
+        else:
+            blockchain_version = '0.0.0'
+        return blockchain_version
+
     def rshares_to_sbd(self, rshares):
         """ Calculates the SBD amount of a vote
         """

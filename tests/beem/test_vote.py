@@ -15,7 +15,7 @@ wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
          "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://steemd.steemgigs.org",
          "wss://steemd.minnowsupportproject.org"]
-nodes_appbase = ["wss://appbasetest.timcliff.com", "https://api.steemitstage.com"]
+nodes_appbase = ["https://api.steem.house", "https://api.steemit.com", "wss://appbasetest.timcliff.com"]
 
 
 class Testcases(unittest.TestCase):

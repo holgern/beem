@@ -85,7 +85,9 @@ class GrapheneRPC(object):
         self.current_rpc = self.rpc_methods["ws"]
         self._request_id = 0
         if isinstance(urls, str):
-            self.urls = re.split(r",|;", urls)
+            self.urls = cycle(re.split(r",|;", urls))
+            if self.urls is None:
+                self.urls = cycle([urls])
         elif isinstance(urls, (list, tuple, set)):
             self.urls = cycle(urls)
         elif urls is not None:
