@@ -183,9 +183,7 @@ def sign_message(message, wif, hashfn=hashlib.sha256):
             if not cnt % 20:
                 log.info("Still searching for a canonical signature. Tried %d times already!" % cnt)
             order = ecdsa.SECP256k1.order
-            signer = private_key.signer(ec.ECDSA(hashes.SHA256()))
-            signer.update(message)
-            sigder = signer.finalize()
+            sigder = private_key.sign(message, ec.ECDSA(hashes.SHA256()))
             r, s = decode_dss_signature(sigder)
             signature = ecdsa.util.sigencode_string(r, s, order)
             # Make sure signature is canonical!
