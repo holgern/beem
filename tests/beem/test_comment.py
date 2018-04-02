@@ -117,12 +117,8 @@ class Testcases(unittest.TestCase):
         json_content = c.json()
 
         for k in keys:
-            if k not in "json_metadata":
-                self.assertEqual(content[k]['time'], json_content[k]['time'])
-                self.assertEqual(content[k]['rshares'], json_content[k]['rshares'])
-                self.assertEqual(content[k]['weight'], json_content[k]['weight'])
-                self.assertEqual(content[k]['percent'], json_content[k]['percent'])
-                self.assertEqual(content[k]['voter'], json_content[k]['voter'])
+            if k not in "json_metadata" and k != 'author_reputation':
+                self.assertEqual(content[k], json_content[k])
 
     def test_resteem(self):
         bts = self.bts
