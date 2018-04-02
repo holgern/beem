@@ -186,7 +186,7 @@ class Blockchain(object):
             else:
                 head_block = self.get_current_block_num()
             if threading and FUTURES_MODULE:
-                pool = ThreadPoolExecutor()
+                pool = ThreadPoolExecutor(max_workers=thread_num + 1)
                 latest_block = 0
                 for blocknum in range(start, head_block + 1, thread_num):
                     futures = []
