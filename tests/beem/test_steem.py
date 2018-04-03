@@ -410,8 +410,8 @@ class Testcases(unittest.TestCase):
     def test_post(self):
         bts = self.bts
         tx = bts.post("title", "body", author="test", permlink=None, reply_identifier=None,
-                    json_metadata=None, comment_options=None, community=None, tags=["a, b, c, d, e"],
-                    beneficiaries=None, self_vote=False)
+                      json_metadata=None, comment_options=None, community=None, tags=["a, b, c, d, e"],
+                      beneficiaries=None, self_vote=False)
         self.assertEqual(
             (tx["operations"][0][0]),
             "comment"

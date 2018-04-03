@@ -7,6 +7,7 @@ from builtins import str
 from builtins import object
 import json
 import logging
+import re
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from datetime import datetime, timedelta
 from beemapi.steemnoderpc import SteemNodeRPC
@@ -23,7 +24,7 @@ from .exceptions import (
 )
 from .wallet import Wallet
 from .transactionbuilder import TransactionBuilder
-from .utils import formatTime, resolve_authorperm, derive_permlink
+from .utils import formatTime, resolve_authorperm, derive_permlink, remove_from_dict
 
 log = logging.getLogger(__name__)
 

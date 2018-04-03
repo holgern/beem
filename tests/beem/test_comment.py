@@ -196,4 +196,3 @@ class Testcases(unittest.TestCase):
         r = RecentByPath(category="hot", steem_instance=bts)
         self.assertTrue(len(r) > 0)
         self.assertTrue(r[0] is not None)
-
