@@ -23,7 +23,7 @@ from .exceptions import (
 )
 from .wallet import Wallet
 from .transactionbuilder import TransactionBuilder
-from .utils import formatTime, resolve_authorperm
+from .utils import formatTime, resolve_authorperm, derive_permlink
 
 log = logging.getLogger(__name__)
 
@@ -964,5 +964,235 @@ class Steem(object):
                 "required_posting_auths": required_posting_auths,
                 "id": id,
                 "prefix": self.prefix,
+            })
+        return self.finalizeOp(op, account, "posting")
+
+    def post(self,
+             title,
+             body,
+             author=None,
+             permlink=None,
+             reply_identifier=None,
+             json_metadata=None,
+             comment_options=None,
+             community=None,
+             tags=None,
+             beneficiaries=None,
+             self_vote=False):
+        """ Create a new post.
+        If this post is intended as a reply/comment, `reply_identifier` needs
+        to be set with the identifier of the parent post/comment (eg.
+        `@author/permlink`).
+        Optionally you can also set json_metadata, comment_options and upvote
+        the newly created post as an author.
+        Setting category, tags or community will override the values provided
+        in json_metadata and/or comment_options where appropriate.
+        Args:
+        title (str): Title of the post
+        body (str): Body of the post/comment
+        author (str): Account are you posting from
+        permlink (str): Manually set the permlink (defaults to None).
+            If left empty, it will be derived from title automatically.
+        reply_identifier (str): Identifier of the parent post/comment (only
+            if this post is a reply/comment).
+        json_metadata (str, dict): JSON meta object that can be attached to
+            the post.
+        comment_options (str, dict): JSON options object that can be
+            attached to the post.
+        Example::
+            comment_options = {
+                'max_accepted_payout': '1000000.000 SBD',
+                'percent_steem_dollars': 10000,
+                'allow_votes': True,
+                'allow_curation_rewards': True,
+                'extensions': [[0, {
+                    'beneficiaries': [
+                        {'account': 'account1', 'weight': 5000},
+                        {'account': 'account2', 'weight': 5000},
+                    ]}
+                ]]
+            }
+        community (str): (Optional) Name of the community we are posting
+            into. This will also override the community specified in
+            `json_metadata`.
+        tags (str, list): (Optional) A list of tags (5 max) to go with the
+            post. This will also override the tags specified in
+            `json_metadata`. The first tag will be used as a 'category'. If
+            provided as a string, it should be space separated.
+        beneficiaries (list of dicts): (Optional) A list of beneficiaries
+            for posting reward distribution. This argument overrides
+            beneficiaries as specified in `comment_options`.
+        For example, if we would like to split rewards between account1 and
+        account2::
+            beneficiaries = [
+                {'account': 'account1', 'weight': 5000},
+                {'account': 'account2', 'weight': 5000}
+            ]
+        self_vote (bool): (Optional) Upvote the post as author, right after
+            posting.
+        """
+
+        # prepare json_metadata
+        json_metadata = json_metadata or {}
+        if isinstance(json_metadata, str):
+            json_metadata = json.loads(json_metadata)
+
+        # override the community
+        if community:
+            json_metadata.update({'community': community})
+        if not author and config["default_account"]:
+            author = config["default_account"]
+        if not author:
+            raise ValueError("You need to provide an account")
+        account = Account(author, steem_instance=self)
+        # deal with the category and tags
+        if isinstance(tags, str):
+            tags = list(set([_f for _f in (re.split("[\W_]", tags)) if _f]))
+
+        category = None
+        tags = tags or json_metadata.get('tags', [])
+        if tags:
+            if len(tags) > 5:
+                raise ValueError('Can only specify up to 5 tags per post.')
+
+            # first tag should be a category
+            category = tags[0]
+            json_metadata.update({"tags": tags})
+
+        # can't provide a category while replying to a post
+        if reply_identifier and category:
+            category = None
+
+        # deal with replies/categories
+        if reply_identifier:
+            parent_author, parent_permlink = resolve_authorperm(
+                reply_identifier)
+            if not permlink:
+                permlink = derive_permlink(title, parent_permlink)
+        elif category:
+            parent_permlink = derive_permlink(category)
+            parent_author = ""
+            if not permlink:
+                permlink = derive_permlink(title)
+        else:
+            parent_author = ""
+            parent_permlink = ""
+            if not permlink:
+                permlink = derive_permlink(title)
+
+        post_op = operations.Comment(
+            **{
+                "parent_author": parent_author,
+                "parent_permlink": parent_permlink,
+                "author": author,
+                "permlink": permlink,
+                "title": title,
+                "body": body,
+                "json_metadata": json_metadata
+            })
+        ops = [post_op]
+
+        # if comment_options are used, add a new op to the transaction
+        if comment_options or beneficiaries:
+            options = remove_from_dict(comment_options or {}, [
+                'max_accepted_payout', 'percent_steem_dollars', 'allow_votes',
+                'allow_curation_rewards', 'extensions'
+            ], keep_keys=True)
+            # override beneficiaries extension
+            if beneficiaries:
+                # validate schema
+                # or just simply vo.Schema([{'account': str, 'weight': int}])
+
+                for b in beneficiaries:
+                    if 'account' not in b:
+                        raise ValueError(
+                            "beneficiaries need an account field!"
+                        )
+                    if 'weight' not in b:
+                        b['weight'] = 10000
+                    if len(b['account']) > 16:
+                        raise ValueError(
+                            "beneficiaries error, account name length >16!"
+                        )
+                    if b['weight'] < 1 or b['weight'] > 10000:
+                        raise ValueError(
+                            "beneficiaries error, 1<=weight<=10000!"
+                        )
+
+                options['beneficiaries'] = beneficiaries
+
+            default_max_payout = "1000000.000 SBD"
+            comment_op = operations.Comment_options(
+                **{
+                    "author":
+                    author,
+                    "permlink":
+                    permlink,
+                    "max_accepted_payout":
+                    options.get("max_accepted_payout", default_max_payout),
+                    "percent_steem_dollars":
+                    int(options.get("percent_steem_dollars", 10000)),
+                    "allow_votes":
+                    options.get("allow_votes", True),
+                    "allow_curation_rewards":
+                    options.get("allow_curation_rewards", True),
+                    "extensions":
+                    options.get("extensions", []),
+                    "beneficiaries":
+                    options.get("beneficiaries"),
+                })
+            ops.append(comment_op)
+
+        if self_vote:
+            vote_op = operations.Vote(
+                **{
+                    'voter': author,
+                    'author': author,
+                    'permlink': permlink,
+                    'weight': 10000,
+                })
+            ops.append(vote_op)
+
+        return self.finalizeOp(ops, account, "posting")
+
+    def comment_options(self, options, identifier, account=None):
+        """ Set the comment options
+            :param str identifier: Post identifier
+            :param dict options: The options to define.
+            :param str account: (optional) the account to allow access
+                to (defaults to ``default_account``)
+            For the options, you have these defaults:::
+                    {
+                        "author": "",
+                        "permlink": "",
+                        "max_accepted_payout": "1000000.000 SBD",
+                        "percent_steem_dollars": 10000,
+                        "allow_votes": True,
+                        "allow_curation_rewards": True,
+                    }
+        """
+        if not account and config["default_account"]:
+            account = config["default_account"]
+        if not account:
+            raise ValueError("You need to provide an account")
+        account = Account(account, steem_instance=self)
+        author, permlink = resolve_authorperm(identifier)
+        default_max_payout = "1000000.000 SBD"
+        STEEMIT_100_PERCENT = 10000
+        STEEMIT_1_PERCENT = (STEEMIT_100_PERCENT / 100)
+        op = operations.Comment_options(
+            **{
+                "author":
+                author,
+                "permlink":
+                permlink,
+                "max_accepted_payout":
+                options.get("max_accepted_payout", default_max_payout),
+                "percent_steem_dollars":
+                options.get("percent_steem_dollars", 100) * STEEMIT_1_PERCENT,
+                "allow_votes":
+                options.get("allow_votes", True),
+                "allow_curation_rewards":
+                options.get("allow_curation_rewards", True),
             })
         return self.finalizeOp(op, account, "posting")

@@ -406,3 +406,35 @@ class Testcases(unittest.TestCase):
         self.assertIn(
             "test1",
             op["witness"])
+
+    def test_post(self):
+        bts = self.bts
+        tx = bts.post("title", "body", author="test", permlink=None, reply_identifier=None,
+                    json_metadata=None, comment_options=None, community=None, tags=["a, b, c, d, e"],
+                    beneficiaries=None, self_vote=False)
+        self.assertEqual(
+            (tx["operations"][0][0]),
+            "comment"
+        )
+        op = tx["operations"][0][1]
+        self.assertEqual(op["body"], "body")
+        self.assertEqual(op["title"], "title")
+        self.assertEqual(op["permlink"], "title")
+        self.assertEqual(op["parent_author"], "")
+
+    def test_comment_option(self):
+        bts = self.bts
+        tx = bts.comment_options({}, "@gtg/witness-gtg-log", account="test")
+        self.assertEqual(
+            (tx["operations"][0][0]),
+            "comment_options"
+        )
+        op = tx["operations"][0][1]
+        self.assertIn(
+            "gtg",
+            op["author"])
+        self.assertEqual('1000000.000 SBD', op["max_accepted_payout"])
+        self.assertEqual(10000, op["percent_steem_dollars"])
+        self.assertEqual(True, op["allow_votes"])
+        self.assertEqual(True, op["allow_curation_rewards"])
+        self.assertEqual("witness-gtg-log", op["permlink"])

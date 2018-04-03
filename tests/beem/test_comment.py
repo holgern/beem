@@ -7,7 +7,7 @@ import unittest
 from parameterized import parameterized
 from pprint import pprint
 from beem import Steem, exceptions
-from beem.comment import Comment
+from beem.comment import Comment, RecentReplies, RecentByPath
 from beem.vote import Vote
 from beem.instance import set_shared_steem_instance
 
@@ -117,7 +117,7 @@ class Testcases(unittest.TestCase):
         json_content = c.json()
 
         for k in keys:
-            if k not in "json_metadata" and k != 'author_reputation':
+            if k not in "json_metadata" and k != 'reputation':
                 self.assertEqual(content[k], json_content[k])
 
     def test_resteem(self):
@@ -158,6 +158,7 @@ class Testcases(unittest.TestCase):
     def test_edit(self):
         bts = self.bts
         c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
+        c.edit(c.body, replace=False)
         body = c.body + "test"
         tx = c.edit(body, replace=False)
         self.assertEqual(
@@ -173,7 +174,7 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
         body = c.body + "test"
-        tx = c.edit(body, replace=True)
+        tx = c.edit(body, meta=c["json_metadata"], replace=True)
         self.assertEqual(
             (tx["operations"][0][0]),
             "comment"
@@ -183,3 +184,16 @@ class Testcases(unittest.TestCase):
             "gtg",
             op["author"])
         self.assertEqual(body, op["body"])
+
+    def test_recent_replies(self):
+        bts = self.bts
+        r = RecentReplies("gtg", skip_own=True, steem_instance=bts)
+        self.assertTrue(len(r) > 0)
+        self.assertTrue(r[0] is not None)
+
+    def test_recent_by_path(self):
+        bts = self.bts
+        r = RecentByPath(category="hot", steem_instance=bts)
+        self.assertTrue(len(r) > 0)
+        self.assertTrue(r[0] is not None)
+
