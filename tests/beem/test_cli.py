@@ -49,10 +49,42 @@ class Testcases(unittest.TestCase):
 
     def test_listkeys(self):
         runner = CliRunner()
+        result = runner.invoke(cli, ['addkey', '--password test', '--key ' + wif])
+        self.assertEqual(result.exit_code, 2)
+
+    def test_addkeys(self):
+        runner = CliRunner()
         result = runner.invoke(cli, ['listkeys'])
         self.assertEqual(result.exit_code, 0)
 
     def test_listaccounts(self):
         runner = CliRunner()
         result = runner.invoke(cli, ['listaccounts'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_info(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['info'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['info', 'test'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_changepassword(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['changewalletpassphrase', '--password test'])
+        self.assertEqual(result.exit_code, 2)
+
+    def test_walletinfo(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['walletinfo'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_createwallet(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['createwallet', '--password test', '--wipe True'])
+        self.assertEqual(result.exit_code, 2)
+
+    def test_set(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['set', '-w 100'])
         self.assertEqual(result.exit_code, 0)
