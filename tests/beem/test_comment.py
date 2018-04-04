@@ -117,7 +117,7 @@ class Testcases(unittest.TestCase):
         json_content = c.json()
 
         for k in keys:
-            if k not in "json_metadata" and k != 'reputation':
+            if k not in "json_metadata" and k != 'reputation' and k != 'active_votes':
                 self.assertEqual(content[k], json_content[k])
 
     def test_resteem(self):
