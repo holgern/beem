@@ -231,11 +231,16 @@ class GrapheneRPC(object):
         try:
             ret = json.loads(reply, strict=False)
         except ValueError:
-            raise ValueError("Client returned invalid format. Expected JSON!")
+            if re.search("Service Temporarily Unavailable", reply):
+                raise RPCError("Service Temporarily Unavailable")
+            elif re.search("Bad Gateway", reply):
+                raise RPCError("Bad Gateway")
+            else:
+                raise ValueError("Client returned invalid format. Expected JSON!")
 
         log.debug(json.dumps(reply))
 
-        if 'error' in ret:
+        if isinstance(ret, dict) and 'error' in ret:
             if 'detail' in ret['error']:
                 raise RPCError(ret['error']['detail'])
             else:
@@ -252,8 +257,10 @@ class GrapheneRPC(object):
                     else:
                         ret_list.append(r["result"])
                 return ret_list
-            elif "result" in ret:
+            elif isinstance(ret, dict) and "result" in ret:
                 return ret["result"]
+            elif isinstance(ret, int):
+                raise ValueError("Client returned invalid format. Expected JSON!")
             else:
                 return ret
 

@@ -64,7 +64,7 @@ class Testcases(unittest.TestCase):
 
     def test_formatTimedelta(self):
         now = datetime.now()
-        self.assertEqual(formatTimedelta(now - now), '0:00.00')
+        self.assertEqual(formatTimedelta(now - now), '0:00:00')
 
     def test_remove_from_dict(self):
         a = {'a': 1, 'b': 2}

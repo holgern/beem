@@ -41,10 +41,10 @@ class SteemNodeRPC(GrapheneRPC):
         doRetryCount = 0
         doRetry = True
         while doRetry and doRetryCount < 5:
+            doRetry = False
+            doRetryCount += 1
             try:
                 # Forward call to GrapheneWebsocketRPC and catch+evaluate errors
-                doRetry = False
-                doRetryCount += 1
                 return super(SteemNodeRPC, self).rpcexec(payload)
             except exceptions.RPCError as e:
                 msg = exceptions.decodeRPCErrorMsg(e).strip()
@@ -62,6 +62,12 @@ class SteemNodeRPC(GrapheneRPC):
                     sleep_and_check_retries(5, doRetryCount, self.url, str(msg))
                     doRetry = True
                 elif re.search("Internal Error", msg):
+                    sleep_and_check_retries(5, doRetryCount, self.url, str(msg))
+                    doRetry = True
+                elif re.search("Service Temporarily Unavailable", msg):
+                    sleep_and_check_retries(5, doRetryCount, self.url, str(msg))
+                    doRetry = True
+                elif re.search("Bad Gateway", msg):
                     sleep_and_check_retries(5, doRetryCount, self.url, str(msg))
                     doRetry = True
                 elif msg:

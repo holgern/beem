@@ -22,7 +22,7 @@ nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.s
          "wss://steemd.minnowsupportproject.org", "https://api.steemit.com", "https://rpc.buildteam.io",
          "https://steemd.minnowsupportproject.org", "https://steemd.pevo.science", "https://rpc.steemviz.com", "https://seed.bitcoiner.me",
          "https://rpc.steemliberator.com", "https://steemd.privex.io", "https://gtg.steem.house:8090", "https://api.steem.house",
-         "https://rpc.curiesteem.com", "https://seed.bitcoiner.me"]
+         "https://rpc.curiesteem.com"]
 
 if __name__ == "__main__":
     how_many_minutes = 10
