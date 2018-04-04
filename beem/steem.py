@@ -307,7 +307,7 @@ class Steem(object):
             if self.rpc.get_use_appbase():
                 return self.rpc.get_feed_history(api="database")['current_median_history']
             else:
-                return self.rpc.get_current_median_history_price()['current_median_history']
+                return self.rpc.get_current_median_history_price(api="database")
         except:
             return None
 
@@ -325,7 +325,7 @@ class Steem(object):
             if self.rpc.get_use_appbase():
                 return self.rpc.get_hardfork_properties(api="database")
             else:
-                return self.rpc.get_next_scheduled_hardfork()
+                return self.rpc.get_next_scheduled_hardfork(api="database")
         except:
             return None
 
