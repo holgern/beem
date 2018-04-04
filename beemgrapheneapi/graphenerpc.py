@@ -70,9 +70,6 @@ class GrapheneRPC(object):
         ws = GrapheneRPC("https://api.steemit.com","","")
         print(ws.get_account_count())
 
-        ws = GrapheneRPC("https://api.steemitstage.com","","")
-        print(ws.get_account_count())
-
     .. note:: This class allows to call methods available via
               websocket. If you want to use the notification
               subsystem, please use ``GrapheneWebsocket`` instead.

@@ -17,24 +17,19 @@ logging.basicConfig(level=logging.INFO)
 
 
 if __name__ == "__main__":
-    node_setup = 3
+    node_setup = 2
     how_many_hours = 1
     if node_setup == 0:
         stm = Steem(node="https://api.steemit.com", num_retries=10)
         max_batch_size = None
-        threading = True
-        thread_num = 8
-    elif node_setup == 1:
-        stm = Steem(node="https://api.steemitstage.com", num_retries=10)
-        max_batch_size = None
         threading = False
         thread_num = 8
-    elif node_setup == 2:
-        stm = Steem(node="https://api.steemitstage.com", num_retries=10)
+    elif node_setup == 1:
+        stm = Steem(node="https://api.steemit.com", num_retries=10)
         max_batch_size = None
         threading = True
         thread_num = 8
-    elif node_setup == 3:
+    elif node_setup == 2:
         stm = Steem(num_retries=10)
         max_batch_size = None
         threading = True

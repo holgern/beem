@@ -72,23 +72,18 @@ class SteemNodeRPC(GrapheneRPC):
                 raise e
 
     def get_account(self, name, **kwargs):
-        """ Get full account details from account name or id
+        """ Get full account details from account name
 
-            :param str name: Account name or account id
+            :param str name: Account name
         """
         if isinstance(name, str):
             return self.get_accounts([name], **kwargs)
-        elif isinstance(name, int):
-            return self.get_account_references(name, **kwargs)
 
     def get_network(self):
         """ Identify the connected network. This call returns a
             dictionary with keys chain_id, core_symbol and prefix
         """
-        try:
-            props = self.get_config(api="database")
-        except:
-            props = self.get_config()
+        props = self.get_config(api="database")
         if "STEEMIT_CHAIN_ID" in props:
             chain_id = props["STEEMIT_CHAIN_ID"]
             network_version = props['STEEMIT_BLOCKCHAIN_VERSION']
