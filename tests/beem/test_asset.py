@@ -24,10 +24,12 @@ class Testcases(unittest.TestCase):
         self.bts = Steem(
             node=nodes,
             nobroadcast=True,
+            num_retries=10
         )
         self.appbase = Steem(
             node=nodes_appbase,
             nobroadcast=True,
+            num_retries=10
         )
         set_shared_steem_instance(self.bts)
 

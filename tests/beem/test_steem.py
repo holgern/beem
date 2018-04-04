@@ -37,13 +37,15 @@ class Testcases(unittest.TestCase):
             node=nodes,
             nobroadcast=True,
             data_refresh_time_seconds=900,
-            keys={"active": wif, "owner": wif, "memo": wif}
+            keys={"active": wif, "owner": wif, "memo": wif},
+            num_retries=10
         )
         self.appbase = Steem(
             node=nodes_appbase,
             nobroadcast=True,
             data_refresh_time_seconds=900,
-            keys={"active": wif, "owner": wif, "memo": wif}
+            keys={"active": wif, "owner": wif, "memo": wif},
+            num_retries=10
         )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())

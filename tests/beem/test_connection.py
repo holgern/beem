@@ -17,11 +17,13 @@ class Testcases(unittest.TestCase):
         b1 = Steem(
             node=["wss://testnet.steem.vc"],
             nobroadcast=True,
+            num_retries=10
         )
 
         b2 = Steem(
             node=nodes,
             nobroadcast=True,
+            num_retries=10
         )
 
         self.assertNotEqual(b1.rpc.url, b2.rpc.url)

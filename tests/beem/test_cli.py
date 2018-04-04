@@ -32,7 +32,8 @@ class Testcases(unittest.TestCase):
             nobroadcast=True,
             bundle=False,
             # Overwrite wallet to use this list of wifs only
-            wif={"active": wif}
+            wif={"active": wif},
+            num_retries=10
         )
         self.bts.set_default_account("test")
         set_shared_steem_instance(self.bts)

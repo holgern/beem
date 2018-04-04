@@ -83,22 +83,21 @@ def get_api_name(appbase, *args, **kwargs):
     return api_name
 
 
-def sleep_and_check_retries(num_retries, cnt, url, errorMsg=None):
+def sleep_and_check_retries(num_retries, cnt, url, errorMsg=None, sleep=True):
     """Sleep and check if num_retries is reached"""
     if errorMsg:
         log.warning("Error: {}\n".format(errorMsg))
     if (num_retries >= 0 and cnt > num_retries):
         raise NumRetriesReached()
-
+    log.warning("\nLost connection or internal error on node: %s (%d/%d) " % (url, cnt, num_retries))
+    if not sleep:
+        return
     if cnt < 1:
         sleeptime = 0
     elif cnt < 10:
-        sleeptime = (cnt - 1) * 2
+        sleeptime = (cnt - 1) * 1.5 + 0.5
     else:
         sleeptime = 10
     if sleeptime:
-        log.warning("\nLost connection or internal error on node: %s (%d/%d) "
-                    % (url, cnt, num_retries) +
-                    "Retrying in %d seconds\n" % sleeptime
-                    )
+        log.warning("Retrying in %d seconds\n" % sleeptime)
         time.sleep(sleeptime)

@@ -53,7 +53,7 @@ class GrapheneRPC(object):
     :param str user: Username for Authentication
     :param str password: Password for Authentication
     :param int num_retries: Try x times to num_retries to a node on disconnect, -1 for indefinitely
-
+    :param int num_retries_call: Repeat num_retries_call times a rpccall on node error (default is 5)
     Available APIs
 
           * database
@@ -82,14 +82,20 @@ class GrapheneRPC(object):
         self.current_rpc = self.rpc_methods["ws"]
         self._request_id = 0
         if isinstance(urls, str):
-            self.urls = cycle(re.split(r",|;", urls))
+            url_list = re.split(r",|;", urls)
+            self.n_urls = len(url_list)
+            self.urls = cycle(url_list)
             if self.urls is None:
+                self.n_urls = 1
                 self.urls = cycle([urls])
         elif isinstance(urls, (list, tuple, set)):
+            self.n_urls = len(urls)
             self.urls = cycle(urls)
         elif urls is not None:
+            self.n_urls = 1
             self.urls = cycle([urls])
         else:
+            self.n_urls = 0
             self.urls = None
             self.current_rpc = self.rpc_methods["offline"]
         self.user = user
@@ -97,7 +103,9 @@ class GrapheneRPC(object):
         self.ws = None
         self.rpc_queue = []
         self.num_retries = kwargs.get("num_retries", -1)
-
+        self.error_cnt = 0
+        self.num_retries_call = kwargs.get("num_retries_call", 5)
+        self.error_cnt_call = 0
         self.rpcconnect()
 
     def get_request_id(self):
@@ -120,12 +128,13 @@ class GrapheneRPC(object):
 
     def rpcconnect(self, next_url=True):
         """Connect to next url in a loop."""
-        cnt = 0
+        self.error_cnt = 0
         if self.urls is None:
             return
         while True:
-            cnt += 1
+            self.error_cnt += 1
             if next_url:
+                self.error_cnt_call = 0
                 self.url = next(self.urls)
                 log.debug("Trying to connect to node %s" % self.url)
                 if self.url[:3] == "wss":
@@ -147,7 +156,6 @@ class GrapheneRPC(object):
                     self.current_rpc = self.rpc_methods["jsonrpc"]
                     self.headers = {'User-Agent': 'beem v0.19.14',
                                     'content-type': 'application/json'}
-
             try:
                 if not self.ws:
                     break
@@ -157,16 +165,15 @@ class GrapheneRPC(object):
             except KeyboardInterrupt:
                 raise
             except Exception as e:
-                sleep_and_check_retries(self.num_retries, cnt, self.url, str(e))
+                do_sleep = not next_url or (next_url and self.n_urls == 1)
+                sleep_and_check_retries(self.num_retries, self.error_cnt, self.url, str(e), sleep=do_sleep)
                 next_url = True
         try:
             props = self.get_config(api="database")
         except:
-            if self.ws:
-                self.current_rpc = self.rpc_methods["wsappbase"]
-            else:
-                self.current_rpc = self.rpc_methods["appbase"]
             props = self.get_config(api="database")
+        if props is None:
+            raise RPCError("Could not recieve answer for get_config")
         if is_network_appbase_ready(props):
             if self.ws:
                 self.current_rpc = self.rpc_methods["wsappbase"]
@@ -207,10 +214,9 @@ class GrapheneRPC(object):
         :raises RPCError: if the server returns an error
         """
         log.debug(json.dumps(payload))
-        cnt = 0
         reply = {}
         while True:
-            cnt += 1
+            self.error_cnt_call += 1
 
             try:
                 if self.current_rpc == 0 or self.current_rpc == 3:
@@ -223,7 +229,7 @@ class GrapheneRPC(object):
             except WebSocketConnectionClosedException:
                 self.rpcconnect(next_url=False)
             except Exception as e:
-                sleep_and_check_retries(self.num_retries, cnt, self.url, str(e))
+                sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, str(e))
                 # retry
                 self.rpcconnect()
 
@@ -256,12 +262,15 @@ class GrapheneRPC(object):
                             raise RPCError(ret['error']['message'])
                     else:
                         ret_list.append(r["result"])
+                self.error_cnt_call = 0
                 return ret_list
             elif isinstance(ret, dict) and "result" in ret:
+                self.error_cnt_call = 0
                 return ret["result"]
             elif isinstance(ret, int):
                 raise ValueError("Client returned invalid format. Expected JSON!")
             else:
+                self.error_cnt_call = 0
                 return ret
 
     # End of Deprecated methods

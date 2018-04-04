@@ -38,11 +38,9 @@ class SteemNodeRPC(GrapheneRPC):
             :raises ValueError: if the server does not respond in proper JSON format
             :raises RPCError: if the server returns an error
         """
-        doRetryCount = 0
         doRetry = True
-        while doRetry and doRetryCount < 5:
+        while doRetry and self.error_cnt_call < self.num_retries_call:
             doRetry = False
-            doRetryCount += 1
             try:
                 # Forward call to GrapheneWebsocketRPC and catch+evaluate errors
                 return super(SteemNodeRPC, self).rpcexec(payload)
@@ -59,16 +57,16 @@ class SteemNodeRPC(GrapheneRPC):
                 elif re.search("Could not find API", msg):
                     raise exceptions.NoApiWithName(msg)
                 elif re.search("Unable to acquire database lock", msg):
-                    sleep_and_check_retries(5, doRetryCount, self.url, str(msg))
+                    sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, str(msg))
                     doRetry = True
                 elif re.search("Internal Error", msg):
-                    sleep_and_check_retries(5, doRetryCount, self.url, str(msg))
+                    sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, str(msg))
                     doRetry = True
                 elif re.search("Service Temporarily Unavailable", msg):
-                    sleep_and_check_retries(5, doRetryCount, self.url, str(msg))
+                    sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, str(msg))
                     doRetry = True
                 elif re.search("Bad Gateway", msg):
-                    sleep_and_check_retries(5, doRetryCount, self.url, str(msg))
+                    sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, str(msg))
                     doRetry = True
                 elif msg:
                     raise exceptions.UnhandledRPCError(msg)

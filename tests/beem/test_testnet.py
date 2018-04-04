@@ -36,6 +36,7 @@ class Testcases(unittest.TestCase):
         self.bts = Steem(
             node=["wss://testnet.steem.vc"],
             nobroadcast=True,
+            num_retries=10
         )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())

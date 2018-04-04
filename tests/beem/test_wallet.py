@@ -31,12 +31,14 @@ class Testcases(unittest.TestCase):
             nobroadcast=True,
             # We want to bundle many operations into a single transaction
             bundle=True,
+            num_retries=10
             # Overwrite wallet to use this list of wifs only
         )
         self.appbase = Steem(
             node=nodes_appbase,
             nobroadcast=True,
             bundle=True,
+            num_retries=10
         )
         self.stm.set_default_account("test")
         set_shared_steem_instance(self.stm)

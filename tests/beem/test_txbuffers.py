@@ -33,6 +33,7 @@ class Testcases(unittest.TestCase):
             node=nodes,
             keys={"active": wif, "owner": wif, "memo": wif},
             nobroadcast=True,
+            num_retries=10
         )
         set_shared_steem_instance(self.stm)
         self.stm.set_default_account("test")

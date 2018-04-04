@@ -44,6 +44,7 @@ class Testcases(unittest.TestCase):
 
         self.ws = SteemWebsocket(
             nodes,
+            num_retries=10
         )
 
     def test_connect(self):

@@ -20,6 +20,7 @@ class Testcases(unittest.TestCase):
         steem = Steem(
             node=nodes,
             nobroadcast=True,
+            num_retries=10
         )
         set_shared_steem_instance(steem)
 

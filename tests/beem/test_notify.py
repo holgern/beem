@@ -45,6 +45,7 @@ class Testcases(unittest.TestCase):
         self.bts = Steem(
             node=nodes,
             nobroadcast=True,
+            num_retries=10
         )
 
     def test_connect(self):
