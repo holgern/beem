@@ -9,6 +9,7 @@ import io
 import logging
 from prettytable import PrettyTable
 from beem.blockchain import Blockchain
+from beem.account import Account
 from beem.block import Block
 from beem.steem import Steem
 from beem.utils import parse_time, formatTimedelta
@@ -25,16 +26,19 @@ nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.s
 
 if __name__ == "__main__":
     how_many_minutes = 10
+    how_many_virtual_op = 10000
     max_batch_size = None
     threading = False
     thread_num = 16
-    t = PrettyTable(["node", "10 blockchain minutes", "version"])
+    t = PrettyTable(["node", "10 blockchain minutes", "10000 virtual account op", "version"])
     t.align = "l"
     for node in nodes:
         print("Current node:", node)
         try:
-            stm = Steem(node=node, num_retries=2)
+            stm = Steem(node=node, num_retries=3)
             blockchain = Blockchain(steem_instance=stm)
+            account = Account("gtg", steem_instance=stm)
+            virtual_op_count = account.virtual_op_count()
             blockchain_version = stm.get_blockchain_version()
 
             last_block_id = 19273700
@@ -68,14 +72,24 @@ if __name__ == "__main__":
                     total_duration = formatTimedelta(datetime.now() - startTime)
                     last_block_id = block_no
                     avtran = total_transaction / (last_block_id - 19273700)
-                    print("* Processed %d blockchain minutes in %s" % (how_many_minutes, total_duration))
-                    print("* blockchain version: %s" % (blockchain_version))
-                    t.add_row([
-                        node,
-                        total_duration,
-                        blockchain_version
-                    ])
                     break
+            start_time = time.time()
+
+            stopOP = virtual_op_count - how_many_virtual_op + 1
+            i = 0
+            for acc_op in account.history_reverse(stop=stopOP):
+                i += 1
+            total_duration_acc = formatTimedelta(datetime.now() - startTime)
+
+            print("* Processed %d blockchain minutes in %s" % (how_many_minutes, total_duration))
+            print("* Processed %d account ops in %s" % (i, total_duration_acc))
+            print("* blockchain version: %s" % (blockchain_version))
+            t.add_row([
+                node,
+                total_duration,
+                total_duration_acc,
+                blockchain_version
+            ])
         except NumRetriesReached:
             print("NumRetriesReached")
             continue

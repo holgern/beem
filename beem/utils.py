@@ -54,7 +54,7 @@ def formatTimedelta(td):
     hours = days * 24 + seconds // 3600
     minutes = (seconds % 3600) // 60
     seconds = (seconds % 60)
-    return "%d:%s.%s" % (hours, str(minutes).zfill(2), str(seconds).zfill(2))
+    return "%d:%s:%s" % (hours, str(minutes).zfill(2), str(seconds).zfill(2))
 
 
 def parse_time(block_time):
