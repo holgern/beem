@@ -36,11 +36,13 @@ class Testcases(unittest.TestCase):
         self.bts = Steem(
             node=nodes,
             nobroadcast=True,
+            data_refresh_time_seconds=900,
             keys={"active": wif, "owner": wif, "memo": wif}
         )
         self.appbase = Steem(
             node=nodes_appbase,
             nobroadcast=True,
+            data_refresh_time_seconds=900,
             keys={"active": wif, "owner": wif, "memo": wif}
         )
         # from getpass import getpass
@@ -125,6 +127,69 @@ class Testcases(unittest.TestCase):
             memo_key=format(key4.pubkey, core_unit),
             additional_owner_keys=[format(key5.pubkey, core_unit)],
             additional_active_keys=[format(key5.pubkey, core_unit)],
+            additional_posting_keys=[format(key5.pubkey, core_unit)],
+            additional_owner_accounts=["test1"],  # 1.2.0
+            additional_active_accounts=["test1"],
+            storekeys=False,
+            delegation_fee_steem="0 STEEM"
+        )
+        self.assertEqual(
+            tx["operations"][0][0],
+            "account_create"
+        )
+        op = tx["operations"][0][1]
+        role = "active"
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            "test1",
+            [x[0] for x in op[role]["account_auths"]])
+        role = "posting"
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            "test1",
+            [x[0] for x in op[role]["account_auths"]])
+        role = "owner"
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            format(key5.pubkey, core_unit),
+            [x[0] for x in op[role]["key_auths"]])
+        self.assertIn(
+            "test1",
+            [x[0] for x in op[role]["account_auths"]])
+        self.assertEqual(
+            op["creator"],
+            "test")
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_create_account_password(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        elif node_param == "appbase":
+            bts = self.appbase
+        name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
+        key5 = PrivateKey()
+        tx = bts.create_account(
+            name,
+            creator="test",   # 1.2.7
+            password="abcdefg",
+            additional_owner_keys=[format(key5.pubkey, core_unit)],
+            additional_active_keys=[format(key5.pubkey, core_unit)],
+            additional_posting_keys=[format(key5.pubkey, core_unit)],
             additional_owner_accounts=["test1"],  # 1.2.0
             additional_active_accounts=["test1"],
             storekeys=False,
@@ -411,7 +476,7 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         tx = bts.post("title", "body", author="test", permlink=None, reply_identifier=None,
                       json_metadata=None, comment_options=None, community=None, tags=["a, b, c, d, e"],
-                      beneficiaries=None, self_vote=False)
+                      beneficiaries=[{'account': 'test1'}], self_vote=True)
         self.assertEqual(
             (tx["operations"][0][0]),
             "comment"
@@ -438,3 +503,64 @@ class Testcases(unittest.TestCase):
         self.assertEqual(True, op["allow_votes"])
         self.assertEqual(True, op["allow_curation_rewards"])
         self.assertEqual("witness-gtg-log", op["permlink"])
+
+    def test_offline(self):
+        bts = Steem(node=nodes,
+                    offline=True,
+                    data_refresh_time_seconds=900,
+                    keys={"active": wif, "owner": wif, "memo": wif})
+        bts.refresh_data()
+        self.assertTrue(bts.get_reserve_ratio(use_stored_data=False) is None)
+        self.assertTrue(bts.get_reserve_ratio(use_stored_data=True) is None)
+        self.assertTrue(bts.get_feed_history(use_stored_data=False) is None)
+        self.assertTrue(bts.get_feed_history(use_stored_data=True) is None)
+        self.assertTrue(bts.get_reward_funds(use_stored_data=False) is None)
+        self.assertTrue(bts.get_reward_funds(use_stored_data=True) is None)
+        self.assertTrue(bts.get_current_median_history(use_stored_data=False) is None)
+        self.assertTrue(bts.get_current_median_history(use_stored_data=True) is None)
+        self.assertTrue(bts.get_hardfork_properties(use_stored_data=False) is None)
+        self.assertTrue(bts.get_hardfork_properties(use_stored_data=True) is None)
+        self.assertTrue(bts.get_network(use_stored_data=False) is None)
+        self.assertTrue(bts.get_network(use_stored_data=True) is None)
+        self.assertTrue(bts.get_witness_schedule(use_stored_data=False) is None)
+        self.assertTrue(bts.get_witness_schedule(use_stored_data=True) is None)
+        self.assertTrue(bts.get_config(use_stored_data=False) is None)
+        self.assertTrue(bts.get_config(use_stored_data=True) is None)
+        self.assertEqual(bts.get_block_interval(), 3)
+        self.assertEqual(bts.get_blockchain_version(), '0.0.0')
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_properties(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        elif node_param == "appbase":
+            bts = self.appbase
+        self.assertTrue(bts.get_reserve_ratio(use_stored_data=False) is not None)
+        self.assertTrue(bts.get_feed_history(use_stored_data=False) is not None)
+        self.assertTrue(bts.get_reward_funds(use_stored_data=False) is not None)
+        self.assertTrue(bts.get_current_median_history(use_stored_data=False) is not None)
+        self.assertTrue(bts.get_hardfork_properties(use_stored_data=False) is not None)
+        self.assertTrue(bts.get_network(use_stored_data=False) is not None)
+        self.assertTrue(bts.get_witness_schedule(use_stored_data=False) is not None)
+        self.assertTrue(bts.get_config(use_stored_data=False) is not None)
+        self.assertTrue(bts.get_block_interval() is not None)
+        self.assertTrue(bts.get_blockchain_version() is not None)
+
+    def test_sp_to_rshares(self):
+        stm = self.bts
+        rshares = stm.sp_to_rshares(stm.vests_to_sp(1e6))
+        self.assertAlmostEqual(rshares, 20000000000.0)
+
+    def test_sign(self):
+        bts = self.bts
+        tx = bts.sign()
+        self.assertTrue(tx is not None)
+
+    def test_broadcast(self):
+        bts = self.bts
+        tx = bts.sign()
+        tx = bts.broadcast(tx=tx)
+        self.assertTrue(tx is None)

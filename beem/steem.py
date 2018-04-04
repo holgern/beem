@@ -297,7 +297,10 @@ class Steem(object):
         """
         if use_stored_data:
             self.refresh_data()
-            return self.data['get_feed_history']['current_median_history']
+            if self.data['get_feed_history']:
+                return self.data['get_feed_history']['current_median_history']
+            else:
+                return None
         if self.rpc is None:
             return None
         try:
@@ -359,9 +362,9 @@ class Steem(object):
     def get_block_interval(self):
         """Returns the block intervall in seconds"""
         props = self.get_config()
-        if "STEEMIT_BLOCK_INTERVAL" in props:
+        if props and "STEEMIT_BLOCK_INTERVAL" in props:
             block_interval = props["STEEMIT_BLOCK_INTERVAL"]
-        elif "STEEM_BLOCK_INTERVAL" in props:
+        elif props and "STEEM_BLOCK_INTERVAL" in props:
             block_interval = props["STEEM_BLOCK_INTERVAL"]
         else:
             block_interval = 3
@@ -370,9 +373,9 @@ class Steem(object):
     def get_blockchain_version(self):
         """Returns the blockchain version"""
         props = self.get_config()
-        if "STEEMIT_BLOCKCHAIN_VERSION" in props:
+        if props and "STEEMIT_BLOCKCHAIN_VERSION" in props:
             blockchain_version = props["STEEMIT_BLOCKCHAIN_VERSION"]
-        elif "STEEM_BLOCKCHAIN_VERSION" in props:
+        elif props and "STEEM_BLOCKCHAIN_VERSION" in props:
             blockchain_version = props["STEEM_BLOCKCHAIN_VERSION"]
         else:
             blockchain_version = '0.0.0'
