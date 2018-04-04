@@ -53,7 +53,7 @@ class GrapheneRPC(object):
     :param str user: Username for Authentication
     :param str password: Password for Authentication
     :param int num_retries: Try x times to num_retries to a node on disconnect, -1 for indefinitely
-    :param int num_retries_call: Repeat num_retries_call times a rpccall on node error (default is 5)
+    :param int num_retries_call: Repeat num_retries_call times a rpc call on node error (default is 5)
     Available APIs
 
           * database
