@@ -91,67 +91,92 @@ class Testcases(unittest.TestCase):
         else:
             stm = self.appbase
         account = Account("test", full=True, steem_instance=stm)
+        h_all_raw = []
+        for h in account.history_reverse(raw_output=True):
+            h_all_raw.append(h)
         h_list = []
-        for h in account.history(stop=10, batch_size=10, raw_output=True):
+        for h in account.history(stop=10, use_block_num=False, batch_size=10, raw_output=True):
             h_list.append(h)
         self.assertEqual(h_list[0][0], 0)
         self.assertEqual(h_list[-1][0], 10)
+        self.assertEqual(h_list[0][1]['block'], h_all_raw[-1][1]['block'])
+        self.assertEqual(h_list[-1][1]['block'], h_all_raw[-11][1]['block'])
         h_list = []
-        for h in account.history(start=1, stop=9, batch_size=10, raw_output=True):
+        for h in account.history(start=1, stop=9, use_block_num=False, batch_size=10, raw_output=True):
             h_list.append(h)
         self.assertEqual(h_list[0][0], 1)
         self.assertEqual(h_list[-1][0], 9)
+        self.assertEqual(h_list[0][1]['block'], h_all_raw[-2][1]['block'])
+        self.assertEqual(h_list[-1][1]['block'], h_all_raw[-10][1]['block'])
         start = formatTimeString(h_list[0][1]["timestamp"])
         stop = formatTimeString(h_list[-1][1]["timestamp"])
         h_list = []
-        for h in account.history(start=start, stop=stop, batch_size=10, raw_output=True):
+        for h in account.history(start=start, stop=stop, use_block_num=False, batch_size=10, raw_output=True):
             h_list.append(h)
         self.assertEqual(h_list[0][0], 1)
         self.assertEqual(h_list[-1][0], 9)
+        self.assertEqual(h_list[0][1]['block'], h_all_raw[-2][1]['block'])
+        self.assertEqual(h_list[-1][1]['block'], h_all_raw[-10][1]['block'])
         h_list = []
-        for h in account.history_reverse(start=10, stop=0, batch_size=10, raw_output=False):
+        for h in account.history_reverse(start=10, stop=0, use_block_num=False, batch_size=10, raw_output=False):
             h_list.append(h)
         self.assertEqual(h_list[0]['index'], 10)
         self.assertEqual(h_list[-1]['index'], 0)
+        self.assertEqual(h_list[0]['block'], h_all_raw[-11][1]['block'])
+        self.assertEqual(h_list[-1]['block'], h_all_raw[-1][1]['block'])
         h_list = []
-        for h in account.history_reverse(start=9, stop=1, batch_size=10, raw_output=True):
+        for h in account.history_reverse(start=9, stop=1, use_block_num=False, batch_size=10, raw_output=True):
             h_list.append(h)
         self.assertEqual(h_list[0][0], 9)
         self.assertEqual(h_list[-1][0], 1)
+        self.assertEqual(h_list[0][1]['block'], h_all_raw[-10][1]['block'])
+        self.assertEqual(h_list[-1][1]['block'], h_all_raw[-2][1]['block'])
         start = formatTimeString(h_list[0][1]["timestamp"])
         stop = formatTimeString(h_list[-1][1]["timestamp"])
         h_list = []
-        for h in account.history_reverse(start=start, stop=stop, batch_size=10, raw_output=True):
+        for h in account.history_reverse(start=start, stop=stop, use_block_num=False, batch_size=10, raw_output=True):
             h_list.append(h)
         self.assertEqual(h_list[0][0], 9)
         self.assertEqual(h_list[-1][0], 1)
+        self.assertEqual(h_list[0][1]['block'], h_all_raw[-10][1]['block'])
+        self.assertEqual(h_list[-1][1]['block'], h_all_raw[-2][1]['block'])
         h_list = []
-        for h in account.get_account_history(10, 10, order=1, raw_output=True):
+        for h in account.get_account_history(10, 10, use_block_num=False, order=1, raw_output=True):
             h_list.append(h)
         self.assertEqual(h_list[0][0], 0)
         self.assertEqual(h_list[-1][0], 10)
+        self.assertEqual(h_list[0][1]['block'], h_all_raw[-1][1]['block'])
+        self.assertEqual(h_list[-1][1]['block'], h_all_raw[-11][1]['block'])
         h_list = []
-        for h in account.get_account_history(10, 10, start=1, stop=9, order=1, raw_output=True):
+        for h in account.get_account_history(10, 10, use_block_num=False, start=1, stop=9, order=1, raw_output=True):
             h_list.append(h)
         self.assertEqual(h_list[0][0], 1)
         self.assertEqual(h_list[-1][0], 9)
+        self.assertEqual(h_list[0][1]['block'], h_all_raw[-2][1]['block'])
+        self.assertEqual(h_list[-1][1]['block'], h_all_raw[-10][1]['block'])
         start = formatTimeString(h_list[0][1]["timestamp"])
         stop = formatTimeString(h_list[-1][1]["timestamp"])
         h_list = []
-        for h in account.get_account_history(10, 10, start=start, stop=stop, order=1, raw_output=True):
+        for h in account.get_account_history(10, 10, use_block_num=False, start=start, stop=stop, order=1, raw_output=True):
             h_list.append(h)
         self.assertEqual(h_list[0][0], 1)
         self.assertEqual(h_list[-1][0], 9)
+        self.assertEqual(h_list[0][1]['block'], h_all_raw[-2][1]['block'])
+        self.assertEqual(h_list[-1][1]['block'], h_all_raw[-10][1]['block'])
         h_list = []
-        for h in account.get_account_history(10, 10, order=-1, raw_output=True):
+        for h in account.get_account_history(10, 10, use_block_num=False, order=-1, raw_output=True):
             h_list.append(h)
         self.assertEqual(h_list[0][0], 10)
         self.assertEqual(h_list[-1][0], 0)
+        self.assertEqual(h_list[0][1]['block'], h_all_raw[-11][1]['block'])
+        self.assertEqual(h_list[-1][1]['block'], h_all_raw[-1][1]['block'])
         h_list = []
-        for h in account.get_account_history(10, 10, start=9, stop=1, order=-1, raw_output=True):
+        for h in account.get_account_history(10, 10, use_block_num=False, start=9, stop=1, order=-1, raw_output=True):
             h_list.append(h)
         self.assertEqual(h_list[0][0], 9)
         self.assertEqual(h_list[-1][0], 1)
+        self.assertEqual(h_list[0][1]['block'], h_all_raw[-10][1]['block'])
+        self.assertEqual(h_list[-1][1]['block'], h_all_raw[-2][1]['block'])
         start = formatTimeString(h_list[0][1]["timestamp"])
         stop = formatTimeString(h_list[-1][1]["timestamp"])
         h_list = []
@@ -159,6 +184,50 @@ class Testcases(unittest.TestCase):
             h_list.append(h)
         self.assertEqual(h_list[0][0], 9)
         self.assertEqual(h_list[-1][0], 1)
+        self.assertEqual(h_list[0][1]['block'], h_all_raw[-10][1]['block'])
+        self.assertEqual(h_list[-1][1]['block'], h_all_raw[-2][1]['block'])
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_history_block_num(self, node_param):
+        if node_param == "non_appbase":
+            stm = self.bts
+        else:
+            stm = self.appbase
+        account = Account("test", full=True, steem_instance=stm)
+        h_all_raw = []
+        for h in account.history_reverse(raw_output=True):
+            h_all_raw.append(h)
+        h_list = []
+        for h in account.history(start=h_all_raw[-1][1]["block"], stop=h_all_raw[-11][1]["block"], use_block_num=True, batch_size=10, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(h_list[0][0], 0)
+        self.assertEqual(h_list[-1][0], 10)
+        self.assertEqual(h_list[0][1]['block'], h_all_raw[-1][1]['block'])
+        self.assertEqual(h_list[-1][1]['block'], h_all_raw[-11][1]['block'])
+        h_list = []
+        for h in account.history_reverse(start=h_all_raw[-11][1]["block"], stop=h_all_raw[-1][1]["block"], use_block_num=True, batch_size=10, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(h_list[0][0], 10)
+        self.assertEqual(h_list[-1][0], 0)
+        self.assertEqual(h_list[0][1]['block'], h_all_raw[-11][1]['block'])
+        self.assertEqual(h_list[-1][1]['block'], h_all_raw[-1][1]['block'])
+        h_list = []
+        for h in account.get_account_history(10, 10, use_block_num=True, start=h_all_raw[-2][1]["block"], stop=h_all_raw[-10][1]["block"], order=1, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(h_list[0][0], 1)
+        self.assertEqual(h_list[-1][0], 9)
+        self.assertEqual(h_list[0][1]['block'], h_all_raw[-2][1]['block'])
+        self.assertEqual(h_list[-1][1]['block'], h_all_raw[-10][1]['block'])
+        h_list = []
+        for h in account.get_account_history(10, 10, use_block_num=True, start=h_all_raw[-10][1]["block"], stop=h_all_raw[-2][1]["block"], order=-1, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(h_list[0][0], 9)
+        self.assertEqual(h_list[-1][0], 1)
+        self.assertEqual(h_list[0][1]['block'], h_all_raw[-10][1]['block'])
+        self.assertEqual(h_list[-1][1]['block'], h_all_raw[-2][1]['block'])
 
     @parameterized.expand([
         ("non_appbase"),

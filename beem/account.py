@@ -636,7 +636,7 @@ class Account(BlockchainObject):
         utc = pytz.timezone('UTC')
         stop = utc.localize(datetime.utcnow()) - timedelta(days=days)
         reward_vests = Amount("0 VESTS", steem_instance=self.steem)
-        for reward in self.history_reverse(stop=stop, only_ops=["curation_reward"]):
+        for reward in self.history_reverse(stop=stop, use_block_num=False, only_ops=["curation_reward"]):
             reward_vests += Amount(reward['reward'], steem_instance=self.steem)
         return self.steem.vests_to_sp(reward_vests.amount)
 
@@ -645,7 +645,7 @@ class Account(BlockchainObject):
                 "7d": self.get_curation_reward(days=7),
                 "avg": self.get_curation_reward(days=7) / 7}
 
-    def get_account_history(self, index, limit, order=-1, start=None, stop=None, only_ops=[], exclude_ops=[], raw_output=False):
+    def get_account_history(self, index, limit, order=-1, start=None, stop=None, use_block_num=True, only_ops=[], exclude_ops=[], raw_output=False):
         """ Returns a generator for individual account transactions. This call can be used in a
             ``for`` loop.
             :param int index: first number of transactions to
@@ -656,6 +656,7 @@ class Account(BlockchainObject):
                 return (*optional*)
             :param int/datetime stop: stop number/date of transactions to
                 return (*optional*)
+            :param bool use_block_num: if true, start and stop are block numbers, otherwise virtual OP count numbers.
             :param array only_ops: Limit generator by these
                 operations (*optional*)
             :param array exclude_ops: Exclude thse operations from
@@ -690,17 +691,25 @@ class Account(BlockchainObject):
                 timediff = start - formatTimeString(event["timestamp"])
                 if timediff.total_seconds() * float(order) > 0:
                     continue
-            elif start and order == 1 and item_index < start:
+            elif start and use_block_num and order == 1 and event['block'] < start:
                 continue
-            elif start and order == -1 and item_index > start:
+            elif start and use_block_num and order == -1 and event['block'] > start:
+                continue
+            elif start and not use_block_num and order == 1 and item_index < start:
+                continue
+            elif start and not use_block_num and order == -1 and item_index > start:
                 continue
             if stop and isinstance(stop, datetime):
                 timediff = stop - formatTimeString(event["timestamp"])
                 if timediff.total_seconds() * float(order) < 0:
                     return
-            elif stop and order == 1 and item_index > stop:
+            elif stop and use_block_num and order == 1 and event['block'] > stop:
                 return
-            elif stop and order == -1 and item_index < stop:
+            elif stop and use_block_num and order == -1 and event['block'] < stop:
+                return
+            elif stop and not use_block_num and order == 1 and item_index > stop:
+                return
+            elif stop and not use_block_num and order == -1 and item_index < stop:
                 return
             op_type, op = event['op']
             block_props = remove_from_dict(event, keys=['op'], keep_keys=False)
@@ -731,7 +740,7 @@ class Account(BlockchainObject):
                 yield construct_op(self["name"])
 
     def history(
-        self, start=None, stop=None,
+        self, start=None, stop=None, use_block_num=True,
         only_ops=[], exclude_ops=[], batch_size=1000, raw_output=False
     ):
         """ Returns a generator for individual account transactions. The
@@ -742,6 +751,8 @@ class Account(BlockchainObject):
                 return (*optional*)
             :param int/datetime stop: stop number/date of transactions to
                 return (*optional*)
+            :param bool use_block_num: if true, start and stop are block numbers,
+                otherwise virtual OP count numbers.
             :param array only_ops: Limit generator by these
                 operations (*optional*)
             :param array exclude_ops: Exclude thse operations from
@@ -752,13 +763,10 @@ class Account(BlockchainObject):
         max_index = self.virtual_op_count()
         if not max_index:
             return
-        if start is None:
-            start_index = 0
+        if start is not None and not use_block_num and not isinstance(start, datetime):
+            start_index = start
         else:
-            if isinstance(start, datetime):
-                start_index = 0
-            else:
-                start_index = start
+            start_index = 0
         if start and isinstance(start, datetime) and start.tzinfo is None:
             utc = pytz.timezone('UTC')
             start = utc.localize(start)
@@ -774,35 +782,41 @@ class Account(BlockchainObject):
                     item_index, event = item
                     op_type, op = event['op']
                     timestamp = event["timestamp"]
+                    block_num = event["block"]
                 else:
                     item_index = item['index']
                     op_type = item['type']
                     timestamp = item["timestamp"]
+                    block_num = item["block"]
                 if start and isinstance(start, datetime):
                     timediff = start - formatTimeString(timestamp)
                     if timediff.total_seconds() > 0:
                         continue
-                elif start and item_index < start:
+                elif start and use_block_num and block_num < start:
+                    continue
+                elif start and not use_block_num and item_index < start:
                     continue
                 if stop and isinstance(stop, datetime):
                     timediff = stop - formatTimeString(timestamp)
                     if timediff.total_seconds() < 0:
                         first = max_index + _limit
                         return
-                elif stop and item_index > stop:
+                elif stop and use_block_num and block_num > stop:
+                    return
+                elif stop and not use_block_num and item_index > stop:
                     return
                 if exclude_ops and op_type in exclude_ops:
                     continue
                 if not only_ops or op_type in only_ops:
                     yield item
             first += (_limit + 1)
-            if stop and isinstance(stop, int) and first >= stop + _limit:
+            if stop and not use_block_num and isinstance(stop, int) and first >= stop + _limit:
                 break
             elif first >= max_index + _limit:
                 break
 
     def history_reverse(
-        self, start=None, stop=None,
+        self, start=None, stop=None, use_block_num=True,
         only_ops=[], exclude_ops=[], batch_size=1000, raw_output=False
     ):
         """ Returns a generator for individual account transactions. The
@@ -813,6 +827,8 @@ class Account(BlockchainObject):
                 return. If negative the virtual_op_count is added. (*optional*)
             :param int/datetime stop: stop number/date of transactions to
                 return. If negative the virtual_op_count is added. (*optional*)
+            :param bool use_block_num: if true, start and stop are block numbers,
+                otherwise virtual OP count numbers.
             :param array only_ops: Limit generator by these
                 operations (*optional*)
             :param array exclude_ops: Exclude thse operations from
@@ -823,11 +839,11 @@ class Account(BlockchainObject):
         first = self.virtual_op_count()
         if not first or not batch_size:
             return
-        if start is not None and isinstance(start, int) and start < 0:
+        if start is not None and isinstance(start, int) and start < 0 and not use_block_num:
             start += first
-        elif start is not None and isinstance(start, int):
+        elif start is not None and isinstance(start, int) and not use_block_num:
             first = start
-        if stop is not None and isinstance(stop, int) and stop < 0:
+        if stop is not None and isinstance(stop, int) and stop < 0 and not use_block_num:
             stop += first
         if start and isinstance(start, datetime) and start.tzinfo is None:
             utc = pytz.timezone('UTC')
@@ -845,22 +861,29 @@ class Account(BlockchainObject):
                     item_index, event = item
                     op_type, op = event['op']
                     timestamp = event["timestamp"]
+                    block_num = event["block"]
                 else:
                     item_index = item['index']
                     op_type = item['type']
                     timestamp = item["timestamp"]
+                    block_num = item["block"]
                 if start and isinstance(start, datetime):
                     timediff = start - formatTimeString(timestamp)
                     if timediff.total_seconds() < 0:
                         continue
-                elif start and item_index > start:
+                elif start and use_block_num and block_num > start:
+                    continue
+                elif start and not use_block_num and item_index > start:
                     continue
                 if stop and isinstance(stop, datetime):
                     timediff = stop - formatTimeString(timestamp)
                     if timediff.total_seconds() > 0:
                         first = 0
                         return
-                elif stop and item_index < stop:
+                elif stop and use_block_num and block_num < stop:
+                    first = 0
+                    return
+                elif stop and not use_block_num and item_index < stop:
                     first = 0
                     return
                 if exclude_ops and op_type in exclude_ops:
