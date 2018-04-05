@@ -344,11 +344,13 @@ class Wallet(object):
             if a["name"] == account:
                 self.removePrivateKeyFromPublicKey(a["pubkey"])
 
-    def getOwnerKeyForAccount(self, name):
-        """ Obtain owner Private Key for an account from the wallet database
+    def getKeyForAccount(self, name, key_type):
+        """ Obtain `key_type` Private Key for an account from the wallet database
         """
-        if "owner" in Wallet.keyMap:
-            return Wallet.keyMap.get("owner")
+        if key_type not in ["owner", "active", "posting", "memo"]:
+            raise AssertionError("Wrong key type")
+        if key_type in Wallet.keyMap:
+            return Wallet.keyMap.get(key_type)
         else:
             if self.rpc.get_use_appbase():
                 account = self.rpc.find_accounts({'accounts': [name]}, api="database")['accounts']
@@ -358,71 +360,37 @@ class Wallet(object):
                 return
             if len(account) == 0:
                 return
-            for authority in account[0]["owner"]["key_auths"]:
-                key = self.getPrivateKeyForPublicKey(authority[0])
+            if key_type == "memo":
+                key = self.getPrivateKeyForPublicKey(
+                    account[0]["memo_key"])
                 if key:
                     return key
+            else:
+                for authority in account[0][key_type]["key_auths"]:
+                    key = self.getPrivateKeyForPublicKey(authority[0])
+                    if key:
+                        return key
             return False
+
+    def getOwnerKeyForAccount(self, name):
+        """ Obtain owner Private Key for an account from the wallet database
+        """
+        return self.getKeyForAccount(name, "owner")
 
     def getMemoKeyForAccount(self, name):
         """ Obtain owner Memo Key for an account from the wallet database
         """
-        if "memo" in Wallet.keyMap:
-            return Wallet.keyMap.get("memo")
-        else:
-            if self.rpc.get_use_appbase():
-                account = self.rpc.find_accounts({'accounts': [name]}, api="database")['accounts']
-            else:
-                account = self.rpc.get_account(name)
-            if not account:
-                return
-            if len(account) == 0:
-                return
-            key = self.getPrivateKeyForPublicKey(
-                account[0]["memo_key"])
-            if key:
-                return key
-            return False
+        return self.getKeyForAccount(name, "memo")
 
     def getActiveKeyForAccount(self, name):
         """ Obtain owner Active Key for an account from the wallet database
         """
-        if "active" in Wallet.keyMap:
-            return Wallet.keyMap.get("active")
-        else:
-            if self.rpc.get_use_appbase():
-                account = self.rpc.find_accounts({'accounts': [name]}, api="database")['accounts']
-            else:
-                account = self.rpc.get_account(name)
-            if not account:
-                return
-            if len(account) == 0:
-                return
-            for authority in account[0]["active"]["key_auths"]:
-                key = self.getPrivateKeyForPublicKey(authority[0])
-                if key:
-                    return key
-            return False
+        return self.getKeyForAccount(name, "active")
 
     def getPostingKeyForAccount(self, name):
         """ Obtain owner Posting Key for an account from the wallet database
         """
-        if "posting" in Wallet.keyMap:
-            return Wallet.keyMap.get("posting")
-        else:
-            if self.rpc.get_use_appbase():
-                account = self.rpc.find_accounts({'accounts': [name]}, api="database")['accounts']
-            else:
-                account = self.rpc.get_account(name)
-            if not account:
-                return
-            if len(account) == 0:
-                return
-            for authority in account[0]["posting"]["key_auths"]:
-                key = self.getPrivateKeyForPublicKey(authority[0])
-                if key:
-                    return key
-            return False
+        return self.getKeyForAccount(name, "posting")
 
     def getAccountFromPrivateKey(self, wif):
         """ Obtain account name from private key
