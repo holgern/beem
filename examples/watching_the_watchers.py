@@ -7,6 +7,7 @@ from beem.blockchain import Blockchain
 from beem.comment import Comment
 from beem.account import Account
 from beem.utils import parse_time, construct_authorperm
+from beem import exceptions
 import logging
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -123,7 +124,10 @@ class WatchingTheWatchersBot:
         if vote_event["weight"] < 0:
             authorperm = construct_authorperm(vote_event["author"], vote_event["permlink"])
             # print(authorperm)
-            process_vote_content(Comment(authorperm))
+            try:
+                process_vote_content(Comment(authorperm))
+            except exceptions.ContentDoesNotExistsException:
+                print("Could not find Comment: %s" % (authorperm))
             al = list()
             if not vote_event["voter"] in self.looked_up:
                 al.append(vote_event["voter"])

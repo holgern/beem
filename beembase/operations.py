@@ -33,16 +33,7 @@ from .objects import (
 default_prefix = "STM"
 
 
-def getOperationNameForId(i):
-    """ Convert an operation id into the corresponding string
-    """
-    for key in operations:
-        if int(operations[key]) is int(i):
-            return key
-    return "Unknown Operation ID %d" % i
-
-
-def checkForClass(self, args):
+def check_for_class(self, args):
     if isArgsThisClass(self, args):
             self.data = args[0].data
             return True
@@ -53,7 +44,7 @@ def checkForClass(self, args):
 class Transfer(GrapheneObject):
     def __init__(self, *args, **kwargs):
         # Allow for overwrite of prefix
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -78,7 +69,7 @@ class Transfer(GrapheneObject):
 
 class Vote(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -92,7 +83,7 @@ class Vote(GrapheneObject):
 
 class Transfer_to_vesting(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -105,7 +96,7 @@ class Transfer_to_vesting(GrapheneObject):
 
 class Withdraw_vesting(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -117,7 +108,7 @@ class Withdraw_vesting(GrapheneObject):
 
 class Account_witness_vote(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -130,7 +121,7 @@ class Account_witness_vote(GrapheneObject):
 
 class Op_wrapper(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -142,7 +133,7 @@ class Op_wrapper(GrapheneObject):
 class Account_create(GrapheneObject):
 
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -173,7 +164,7 @@ class Account_create(GrapheneObject):
 class Account_create_with_delegation(GrapheneObject):
 
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -205,7 +196,7 @@ class Account_create_with_delegation(GrapheneObject):
 
 class Account_update(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -245,7 +236,7 @@ class Account_update(GrapheneObject):
 
 class Witness_update(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -268,7 +259,7 @@ class Witness_update(GrapheneObject):
 
 class Comment(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -293,7 +284,7 @@ class Comment(GrapheneObject):
 
 class Custom_json(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -321,7 +312,7 @@ class Custom_json(GrapheneObject):
 
 class Comment_options(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -351,7 +342,7 @@ class Comment_options(GrapheneObject):
 
 class Delete_comment(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -364,7 +355,7 @@ class Delete_comment(GrapheneObject):
 
 class Feed_publish(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -377,7 +368,7 @@ class Feed_publish(GrapheneObject):
 
 class Convert(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -391,7 +382,7 @@ class Convert(GrapheneObject):
 
 class Set_withdraw_vesting_route(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -406,7 +397,7 @@ class Set_withdraw_vesting_route(GrapheneObject):
 
 class Limit_order_cancel(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -419,7 +410,7 @@ class Limit_order_cancel(GrapheneObject):
 
 class Delegate_vesting_shares(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -433,7 +424,7 @@ class Delegate_vesting_shares(GrapheneObject):
 
 class Limit_order_create(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -450,7 +441,7 @@ class Limit_order_create(GrapheneObject):
 
 class Transfer_from_savings(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -469,7 +460,7 @@ class Transfer_from_savings(GrapheneObject):
 
 class Cancel_transfer_from_savings(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -482,7 +473,7 @@ class Cancel_transfer_from_savings(GrapheneObject):
 
 class Claim_reward_balance(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
@@ -497,7 +488,7 @@ class Claim_reward_balance(GrapheneObject):
 
 class Transfer_to_savings(GrapheneObject):
     def __init__(self, *args, **kwargs):
-        if checkForClass(self, args):
+        if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]

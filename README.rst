@@ -49,6 +49,9 @@ Current build status
    :target: https://codeclimate.com/github/holgern/beem/test_coverage
    :alt: Test Coverage
 
+Support
+=======
+You may find help at https://discord.gg/4HM592V. The discord channel can also be used to discuss things about beem.
 
 Installation
 ============
@@ -132,6 +135,16 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.19
+-------
+* serveral bug fixes and improvements
+* coverage improved
+* steem.get_blockchain_version added
+* post and comment_options moved from beem.commment to beem.steem
+* wait_for_and_get_block improved
+* num_retries handling improved
+* block_numbers can be set as start and stop in account.history and account.history_reverse, when use_block_num=True (default)
+
 0.19.18
 -------
 * bug fix release
