@@ -282,10 +282,11 @@ class TransactionBuilder(dict):
 
         if "operations" not in self or not self["operations"]:
             return
+        ret = self.json()
         if not self.steem.offline and self.steem.rpc.get_use_appbase():
-            ret = {'trx': self.json(), 'max_block_age': max_block_age}
+            args = {'trx': self.json(), 'max_block_age': max_block_age}
         else:
-            ret = self.json()
+            args = self.json()
 
         if self.steem.nobroadcast:
             log.warning("Not broadcasting anything!")
@@ -295,11 +296,11 @@ class TransactionBuilder(dict):
         try:
             if self.steem.blocking:
                 ret = self.steem.rpc.broadcast_transaction_synchronous(
-                    ret, api="network_broadcast")
+                    args, api="network_broadcast")
                 ret.update(**ret["trx"])
             else:
                 self.steem.rpc.broadcast_transaction(
-                    ret, api="network_broadcast")
+                    args, api="network_broadcast")
         except Exception as e:
             self.clear()
             raise e
