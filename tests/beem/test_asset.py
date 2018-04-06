@@ -10,10 +10,7 @@ from beem import Steem
 from beem.asset import Asset
 from beem.instance import set_shared_steem_instance
 from beem.exceptions import AssetDoesNotExistsException
-nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
-         "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
-         "wss://steemd.minnowsupportproject.org"]
-nodes_appbase = ["https://api.steem.house", "https://api.steemit.com", "wss://appbasetest.timcliff.com"]
+from beem.utils import get_node_list
 
 
 class Testcases(unittest.TestCase):
@@ -22,12 +19,12 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
-            node=nodes,
+            node=get_node_list(appbase=False),
             nobroadcast=True,
             num_retries=10
         )
         self.appbase = Steem(
-            node=nodes_appbase,
+            node=get_node_list(appbase=True),
             nobroadcast=True,
             num_retries=10
         )

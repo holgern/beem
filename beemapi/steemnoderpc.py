@@ -46,9 +46,13 @@ class SteemNodeRPC(GrapheneRPC):
                 # Forward call to GrapheneWebsocketRPC and catch+evaluate errors
                 self.error_cnt_call = cnt
                 return super(SteemNodeRPC, self).rpcexec(payload)
+            except exceptions.RPCErrorDoRetry as e:
+                msg = exceptions.decodeRPCErrorMsg(e).strip()
+                sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg))
+                doRetry = True
             except exceptions.RPCError as e:
                 msg = exceptions.decodeRPCErrorMsg(e).strip()
-                if msg == "missing required active authority":
+                if re.search("missing required active authority", msg):
                     raise exceptions.MissingRequiredActiveAuthority
                 elif re.search("missing required active authority", msg):
                     raise exceptions.MissingRequiredActiveAuthority
@@ -58,17 +62,19 @@ class SteemNodeRPC(GrapheneRPC):
                     raise exceptions.NoMethodWithName(msg)
                 elif re.search("Could not find API", msg):
                     raise exceptions.NoApiWithName(msg)
+                elif re.search("irrelevant signature included", msg):
+                    raise exceptions.UnnecessarySignatureDetected(msg)
+                elif re.search("WinError", msg):
+                    raise exceptions.RPCError(msg)
                 elif re.search("Unable to acquire database lock", msg):
                     sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg))
                     doRetry = True
                 elif re.search("Internal Error", msg):
                     sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg))
                     doRetry = True
-                elif re.search("Service Temporarily Unavailable", msg):
-                    sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg))
-                    doRetry = True
-                elif re.search("Bad Gateway", msg):
-                    sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg))
+                elif re.search("!check_max_block_age", str(e)):
+                    sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg), sleep=False)
+                    self.next()
                     doRetry = True
                 elif msg:
                     raise exceptions.UnhandledRPCError(msg)

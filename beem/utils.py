@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from builtins import next
 import re
 import time
+import math
 from datetime import datetime, tzinfo, timedelta
 import pytz
 import difflib
@@ -191,31 +192,17 @@ def construct_authorpermvoter(*args):
     return "{prefix}{author}/{permlink}|{voter}".format(**fields)
 
 
-def test_proposal_in_buffer(buf, operation_name, id):
-    from .transactionbuilder import ProposalBuilder
-    from peerplaysbase.operationids import operations
-    if not isinstance(buf, ProposalBuilder):
-        raise AssertionError()
-
-    operationid = operations.get(operation_name)
-    _, _, j = id.split(".")
-
-    ops = buf.list_operations()
-    if (len(ops) <= int(j)):
-        raise ObjectNotInProposalBuffer(
-            "{} with id {} not found".format(
-                operation_name,
-                id
-            )
-        )
-    op = ops[int(j)].json()
-    if op[0] != operationid:
-        raise ObjectNotInProposalBuffer(
-            "{} with id {} not found".format(
-                operation_name,
-                id
-            )
-        )
+def reputation_to_score(rep):
+    """Converts the account reputation value into the reputation score"""
+    if isinstance(rep, str):
+        rep = int(rep)
+    if rep == 0:
+        return 25.
+    score = max([math.log10(abs(rep)) - 9, 0])
+    if rep < 0:
+        score *= -1
+    score = (score * 9.) + 25.
+    return score
 
 
 def remove_from_dict(obj, keys=list(), keep_keys=True):
@@ -242,3 +229,16 @@ def make_patch(a, b, n=3):
     except StopIteration:
         pass
     return ''.join([d if d[-1] == '\n' else d + _no_eol for d in diffs])
+
+
+def get_node_list(appbase=False):
+    """Returns node list"""
+    if appbase:
+        return ["https://api.steem.house", "https://api.steemit.com", "wss://appbasetest.timcliff.com"]
+    else:
+        return ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
+                "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://steemd.steemgigs.org",
+                "wss://steemd.minnowsupportproject.org", "https://rpc.buildteam.io",
+                "https://steemd.minnowsupportproject.org", "https://steemd.pevo.science", "https://rpc.steemviz.com", "https://seed.bitcoiner.me",
+                "https://rpc.steemliberator.com", "https://steemd.privex.io", "https://gtg.steem.house:8090",
+                "https://rpc.curiesteem.com"]

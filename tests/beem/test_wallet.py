@@ -13,12 +13,9 @@ from beem.amount import Amount
 from beem.asset import Asset
 from beem.wallet import Wallet
 from beem.instance import set_shared_steem_instance
+from beem.utils import get_node_list
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
-         "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
-         "wss://steemd.minnowsupportproject.org"]
-nodes_appbase = ["https://api.steem.house", "https://api.steemit.com", "wss://appbasetest.timcliff.com"]
 
 
 class Testcases(unittest.TestCase):
@@ -27,7 +24,7 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.stm = Steem(
-            node=nodes,
+            node=get_node_list(appbase=False),
             nobroadcast=True,
             # We want to bundle many operations into a single transaction
             bundle=True,
@@ -35,7 +32,7 @@ class Testcases(unittest.TestCase):
             # Overwrite wallet to use this list of wifs only
         )
         self.appbase = Steem(
-            node=nodes_appbase,
+            node=get_node_list(appbase=True),
             nobroadcast=True,
             bundle=True,
             num_retries=10

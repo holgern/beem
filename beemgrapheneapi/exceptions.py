@@ -22,6 +22,12 @@ class RPCError(Exception):
     pass
 
 
+class RPCErrorDoRetry(Exception):
+    """RPCErrorDoRetry Exception."""
+
+    pass
+
+
 class NumRetriesReached(Exception):
     """NumRetriesReached Exception."""
 

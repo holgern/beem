@@ -3,12 +3,10 @@ from beem import Steem
 from beem.account import Account
 from beem.instance import set_shared_steem_instance, SharedInstance
 from beem.blockchainobject import BlockchainObject
+from beem.utils import get_node_list
 
 import logging
 log = logging.getLogger()
-nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
-         "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
-         "wss://steemd.minnowsupportproject.org"]
 
 
 class Testcases(unittest.TestCase):
@@ -21,7 +19,7 @@ class Testcases(unittest.TestCase):
         )
 
         b2 = Steem(
-            node=nodes,
+            node=get_node_list(appbase=False),
             nobroadcast=True,
             num_retries=10
         )
@@ -37,7 +35,7 @@ class Testcases(unittest.TestCase):
         test = Account("test")
 
         b2 = Steem(
-            node=nodes,
+            node=get_node_list(appbase=False),
             nobroadcast=True,
         )
         set_shared_steem_instance(b2)

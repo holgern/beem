@@ -16,7 +16,7 @@ import re
 import time
 import warnings
 from .exceptions import (
-    UnauthorizedError, RPCConnection, RPCError, NumRetriesReached
+    UnauthorizedError, RPCConnection, RPCError, RPCErrorDoRetry, NumRetriesReached
 )
 from .rpcutils import (
     is_network_appbase_ready, sleep_and_check_retries,
@@ -157,29 +157,24 @@ class GrapheneRPC(object):
                     self.headers = {'User-Agent': 'beem v0.19.14',
                                     'content-type': 'application/json'}
             try:
-                if not self.ws:
-                    break
-                else:
+                if self.ws:
                     self.ws.connect(self.url)
-                    break
+                props = self.get_config(api="database")
+                if props is None:
+                    raise RPCError("Could not recieve answer for get_config")
+                if is_network_appbase_ready(props):
+                    if self.ws:
+                        self.current_rpc = self.rpc_methods["wsappbase"]
+                    else:
+                        self.current_rpc = self.rpc_methods["appbase"]
+                self.rpclogin(self.user, self.password)
+                break
             except KeyboardInterrupt:
                 raise
             except Exception as e:
                 do_sleep = not next_url or (next_url and self.n_urls == 1)
                 sleep_and_check_retries(self.num_retries, self.error_cnt, self.url, str(e), sleep=do_sleep)
                 next_url = True
-        try:
-            props = self.get_config(api="database")
-        except:
-            props = self.get_config(api="database")
-        if props is None:
-            raise RPCError("Could not recieve answer for get_config")
-        if is_network_appbase_ready(props):
-            if self.ws:
-                self.current_rpc = self.rpc_methods["wsappbase"]
-            else:
-                self.current_rpc = self.rpc_methods["appbase"]
-        self.rpclogin(self.user, self.password)
 
     def rpclogin(self, user, password):
         """Login into Websocket"""
@@ -237,10 +232,30 @@ class GrapheneRPC(object):
         try:
             ret = json.loads(reply, strict=False)
         except ValueError:
-            if re.search("Service Temporarily Unavailable", reply):
-                raise RPCError("Service Temporarily Unavailable")
-            elif re.search("Bad Gateway", reply):
-                raise RPCError("Bad Gateway")
+            if re.search("Internal Server Error", reply) or re.search("500", reply):
+                raise RPCErrorDoRetry("Internal Server Error")
+            elif re.search("Not Implemented", reply) or re.search("501", reply):
+                raise RPCError("Not Implemented")
+            elif re.search("Bad Gateway", reply) or re.search("502", reply):
+                raise RPCErrorDoRetry("Bad Gateway")
+            elif re.search("Service Temporarily Unavailable", reply) or re.search("Service Unavailable", reply) or re.search("503", reply):
+                raise RPCErrorDoRetry("Service Temporarily Unavailable")
+            elif re.search("Gateway Time-out", reply) or re.search("Gateway Timeout", reply) or re.search("504", reply):
+                raise RPCErrorDoRetry("Gateway Time-out")
+            elif re.search("HTTP Version not supported", reply) or re.search("505", reply):
+                raise RPCError("HTTP Version not supported")
+            elif re.search("Variant Also Negotiates", reply) or re.search("506", reply):
+                raise RPCError("Variant Also Negotiates")
+            elif re.search("Insufficient Storage", reply) or re.search("507", reply):
+                raise RPCError("Insufficient Storage")
+            elif re.search("Loop Detected", reply) or re.search("508", reply):
+                raise RPCError("Loop Detected")
+            elif re.search("Bandwidth Limit Exceeded", reply) or re.search("509", reply):
+                raise RPCError("Bandwidth Limit Exceeded")
+            elif re.search("Not Extended", reply) or re.search("510", reply):
+                raise RPCError("Not Extended")
+            elif re.search("Network Authentication Required", reply) or re.search("511", reply):
+                raise RPCError("Network Authentication Required")
             else:
                 raise ValueError("Client returned invalid format. Expected JSON!")
 

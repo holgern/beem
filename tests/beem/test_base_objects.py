@@ -8,9 +8,7 @@ from beem import Steem, exceptions
 from beem.instance import set_shared_steem_instance
 from beem.account import Account
 from beem.witness import Witness
-nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
-         "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
-         "wss://steemd.minnowsupportproject.org"]
+from beem.utils import get_node_list
 
 
 class Testcases(unittest.TestCase):
@@ -19,7 +17,7 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
-            node=nodes,
+            node=get_node_list(appbase=False),
             nobroadcast=True,
             num_retries=10
         )

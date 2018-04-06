@@ -40,6 +40,8 @@ class Steem(object):
         :param bool debug: Enable Debugging *(optional)*
         :param array,dict,string keys: Predefine the wif keys to shortcut the
             wallet database *(optional)*
+        :param array,dict,string wif: Predefine the wif keys to shortcut the
+                wallet database *(optional)*
         :param bool offline: Boolean to prevent connecting to network (defaults
             to ``False``) *(optional)*
         :param int expiration: Delay in seconds until transactions are supposed
@@ -108,6 +110,8 @@ class Steem(object):
                 *(optional)*
             :param bool debug: Enable Debugging *(optional)*
             :param array,dict,string keys: Predefine the wif keys to shortcut the
+                wallet database *(optional)*
+            :param array,dict,string wif: Predefine the wif keys to shortcut the
                 wallet database *(optional)*
             :param bool offline: Boolean to prevent connecting to network (defaults
                 to ``False``) *(optional)*

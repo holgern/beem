@@ -4,7 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
 import re
-from beemgrapheneapi.graphenerpc import RPCError
+from beemgrapheneapi.graphenerpc import RPCError, RPCErrorDoRetry
 
 
 def decodeRPCErrorMsg(e):
@@ -50,4 +50,8 @@ class NumRetriesReached(Exception):
 
 
 class InvalidEndpointUrl(Exception):
+    pass
+
+
+class UnnecessarySignatureDetected(Exception):
     pass

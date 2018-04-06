@@ -257,16 +257,24 @@ class TransactionBuilder(dict):
         """ Verify the authority of the signed transaction
         """
         try:
-            ret = self.steem.rpc.verify_authority(self.json(), api="database")
+            if self.steem.rpc.get_use_appbase():
+                args = {'trx': self.json()}
+            else:
+                args = self.json()
+            ret = self.steem.rpc.verify_authority(args, api="database")
             if not ret:
+                raise InsufficientAuthorityError
+            elif isinstance(ret, dict) and "valid" in ret and not ret["valid"]:
                 raise InsufficientAuthorityError
         except Exception as e:
             raise e
 
-    def broadcast(self):
+    def broadcast(self, max_block_age=-1):
         """ Broadcast a transaction to the steem network
 
             :param tx tx: Signed transaction to broadcast
+            :param int max_block_age: paramerter only used
+                for appbase ready nodes
         """
         # Cannot broadcast an empty transaction
         if not self._is_signed():
@@ -274,8 +282,10 @@ class TransactionBuilder(dict):
 
         if "operations" not in self or not self["operations"]:
             return
-
-        ret = self.json()
+        if not self.steem.offline and self.steem.rpc.get_use_appbase():
+            ret = {'trx': self.json(), 'max_block_age': max_block_age}
+        else:
+            ret = self.json()
 
         if self.steem.nobroadcast:
             log.warning("Not broadcasting anything!")

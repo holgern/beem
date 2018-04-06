@@ -21,7 +21,7 @@ class Testcases(unittest.TestCase):
         self.bts = Steem(
             node=nodes,
             nobroadcast=True,
-            wif=[wif],
+            keys=[wif],
             num_retries=10
         )
         set_shared_steem_instance(self.bts)

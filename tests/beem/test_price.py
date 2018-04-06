@@ -8,9 +8,7 @@ from beem.amount import Amount
 from beem.price import Price, Order, FilledOrder
 from beem.asset import Asset
 import unittest
-nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
-         "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
-         "wss://steemd.minnowsupportproject.org"]
+from beem.utils import get_node_list
 
 
 class Testcases(unittest.TestCase):
@@ -18,7 +16,7 @@ class Testcases(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(Testcases, self).__init__(*args, **kwargs)
         steem = Steem(
-            node=nodes,
+            node=get_node_list(appbase=False),
             nobroadcast=True,
             num_retries=10
         )

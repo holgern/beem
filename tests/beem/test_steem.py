@@ -18,14 +18,11 @@ from beem.witness import Witness
 from beem.account import Account
 from beemgraphenebase.account import PrivateKey
 from beem.instance import set_shared_steem_instance
+from beem.utils import get_node_list
 # Py3 compatibility
 import sys
 core_unit = "STM"
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
-         "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
-         "wss://steemd.minnowsupportproject.org"]
-nodes_appbase = ["https://api.steem.house", "https://api.steemit.com", "wss://appbasetest.timcliff.com"]
 
 
 class Testcases(unittest.TestCase):
@@ -34,14 +31,14 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
-            node=nodes,
+            node=get_node_list(appbase=False),
             nobroadcast=True,
             data_refresh_time_seconds=900,
             keys={"active": wif, "owner": wif, "memo": wif},
             num_retries=10
         )
         self.appbase = Steem(
-            node=nodes_appbase,
+            node=get_node_list(appbase=True),
             nobroadcast=True,
             data_refresh_time_seconds=900,
             keys={"active": wif, "owner": wif, "memo": wif},
@@ -507,7 +504,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual("witness-gtg-log", op["permlink"])
 
     def test_offline(self):
-        bts = Steem(node=nodes,
+        bts = Steem(node=get_node_list(appbase=False),
                     offline=True,
                     data_refresh_time_seconds=900,
                     keys={"active": wif, "owner": wif, "memo": wif})
@@ -554,7 +551,7 @@ class Testcases(unittest.TestCase):
     def test_sp_to_rshares(self):
         stm = self.bts
         rshares = stm.sp_to_rshares(stm.vests_to_sp(1e6))
-        self.assertAlmostEqual(rshares, 20000000000.0)
+        self.assertAlmostEqual(rshares, 20000000000.0, places=0)
 
     def test_sign(self):
         bts = self.bts

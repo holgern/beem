@@ -18,15 +18,12 @@ from beem.blockchain import Blockchain
 from beem.block import Block
 from beem.wallet import Wallet
 from beemgraphenebase.account import PasswordKey, PrivateKey, PublicKey
-from beem.utils import parse_time, formatTimedelta
+from beem.utils import parse_time, formatTimedelta, get_node_list
 from beemgrapheneapi.rpcutils import NumRetriesReached
 
 # Py3 compatibility
 import sys
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
-         "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
-         "wss://steemd.minnowsupportproject.org"]
 core_unit = "GLS"
 
 
@@ -36,7 +33,7 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
         set_shared_steem_instance(None)
         self.stm = Steem(
-            node=nodes,
+            node=get_node_list(appbase=False),
             nobroadcast=True,
             bundle=False,
             # Overwrite wallet to use this list of wifs only

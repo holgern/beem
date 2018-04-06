@@ -14,14 +14,11 @@ from beem.discussions import (
     Discussions_by_children, Discussions_by_hot, Discussions_by_feed, Discussions_by_blog,
     Discussions_by_comments, Discussions_by_promoted
 )
+from beem.utils import get_node_list
 from datetime import datetime
 from beem.instance import set_shared_steem_instance
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
-         "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
-         "wss://steemd.minnowsupportproject.org"]
-nodes_appbase = ["https://api.steem.house", "https://api.steemit.com", "wss://appbasetest.timcliff.com"]
 
 
 class Testcases(unittest.TestCase):
@@ -30,13 +27,13 @@ class Testcases(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.bts = Steem(
-            node=nodes,
+            node=get_node_list(appbase=False),
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10
         )
         self.appbase = Steem(
-            node=nodes_appbase,
+            node=get_node_list(appbase=True),
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10

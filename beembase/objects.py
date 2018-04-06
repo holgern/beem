@@ -43,10 +43,17 @@ class Amount(object):
                 self.precision = asset_precision[self.asset]
             else:
                 raise Exception("Asset unknown")
+            self.str_repr = '{:.{}f} {}'.format(self.amount, self.precision, self.asset)
+        elif isinstance(d, list):
+            self.amount = d[0]
+            self.asset = d[2]
+            self.precision = d[1]
+            self.str_repr = d
         else:
             self.amount = d.amount
             self.asset = d.symbol
             self.precision = d.asset["precision"]
+            self.str_repr = d.json()
 
     def __bytes__(self):
         # padding
@@ -56,7 +63,7 @@ class Amount(object):
                 py23_bytes(asset, "ascii"))
 
     def __str__(self):
-        return '{:.{}f} {}'.format(self.amount, self.precision, self.asset)
+        return self.str_repr
 
 
 @python_2_unicode_compatible

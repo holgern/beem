@@ -149,7 +149,7 @@ class Amount(dict):
         return self["asset"]
 
     def json(self):
-        if self.steem.rpc.get_use_appbase():
+        if not self.steem.offline and self.steem.rpc.get_use_appbase():
             return [str(int(self)), self["asset"]["precision"], self["asset"]["asset"]]
         else:
             return str(self)

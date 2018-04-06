@@ -14,7 +14,7 @@ from beem.instance import shared_steem_instance
 from .exceptions import AccountDoesNotExistsException
 from .blockchainobject import BlockchainObject
 from .blockchain import Blockchain
-from .utils import formatTimeString, formatTimedelta, remove_from_dict
+from .utils import formatTimeString, formatTimedelta, remove_from_dict, reputation_to_score
 from beem.amount import Amount
 from beembase import operations
 from beemgraphenebase.account import PrivateKey, PublicKey
@@ -187,13 +187,7 @@ class Account(BlockchainObject):
                 rep = int(rep[0]['reputation'])
         else:
             rep = int(self['reputation'])
-        if rep == 0:
-            return 25.
-        score = max([math.log10(abs(rep)) - 9, 0])
-        if rep < 0:
-            score *= -1
-        score = (score * 9.) + 25.
-        return score
+        return reputation_to_score(rep)
 
     def get_voting_power(self, with_regeneration=True):
         """ Returns the account voting power
@@ -663,6 +657,14 @@ class Account(BlockchainObject):
                 generator (*optional*)
             :param int batch_size: internal api call batch size (*optional*)
             :param (-1, 1) order: 1 for chronological, -1 for reverse order
+            :param bool raw_output: if False, the output is a dict, which
+                includes all values. Otherwise, the output is list.
+
+            ... note::
+                only_ops and exclude_ops takes an array of strings:
+                The full list of operation ID's can be found in
+                beembase.operationids.ops.
+                Example: ['transfer', 'vote']
         """
         if order != -1 and order != 1:
             raise ValueError("order must be -1 or 1!")
@@ -758,6 +760,14 @@ class Account(BlockchainObject):
             :param array exclude_ops: Exclude thse operations from
                 generator (*optional*)
             :param int batch_size: internal api call batch size (*optional*)
+            :param bool raw_output: if False, the output is a dict, which
+                includes all values. Otherwise, the output is list.
+
+            ... note::
+                only_ops and exclude_ops takes an array of strings:
+                The full list of operation ID's can be found in
+                beembase.operationids.ops.
+                Example: ['transfer', 'vote']
         """
         _limit = batch_size
         max_index = self.virtual_op_count()
@@ -834,6 +844,14 @@ class Account(BlockchainObject):
             :param array exclude_ops: Exclude thse operations from
                 generator (*optional*)
             :param int batch_size: internal api call batch size (*optional*)
+            :param bool raw_output: if False, the output is a dict, which
+                includes all values. Otherwise, the output is list.
+
+            ... note::
+                only_ops and exclude_ops takes an array of strings:
+                The full list of operation ID's can be found in
+                beembase.operationids.ops.
+                Example: ['transfer', 'vote']
         """
         _limit = batch_size
         first = self.virtual_op_count()
