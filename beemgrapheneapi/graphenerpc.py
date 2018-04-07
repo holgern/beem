@@ -200,6 +200,35 @@ class GrapheneRPC(object):
         reply = self.ws.recv()
         return reply
 
+    def _check_for_server_error(self, reply):
+        """Checks for server error message in reply"""
+        if re.search("Internal Server Error", reply) or re.search("500", reply):
+            raise RPCErrorDoRetry("Internal Server Error")
+        elif re.search("Not Implemented", reply) or re.search("501", reply):
+            raise RPCError("Not Implemented")
+        elif re.search("Bad Gateway", reply) or re.search("502", reply):
+            raise RPCErrorDoRetry("Bad Gateway")
+        elif re.search("Service Temporarily Unavailable", reply) or re.search("Service Unavailable", reply) or re.search("503", reply):
+            raise RPCErrorDoRetry("Service Temporarily Unavailable")
+        elif re.search("Gateway Time-out", reply) or re.search("Gateway Timeout", reply) or re.search("504", reply):
+            raise RPCErrorDoRetry("Gateway Time-out")
+        elif re.search("HTTP Version not supported", reply) or re.search("505", reply):
+            raise RPCError("HTTP Version not supported")
+        elif re.search("Variant Also Negotiates", reply) or re.search("506", reply):
+            raise RPCError("Variant Also Negotiates")
+        elif re.search("Insufficient Storage", reply) or re.search("507", reply):
+            raise RPCError("Insufficient Storage")
+        elif re.search("Loop Detected", reply) or re.search("508", reply):
+            raise RPCError("Loop Detected")
+        elif re.search("Bandwidth Limit Exceeded", reply) or re.search("509", reply):
+            raise RPCError("Bandwidth Limit Exceeded")
+        elif re.search("Not Extended", reply) or re.search("510", reply):
+            raise RPCError("Not Extended")
+        elif re.search("Network Authentication Required", reply) or re.search("511", reply):
+            raise RPCError("Network Authentication Required")
+        else:
+            raise ValueError("Client returned invalid format. Expected JSON!")
+
     def rpcexec(self, payload):
         """
         Execute a call by sending the payload.
@@ -232,32 +261,7 @@ class GrapheneRPC(object):
         try:
             ret = json.loads(reply, strict=False)
         except ValueError:
-            if re.search("Internal Server Error", reply) or re.search("500", reply):
-                raise RPCErrorDoRetry("Internal Server Error")
-            elif re.search("Not Implemented", reply) or re.search("501", reply):
-                raise RPCError("Not Implemented")
-            elif re.search("Bad Gateway", reply) or re.search("502", reply):
-                raise RPCErrorDoRetry("Bad Gateway")
-            elif re.search("Service Temporarily Unavailable", reply) or re.search("Service Unavailable", reply) or re.search("503", reply):
-                raise RPCErrorDoRetry("Service Temporarily Unavailable")
-            elif re.search("Gateway Time-out", reply) or re.search("Gateway Timeout", reply) or re.search("504", reply):
-                raise RPCErrorDoRetry("Gateway Time-out")
-            elif re.search("HTTP Version not supported", reply) or re.search("505", reply):
-                raise RPCError("HTTP Version not supported")
-            elif re.search("Variant Also Negotiates", reply) or re.search("506", reply):
-                raise RPCError("Variant Also Negotiates")
-            elif re.search("Insufficient Storage", reply) or re.search("507", reply):
-                raise RPCError("Insufficient Storage")
-            elif re.search("Loop Detected", reply) or re.search("508", reply):
-                raise RPCError("Loop Detected")
-            elif re.search("Bandwidth Limit Exceeded", reply) or re.search("509", reply):
-                raise RPCError("Bandwidth Limit Exceeded")
-            elif re.search("Not Extended", reply) or re.search("510", reply):
-                raise RPCError("Not Extended")
-            elif re.search("Network Authentication Required", reply) or re.search("511", reply):
-                raise RPCError("Network Authentication Required")
-            else:
-                raise ValueError("Client returned invalid format. Expected JSON!")
+            self._check_for_server_error(reply)
 
         log.debug(json.dumps(reply))
 
