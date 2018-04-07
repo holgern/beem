@@ -270,20 +270,22 @@ class GrapheneRPC(object):
             if isinstance(ret, list):
                 ret_list = []
                 for r in ret:
-                    if 'error' in ret:
-                        if 'detail' in ret['error']:
-                            raise RPCError(ret['error']['detail'])
+                    if isinstance(r, dict) and 'error' in r:
+                        if 'detail' in r['error']:
+                            raise RPCError(r['error']['detail'])
                         else:
-                            raise RPCError(ret['error']['message'])
-                    else:
+                            raise RPCError(r['error']['message'])
+                    elif isinstance(r, dict) and "result" in r:
                         ret_list.append(r["result"])
+                    else:
+                        ret_list.append(r)
                 self.error_cnt_call = 0
                 return ret_list
             elif isinstance(ret, dict) and "result" in ret:
                 self.error_cnt_call = 0
                 return ret["result"]
             elif isinstance(ret, int):
-                raise ValueError("Client returned invalid format. Expected JSON!")
+                raise ValueError("Client returned invalid format. Expected JSON! Output: %s" % (str(ret)))
             else:
                 self.error_cnt_call = 0
                 return ret
