@@ -135,6 +135,14 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.20
+-------
+* serveral bug fixes and improvements
+* coverage improved
+* rpc improvements
+* Native appbase support for broadcasting transactions added
+* Native appbase support for Transfer added
+
 0.19.19
 -------
 * serveral bug fixes and improvements
