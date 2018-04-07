@@ -48,12 +48,13 @@ class Amount(object):
             self.amount = d[0]
             self.asset = d[2]
             self.precision = d[1]
-            self.str_repr = d
+            a = Array([String(d[0]), d[1], d[2]])
+            self.str_repr = str(a.__str__())
         else:
             self.amount = d.amount
             self.asset = d.symbol
             self.precision = d.asset["precision"]
-            self.str_repr = d.json()
+            self.str_repr = json.dumps((d.json()))
 
     def __bytes__(self):
         # padding

@@ -248,7 +248,10 @@ class Array(object):
         r = []
         for a in self.data:
             try:
-                r.append(JsonObj(a))
+                if isinstance(a, String):
+                    r.append(str(a))
+                else:
+                    r.append(JsonObj(a))
             except Exception:
                 r.append(str(a))
         return json.dumps(r)
