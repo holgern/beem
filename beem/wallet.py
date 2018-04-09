@@ -366,6 +366,7 @@ class Wallet(object):
                 if key:
                     return key
             else:
+                key = None
                 for authority in account[0][key_type]["key_auths"]:
                     try:
                         key = self.getPrivateKeyForPublicKey(authority[0])
@@ -373,7 +374,9 @@ class Wallet(object):
                             return key
                     except KeyNotFound:
                         key = None
-            return False
+                if key is None:
+                    raise KeyNotFound("No private key for {} found".format(name))
+            return
 
     def getOwnerKeyForAccount(self, name):
         """ Obtain owner Private Key for an account from the wallet database

@@ -10,7 +10,7 @@ from beem import Steem
 from beem.comment import Comment
 from beem.vote import Vote, ActiveVotes, AccountVotes
 from beem.instance import set_shared_steem_instance
-from beem.utils import get_node_list
+from beem.utils import get_node_list, construct_authorperm, resolve_authorperm, resolve_authorpermvoter
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
@@ -37,10 +37,11 @@ class Testcases(unittest.TestCase):
         set_shared_steem_instance(self.bts)
         self.bts.set_default_account("test")
         self.authorpermvoter = u"@gtg/ffdhu-gtg-witness-log|gandalf"
-        self.author = u"gtg"
-        self.permlink = u"ffdhu-gtg-witness-log"
-        self.voter = u"gandalf"
-        self.authorperm = u"@gtg/ffdhu-gtg-witness-log"
+        [author, permlink, voter] = resolve_authorpermvoter(identifier)
+        self.author = author
+        self.permlink = permlink
+        self.voter = voter
+        self.authorperm = construct_authorperm(author, permlink)
 
     @parameterized.expand([
         ("non_appbase"),
