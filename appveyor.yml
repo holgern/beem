@@ -60,8 +60,8 @@ build_script:
 
 test_script:
   # Run the project tests
-  - "py.test beembase"
-  - "py.test beemgraphene"
+  - "py.test tests\beembase"
+  - "py.test tests\beemgraphene"
 
 after_test:
   # If tests are successful, create binary packages for the project.
