@@ -135,6 +135,15 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.21
+-------
+* Transactionbuilder and Wallet improved
+* Accounts with more than one authority can be used for signing
+* Examples added
+* reconstruct_tx added to sign and addSigningInformation
+* proposer from Transactionbuilder removed, as it had no function
+* rshares_to_vote_pct added
+
 0.19.20
 -------
 * serveral bug fixes and improvements
