@@ -37,7 +37,7 @@ class Testcases(unittest.TestCase):
         set_shared_steem_instance(self.bts)
         self.bts.set_default_account("test")
         self.authorpermvoter = u"@gtg/ffdhu-gtg-witness-log|gandalf"
-        [author, permlink, voter] = resolve_authorpermvoter(identifier)
+        [author, permlink, voter] = resolve_authorpermvoter(self.authorpermvoter)
         self.author = author
         self.permlink = permlink
         self.voter = voter
