@@ -8,6 +8,7 @@ from builtins import object
 import json
 import logging
 import re
+import math
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from datetime import datetime, timedelta
 from beemapi.steemnoderpc import SteemNodeRPC
@@ -18,6 +19,7 @@ from .account import Account
 from .amount import Amount
 from .price import Price
 from .storage import configStorage as config
+from .version import version as beem_version
 from .exceptions import (
     AccountExistsException,
     AccountDoesNotExistsException
@@ -455,38 +457,93 @@ class Steem(object):
         return sp * 1e6 / self.get_steem_per_mvest(timestamp)
 
     def sp_to_sbd(self, sp, voting_power=10000, vote_pct=10000):
+        """ Obtain the resulting sbd amount from Steem power
+            :param number steem_power: Steem Power
+            :param int voting_power: voting power (100% = 10000)
+            :param int vote_pct: voting participation (100% = 10000)
+        """
+        vesting_shares = int(self.sp_to_vests(sp))
+        return self.vests_to_sbd(vesting_shares, voting_power=voting_power, vote_pct=vote_pct)
+
+    def vests_to_sbd(self, vests, voting_power=10000, vote_pct=10000):
+        """ Obtain the resulting sbd voting amount from vests
+            :param number vests: vesting shares
+            :param int voting_power: voting power (100% = 10000)
+            :param int vote_pct: voting participation (100% = 10000)
+        """
         reward_fund = self.get_reward_funds()
         reward_balance = Amount(reward_fund["reward_balance"], steem_instance=self).amount
         recent_claims = float(reward_fund["recent_claims"])
         reward_share = reward_balance / recent_claims
 
-        resulting_vote = ((voting_power * (vote_pct) / 10000) + 49) / 50
-        vesting_shares = int(self.sp_to_vests(sp))
+        resulting_vote = self._calc_resulting_vote(voting_power=voting_power, vote_pct=vote_pct)
         SBD_price = (self.get_median_price() * Amount("1 STEEM", steem_instance=self)).amount
-        VoteValue = (vesting_shares * resulting_vote * 100) * reward_share * SBD_price
+        VoteValue = (vests * resulting_vote * 100) * reward_share * SBD_price
         return VoteValue
 
-    def sp_to_rshares(self, sp, voting_power=10000, vote_pct=10000):
-        """ Obtain the r-shares
-            :param number sp: Steem Power
-            :param int voting_power: voting power (100% = 10000)
-            :param int vote_pct: voting participation (100% = 10000)
-        """
-        # calculate our account voting shares (from vests), mine is 6.08b
-        vesting_shares = int(self.sp_to_vests(sp) * 1e6)
-
+    def _max_vote_denom(self):
         # get props
         global_properties = self.get_dynamic_global_properties()
         vote_power_reserve_rate = global_properties['vote_power_reserve_rate']
+        max_vote_denom = vote_power_reserve_rate * (5 * 60 * 60 * 24) / (60 * 60 * 24)
+        return max_vote_denom
 
+    def _calc_resulting_vote(self, voting_power=10000, vote_pct=10000):
         # determine voting power used
         used_power = int((voting_power * vote_pct) / 10000)
-        max_vote_denom = vote_power_reserve_rate * (5 * 60 * 60 * 24) / (60 * 60 * 24)
+        max_vote_denom = self._max_vote_denom()
         used_power = int((used_power + max_vote_denom - 1) / max_vote_denom)
-        # calculate vote rshares
-        rshares = ((vesting_shares * used_power) / 10000)
+        return used_power
 
+    def sp_to_rshares(self, steem_power, voting_power=10000, vote_pct=10000):
+        """ Obtain the r-shares from Steem power
+            :param number steem_power: Steem Power
+            :param int voting_power: voting power (100% = 10000)
+            :param int vote_pct: voting participation (100% = 10000)
+        """
+        # calculate our account voting shares (from vests)
+        vesting_shares = int(self.sp_to_vests(steem_power) * 1e6)
+        return self.vests_to_rshares(vesting_shares, voting_power=voting_power, vote_pct=vote_pct)
+
+    def vests_to_rshares(self, vests, voting_power=10000, vote_pct=10000):
+        """ Obtain the r-shares from vests
+            :param number vests: vesting shares
+            :param int voting_power: voting power (100% = 10000)
+            :param int vote_pct: voting participation (100% = 10000)
+        """
+        used_power = self._calc_resulting_vote(voting_power=voting_power, vote_pct=vote_pct)
+        # calculate vote rshares
+        rshares = int((vests * used_power) / 10000)
         return rshares
+
+    def rshares_to_vote_pct(self, rshares, steem_power=None, vests=None, voting_power=10000):
+        """ Obtain the voting percentage for a desired rshares value
+            for a given Steem Power or vesting shares and voting_power
+            Give either steem_power or vests, not both.
+            When the output is greater than 10000, the given rshares
+            are to high
+
+            Returns the voting participation (100% = 10000)
+
+            :param number rshares: desired rshares value
+            :param number steem_power: Steem Power
+            :param number vests: vesting shares
+            :param int voting_power: voting power (100% = 10000)
+        """
+        if steem_power is None and vests is None:
+            raise ValueError("Either steem_power or vests has to be set!")
+        if steem_power is not None and vests is not None:
+            raise ValueError("Either steem_power or vests has to be set. Not both!")
+        if steem_power is not None:
+            vests = int(self.sp_to_vests(steem_power) * 1e6)
+
+        max_vote_denom = self._max_vote_denom()
+
+        used_power = int(math.ceil(rshares * 10000 / vests))
+        used_power = used_power * max_vote_denom
+
+        vote_pct = int(used_power * 10000 / voting_power)
+        return vote_pct
 
     def get_chain_properties(self, use_stored_data=True):
         """ Return witness elected chain properties
@@ -1012,6 +1069,7 @@ class Steem(object):
              json_metadata=None,
              comment_options=None,
              community=None,
+             app=None,
              tags=None,
              beneficiaries=None,
              self_vote=False):
@@ -1051,6 +1109,8 @@ class Steem(object):
         community (str): (Optional) Name of the community we are posting
             into. This will also override the community specified in
             `json_metadata`.
+        app (str): (Optional) Name of the app which are used for posting
+            when not set, beem/<version> is used
         tags (str, list): (Optional) A list of tags (5 max) to go with the
             post. This will also override the tags specified in
             `json_metadata`. The first tag will be used as a 'category'. If
@@ -1076,6 +1136,10 @@ class Steem(object):
         # override the community
         if community:
             json_metadata.update({'community': community})
+        if app:
+            json_metadata.update({'app': app})
+        elif 'app' not in json_metadata:
+            json_metadata.update({'app': 'beem/%s' % (beem_version)})
         if not author and config["default_account"]:
             author = config["default_account"]
         if not author:

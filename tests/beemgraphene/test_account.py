@@ -199,3 +199,9 @@ class Testcases(unittest.TestCase):
         for i, pwd in enumerate(a):
             p = format(PasswordKey("xeroc", pwd, "posting").get_public(), "STM")
             self.assertEqual(p, b[i])
+
+    def test_Privatekey_pubkey(self):
+        self.assertEqual([format(PrivateKey("5HvVz6XMx84aC5KaaBbwYrRLvWE46cH6zVnv4827SBPLorg76oq").pubkey, "STX"),
+                          str(PrivateKey("5HvVz6XMx84aC5KaaBbwYrRLvWE46cH6zVnv4827SBPLorg76oq", prefix="STX").pubkey)],
+                         ["STX7W5qsanXHgRAZPijbrLMDwX6VmHqUdL2s8PZiYKD5h1R7JaqRJ",
+                          "STX7W5qsanXHgRAZPijbrLMDwX6VmHqUdL2s8PZiYKD5h1R7JaqRJ"])

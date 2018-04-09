@@ -238,6 +238,10 @@ class PublicKey(Address):
 
     """
     def __init__(self, pk, prefix="STM"):
+        """Init PublicKey
+            :param str pk: Base58 encoded public key
+            :param str prefix: Network prefix (defaults to ``STM``)
+        """
         self.prefix = prefix
         self._pk = Base58(pk, prefix=prefix)
         self.address = Address(pubkey=pk, prefix=prefix)

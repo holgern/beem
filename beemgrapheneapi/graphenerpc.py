@@ -22,6 +22,7 @@ from .rpcutils import (
     is_network_appbase_ready, sleep_and_check_retries,
     get_api_name, get_query
 )
+from beem.version import version as beem_version
 
 WEBSOCKET_MODULE = None
 if not WEBSOCKET_MODULE:
@@ -154,7 +155,7 @@ class GrapheneRPC(object):
                         raise Exception()
                     self.ws = None
                     self.current_rpc = self.rpc_methods["jsonrpc"]
-                    self.headers = {'User-Agent': 'beem v0.19.14',
+                    self.headers = {'User-Agent': 'beem v%s' % (beem_version),
                                     'content-type': 'application/json'}
             try:
                 if self.ws:

@@ -25,7 +25,6 @@ from beemgrapheneapi.rpcutils import NumRetriesReached
 # Py3 compatibility
 import sys
 
-password = "yfABsiDXWcCVyDC2udXGYD2psFUiQy"
 core_unit = "STX"
 
 
@@ -45,22 +44,53 @@ class Testcases(unittest.TestCase):
         stm.wallet.wipe(True)
         stm.wallet.create("123")
         stm.wallet.unlock("123")
-        account_name = "beem"
-        active_key = PasswordKey(account_name, password, role="active", prefix=stm.prefix)
-        owner_key = PasswordKey(account_name, password, role="owner", prefix=stm.prefix)
-        posting_key = PasswordKey(account_name, password, role="posting", prefix=stm.prefix)
-        memo_key = PasswordKey(account_name, password, role="memo", prefix=stm.prefix)
-        active_privkey = active_key.get_private_key()
-        posting_privkey = posting_key.get_private_key()
-        owner_privkey = owner_key.get_private_key()
-        memo_privkey = memo_key.get_private_key()
-        stm.wallet.addPrivateKey(owner_privkey)
-        stm.wallet.addPrivateKey(active_privkey)
-        stm.wallet.addPrivateKey(memo_privkey)
-        stm.wallet.addPrivateKey(posting_privkey)
+        # Test account "beem"
+        self.active_key = "5Jt2wTfhUt5GkZHV1HYVfkEaJ6XnY8D2iA4qjtK9nnGXAhThM3w"
+        self.posting_key = "5Jh1Gtu2j4Yi16TfhoDmg8Qj3ULcgRi7A49JXdfUUTVPkaFaRKz"
+        self.memo_key = "5KPbCuocX26aMxN9CDPdUex4wCbfw9NoT5P7UhcqgDwxXa47bit"
+
+        stm.wallet.addPrivateKey(self.active_key)
+        stm.wallet.addPrivateKey(self.memo_key)
+        stm.wallet.addPrivateKey(self.posting_key)
+
+        # Test account "beem1"
+        self.active_key1 = "5Jo9SinzpdAiCDLDJVwuN7K5JcusKmzFnHpEAtPoBHaC1B5RDUd"
+        self.posting_key1 = "5JGNhDXuDLusTR3nbmpWAw4dcmE8WfSM8odzqcQ6mDhJHP8YkQo"
+        self.memo_key1 = "5KA2ddfAffjfRFoe1UhQjJtKnGsBn9xcsdPQTfMt1fQuErDAkWr"
+
+        stm.wallet.addPrivateKey(self.active_key1)
+        stm.wallet.addPrivateKey(self.memo_key1)
+        stm.wallet.addPrivateKey(self.posting_key1)
+
+        self.active_private_key_of_steemfiles = '5HvwMUj7phRn6JeWi8HNHC9FuNEhaATt3PHWZoKPXouvb4wBmz1'
+        self.active_private_key_of_elf = '5JeUg6eXYLKqESf2dyP8bshK3YZGKo4UCsvZAP4GW9yDrxzySSK'
+        stm.wallet.addPrivateKey(self.active_private_key_of_steemfiles)
+        stm.wallet.addPrivateKey(self.active_private_key_of_elf)
+
+    def test_wallet_keys(self):
+        stm = self.bts
+        stm.wallet.unlock("123")
+        priv_key = stm.wallet.getPrivateKeyForPublicKey(str(PrivateKey(self.posting_key, prefix=stm.prefix).pubkey))
+        self.assertEqual(str(priv_key), self.posting_key)
+        priv_key = stm.wallet.getKeyForAccount("beem", "active")
+        self.assertEqual(str(priv_key), self.active_key)
+        priv_key = stm.wallet.getKeyForAccount("beem1", "posting")
+        self.assertEqual(str(priv_key), self.posting_key1)
+
+        priv_key = stm.wallet.getPrivateKeyForPublicKey(str(PrivateKey(self.active_private_key_of_steemfiles, prefix=stm.prefix).pubkey))
+        self.assertEqual(str(priv_key), self.active_private_key_of_steemfiles)
+        priv_key = stm.wallet.getKeyForAccount("steemfiles", "active")
+        self.assertEqual(str(priv_key), self.active_private_key_of_steemfiles)
+
+        priv_key = stm.wallet.getPrivateKeyForPublicKey(str(PrivateKey(self.active_private_key_of_elf, prefix=stm.prefix).pubkey))
+        self.assertEqual(str(priv_key), self.active_private_key_of_elf)
+        priv_key = stm.wallet.getKeyForAccount("elf", "active")
+        self.assertEqual(str(priv_key), self.active_private_key_of_elf)
 
     def test_transfer(self):
         bts = self.bts
+        bts.nobroadcast = False
+        bts.wallet.unlock("123")
         # bts.prefix ="STX"
         acc = Account("beem", steem_instance=bts)
         tx = acc.transfer(
@@ -69,15 +99,101 @@ class Testcases(unittest.TestCase):
             tx["operations"][0][0],
             "transfer"
         )
+        self.assertEqual(len(tx['signatures']), 1)
         op = tx["operations"][0][1]
         self.assertIn("memo", op)
         self.assertEqual(op["from"], "beem")
         self.assertEqual(op["to"], "test1")
         amount = Amount(op["amount"], steem_instance=bts)
         self.assertEqual(float(amount), 1.33)
+        bts.nobroadcast = True
+
+    def test_transfer_1of1(self):
+        steem = self.bts
+        steem.nobroadcast = False
+        tx = TransactionBuilder(steem_instance=steem)
+        tx.appendOps(Transfer(**{"from": 'beem',
+                                 "to": 'leprechaun',
+                                 "amount": '0.01 SBD',
+                                 "memo": '1 of 1 transaction'}))
+        self.assertEqual(
+            tx["operations"][0][0],
+            "transfer"
+        )
+        tx.appendWif(self.active_key)
+        tx.sign()
+        self.assertEqual(len(tx['signatures']), 1)
+        tx.broadcast()
+        steem.nobroadcast = True
+
+    def test_transfer_2of2_simple(self):
+        # Send a 2 of 2 transaction from elf which needs steemfiles's cosign to send funds
+        steem = self.bts
+        steem.nobroadcast = False
+        tx = TransactionBuilder(steem_instance=steem)
+        tx.appendOps(Transfer(**{"from": 'elf',
+                                 "to": 'leprechaun',
+                                 "amount": '0.01 SBD',
+                                 "memo": '2 of 2 simple transaction'}))
+
+        tx.appendWif(self.active_private_key_of_elf)
+        tx.appendWif(self.active_private_key_of_steemfiles)
+        tx.sign()
+        self.assertEqual(len(tx['signatures']), 2)
+        tx.broadcast()
+        steem.nobroadcast = True
+
+    def test_transfer_2of2_wallet(self):
+        # Send a 2 of 2 transaction from elf which needs steemfiles's cosign to send
+        # priv key of elf and steemfiles are stored in the wallet
+        # appendSigner fetches both keys and signs automatically with both keys.
+        steem = self.bts
+        steem.nobroadcast = False
+        steem.wallet.unlock("123")
+
+        tx = TransactionBuilder(steem_instance=steem)
+        tx.appendOps(Transfer(**{"from": 'elf',
+                                 "to": 'leprechaun',
+                                 "amount": '0.01 SBD',
+                                 "memo": '2 of 2 serialized/deserialized transaction'}))
+
+        tx.appendSigner("elf", "active")
+        tx.sign()
+        self.assertEqual(len(tx['signatures']), 2)
+        tx.broadcast()
+        steem.nobroadcast = True
+
+    def test_transfer_2of2_serialized_deserialized(self):
+        # Send a 2 of 2 transaction from elf which needs steemfiles's cosign to send
+        # funds but sign the transaction with elf's key and then serialize the transaction
+        # and deserialize the transaction.  After that, sign with steemfiles's key.
+        steem = self.bts
+        steem.nobroadcast = False
+        steem.wallet.unlock("123")
+        steem.wallet.removeAccount("steemfiles")
+
+        tx = TransactionBuilder(steem_instance=steem)
+        tx.appendOps(Transfer(**{"from": 'elf',
+                                 "to": 'leprechaun',
+                                 "amount": '0.01 SBD',
+                                 "memo": '2 of 2 serialized/deserialized transaction'}))
+
+        tx.appendSigner("elf", "active")
+        tx.sign()
+        self.assertEqual(len(tx['signatures']), 1)
+        new_tx = TransactionBuilder(tx=tx.json(), steem_instance=steem)
+        self.assertEqual(len(new_tx['signatures']), 1)
+        steem.wallet.addPrivateKey(self.active_private_key_of_steemfiles)
+        new_tx.addSigningInformation("steemfiles", "active", reconstruct_tx=False)
+        new_tx.appendMissingSignatures()
+        new_tx.sign(reconstruct_tx=False)
+        self.assertEqual(len(new_tx['signatures']), 2)
+        new_tx.broadcast()
+        steem.nobroadcast = True
 
     def test_verifyAuthority(self):
         stm = self.bts
+        stm.wallet.unlock("123")
         tx = TransactionBuilder(steem_instance=stm)
         tx.appendOps(Transfer(**{"from": "beem",
                                  "to": "test1",
@@ -205,18 +321,18 @@ class Testcases(unittest.TestCase):
             account="beem",
             weight=1,
             threshold=1,
-            permission="owner",
+            permission="active",
         )
         self.assertEqual(
             (tx["operations"][0][0]),
             "account_update"
         )
         op = tx["operations"][0][1]
-        self.assertIn("owner", op)
+        self.assertIn("active", op)
         self.assertIn(
             ["STX55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n", '1'],
-            op["owner"]["key_auths"])
-        self.assertEqual(op["owner"]["weight_threshold"], 1)
+            op["active"]["key_auths"])
+        self.assertEqual(op["active"]["weight_threshold"], 1)
 
     def test_disallow(self):
         bts = self.bts
@@ -230,18 +346,19 @@ class Testcases(unittest.TestCase):
                 "STX55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n",
                 weight=1,
                 threshold=1,
-                permission="owner"
+                permission="active"
             )
         with _assertRaisesRegex(ValueError, ".*Changes nothing!.*"):
             acc.disallow(
                 "STX6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
                 weight=1,
                 threshold=1,
-                permission="owner"
+                permission="active"
             )
 
     def test_update_memo_key(self):
         bts = self.bts
+        bts.wallet.unlock("123")
         self.assertEqual(bts.prefix, "STX")
         acc = Account("beem", steem_instance=bts)
         tx = acc.update_memo_key("STX55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n")

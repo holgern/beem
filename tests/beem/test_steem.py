@@ -9,10 +9,12 @@ import string
 import unittest
 from parameterized import parameterized
 import random
+import json
 from pprint import pprint
 from beem import Steem
 from beem.amount import Amount
 from beem.memo import Memo
+from beem.version import version as beem_version
 from beem.wallet import Wallet
 from beem.witness import Witness
 from beem.account import Account
@@ -474,7 +476,7 @@ class Testcases(unittest.TestCase):
     def test_post(self):
         bts = self.bts
         tx = bts.post("title", "body", author="test", permlink=None, reply_identifier=None,
-                      json_metadata=None, comment_options=None, community=None, tags=["a, b, c, d, e"],
+                      json_metadata=None, comment_options=None, community="test", tags=["a", "b", "c", "d", "e"],
                       beneficiaries=[{'account': 'test1'}], self_vote=True)
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -485,6 +487,10 @@ class Testcases(unittest.TestCase):
         self.assertEqual(op["title"], "title")
         self.assertEqual(op["permlink"], "title")
         self.assertEqual(op["parent_author"], "")
+        self.assertEqual(op["parent_permlink"], "a")
+        json_metadata = json.loads(op["json_metadata"])
+        self.assertEqual(json_metadata["tags"], ["a", "b", "c", "d", "e"])
+        self.assertEqual(json_metadata["app"], "beem/%s" % (beem_version))
 
     def test_comment_option(self):
         bts = self.bts
@@ -552,6 +558,21 @@ class Testcases(unittest.TestCase):
         stm = self.bts
         rshares = stm.sp_to_rshares(stm.vests_to_sp(1e6))
         self.assertAlmostEqual(rshares, 20000000000.0, places=0)
+
+    def test_sp_to_sbd(self):
+        stm = self.bts
+        sp = 500
+        ret = stm.sp_to_sbd(sp)
+        self.assertTrue(ret is not None)
+
+    def test_rshares_to_vote_pct(self):
+        stm = self.bts
+        sp = 1000
+        voting_power = 9000
+        for vote_pct in range(500, 10000, 500):
+            rshares = stm.sp_to_rshares(sp, voting_power=voting_power, vote_pct=vote_pct)
+            vote_pct_ret = stm.rshares_to_vote_pct(rshares, steem_power=sp, voting_power=voting_power)
+            self.assertEqual(vote_pct_ret, vote_pct)
 
     def test_sign(self):
         bts = self.bts

@@ -61,7 +61,7 @@ class Wallet(object):
 
            from beem import Steem
            steem = Steem()
-           steem.wallet.purgeWallet()
+           steem.wallet.wipe(True)
            steem.wallet.create("supersecret-passphrase")
 
         This will raise an exception if you already have a wallet installed.
@@ -367,9 +367,12 @@ class Wallet(object):
                     return key
             else:
                 for authority in account[0][key_type]["key_auths"]:
-                    key = self.getPrivateKeyForPublicKey(authority[0])
-                    if key:
-                        return key
+                    try:
+                        key = self.getPrivateKeyForPublicKey(authority[0])
+                        if key:
+                            return key
+                    except KeyNotFound:
+                        key = None
             return False
 
     def getOwnerKeyForAccount(self, name):

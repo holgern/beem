@@ -15,7 +15,8 @@ from .exceptions import (
     InsufficientAuthorityError,
     MissingKeyError,
     InvalidWifError,
-    WalletLocked
+    WalletLocked,
+    KeyNotFound
 )
 from beem.instance import shared_steem_instance
 import logging
@@ -27,6 +28,10 @@ class TransactionBuilder(dict):
     """ This class simplifies the creation of transactions by adding
         operations and signers.
         To build your own transactions and sign them
+
+        param dict tx: transaction (Optional). If not set, the new transaction is created.
+        param str expiration: expiration date
+        param Steem steem_instance: If not set, shared_steem_instance() is used
 
         .. code-block:: python
 
@@ -47,7 +52,6 @@ class TransactionBuilder(dict):
     def __init__(
         self,
         tx={},
-        proposer=None,
         expiration=None,
         steem_instance=None
     ):
@@ -63,19 +67,24 @@ class TransactionBuilder(dict):
         self.set_expiration(expiration)
 
     def set_expiration(self, p):
+        """Set expiration date"""
         self.expiration = p
 
     def is_empty(self):
+        """Check if ops is empty"""
         return not (len(self.ops) > 0)
 
     def list_operations(self):
+        """List all ops"""
         return [Operation(o) for o in self.ops]
 
     def _is_signed(self):
-        return "signatures" in self and self["signatures"]
+        """Check if signatures exists"""
+        return "signatures" in self and bool(self["signatures"])
 
     def _is_constructed(self):
-        return "expiration" in self and self["expiration"]
+        """Check if tx is already constructed"""
+        return "expiration" in self and bool(self["expiration"])
 
     def _is_require_reconstruction(self):
         return self._require_reconstruction
@@ -123,6 +132,7 @@ class TransactionBuilder(dict):
     def appendSigner(self, account, permission):
         """ Try to obtain the wif key from the wallet by telling which account
             and permission is supposed to sign the transaction
+            It is possible to add more than one signer.
         """
         if permission not in ["active", "owner", "posting"]:
             raise AssertionError("Invalid permission")
@@ -152,6 +162,8 @@ class TransactionBuilder(dict):
                     if wif:
                         r.append([wif, authority[1]])
                 except ValueError:
+                    pass
+                except KeyNotFound:
                     pass
 
             if sum([x[1] for x in r]) < required_treshold:
@@ -185,6 +197,9 @@ class TransactionBuilder(dict):
 
     def appendWif(self, wif):
         """ Add a wif that should be used for signing of the transaction.
+
+            :param string wif: One wif key to use for signing
+                a transaction.
         """
         if wif:
             try:
@@ -196,6 +211,7 @@ class TransactionBuilder(dict):
     def constructTx(self):
         """ Construct the actual transaction and store it in the class's dict
             store
+
         """
         ops = list()
         for op in self.ops:
@@ -215,24 +231,27 @@ class TransactionBuilder(dict):
             operations=ops,
             ref_block_num=ref_block_num
         )
+
         super(TransactionBuilder, self).update(self.tx.json())
         self._unset_require_reconstruction()
 
-    def sign(self):
-        """ Sign a provided transaction witht he provided key(s)
+    def sign(self, reconstruct_tx=True):
+        """ Sign a provided transaction with the provided key(s)
+            One or many wif keys to use for signing a transaction.
+            The wif keys can be provided by "appendWif" or the
+            signer can be defined "appendSigner". The wif keys
+            from all signer that are defined by "appendSigner
+            will be loaded from the wallet.
 
-            :param dict tx: The transaction to be signed and returned
-            :param string wifs: One or many wif keys to use for signing
-                a transaction. If not present, the keys will be loaded
-                from the wallet as defined in "missing_signatures" key
-                of the transactions.
+            :param bool reconstruct_tx: when set to False and tx
+                is already contructed, it will not reconstructed
+                and already added signatures remain
         """
-        self.constructTx()
+        if not self._is_constructed() or (self._is_constructed() and reconstruct_tx):
+            self.constructTx()
 
         if "operations" not in self or not self["operations"]:
             return
-
-        # Legacy compatibility!
 
         # We need to set the default prefix, otherwise pubkeys are
         # presented wrongly!
@@ -271,8 +290,11 @@ class TransactionBuilder(dict):
 
     def broadcast(self, max_block_age=-1):
         """ Broadcast a transaction to the steem network
+            Returns the signed transaction and clears itself
+            after broadast
 
-            :param tx tx: Signed transaction to broadcast
+            Clears itself when broadcast was not sucessfully.
+
             :param int max_block_age: paramerter only used
                 for appbase ready nodes
         """
@@ -302,6 +324,7 @@ class TransactionBuilder(dict):
                 self.steem.rpc.broadcast_transaction(
                     args, api="network_broadcast")
         except Exception as e:
+            log.error("Could Not broadcasting anything!")
             self.clear()
             raise e
 
@@ -318,14 +341,21 @@ class TransactionBuilder(dict):
         self["expiration"] = None
         super(TransactionBuilder, self).__init__({})
 
-    def addSigningInformation(self, account, permission):
+    def addSigningInformation(self, account, permission, reconstruct_tx=False):
         """ This is a private method that adds side information to a
             unsigned/partial transaction in order to simplify later
             signing (e.g. for multisig or coldstorage)
 
+            Not needed when "appendWif" was already or is going to be used
+
             FIXME: Does not work with owner keys!
+
+            :param bool reconstruct_tx: when set to False and tx
+                is already contructed, it will not reconstructed
+                and already added signatures remain
         """
-        self.constructTx()
+        if not self._is_constructed() or (self._is_constructed() and reconstruct_tx):
+            self.constructTx()
         self["blockchain"] = self.steem.rpc.chain_params
 
         if isinstance(account, PublicKey):
@@ -365,6 +395,9 @@ class TransactionBuilder(dict):
         """
         missing_signatures = self.get("missing_signatures", [])
         for pub in missing_signatures:
-            wif = self.steem.wallet.getPrivateKeyForPublicKey(pub)
-            if wif:
-                self.appendWif(wif)
+            try:
+                wif = self.steem.wallet.getPrivateKeyForPublicKey(pub)
+                if wif:
+                    self.appendWif(wif)
+            except KeyNotFound:
+                wif = None
