@@ -164,9 +164,12 @@ class GrapheneRPC(object):
                     self.ws.connect(self.url)
                 try:
                     props = self.get_config(api="database")
-                except:
-                    self.current_rpc += 2
-                    props = self.get_config(api="database")
+                except Exception as e:
+                    if re.search("Bad Cast:Invalid cast from type", stra(e)):
+                        self.current_rpc += 2
+                        props = self.get_config(api="database")
+                    else:
+                        prop = None
                 if props is None:
                     raise RPCError("Could not recieve answer for get_config")
                 if is_network_appbase_ready(props):
