@@ -17,10 +17,9 @@ from beem.exceptions import (
     InvalidWifError,
     WalletLocked
 )
-from beemgraphenebase.transactions import formatTimeFromNow
 from beemapi import exceptions
 from beem.wallet import Wallet
-from beem.utils import get_node_list
+from beem.utils import get_node_list, formatTimeFromNow
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
