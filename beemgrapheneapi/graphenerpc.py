@@ -80,7 +80,7 @@ class GrapheneRPC(object):
 
     def __init__(self, urls, user=None, password=None, **kwargs):
         """Init."""
-        self.rpc_methods = {'offline': -1, 'ws': 0, 'jsonrpc': 1, 'appbase': 2, 'wsappbase': 3}
+        self.rpc_methods = {'offline': -1, 'ws': 0, 'jsonrpc': 1, 'wsappbase': 2, 'appbase': 3}
         self.current_rpc = self.rpc_methods["ws"]
         self._request_id = 0
         if isinstance(urls, str):
@@ -162,7 +162,11 @@ class GrapheneRPC(object):
             try:
                 if self.ws:
                     self.ws.connect(self.url)
-                props = self.get_config(api="database")
+                try:
+                    props = self.get_config(api="database")
+                except:
+                    self.current_rpc += 2
+                    props = self.get_config(api="database")
                 if props is None:
                     raise RPCError("Could not recieve answer for get_config")
                 if is_network_appbase_ready(props):
