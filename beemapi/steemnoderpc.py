@@ -64,13 +64,13 @@ class SteemNodeRPC(GrapheneRPC):
                 doRetry = True
             except exceptions.RPCError as e:
                 doRetry = self._check_error_message(e, cnt)
-                if doRetry:
-                    if self.error_cnt_call == 0:
-                        cnt += 1
-                    else:
-                        cnt = self.error_cnt_call + 1
             except Exception as e:
                 raise e
+            if doRetry:
+                if self.error_cnt_call == 0:
+                    cnt += 1
+                else:
+                    cnt = self.error_cnt_call + 1
 
     def _check_error_message(self, e, cnt):
         """Check error message and decide what to do"""

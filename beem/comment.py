@@ -94,7 +94,7 @@ class Comment(BlockchainObject):
             content = self.steem.rpc.get_discussion({'author': author, 'permlink': permlink}, api="tags")
         else:
             content = self.steem.rpc.get_content(author, permlink)
-        if not content or not content['author']:
+        if not content or not content['author'] or not content['permlink']:
             raise ContentDoesNotExistsException
         super(Comment, self).__init__(content, id_item="authorperm", steem_instance=self.steem)
         self["authorperm"] = construct_authorperm(self["author"], self["permlink"])
@@ -412,6 +412,7 @@ class RecentReplies(list):
     """
     def __init__(self, author, skip_own=True, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        self.steem.rpc.set_next_node_on_empty_reply(True)
         state = self.steem.rpc.get_state("/@%s/recent-replies" % author)
         replies = state["accounts"][author].get("recent_replies", [])
         comments = []
@@ -431,7 +432,7 @@ class RecentByPath(list):
     """
     def __init__(self, path="promoted", category=None, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
-
+        self.steem.rpc.set_next_node_on_empty_reply(True)
         state = self.steem.rpc.get_state("/" + path)
         replies = state["discussion_idx"][''].get(path, [])
         comments = []

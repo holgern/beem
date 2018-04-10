@@ -47,6 +47,8 @@ class Discussions_by_trending(list):
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        limit_ok = "limit" in discussion_query and discussion_query["limit"] > 0
+        self.steem.rpc.set_next_node_on_empty_reply(limit_ok)
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_trending(discussion_query, api="tags")['discussions']
         else:
@@ -67,6 +69,8 @@ class Comment_discussions_by_payout(list):
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        limit_ok = "limit" in discussion_query and discussion_query["limit"] > 0
+        self.steem.rpc.set_next_node_on_empty_reply(limit_ok)
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_comment_discussions_by_payout(discussion_query, api="tags")['discussions']
         else:
@@ -87,6 +91,8 @@ class Post_discussions_by_payout(list):
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        limit_ok = "limit" in discussion_query and discussion_query["limit"] > 0
+        self.steem.rpc.set_next_node_on_empty_reply(limit_ok)
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_post_discussions_by_payout(discussion_query, api="tags")['discussions']
         else:
@@ -107,6 +113,8 @@ class Discussions_by_created(list):
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        limit_ok = "limit" in discussion_query and discussion_query["limit"] > 0
+        self.steem.rpc.set_next_node_on_empty_reply(limit_ok)
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_created(discussion_query, api="tags")['discussions']
         else:
@@ -127,6 +135,8 @@ class Discussions_by_active(list):
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        limit_ok = "limit" in discussion_query and discussion_query["limit"] > 0
+        self.steem.rpc.set_next_node_on_empty_reply(limit_ok)
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_active(discussion_query, api="tags")['discussions']
         else:
@@ -148,6 +158,8 @@ class Discussions_by_cashout(list):
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        limit_ok = "limit" in discussion_query and discussion_query["limit"] > 0
+        self.steem.rpc.set_next_node_on_empty_reply(limit_ok)
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_cashout(discussion_query, api="tags")['discussions']
         else:
@@ -168,6 +180,8 @@ class Discussions_by_votes(list):
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        limit_ok = "limit" in discussion_query and discussion_query["limit"] > 0
+        self.steem.rpc.set_next_node_on_empty_reply(limit_ok)
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_votes(discussion_query, api="tags")['discussions']
         else:
@@ -188,6 +202,8 @@ class Discussions_by_children(list):
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        limit_ok = "limit" in discussion_query and discussion_query["limit"] > 0
+        self.steem.rpc.set_next_node_on_empty_reply(limit_ok)
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_children(discussion_query, api="tags")['discussions']
         else:
@@ -208,6 +224,8 @@ class Discussions_by_hot(list):
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        limit_ok = "limit" in discussion_query and discussion_query["limit"] > 0
+        self.steem.rpc.set_next_node_on_empty_reply(limit_ok)
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_hot(discussion_query, api="tags")['discussions']
         else:
@@ -228,6 +246,8 @@ class Discussions_by_feed(list):
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        limit_ok = "limit" in discussion_query and discussion_query["limit"] > 0
+        self.steem.rpc.set_next_node_on_empty_reply(limit_ok)
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_feed(discussion_query, api="tags")['discussions']
         else:
@@ -252,6 +272,8 @@ class Discussions_by_blog(list):
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        limit_ok = "limit" in discussion_query and discussion_query["limit"] > 0
+        self.steem.rpc.set_next_node_on_empty_reply(limit_ok)
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_blog(discussion_query, api="tags")['discussions']
         else:
@@ -276,6 +298,8 @@ class Discussions_by_comments(list):
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        limit_ok = "limit" in discussion_query and discussion_query["limit"] > 0
+        self.steem.rpc.set_next_node_on_empty_reply(limit_ok)
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_comments(discussion_query, api="tags")['discussions']
         else:
@@ -296,6 +320,8 @@ class Discussions_by_promoted(list):
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        limit_ok = "limit" in discussion_query and discussion_query["limit"] > 0
+        self.steem.rpc.set_next_node_on_empty_reply(limit_ok)
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_promoted(discussion_query, api="tags")['discussions']
         else:

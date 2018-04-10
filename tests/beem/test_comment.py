@@ -50,7 +50,10 @@ class Testcases(unittest.TestCase):
             exceptions.ContentDoesNotExistsException
         ):
             Comment("@abcdef/abcdef", steem_instance=bts)
-        c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
+        try:
+            c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
+        except exceptions.ContentDoesNotExistsException:
+            c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
         self.assertTrue(isinstance(c.id, int))
         self.assertTrue(c.id > 0)
         self.assertEqual(c.author, "gtg")
