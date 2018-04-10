@@ -234,12 +234,11 @@ def make_patch(a, b, n=3):
 def get_node_list(appbase=False):
     """Returns node list"""
     if appbase:
-        return ["https://api.steem.house", "https://api.steemit.com", "wss://steemd.steemitstage.com",
+        return ["https://api.steemit.com", "https://api.steem.house", "wss://steemd.steemitstage.com",
                 "wss://steemd.steemitdev.com", "wss://appbasetest.timcliff.com"]
     else:
-        return ["wss://steemd.privex.io", "wss://steemd.pevo.science", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io", "wss://gtg.steem.house:8090",
-                "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://steemd.steemgigs.org",
-                "wss://steemd.minnowsupportproject.org", "https://rpc.buildteam.io",
+        return ["wss://steemd.privex.io", "wss://steemd.pevo.science", "wss://rpc.buildteam.io", "wss://rpc.steemliberator.com", "wss://gtg.steem.house:8090",
+                "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://steemd.steemgigs.org", "wss://steemd.minnowsupportproject.org", "https://rpc.buildteam.io",
                 "https://steemd.minnowsupportproject.org", "https://steemd.pevo.science", "https://rpc.steemviz.com", "https://seed.bitcoiner.me",
                 "https://rpc.steemliberator.com", "https://steemd.privex.io", "https://gtg.steem.house:8090",
-                "https://rpc.curiesteem.com"]
+                "https://rpc.curiesteem.com", "https://steemd.steemgigs.org"]

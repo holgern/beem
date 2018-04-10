@@ -232,14 +232,12 @@ class Configuration(DataDir):
     __tablename__ = "config"
 
     #: Default configuration
-    nodes = get_node_list(appbase=False)
-    nodes.append(get_node_list(appbase=True))
+    nodes = get_node_list(appbase=False) + get_node_list(appbase=True)
     config_defaults = {
         "node": nodes,
         "rpcpassword": "",
         "rpcuser": "",
-        "order-expiration": 7 * 24 * 60 * 60,
-    }
+        "order-expiration": 7 * 24 * 60 * 60}
 
     def __init__(self):
         super(Configuration, self).__init__()

@@ -15,6 +15,7 @@ import threading
 import re
 import time
 import warnings
+from requests.exceptions import ConnectionError
 from .exceptions import (
     UnauthorizedError, RPCConnection, RPCError, RPCErrorDoRetry, NumRetriesReached
 )
@@ -103,8 +104,9 @@ class GrapheneRPC(object):
         self.password = password
         self.ws = None
         self.rpc_queue = []
+        self.timeout = kwargs.get('timeout', 60)
         self.num_retries = kwargs.get("num_retries", -1)
-        self.error_cnt = 0
+        self.error_cnt = {}
         self.num_retries_call = kwargs.get("num_retries_call", 5)
         self.error_cnt_call = 0
         self.rpcconnect()
@@ -129,14 +131,14 @@ class GrapheneRPC(object):
 
     def rpcconnect(self, next_url=True):
         """Connect to next url in a loop."""
-        self.error_cnt = 0
         if self.urls is None:
             return
         while True:
-            self.error_cnt += 1
             if next_url:
                 self.error_cnt_call = 0
                 self.url = next(self.urls)
+                if self.url not in self.error_cnt:
+                    self.error_cnt[self.url] = 0
                 log.debug("Trying to connect to node %s" % self.url)
                 if self.url[:3] == "wss":
                     if WEBSOCKET_MODULE is None:
@@ -173,8 +175,9 @@ class GrapheneRPC(object):
             except KeyboardInterrupt:
                 raise
             except Exception as e:
+                self.error_cnt[self.url] += 1
                 do_sleep = not next_url or (next_url and self.n_urls == 1)
-                sleep_and_check_retries(self.num_retries, self.error_cnt, self.url, str(e), sleep=do_sleep)
+                sleep_and_check_retries(self.num_retries, self.error_cnt[self.url], self.url, str(e), sleep=do_sleep)
                 next_url = True
 
     def rpclogin(self, user, password):
@@ -191,6 +194,7 @@ class GrapheneRPC(object):
         response = requests.post(self.url,
                                  data=payload,
                                  headers=self.headers,
+                                 timeout=self.timeout,
                                  auth=(self.user, self.password))
         if response.status_code == 401:
             raise UnauthorizedError
@@ -252,8 +256,13 @@ class GrapheneRPC(object):
             except KeyboardInterrupt:
                 raise
             except WebSocketConnectionClosedException:
+                self.error_cnt[self.url] += 1
                 self.rpcconnect(next_url=False)
+            except ConnectionError as e:
+                self.error_cnt[self.url] += 1
+                sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, str(e))
             except Exception as e:
+                self.error_cnt[self.url] += 1
                 sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, str(e))
                 # retry
                 self.rpcconnect()
