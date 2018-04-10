@@ -12,17 +12,11 @@ from beem.blockchain import Blockchain
 from beem.account import Account
 from beem.block import Block
 from beem.steem import Steem
-from beem.utils import parse_time, formatTimedelta
+from beem.utils import parse_time, formatTimedelta, get_node_list
 from beemgrapheneapi.rpcutils import NumRetriesReached
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
-         "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org",
-         "wss://steemd.minnowsupportproject.org", "https://api.steemit.com", "https://rpc.buildteam.io",
-         "https://steemd.minnowsupportproject.org", "https://steemd.pevo.science", "https://rpc.steemviz.com", "https://seed.bitcoiner.me",
-         "https://rpc.steemliberator.com", "https://steemd.privex.io", "https://gtg.steem.house:8090", "https://api.steem.house",
-         "https://rpc.curiesteem.com"]
 
 if __name__ == "__main__":
     how_many_minutes = 10
@@ -30,6 +24,8 @@ if __name__ == "__main__":
     max_batch_size = None
     threading = False
     thread_num = 16
+    nodes = get_node_list(appbase=True)
+    nodes.append(get_node_list(appbase=False))
     t = PrettyTable(["node", "10 blockchain minutes", "10000 virtual account op", "version"])
     t.align = "l"
     for node in nodes:

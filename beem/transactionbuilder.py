@@ -209,6 +209,10 @@ class TransactionBuilder(dict):
             except:
                 raise InvalidWifError
 
+    def clearWifs(self):
+        """Clear all stored wifs"""
+        self.wifs = set()
+
     def constructTx(self):
         """ Construct the actual transaction and store it in the class's dict
             store

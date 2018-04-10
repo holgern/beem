@@ -122,6 +122,7 @@ class Testcases(unittest.TestCase):
         )
         tx.appendWif(self.active_key)
         tx.sign()
+        tx.sign()
         self.assertEqual(len(tx['signatures']), 1)
         tx.broadcast()
         steem.nobroadcast = True
@@ -137,8 +138,10 @@ class Testcases(unittest.TestCase):
                                  "memo": '2 of 2 simple transaction'}))
 
         tx.appendWif(self.active_private_key_of_elf)
-        tx.appendWif(self.active_private_key_of_steemfiles)
         tx.sign()
+        tx.clearWifs()
+        tx.appendWif(self.active_private_key_of_steemfiles)
+        tx.sign(reconstruct_tx=False)
         self.assertEqual(len(tx['signatures']), 2)
         tx.broadcast()
         steem.nobroadcast = True
@@ -180,6 +183,7 @@ class Testcases(unittest.TestCase):
 
         tx.appendSigner("elf", "active")
         tx.sign()
+        tx.clearWifs()
         self.assertEqual(len(tx['signatures']), 1)
         new_tx = TransactionBuilder(tx=tx.json(), steem_instance=steem)
         self.assertEqual(len(new_tx['signatures']), 1)
@@ -190,6 +194,35 @@ class Testcases(unittest.TestCase):
         self.assertEqual(len(new_tx['signatures']), 2)
         new_tx.broadcast()
         steem.nobroadcast = True
+
+    def test_transfer_2of2_offline(self):
+        # Send a 2 of 2 transaction from elf which needs steemfiles's cosign to send
+        # funds but sign the transaction with elf's key and then serialize the transaction
+        # and deserialize the transaction.  After that, sign with steemfiles's key.
+        steem = self.bts
+        steem.nobroadcast = False
+        steem.wallet.unlock("123")
+        steem.wallet.removeAccount("steemfiles")
+
+        tx = TransactionBuilder(steem_instance=steem)
+        tx.appendOps(Transfer(**{"from": 'elf',
+                                 "to": 'leprechaun',
+                                 "amount": '0.01 SBD',
+                                 "memo": '2 of 2 serialized/deserialized transaction'}))
+
+        tx.appendSigner("elf", "active")
+        tx.addSigningInformation("elf", "active")
+        tx.sign()
+        tx.clearWifs()
+        self.assertEqual(len(tx['signatures']), 1)
+        steem.wallet.removeAccount("elf")
+        steem.wallet.addPrivateKey(self.active_private_key_of_steemfiles)
+        tx.appendMissingSignatures()
+        tx.sign(reconstruct_tx=False)
+        self.assertEqual(len(tx['signatures']), 2)
+        tx.broadcast()
+        steem.nobroadcast = True
+        steem.wallet.addPrivateKey(self.active_private_key_of_elf)
 
     def test_verifyAuthority(self):
         stm = self.bts
