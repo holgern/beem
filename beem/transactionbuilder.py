@@ -7,6 +7,7 @@ from builtins import str
 from future.utils import python_2_unicode_compatible
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from .account import Account
+from .utils import formatTimeFromNow
 from beembase.objects import Operation
 from beemgraphenebase.account import PrivateKey, PublicKey
 from beembase.signedtransactions import Signed_Transaction
@@ -220,7 +221,7 @@ class TransactionBuilder(dict):
 
         # We no wrap everything into an actual transaction
         # ops = transactions.addRequiredFees(self.steem.rpc, ops)
-        expiration = transactions.formatTimeFromNow(
+        expiration = formatTimeFromNow(
             self.expiration or self.steem.expiration
         )
         ref_block_num, ref_block_prefix = transactions.getBlockParams(

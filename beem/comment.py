@@ -24,7 +24,6 @@ class Comment(BlockchainObject):
 
         :param str authorperm: perm link to post/comment
         :param steem steem_instance: Steem() instance to use when accesing a RPC
-
     """
     type_id = 8
 
@@ -87,7 +86,10 @@ class Comment(BlockchainObject):
     def refresh(self):
         if self.identifier == "":
             return
+        if self.steem.offline:
+            return
         [author, permlink] = resolve_authorperm(self.identifier)
+        self.steem.rpc.set_next_node_on_empty_reply(True)
         if self.steem.rpc.get_use_appbase():
             content = self.steem.rpc.get_discussion({'author': author, 'permlink': permlink}, api="tags")
         else:

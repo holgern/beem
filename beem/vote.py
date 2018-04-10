@@ -12,6 +12,7 @@ from .utils import resolve_authorperm, resolve_authorpermvoter, construct_author
 from .blockchainobject import BlockchainObject
 from .comment import Comment
 from datetime import datetime
+from beemapi.exceptions import UnkownKey
 import json
 import math
 import pytz
@@ -82,14 +83,18 @@ class Vote(BlockchainObject):
     def refresh(self):
         if self.identifier is None:
             return
-        [author, permlink, voter] = resolve_authorpermvoter(self.identifier)
-        if self.steem.rpc.get_use_appbase():
-            votes = self.steem.rpc.get_active_votes({'author': author, 'permlink': permlink}, api="tags")['votes']
-        else:
-            votes = self.steem.rpc.get_active_votes(author, permlink)
-        if not votes:
-            self["voter"] = voter
+        if self.steem.offline:
             return
+        [author, permlink, voter] = resolve_authorpermvoter(self.identifier)
+        self.steem.rpc.set_next_node_on_empty_reply(True)
+        try:
+            if self.steem.rpc.get_use_appbase():
+                votes = self.steem.rpc.get_active_votes({'author': author, 'permlink': permlink}, api="tags")['votes']
+            else:
+                votes = self.steem.rpc.get_active_votes(author, permlink, api="database_api")
+        except UnkownKey:
+            raise VoteDoesNotExistsException
+
         vote = None
         for x in votes:
             if x["voter"] == voter:
@@ -190,14 +195,17 @@ class ActiveVotes(VotesObject):
             if 'active_votes' in authorperm and len(authorperm["active_votes"]) > 0:
                 votes = authorperm["active_votes"]
             elif self.steem.rpc.get_use_appbase():
+                self.steem.rpc.set_next_node_on_empty_reply(True)
                 votes = self.steem.rpc.get_active_votes({'author': authorperm["author"],
                                                          'permlink': authorperm["permlink"]},
                                                         api="tags")['votes']
             else:
+                self.steem.rpc.set_next_node_on_empty_reply(True)
                 votes = self.steem.rpc.get_active_votes(authorperm["author"], authorperm["permlink"])
             authorperm = authorperm["authorperm"]
         elif isinstance(authorperm, string_types):
             [author, permlink] = resolve_authorperm(authorperm)
+            self.steem.rpc.set_next_node_on_empty_reply(True)
             if self.steem.rpc.get_use_appbase():
                 votes = self.steem.rpc.get_active_votes({'author': author,
                                                          'permlink': permlink},

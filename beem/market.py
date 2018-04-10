@@ -51,6 +51,9 @@ class Market(dict):
         self,
         steem_instance=None,
     ):
+        """
+        Init Market
+        """
         self.steem = steem_instance or shared_steem_instance()
 
         quote = Asset("STEEM", steem_instance=self.steem)
@@ -98,10 +101,9 @@ class Market(dict):
         """
         data = {}
         # Core Exchange rate
-        if self.steem.rpc.get_use_appbase():
-            ticker = self.steem.rpc.get_ticker(api="market_history")
-        else:
-            ticker = self.steem.rpc.get_ticker(api="market_history")
+        self.steem.rpc.set_next_node_on_empty_reply(True)
+        ticker = self.steem.rpc.get_ticker(api="market_history")
+
         if raw_data:
             return ticker
 
@@ -142,10 +144,8 @@ class Market(dict):
                 }
 
         """
-        if self.steem.rpc.get_use_appbase():
-            volume = self.steem.rpc.get_volume(api="market_history")
-        else:
-            volume = self.steem.rpc.get_volume(api="market_history")
+        self.steem.rpc.set_next_node_on_empty_reply(True)
+        volume = self.steem.rpc.get_volume(api="market_history")
         if raw_data:
             return volume
         return {
@@ -174,10 +174,11 @@ class Market(dict):
                 ``base``, ``quote`` and ``price``. From those you can
                 obtain the actual amounts for sale
         """
+        self.steem.rpc.set_next_node_on_empty_reply(True)
         if self.steem.rpc.get_use_appbase():
             orders = self.steem.rpc.get_order_book({'limit': limit}, api="market_history")
         else:
-            orders = self.steem.rpc.get_order_book(limit)
+            orders = self.steem.rpc.get_order_book(limit, api='database_api')
         if raw_data:
             return orders
         asks = list([Order(
@@ -221,6 +222,7 @@ class Market(dict):
                 obtain the actual amounts for sale
 
         """
+        self.steem.rpc.set_next_node_on_empty_reply(limit > 0)
         if self.steem.rpc.get_use_appbase():
             orders = self.steem.rpc.get_recent_trades({'limit': limit}, api="market_history")['trades']
         else:
@@ -244,6 +246,7 @@ class Market(dict):
             stop = datetime.now()
         if not start:
             start = stop - timedelta(hours=24)
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             orders = self.steem.rpc.get_trade_history({'start': formatTimeString(start),
                                                        'end': formatTimeString(stop),
@@ -259,10 +262,12 @@ class Market(dict):
         return filled_order
 
     def market_history_buckets(self):
+        self.steem.rpc.set_next_node_on_empty_reply(True)
+        ret = self.steem.rpc.get_market_history_buckets(api="market_history")
         if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.get_market_history_buckets(api="market_history")['bucket_sizes']
+            return ret['bucket_sizes']
         else:
-            return self.steem.rpc.get_market_history_buckets(api="market_history")
+            return ret
 
     def market_history(self, bucket_seconds=300, start_age=3600, end_age=0):
         buckets = self.market_history_buckets()
@@ -271,6 +276,7 @@ class Market(dict):
         else:
             if bucket_seconds not in buckets:
                 raise ValueError("You need select the bucket_seconds from " + str(buckets))
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             history = self.steem.rpc.get_market_history({'bucket_seconds': bucket_seconds,
                                                          'start': formatTimeFromNow(-start_age - end_age),

@@ -29,6 +29,10 @@ class MissingRequiredActiveAuthority(RPCError):
     pass
 
 
+class UnkownKey(RPCError):
+    pass
+
+
 class NoMethodWithName(RPCError):
     pass
 

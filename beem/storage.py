@@ -18,6 +18,7 @@ from binascii import hexlify
 import random
 import hashlib
 from .exceptions import WrongMasterPasswordException
+from .utils import get_node_list
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
@@ -231,12 +232,8 @@ class Configuration(DataDir):
     __tablename__ = "config"
 
     #: Default configuration
-    nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
-             "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://steemd.steemgigs.org",
-             "wss://steemd.minnowsupportproject.org", "https://api.steemit.com", "https://rpc.buildteam.io",
-             "https://steemd.minnowsupportproject.org", "https://steemd.pevo.science", "https://rpc.steemviz.com", "https://seed.bitcoiner.me",
-             "https://rpc.steemliberator.com", "https://steemd.privex.io", "https://gtg.steem.house:8090", "https://api.steem.house",
-             "https://rpc.curiesteem.com"]
+    nodes = get_node_list(appbase=False)
+    nodes.append(get_node_list(appbase=True))
     config_defaults = {
         "node": nodes,
         "rpcpassword": "",

@@ -83,6 +83,8 @@ class Account(BlockchainObject):
     def refresh(self):
         """ Refresh/Obtain an account's data from the API server
         """
+        if self.steem.offline:
+            return
         if self.steem.rpc.get_use_appbase():
                 account = self.steem.rpc.find_accounts({'accounts': [self.identifier]}, api="database")
         else:

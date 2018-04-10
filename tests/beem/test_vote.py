@@ -6,11 +6,11 @@ from builtins import super
 import unittest
 from parameterized import parameterized
 from pprint import pprint
-from beem import Steem
+from beem import Steem, exceptions
 from beem.comment import Comment
 from beem.vote import Vote, ActiveVotes, AccountVotes
 from beem.instance import set_shared_steem_instance
-from beem.utils import get_node_list, construct_authorperm, resolve_authorperm, resolve_authorpermvoter
+from beem.utils import get_node_list, construct_authorperm, resolve_authorperm, resolve_authorpermvoter, construct_authorpermvoter
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
@@ -85,6 +85,30 @@ class Testcases(unittest.TestCase):
         self.assertTrue(vote.reputation is not None)
         self.assertTrue(vote.rep is not None)
         self.assertTrue(vote.time is not None)
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_keyerror(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        else:
+            bts = self.appbase
+        with self.assertRaises(
+            exceptions.VoteDoesNotExistsException
+        ):
+            Vote(construct_authorpermvoter(self.author, self.permlink, "asdfsldfjlasd"), steem_instance=bts)
+
+        with self.assertRaises(
+            exceptions.VoteDoesNotExistsException
+        ):
+            Vote(construct_authorpermvoter(self.author, "sdlfjd", "asdfsldfjlasd"), steem_instance=bts)
+
+        with self.assertRaises(
+            exceptions.VoteDoesNotExistsException
+        ):
+            Vote(construct_authorpermvoter("sdalfj", "dsfa", "asdfsldfjlasd"), steem_instance=bts)
 
     @parameterized.expand([
         ("non_appbase"),

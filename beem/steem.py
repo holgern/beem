@@ -80,7 +80,7 @@ class Steem(object):
 
             steem = Steem(<host>)
 
-        where ``<host>`` starts with ``ws://`` or ``wss://``.
+        where ``<host>`` starts with ``https://``, ``ws://`` or ``wss://``.
 
         The purpose of this class it to simplify interaction with
         Steem.
