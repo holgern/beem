@@ -239,7 +239,7 @@ class GrapheneRPC(object):
         elif re.search("Network Authentication Required", reply) or re.search("511", reply):
             raise RPCError("Network Authentication Required")
         else:
-            raise ValueError("Client returned invalid format. Expected JSON!")
+            raise RPCError("Client returned invalid format. Expected JSON!")
 
     def rpcexec(self, payload):
         """

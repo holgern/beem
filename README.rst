@@ -38,9 +38,6 @@ Current build status
 .. image:: https://api.codacy.com/project/badge/Grade/e5476faf97df4c658697b8e7a7efebd7    
     :target: https://www.codacy.com/app/holgern/beem?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=holgern/beem&amp;utm_campaign=Badge_Grade
 
-.. image:: https://api.codacy.com/project/badge/Coverage/e5476faf97df4c658697b8e7a7efebd7
-    :target: https://www.codacy.com/app/holgern/beem?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=holgern/beem&amp;utm_campaign=Badge_Coverage
-
 .. image:: https://api.codeclimate.com/v1/badges/e7bdb5b4aa7ab160a780/test_coverage
    :target: https://codeclimate.com/github/holgern/beem/test_coverage
    :alt: Test Coverage
