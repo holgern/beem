@@ -32,18 +32,14 @@ Current build status
 .. image:: https://circleci.com/gh/holgern/beem.svg?style=svg
     :target: https://circleci.com/gh/holgern/beem
 
-.. image:: https://codecov.io/gh/holgern/beem/branch/master/graph/badge.svg
-  :target: https://codecov.io/gh/holgern/beem
-
-.. image:: https://coveralls.io/repos/github/holgern/beem/badge.svg
-    :target: https://coveralls.io/github/holgern/beem
-
+.. image:: https://readthedocs.org/projects/beem/badge/?version=latest
+  :target: http://beem.readthedocs.org/en/latest/?badge=latest
 
 .. image:: https://api.codacy.com/project/badge/Grade/e5476faf97df4c658697b8e7a7efebd7    
     :target: https://www.codacy.com/app/holgern/beem?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=holgern/beem&amp;utm_campaign=Badge_Grade
-  
-.. image:: https://readthedocs.org/projects/beem/badge/?version=latest
-  :target: http://beem.readthedocs.org/en/latest/?badge=latest
+
+.. image:: https://api.codacy.com/project/badge/Coverage/e5476faf97df4c658697b8e7a7efebd7
+    :target: https://www.codacy.com/app/holgern/beem?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=holgern/beem&amp;utm_campaign=Badge_Coverage
 
 .. image:: https://api.codeclimate.com/v1/badges/e7bdb5b4aa7ab160a780/test_coverage
    :target: https://codeclimate.com/github/holgern/beem/test_coverage

@@ -42,7 +42,7 @@ matrix:
       language: objective-c
       env:
         - TRAVIS_PYTHON_VERSION=3.6
-        - TOXENV=py36short
+        - TOXENV=short
 
 cache: pip
 
@@ -56,12 +56,7 @@ before_install:
   - pip install --upgrade pip
   - pip install --upgrade wheel
   # Set numpy version first, other packages link against it
-  - pip install six nose coverage codecov tox-travis pytest pytest-cov coveralls codacy-coverage parameterized secp256k1 cryptography scrypt
+  - pip install six nose coverage codecov tox-travis pytest parameterized secp256k1 cryptography scrypt
 
 script:
  - tox
-
-after_success:
-  - codecov
-  - coveralls
-  - python-codacy-coverage -r coverage.xml
