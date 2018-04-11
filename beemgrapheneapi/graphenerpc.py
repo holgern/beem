@@ -29,7 +29,7 @@ WEBSOCKET_MODULE = None
 if not WEBSOCKET_MODULE:
     try:
         import websocket
-        from websocket._exceptions import WebSocketConnectionClosedException
+        from websocket._exceptions import WebSocketConnectionClosedException, WebSocketTimeoutException
         WEBSOCKET_MODULE = "websocket"
     except ImportError:
         WEBSOCKET_MODULE = None
@@ -148,13 +148,11 @@ class GrapheneRPC(object):
                     ssl_defaults = ssl.get_default_verify_paths()
                     sslopt_ca_certs = {'ca_certs': ssl_defaults.cafile}
                     self.ws = websocket.WebSocket(sslopt=sslopt_ca_certs, enable_multithread=True)
-                    self.ws.setdefaulttimeout(self.timeout)
                     self.current_rpc = self.rpc_methods["ws"]
                 elif self.url[:2] == "ws":
                     if WEBSOCKET_MODULE is None:
                         raise Exception()
                     self.ws = websocket.WebSocket(enable_multithread=True)
-                    self.ws.setdefaulttimeout(self.timeout)
                     self.current_rpc = self.rpc_methods["ws"]
                 else:
                     if REQUEST_MODULE is None:
@@ -276,7 +274,7 @@ class GrapheneRPC(object):
             except WebSocketConnectionClosedException:
                 self.error_cnt[self.url] += 1
                 self.rpcconnect(next_url=False)
-            except websocket.WebSocketTimeoutException:
+            except WebSocketTimeoutException:
                 self.error_cnt[self.url] += 1
                 self.rpcconnect(next_url=True)                
             except ConnectionError as e:
