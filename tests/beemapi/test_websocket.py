@@ -18,10 +18,10 @@ import sys
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 core_unit = "STM"
+
 nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
          "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
          "wss://steemd.minnowsupportproject.org"]
-nodes_appbase = ["wss://appbasetest.timcliff.com"]
 
 
 class TestBot:
@@ -42,8 +42,11 @@ class Testcases(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        stm = Steem(node=nodes)
+
         self.ws = SteemWebsocket(
-            nodes,
+            urls=stm.rpc.urls,
+            timeout=15,
             num_retries=10
         )
 

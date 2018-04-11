@@ -31,7 +31,6 @@ class SteemWebsocket(Events):
         :param str user: Username for Authentication
         :param str password: Password for Authentication
         :param int keep_alive: seconds between a ping to the backend (defaults to 25seconds)
-        :param int timeout: Timeout setting for https nodes (default is 60)
 
         After instanciating this class, you can add event slots for:
 
@@ -83,7 +82,6 @@ class SteemWebsocket(Events):
         self.user = user
         self.password = password
         self.keep_alive = keep_alive
-        self.timeout = timeout
         self.run_event = threading.Event()
         self.only_block_id = only_block_id
         if isinstance(urls, cycle):
@@ -257,7 +255,6 @@ class SteemWebsocket(Events):
                     on_close=self.on_close,
                     on_open=self.on_open,
                 )
-                self.ws.setdefaulttimeout(self.timeout)
                 self.ws.run_forever()
             except websocket.WebSocketException as exc:
                 sleep_and_check_retries(self.num_retries, cnt, self.url)
