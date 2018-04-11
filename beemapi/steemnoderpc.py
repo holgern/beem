@@ -17,7 +17,12 @@ log = logging.getLogger(__name__)
 class SteemNodeRPC(GrapheneRPC):
     """This class allows to call API methods exposed by the witness node via
        websockets / rpc-json.
-
+    :param str urls: Either a single Websocket/Http URL, or a list of URLs
+    :param str user: Username for Authentication
+    :param str password: Password for Authentication
+    :param int num_retries: Try x times to num_retries to a node on disconnect, -1 for indefinitely
+    :param int num_retries_call: Repeat num_retries_call times a rpc call on node error (default is 5)
+    :param int timeout: Timeout setting for https nodes (default is 60)
     """
 
     def __init__(self, *args, **kwargs):

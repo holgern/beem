@@ -93,7 +93,7 @@ class Vote(BlockchainObject):
             else:
                 votes = self.steem.rpc.get_active_votes(author, permlink, api="database_api")
         except UnkownKey:
-            raise VoteDoesNotExistsException
+            raise VoteDoesNotExistsException(self.identifier)
 
         vote = None
         for x in votes:

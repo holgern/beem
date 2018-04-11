@@ -56,6 +56,7 @@ class GrapheneRPC(object):
     :param str password: Password for Authentication
     :param int num_retries: Try x times to num_retries to a node on disconnect, -1 for indefinitely
     :param int num_retries_call: Repeat num_retries_call times a rpc call on node error (default is 5)
+    :param int timeout: Timeout setting for https nodes (default is 60)
     Available APIs
 
           * database
@@ -163,13 +164,12 @@ class GrapheneRPC(object):
                 if self.ws:
                     self.ws.connect(self.url)
                 try:
+                    props = None
                     props = self.get_config(api="database")
                 except Exception as e:
-                    if re.search("Bad Cast:Invalid cast from type", stra(e)):
+                    if re.search("Bad Cast:Invalid cast from type", str(e)):
                         self.current_rpc += 2
                         props = self.get_config(api="database")
-                    else:
-                        prop = None
                 if props is None:
                     raise RPCError("Could not recieve answer for get_config")
                 if is_network_appbase_ready(props):
@@ -255,7 +255,7 @@ class GrapheneRPC(object):
             self.error_cnt_call += 1
 
             try:
-                if self.current_rpc == 0 or self.current_rpc == 3:
+                if self.current_rpc == 0 or self.current_rpc == 2:
                     reply = self.ws_send(json.dumps(payload, ensure_ascii=False).encode('utf8'))
                 else:
                     reply = self.request_send(json.dumps(payload, ensure_ascii=False).encode('utf8'))
