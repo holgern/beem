@@ -148,7 +148,7 @@ class GrapheneRPC(object):
                     sslopt_ca_certs = {'ca_certs': ssl_defaults.cafile}
                     self.ws = websocket.WebSocket(sslopt=sslopt_ca_certs, enable_multithread=True)
                     self.current_rpc = self.rpc_methods["ws"]
-                elif self.url[:3] == "ws":
+                elif self.url[:2] == "ws":
                     if WEBSOCKET_MODULE is None:
                         raise Exception()
                     self.ws = websocket.WebSocket(enable_multithread=True)

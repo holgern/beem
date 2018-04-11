@@ -39,6 +39,8 @@ class Testcases(unittest.TestCase):
             keys={"active": wif},
             num_retries=10
         )
+        self.account = Account("test", full=True, steem_instance=self.bts)
+        self.account_appbase = Account("test", full=True, steem_instance=self.appbase)
         self.bts.set_default_account("test")
         set_shared_steem_instance(self.bts)
 
@@ -49,8 +51,10 @@ class Testcases(unittest.TestCase):
     def test_account(self, node_param):
         if node_param == "non_appbase":
             stm = self.bts
+            account = self.account
         else:
             stm = self.appbase
+            account = self.account_appbase
         Account("test", steem_instance=stm)
         with self.assertRaises(
             exceptions.AccountDoesNotExistsException
@@ -58,7 +62,6 @@ class Testcases(unittest.TestCase):
             Account("DoesNotExistsXXX", steem_instance=stm)
         # asset = Asset("1.3.0")
         # symbol = asset["symbol"]
-        account = Account("test", full=True, steem_instance=stm)
         self.assertEqual(account.name, "test")
         self.assertEqual(account["name"], account.name)
         self.assertIsInstance(account.get_balance("available", "SBD"), Amount)
@@ -83,10 +86,9 @@ class Testcases(unittest.TestCase):
     ])
     def test_history(self, node_param):
         if node_param == "non_appbase":
-            stm = self.bts
+            account = self.account
         else:
-            stm = self.appbase
-        account = Account("test", full=True, steem_instance=stm)
+            account = self.account_appbase
         h_all_raw = []
         for h in account.history_reverse(raw_output=True):
             h_all_raw.append(h)
@@ -189,10 +191,9 @@ class Testcases(unittest.TestCase):
     ])
     def test_history_block_num(self, node_param):
         if node_param == "non_appbase":
-            stm = self.bts
+            account = self.account
         else:
-            stm = self.appbase
-        account = Account("test", full=True, steem_instance=stm)
+            account = self.account_appbase
         h_all_raw = []
         for h in account.history_reverse(raw_output=True):
             h_all_raw.append(h)
@@ -231,10 +232,9 @@ class Testcases(unittest.TestCase):
     ])
     def test_account_props(self, node_param):
         if node_param == "non_appbase":
-            stm = self.bts
+            account = self.account
         else:
-            stm = self.appbase
-        account = Account("test", full=True, steem_instance=stm)
+            account = self.account_appbase
         rep = account.get_reputation()
         self.assertTrue(isinstance(rep, float))
         vp = account.get_voting_power()
@@ -255,8 +255,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual(count['following_count'], len(following))
 
     def test_withdraw_vesting(self):
-        bts = self.bts
-        w = Account("test", steem_instance=bts)
+        w = self.account
         tx = w.withdraw_vesting("100 VESTS")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -268,8 +267,7 @@ class Testcases(unittest.TestCase):
             op["account"])
 
     def test_delegate_vesting_shares(self):
-        bts = self.bts
-        w = Account("test", steem_instance=bts)
+        w = self.account
         tx = w.delegate_vesting_shares("test1", "100 VESTS")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -281,8 +279,7 @@ class Testcases(unittest.TestCase):
             op["delegator"])
 
     def test_claim_reward_balance(self):
-        bts = self.bts
-        w = Account("test", steem_instance=bts)
+        w = self.account
         tx = w.claim_reward_balance()
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -294,8 +291,7 @@ class Testcases(unittest.TestCase):
             op["account"])
 
     def test_cancel_transfer_from_savings(self):
-        bts = self.bts
-        w = Account("test", steem_instance=bts)
+        w = self.account
         tx = w.cancel_transfer_from_savings(0)
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -307,8 +303,7 @@ class Testcases(unittest.TestCase):
             op["from"])
 
     def test_transfer_from_savings(self):
-        bts = self.bts
-        w = Account("test", steem_instance=bts)
+        w = self.account
         tx = w.transfer_from_savings(1, "STEEM", "")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -320,8 +315,7 @@ class Testcases(unittest.TestCase):
             op["from"])
 
     def test_transfer_to_savings(self):
-        bts = self.bts
-        w = Account("test", steem_instance=bts)
+        w = self.account
         tx = w.transfer_to_savings(1, "STEEM", "")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -333,8 +327,7 @@ class Testcases(unittest.TestCase):
             op["from"])
 
     def test_convert(self):
-        bts = self.bts
-        w = Account("test", steem_instance=bts)
+        w = self.account
         tx = w.convert("1 SBD")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -346,8 +339,7 @@ class Testcases(unittest.TestCase):
             op["owner"])
 
     def test_transfer_to_vesting(self):
-        bts = self.bts
-        w = Account("test", steem_instance=bts)
+        w = self.account
         tx = w.transfer_to_vesting("1 STEEM")
         self.assertEqual(
             (tx["operations"][0][0]),

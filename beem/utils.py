@@ -234,7 +234,7 @@ def make_patch(a, b, n=3):
 def get_node_list(appbase=False):
     """Returns node list"""
     if appbase:
-        return ["https://api.steemit.com", "https://api.steem.house", "wss://appbasetest.timcliff.com"]
+        return ["https://api.steemit.com", "wss://appbasetest.timcliff.com", "https://api.steem.house"]
     else:
         return ["wss://steemd.privex.io", "wss://steemd.pevo.science", "wss://rpc.buildteam.io", "wss://rpc.steemliberator.com", "wss://gtg.steem.house:8090",
                 "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://steemd.steemgigs.org", "wss://steemd.minnowsupportproject.org", "https://rpc.buildteam.io",

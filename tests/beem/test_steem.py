@@ -46,6 +46,8 @@ class Testcases(unittest.TestCase):
             keys={"active": wif, "owner": wif, "memo": wif},
             num_retries=10
         )
+        self.account = Account("test", full=True, steem_instance=self.bts)
+        self.account_appbase = Account("test", full=True, steem_instance=self.appbase)
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(self.bts)
@@ -58,9 +60,10 @@ class Testcases(unittest.TestCase):
     def test_transfer(self, node_param):
         if node_param == "non_appbase":
             bts = self.bts
+            acc = self.account
         elif node_param == "appbase":
             bts = self.appbase
-        acc = Account("test", steem_instance=bts)
+            acc = self.account_appbase
         tx = acc.transfer(
             "test", 1.33, "SBD", memo="Foobar", account="test1")
         self.assertEqual(
@@ -83,9 +86,10 @@ class Testcases(unittest.TestCase):
     def test_transfer_memo(self, node_param):
         if node_param == "non_appbase":
             bts = self.bts
+            acc = self.account
         elif node_param == "appbase":
             bts = self.appbase
-        acc = Account("test", steem_instance=bts)
+            acc = self.account_appbase
         tx = acc.transfer(
             "test", 1.33, "SBD", memo="#Foobar", account="test1")
         self.assertEqual(
@@ -332,12 +336,13 @@ class Testcases(unittest.TestCase):
     def test_finalizeOps(self, node_param):
         if node_param == "non_appbase":
             bts = self.bts
+            acc = self.account
         elif node_param == "appbase":
             bts = self.appbase
+            acc = self.account_appbase
         tx1 = bts.new_tx()
         tx2 = bts.new_tx()
 
-        acc = Account("test1", steem_instance=bts)
         acc.transfer("test1", 1, "STEEM", append_to=tx1)
         acc.transfer("test1", 2, "STEEM", append_to=tx2)
         acc.transfer("test1", 3, "STEEM", append_to=tx1)
@@ -382,10 +387,11 @@ class Testcases(unittest.TestCase):
     def test_allow(self, node_param):
         if node_param == "non_appbase":
             bts = self.bts
+            acc = self.account
         elif node_param == "appbase":
             bts = self.appbase
+            acc = self.account_appbase
         self.assertIn(bts.prefix, "STM")
-        acc = Account("test", steem_instance=bts)
         tx = acc.allow(
             "STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n",
             account="test",
@@ -410,10 +416,9 @@ class Testcases(unittest.TestCase):
     ])
     def test_disallow(self, node_param):
         if node_param == "non_appbase":
-            bts = self.bts
+            acc = self.account
         elif node_param == "appbase":
-            bts = self.appbase
-        acc = Account("test", steem_instance=bts)
+            acc = self.account_appbase
         if sys.version > '3':
             _assertRaisesRegex = self.assertRaisesRegex
         else:
@@ -439,10 +444,9 @@ class Testcases(unittest.TestCase):
     ])
     def test_update_memo_key(self, node_param):
         if node_param == "non_appbase":
-            bts = self.bts
+            acc = self.account
         elif node_param == "appbase":
-            bts = self.appbase
-        acc = Account("test1", steem_instance=bts)
+            acc = self.account_appbase
         tx = acc.update_memo_key("STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -459,10 +463,9 @@ class Testcases(unittest.TestCase):
     ])
     def test_approvewitness(self, node_param):
         if node_param == "non_appbase":
-            bts = self.bts
+            w = self.account
         elif node_param == "appbase":
-            bts = self.appbase
-        w = Account("test", steem_instance=bts)
+            w = self.account_appbase
         tx = w.approvewitness("test1")
         self.assertEqual(
             (tx["operations"][0][0]),

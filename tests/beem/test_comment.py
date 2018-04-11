@@ -43,12 +43,6 @@ class Testcases(unittest.TestCase):
             c = Comment("@gtg/witness-gtg-log", steem_instance=self.bts)
             title = c["title"]
             self.bts.rpc.next()
-        cnt = 0
-        title = ''
-        while cnt < 5 and title == '':
-            c = Comment("@gtg/witness-gtg-log", steem_instance=self.appbase)
-            title = c["title"]
-            self.appbase.rpc.next()
 
     @parameterized.expand([
         ("non_appbase"),
