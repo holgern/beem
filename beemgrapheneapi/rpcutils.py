@@ -101,33 +101,3 @@ def sleep_and_check_retries(num_retries, cnt, url, errorMsg=None, sleep=True):
     if sleeptime:
         log.warning("Retrying in %d seconds\n" % sleeptime)
         time.sleep(sleeptime)
-
-
-def evaluate_json_reply(self, ret):
-    """Evaluate server reply and raises RPCError on errors"""
-    if isinstance(ret, dict) and 'error' in ret:
-        if 'detail' in ret['error']:
-            raise RPCError(ret['error']['detail'])
-        else:
-            raise RPCError(ret['error']['message'])
-    else:
-        if isinstance(ret, list):
-            ret_list = []
-            for r in ret:
-                if isinstance(r, dict) and 'error' in r:
-                    if 'detail' in r['error']:
-                        raise RPCError(r['error']['detail'])
-                    else:
-                        raise RPCError(r['error']['message'])
-                elif isinstance(r, dict) and "result" in r:
-                    ret_list.append(r["result"])
-                else:
-                    ret_list.append(r)
-            return ret_list
-        elif isinstance(ret, dict) and "result" in ret:
-            return ret["result"]
-        elif isinstance(ret, int):
-            raise RPCError("Client returned invalid format. Expected JSON! Output: %s" % (str(ret)))
-        else:
-            return ret
-    return ret

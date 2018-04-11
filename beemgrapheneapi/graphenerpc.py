@@ -29,7 +29,7 @@ WEBSOCKET_MODULE = None
 if not WEBSOCKET_MODULE:
     try:
         import websocket
-        from websocket._exceptions import WebSocketConnectionClosedException, WebSocketTimeoutException
+        from websocket._exceptions import WebSocketConnectionClosedException
         WEBSOCKET_MODULE = "websocket"
     except ImportError:
         WEBSOCKET_MODULE = None
@@ -164,7 +164,20 @@ class GrapheneRPC(object):
             try:
                 if self.ws:
                     self.ws.connect(self.url)
-                self._is_node_appbase_ready()
+                try:
+                    props = None
+                    props = self.get_config(api="database")
+                except Exception as e:
+                    if re.search("Bad Cast:Invalid cast from type", str(e)):
+                        self.current_rpc += 2
+                        props = self.get_config(api="database")
+                if props is None:
+                    raise RPCError("Could not recieve answer for get_config")
+                if is_network_appbase_ready(props):
+                    if self.ws:
+                        self.current_rpc = self.rpc_methods["wsappbase"]
+                    else:
+                        self.current_rpc = self.rpc_methods["appbase"]
                 self.rpclogin(self.user, self.password)
                 break
             except KeyboardInterrupt:
@@ -174,22 +187,6 @@ class GrapheneRPC(object):
                 do_sleep = not next_url or (next_url and self.n_urls == 1)
                 sleep_and_check_retries(self.num_retries, self.error_cnt[self.url], self.url, str(e), sleep=do_sleep)
                 next_url = True
-
-    def _is_node_appbase_ready(self):
-        try:
-            props = None
-            props = self.get_config(api="database")
-        except Exception as e:
-            if re.search("Bad Cast:Invalid cast from type", str(e)):
-                self.current_rpc += 2
-                props = self.get_config(api="database")
-        if props is None:
-            raise RPCError("Could not recieve answer for get_config")
-        if is_network_appbase_ready(props):
-            if self.ws:
-                self.current_rpc = self.rpc_methods["wsappbase"]
-            else:
-                self.current_rpc = self.rpc_methods["appbase"]
 
     def rpclogin(self, user, password):
         """Login into Websocket"""
@@ -274,9 +271,6 @@ class GrapheneRPC(object):
             except WebSocketConnectionClosedException:
                 self.error_cnt[self.url] += 1
                 self.rpcconnect(next_url=False)
-            except WebSocketTimeoutException:
-                self.error_cnt[self.url] += 1
-                self.rpcconnect(next_url=True)                
             except ConnectionError as e:
                 self.error_cnt[self.url] += 1
                 sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, str(e))
@@ -286,16 +280,42 @@ class GrapheneRPC(object):
                 # retry
                 self.rpcconnect()
 
-        json_reply = {}
+        ret = {}
         try:
-            json_reply = json.loads(reply, strict=False)
+            ret = json.loads(reply, strict=False)
         except ValueError:
             self._check_for_server_error(reply)
 
         log.debug(json.dumps(reply))
 
-        ret = evaluate_json_reply(json_reply)
-        self.error_cnt_call = 0
+        if isinstance(ret, dict) and 'error' in ret:
+            if 'detail' in ret['error']:
+                raise RPCError(ret['error']['detail'])
+            else:
+                raise RPCError(ret['error']['message'])
+        else:
+            if isinstance(ret, list):
+                ret_list = []
+                for r in ret:
+                    if isinstance(r, dict) and 'error' in r:
+                        if 'detail' in r['error']:
+                            raise RPCError(r['error']['detail'])
+                        else:
+                            raise RPCError(r['error']['message'])
+                    elif isinstance(r, dict) and "result" in r:
+                        ret_list.append(r["result"])
+                    else:
+                        ret_list.append(r)
+                self.error_cnt_call = 0
+                return ret_list
+            elif isinstance(ret, dict) and "result" in ret:
+                self.error_cnt_call = 0
+                return ret["result"]
+            elif isinstance(ret, int):
+                raise RPCError("Client returned invalid format. Expected JSON! Output: %s" % (str(ret)))
+            else:
+                self.error_cnt_call = 0
+                return ret
         return ret
 
     # End of Deprecated methods
