@@ -129,15 +129,9 @@ jobs:
             tox -e py35
 workflows:
   version: 2
-  build-test-and-deploy:
+  build_and_test:
     jobs:
       - build-python3.6
-      - build-python2.7:
-          requires:
-            - build-python3.6
-      - build-python3.4:
-          requires:
-            - build-python2.7
-      - build-python3.5:
-          requires:
-            - build-python3.5
+      - build-python2.7
+      - build-python3.4
+      - build-python3.5
