@@ -85,4 +85,3 @@ class Testcases(unittest.TestCase):
             exceptions.BlockDoesNotExistsException
         ):
             BlockHeader(0, steem_instance=bts)
-

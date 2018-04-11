@@ -47,7 +47,7 @@ class Block(BlockchainObject):
         else:
             block = self.steem.rpc.get_block(self.identifier)
         if not block:
-            raise BlockDoesNotExistsException
+            raise BlockDoesNotExistsException(str(self.identifier))
         super(Block, self).__init__(block, steem_instance=self.steem)
 
     @property
@@ -98,7 +98,7 @@ class BlockHeader(BlockchainObject):
         else:
             block = self.steem.rpc.get_block_header(self.identifier)
         if not block:
-            raise BlockDoesNotExistsException
+            raise BlockDoesNotExistsException(str(self.identifier))
         super(BlockHeader, self).__init__(
             block,
             steem_instance=self.steem

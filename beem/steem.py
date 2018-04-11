@@ -492,12 +492,12 @@ class Steem(object):
         # get props
         global_properties = self.get_dynamic_global_properties()
         vote_power_reserve_rate = global_properties['vote_power_reserve_rate']
-        max_vote_denom = vote_power_reserve_rate * (5 * 60 * 60 * 24) / (60 * 60 * 24)
+        max_vote_denom = vote_power_reserve_rate * (5 * 60 * 60 * 24)
         return max_vote_denom
 
     def _calc_resulting_vote(self, voting_power=10000, vote_pct=10000):
         # determine voting power used
-        used_power = int((voting_power * vote_pct) / 10000)
+        used_power = int((voting_power * vote_pct) / 10000 * (60 * 60 * 24))
         max_vote_denom = self._max_vote_denom()
         used_power = int((used_power + max_vote_denom - 1) / max_vote_denom)
         return used_power
@@ -549,7 +549,7 @@ class Steem(object):
         used_power = int(math.ceil(rshares * 10000 / vests))
         used_power = used_power * max_vote_denom
 
-        vote_pct = int(used_power * 10000 / voting_power)
+        vote_pct = int(used_power * 10000 / (60 * 60 * 24) / voting_power)
         return vote_pct
 
     def get_chain_properties(self, use_stored_data=True):
