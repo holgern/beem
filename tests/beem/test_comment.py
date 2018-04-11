@@ -32,10 +32,23 @@ class Testcases(unittest.TestCase):
             keys={"active": wif},
             num_retries=10
         )
+        self.authorperm = "@gtg/witness-gtg-log"
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(self.bts)
         self.bts.set_default_account("test")
+        cnt = 0
+        title = ''
+        while cnt < 5 and title == '':
+            c = Comment("@gtg/witness-gtg-log", steem_instance=self.bts)
+            title = c["title"]
+            self.bts.rpc.next()
+        cnt = 0
+        title = ''
+        while cnt < 5 and title == '':
+            c = Comment("@gtg/witness-gtg-log", steem_instance=self.appbase)
+            title = c["title"]
+            self.appbase.rpc.next()
 
     @parameterized.expand([
         ("non_appbase"),
@@ -50,10 +63,7 @@ class Testcases(unittest.TestCase):
             exceptions.ContentDoesNotExistsException
         ):
             Comment("@abcdef/abcdef", steem_instance=bts)
-        try:
-            c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
-        except exceptions.ContentDoesNotExistsException:
-            c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
+        c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
         self.assertTrue(isinstance(c.id, int))
         self.assertTrue(c.id > 0)
         self.assertEqual(c.author, "gtg")

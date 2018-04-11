@@ -72,9 +72,7 @@ class Comment(BlockchainObject):
                 self[p] = Amount(self.get(p, "0.000 SBD"), steem_instance=self.steem)
 
         # turn json_metadata into python dict
-        meta_str = self.get("json_metadata", "{}")
-        if isinstance(meta_str, (string_types, bytes_types, bytearray)):
-            self['json_metadata'] = json.loads(meta_str)
+        self.__metadata_to_dict()
         self["tags"] = []
         self['community'] = ''
         if isinstance(self['json_metadata'], dict):
@@ -82,6 +80,17 @@ class Comment(BlockchainObject):
                 self["tags"] = self['json_metadata']["tags"]
             if 'community' in self['json_metadata']:
                 self['community'] = self['json_metadata']['community']
+
+    def _metadata_to_dict(self):
+        """turn json_metadata into python dict"""
+        meta_str = self.get("json_metadata", "{}")
+        if isinstance(meta_str, (string_types, bytes_types, bytearray)):
+            try:
+                self['json_metadata'] = json.loads(meta_str)
+            except:
+                self['json_metadata'] = {}
+        else:
+            self['json_metadata'] = {}
 
     def refresh(self):
         if self.identifier == "":
@@ -119,15 +128,7 @@ class Comment(BlockchainObject):
             if p in self and isinstance(self.get(p), string_types):
                 self[p] = Amount(self.get(p, "0.000 SBD"), steem_instance=self.steem)
         # turn json_metadata into python dict
-
-        meta_str = self.get("json_metadata", "{}")
-        if isinstance(meta_str, (string_types, bytes_types, bytearray)):
-            try:
-                self['json_metadata'] = json.loads(meta_str)
-            except:
-                self['json_metadata'] = {}
-        else:
-            self['json_metadata'] = {}
+        self._metadata_to_dict()
         self["tags"] = []
         self['community'] = ''
         if isinstance(self['json_metadata'], dict):
