@@ -129,7 +129,7 @@ jobs:
             tox -e py35
 workflows:
   version: 2
-  build_and_test:
+  build-test-and-deploy:
     jobs:
       - build-python3.6
       - build-python2.7:
