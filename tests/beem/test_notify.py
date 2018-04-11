@@ -30,7 +30,7 @@ class TestBot:
     def new_block(self, block):
         chunk = 5
         self.blocks = self.blocks + 1
-        if self.blocks % chunk == 0:
+        if self.blocks >= chunk:
             self.notify.close()
 
 
