@@ -72,7 +72,7 @@ class Comment(BlockchainObject):
                 self[p] = Amount(self.get(p, "0.000 SBD"), steem_instance=self.steem)
 
         # turn json_metadata into python dict
-        self.__metadata_to_dict()
+        self._metadata_to_dict()
         self["tags"] = []
         self['community'] = ''
         if isinstance(self['json_metadata'], dict):
@@ -84,13 +84,13 @@ class Comment(BlockchainObject):
     def _metadata_to_dict(self):
         """turn json_metadata into python dict"""
         meta_str = self.get("json_metadata", "{}")
+        if meta_str == "{}":
+            self['json_metadata'] = meta_str
         if isinstance(meta_str, (string_types, bytes_types, bytearray)):
             try:
                 self['json_metadata'] = json.loads(meta_str)
             except:
                 self['json_metadata'] = {}
-        else:
-            self['json_metadata'] = {}
 
     def refresh(self):
         if self.identifier == "":

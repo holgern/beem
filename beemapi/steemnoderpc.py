@@ -56,9 +56,11 @@ class SteemNodeRPC(GrapheneRPC):
                 # Forward call to GrapheneWebsocketRPC and catch+evaluate errors
                 self.error_cnt_call = cnt
                 reply = super(SteemNodeRPC, self).rpcexec(payload)
-                if self.next_node_on_empty_reply and not bool(reply):
+                if self.next_node_on_empty_reply and not bool(reply) and self.n_urls > 1:
                     sleep_and_check_retries(self.num_retries_call, cnt, self.url, str("Empty reply"), sleep=False)
                     self.next()
+                    cnt = 0
+                    self.error_cnt_call = 0
                     doRetry = True
                 else:
                     self.next_node_on_empty_reply = False

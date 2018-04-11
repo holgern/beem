@@ -100,7 +100,7 @@ class Vote(BlockchainObject):
             if x["voter"] == voter:
                 vote = x
         if not vote:
-            raise VoteDoesNotExistsException
+            raise VoteDoesNotExistsException(self.identifier)
         super(Vote, self).__init__(vote, id_item="authorpermvoter", steem_instance=self.steem)
 
         self.identifier = construct_authorpermvoter(author, permlink, voter)
