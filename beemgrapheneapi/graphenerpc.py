@@ -21,7 +21,7 @@ from .exceptions import (
 )
 from .rpcutils import (
     is_network_appbase_ready, sleep_and_check_retries,
-    get_api_name, get_query
+    get_api_name, get_query, evaluate_json_reply
 )
 from beem.version import version as beem_version
 
@@ -110,7 +110,8 @@ class GrapheneRPC(object):
         self.error_cnt = {}
         self.num_retries_call = kwargs.get("num_retries_call", 5)
         self.error_cnt_call = 0
-        self.rpcconnect()
+        if kwargs.get("autoconnect", True):
+            self.rpcconnect()
 
     def get_request_id(self):
         """Get request id."""
@@ -147,11 +148,13 @@ class GrapheneRPC(object):
                     ssl_defaults = ssl.get_default_verify_paths()
                     sslopt_ca_certs = {'ca_certs': ssl_defaults.cafile}
                     self.ws = websocket.WebSocket(sslopt=sslopt_ca_certs, enable_multithread=True)
+                    self.ws.setdefaulttimeout(self.timeout)
                     self.current_rpc = self.rpc_methods["ws"]
                 elif self.url[:2] == "ws":
                     if WEBSOCKET_MODULE is None:
                         raise Exception()
                     self.ws = websocket.WebSocket(enable_multithread=True)
+                    self.ws.setdefaulttimeout(self.timeout)
                     self.current_rpc = self.rpc_methods["ws"]
                 else:
                     if REQUEST_MODULE is None:
@@ -163,20 +166,7 @@ class GrapheneRPC(object):
             try:
                 if self.ws:
                     self.ws.connect(self.url)
-                try:
-                    props = None
-                    props = self.get_config(api="database")
-                except Exception as e:
-                    if re.search("Bad Cast:Invalid cast from type", str(e)):
-                        self.current_rpc += 2
-                        props = self.get_config(api="database")
-                if props is None:
-                    raise RPCError("Could not recieve answer for get_config")
-                if is_network_appbase_ready(props):
-                    if self.ws:
-                        self.current_rpc = self.rpc_methods["wsappbase"]
-                    else:
-                        self.current_rpc = self.rpc_methods["appbase"]
+                self._is_node_appbase_ready()
                 self.rpclogin(self.user, self.password)
                 break
             except KeyboardInterrupt:
@@ -186,6 +176,22 @@ class GrapheneRPC(object):
                 do_sleep = not next_url or (next_url and self.n_urls == 1)
                 sleep_and_check_retries(self.num_retries, self.error_cnt[self.url], self.url, str(e), sleep=do_sleep)
                 next_url = True
+
+    def _is_node_appbase_ready(self):
+        try:
+            props = None
+            props = self.get_config(api="database")
+        except Exception as e:
+            if re.search("Bad Cast:Invalid cast from type", str(e)):
+                self.current_rpc += 2
+                props = self.get_config(api="database")
+        if props is None:
+            raise RPCError("Could not recieve answer for get_config")
+        if is_network_appbase_ready(props):
+            if self.ws:
+                self.current_rpc = self.rpc_methods["wsappbase"]
+            else:
+                self.current_rpc = self.rpc_methods["appbase"]
 
     def rpclogin(self, user, password):
         """Login into Websocket"""
@@ -261,7 +267,7 @@ class GrapheneRPC(object):
                     reply = self.request_send(json.dumps(payload, ensure_ascii=False).encode('utf8'))
                 if reply == '':
                     self.error_cnt[self.url] += 1
-                    sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, "Emply Reply")
+                    sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, "Empty Reply")
                     self.rpcconnect()
                 else:
                     break
@@ -270,6 +276,9 @@ class GrapheneRPC(object):
             except WebSocketConnectionClosedException:
                 self.error_cnt[self.url] += 1
                 self.rpcconnect(next_url=False)
+            except websocket.WebSocketTimeoutException:
+                self.error_cnt[self.url] += 1
+                self.rpcconnect(next_url=True)                
             except ConnectionError as e:
                 self.error_cnt[self.url] += 1
                 sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, str(e))
@@ -279,42 +288,17 @@ class GrapheneRPC(object):
                 # retry
                 self.rpcconnect()
 
-        ret = {}
+        json_reply = {}
         try:
-            ret = json.loads(reply, strict=False)
+            json_reply = json.loads(reply, strict=False)
         except ValueError:
             self._check_for_server_error(reply)
 
         log.debug(json.dumps(reply))
 
-        if isinstance(ret, dict) and 'error' in ret:
-            if 'detail' in ret['error']:
-                raise RPCError(ret['error']['detail'])
-            else:
-                raise RPCError(ret['error']['message'])
-        else:
-            if isinstance(ret, list):
-                ret_list = []
-                for r in ret:
-                    if isinstance(r, dict) and 'error' in r:
-                        if 'detail' in r['error']:
-                            raise RPCError(r['error']['detail'])
-                        else:
-                            raise RPCError(r['error']['message'])
-                    elif isinstance(r, dict) and "result" in r:
-                        ret_list.append(r["result"])
-                    else:
-                        ret_list.append(r)
-                self.error_cnt_call = 0
-                return ret_list
-            elif isinstance(ret, dict) and "result" in ret:
-                self.error_cnt_call = 0
-                return ret["result"]
-            elif isinstance(ret, int):
-                raise ValueError("Client returned invalid format. Expected JSON! Output: %s" % (str(ret)))
-            else:
-                self.error_cnt_call = 0
-                return ret
+        ret = evaluate_json_reply(json_reply)
+        self.error_cnt_call = 0
+        return ret
 
     # End of Deprecated methods
     ####################################################################
@@ -325,7 +309,7 @@ class GrapheneRPC(object):
             api_name = get_api_name(self.is_appbase_ready(), *args, **kwargs)
 
             # let's be able to define the num_retries per query
-            self.num_retries = kwargs.get("num_retries", self.num_retries)
+            self.num_retries_call = kwargs.get("num_retries_call", self.num_retries_call)
             add_to_queue = kwargs.get("add_to_queue", False)
             query = get_query(self.is_appbase_ready(), self.get_request_id(), api_name, name, args)
             if add_to_queue:

@@ -58,10 +58,12 @@ class SteemNodeRPC(GrapheneRPC):
                 reply = super(SteemNodeRPC, self).rpcexec(payload)
                 if self.next_node_on_empty_reply and not bool(reply) and self.n_urls > 1:
                     sleep_and_check_retries(self.num_retries_call, cnt, self.url, str("Empty reply"), sleep=False)
+                    self.error_cnt[self.url] += 1
                     self.next()
                     cnt = 0
                     self.error_cnt_call = 0
                     doRetry = True
+                    self.next_node_on_empty_reply = True
                 else:
                     self.next_node_on_empty_reply = False
                     return reply
