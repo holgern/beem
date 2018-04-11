@@ -21,7 +21,7 @@ from .exceptions import (
 )
 from .rpcutils import (
     is_network_appbase_ready, sleep_and_check_retries,
-    get_api_name, get_query, evaluate_json_reply
+    get_api_name, get_query
 )
 from beem.version import version as beem_version
 
