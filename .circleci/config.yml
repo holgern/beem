@@ -56,6 +56,7 @@ jobs:
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               tox -e upload_coverage
             fi
+
   build-python2.7:
     docker:
       - image: circleci/python:2.7.13
@@ -73,7 +74,7 @@ jobs:
           command: |
             sudo python -m pip install --upgrade pip setuptools wheel mock pytest  pytest-cov parameterized secp256k1 cryptography scrypt
             sudo python -m pip install -r requirements.txt
-            sudo python -m pip install --upgrade pycodestyle pyflakes coverage tox codacy-coverage virtualenv
+            sudo python -m pip install --upgrade pycodestyle pyflakes tox virtualenv
 
       - run:
           name: run tests
@@ -97,7 +98,7 @@ jobs:
           command: |
             sudo python -m pip install --upgrade pip setuptools wheel mock pytest  pytest-cov parameterized secp256k1 cryptography scrypt
             sudo python -m pip install -r requirements.txt
-            sudo python -m pip install --upgrade pycodestyle pyflakes coverage tox codacy-coverage virtualenv
+            sudo python -m pip install --upgrade pycodestyle pyflakes tox virtualenv
 
       - run:
           name: run tests
@@ -121,8 +122,7 @@ jobs:
           command: |
             sudo python -m pip install --upgrade pip setuptools wheel mock pytest  pytest-cov parameterized secp256k1 cryptography scrypt
             sudo python -m pip install -r requirements.txt
-            sudo python -m pip install --upgrade pycodestyle pyflakes coverage tox codacy-coverage virtualenv
-
+            sudo python -m pip install --upgrade pycodestyle pyflakes tox virtualenv
       - run:
           name: run tests
           command: |
