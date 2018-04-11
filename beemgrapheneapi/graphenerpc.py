@@ -260,7 +260,7 @@ class GrapheneRPC(object):
                     reply = self.ws_send(json.dumps(payload, ensure_ascii=False).encode('utf8'))
                 else:
                     reply = self.request_send(json.dumps(payload, ensure_ascii=False).encode('utf8'))
-                if reply == '':
+                if not bool(reply):
                     self.error_cnt[self.url] += 1
                     sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, "Empty Reply")
                     self.rpcconnect()
