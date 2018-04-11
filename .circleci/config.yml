@@ -127,3 +127,11 @@ jobs:
           name: run tests
           command: |
             tox -e py35
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - build-python2.7
+      - build-python3.4
+      - build-python3.5
