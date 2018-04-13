@@ -622,6 +622,19 @@ class Steem(object):
         Account(account, steem_instance=self)
         config["default_account"] = account
 
+    def set_default_nodes(self, nodes):
+        """ Set the default nodes to be used
+        """
+        if bool(nodes):
+            config["node"] = nodes
+        else:
+            config.delete("node")
+
+    def set_default_vote_weight(self, vote_weight):
+        """ Set the default vote weight to be used
+        """
+        config["default_vote_weight"] = vote_weight
+
     def finalizeOp(self, ops, account, permission, **kwargs):
         """ This method obtains the required private keys if present in
             the wallet, finalizes the transaction, signs it and

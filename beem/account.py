@@ -614,13 +614,19 @@ class Account(BlockchainObject):
             return last_item
         else:
             try:
+                op_count = 0
+                self.steem.rpc.set_next_node_on_empty_reply(True)
                 if self.steem.rpc.get_use_appbase():
                     try:
-                        return self.steem.rpc.get_account_history({'account': self["name"], 'start': -1, 'limit': 0}, api="account_history")['history'][0][0]
+                        op_count = self.steem.rpc.get_account_history({'account': self["name"], 'start': -1, 'limit': 0}, api="account_history")['history']
                     except:
-                        return self.steem.rpc.get_account_history(self["name"], -1, 0)[0][0]
+                        op_count = self.steem.rpc.get_account_history(self["name"], -1, 0)
                 else:
-                    return self.steem.rpc.get_account_history(self["name"], -1, 0, api="database")[0][0]
+                    op_count = self.steem.rpc.get_account_history(self["name"], -1, 0, api="database")
+                if isinstance(op_count, list) and len(op_count) > 0 and len(op_count[0]) > 0:
+                    return op_count[0][0]
+                else:
+                    return 0
             except IndexError:
                 return 0
 

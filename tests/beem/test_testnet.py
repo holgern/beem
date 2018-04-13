@@ -182,13 +182,16 @@ class Testcases(unittest.TestCase):
                                  "memo": '2 of 2 serialized/deserialized transaction'}))
 
         tx.appendSigner("elf", "active")
+        tx.addSigningInformation("elf", "active")
         tx.sign()
         tx.clearWifs()
         self.assertEqual(len(tx['signatures']), 1)
-        new_tx = TransactionBuilder(tx=tx.json(), steem_instance=steem)
+        steem.wallet.removeAccount("elf")
+        tx_json = tx.json()
+        del tx
+        new_tx = TransactionBuilder(tx=tx_json, steem_instance=steem)
         self.assertEqual(len(new_tx['signatures']), 1)
         steem.wallet.addPrivateKey(self.active_private_key_of_steemfiles)
-        new_tx.addSigningInformation("steemfiles", "active", reconstruct_tx=False)
         new_tx.appendMissingSignatures()
         new_tx.sign(reconstruct_tx=False)
         self.assertEqual(len(new_tx['signatures']), 2)
@@ -223,6 +226,42 @@ class Testcases(unittest.TestCase):
         tx.broadcast()
         steem.nobroadcast = True
         steem.wallet.addPrivateKey(self.active_private_key_of_elf)
+
+    def test_transfer_2of2_wif(self):
+        # Send a 2 of 2 transaction from elf which needs steemfiles's cosign to send
+        # funds but sign the transaction with elf's key and then serialize the transaction
+        # and deserialize the transaction.  After that, sign with steemfiles's key.
+        steem = Steem(
+            node=["wss://testnet.steem.vc"],
+            num_retries=10,
+            keys=[self.active_private_key_of_elf]
+        )
+
+        tx = TransactionBuilder(steem_instance=steem)
+        tx.appendOps(Transfer(**{"from": 'elf',
+                                 "to": 'leprechaun',
+                                 "amount": '0.01 SBD',
+                                 "memo": '2 of 2 serialized/deserialized transaction'}))
+
+        tx.appendSigner("elf", "active")
+        tx.addSigningInformation("elf", "active")
+        tx.sign()
+        tx.clearWifs()
+        self.assertEqual(len(tx['signatures']), 1)
+        tx_json = tx.json()
+        del steem
+        del tx
+
+        steem = Steem(
+            node=["wss://testnet.steem.vc"],
+            num_retries=10,
+            keys=[self.active_private_key_of_steemfiles]
+        )
+        new_tx = TransactionBuilder(tx=tx_json, steem_instance=steem)
+        new_tx.appendMissingSignatures()
+        new_tx.sign(reconstruct_tx=False)
+        self.assertEqual(len(new_tx['signatures']), 2)
+        new_tx.broadcast()
 
     def test_verifyAuthority(self):
         stm = self.bts
