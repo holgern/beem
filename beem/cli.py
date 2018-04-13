@@ -45,9 +45,27 @@ def prompt_callback(ctx, param, value):
         ctx.abort()
 
 
+def asset_callback(ctx, param, value):
+    if value not in ["STEEM", "SBD"]:
+        print("Please STEEM or SBD as asset!")
+        ctx.abort()
+    else:
+        return value
+
+
 def prompt_flag_callback(ctx, param, value):
     if not value:
         ctx.abort()
+
+
+def unlock_wallet(stm, password):
+    stm.wallet.unlock(password)
+    if stm.wallet.locked():
+        print("Wallet could not be unlocked!")
+        return False
+    else:
+        print("Wallet Unlocked!")
+        return True
 
 
 @click.group(chain=True)
@@ -195,14 +213,9 @@ def addkey(password, unsafe_import_key):
         and a prompt for entering the private key are shown.
     """
     stm = shared_steem_instance()
-    if not stm.wallet.locked():
+    if not unlock_wallet(stm, password):
         return
-    stm.wallet.unlock(password)
-    if stm.wallet.locked():
-        print("Could not be unlocked!")
-    else:
-        print("Unlocked!")
-        stm.wallet.addPrivateKey(unsafe_import_key)
+    stm.wallet.addPrivateKey(unsafe_import_key)
     set_shared_steem_instance(stm)
 
 
@@ -221,15 +234,10 @@ def delkey(confirm, password, pub):
         which will be deleted from the wallet
     """
     stm = shared_steem_instance()
-    if not stm.wallet.locked():
+    if not unlock_wallet(stm, password):
         return
-    stm.wallet.unlock(password)
-    if stm.wallet.locked():
-        print("Could not be unlocked!")
-    else:
-        print("Unlocked!")
-        if click.confirm('Do you want to continue to wipe the private key?'):
-            stm.wallet.removePrivateKeyFromPublicKey(pub)
+    if click.confirm('Do you want to continue to wipe the private key?'):
+        stm.wallet.removePrivateKeyFromPublicKey(pub)
     set_shared_steem_instance(stm)
 
 
@@ -261,46 +269,130 @@ def listaccounts():
 
 @cli.command()
 @click.argument('post', nargs=1)
+@click.argument('vote_weight', nargs=1, required=False)
+@click.option('--weight', '-w', help='Vote weight (from 0.1 to 100.0)')
 @click.option('--account', '-a', help='Voter account name')
-@click.option('--weight', '-w', default=100.0, help='Vote weight (from 0.1 to 100.0)')
-def upvote(post, account, weight):
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+def upvote(post, vote_weight, account, weight, password):
     """Upvote a post/comment
 
         POST is @author/permlink
     """
     stm = shared_steem_instance()
-    if not weight:
+    if not weight and vote_weight:
+        weight = vote_weight
+    elif not weight and not vote_weight:
         weight = stm.config["default_vote_weight"]
     if not account:
         account = stm.config["default_account"]
+    if not unlock_wallet(stm, password):
+        return
     try:
-        post = Comment(post)
+        post = Comment(post, steem_instance=stm)
+        post.upvote(weight, voter=account)
     except Exception as e:
         log.error(str(e))
-        return
-    post.upvote(weight, voter=account)
 
 
 @cli.command()
 @click.argument('post', nargs=1)
+@click.argument('vote_weight', nargs=1, required=False)
 @click.option('--account', '-a', help='Voter account name')
 @click.option('--weight', '-w', default=100.0, help='Vote weight (from 0.1 to 100.0)')
-def downvote(post, account, weight):
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+def downvote(post, vote_weight, account, weight, password):
     """Downvote a post/comment
 
         POST is @author/permlink
     """
     stm = shared_steem_instance()
-    if not weight:
+    if not weight and vote_weight:
+        weight = vote_weight
+    elif not weight and not vote_weight:
         weight = stm.config["default_vote_weight"]
     if not account:
         account = stm.config["default_account"]
+    if not unlock_wallet(stm, password):
+        return
     try:
         post = Comment(post)
     except Exception as e:
         log.error(str(e))
         return
     post.downvote(weight, voter=account)
+
+
+@cli.command()
+@click.argument('to', nargs=1)
+@click.argument('amount', nargs=1)
+@click.argument('asset', nargs=1, callback=asset_callback)
+@click.argument('memo', nargs=1, required=False)
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--account', '-a', help='Transfer from this account')
+def transfer(to, amount, asset, memo, password, account):
+    """Transfer SBD/STEEM"""
+    stm = shared_steem_instance()
+    if not account:
+        account = stm.config["default_account"]
+    if not bool(memo):
+        memo = ''
+    if not unlock_wallet(stm, password):
+        return
+    acc = Account(account, steem_instance=stm)
+    tx = acc.transfer(to, amount, asset, memo)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.argument('amount', nargs=1)
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--account', '-a', help='Powerup from this account')
+@click.option('--to', help='Powerup this account', default=None)
+def powerup(amount, password, account, to):
+    """Power up (vest STEEM as STEEM POWER)"""
+    stm = shared_steem_instance()
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm, password):
+        return
+    acc = Account(account, steem_instance=stm)
+    try:
+        amount = float(amount)
+    except:
+        amount = str(amount)
+    tx = acc.transfer_to_vesting(amount, to=to)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.argument('amount', nargs=1)
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--account', '-a', help='Powerup from this account')
+def powerdown(amount, password, account):
+    """Power down (start withdrawing VESTS from Steem POWER)
+
+        amount is in VESTS
+    """
+    stm = shared_steem_instance()
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm, password):
+        return
+    acc = Account(account, steem_instance=stm)
+    try:
+        amount = float(amount)
+    except:
+        amount = str(amount)
+    tx = acc.withdraw_vesting(amount)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
 
 
 @cli.command()

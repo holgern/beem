@@ -29,7 +29,9 @@ class Testcases(unittest.TestCase):
         runner.invoke(cli, ['set', 'default_vote_weight', '100'])
         runner.invoke(cli, ['set', 'default_account', 'beem'])
         runner.invoke(cli, ['set', 'nodes', 'wss://testnet.steem.vc'])
-        runner.invoke(cli, ['createwallet', '--wipe True'], input='test\ntest\n')
+        runner.invoke(cli, ['createwallet', '--wipe', '--password test'], input='y\n')
+        runner.invoke(cli, ['addkey', '--password test', '--unsafe-import-key ' + wif])
+        # runner.invoke(cli, ['changewalletpassphrase', '--password test'])
 
     def test_balance(self):
         runner = CliRunner()
@@ -43,12 +45,16 @@ class Testcases(unittest.TestCase):
 
     def test_addkey(self):
         runner = CliRunner()
+        result = runner.invoke(cli, ['createwallet', '--wipe', '--password test'], input='y\n')
+        self.assertEqual(result.exit_code, 2)
         result = runner.invoke(cli, ['addkey', '--password test', '--unsafe-import-key ' + wif])
         self.assertEqual(result.exit_code, 2)
 
     def test_delkey(self):
         runner = CliRunner()
         result = runner.invoke(cli, ['delkey', '--password test', wif])
+        self.assertEqual(result.exit_code, 2)
+        result = runner.invoke(cli, ['addkey', '--password test', '--unsafe-import-key ' + wif])
         self.assertEqual(result.exit_code, 2)
 
     def test_listkeys(self):
@@ -82,12 +88,22 @@ class Testcases(unittest.TestCase):
         result = runner.invoke(cli, ['walletinfo'])
         self.assertEqual(result.exit_code, 0)
 
-    def test_createwallet(self):
-        runner = CliRunner()
-        result = runner.invoke(cli, ['createwallet', '--password test', '--wipe True'])
-        self.assertEqual(result.exit_code, 2)
-
     def test_set(self):
         runner = CliRunner()
         result = runner.invoke(cli, ['set', 'set_default_vote_weight', '100'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_upvote(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['upvote', '@test/abcd', '--weight 100'], input='test\n')
+        self.assertEqual(result.exit_code, 0)
+
+    def test_downvote(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['downvote', '@test/abcd', '--weight 100'], input='test\n')
+        self.assertEqual(result.exit_code, 0)
+
+    def test_transfer(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['transfer', 'beem1', '1', 'SBD', 'test'], input='test\n')
         self.assertEqual(result.exit_code, 0)

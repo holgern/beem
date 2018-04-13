@@ -1097,7 +1097,7 @@ class Account(BlockchainObject):
         if not account:
             raise ValueError("You need to provide an account")
         if not to:
-            to = account  # powerup on the same account
+            to = self  # powerup on the same account
         account = Account(account, steem_instance=self.steem)
         if isinstance(amount, (string_types, Amount)):
             amount = Amount(amount, steem_instance=self.steem)
