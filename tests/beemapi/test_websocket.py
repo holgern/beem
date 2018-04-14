@@ -21,19 +21,6 @@ wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 core_unit = "STM"
 
 
-class TestBot:
-    def init(self):
-        self.ws = None
-        self.blocks = 0
-
-    def new_block(self, block):
-        chunk = 5
-        self.blocks = self.blocks + 1
-        print(str(self.blocks))
-        if self.blocks >= chunk:
-            self.ws.stop()
-
-
 class Testcases(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
@@ -47,9 +34,5 @@ class Testcases(unittest.TestCase):
         )
 
     def test_connect(self):
-        tb = TestBot()
-        tb.init()
-        tb.ws = self.ws
-        self.ws.on_block += tb.new_block
-        self.ws.run_forever()
-        self.assertEqual(tb.blocks, 5)
+        ws = self.ws
+        self.assertTrue(len(next(ws.urls)) > 0)

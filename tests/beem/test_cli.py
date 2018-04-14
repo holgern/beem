@@ -19,6 +19,7 @@ from beembase.operationids import getOperationNameForId
 from beem.utils import get_node_list
 
 wif = "5Jt2wTfhUt5GkZHV1HYVfkEaJ6XnY8D2iA4qjtK9nnGXAhThM3w"
+pub_key = "STX52xMqKegLk4tdpNcUXU9Rw5DtdM9fxf3f12Gp55v1UjLX3ELZf"
 
 
 class Testcases(unittest.TestCase):
@@ -29,8 +30,8 @@ class Testcases(unittest.TestCase):
         runner.invoke(cli, ['set', 'default_vote_weight', '100'])
         runner.invoke(cli, ['set', 'default_account', 'beem'])
         runner.invoke(cli, ['set', 'nodes', 'wss://testnet.steem.vc'])
-        runner.invoke(cli, ['createwallet', '--wipe', '--password test'], input='y\n')
-        runner.invoke(cli, ['addkey', '--password test', '--unsafe-import-key ' + wif])
+        runner.invoke(cli, ['createwallet'], input="y\ntest\ntest\n")
+        runner.invoke(cli, ['addkey'], input="test\n" + wif + "\n")
         # runner.invoke(cli, ['changewalletpassphrase', '--password test'])
 
     def test_balance(self):
@@ -50,17 +51,17 @@ class Testcases(unittest.TestCase):
 
     def test_addkey(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['createwallet', '--wipe', '--password test'], input='y\n')
-        self.assertEqual(result.exit_code, 2)
-        result = runner.invoke(cli, ['addkey', '--password test', '--unsafe-import-key ' + wif])
-        self.assertEqual(result.exit_code, 2)
+        result = runner.invoke(cli, ['createwallet'], input="y\ntest\ntest\n")
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['addkey'], input="test\n" + wif + "\n")
+        self.assertEqual(result.exit_code, 0)
 
     def test_delkey(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['delkey', '--password test', wif])
-        self.assertEqual(result.exit_code, 2)
-        result = runner.invoke(cli, ['addkey', '--password test', '--unsafe-import-key ' + wif])
-        self.assertEqual(result.exit_code, 2)
+        result = runner.invoke(cli, ['delkey', '--confirm', pub_key], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['addkey'], input="test\n" + wif + "\n")
+        self.assertEqual(result.exit_code, 0)
 
     def test_listkeys(self):
         runner = CliRunner()
@@ -85,8 +86,8 @@ class Testcases(unittest.TestCase):
 
     def test_changepassword(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['changewalletpassphrase', '--password test'])
-        self.assertEqual(result.exit_code, 2)
+        result = runner.invoke(cli, ['changewalletpassphrase'], input="test\ntest\ntest\n")
+        self.assertEqual(result.exit_code, 0)
 
     def test_walletinfo(self):
         runner = CliRunner()
@@ -100,25 +101,25 @@ class Testcases(unittest.TestCase):
 
     def test_upvote(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['upvote', '@test/abcd', '--weight 100', '--password test'], input='test\n')
-        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['upvote', '--weight 100', '@test/abcd'], input="test\n")
+        self.assertEqual(result.exit_code, 2)
 
     def test_downvote(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['downvote', '@test/abcd', '--weight 100', '--password test'], input='test\n')
-        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['downvote', '--weight 100', '@test/abcd'], input="test\n")
+        self.assertEqual(result.exit_code, 2)
 
     def test_transfer(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['transfer', 'beem1', '1', 'SBD', 'test', '--password test'], input='test\n')
+        result = runner.invoke(cli, ['transfer', 'beem1', '1', 'SBD', 'test'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_powerdownroute(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['powerdownroute', 'beem1', '--password test'], input='test\n')
+        result = runner.invoke(cli, ['powerdownroute', 'beem1'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_convert(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['convert', '1', '--password test'], input='test\n')
+        result = runner.invoke(cli, ['convert', '1'], input="test\n")
         self.assertEqual(result.exit_code, 0)

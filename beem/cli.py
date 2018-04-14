@@ -181,7 +181,7 @@ def createwallet(wipe, password):
     """ Create new wallet with password
     """
     stm = shared_steem_instance()
-    if wipe and click.confirm('Do you want to continue to wipe your Wallet?'):
+    if wipe:
         stm.wallet.wipe(True)
     stm.wallet.create(password)
     set_shared_steem_instance(stm)
@@ -236,8 +236,7 @@ def delkey(confirm, password, pub):
     stm = shared_steem_instance()
     if not unlock_wallet(stm, password):
         return
-    if click.confirm('Do you want to continue to wipe the private key?'):
-        stm.wallet.removePrivateKeyFromPublicKey(pub)
+    stm.wallet.removePrivateKeyFromPublicKey(pub)
     set_shared_steem_instance(stm)
 
 
@@ -329,7 +328,7 @@ def downvote(post, vote_weight, account, weight, password):
 @click.argument('amount', nargs=1)
 @click.argument('asset', nargs=1, callback=asset_callback)
 @click.argument('memo', nargs=1, required=False)
-@click.option('--password', prompt=True, hide_input=True,
+@click.option('--password', prompt=True, hide_input=True, default='',
               confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--account', '-a', help='Transfer from this account')
 def transfer(to, amount, asset, memo, password, account):
@@ -439,13 +438,17 @@ def convert(amount, password, account):
 
 
 @cli.command()
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=True)
-def changewalletpassphrase(password):
+@click.option('--oldpassword', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--newpassword', prompt=True, hide_input=True,
+              confirmation_prompt=True, help='Set new password to unlock wallet')
+def changewalletpassphrase(oldpassword, newpassword):
     """ Change wallet password
     """
     stm = shared_steem_instance()
-    stm.wallet.changePassphrase(password)
+    if not unlock_wallet(stm, oldpassword):
+        return
+    stm.wallet.changePassphrase(newpassword)
 
 
 @cli.command()
