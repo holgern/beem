@@ -9,6 +9,11 @@
    http://openalea.gforge.inria.fr/doc/openalea/doc/_build/html/source/sphinx/rest_syntax.html
    http://rest-sphinx-memo.readthedocs.org/en/latest/ReST.html
 
+.. image:: _static/beem-logo.svg
+   :width: 300 px
+   :alt: beem
+   :align: center
+
 Welcome to beem's documentation!
 ================================
 

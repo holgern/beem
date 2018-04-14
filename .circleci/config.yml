@@ -50,12 +50,12 @@ jobs:
             tox -e py36
             ./cc-test-reporter after-build --exit-code $?
 
-      - deploy:
-          name: Push coverage
-          command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              tox -e upload_coverage
-            fi
+      # - deploy:
+      #    name: Push coverage
+      #    command: |
+      #      if [ "${CIRCLE_BRANCH}" == "master" ]; then
+      #        tox -e upload_coverage
+      #      fi
 
   build-python2.7:
     docker:
