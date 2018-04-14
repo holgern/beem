@@ -100,17 +100,17 @@ class Testcases(unittest.TestCase):
 
     def test_upvote(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['upvote', '@test/abcd', '--weight 100' '--password test'], input='test\n')
+        result = runner.invoke(cli, ['upvote', '@test/abcd', '--weight 100', '--password test'], input='test\n')
         self.assertEqual(result.exit_code, 0)
 
     def test_downvote(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['downvote', '@test/abcd', '--weight 100' '--password test'], input='test\n')
+        result = runner.invoke(cli, ['downvote', '@test/abcd', '--weight 100', '--password test'], input='test\n')
         self.assertEqual(result.exit_code, 0)
 
     def test_transfer(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['transfer', 'beem1', '1', 'SBD', 'test' '--password test'], input='test\n')
+        result = runner.invoke(cli, ['transfer', 'beem1', '1', 'SBD', 'test', '--password test'], input='test\n')
         self.assertEqual(result.exit_code, 0)
 
     def test_powerdownroute(self):
