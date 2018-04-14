@@ -396,6 +396,49 @@ def powerdown(amount, password, account):
 
 
 @cli.command()
+@click.argument('to', nargs=1)
+@click.option('--percentage', default=100, help='The percent of the withdraw to go to the "to" account')
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--account', '-a', help='Powerup from this account')
+@click.option('--auto_vest', help='Set to true if the from account should receive the VESTS as'
+              'VESTS, or false if it should receive them as STEEM.', is_flag=True)
+def powerdownroute(to, percentage, password, account, auto_vest):
+    """Setup a powerdown route"""
+    stm = shared_steem_instance()
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm, password):
+        return
+    acc = Account(account, steem_instance=stm)
+    tx = acc.set_withdraw_vesting_route(to, percentage, auto_vest=auto_vest)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.argument('amount', nargs=1)
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--account', '-a', help='Powerup from this account')
+def convert(amount, password, account):
+    """Convert STEEMDollars to Steem (takes a week to settle)"""
+    stm = shared_steem_instance()
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm, password):
+        return
+    acc = Account(account, steem_instance=stm)
+    try:
+        amount = float(amount)
+    except:
+        amount = str(amount)
+    tx = acc.convert(amount)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
 @click.option('--password', prompt=True, hide_input=True,
               confirmation_prompt=True)
 def changewalletpassphrase(password):
@@ -406,8 +449,7 @@ def changewalletpassphrase(password):
 
 
 @cli.command()
-@click.option(
-    '--account', '-a', multiple=True)
+@click.argument('account', nargs=-1)
 def balance(account):
     """ Shows balance
     """
@@ -445,6 +487,34 @@ def balance(account):
             str(a.balances['total'][2]),
         ])
         print(t)
+
+
+@cli.command()
+@click.argument('account', nargs=-1, required=False)
+def interest(account):
+    """ Get information about interest payment
+    """
+    stm = shared_steem_instance()
+    if not account:
+        if "default_account" in stm.config:
+            account = [stm.config["default_account"]]
+
+    t = PrettyTable([
+        "Account", "Last Interest Payment", "Next Payment",
+        "Interest rate", "Interest"
+    ])
+    t.align = "r"
+    for a in account:
+        a = Account(a, steem_instance=stm)
+        i = a.interest()
+        t.add_row([
+            a["name"],
+            i["last_payment"],
+            "in %s" % (i["next_payment_duration"]),
+            "%.1f%%" % i["interest_rate"],
+            "%.3f %s" % (i["interest"], "SBD"),
+        ])
+    print(t)
 
 
 @cli.command()

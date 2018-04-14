@@ -41,6 +41,10 @@ class NoApiWithName(RPCError):
     pass
 
 
+class ApiNotSupported(RPCError):
+    pass
+
+
 class UnhandledRPCError(RPCError):
     pass
 

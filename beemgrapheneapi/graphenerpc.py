@@ -254,7 +254,6 @@ class GrapheneRPC(object):
         reply = {}
         while True:
             self.error_cnt_call += 1
-
             try:
                 if self.current_rpc == 0 or self.current_rpc == 2:
                     reply = self.ws_send(json.dumps(payload, ensure_ascii=False).encode('utf8'))
@@ -262,7 +261,7 @@ class GrapheneRPC(object):
                     reply = self.request_send(json.dumps(payload, ensure_ascii=False).encode('utf8'))
                 if not bool(reply):
                     self.error_cnt[self.url] += 1
-                    sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, "Empty Reply")
+                    sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, "Empty Reply", call_retry=True)
                     self.rpcconnect()
                 else:
                     break
@@ -273,10 +272,10 @@ class GrapheneRPC(object):
                 self.rpcconnect(next_url=False)
             except ConnectionError as e:
                 self.error_cnt[self.url] += 1
-                sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, str(e))
+                sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, str(e), call_retry=True)
             except Exception as e:
                 self.error_cnt[self.url] += 1
-                sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, str(e))
+                sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, str(e), call_retry=True)
                 # retry
                 self.rpcconnect()
 

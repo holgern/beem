@@ -57,7 +57,7 @@ class SteemNodeRPC(GrapheneRPC):
                 self.error_cnt_call = cnt
                 reply = super(SteemNodeRPC, self).rpcexec(payload)
                 if self.next_node_on_empty_reply and not bool(reply) and self.n_urls > 1:
-                    sleep_and_check_retries(self.num_retries_call, cnt, self.url, str("Empty reply"), sleep=False)
+                    sleep_and_check_retries(self.num_retries_call, cnt, self.url, str("Empty reply"), sleep=False, call_retry=True)
                     self.error_cnt[self.url] += 1
                     self.next()
                     cnt = 0
@@ -69,7 +69,7 @@ class SteemNodeRPC(GrapheneRPC):
                     return reply
             except exceptions.RPCErrorDoRetry as e:
                 msg = exceptions.decodeRPCErrorMsg(e).strip()
-                sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg))
+                sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg), call_retry=True)
                 doRetry = True
             except exceptions.RPCError as e:
                 doRetry = self._check_error_message(e, cnt)
@@ -94,19 +94,25 @@ class SteemNodeRPC(GrapheneRPC):
         elif re.search("Could not find method", msg):
             raise exceptions.NoMethodWithName(msg)
         elif re.search("Could not find API", msg):
-            raise exceptions.NoApiWithName(msg)
+            if self._check_api_name(msg):
+                raise exceptions.ApiNotSupported(msg)
+            else:
+                raise exceptions.NoApiWithName(msg)
         elif re.search("irrelevant signature included", msg):
             raise exceptions.UnnecessarySignatureDetected(msg)
         elif re.search("WinError", msg):
             raise exceptions.RPCError(msg)
         elif re.search("Unable to acquire database lock", msg):
-            sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg))
+            sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg), call_retry=True)
             doRetry = True
         elif re.search("Internal Error", msg):
-            sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg))
+            sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg), call_retry=True)
             doRetry = True
         elif re.search("!check_max_block_age", str(e)):
-            sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg), sleep=False)
+            if self.n_urls == 1:
+                raise exceptions.UnhandledRPCError(msg)
+            self.error_cnt[self.url] += 1
+            sleep_and_check_retries(self.num_retries, self.error_cnt[self.url], self.url, str(msg), sleep=False)
             self.next()
             doRetry = True
         elif re.search("out_of_rangeEEEE: unknown key", msg) or re.search("unknown key:unknown key", msg):
@@ -116,6 +122,37 @@ class SteemNodeRPC(GrapheneRPC):
         else:
             raise e
         return doRetry
+
+    def _check_api_name(self, msg):
+        error_start = "Could not find API "
+        if re.search(error_start + "account_history_api", msg):
+            return True
+        elif re.search(error_start + "tags_api", msg):
+            return True
+        elif re.search(error_start + "database_api", msg):
+            return True
+        elif re.search(error_start + "market_history_api", msg):
+            return True
+        elif re.search(error_start + "block_api", msg):
+            return True
+        elif re.search(error_start + "account_by_key_api", msg):
+            return True
+        elif re.search(error_start + "chain_api", msg):
+            return True
+        elif re.search(error_start + "follow_api", msg):
+            return True
+        elif re.search(error_start + "condenser_api", msg):
+            return True
+        elif re.search(error_start + "debug_node_api", msg):
+            return True
+        elif re.search(error_start + "witness_api", msg):
+            return True
+        elif re.search(error_start + "test_api", msg):
+            return True
+        elif re.search(error_start + "network_broadcast_api", msg):
+            return True
+        else:
+            return False
 
     def get_account(self, name, **kwargs):
         """ Get full account details from account name

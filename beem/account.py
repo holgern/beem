@@ -1362,6 +1362,38 @@ class Account(BlockchainObject):
 
         return self.steem.finalizeOp(op, account, "active")
 
+    def set_withdraw_vesting_route(self,
+                                   to,
+                                   percentage=100,
+                                   account=None,
+                                   auto_vest=False):
+        """ Set up a vesting withdraw route. When vesting shares are
+            withdrawn, they will be routed to these accounts based on the
+            specified weights.
+            :param str to: Recipient of the vesting withdrawal
+            :param float percentage: The percent of the withdraw to go
+                to the 'to' account.
+            :param str account: (optional) the vesting account
+            :param bool auto_vest: Set to true if the from account
+                should receive the VESTS as VESTS, or false if it should
+                receive them as STEEM. (defaults to ``False``)
+        """
+        if not account:
+            account = self
+        if not account:
+            raise ValueError("You need to provide an account")
+        STEEMIT_100_PERCENT = 10000
+        STEEMIT_1_PERCENT = (STEEMIT_100_PERCENT / 100)
+        op = operations.Set_withdraw_vesting_route(
+            **{
+                "from_account": account["name"],
+                "to_account": to,
+                "percent": int(percentage * STEEMIT_1_PERCENT),
+                "auto_vest": auto_vest
+            })
+
+        return self.steem.finalizeOp(op, account, "active")
+
     def allow(
         self, foreign, weight=None, permission="posting",
         account=None, threshold=None, **kwargs
