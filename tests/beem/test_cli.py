@@ -83,6 +83,8 @@ class Testcases(unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['info', '--', '-1'])
         self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['info', pub_key])
+        self.assertEqual(result.exit_code, 0)
 
     def test_changepassword(self):
         runner = CliRunner()
@@ -101,13 +103,21 @@ class Testcases(unittest.TestCase):
 
     def test_upvote(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['upvote', '--weight 100', '@test/abcd'], input="test\n")
-        self.assertEqual(result.exit_code, 2)
+        result = runner.invoke(cli, ['-o', 'upvote', '@test/abcd'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['-o', 'upvote', '@test/abcd', '100'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['-o', 'upvote', '@test/abcd', '--weight 100'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
 
     def test_downvote(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['downvote', '--weight 100', '@test/abcd'], input="test\n")
-        self.assertEqual(result.exit_code, 2)
+        result = runner.invoke(cli, ['-o', 'downvote', '@test/abcd'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['-o', 'downvote', '@test/abcd', '100'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['-o', 'downvote', '@test/abcd', '--weight 100'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
 
     def test_transfer(self):
         runner = CliRunner()
@@ -122,4 +132,36 @@ class Testcases(unittest.TestCase):
     def test_convert(self):
         runner = CliRunner()
         result = runner.invoke(cli, ['convert', '1'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+
+    def test_powerup(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['powerup', '1'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+
+    def test_permissions(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['permissions', 'test'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_allow_disallow(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['allow', 'beem1', '--account beem', '--permission posting'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['disallow', 'beem1', '--account beem', '--permission posting'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+
+    def test_witnesses(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['witnesses'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_approvewitness(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['-o', 'approvewitness', 'beem1'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+
+    def test_disapprovewitness(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['-o', 'disapprovewitness', 'beem1'], input="test\n")
         self.assertEqual(result.exit_code, 0)

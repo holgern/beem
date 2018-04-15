@@ -666,6 +666,8 @@ class Steem(object):
                 :class:`beem.transactionbuilder.TransactionBuilder`.
                 You may want to use your own txbuffer
         """
+        if self.offline:
+                return {}
         if "append_to" in kwargs and kwargs["append_to"]:
 
             # Append to the append_to and return

@@ -10,7 +10,7 @@ from beem.account import Account
 from beem.steem import Steem
 from beem.comment import Comment
 from beem.block import Block
-from beem.witness import Witness
+from beem.witness import Witness, WitnessesRankedByVote, WitnessesVotedByAccount
 from beem.blockchain import Blockchain
 from beem import exceptions
 from beem.version import version as __version__
@@ -289,9 +289,12 @@ def upvote(post, vote_weight, account, weight, password):
         return
     try:
         post = Comment(post, steem_instance=stm)
-        post.upvote(weight, voter=account)
-    except Exception as e:
-        log.error(str(e))
+        tx = post.upvote(weight, voter=account)
+    except exceptions.VotingInvalidOnArchivedPost:
+        print("Post/Comment is older than 7 days! Did not upvote.")
+        tx = {}
+    tx = json.dumps(tx, indent=4)
+    print(tx)
 
 
 @cli.command()
@@ -316,11 +319,13 @@ def downvote(post, vote_weight, account, weight, password):
     if not unlock_wallet(stm, password):
         return
     try:
-        post = Comment(post)
-    except Exception as e:
-        log.error(str(e))
-        return
-    post.downvote(weight, voter=account)
+        post = Comment(post, steem_instance=stm)
+        tx = post.downvote(weight, voter=account)
+    except exceptions.VotingInvalidOnArchivedPost:
+        print("Post/Comment is older than 7 days! Did not downvote.")
+        tx = {}
+    tx = json.dumps(tx, indent=4)
+    print(tx)
 
 
 @cli.command()
@@ -518,6 +523,171 @@ def interest(account):
             "%.3f %s" % (i["interest"], "SBD"),
         ])
     print(t)
+
+
+@cli.command()
+@click.argument('account', nargs=1, required=False)
+def permissions(account):
+    """ Show permissions of an account
+    """
+    stm = shared_steem_instance()
+    if not account:
+        if "default_account" in stm.config:
+            account = stm.config["default_account"]
+    account = Account(account, steem_instance=stm)
+    t = PrettyTable(["Permission", "Threshold", "Key/Account"], hrules=0)
+    t.align = "r"
+    for permission in ["owner", "active", "posting"]:
+        auths = []
+        for type_ in ["account_auths", "key_auths"]:
+            for authority in account[permission][type_]:
+                auths.append("%s (%d)" % (authority[0], authority[1]))
+        t.add_row([
+            permission,
+            account[permission]["weight_threshold"],
+            "\n".join(auths),
+        ])
+    print(t)
+
+
+@cli.command()
+@click.argument('foreign_account', nargs=1, required=False)
+@click.option('--permission', default="posting", help='The permission to grant (defaults to "posting")')
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--account', '-a', help='The account to allow action for')
+@click.option('--weight', help='The weight to use instead of the (full) threshold. '
+              'If the weight is smaller than the threshold, '
+              'additional signatures are required')
+@click.option('--threshold', help='The permission\'s threshold that needs to be reached '
+              'by signatures to be able to interact')
+def allow(foreign_account, permission, password, account, weight, threshold):
+    """Allow an account/key to interact with your account
+
+        foreign_account: The account or key that will be allowed to interact with account.
+            When not given, password will be asked, from which a public key is derived.
+            This derived key will then interact with your account.
+    """
+    stm = shared_steem_instance()
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm, password):
+        return
+    if permission not in ["posting", "active", "owner"]:
+        print("Wrong permission, please use: posting, active or owner!")
+        return
+    acc = Account(account, steem_instance=stm)
+    if not foreign_account:
+        from beemgraphenebase.account import PasswordKey
+        pwd = click.prompt("Password for Key Derivation", confirmation_prompt=True)
+        foreign_account = format(PasswordKey(account, pwd, permission).get_public(), stm.prefix)
+    tx = acc.allow(foreign_account, weight=weight, permission=permission, threshold=threshold)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.argument('foreign_account', nargs=1, required=False)
+@click.option('--permission', default="posting", help='The permission to grant (defaults to "posting")')
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--account', '-a', help='The account to disallow action for')
+@click.option('--threshold', help='The permission\'s threshold that needs to be reached '
+              'by signatures to be able to interact')
+def disallow(foreign_account, permission, password, account, threshold):
+    """Remove allowance an account/key to interact with your account"""
+    stm = shared_steem_instance()
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm, password):
+        return
+    if permission not in ["posting", "active", "owner"]:
+        print("Wrong permission, please use: posting, active or owner!")
+        return
+    acc = Account(account, steem_instance=stm)
+    if not foreign_account:
+        from beemgraphenebase.account import PasswordKey
+        pwd = click.prompt("Password for Key Derivation", confirmation_prompt=True)
+        foreign_account = format(PasswordKey(account, pwd, permission).get_public(), stm.prefix)
+    tx = acc.disallow(foreign_account, permission=permission, threshold=threshold)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--account', '-a', help='The account to updateMemoKey action for')
+@click.option('--key', help='The new memo key')
+def updateMemoKey(password, account, key):
+    """Update an account\'s memo key"""
+    stm = shared_steem_instance()
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm, password):
+        return
+    acc = Account(account, steem_instance=stm)
+    if not key:
+        from beemgraphenebase.account import PasswordKey
+        pwd = click.prompt("Password for Memo Key Derivation", confirmation_prompt=True)
+        memo_key = PasswordKey(account, pwd, "memo")
+        key = format(memo_key.get_public_key(), "STM")
+        memo_privkey = memo_key.get_private_key()
+        if not stm.nobroadcast:
+            stm.wallet.addPrivateKey(memo_privkey)
+    tx = acc.update_memo_key(key)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.argument('witness', nargs=1)
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--account', '-a', help='Your account')
+def approvewitness(witness, password, account):
+    """Approve a witnesses"""
+    stm = shared_steem_instance()
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm, password):
+        return
+    acc = Account(account, steem_instance=stm)
+    tx = acc.approvewitness(witness, approve=True)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.argument('witness', nargs=1)
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--account', '-a', help='Your account')
+def disapprovewitness(witness, password, account):
+    """Disapprove a witnesses"""
+    stm = shared_steem_instance()
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm, password):
+        return
+    acc = Account(account, steem_instance=stm)
+    tx = acc.disapprovewitness(witness)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.option('--account', '-a', help='List the voted witnesses of your account')
+@click.option('--limit', help='How many witnesses should be shown', default=100)
+def witnesses(account, limit):
+    """ List witnesses
+    """
+    stm = shared_steem_instance()
+    if account:
+        witnesses = WitnessesVotedByAccount(account, steem_instance=stm)
+    else:
+        witnesses = WitnessesRankedByVote(limit=limit, steem_instance=stm)
+    witnesses.printAsTable()
 
 
 @cli.command()
