@@ -41,6 +41,8 @@ class Testcases(unittest.TestCase):
                          ('theaussiegame', 'cryptokittie-giveaway-number-2'))
         self.assertEqual(resolve_authorperm('holger80/virtuelle-cloud-mining-ponzi-schemen-auch-bekannt-als-hypt'),
                          ('holger80', 'virtuelle-cloud-mining-ponzi-schemen-auch-bekannt-als-hypt'))
+        self.assertEqual(resolve_authorperm('https://steemit.com/deutsch/holger80/virtuelle-cloud-mining-ponzi-schemen-auch-bekannt-als-hypt'),
+                         ('holger80', 'virtuelle-cloud-mining-ponzi-schemen-auch-bekannt-als-hypt'))
 
     def test_authorpermvoter_resolve(self):
         self.assertEqual(resolve_authorpermvoter('theaussiegame/cryptokittie-giveaway-number-2|test'),

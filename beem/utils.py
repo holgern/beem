@@ -13,6 +13,11 @@ import difflib
 from .exceptions import ObjectNotInProposalBuffer
 
 timeFormat = '%Y-%m-%dT%H:%M:%S'
+# https://github.com/matiasb/python-unidiff/blob/master/unidiff/constants.py#L37
+# @@ (source offset, length) (target offset, length) @@ (section header)
+RE_HUNK_HEADER = re.compile(
+    r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))?\ @@[ ]?(.*)$",
+    flags=re.MULTILINE)
 
 
 def formatTime(t):
@@ -110,9 +115,12 @@ def resolve_authorperm(identifier):
     following separator: ``/``.
     """
     match = re.match("@?([\w\-\.]*)/([\w\-]*)", identifier)
+    if hasattr(match, "group"):
+        return match.group(1), match.group(2)
+    match = re.match("([\w\-\.]+[^#?\s]+)/@?([\w\-\.]*)/([\w\-]*)", identifier)
     if not hasattr(match, "group"):
         raise ValueError("Invalid identifier")
-    return match.group(1), match.group(2)
+    return match.group(2), match.group(3)
 
 
 def construct_authorperm(*args):
@@ -229,6 +237,10 @@ def make_patch(a, b, n=3):
     except StopIteration:
         pass
     return ''.join([d if d[-1] == '\n' else d + _no_eol for d in diffs])
+
+
+def findall_patch_hunks(body=None):
+    return RE_HUNK_HEADER.findall(body)
 
 
 def get_node_list(appbase=False):

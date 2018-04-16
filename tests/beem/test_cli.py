@@ -34,7 +34,6 @@ class Testcases(unittest.TestCase):
         runner.invoke(cli, ['createwallet'], input="y\ntest\ntest\n")
         runner.invoke(cli, ['addkey'], input="test\n" + wif + "\n")
         runner.invoke(cli, ['addkey'], input="test\n" + posting_key + "\n")
-        # runner.invoke(cli, ['changewalletpassphrase', '--password test'])
 
     def test_balance(self):
         runner = CliRunner()
@@ -242,4 +241,13 @@ class Testcases(unittest.TestCase):
     def test_witnesscreate(self):
         runner = CliRunner()
         result = runner.invoke(cli, ['-d', 'witnesscreate', 'beem', pub_key], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+
+    def test_profile(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['setprofile', 'url', 'https.//google.de'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['setprofile', '--pair img=foobar', '--pair url=https.//google.de'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['delprofile'], input="test\n")
         self.assertEqual(result.exit_code, 0)

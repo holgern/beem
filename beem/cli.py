@@ -12,6 +12,7 @@ from beem.steem import Steem
 from beem.comment import Comment
 from beem.market import Market
 from beem.block import Block
+from beem.profile import Profile
 from beem.witness import Witness, WitnessesRankedByVote, WitnessesVotedByAccount
 from beem.blockchain import Blockchain
 from beem.utils import formatTimeString
@@ -22,6 +23,7 @@ import pytz
 from beembase import operations
 
 from beemgraphenebase.account import PrivateKey, PublicKey
+import os
 import json
 from prettytable import PrettyTable
 import math
@@ -61,8 +63,15 @@ def prompt_flag_callback(ctx, param, value):
         ctx.abort()
 
 
-def unlock_wallet(stm, password):
-    stm.wallet.unlock(password)
+def unlock_wallet(stm, password=None):
+    if not password:
+        password = os.environ.get("UNLOCK")
+    if bool(password):
+        stm.wallet.unlock(password)
+    else:
+        password = click.prompt("Password to unlock wallet", confirmation_prompt=False, hide_input=True)
+        stm.wallet.unlock(password)
+
     if stm.wallet.locked():
         print("Wallet could not be unlocked!")
         return False
@@ -205,19 +214,19 @@ def walletinfo():
 
 
 @cli.command()
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
-@click.option('--unsafe-import-key', prompt='Enter private key', hide_input=False,
-              confirmation_prompt=False, help='Private key to import to wallet (unsafe, unless shell history is deleted afterwards)')
-def addkey(password, unsafe_import_key):
+@click.option('--unsafe-import-key',
+              help='Private key to import to wallet (unsafe, unless shell history is deleted afterwards)')
+def addkey(unsafe_import_key):
     """ Add key to wallet
 
         When no [OPTION] is given, a password prompt for unlocking the wallet
         and a prompt for entering the private key are shown.
     """
     stm = shared_steem_instance()
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
+    if not unsafe_import_key:
+        unsafe_import_key = click.prompt("Enter private key", confirmation_prompt=False, hide_input=False)
     stm.wallet.addPrivateKey(unsafe_import_key)
     set_shared_steem_instance(stm)
 
@@ -227,17 +236,15 @@ def addkey(password, unsafe_import_key):
               prompt='Are your sure? This is IRREVERSIBLE! If you dont have a backup you may lose access to your account!',
               hide_input=False, callback=prompt_flag_callback, is_flag=True,
               confirmation_prompt=False, help='Please confirm!')
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.argument('pub')
-def delkey(confirm, password, pub):
+def delkey(confirm, pub):
     """ Delete key from the wallet
 
         PUB is the public key from the private key
         which will be deleted from the wallet
     """
     stm = shared_steem_instance()
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     stm.wallet.removePrivateKeyFromPublicKey(pub)
     set_shared_steem_instance(stm)
@@ -274,9 +281,7 @@ def listaccounts():
 @click.argument('vote_weight', nargs=1, required=False)
 @click.option('--weight', '-w', help='Vote weight (from 0.1 to 100.0)')
 @click.option('--account', '-a', help='Voter account name')
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
-def upvote(post, vote_weight, account, weight, password):
+def upvote(post, vote_weight, account, weight):
     """Upvote a post/comment
 
         POST is @author/permlink
@@ -288,7 +293,7 @@ def upvote(post, vote_weight, account, weight, password):
         weight = stm.config["default_vote_weight"]
     if not account:
         account = stm.config["default_account"]
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     try:
         post = Comment(post, steem_instance=stm)
@@ -305,9 +310,7 @@ def upvote(post, vote_weight, account, weight, password):
 @click.argument('vote_weight', nargs=1, required=False)
 @click.option('--account', '-a', help='Voter account name')
 @click.option('--weight', '-w', default=100.0, help='Vote weight (from 0.1 to 100.0)')
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
-def downvote(post, vote_weight, account, weight, password):
+def downvote(post, vote_weight, account, weight):
     """Downvote a post/comment
 
         POST is @author/permlink
@@ -319,7 +322,7 @@ def downvote(post, vote_weight, account, weight, password):
         weight = stm.config["default_vote_weight"]
     if not account:
         account = stm.config["default_account"]
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     try:
         post = Comment(post, steem_instance=stm)
@@ -336,17 +339,15 @@ def downvote(post, vote_weight, account, weight, password):
 @click.argument('amount', nargs=1)
 @click.argument('asset', nargs=1, callback=asset_callback)
 @click.argument('memo', nargs=1, required=False)
-@click.option('--password', prompt=True, hide_input=True, default='',
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--account', '-a', help='Transfer from this account')
-def transfer(to, amount, asset, memo, password, account):
+def transfer(to, amount, asset, memo, account):
     """Transfer SBD/STEEM"""
     stm = shared_steem_instance()
     if not account:
         account = stm.config["default_account"]
     if not bool(memo):
         memo = ''
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     acc = Account(account, steem_instance=stm)
     tx = acc.transfer(to, amount, asset, memo)
@@ -356,16 +357,14 @@ def transfer(to, amount, asset, memo, password, account):
 
 @cli.command()
 @click.argument('amount', nargs=1)
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--account', '-a', help='Powerup from this account')
 @click.option('--to', help='Powerup this account', default=None)
-def powerup(amount, password, account, to):
+def powerup(amount, account, to):
     """Power up (vest STEEM as STEEM POWER)"""
     stm = shared_steem_instance()
     if not account:
         account = stm.config["default_account"]
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     acc = Account(account, steem_instance=stm)
     try:
@@ -379,10 +378,8 @@ def powerup(amount, password, account, to):
 
 @cli.command()
 @click.argument('amount', nargs=1)
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--account', '-a', help='Powerup from this account')
-def powerdown(amount, password, account):
+def powerdown(amount, account):
     """Power down (start withdrawing VESTS from Steem POWER)
 
         amount is in VESTS
@@ -390,7 +387,7 @@ def powerdown(amount, password, account):
     stm = shared_steem_instance()
     if not account:
         account = stm.config["default_account"]
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     acc = Account(account, steem_instance=stm)
     try:
@@ -405,17 +402,15 @@ def powerdown(amount, password, account):
 @cli.command()
 @click.argument('to', nargs=1)
 @click.option('--percentage', default=100, help='The percent of the withdraw to go to the "to" account')
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--account', '-a', help='Powerup from this account')
 @click.option('--auto_vest', help='Set to true if the from account should receive the VESTS as'
               'VESTS, or false if it should receive them as STEEM.', is_flag=True)
-def powerdownroute(to, percentage, password, account, auto_vest):
+def powerdownroute(to, percentage, account, auto_vest):
     """Setup a powerdown route"""
     stm = shared_steem_instance()
     if not account:
         account = stm.config["default_account"]
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     acc = Account(account, steem_instance=stm)
     tx = acc.set_withdraw_vesting_route(to, percentage, auto_vest=auto_vest)
@@ -425,15 +420,13 @@ def powerdownroute(to, percentage, password, account, auto_vest):
 
 @cli.command()
 @click.argument('amount', nargs=1)
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--account', '-a', help='Powerup from this account')
-def convert(amount, password, account):
+def convert(amount, account):
     """Convert STEEMDollars to Steem (takes a week to settle)"""
     stm = shared_steem_instance()
     if not account:
         account = stm.config["default_account"]
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     acc = Account(account, steem_instance=stm)
     try:
@@ -556,15 +549,13 @@ def permissions(account):
 @cli.command()
 @click.argument('foreign_account', nargs=1, required=False)
 @click.option('--permission', default="posting", help='The permission to grant (defaults to "posting")')
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--account', '-a', help='The account to allow action for')
 @click.option('--weight', help='The weight to use instead of the (full) threshold. '
               'If the weight is smaller than the threshold, '
               'additional signatures are required')
 @click.option('--threshold', help='The permission\'s threshold that needs to be reached '
               'by signatures to be able to interact')
-def allow(foreign_account, permission, password, account, weight, threshold):
+def allow(foreign_account, permission, account, weight, threshold):
     """Allow an account/key to interact with your account
 
         foreign_account: The account or key that will be allowed to interact with account.
@@ -574,7 +565,7 @@ def allow(foreign_account, permission, password, account, weight, threshold):
     stm = shared_steem_instance()
     if not account:
         account = stm.config["default_account"]
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     if permission not in ["posting", "active", "owner"]:
         print("Wrong permission, please use: posting, active or owner!")
@@ -582,7 +573,7 @@ def allow(foreign_account, permission, password, account, weight, threshold):
     acc = Account(account, steem_instance=stm)
     if not foreign_account:
         from beemgraphenebase.account import PasswordKey
-        pwd = click.prompt("Password for Key Derivation", confirmation_prompt=True)
+        pwd = click.prompt("Password for Key Derivation", confirmation_prompt=True, hide_input=True)
         foreign_account = format(PasswordKey(account, pwd, permission).get_public(), stm.prefix)
     tx = acc.allow(foreign_account, weight=weight, permission=permission, threshold=threshold)
     tx = json.dumps(tx, indent=4)
@@ -592,17 +583,15 @@ def allow(foreign_account, permission, password, account, weight, threshold):
 @cli.command()
 @click.argument('foreign_account', nargs=1, required=False)
 @click.option('--permission', default="posting", help='The permission to grant (defaults to "posting")')
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--account', '-a', help='The account to disallow action for')
 @click.option('--threshold', help='The permission\'s threshold that needs to be reached '
               'by signatures to be able to interact')
-def disallow(foreign_account, permission, password, account, threshold):
+def disallow(foreign_account, permission, account, threshold):
     """Remove allowance an account/key to interact with your account"""
     stm = shared_steem_instance()
     if not account:
         account = stm.config["default_account"]
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     if permission not in ["posting", "active", "owner"]:
         print("Wrong permission, please use: posting, active or owner!")
@@ -619,42 +608,95 @@ def disallow(foreign_account, permission, password, account, threshold):
 
 @cli.command()
 @click.argument('accountname', nargs=1, required=True)
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--account', '-a', help='Account that pays the fee')
 @click.option('--fee', help='Base Fee to pay. Delegate the rest.', default='0 STEEM')
-def newaccount(accountname, password, account, fee):
+def newaccount(accountname, account, fee):
     """Create a new account"""
     stm = shared_steem_instance()
     if not account:
         account = stm.config["default_account"]
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     acc = Account(account, steem_instance=stm)
-    pwd = click.prompt("New Account Passphrase", confirmation_prompt=True, hide_input=True)
-    if not pwd:
+    password = click.prompt("New Account Passphrase", confirmation_prompt=True, hide_input=True)
+    if not password:
         print("You cannot chose an empty password")
         return
-    tx = stm.create_account(accountname, creator=acc, password=pwd, delegation_fee_steem=fee)
+    tx = stm.create_account(accountname, creator=acc, password=password, delegation_fee_steem=fee)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.argument('variable', nargs=1, required=False)
+@click.argument('value', nargs=1, required=False)
+@click.option('--account', '-a', help='setprofile as this user')
+@click.option('--pair', '-p', help='"Key=Value" pairs', multiple=True)
+def setprofile(variable, value, account, pair):
+    """Set a variable in an account\'s profile"""
+    stm = shared_steem_instance()
+    keys = []
+    values = []
+    if pair:
+        for p in pair:
+            key, value = p.split("=")
+            keys.append(key)
+            values.append(value)
+    if variable and value:
+        keys.append(variable)
+        values.append(value)
+
+    profile = Profile(keys, values)
+
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm):
+        return
+    acc = Account(account, steem_instance=stm)
+
+    acc["json_metadata"] = Profile(acc["json_metadata"]
+                                   if acc["json_metadata"] else {})
+    acc["json_metadata"].update(profile)
+    tx = acc.update_account_profile(acc["json_metadata"])
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.argument('variable', nargs=-1, required=True)
+@click.option('--account', '-a', help='delprofile as this user')
+def delprofile(variable, account):
+    """Delete a variable in an account\'s profile"""
+    stm = shared_steem_instance()
+
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm):
+        return
+    acc = Account(account, steem_instance=stm)
+    acc["json_metadata"] = Profile(acc["json_metadata"])
+
+    for var in variable:
+        acc["json_metadata"].remove(var)
+
+    tx = acc.update_account_profile(acc["json_metadata"])
     tx = json.dumps(tx, indent=4)
     print(tx)
 
 
 @cli.command()
 @click.argument('account', nargs=1, required=True)
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--roles', help='Import specified keys (owner, active, posting, memo).', default=["active", "posting", "memo"])
-def importaccount(account, password, roles):
+def importaccount(account, roles):
     """Import an account using a passphrase"""
     from beemgraphenebase.account import PasswordKey
     stm = shared_steem_instance()
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     account = Account(account, steem_instance=stm)
     imported = False
-    pwd = click.prompt("Account Passphrase", confirmation_prompt=False, hide_input=True)
-    if not pwd:
+    password = click.prompt("Account Passphrase", confirmation_prompt=False, hide_input=True)
+    if not password:
         print("You cannot chose an empty Passphrase")
         return
     if "owner" in roles:
@@ -700,16 +742,14 @@ def importaccount(account, password, roles):
 
 
 @cli.command()
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--account', '-a', help='The account to updatememokey action for')
 @click.option('--key', help='The new memo key')
-def updatememokey(password, account, key):
+def updatememokey(account, key):
     """Update an account\'s memo key"""
     stm = shared_steem_instance()
     if not account:
         account = stm.config["default_account"]
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     acc = Account(account, steem_instance=stm)
     if not key:
@@ -727,15 +767,13 @@ def updatememokey(password, account, key):
 
 @cli.command()
 @click.argument('witness', nargs=1)
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--account', '-a', help='Your account')
-def approvewitness(witness, password, account):
+def approvewitness(witness, account):
     """Approve a witnesses"""
     stm = shared_steem_instance()
     if not account:
         account = stm.config["default_account"]
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     acc = Account(account, steem_instance=stm)
     tx = acc.approvewitness(witness, approve=True)
@@ -745,18 +783,52 @@ def approvewitness(witness, password, account):
 
 @cli.command()
 @click.argument('witness', nargs=1)
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--account', '-a', help='Your account')
-def disapprovewitness(witness, password, account):
+def disapprovewitness(witness, account):
     """Disapprove a witnesses"""
     stm = shared_steem_instance()
     if not account:
         account = stm.config["default_account"]
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     acc = Account(account, steem_instance=stm)
     tx = acc.disapprovewitness(witness)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.option('--file', help='Load transaction from file. If "-", read from stdin (defaults to "-")')
+def sign(file):
+    """Sign a provided transaction with available and required keys"""
+    stm = shared_steem_instance()
+    if file and file != "-":
+        if not os.path.isfile(file):
+            raise Exception("File %s does not exist!" % file)
+        with open(file) as fp:
+            tx = fp.read()
+    else:
+        tx = click.get_text_stream('stdin')
+    tx = eval(tx)
+    tx = stm.sign(tx)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.option('--file', help='Load transaction from file. If "-", read from stdin (defaults to "-")')
+def broadcast(file):
+    """broadcast a signed transaction"""
+    stm = shared_steem_instance()
+    if file and file != "-":
+        if not os.path.isfile(file):
+            raise Exception("File %s does not exist!" % file)
+        with open(file) as fp:
+            tx = fp.read()
+    else:
+        tx = click.get_text_stream('stdin')
+    tx = eval(tx)
+    tx = stm.broadcast(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -817,11 +889,9 @@ def orderbook(chart):
 @click.argument('amount', nargs=1)
 @click.argument('asset', nargs=1)
 @click.argument('price', nargs=1)
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--account', '-a', help='Buy with this account (defaults to "default_account")')
 @click.option('--orderid', help='Set an orderid')
-def buy(amount, asset, price, password, account, orderid):
+def buy(amount, asset, price, account, orderid):
     """Buy STEEM or SBD from the internal market
 
         Limit buy price denoted in (SBD per STEEM)
@@ -830,7 +900,7 @@ def buy(amount, asset, price, password, account, orderid):
     market = Market(steem_instance=stm)
     if not account:
         account = stm.config["default_account"]
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     p = Price(float(price), u"SBD:STEEM", steem_instance=stm)
     a = Amount(float(amount), asset, steem_instance=stm)
@@ -844,11 +914,9 @@ def buy(amount, asset, price, password, account, orderid):
 @click.argument('amount', nargs=1)
 @click.argument('asset', nargs=1)
 @click.argument('price', nargs=1)
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--account', '-a', help='Sell with this account (defaults to "default_account")')
 @click.option('--orderid', help='Set an orderid')
-def sell(amount, asset, price, password, account, orderid):
+def sell(amount, asset, price, account, orderid):
     """Sell STEEM or SBD from the internal market
 
         Limit sell price denoted in (SBD per STEEM)
@@ -857,7 +925,7 @@ def sell(amount, asset, price, password, account, orderid):
     market = Market(steem_instance=stm)
     if not account:
         account = stm.config["default_account"]
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     p = Price(float(price), u"SBD:STEEM", steem_instance=stm)
     a = Amount(float(amount), asset, steem_instance=stm)
@@ -869,16 +937,14 @@ def sell(amount, asset, price, password, account, orderid):
 
 @cli.command()
 @click.argument('orderid', nargs=1)
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--account', '-a', help='Sell with this account (defaults to "default_account")')
-def cancel(orderid, password, account):
+def cancel(orderid, account):
     """Cancel order in the internal market"""
     stm = shared_steem_instance()
     market = Market(steem_instance=stm)
     if not account:
         account = stm.config["default_account"]
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     acc = Account(account, steem_instance=stm)
     tx = market.cancel(orderid, account=acc)
@@ -908,15 +974,13 @@ def openorders(account):
 
 @cli.command()
 @click.argument('identifier', nargs=1)
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--account', '-a', help='Resteem as this user')
-def resteem(identifier, password, account):
+def resteem(identifier, account):
     """Resteem an existing post"""
     stm = shared_steem_instance()
     if not account:
         account = stm.config["default_account"]
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     acc = Account(account, steem_instance=stm)
     post = Comment(identifier, steem_instance=stm)
@@ -927,16 +991,14 @@ def resteem(identifier, password, account):
 
 @cli.command()
 @click.argument('follow', nargs=1)
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--account', '-a', help='Follow from this account')
 @click.option('--what', help='Follow these objects (defaults to "blog")', default=["blog"])
-def follow(follow, password, account, what):
+def follow(follow, account, what):
     """Follow another account"""
     stm = shared_steem_instance()
     if not account:
         account = stm.config["default_account"]
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     acc = Account(account, steem_instance=stm)
     tx = acc.follow(follow, what=what)
@@ -946,15 +1008,13 @@ def follow(follow, password, account, what):
 
 @cli.command()
 @click.argument('unfollow', nargs=1)
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--account', '-a', help='Follow from this account')
-def unfollow(unfollow, password, account):
+def unfollow(unfollow, account):
     """Unfollow another account"""
     stm = shared_steem_instance()
     if not account:
         account = stm.config["default_account"]
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     acc = Account(account, steem_instance=stm)
     tx = acc.unfollow(unfollow)
@@ -963,20 +1023,18 @@ def unfollow(unfollow, password, account):
 
 
 @cli.command()
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--witness', help='Witness name')
 @click.option('--maximum_block_size', help='Max block size')
 @click.option('--account_creation_fee', help='Account creation fee')
 @click.option('--sbd_interest_rate', help='SBD interest rate in percent')
 @click.option('--url', help='Witness URL')
 @click.option('--signing_key', help='Signing Key')
-def witnessupdate(password, witness, maximum_block_size, account_creation_fee, sbd_interest_rate, url, signing_key):
+def witnessupdate(witness, maximum_block_size, account_creation_fee, sbd_interest_rate, url, signing_key):
     """Change witness properties"""
     stm = shared_steem_instance()
     if not witness:
         witness = stm.config["default_account"]
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     witness = Witness(witness, steem_instance=stm)
     props = witness["props"]
@@ -995,16 +1053,14 @@ def witnessupdate(password, witness, maximum_block_size, account_creation_fee, s
 @cli.command()
 @click.argument('witness', nargs=1)
 @click.argument('signing_key', nargs=1)
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
 @click.option('--maximum_block_size', help='Max block size', default="65536")
 @click.option('--account_creation_fee', help='Account creation fee', default=30)
 @click.option('--sbd_interest_rate', help='SBD interest rate in percent', default=0.0)
 @click.option('--url', help='Witness URL', default="")
-def witnesscreate(witness, signing_key, password, maximum_block_size, account_creation_fee, sbd_interest_rate, url):
+def witnesscreate(witness, signing_key, maximum_block_size, account_creation_fee, sbd_interest_rate, url):
     """Create a witness"""
     stm = shared_steem_instance()
-    if not unlock_wallet(stm, password):
+    if not unlock_wallet(stm):
         return
     props = {
         "account_creation_fee":

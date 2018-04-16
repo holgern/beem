@@ -19,5 +19,6 @@ __all__ = [
     "notify",
     "comment",
     "discussions",
-    "witness"
+    "witness",
+    "profile"
 ]

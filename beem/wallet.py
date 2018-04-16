@@ -174,7 +174,8 @@ class Wallet(object):
     def tryUnlockFromEnv(self):
         if "UNLOCK" in os.environ:
             log.debug("Trying to use environmental variable to unlock wallet")
-            self.unlock(os.environ.get("UNLOCK"))
+            pwd = os.environ.get("UNLOCK")
+            self.unlock(pwd)
         else:
             raise WrongMasterPasswordException
 
