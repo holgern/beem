@@ -116,6 +116,7 @@ General
    installation
    quickstart
    tutorials
+   cli
    configuration
    contribute
    support

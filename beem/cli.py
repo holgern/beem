@@ -24,6 +24,7 @@ from beembase import operations
 
 from beemgraphenebase.account import PrivateKey, PublicKey
 import os
+import ast
 import json
 from prettytable import PrettyTable
 import math
@@ -809,7 +810,7 @@ def sign(file):
             tx = fp.read()
     else:
         tx = click.get_text_stream('stdin')
-    tx = eval(tx)
+    tx = ast.literal_eval(tx)
     tx = stm.sign(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
@@ -827,7 +828,7 @@ def broadcast(file):
             tx = fp.read()
     else:
         tx = click.get_text_stream('stdin')
-    tx = eval(tx)
+    tx = ast.literal_eval(tx)
     tx = stm.broadcast(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)

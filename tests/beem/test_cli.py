@@ -245,9 +245,7 @@ class Testcases(unittest.TestCase):
 
     def test_profile(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['setprofile', 'url', 'https.//google.de'], input="test\n")
+        result = runner.invoke(cli, ['setprofile', 'url', 'https://google.de'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['setprofile', '--pair img=foobar', '--pair url=https.//google.de'], input="test\n")
-        self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['delprofile'], input="test\n")
+        result = runner.invoke(cli, ['delprofile', 'url'], input="test\n")
         self.assertEqual(result.exit_code, 0)
