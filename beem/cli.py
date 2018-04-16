@@ -93,18 +93,12 @@ def unlock_wallet(stm, password=None):
 @click.option(
     '--unsigned', '-x', is_flag=True, default=False, help="Nothing will be signed")
 @click.option(
-    '--blocking', is_flag=True, default=False,
-    help="Wait for broadcasted transactions to be included in a block and return full transaction")
-@click.option(
-    '--bundle', is_flag=True, default=False,
-    help="Do not broadcast transactions right away, but allow to bundle operations ")
-@click.option(
     '--expires', '-e', default=30,
     help='Delay in seconds until transactions are supposed to expire(defaults to 60)')
 @click.option(
     '--verbose', '-v', default=3, help='Verbosity')
 @click.version_option(version=__version__)
-def cli(node, offline, no_broadcast, no_wallet, unsigned, blocking, bundle, expires, verbose):
+def cli(node, offline, no_broadcast, no_wallet, unsigned, expires, verbose):
 
     # Logging
     log = logging.getLogger(__name__)
@@ -125,8 +119,6 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, blocking, bundle, expi
         offline=offline,
         nowallet=no_wallet,
         unsigned=unsigned,
-        blocking=blocking,
-        bundle=bundle,
         expiration=expires,
         debug=debug
     )
@@ -227,7 +219,7 @@ def addkey(unsafe_import_key):
     if not unlock_wallet(stm):
         return
     if not unsafe_import_key:
-        unsafe_import_key = click.prompt("Enter private key", confirmation_prompt=False, hide_input=False)
+        unsafe_import_key = click.prompt("Enter private key", confirmation_prompt=False, hide_input=True)
     stm.wallet.addPrivateKey(unsafe_import_key)
     set_shared_steem_instance(stm)
 
@@ -1089,6 +1081,28 @@ def witnesses(account, limit):
     else:
         witnesses = WitnessesRankedByVote(limit=limit, steem_instance=stm)
     witnesses.printAsTable()
+
+
+@cli.command()
+@click.option('--reward_steem', help='Amount of STEEM you would like to claim', default="0 STEEM")
+@click.option('--reward_sbd', help='Amount of SBD you would like to claim', default="0 SBD")
+@click.option('--reward_vests', help='Amount of VESTS you would like to claim', default="0 VESTS")
+@click.option('--account', '-a', help='Voter account name')
+def claimreward(reward_steem, reward_sbd, reward_vests, account):
+    """Claim reward balances
+
+        By default, this will claim ``all`` outstanding balances.
+    """
+    stm = shared_steem_instance()
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm):
+        return
+    acc = Account(account, steem_instance=stm)
+
+    tx = acc.claim_reward_balance(reward_steem, reward_sbd, reward_vests)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
 
 
 @cli.command()

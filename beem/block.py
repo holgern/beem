@@ -42,7 +42,7 @@ class Block(BlockchainObject):
             self.identifier = int(self.identifier)
         if self.steem.rpc.get_use_appbase():
             block = self.steem.rpc.get_block({"block_num": self.identifier}, api="block")
-            if "block" in block:
+            if block and "block" in block:
                 block = block["block"]
         else:
             block = self.steem.rpc.get_block(self.identifier)

@@ -249,3 +249,8 @@ class Testcases(unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['delprofile', 'url'], input="test\n")
         self.assertEqual(result.exit_code, 0)
+
+    def test_claimreward(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['claimreward'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
