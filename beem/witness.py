@@ -51,6 +51,8 @@ class Witness(BlockchainObject):
     def refresh(self):
         if not self.identifier:
             return
+        if self.steem.offline:
+            return
         if self.steem.rpc.get_use_appbase():
             witness = self.steem.rpc.find_witnesses({'owners': [self.identifier]}, api="database")['witnesses']
             if len(witness) > 0:
@@ -128,26 +130,7 @@ class Witness(BlockchainObject):
         """
         if not account:
             account = self["owner"]
-        if not account:
-            raise ValueError("You need to provide an account")
-
-        account = Account(account, steem_instance=self.steem)
-
-        try:
-            PublicKey(signing_key)
-        except Exception as e:
-            raise e
-
-        op = operations.Witness_update(
-            **{
-                "owner": account["name"],
-                "url": url,
-                "block_signing_key": signing_key,
-                "props": props,
-                "fee": "0.000 STEEM",
-                "prefix": self.steem.prefix,
-            })
-        return self.steem.finalizeOp(op, account, "active")
+        return self.steem.witness_update(signing_key, url, props, account=account)
 
 
 class WitnessesObject(list):

@@ -6,12 +6,15 @@ from __future__ import unicode_literals
 from builtins import bytes, int, str
 from beem.instance import set_shared_steem_instance, shared_steem_instance
 from beem.amount import Amount
+from beem.price import Price
 from beem.account import Account
 from beem.steem import Steem
 from beem.comment import Comment
+from beem.market import Market
 from beem.block import Block
 from beem.witness import Witness, WitnessesRankedByVote, WitnessesVotedByAccount
 from beem.blockchain import Blockchain
+from beem.utils import formatTimeString
 from beem import exceptions
 from beem.version import version as __version__
 from datetime import datetime, timedelta
@@ -615,11 +618,93 @@ def disallow(foreign_account, permission, password, account, threshold):
 
 
 @cli.command()
+@click.argument('accountname', nargs=1, required=True)
 @click.option('--password', prompt=True, hide_input=True,
               confirmation_prompt=False, help='Password to unlock wallet')
-@click.option('--account', '-a', help='The account to updateMemoKey action for')
+@click.option('--account', '-a', help='Account that pays the fee')
+@click.option('--fee', help='Base Fee to pay. Delegate the rest.', default='0 STEEM')
+def newaccount(accountname, password, account, fee):
+    """Create a new account"""
+    stm = shared_steem_instance()
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm, password):
+        return
+    acc = Account(account, steem_instance=stm)
+    pwd = click.prompt("New Account Passphrase", confirmation_prompt=True, hide_input=True)
+    if not pwd:
+        print("You cannot chose an empty password")
+        return
+    tx = stm.create_account(accountname, creator=acc, password=pwd, delegation_fee_steem=fee)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.argument('account', nargs=1, required=True)
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--roles', help='Import specified keys (owner, active, posting, memo).', default=["active", "posting", "memo"])
+def importaccount(account, password, roles):
+    """Import an account using a passphrase"""
+    from beemgraphenebase.account import PasswordKey
+    stm = shared_steem_instance()
+    if not unlock_wallet(stm, password):
+        return
+    account = Account(account, steem_instance=stm)
+    imported = False
+    pwd = click.prompt("Account Passphrase", confirmation_prompt=False, hide_input=True)
+    if not pwd:
+        print("You cannot chose an empty Passphrase")
+        return
+    if "owner" in roles:
+        owner_key = PasswordKey(account["name"], password, role="owner")
+        owner_pubkey = format(owner_key.get_public_key(), stm.prefix)
+        if owner_pubkey in [x[0] for x in account["owner"]["key_auths"]]:
+            print("Importing owner key!")
+            owner_privkey = owner_key.get_private_key()
+            stm.wallet.addPrivateKey(owner_privkey)
+            imported = True
+
+    if "active" in roles:
+        active_key = PasswordKey(account["name"], password, role="active")
+        active_pubkey = format(active_key.get_public_key(), stm.prefix)
+        if active_pubkey in [x[0] for x in account["active"]["key_auths"]]:
+            print("Importing active key!")
+            active_privkey = active_key.get_private_key()
+            stm.wallet.addPrivateKey(active_privkey)
+            imported = True
+
+    if "posting" in roles:
+        posting_key = PasswordKey(account["name"], password, role="posting")
+        posting_pubkey = format(posting_key.get_public_key(), stm.prefix)
+        if posting_pubkey in [
+            x[0] for x in account["posting"]["key_auths"]
+        ]:
+            print("Importing posting key!")
+            posting_privkey = posting_key.get_private_key()
+            stm.wallet.addPrivateKey(posting_privkey)
+            imported = True
+
+    if "memo" in roles:
+        memo_key = PasswordKey(account["name"], password, role="memo")
+        memo_pubkey = format(memo_key.get_public_key(), stm.prefix)
+        if memo_pubkey == account["memo_key"]:
+            print("Importing memo key!")
+            memo_privkey = memo_key.get_private_key()
+            stm.wallet.addPrivateKey(memo_privkey)
+            imported = True
+
+    if not imported:
+        print("No matching key(s) found. Password correct?")
+
+
+@cli.command()
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--account', '-a', help='The account to updatememokey action for')
 @click.option('--key', help='The new memo key')
-def updateMemoKey(password, account, key):
+def updatememokey(password, account, key):
     """Update an account\'s memo key"""
     stm = shared_steem_instance()
     if not account:
@@ -629,9 +714,9 @@ def updateMemoKey(password, account, key):
     acc = Account(account, steem_instance=stm)
     if not key:
         from beemgraphenebase.account import PasswordKey
-        pwd = click.prompt("Password for Memo Key Derivation", confirmation_prompt=True)
+        pwd = click.prompt("Password for Memo Key Derivation", confirmation_prompt=True, hide_input=True)
         memo_key = PasswordKey(account, pwd, "memo")
-        key = format(memo_key.get_public_key(), "STM")
+        key = format(memo_key.get_public_key(), stm.prefix)
         memo_privkey = memo_key.get_private_key()
         if not stm.nobroadcast:
             stm.wallet.addPrivateKey(memo_privkey)
@@ -672,6 +757,265 @@ def disapprovewitness(witness, password, account):
         return
     acc = Account(account, steem_instance=stm)
     tx = acc.disapprovewitness(witness)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.option('--chart', help='Enable charting (requires matplotlib)', is_flag=True)
+def orderbook(chart):
+    """Obtain orderbook of the internal market"""
+    stm = shared_steem_instance()
+    market = Market(steem_instance=stm)
+    orderbook = market.orderbook(limit=25, raw_data=False)
+    t = PrettyTable(["asks-date", "bids-date", "asks", "bids"], hrules=0)
+    t.align = "r"
+    asks = []
+    bids = []
+    asks_date = []
+    bids_date = []
+    n = 0
+    for order in orderbook["asks"]:
+        asks.append(order)
+    if n < len(asks):
+        n = len(asks)
+    for order in orderbook["bids"]:
+        bids.append(order)
+    if n < len(bids):
+        n = len(bids)
+    for order in orderbook["asks_date"]:
+        asks_date.append(order)
+    if n < len(asks_date):
+        n = len(asks_date)
+    for order in orderbook["bids_date"]:
+        bids_date.append(order)
+    if n < len(bids_date):
+        n = len(bids_date)
+    for i in range(n):
+        row = []
+        if len(asks_date) > i:
+            row.append(formatTimeString(asks_date[i]))
+        else:
+            row.append([""])
+        if len(asks) > i:
+            row.append(str(asks[i]))
+        else:
+            row.append([""])
+        if len(bids_date) > i:
+            row.append(formatTimeString(bids_date[i]))
+        else:
+            row.append([""])
+        if len(bids) > i:
+            row.append(str(bids[i]))
+        else:
+            row.append([""])
+        t.add_row(row)
+    print(t)
+
+
+@cli.command()
+@click.argument('amount', nargs=1)
+@click.argument('asset', nargs=1)
+@click.argument('price', nargs=1)
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--account', '-a', help='Buy with this account (defaults to "default_account")')
+@click.option('--orderid', help='Set an orderid')
+def buy(amount, asset, price, password, account, orderid):
+    """Buy STEEM or SBD from the internal market
+
+        Limit buy price denoted in (SBD per STEEM)
+    """
+    stm = shared_steem_instance()
+    market = Market(steem_instance=stm)
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm, password):
+        return
+    p = Price(float(price), u"SBD:STEEM", steem_instance=stm)
+    a = Amount(float(amount), asset, steem_instance=stm)
+    acc = Account(account, steem_instance=stm)
+    tx = market.buy(p, a, account=acc, orderid=orderid)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.argument('amount', nargs=1)
+@click.argument('asset', nargs=1)
+@click.argument('price', nargs=1)
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--account', '-a', help='Sell with this account (defaults to "default_account")')
+@click.option('--orderid', help='Set an orderid')
+def sell(amount, asset, price, password, account, orderid):
+    """Sell STEEM or SBD from the internal market
+
+        Limit sell price denoted in (SBD per STEEM)
+    """
+    stm = shared_steem_instance()
+    market = Market(steem_instance=stm)
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm, password):
+        return
+    p = Price(float(price), u"SBD:STEEM", steem_instance=stm)
+    a = Amount(float(amount), asset, steem_instance=stm)
+    acc = Account(account, steem_instance=stm)
+    tx = market.sell(p, a, account=acc, orderid=orderid)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.argument('orderid', nargs=1)
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--account', '-a', help='Sell with this account (defaults to "default_account")')
+def cancel(orderid, password, account):
+    """Cancel order in the internal market"""
+    stm = shared_steem_instance()
+    market = Market(steem_instance=stm)
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm, password):
+        return
+    acc = Account(account, steem_instance=stm)
+    tx = market.cancel(orderid, account=acc)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.option('--account', '-a', help='Sell with this account (defaults to "default_account")')
+def openorders(account):
+    """Show open orders"""
+    stm = shared_steem_instance()
+    market = Market(steem_instance=stm)
+    if not account:
+        account = stm.config["default_account"]
+    acc = Account(account, steem_instance=stm)
+    openorders = market.accountopenorders(account=acc)
+    t = PrettyTable(["orderid", "created", "order", "account"], hrules=0)
+    t.align = "r"
+    for order in openorders:
+        t.add_row([order["orderid"],
+                   formatTimeString(order["created"]),
+                   str(order["order"]),
+                   account])
+    print(t)
+
+
+@cli.command()
+@click.argument('identifier', nargs=1)
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--account', '-a', help='Resteem as this user')
+def resteem(identifier, password, account):
+    """Resteem an existing post"""
+    stm = shared_steem_instance()
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm, password):
+        return
+    acc = Account(account, steem_instance=stm)
+    post = Comment(identifier, steem_instance=stm)
+    tx = post.resteem(account=acc)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.argument('follow', nargs=1)
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--account', '-a', help='Follow from this account')
+@click.option('--what', help='Follow these objects (defaults to "blog")', default=["blog"])
+def follow(follow, password, account, what):
+    """Follow another account"""
+    stm = shared_steem_instance()
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm, password):
+        return
+    acc = Account(account, steem_instance=stm)
+    tx = acc.follow(follow, what=what)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.argument('unfollow', nargs=1)
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--account', '-a', help='Follow from this account')
+def unfollow(unfollow, password, account):
+    """Unfollow another account"""
+    stm = shared_steem_instance()
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm, password):
+        return
+    acc = Account(account, steem_instance=stm)
+    tx = acc.unfollow(unfollow)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--witness', help='Witness name')
+@click.option('--maximum_block_size', help='Max block size')
+@click.option('--account_creation_fee', help='Account creation fee')
+@click.option('--sbd_interest_rate', help='SBD interest rate in percent')
+@click.option('--url', help='Witness URL')
+@click.option('--signing_key', help='Signing Key')
+def witnessupdate(password, witness, maximum_block_size, account_creation_fee, sbd_interest_rate, url, signing_key):
+    """Change witness properties"""
+    stm = shared_steem_instance()
+    if not witness:
+        witness = stm.config["default_account"]
+    if not unlock_wallet(stm, password):
+        return
+    witness = Witness(witness, steem_instance=stm)
+    props = witness["props"]
+    if account_creation_fee:
+        props["account_creation_fee"] = str(
+            Amount("%f STEEM" % account_creation_fee))
+    if maximum_block_size:
+        props["maximum_block_size"] = maximum_block_size
+    if sbd_interest_rate:
+        props["sbd_interest_rate"] = int(sbd_interest_rate * 100)
+    tx = witness.update(signing_key or witness["signing_key"], url or witness["url"], props)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.argument('witness', nargs=1)
+@click.argument('signing_key', nargs=1)
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=False, help='Password to unlock wallet')
+@click.option('--maximum_block_size', help='Max block size', default="65536")
+@click.option('--account_creation_fee', help='Account creation fee', default=30)
+@click.option('--sbd_interest_rate', help='SBD interest rate in percent', default=0.0)
+@click.option('--url', help='Witness URL', default="")
+def witnesscreate(witness, signing_key, password, maximum_block_size, account_creation_fee, sbd_interest_rate, url):
+    """Create a witness"""
+    stm = shared_steem_instance()
+    if not unlock_wallet(stm, password):
+        return
+    props = {
+        "account_creation_fee":
+            str(Amount("%f STEEM" % account_creation_fee)),
+        "maximum_block_size":
+            maximum_block_size,
+        "sbd_interest_rate":
+            int(sbd_interest_rate * 100)
+    }
+
+    tx = stm.witness_update(signing_key, url, props, account=witness)
     tx = json.dumps(tx, indent=4)
     print(tx)
 

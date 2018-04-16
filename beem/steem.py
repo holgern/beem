@@ -827,10 +827,13 @@ class Steem(object):
 
             .. note:: Please note that this imports private keys
                       (if password is present) into the wallet by
-                      default. However, it **does not import the owner
-                      key** for security reasons. Do NOT expect to be
-                      able to recover it from the wallet if you lose
-                      your password!
+                      default when nobroadcast is set to False.
+                      However, it **does not import the owner
+                      key** for security reasons by default.
+                      If you set store_owner_key to True, the
+                      owner key is stored.
+                      Do NOT expect to be able to recover it from
+                      the wallet if you lose your password!
 
             .. note:: Account creations cost a fee that is defined by
                        the network. If you create an account, you will
@@ -917,7 +920,7 @@ class Steem(object):
             memo_privkey = memo_key.get_private_key()
             # store private keys
             try:
-                if storekeys:
+                if storekeys and not self.nobroadcast:
                     if store_owner_key:
                         self.wallet.addPrivateKey(owner_privkey)
                     self.wallet.addPrivateKey(active_privkey)
@@ -971,6 +974,7 @@ class Steem(object):
 
         props = self.get_chain_properties()
         required_fee_steem = Amount(props["account_creation_fee"], steem_instance=self) * 30
+        required_fee_vests = Amount(0, "VESTS", steem_instance=self)
         if delegation_fee_steem.amount:
             # creating accounts without delegation requires 30x
             # account_creation_fee creating account with delegation allows one
@@ -983,7 +987,6 @@ class Steem(object):
                 raise ValueError(
                     "When creating account with delegation, at least " +
                     "1 STEEM in fee must be paid.")
-
             # calculate required remaining fee in vests
             remaining_fee = required_fee_steem - delegation_fee_steem
             if remaining_fee.amount > 0:
@@ -1034,6 +1037,42 @@ class Steem(object):
             }
             op = operations.Account_create(**op)
         return self.finalizeOp(op, creator, "active", **kwargs)
+
+    def witness_update(self, signing_key, url, props, account=None):
+        """ Creates/updates a witness
+            :param pubkey signing_key: Signing key
+            :param str url: URL
+            :param dict props: Properties
+            :param str account: (optional) witness account name
+             Properties:::
+                {
+                    "account_creation_fee": x,
+                    "maximum_block_size": x,
+                    "sbd_interest_rate": x,
+                }
+        """
+        if not account and config["default_account"]:
+            account = config["default_account"]
+        if not account:
+            raise ValueError("You need to provide an account")
+
+        account = Account(account, steem_instance=self)
+
+        try:
+            PublicKey(signing_key, prefix=self.prefix)
+        except Exception as e:
+            raise e
+
+        op = operations.Witness_update(
+            **{
+                "owner": account["name"],
+                "url": url,
+                "block_signing_key": signing_key,
+                "props": props,
+                "fee": "0.000 STEEM",
+                "prefix": self.prefix,
+            })
+        return self.finalizeOp(op, account, "active")
 
     def _test_weights_treshold(self, authority):
         """ This method raises an error if the threshold of an authority cannot

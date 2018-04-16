@@ -920,11 +920,9 @@ class Account(BlockchainObject):
             if first < 1:
                 break
 
-    def unfollow(self, unfollow, what=["blog"], account=None):
+    def unfollow(self, unfollow, account=None):
         """ Unfollow another account's blog
             :param str unfollow: Follow this account
-            :param list what: List of states to follow
-                (defaults to ``['blog']``)
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
         """
@@ -953,7 +951,7 @@ class Account(BlockchainObject):
             }
         ]
         return self.steem.custom_json(
-            id="follow", json=json_body, required_posting_auths=[account])
+            "follow", json_body, required_posting_auths=[account])
 
     def update_account_profile(self, profile, account=None):
         """ Update an account's meta data (json_meta)
