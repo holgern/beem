@@ -65,7 +65,7 @@ class Testcases(unittest.TestCase):
         runner = CliRunner()
         result = runner.invoke(cli, ['parsewif'], input=wif + "\nexit\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['parsewif', '--unsafe-import-key ' + wif])
+        result = runner.invoke(cli, ['parsewif', '--unsafe-import-key', wif])
         self.assertEqual(result.exit_code, 0)
 
     def test_delkey(self):
@@ -130,7 +130,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['-o', 'upvote', '@test/abcd', '100'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-o', 'upvote', '@test/abcd', '--weight 100'], input="test\n")
+        result = runner.invoke(cli, ['-o', 'upvote', '--weight', '100', '@test/abcd'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_downvote(self):
@@ -139,7 +139,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['-o', 'downvote', '@test/abcd', '100'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-o', 'downvote', '@test/abcd', '--weight 100'], input="test\n")
+        result = runner.invoke(cli, ['-o', 'downvote', '--weight', '100', '@test/abcd'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_transfer(self):
@@ -191,9 +191,9 @@ class Testcases(unittest.TestCase):
 
     def test_allow_disallow(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-d', 'allow', 'beem1', '--account beem', '--permission posting'], input="test\n")
+        result = runner.invoke(cli, ['-d', 'allow', '--account', 'beem', '--permission', 'posting', 'beem1'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-d', 'disallow', 'beem1', '--account beem', '--permission posting'], input="test\n")
+        result = runner.invoke(cli, ['-d', 'disallow', '--account', 'beem', '--permission', 'posting', 'beem1'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_witnesses(self):
@@ -215,12 +215,12 @@ class Testcases(unittest.TestCase):
         runner = CliRunner()
         result = runner.invoke(cli, ['-d', 'newaccount', 'beem3'], input="test\ntest\ntest\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-d', 'newaccount', 'beem3', '--fee "6 STEEM"'], input="test\ntest\ntest\n")
+        result = runner.invoke(cli, ['-d', 'newaccount', '--fee', '6 STEEM', 'beem3'], input="test\ntest\ntest\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_importaccount(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['importaccount', '--roles=["owner", "active", "posting", "memo"]', 'beem2'], input="test\ntest\n")
+        result = runner.invoke(cli, ['importaccount', '--roles', '["owner", "active", "posting", "memo"]', 'beem2'], input="test\ntest\n")
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['delkey', '--confirm', 'STX7mLs2hns87f7kbf3o2HBqNoEaXiTeeU89eVF6iUCrMQJFzBsPo'], input="test\n")
         self.assertEqual(result.exit_code, 0)
