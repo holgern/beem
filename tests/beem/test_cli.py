@@ -20,6 +20,7 @@ from beem.utils import get_node_list
 
 wif = "5Jt2wTfhUt5GkZHV1HYVfkEaJ6XnY8D2iA4qjtK9nnGXAhThM3w"
 posting_key = "5Jh1Gtu2j4Yi16TfhoDmg8Qj3ULcgRi7A49JXdfUUTVPkaFaRKz"
+memo_key = "5KPbCuocX26aMxN9CDPdUex4wCbfw9NoT5P7UhcqgDwxXa47bit"
 pub_key = "STX52xMqKegLk4tdpNcUXU9Rw5DtdM9fxf3f12Gp55v1UjLX3ELZf"
 
 
@@ -34,6 +35,7 @@ class Testcases(unittest.TestCase):
         runner.invoke(cli, ['createwallet'], input="y\ntest\ntest\n")
         runner.invoke(cli, ['addkey'], input="test\n" + wif + "\n")
         runner.invoke(cli, ['addkey'], input="test\n" + posting_key + "\n")
+        runner.invoke(cli, ['addkey'], input="test\n" + memo_key + "\n")
 
     def test_balance(self):
         runner = CliRunner()
@@ -88,6 +90,17 @@ class Testcases(unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['info', pub_key])
         self.assertEqual(result.exit_code, 0)
+
+    def test_info2(self):
+        runner = CliRunner()
+        runner.invoke(cli, ['set', 'nodes', ''])
+        result = runner.invoke(cli, ['info', '--', '-1:1'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['info', 'gtg'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['info', "@gtg/witness-gtg-log"])
+        self.assertEqual(result.exit_code, 0)
+        runner.invoke(cli, ['set', 'nodes', 'wss://testnet.steem.vc'])
 
     def test_changepassword(self):
         runner = CliRunner()
@@ -161,9 +174,9 @@ class Testcases(unittest.TestCase):
 
     def test_allow_disallow(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['allow', 'beem1', '--account beem', '--permission posting'], input="test\n")
+        result = runner.invoke(cli, ['-d', 'allow', 'beem1', '--account beem', '--permission posting'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['disallow', 'beem1', '--account beem', '--permission posting'], input="test\n")
+        result = runner.invoke(cli, ['-d', 'disallow', 'beem1', '--account beem', '--permission posting'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_witnesses(self):

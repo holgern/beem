@@ -105,7 +105,7 @@ class SteemNodeRPC(GrapheneRPC):
         elif re.search("Unable to acquire database lock", msg):
             sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg), call_retry=True)
             doRetry = True
-        elif re.search("Internal Error", msg):
+        elif re.search("Internal Error", msg) or re.search("Unknown exception", msg):
             sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg), call_retry=True)
             doRetry = True
         elif re.search("!check_max_block_age", str(e)):

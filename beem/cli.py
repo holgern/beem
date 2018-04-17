@@ -1151,16 +1151,18 @@ def info(objects):
                             tran_nr = len(value) + int(tran_nr)
                         else:
                             tran_nr = int(tran_nr)
-                        if len(value) > tran_nr and tran_nr > -1:
-                            t_value = json.dumps(value[tran_nr], indent=4)
+                        if len(value) > tran_nr - 1 and tran_nr > -1:
+                            t_value = json.dumps(value[tran_nr - 1], indent=4)
                             t.add_row(["transaction %d/%d" % (tran_nr, len(value)), t_value])
+                    elif key == "transaction_ids" and not bool(tran_nr):
+                        t.add_row(["Nr. of transaction_ids", len(value)])
                     elif key == "transaction_ids" and bool(tran_nr):
                         if int(tran_nr) < 0:
                             tran_nr = len(value) + int(tran_nr)
                         else:
                             tran_nr = int(tran_nr)
-                        if len(value) > int(tran_nr) and int(tran_nr) > -1:
-                            t.add_row(["transaction_id %d/%d" % (int(tran_nr), len(value)), value[int(tran_nr)]])
+                        if len(value) > tran_nr - 1 and tran_nr > -1:
+                            t.add_row(["transaction_id %d/%d" % (int(tran_nr), len(value)), value[tran_nr - 1]])
                     else:
                         t.add_row([key, value])
                 print(t)
@@ -1201,7 +1203,7 @@ def info(objects):
             except exceptions.WitnessDoesNotExistsException as e:
                 print(str(e))
         # Public Key
-        elif re.match("^STM.{48,55}$", obj):
+        elif re.match("^" + stm.prefix + ".{48,55}$", obj):
             account = stm.wallet.getAccountFromPublicKey(obj)
             if account:
                 t = PrettyTable(["Account"])
