@@ -209,6 +209,31 @@ def walletinfo():
 
 @cli.command()
 @click.option('--unsafe-import-key',
+              help='WIF key to parse (unsafe, unless shell history is deleted afterwards)', multiple=True)
+def parsewif(unsafe_import_key):
+    """ Parse a WIF private key without importing
+    """
+    stm = shared_steem_instance()
+    if unsafe_import_key:
+        for key in unsafe_import_key:
+            try:
+                print(PrivateKey(key, prefix=stm.prefix).pubkey)
+            except Exception as e:
+                print(str(e))
+    else:
+        while True:
+            wifkey = click.prompt("Enter private key", confirmation_prompt=False, hide_input=True)
+            if not wifkey:
+                break
+            try:
+                print(PrivateKey(wifkey, prefix=stm.prefix).pubkey)
+            except Exception as e:
+                print(str(e))
+                continue
+
+
+@cli.command()
+@click.option('--unsafe-import-key',
               help='Private key to import to wallet (unsafe, unless shell history is deleted afterwards)')
 def addkey(unsafe_import_key):
     """ Add key to wallet

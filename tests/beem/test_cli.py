@@ -61,6 +61,13 @@ class Testcases(unittest.TestCase):
         result = runner.invoke(cli, ['addkey'], input="test\n" + posting_key + "\n")
         self.assertEqual(result.exit_code, 0)
 
+    def test_parsewif(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['parsewif'], input=wif + "\n")
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['parsewif', '--unsafe-import-key ' + wif])
+        self.assertEqual(result.exit_code, 0)
+
     def test_delkey(self):
         runner = CliRunner()
         result = runner.invoke(cli, ['delkey', '--confirm', pub_key], input="test\n")
