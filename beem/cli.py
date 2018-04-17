@@ -223,7 +223,7 @@ def parsewif(unsafe_import_key):
     else:
         while True:
             wifkey = click.prompt("Enter private key", confirmation_prompt=False, hide_input=True)
-            if not wifkey:
+            if not wifkey or wifkey == "quit" or wifkey == "exit":
                 break
             try:
                 print(PrivateKey(wifkey, prefix=stm.prefix).pubkey)

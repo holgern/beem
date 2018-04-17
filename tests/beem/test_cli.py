@@ -63,7 +63,7 @@ class Testcases(unittest.TestCase):
 
     def test_parsewif(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['parsewif'], input=wif + "\n")
+        result = runner.invoke(cli, ['parsewif'], input=wif + "\nexit\n")
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['parsewif', '--unsafe-import-key ' + wif])
         self.assertEqual(result.exit_code, 0)
