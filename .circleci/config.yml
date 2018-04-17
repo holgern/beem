@@ -50,7 +50,7 @@ jobs:
             tox -e py36
             ./cc-test-reporter after-build --exit-code $?
 
-       - deploy:
+      - deploy:
           name: Push coverage
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
