@@ -252,5 +252,5 @@ class Testcases(unittest.TestCase):
 
     def test_claimreward(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['claimreward'], input="test\n")
+        result = runner.invoke(cli, ['-d', 'claimreward'], input="test\n")
         self.assertEqual(result.exit_code, 0)
