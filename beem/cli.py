@@ -201,7 +201,8 @@ def walletinfo():
     t.align = "l"
     t.add_row(["created", stm.wallet.created()])
     t.add_row(["locked", stm.wallet.locked()])
-    # t.add_row(["getAccounts", str(stm.wallet.getAccounts())])
+    t.add_row(["Number of stored keys", len(stm.wallet.getPublicKeys())])
+    t.add_row(["sql-file", stm.wallet.keyStorage.sqlDataBaseFile])
     # t.add_row(["getPublicKeys", str(stm.wallet.getPublicKeys())])
     print(t)
 
@@ -1085,7 +1086,7 @@ def cancel(orderid, account):
 
 
 @cli.command()
-@click.option('--account', '-a', help='Sell with this account (defaults to "default_account")')
+@click.argument('account', nargs=1, required=False)
 def openorders(account):
     """Show open orders"""
     stm = shared_steem_instance()
@@ -1223,11 +1224,11 @@ def witnesses(account, limit):
 
 
 @cli.command()
+@click.argument('account', nargs=1, required=False)
 @click.option('--reward_steem', help='Amount of STEEM you would like to claim', default="0 STEEM")
 @click.option('--reward_sbd', help='Amount of SBD you would like to claim', default="0 SBD")
 @click.option('--reward_vests', help='Amount of VESTS you would like to claim', default="0 VESTS")
-@click.option('--account', '-a', help='Voter account name')
-def claimreward(reward_steem, reward_sbd, reward_vests, account):
+def claimreward(account, reward_steem, reward_sbd, reward_vests):
     """Claim reward balances
 
         By default, this will claim ``all`` outstanding balances.
@@ -1235,9 +1236,13 @@ def claimreward(reward_steem, reward_sbd, reward_vests, account):
     stm = shared_steem_instance()
     if not account:
         account = stm.config["default_account"]
+    acc = Account(account, steem_instance=stm)
+    r = acc.balances["rewards"]
+    if r[0].amount + r[1].amount + r[2].amount == 0:
+        print("Nothing to claim.")
+        return
     if not unlock_wallet(stm):
         return
-    acc = Account(account, steem_instance=stm)
 
     tx = acc.claim_reward_balance(reward_steem, reward_sbd, reward_vests)
     tx = json.dumps(tx, indent=4)
