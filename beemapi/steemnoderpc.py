@@ -8,6 +8,7 @@ import sys
 from itertools import cycle
 from beemgrapheneapi.graphenerpc import GrapheneRPC
 from beemgrapheneapi.rpcutils import sleep_and_check_retries
+from beemgrapheneapi.exceptions import CallRetriesReached
 from beembase.chains import known_chains
 from . import exceptions
 import logging
@@ -57,11 +58,8 @@ class SteemNodeRPC(GrapheneRPC):
                 self.error_cnt_call = cnt
                 reply = super(SteemNodeRPC, self).rpcexec(payload)
                 if self.next_node_on_empty_reply and not bool(reply) and self.n_urls > 1:
-                    sleep_and_check_retries(self.num_retries_call, cnt, self.url, str("Empty reply"), sleep=False, call_retry=True)
-                    self.error_cnt[self.url] += 1
-                    self.next()
+                    self._retry_on_next_node("Empty Reply")
                     cnt = 0
-                    self.error_cnt_call = 0
                     doRetry = True
                     self.next_node_on_empty_reply = True
                 else:
@@ -69,10 +67,21 @@ class SteemNodeRPC(GrapheneRPC):
                     return reply
             except exceptions.RPCErrorDoRetry as e:
                 msg = exceptions.decodeRPCErrorMsg(e).strip()
-                sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg), call_retry=True)
-                doRetry = True
+                try:
+                    sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg), call_retry=True)
+                    doRetry = True
+                except CallRetriesReached:
+                    self._retry_on_next_node(msg)
+                    cnt = 0
+                    doRetry = True
             except exceptions.RPCError as e:
-                doRetry = self._check_error_message(e, cnt)
+                try:
+                    doRetry = self._check_error_message(e, cnt)
+                except CallRetriesReached:
+                    msg = exceptions.decodeRPCErrorMsg(e).strip()
+                    self._retry_on_next_node(msg)
+                    cnt = 0
+                    doRetry = True
             except Exception as e:
                 raise e
             if doRetry:
@@ -80,6 +89,12 @@ class SteemNodeRPC(GrapheneRPC):
                     cnt += 1
                 else:
                     cnt = self.error_cnt_call + 1
+
+    def _retry_on_next_node(self, error_msg):
+        self.error_cnt[self.url] += 1
+        sleep_and_check_retries(self.num_retries, self.error_cnt[self.url], self.url, error_msg, sleep=False, call_retry=False)
+        self.next()
+        self.error_cnt_call = 0
 
     def _check_error_message(self, e, cnt):
         """Check error message and decide what to do"""

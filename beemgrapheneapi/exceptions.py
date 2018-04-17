@@ -32,3 +32,9 @@ class NumRetriesReached(Exception):
     """NumRetriesReached Exception."""
 
     pass
+
+
+class CallRetriesReached(Exception):
+    """CallRetriesReached Exception."""
+
+    pass

@@ -188,7 +188,7 @@ class Market(dict):
         bids = list([Order(
             Amount(x["order_price"]["quote"], steem_instance=self.steem),
             Amount(x["order_price"]["base"], steem_instance=self.steem),
-            steem_instance=self.steem) for x in orders["bids"]])
+            steem_instance=self.steem).invert() for x in orders["bids"]])
         asks_date = list([formatTimeString(x["created"]) for x in orders["asks"]])
         bids_date = list([formatTimeString(x["created"]) for x in orders["bids"]])
         data = {"asks": asks, "bids": bids, "asks_date": asks_date, "bids_date": bids_date}

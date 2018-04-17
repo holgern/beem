@@ -833,7 +833,7 @@ def orderbook(chart):
     stm = shared_steem_instance()
     market = Market(steem_instance=stm)
     orderbook = market.orderbook(limit=25, raw_data=False)
-    t = PrettyTable(["asks-date", "bids-date", "asks", "bids"], hrules=0)
+    t = PrettyTable(["asks-date", "asks", "bids-date", "bids"], hrules=0)
     t.align = "r"
     asks = []
     bids = []
@@ -881,7 +881,7 @@ def orderbook(chart):
 @cli.command()
 @click.argument('amount', nargs=1)
 @click.argument('asset', nargs=1)
-@click.argument('price', nargs=1)
+@click.argument('price', nargs=1, required=False)
 @click.option('--account', '-a', help='Buy with this account (defaults to "default_account")')
 @click.option('--orderid', help='Set an orderid')
 def buy(amount, asset, price, account, orderid):
@@ -893,9 +893,20 @@ def buy(amount, asset, price, account, orderid):
     market = Market(steem_instance=stm)
     if not account:
         account = stm.config["default_account"]
+    if not price:
+        orderbook = market.orderbook(limit=1, raw_data=False)
+        if asset == "STEEM" and len(orderbook["bids"]) > 0:
+            p = Price(orderbook["bids"][0]["base"], orderbook["bids"][0]["quote"], steem_instance=stm).invert()
+        else:
+            p = Price(orderbook["asks"][0]["base"], orderbook["asks"][0]["quote"], steem_instance=stm).invert()
+        price_ok = click.prompt("Is the following Price ok: %s [y/n]" % (str(p)))
+        if price_ok not in ["y", "ye", "yes"]:
+            return
+    else:
+        p = Price(float(price), u"SBD:STEEM", steem_instance=stm)
     if not unlock_wallet(stm):
         return
-    p = Price(float(price), u"SBD:STEEM", steem_instance=stm)
+
     a = Amount(float(amount), asset, steem_instance=stm)
     acc = Account(account, steem_instance=stm)
     tx = market.buy(p, a, account=acc, orderid=orderid)
@@ -906,7 +917,7 @@ def buy(amount, asset, price, account, orderid):
 @cli.command()
 @click.argument('amount', nargs=1)
 @click.argument('asset', nargs=1)
-@click.argument('price', nargs=1)
+@click.argument('price', nargs=1, required=False)
 @click.option('--account', '-a', help='Sell with this account (defaults to "default_account")')
 @click.option('--orderid', help='Set an orderid')
 def sell(amount, asset, price, account, orderid):
@@ -918,9 +929,19 @@ def sell(amount, asset, price, account, orderid):
     market = Market(steem_instance=stm)
     if not account:
         account = stm.config["default_account"]
+    if not price:
+        orderbook = market.orderbook(limit=1, raw_data=False)
+        if asset == "SBD" and len(orderbook["bids"]) > 0:
+            p = Price(orderbook["bids"][0]["base"], orderbook["bids"][0]["quote"], steem_instance=stm).invert()
+        else:
+            p = Price(orderbook["asks"][0]["base"], orderbook["asks"][0]["quote"], steem_instance=stm).invert()
+        price_ok = click.prompt("Is the following Price ok: %s [y/n]" % (str(p)))
+        if price_ok not in ["y", "ye", "yes"]:
+            return
+    else:
+        p = Price(float(price), u"SBD:STEEM", steem_instance=stm)
     if not unlock_wallet(stm):
         return
-    p = Price(float(price), u"SBD:STEEM", steem_instance=stm)
     a = Amount(float(amount), asset, steem_instance=stm)
     acc = Account(account, steem_instance=stm)
     tx = market.sell(p, a, account=acc, orderid=orderid)

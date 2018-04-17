@@ -7,7 +7,7 @@ import time
 import json
 import logging
 from .exceptions import (
-    UnauthorizedError, RPCConnection, RPCError, NumRetriesReached
+    UnauthorizedError, RPCConnection, RPCError, NumRetriesReached, CallRetriesReached
 )
 
 log = logging.getLogger(__name__)
@@ -92,7 +92,10 @@ def sleep_and_check_retries(num_retries, cnt, url, errorMsg=None, sleep=True, ca
     else:
         log.warning("Lost connection or internal error on node: %s (%d/%d) \n" % (url, cnt, num_retries))
     if (num_retries >= 0 and cnt > num_retries):
-        raise NumRetriesReached()
+        if not call_retry:
+            raise NumRetriesReached()
+        else:
+            raise CallRetriesReached()
     if not sleep:
         return
     if cnt < 1:
