@@ -515,6 +515,124 @@ def interest(account):
 
 
 @cli.command()
+@click.argument('account', nargs=-1, required=False)
+def follower(account):
+    """ Get information about followers
+    """
+    stm = shared_steem_instance()
+    if not account:
+        if "default_account" in stm.config:
+            account = [stm.config["default_account"]]
+    for a in account:
+        t = PrettyTable([
+            "Key", "value"
+        ])
+        t.align = "r"
+        a = Account(a, steem_instance=stm)
+        print("\nFollowers statistics for @%s (please wait...)" % a.name)
+        follower_count = a.get_follow_count()["follower_count"]
+        t.add_row(["follower_count", str(follower_count)])
+        followers = a.get_followers(False)
+        own_mvest = []
+        eff_sp = []
+        rep = []
+        last_vote_h = []
+        last_post_d = []
+        no_vote = 0
+        no_post = 0
+        for f in followers:
+            rep.append(f.rep)
+            own_mvest.append(f.balances["available"][2].amount / 1e6)
+            eff_sp.append(f.get_steem_power())
+            utc = pytz.timezone('UTC')
+            last_vote = utc.localize(datetime.utcnow()) - formatTimeString(f["last_vote_time"])
+            if last_vote.days >= 365:
+                no_vote += 1
+            else:
+                last_vote_h.append(last_vote.total_seconds() / 60 / 60)
+            last_post = utc.localize(datetime.utcnow()) - formatTimeString(f["last_root_post"])
+            if last_post.days >= 365:
+                no_post += 1
+            else:
+                last_post_d.append(last_post.total_seconds() / 60 / 60 / 24)
+
+        t.add_row(["Summed MVest value", "%.2f" % sum(own_mvest)])
+        if (len(rep) > 0):
+            t.add_row(["Mean Rep.", "%.2f" % (sum(rep) / len(rep))])
+            t.add_row(["Max Rep.", "%.2f" % (max(rep))])
+        if (len(eff_sp) > 0):
+            t.add_row(["Summed eff. SP", "%.2f" % sum(eff_sp)])
+            t.add_row(["Mean eff. SP", "%.2f" % (sum(eff_sp) / len(eff_sp))])
+            t.add_row(["Max eff. SP", "%.2f" % max(eff_sp)])
+        if (len(last_vote_h) > 0):
+            t.add_row(["Mean last vote diff in hours", "%.2f" % (sum(last_vote_h) / len(last_vote_h))])
+        if len(last_post_d) > 0:
+            t.add_row(["Mean last post diff in days", "%.2f" % (sum(last_post_d) / len(last_post_d))])
+        t.add_row(["Followers without vote in 365 days", no_vote])
+        t.add_row(["Followers without post in 365 days", no_post])
+        print(t)
+
+
+@cli.command()
+@click.argument('account', nargs=-1, required=False)
+def following(account):
+    """ Get information about following
+    """
+    stm = shared_steem_instance()
+    if not account:
+        if "default_account" in stm.config:
+            account = [stm.config["default_account"]]
+    for a in account:
+        t = PrettyTable([
+            "Key", "value"
+        ])
+        t.align = "r"
+        a = Account(a, steem_instance=stm)
+        print("\nFollowing statistics for @%s (please wait...)" % a.name)
+        following_count = a.get_follow_count()["following_count"]
+        t.add_row(["following_count", str(following_count)])
+        following = a.get_following(False)
+        own_mvest = []
+        eff_sp = []
+        rep = []
+        last_vote_h = []
+        last_post_d = []
+        no_vote = 0
+        no_post = 0
+        for f in following:
+            rep.append(f.rep)
+            own_mvest.append(f.balances["available"][2].amount / 1e6)
+            eff_sp.append(f.get_steem_power())
+            utc = pytz.timezone('UTC')
+            last_vote = utc.localize(datetime.utcnow()) - formatTimeString(f["last_vote_time"])
+            if last_vote.days >= 365:
+                no_vote += 1
+            else:
+                last_vote_h.append(last_vote.total_seconds() / 60 / 60)
+            last_post = utc.localize(datetime.utcnow()) - formatTimeString(f["last_root_post"])
+            if last_post.days >= 365:
+                no_post += 1
+            else:
+                last_post_d.append(last_post.total_seconds() / 60 / 60 / 24)
+
+        t.add_row(["Summed MVest value", "%.2f" % sum(own_mvest)])
+        if (len(rep) > 0):
+            t.add_row(["Mean Rep.", "%.2f" % (sum(rep) / len(rep))])
+            t.add_row(["Max Rep.", "%.2f" % (max(rep))])
+        if (len(eff_sp) > 0):
+            t.add_row(["Summed eff. SP", "%.2f" % sum(eff_sp)])
+            t.add_row(["Mean eff. SP", "%.2f" % (sum(eff_sp) / len(eff_sp))])
+            t.add_row(["Max eff. SP", "%.2f" % max(eff_sp)])
+        if (len(last_vote_h) > 0):
+            t.add_row(["Mean last vote diff in hours", "%.2f" % (sum(last_vote_h) / len(last_vote_h))])
+        if len(last_post_d) > 0:
+            t.add_row(["Mean last post diff in days", "%.2f" % (sum(last_post_d) / len(last_post_d))])
+        t.add_row(["Following without vote in 365 days", no_vote])
+        t.add_row(["Following without post in 365 days", no_post])
+        print(t)
+
+
+@cli.command()
 @click.argument('account', nargs=1, required=False)
 def permissions(account):
     """ Show permissions of an account
@@ -1091,7 +1209,7 @@ def witnesscreate(witness, signing_key, maximum_block_size, account_creation_fee
 
 
 @cli.command()
-@click.option('--account', '-a', help='List the voted witnesses of your account')
+@click.argument('account', nargs=1, required=False)
 @click.option('--limit', help='How many witnesses should be shown', default=100)
 def witnesses(account, limit):
     """ List witnesses

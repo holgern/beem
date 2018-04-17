@@ -172,6 +172,16 @@ class Testcases(unittest.TestCase):
         result = runner.invoke(cli, ['permissions', 'test'])
         self.assertEqual(result.exit_code, 0)
 
+    def test_follower(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['follower', 'beem2'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_following(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['following', 'beem'])
+        self.assertEqual(result.exit_code, 0)
+
     def test_allow_disallow(self):
         runner = CliRunner()
         result = runner.invoke(cli, ['-d', 'allow', 'beem1', '--account beem', '--permission posting'], input="test\n")

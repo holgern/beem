@@ -128,6 +128,12 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.22
+-------
+* beempy (command line tool) improved and all missing functions which are available in steempy are added
+* new functions to beempy added: witnesses, walletinfo, openorders, orderbook and claimreward
+* unit tests for cli added
+
 0.19.21
 -------
 * Transactionbuilder and Wallet improved

@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from beembase import transactions, operations
 from beemgraphenebase.account import PrivateKey, PublicKey
 import pytz
+from prettytable import PrettyTable
 
 
 class Witness(BlockchainObject):
@@ -60,13 +61,17 @@ class Witness(BlockchainObject):
         else:
             witness = self.steem.rpc.get_witness_by_account(self.identifier)
         if not witness:
-            raise WitnessDoesNotExistsException
+            raise WitnessDoesNotExistsException(self.identifier)
         super(Witness, self).__init__(witness, id_item="owner", steem_instance=self.steem)
         self.identifier = self["owner"]
 
     @property
     def account(self):
         return Account(self["owner"], steem_instance=self.steem)
+
+    @property
+    def is_active(self):
+        return len(self['signing_key']) > 3 and self['signing_key'][3:] != '1111111111111111111111111111111114T1Anm'
 
     def feed_publish(self,
                      base,
@@ -136,6 +141,8 @@ class Witness(BlockchainObject):
 class WitnessesObject(list):
     def printAsTable(self, sort_key="votes", reverse=True):
         utc = pytz.timezone('UTC')
+        t = PrettyTable(["name", "Votes [PV]", "disabled", "missed blocks", "feed base", "feed quote", "feed update", "fee", "size", "interest", "version"])
+        t.align = "l"
         if sort_key == 'base':
             sortedList = sorted(self, key=lambda self: self['sbd_exchange_rate']['base'], reverse=reverse)
         elif sort_key == 'quote':
@@ -153,15 +160,22 @@ class WitnessesObject(list):
         else:
             sortedList = sorted(self, key=lambda self: self[sort_key], reverse=reverse)
         for witness in sortedList:
-            outstr = ''
-            outstr += witness['owner'][:15].ljust(15) + " \t " + str(round(int(witness['votes']) / 1e15, 2)).ljust(5) + " PV - " + str(witness['total_missed']).ljust(5)
-            outstr += " missed - feed:" + str(Amount(witness['sbd_exchange_rate']['base'], steem_instance=self.steem)) + "/"
-            outstr += str(Amount(witness['sbd_exchange_rate']['quote'], steem_instance=self.steem))
             td = utc.localize(datetime.now()) - formatTimeString(witness['last_sbd_exchange_update'])
-            outstr += " " + str(td.days) + " days " + str(td.seconds // 3600) + ":" + str((td.seconds // 60) % 60) + " \t "
-            outstr += str(witness['props']['account_creation_fee']) + " " + str(witness['props']['maximum_block_size']) + " Blocks "
-            outstr += str(witness['props']['sbd_interest_rate']) + " \t " + witness['running_version']
-            print(outstr)
+            disabled = ""
+            if not witness.is_active:
+                disabled = "yes"
+            t.add_row([witness['owner'],
+                       str(round(int(witness['votes']) / 1e15, 2)),
+                       disabled,
+                       str(witness['total_missed']),
+                       str(Amount(witness['sbd_exchange_rate']['base'], steem_instance=self.steem)),
+                       str(Amount(witness['sbd_exchange_rate']['quote'], steem_instance=self.steem)),
+                       str(td.days) + " days " + str(td.seconds // 3600) + ":" + str((td.seconds // 60) % 60),
+                       str(witness['props']['account_creation_fee']),
+                       str(witness['props']['maximum_block_size']),
+                       str(witness['props']['sbd_interest_rate'] / 100) + " %",
+                       witness['running_version']])
+        print(t)
 
 
 class Witnesses(WitnessesObject):

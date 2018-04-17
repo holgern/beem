@@ -98,7 +98,7 @@ You can see all available commands with ``beempy --help``
 ::
 
     ~ % beempy --help
-   Usage: beempy [OPTIONS] COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]...
+   Usage: cli.py [OPTIONS] COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]...
    
    Options:
      -n, --node TEXT        URL for public Steem API (e.g.
@@ -107,10 +107,6 @@ You can see all available commands with ``beempy --help``
      -d, --no-broadcast     Do not broadcast
      -p, --no-wallet        Do not load the wallet
      -x, --unsigned         Nothing will be signed
-     --blocking             Wait for broadcasted transactions to be included in a
-                            block and return full transaction
-     --bundle               Do not broadcast transactions right away, but allow
-                            to bundle operations
      -e, --expires INTEGER  Delay in seconds until transactions are supposed to
                             expire(defaults to 60)
      -v, --verbose INTEGER  Verbosity
@@ -122,17 +118,22 @@ You can see all available commands with ``beempy --help``
      allow                   Allow an account/key to interact with your...
      approvewitness          Approve a witnesses
      balance                 Shows balance
+     broadcast               broadcast a signed transaction
      buy                     Buy STEEM or SBD from the internal market...
      cancel                  Cancel order in the internal market
      changewalletpassphrase  Change wallet password
+     claimreward             Claim reward balances By default, this will...
      config                  Shows local configuration
      convert                 Convert STEEMDollars to Steem (takes a week...
      createwallet            Create new wallet with password
      delkey                  Delete key from the wallet PUB is the public...
+     delprofile              Delete a variable in an account's profile
      disallow                Remove allowance an account/key to interact...
      disapprovewitness       Disapprove a witnesses
      downvote                Downvote a post/comment POST is...
      follow                  Follow another account
+     follower                Get information about followers
+     following               Get information about following
      importaccount           Import an account using a passphrase
      info                    Show basic blockchain info General...
      interest                Get information about interest payment
@@ -148,6 +149,8 @@ You can see all available commands with ``beempy --help``
      resteem                 Resteem an existing post
      sell                    Sell STEEM or SBD from the internal market...
      set                     Set default_account, default_vote_weight or...
+     setprofile              Set a variable in an account's profile
+     sign                    Sign a provided transaction with available...
      transfer                Transfer SBD/STEEM
      unfollow                Unfollow another account
      updatememokey           Update an account's memo key
