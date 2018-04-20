@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 import math
 import random
 import logging
+from prettytable import PrettyTable
 from beem.instance import shared_steem_instance
 from .exceptions import AccountDoesNotExistsException
 from .blockchainobject import BlockchainObject
@@ -101,6 +102,19 @@ class Account(BlockchainObject):
         if not account:
             raise AccountDoesNotExistsException(self.identifier)
         self.identifier = account["name"]
+        # self.steem.refresh_data()
+
+        super(Account, self).__init__(account, id_item="name", steem_instance=self.steem)
+
+        parse_times = [
+            "last_owner_update", "last_account_update", "created", "last_owner_proved", "last_active_proved",
+            "last_account_recovery", "last_vote_time", "sbd_seconds_last_update", "sbd_last_interest_payment",
+            "savings_sbd_seconds_last_update", "savings_sbd_last_interest_payment", "next_vesting_withdrawal",
+            "last_market_bandwidth_update", "last_post", "last_root_post", "last_bandwidth_update"
+        ]
+        for p in parse_times:
+            if p in self and isinstance(self.get(p), string_types):
+                self[p] = formatTimeString(self.get(p, "1970-01-01T00:00:00"))
         # Parse Amounts
         amounts = [
             "balance",
@@ -116,11 +130,41 @@ class Account(BlockchainObject):
             "received_vesting_shares"
         ]
         for p in amounts:
-            if p in account and isinstance(account.get(p), (string_types, list)):
-                account[p] = Amount(account[p], steem_instance=self.steem)
-        self.steem.refresh_data()
+            if p in self and isinstance(self.get(p), (string_types, list)):
+                self[p] = Amount(self[p], steem_instance=self.steem)
 
-        super(Account, self).__init__(account, id_item="name", steem_instance=self.steem)
+    def json(self):
+        output = self.copy()
+        parse_times = [
+            "last_owner_update", "last_account_update", "created", "last_owner_proved", "last_active_proved",
+            "last_account_recovery", "last_vote_time", "sbd_seconds_last_update", "sbd_last_interest_payment",
+            "savings_sbd_seconds_last_update", "savings_sbd_last_interest_payment", "next_vesting_withdrawal",
+            "last_market_bandwidth_update", "last_post", "last_root_post", "last_bandwidth_update"
+        ]
+        for p in parse_times:
+            if p in output:
+                date = output.get(p, datetime(1970, 1, 1, 0, 0))
+                if isinstance(date, datetime):
+                    output[p] = formatTimeString(date)
+                else:
+                    output[p] = date
+        amounts = [
+            "balance",
+            "savings_balance",
+            "sbd_balance",
+            "savings_sbd_balance",
+            "reward_sbd_balance",
+            "reward_steem_balance",
+            "reward_vesting_balance",
+            "reward_vesting_steem",
+            "vesting_shares",
+            "delegated_vesting_shares",
+            "received_vesting_shares"
+        ]
+        for p in amounts:
+            if p in output:
+                output[p] = output.get(p, Amount("0.000 SBD", steem_instance=self.steem)).json()
+        return json.loads(str(json.dumps(output)))
 
     def getSimilarAccountNames(self, limit=5):
         """ Returns limit similar accounts with name as array
@@ -194,7 +238,7 @@ class Account(BlockchainObject):
         """
         if with_regeneration:
             utc = pytz.timezone('UTC')
-            diff_in_seconds = (utc.localize(datetime.utcnow()) - formatTimeString(self["last_vote_time"])).total_seconds()
+            diff_in_seconds = (utc.localize(datetime.utcnow()) - (self["last_vote_time"])).total_seconds()
             regenerated_vp = diff_in_seconds * 10000 / 86400 / 5 / 100
         else:
             regenerated_vp = 0
@@ -330,46 +374,58 @@ class Account(BlockchainObject):
         else:
             return self.steem.rpc.get_follow_count(account, api='follow')
 
-    def get_followers(self, raw_data=True):
+    def get_followers(self, raw_name_list=True):
         """ Returns the account followers as list
         """
-        if raw_data:
-            return [
-                x['follower'] for x in self._get_followers(direction="follower")
-            ]
+        name_list = [x['follower'] for x in self._get_followers(direction="follower")]
+        if raw_name_list:
+            return name_list
         else:
-            return [
-                Account(x['follower'], steem_instance=self.steem) for x in self._get_followers(direction="follower")
-            ]
+            return Accounts(name_list, steem_instance=self.steem)
 
-    def get_following(self, raw_data=True):
+    def get_following(self, raw_name_list=True):
         """ Returns who the account is following as list
         """
-        if raw_data:
-            return [
-                x['following'] for x in self._get_followers(direction="following")
-            ]
+        name_list = [x['following'] for x in self._get_followers(direction="following")]
+        if raw_name_list:
+            return name_list
         else:
-            return [
-                Account(x['following'], steem_instance=self.steem) for x in self._get_followers(direction="following")
-            ]
+            return Accounts(name_list, steem_instance=self.steem)
 
-    def _get_followers(self, direction="follower", last_user=""):
+    def get_muters(self, raw_name_list=True):
+        """ Returns the account muters as list
+        """
+        name_list = [x['follower'] for x in self._get_followers(direction="follower", what="ignore")]
+        if raw_name_list:
+            return name_list
+        else:
+            return Accounts(name_list, steem_instance=self.steem)
+
+    def get_mutings(self, raw_name_list=True):
+        """ Returns who the account is muting as list
+        """
+        name_list = [x['following'] for x in self._get_followers(direction="following", what="ignore")]
+        if raw_name_list:
+            return name_list
+        else:
+            return Accounts(name_list, steem_instance=self.steem)
+
+    def _get_followers(self, direction="follower", last_user="", what="blog", limit=100):
         """ Help function, used in get_followers and get_following
         """
         if self.steem.rpc.get_use_appbase():
-            query = {'account': self.name, 'start': last_user, 'type': "blog", 'limit': 100}
+            query = {'account': self.name, 'start': last_user, 'type': what, 'limit': limit}
             if direction == "follower":
                 followers = self.steem.rpc.get_followers(query, api='follow')['followers']
             elif direction == "following":
                 followers = self.steem.rpc.get_following(query, api='follow')['following']
         else:
             if direction == "follower":
-                followers = self.steem.rpc.get_followers(self.name, last_user, "blog", 100, api='follow')
+                followers = self.steem.rpc.get_followers(self.name, last_user, what, limit, api='follow')
             elif direction == "following":
-                followers = self.steem.rpc.get_following(self.name, last_user, "blog", 100, api='follow')
+                followers = self.steem.rpc.get_following(self.name, last_user, what, limit, api='follow')
 
-        if len(followers) >= 100:
+        if len(followers) >= limit:
             followers += self._get_followers(
                 direction=direction, last_user=followers[-1][direction])[1:]
         return followers
@@ -456,7 +512,7 @@ class Account(BlockchainObject):
         """ Caluclate interest for an account
             :param str account: Account name to get interest for
         """
-        last_payment = formatTimeString(self["sbd_last_interest_payment"])
+        last_payment = (self["sbd_last_interest_payment"])
         next_payment = last_payment + timedelta(days=30)
         interest_rate = self.steem.get_dynamic_global_properties()[
             "sbd_interest_rate"] / 100  # percent
@@ -503,7 +559,7 @@ class Account(BlockchainObject):
                 return {"used": 0,
                         "allocated": allocated_bandwidth}
             total_seconds = 604800
-            date_bandwidth = formatTimeString(self["last_bandwidth_update"])
+            date_bandwidth = (self["last_bandwidth_update"])
             utc = pytz.timezone('UTC')
             seconds_since_last_update = utc.localize(datetime.utcnow()) - date_bandwidth
             seconds_since_last_update = seconds_since_last_update.total_seconds()
@@ -921,20 +977,29 @@ class Account(BlockchainObject):
             if first < 1:
                 break
 
-    def unfollow(self, unfollow, account=None):
-        """ Unfollow another account's blog
-            :param str unfollow: Follow this account
+    def mute(self, mute, account=None):
+        """ Mute another account
+            :param str mute: Mute this account
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
         """
-        # FIXME: removing 'blog' from the array requires to first read
-        # the follow.what from the blockchain
+        return self.follow(mute, what=["ignore"], account=account)
+
+    def unfollow(self, unfollow, account=None):
+        """ Unfollow/Unmute another account's blog
+            :param str unfollow: Unfollow/Unmute this account
+            :param str account: (optional) the account to allow access
+                to (defaults to ``default_account``)
+        """
         return self.follow(unfollow, what=[], account=account)
 
-    def follow(self, follow, what=["blog"], account=None):
-        """ Follow another account's blog
-            :param str follow: Follow this account
-            :param list what: List of states to follow
+    def follow(self, other, what=["blog"], account=None):
+        """ Follow/Unfollow/Mute/Unmute another account's blog
+            :param str other: Follow this account
+            :param list what: List of states to follow.
+                ``['blog']`` means to follow ``other``,
+                ``[]`` means to unfollow/unmute ``other``,
+                ``['ignore']`` means to ignore ``other``,
                 (defaults to ``['blog']``)
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
@@ -943,11 +1008,13 @@ class Account(BlockchainObject):
             account = self["name"]
         if not account:
             raise ValueError("You need to provide an account")
+        if not other:
+            raise ValueError("You need to provide an account to follow/unfollow/mute/unmute")
 
         json_body = [
             'follow', {
                 'follower': account,
-                'following': follow,
+                'following': other,
                 'what': what
             }
         ]
@@ -1544,3 +1611,39 @@ class Account(BlockchainObject):
             return self.steem.finalizeOp(op, account, "owner", **kwargs)
         else:
             return self.steem.finalizeOp(op, account, "active", **kwargs)
+
+
+class AccountsObject(list):
+    def printAsTable(self):
+        t = PrettyTable(["name"])
+        t.align = "l"
+        for acc in self:
+            t.add_row([acc['name']])
+        print(t)
+
+
+class Accounts(AccountsObject):
+    """ Obtain a list of accounts
+
+        :param steem steem_instance: Steem() instance to use when
+            accesing a RPC
+    """
+    def __init__(self, name_list, batch_limit=100, steem_instance=None):
+        self.steem = steem_instance or shared_steem_instance()
+        if self.steem.offline:
+            return
+        accounts = []
+        name_cnt = 0
+        while name_cnt < len(name_list):
+            if self.steem.rpc.get_use_appbase():
+                accounts += self.steem.rpc.find_accounts({'accounts': name_list[name_cnt:batch_limit + name_cnt]}, api="database")["accounts"]
+            else:
+                accounts += self.steem.rpc.get_accounts(name_list[name_cnt:batch_limit + name_cnt])
+            name_cnt += batch_limit
+
+        super(Accounts, self).__init__(
+            [
+                Account(x, lazy=True, steem_instance=self.steem)
+                for x in accounts
+            ]
+        )

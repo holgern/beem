@@ -195,6 +195,16 @@ class Testcases(unittest.TestCase):
         result = runner.invoke(cli, ['following', 'beem'])
         self.assertEqual(result.exit_code, 0)
 
+    def test_muter(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['muter', 'beem2'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_muting(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['muting', 'beem'])
+        self.assertEqual(result.exit_code, 0)
+
     def test_allow_disallow(self):
         runner = CliRunner()
         result = runner.invoke(cli, ['-d', 'allow', '--account', 'beem', '--permission', 'posting', 'beem1'], input="test\n")

@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 from builtins import bytes, int, str
 import re
 import sys
-from itertools import cycle
 from beemgrapheneapi.graphenerpc import GrapheneRPC
 from beemgrapheneapi.rpcutils import sleep_and_check_retries
 from beemgrapheneapi.exceptions import CallRetriesReached

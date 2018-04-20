@@ -81,6 +81,52 @@ def unlock_wallet(stm, password=None):
         return True
 
 
+def print_account_table(tag_account_list, tag_type="Follower"):
+    t = PrettyTable([
+        "Key", "value"
+    ])
+    t.align = "r"
+    t.add_row([tag_type + " count", str(len(tag_account_list))])
+    own_mvest = []
+    eff_sp = []
+    rep = []
+    last_vote_h = []
+    last_post_d = []
+    no_vote = 0
+    no_post = 0
+    for f in tag_account_list:
+        rep.append(f.rep)
+        own_mvest.append(f.balances["available"][2].amount / 1e6)
+        eff_sp.append(f.get_steem_power())
+        utc = pytz.timezone('UTC')
+        last_vote = utc.localize(datetime.utcnow()) - (f["last_vote_time"])
+        if last_vote.days >= 365:
+            no_vote += 1
+        else:
+            last_vote_h.append(last_vote.total_seconds() / 60 / 60)
+        last_post = utc.localize(datetime.utcnow()) - (f["last_root_post"])
+        if last_post.days >= 365:
+            no_post += 1
+        else:
+            last_post_d.append(last_post.total_seconds() / 60 / 60 / 24)
+
+    t.add_row(["Summed MVest value", "%.2f" % sum(own_mvest)])
+    if (len(rep) > 0):
+        t.add_row(["Mean Rep.", "%.2f" % (sum(rep) / len(rep))])
+        t.add_row(["Max Rep.", "%.2f" % (max(rep))])
+    if (len(eff_sp) > 0):
+        t.add_row(["Summed eff. SP", "%.2f" % sum(eff_sp)])
+        t.add_row(["Mean eff. SP", "%.2f" % (sum(eff_sp) / len(eff_sp))])
+        t.add_row(["Max eff. SP", "%.2f" % max(eff_sp)])
+    if (len(last_vote_h) > 0):
+        t.add_row(["Mean last vote diff in hours", "%.2f" % (sum(last_vote_h) / len(last_vote_h))])
+    if len(last_post_d) > 0:
+        t.add_row(["Mean last post diff in days", "%.2f" % (sum(last_post_d) / len(last_post_d))])
+    t.add_row([tag_type + " without vote in 365 days", no_vote])
+    t.add_row([tag_type + " without post in 365 days", no_post])
+    print(t)
+
+
 @click.group(chain=True)
 @click.option(
     '--node', '-n', default="", help="URL for public Steem API (e.g. https://api.steemit.com)")
@@ -550,53 +596,10 @@ def follower(account):
         if "default_account" in stm.config:
             account = [stm.config["default_account"]]
     for a in account:
-        t = PrettyTable([
-            "Key", "value"
-        ])
-        t.align = "r"
         a = Account(a, steem_instance=stm)
         print("\nFollowers statistics for @%s (please wait...)" % a.name)
-        follower_count = a.get_follow_count()["follower_count"]
-        t.add_row(["follower_count", str(follower_count)])
         followers = a.get_followers(False)
-        own_mvest = []
-        eff_sp = []
-        rep = []
-        last_vote_h = []
-        last_post_d = []
-        no_vote = 0
-        no_post = 0
-        for f in followers:
-            rep.append(f.rep)
-            own_mvest.append(f.balances["available"][2].amount / 1e6)
-            eff_sp.append(f.get_steem_power())
-            utc = pytz.timezone('UTC')
-            last_vote = utc.localize(datetime.utcnow()) - formatTimeString(f["last_vote_time"])
-            if last_vote.days >= 365:
-                no_vote += 1
-            else:
-                last_vote_h.append(last_vote.total_seconds() / 60 / 60)
-            last_post = utc.localize(datetime.utcnow()) - formatTimeString(f["last_root_post"])
-            if last_post.days >= 365:
-                no_post += 1
-            else:
-                last_post_d.append(last_post.total_seconds() / 60 / 60 / 24)
-
-        t.add_row(["Summed MVest value", "%.2f" % sum(own_mvest)])
-        if (len(rep) > 0):
-            t.add_row(["Mean Rep.", "%.2f" % (sum(rep) / len(rep))])
-            t.add_row(["Max Rep.", "%.2f" % (max(rep))])
-        if (len(eff_sp) > 0):
-            t.add_row(["Summed eff. SP", "%.2f" % sum(eff_sp)])
-            t.add_row(["Mean eff. SP", "%.2f" % (sum(eff_sp) / len(eff_sp))])
-            t.add_row(["Max eff. SP", "%.2f" % max(eff_sp)])
-        if (len(last_vote_h) > 0):
-            t.add_row(["Mean last vote diff in hours", "%.2f" % (sum(last_vote_h) / len(last_vote_h))])
-        if len(last_post_d) > 0:
-            t.add_row(["Mean last post diff in days", "%.2f" % (sum(last_post_d) / len(last_post_d))])
-        t.add_row(["Followers without vote in 365 days", no_vote])
-        t.add_row(["Followers without post in 365 days", no_post])
-        print(t)
+        print_account_table(followers, tag_type="Followers")
 
 
 @cli.command()
@@ -609,53 +612,42 @@ def following(account):
         if "default_account" in stm.config:
             account = [stm.config["default_account"]]
     for a in account:
-        t = PrettyTable([
-            "Key", "value"
-        ])
-        t.align = "r"
         a = Account(a, steem_instance=stm)
         print("\nFollowing statistics for @%s (please wait...)" % a.name)
-        following_count = a.get_follow_count()["following_count"]
-        t.add_row(["following_count", str(following_count)])
         following = a.get_following(False)
-        own_mvest = []
-        eff_sp = []
-        rep = []
-        last_vote_h = []
-        last_post_d = []
-        no_vote = 0
-        no_post = 0
-        for f in following:
-            rep.append(f.rep)
-            own_mvest.append(f.balances["available"][2].amount / 1e6)
-            eff_sp.append(f.get_steem_power())
-            utc = pytz.timezone('UTC')
-            last_vote = utc.localize(datetime.utcnow()) - formatTimeString(f["last_vote_time"])
-            if last_vote.days >= 365:
-                no_vote += 1
-            else:
-                last_vote_h.append(last_vote.total_seconds() / 60 / 60)
-            last_post = utc.localize(datetime.utcnow()) - formatTimeString(f["last_root_post"])
-            if last_post.days >= 365:
-                no_post += 1
-            else:
-                last_post_d.append(last_post.total_seconds() / 60 / 60 / 24)
+        print_account_table(following, tag_type="Following")
 
-        t.add_row(["Summed MVest value", "%.2f" % sum(own_mvest)])
-        if (len(rep) > 0):
-            t.add_row(["Mean Rep.", "%.2f" % (sum(rep) / len(rep))])
-            t.add_row(["Max Rep.", "%.2f" % (max(rep))])
-        if (len(eff_sp) > 0):
-            t.add_row(["Summed eff. SP", "%.2f" % sum(eff_sp)])
-            t.add_row(["Mean eff. SP", "%.2f" % (sum(eff_sp) / len(eff_sp))])
-            t.add_row(["Max eff. SP", "%.2f" % max(eff_sp)])
-        if (len(last_vote_h) > 0):
-            t.add_row(["Mean last vote diff in hours", "%.2f" % (sum(last_vote_h) / len(last_vote_h))])
-        if len(last_post_d) > 0:
-            t.add_row(["Mean last post diff in days", "%.2f" % (sum(last_post_d) / len(last_post_d))])
-        t.add_row(["Following without vote in 365 days", no_vote])
-        t.add_row(["Following without post in 365 days", no_post])
-        print(t)
+
+@cli.command()
+@click.argument('account', nargs=-1, required=False)
+def muter(account):
+    """ Get information about muter
+    """
+    stm = shared_steem_instance()
+    if not account:
+        if "default_account" in stm.config:
+            account = [stm.config["default_account"]]
+    for a in account:
+        a = Account(a, steem_instance=stm)
+        print("\nMuters statistics for @%s (please wait...)" % a.name)
+        muters = a.get_muters(False)
+        print_account_table(muters, tag_type="Muters")
+
+
+@cli.command()
+@click.argument('account', nargs=-1, required=False)
+def muting(account):
+    """ Get information about muting
+    """
+    stm = shared_steem_instance()
+    if not account:
+        if "default_account" in stm.config:
+            account = [stm.config["default_account"]]
+    for a in account:
+        a = Account(a, steem_instance=stm)
+        print("\nMuting statistics for @%s (please wait...)" % a.name)
+        muting = a.get_mutings(False)
+        print_account_table(muting, tag_type="Muting")
 
 
 @cli.command()
@@ -1150,12 +1142,14 @@ def resteem(identifier, account):
 @cli.command()
 @click.argument('follow', nargs=1)
 @click.option('--account', '-a', help='Follow from this account')
-@click.option('--what', help='Follow these objects (defaults to "blog")', default=["blog"])
+@click.option('--what', help='Follow these objects (defaults to ["blog"])', default=["blog"])
 def follow(follow, account, what):
     """Follow another account"""
     stm = shared_steem_instance()
     if not account:
         account = stm.config["default_account"]
+    if isinstance(what, str):
+        what = [what]
     if not unlock_wallet(stm):
         return
     acc = Account(account, steem_instance=stm)
@@ -1165,10 +1159,29 @@ def follow(follow, account, what):
 
 
 @cli.command()
+@click.argument('mute', nargs=1)
+@click.option('--account', '-a', help='Mute from this account')
+@click.option('--what', help='Mute these objects (defaults to ["ignore"])', default=["ignore"])
+def mute(mute, account, what):
+    """Mute another account"""
+    stm = shared_steem_instance()
+    if not account:
+        account = stm.config["default_account"]
+    if isinstance(what, str):
+        what = [what]
+    if not unlock_wallet(stm):
+        return
+    acc = Account(account, steem_instance=stm)
+    tx = acc.follow(mute, what=what)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
 @click.argument('unfollow', nargs=1)
-@click.option('--account', '-a', help='Follow from this account')
+@click.option('--account', '-a', help='UnFollow/UnMute from this account')
 def unfollow(unfollow, account):
-    """Unfollow another account"""
+    """Unfollow/Unmute another account"""
     stm = shared_steem_instance()
     if not account:
         account = stm.config["default_account"]
@@ -1289,12 +1302,14 @@ def info(objects):
         info = stm.get_dynamic_global_properties()
         median_price = stm.get_current_median_history()
         steem_per_mvest = stm.get_steem_per_mvest()
+        chain_props = stm.get_chain_properties()
         price = (Amount(median_price["base"]).amount / Amount(
             median_price["quote"]).amount)
         for key in info:
             t.add_row([key, info[key]])
         t.add_row(["steem per mvest", steem_per_mvest])
         t.add_row(["internal price", price])
+        t.add_row(["account_creation_fee", chain_props["account_creation_fee"]])
         print(t.get_string(sortby="Key"))
         # Block
     for obj in objects:
