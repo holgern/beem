@@ -205,3 +205,15 @@ class Testcases(unittest.TestCase):
                           str(PrivateKey("5HvVz6XMx84aC5KaaBbwYrRLvWE46cH6zVnv4827SBPLorg76oq", prefix="STX").pubkey)],
                          ["STX7W5qsanXHgRAZPijbrLMDwX6VmHqUdL2s8PZiYKD5h1R7JaqRJ",
                           "STX7W5qsanXHgRAZPijbrLMDwX6VmHqUdL2s8PZiYKD5h1R7JaqRJ"])
+
+    def test_Privatekey_derive(self):
+        p1 = PrivateKey("5HvVz6XMx84aC5KaaBbwYrRLvWE46cH6zVnv4827SBPLorg76oq")
+        p2 = PrivateKey("5Jete5oFNjjk3aUMkKuxgAXsp7ZyhgJbYNiNjHLvq5xzXkiqw7R")
+        self.assertEqual([format(p1.child(p2.get_secret()), "STM"),
+                          format(p2.child(p1.get_secret()), "STM"),
+                          format(p1.derive_private_key(0), "STM"),
+                          format(p2.derive_private_key(56), "STM")],
+                         ["STMZiwJpC7MUmc9gn3vii3XS36nUceYEfKvFC1NLSrjB7ZRQJ7gt",
+                          "STM24hzNSDZYgm9C85yxJqyk32DwjXg8pCgkGVzB77hvP2XxGDdvr",
+                          "STM2e99iqVQUFij7Dk2nWVNC1dL8M86q37Nj4KwPHKBu1Yy49HkwA",
+                          "STMgqaH9RdvUtVk7NFnx4BZJRrNS7Lj35qaueAeYJ3tKEqPaLwa4"])

@@ -922,10 +922,10 @@ class Steem(object):
             try:
                 if storekeys and not self.nobroadcast:
                     if store_owner_key:
-                        self.wallet.addPrivateKey(owner_privkey)
-                    self.wallet.addPrivateKey(active_privkey)
-                    self.wallet.addPrivateKey(memo_privkey)
-                    self.wallet.addPrivateKey(posting_privkey)
+                        self.wallet.addPrivateKey(str(owner_privkey))
+                    self.wallet.addPrivateKey(str(active_privkey))
+                    self.wallet.addPrivateKey(str(memo_privkey))
+                    self.wallet.addPrivateKey(str(posting_privkey))
             except ValueError as e:
                 log.info(str(e))
 

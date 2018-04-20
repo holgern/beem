@@ -1,12 +1,12 @@
-Contributing to python-steem 
-================================
+Contributing to beem
+====================
 
 We welcome your contributions to our project.
 
 Repository
 ----------
 
-The *main* repository of python-steem is currently located at:
+The repository of beem is currently located at:
 
     https://github.com/holgern/beem
 

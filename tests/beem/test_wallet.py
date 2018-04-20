@@ -12,18 +12,19 @@ from beem.account import Account
 from beem.amount import Amount
 from beem.asset import Asset
 from beem.wallet import Wallet
-from beem.instance import set_shared_steem_instance
+from beem.instance import set_shared_steem_instance, shared_steem_instance
 from beem.utils import get_node_list
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
 
 class Testcases(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        stm = shared_steem_instance()
+        stm.config.refreshBackup()
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.stm = Steem(
+        cls.stm = Steem(
             node=get_node_list(appbase=False),
             nobroadcast=True,
             # We want to bundle many operations into a single transaction
@@ -31,20 +32,28 @@ class Testcases(unittest.TestCase):
             num_retries=10
             # Overwrite wallet to use this list of wifs only
         )
-        self.appbase = Steem(
+        cls.appbase = Steem(
             node=get_node_list(appbase=True),
             nobroadcast=True,
             bundle=True,
             num_retries=10
         )
-        self.stm.set_default_account("test")
-        set_shared_steem_instance(self.stm)
+        cls.stm.set_default_account("test")
+        set_shared_steem_instance(cls.stm)
         # self.stm.newWallet("TestingOneTwoThree")
+        cls.create_wallet(cls)
+
+    def create_wallet(self):
         self.wallet = Wallet(steem_instance=self.stm)
         self.wallet.wipe(True)
         self.wallet.newWallet(pwd="TestingOneTwoThree")
         self.wallet.unlock(pwd="TestingOneTwoThree")
         self.wallet.addPrivateKey(wif)
+
+    @classmethod
+    def tearDownClass(cls):
+        stm = shared_steem_instance()
+        stm.config.recover_with_latest_backup()
 
     def test_wallet_lock(self):
         stm = self.stm

@@ -16,17 +16,15 @@ wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
 
 class Testcases(unittest.TestCase):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.bts = Steem(
+    @classmethod
+    def setUpClass(cls):
+        cls.bts = Steem(
             node=get_node_list(appbase=False),
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10
         )
-        self.appbase = Steem(
+        cls.appbase = Steem(
             node=get_node_list(appbase=True),
             nobroadcast=True,
             keys={"active": wif},
@@ -34,14 +32,15 @@ class Testcases(unittest.TestCase):
         )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
-        set_shared_steem_instance(self.bts)
-        self.bts.set_default_account("test")
-        self.authorpermvoter = u"@gtg/ffdhu-gtg-witness-log|gandalf"
-        [author, permlink, voter] = resolve_authorpermvoter(self.authorpermvoter)
-        self.author = author
-        self.permlink = permlink
-        self.voter = voter
-        self.authorperm = construct_authorperm(author, permlink)
+        set_shared_steem_instance(cls.bts)
+        cls.bts.set_default_account("test")
+
+        cls.authorpermvoter = u"@gtg/ffdhu-gtg-witness-log|gandalf"
+        [author, permlink, voter] = resolve_authorpermvoter(cls.authorpermvoter)
+        cls.author = author
+        cls.permlink = permlink
+        cls.voter = voter
+        cls.authorperm = construct_authorperm(author, permlink)
 
     @parameterized.expand([
         ("non_appbase"),

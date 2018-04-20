@@ -39,22 +39,24 @@ class Asset(BlockchainObject):
             full=full,
             steem_instance=steem_instance
         )
-        self.refresh()
-        if "asset" not in self or self["asset"] is None or len(self["asset"]) == 0:
-            raise AssetDoesNotExistsException(self.identifier + " chain_assets:" + str(self.steem.chain_params["chain_assets"]))
+        # self.refresh()
 
     def refresh(self):
         """ Refresh the data from the API server
         """
         self.chain_params = self.steem.chain_params
         self["asset"] = ""
+        found_asset = False
         for asset in self.chain_params["chain_assets"]:
             if self.identifier in [asset["symbol"], asset["asset"], asset["id"]]:
                 self["asset"] = asset["asset"]
                 self["precision"] = asset["precision"]
                 self["id"] = asset["id"]
                 self["symbol"] = asset["symbol"]
+                found_asset = True
                 break
+        if not found_asset:
+            raise AssetDoesNotExistsException(self.identifier + " chain_assets:" + str(self.chain_params["chain_assets"]))
 
     @property
     def symbol(self):
@@ -67,3 +69,15 @@ class Asset(BlockchainObject):
     @property
     def precision(self):
         return self["precision"]
+
+    def __eq__(self, other):
+        if isinstance(other, (Asset, dict)):
+            return self["symbol"] == other["symbol"] and self["asset"] == other["asset"] and self["precision"] == other["precision"]
+        else:
+            return self["symbol"] == other
+
+    def __ne__(self, other):
+        if isinstance(other, (Asset, dict)):
+            return self["symbol"] != other["symbol"] or self["asset"] != other["asset"] or self["precision"] != other["precision"]
+        else:
+            return self["symbol"] != other

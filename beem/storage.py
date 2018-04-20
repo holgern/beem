@@ -71,7 +71,7 @@ class DataDir(object):
             except OSError:
                 raise
 
-    def sqlite3_backup(self, dbfile, backupdir):
+    def sqlite3_backup(self, backupdir):
         """ Create timestamped database copy
         """
         if not os.path.isdir(backupdir):
@@ -80,16 +80,39 @@ class DataDir(object):
             backupdir,
             os.path.basename(self.storageDatabase) +
             datetime.now().strftime("-" + timeformat))
+        self.sqlite3_copy(self.sqlDataBaseFile, backup_file)
+        configStorage["lastBackup"] = datetime.now().strftime(timeformat)
+
+    def sqlite3_copy(self, src, dst):
+        """Copy sql file from src to dst"""
+        if not os.path.isfile(src):
+            return
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
         # Lock database before making a backup
         cursor.execute('begin immediate')
         # Make new backup file
-        shutil.copyfile(dbfile, backup_file)
-        log.info("Creating {}...".format(backup_file))
+        shutil.copyfile(src, dst)
+        log.info("Creating {}...".format(dst))
         # Unlock database
         connection.rollback()
-        configStorage["lastBackup"] = datetime.now().strftime(timeformat)
+
+    def recover_with_latest_backup(self, backupdir="backups"):
+        """ Replace database with latest backup"""
+        file_date = 0
+        if not os.path.isdir(backupdir):
+            backupdir = os.path.join(self.data_dir, backupdir)
+        if not os.path.isdir(backupdir):
+            return
+        newest_backup_file = None
+        for filename in os.listdir(backupdir):
+            backup_file = os.path.join(backupdir, filename)
+            if os.stat(backup_file).st_ctime > file_date:
+                if os.path.isfile(backup_file):
+                    file_date = os.stat(backup_file).st_ctime
+                    newest_backup_file = backup_file
+        if newest_backup_file is not None:
+            self.sqlite3_copy(newest_backup_file, self.sqlDataBaseFile)
 
     def clean_data(self):
         """ Delete files older than 70 days
@@ -106,7 +129,7 @@ class DataDir(object):
         """ Make a new backup
         """
         backupdir = os.path.join(self.data_dir, "backups")
-        self.sqlite3_backup(self.sqlDataBaseFile, backupdir)
+        self.sqlite3_backup(backupdir)
         self.clean_data()
 
 

@@ -1,5 +1,5 @@
 beempy CLI
-~~~~~~~~~~~
+~~~~~~~~~~
 `beempy` is a convenient CLI utility that enables you to manage your wallet, transfer funds, check
 balances and more.
 

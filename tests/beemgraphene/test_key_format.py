@@ -27,7 +27,7 @@ key = {
 class Testcases(unittest.TestCase):
     def test_public_from_private(self):
         private_key = PrivateKey(key["private_key"])
-        public_key = private_key.pubkey
+        public_key = private_key.get_public_key()
         self.assertEqual(key["public_key"], str(public_key))
 
     def test_short_address(self):

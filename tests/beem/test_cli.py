@@ -14,7 +14,7 @@ from beem.account import Account
 from beem.amount import Amount
 from beemgraphenebase.account import PrivateKey
 from beem.cli import cli, balance
-from beem.instance import set_shared_steem_instance
+from beem.instance import set_shared_steem_instance, shared_steem_instance
 from beembase.operationids import getOperationNameForId
 from beem.utils import get_node_list
 
@@ -25,9 +25,10 @@ pub_key = "STX52xMqKegLk4tdpNcUXU9Rw5DtdM9fxf3f12Gp55v1UjLX3ELZf"
 
 
 class Testcases(unittest.TestCase):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    @classmethod
+    def setUpClass(cls):
+        stm = shared_steem_instance()
+        stm.config.refreshBackup()
         runner = CliRunner()
         runner.invoke(cli, ['set', 'default_vote_weight', '100'])
         runner.invoke(cli, ['set', 'default_account', 'beem'])
@@ -36,6 +37,11 @@ class Testcases(unittest.TestCase):
         runner.invoke(cli, ['addkey'], input="test\n" + wif + "\n")
         runner.invoke(cli, ['addkey'], input="test\n" + posting_key + "\n")
         runner.invoke(cli, ['addkey'], input="test\n" + memo_key + "\n")
+
+    @classmethod
+    def tearDownClass(cls):
+        stm = shared_steem_instance()
+        stm.config.recover_with_latest_backup()
 
     def test_balance(self):
         runner = CliRunner()

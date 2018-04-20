@@ -19,11 +19,9 @@ nodes = ["https://api.steem.house", "https://api.steemit.com"]
 
 
 class Testcases(unittest.TestCase):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.bts = Steem(
+    @classmethod
+    def setUpClass(cls):
+        cls.bts = Steem(
             node=nodes,
             nobroadcast=True,
             num_retries=10,
@@ -31,12 +29,13 @@ class Testcases(unittest.TestCase):
         )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
-        set_shared_steem_instance(self.bts)
-        self.bts.set_default_account("test")
-        b = Blockchain(steem_instance=self.bts)
+        set_shared_steem_instance(cls.bts)
+        cls.bts.set_default_account("test")
+
+        b = Blockchain(steem_instance=cls.bts)
         num = b.get_current_block_num()
-        self.start = num - 25
-        self.stop = num
+        cls.start = num - 25
+        cls.stop = num
 
     def test_stream_batch(self):
         bts = self.bts

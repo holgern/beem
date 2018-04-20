@@ -96,9 +96,7 @@ class Account(BlockchainObject):
                     [self.identifier])
         if self.steem.rpc.get_use_appbase():
             account = account["accounts"]
-        if not account:
-            raise AccountDoesNotExistsException(self.identifier)
-        else:
+        if account and isinstance(account, list) and len(account) == 1:
             account = account[0]
         if not account:
             raise AccountDoesNotExistsException(self.identifier)
@@ -643,6 +641,9 @@ class Account(BlockchainObject):
         return self.steem.vests_to_sp(reward_vests.amount)
 
     def curation_stats(self):
+        """Returns the curation reward of the last 24h and 7d and the average
+            of the last 7 days
+        """
         return {"24hr": self.get_curation_reward(days=1),
                 "7d": self.get_curation_reward(days=7),
                 "avg": self.get_curation_reward(days=7) / 7}
@@ -664,7 +665,7 @@ class Account(BlockchainObject):
             :param array exclude_ops: Exclude thse operations from
                 generator (*optional*)
             :param int batch_size: internal api call batch size (*optional*)
-            :param (-1, 1) order: 1 for chronological, -1 for reverse order
+            :param int order: 1 for chronological, -1 for reverse order
             :param bool raw_output: if False, the output is a dict, which
                 includes all values. Otherwise, the output is list.
 

@@ -264,7 +264,7 @@ class Price(dict):
             else:
                 raise ValueError("Wrong rotation of prices")
         elif isinstance(other, Amount):
-            if not other["asset"]["id"] == self["quote"]["asset"]["id"]:
+            if not other["asset"] == self["quote"]["asset"]:
                 raise AssertionError()
             a = other.copy() * self["price"]
             a["asset"] = self["base"]["asset"].copy()
@@ -303,7 +303,7 @@ class Price(dict):
                 steem_instance=self.steem
             )
         elif isinstance(other, Amount):
-            if not other["asset"]["id"] == self["quote"]["asset"]["id"]:
+            if not other["asset"] == self["quote"]["asset"]:
                 raise AssertionError()
             a = other.copy() / self["price"]
             a["asset"] = self["base"]["asset"].copy()

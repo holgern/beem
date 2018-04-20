@@ -10,36 +10,33 @@ from beem import Steem, exceptions
 from beem.block import Block, BlockHeader
 from datetime import datetime
 from beem.instance import set_shared_steem_instance
+from beem.utils import get_node_list
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
-         "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
-         "wss://steemd.minnowsupportproject.org"]
 nodes_appbase = ["https://api.steem.house", "https://api.steemit.com"]
 
 
 class Testcases(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.bts = Steem(
-            node=nodes,
+        cls.bts = Steem(
+            node=get_node_list(appbase=False),
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10
         )
-        self.appbase = Steem(
+        cls.appbase = Steem(
             node=nodes_appbase,
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10
         )
-        self.test_block_id = 19273700
+        cls.test_block_id = 19273700
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
-        set_shared_steem_instance(self.bts)
-        self.bts.set_default_account("test")
+        set_shared_steem_instance(cls.bts)
+        cls.bts.set_default_account("test")
 
     @parameterized.expand([
         ("non_appbase"),

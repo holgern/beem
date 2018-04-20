@@ -13,25 +13,23 @@ from beem.instance import set_shared_steem_instance, SharedInstance
 
 
 class Testcases(unittest.TestCase):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.bts = Steem(
+    @classmethod
+    def setUpClass(cls):
+        cls.bts = Steem(
             node=get_node_list(appbase=False),
             nobroadcast=True,
             num_retries=10
         )
-        self.appbase = Steem(
+        cls.appbase = Steem(
             node=get_node_list(appbase=True),
             nobroadcast=True,
             num_retries=10
         )
-        set_shared_steem_instance(self.bts)
-        self.asset = Asset("SBD")
-        self.symbol = self.asset["symbol"]
-        self.precision = self.asset["precision"]
-        self.asset2 = Asset("STEEM")
+        set_shared_steem_instance(cls.bts)
+        cls.asset = Asset("SBD")
+        cls.symbol = cls.asset["symbol"]
+        cls.precision = cls.asset["precision"]
+        cls.asset2 = Asset("STEEM")
 
     def dotest(self, ret, amount, symbol):
         self.assertEqual(float(ret), float(amount))

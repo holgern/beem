@@ -13,16 +13,14 @@ from beem.utils import get_node_list
 
 
 class Testcases(unittest.TestCase):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.bts = Steem(
+    @classmethod
+    def setUpClass(cls):
+        cls.bts = Steem(
             node=get_node_list(appbase=False),
             nobroadcast=True,
             num_retries=10
         )
-        set_shared_steem_instance(self.bts)
+        set_shared_steem_instance(cls.bts)
 
     def test_cache(self):
         cache = ObjectCache(default_expiration=1)

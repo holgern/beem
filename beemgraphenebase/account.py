@@ -107,6 +107,12 @@ class BrainKey(object):
         s = hashlib.sha256(hashlib.sha512(a).digest()).digest()
         return PrivateKey(hexlify(s).decode('ascii'))
 
+    def get_blind_private(self):
+        """ Derive private key from the brain key (and no sequence number)
+        """
+        a = py23_bytes(self.brainkey, 'ascii')
+        return PrivateKey(hashlib.sha256(a).hexdigest())
+
     def get_public(self):
         return self.get_private().pubkey
 
@@ -160,9 +166,16 @@ class Address(object):
             raise Exception("Address has to be initialized by either the " +
                             "pubkey or the address.")
 
+    def get_public_key(self):
+        """Returns the pubkey"""
+        return self._pubkey
+
     def derivesha256address(self):
         """ Derive address using ``RIPEMD160(SHA256(x))`` """
-        pkbin = unhexlify(repr(self._pubkey))
+        pubkey = self.get_public_key()
+        if pubkey is None:
+            return None
+        pkbin = unhexlify(repr(pubkey))
         addressbin = ripemd160(hexlify(hashlib.sha256(pkbin).digest()))
         return Base58(hexlify(addressbin).decode('ascii'))
 
@@ -170,7 +183,10 @@ class Address(object):
         """ Derive address using ``RIPEMD160(SHA256(x))``
             and adding version + checksum
         """
-        pkbin = unhexlify(repr(self._pubkey))
+        pubkey = self.get_public_key()
+        if pubkey is None:
+            return None
+        pkbin = unhexlify(repr(pubkey))
         addressbin = ripemd160(hexlify(hashlib.sha256(pkbin).digest()))
         addr = py23_bytes(bytearray(ctypes.c_uint8(version & 0xFF))) + addressbin
         check = hashlib.sha256(addr).digest()
@@ -180,7 +196,10 @@ class Address(object):
 
     def derivesha512address(self):
         """ Derive address using ``RIPEMD160(SHA512(x))`` """
-        pkbin = unhexlify(repr(self._pubkey))
+        pubkey = self.get_public_key()
+        if pubkey is None:
+            return None
+        pkbin = unhexlify(repr(pubkey))
         addressbin = ripemd160(hexlify(hashlib.sha512(pkbin).digest()))
         return Base58(hexlify(addressbin).decode('ascii'))
 
@@ -246,6 +265,10 @@ class PublicKey(Address):
         self._pk = Base58(pk, prefix=prefix)
         self.address = Address(pubkey=pk, prefix=prefix)
         self.pubkey = self._pk
+
+    def get_public_key(self):
+        """Returns the pubkey"""
+        return self.pubkey
 
     def _derive_y_from_x(self, x, is_even):
         """ Derive y point from x point """
@@ -343,6 +366,10 @@ class PrivateKey(PublicKey):
         self.uncompressed.address = Address(pubkey=self._pubkeyuncompressedhex, prefix=prefix)
         self.address = Address(pubkey=self._pubkeyhex, prefix=prefix)
 
+    def get_public_key(self):
+        """Returns the pubkey"""
+        return self.pubkey
+
     def compressedpubkey(self):
         """ Derive uncompressed public key """
         secret = unhexlify(repr(self._wif))
@@ -355,6 +382,42 @@ class PrivateKey(PublicKey):
         compressed = hexlify(py23_bytes(chr(2 + (p.y() & 1)), 'ascii') + x_str).decode('ascii')
         uncompressed = hexlify(py23_bytes(chr(4), 'ascii') + x_str + y_str).decode('ascii')
         return([compressed, uncompressed])
+
+    def get_secret(self):
+        """ Get sha256 digest of the wif key.
+        """
+        return hashlib.sha256(py23_bytes(self)).digest()
+
+    def derive_private_key(self, sequence):
+        """ Derive new private key from this private key and an arbitrary
+            sequence number
+        """
+        encoded = "%s %d" % (str(self), sequence)
+        a = py23_bytes(encoded, 'ascii')
+        s = hashlib.sha256(hashlib.sha512(a).digest()).digest()
+        return PrivateKey(hexlify(s).decode('ascii'), prefix=self.pubkey.prefix)
+
+    def child(self, offset256):
+        """ Derive new private key from this key and a sha256 "offset"
+        """
+        pubkey = self.get_public_key()
+        a = py23_bytes(pubkey) + offset256
+        s = hashlib.sha256(a).digest()
+        return self.derive_from_seed(s)
+
+    def derive_from_seed(self, offset):
+        """ Derive private key using "generate_from_seed" method.
+            Here, the key itself serves as a `seed`, and `offset`
+            is expected to be a sha256 digest.
+        """
+        seed = int(hexlify(py23_bytes(self)).decode('ascii'), 16)
+        z = int(hexlify(offset).decode('ascii'), 16)
+        order = ecdsa.SECP256k1.order
+
+        secexp = (seed + z) % order
+
+        secret = "%0x" % secexp
+        return PrivateKey(secret, prefix=self.pubkey.prefix)
 
     def __format__(self, _format):
         """ Formats the instance of:doc:`Base58 <base58>` according to

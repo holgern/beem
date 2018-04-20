@@ -12,9 +12,8 @@ from beem.utils import get_node_list
 
 
 class Testcases(unittest.TestCase):
-
-    def __init__(self, *args, **kwargs):
-        super(Testcases, self).__init__(*args, **kwargs)
+    @classmethod
+    def setUpClass(cls):
         steem = Steem(
             node=get_node_list(appbase=False),
             nobroadcast=True,

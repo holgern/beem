@@ -15,16 +15,15 @@ nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.s
 
 class Testcases(unittest.TestCase):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.bts = Steem(
+    @classmethod
+    def setUpClass(cls):
+        cls.bts = Steem(
             node=nodes,
             nobroadcast=True,
             keys=[wif],
             num_retries=10
         )
-        set_shared_steem_instance(self.bts)
+        set_shared_steem_instance(cls.bts)
 
     def test_sign_message(self):
         def new_refresh(self):

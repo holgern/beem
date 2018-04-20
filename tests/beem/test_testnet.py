@@ -13,7 +13,7 @@ from beem import Steem
 from beem.amount import Amount
 from beem.witness import Witness
 from beem.account import Account
-from beem.instance import set_shared_steem_instance
+from beem.instance import set_shared_steem_instance, shared_steem_instance
 from beem.blockchain import Blockchain
 from beem.block import Block
 from beem.transactionbuilder import TransactionBuilder
@@ -29,18 +29,23 @@ core_unit = "STX"
 
 
 class Testcases(unittest.TestCase):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.bts = Steem(
+    @classmethod
+    def setUpClass(cls):
+        stm = shared_steem_instance()
+        stm.config.refreshBackup()
+        cls.bts = Steem(
             node=["wss://testnet.steem.vc"],
             nobroadcast=True,
             num_retries=10
         )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
-        self.bts.set_default_account("beem")
+        cls.bts.set_default_account("beem")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         stm = self.bts
+        stm.nobroadcast = True
         stm.wallet.wipe(True)
         stm.wallet.create("123")
         stm.wallet.unlock("123")
@@ -66,6 +71,11 @@ class Testcases(unittest.TestCase):
         self.active_private_key_of_elf = '5JeUg6eXYLKqESf2dyP8bshK3YZGKo4UCsvZAP4GW9yDrxzySSK'
         stm.wallet.addPrivateKey(self.active_private_key_of_steemfiles)
         stm.wallet.addPrivateKey(self.active_private_key_of_elf)
+
+    @classmethod
+    def tearDownClass(cls):
+        stm = shared_steem_instance()
+        stm.config.recover_with_latest_backup()
 
     def test_wallet_keys(self):
         stm = self.bts

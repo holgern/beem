@@ -12,16 +12,15 @@ from beem.utils import get_node_list
 
 
 class Testcases(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.bts = Steem(
+        cls.bts = Steem(
             node=get_node_list(appbase=False),
             nobroadcast=True,
             num_retries=10
         )
-        set_shared_steem_instance(self.bts)
+        set_shared_steem_instance(cls.bts)
 
     def test_Account(self):
         with self.assertRaises(

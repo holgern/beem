@@ -16,33 +16,31 @@ wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
 
 class Testcases(unittest.TestCase):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.bts = Steem(
+    @classmethod
+    def setUpClass(cls):
+        cls.bts = Steem(
             node=get_node_list(appbase=False),
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10
         )
-        self.appbase = Steem(
+        cls.appbase = Steem(
             node=get_node_list(appbase=True),
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10
         )
-        self.authorperm = "@gtg/witness-gtg-log"
+        cls.authorperm = "@gtg/witness-gtg-log"
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
-        set_shared_steem_instance(self.bts)
-        self.bts.set_default_account("test")
+        set_shared_steem_instance(cls.bts)
+        cls.bts.set_default_account("test")
         cnt = 0
         title = ''
         while cnt < 5 and title == '':
-            c = Comment("@gtg/witness-gtg-log", steem_instance=self.bts)
+            c = Comment("@gtg/witness-gtg-log", steem_instance=cls.bts)
             title = c["title"]
-            self.bts.rpc.next()
+            cls.bts.rpc.next()
 
     @parameterized.expand([
         ("non_appbase"),

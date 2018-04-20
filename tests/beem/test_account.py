@@ -20,10 +20,10 @@ wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
 class Testcases(unittest.TestCase):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    @classmethod
+    def setUpClass(cls):
 
-        self.bts = Steem(
+        cls.bts = Steem(
             node=get_node_list(appbase=False),
             nobroadcast=True,
             bundle=False,
@@ -31,7 +31,7 @@ class Testcases(unittest.TestCase):
             keys={"active": wif},
             num_retries=10
         )
-        self.appbase = Steem(
+        cls.appbase = Steem(
             node=get_node_list(appbase=True),
             nobroadcast=True,
             bundle=False,
@@ -39,10 +39,10 @@ class Testcases(unittest.TestCase):
             keys={"active": wif},
             num_retries=10
         )
-        self.account = Account("test", full=True, steem_instance=self.bts)
-        self.account_appbase = Account("test", full=True, steem_instance=self.appbase)
-        self.bts.set_default_account("test")
-        set_shared_steem_instance(self.bts)
+        cls.account = Account("test", full=True, steem_instance=cls.bts)
+        cls.account_appbase = Account("test", full=True, steem_instance=cls.appbase)
+        cls.bts.set_default_account("test")
+        set_shared_steem_instance(cls.bts)
 
     @parameterized.expand([
         ("non_appbase"),

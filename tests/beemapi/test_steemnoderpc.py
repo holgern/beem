@@ -35,26 +35,25 @@ test_list = ["wss://steemd.doesnot.exists", "wss://api.steemit.com", "wss://stee
 
 class Testcases(unittest.TestCase):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.bts = Steem(
+    @classmethod
+    def setUpClass(cls):
+        cls.bts = Steem(
             node=nodes,
             nobroadcast=True,
             keys={"active": wif, "owner": wif, "memo": wif},
             num_retries=10
         )
-        self.appbase = Steem(
+        cls.appbase = Steem(
             node=nodes_appbase,
             nobroadcast=True,
             keys={"active": wif, "owner": wif, "memo": wif},
             num_retries=10
         )
-        self.rpc = SteemNodeRPC(urls=test_list)
+        cls.rpc = SteemNodeRPC(urls=test_list)
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
-        set_shared_steem_instance(self.bts)
-        self.bts.set_default_account("test")
+        set_shared_steem_instance(cls.bts)
+        cls.bts.set_default_account("test")
 
     def get_reply(self, msg):
         reply = '<html>  <head><title>403 Forbidden</title></head><body bgcolor="white"><center><h1>' \
