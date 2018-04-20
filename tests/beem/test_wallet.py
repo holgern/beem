@@ -41,14 +41,12 @@ class Testcases(unittest.TestCase):
         cls.stm.set_default_account("test")
         set_shared_steem_instance(cls.stm)
         # self.stm.newWallet("TestingOneTwoThree")
-        cls.create_wallet(cls)
 
-    def create_wallet(self):
-        self.wallet = Wallet(steem_instance=self.stm)
-        self.wallet.wipe(True)
-        self.wallet.newWallet(pwd="TestingOneTwoThree")
-        self.wallet.unlock(pwd="TestingOneTwoThree")
-        self.wallet.addPrivateKey(wif)
+        cls.wallet = Wallet(steem_instance=cls.stm)
+        cls.wallet.wipe(True)
+        cls.wallet.newWallet(pwd="TestingOneTwoThree")
+        cls.wallet.unlock(pwd="TestingOneTwoThree")
+        cls.wallet.addPrivateKey(wif)
 
     @classmethod
     def tearDownClass(cls):
