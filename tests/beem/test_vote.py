@@ -120,6 +120,8 @@ class Testcases(unittest.TestCase):
             bts = self.appbase
         votes = ActiveVotes(self.authorperm, steem_instance=bts)
         votes.printAsTable()
+        vote_list = votes.get_list()
+        self.assertTrue(isinstance(vote_list, list))
 
     @parameterized.expand([
         ("non_appbase"),

@@ -200,31 +200,28 @@ class Testcases(unittest.TestCase):
         account = Account("gtg", steem_instance=stm)
         h_list = []
         max_index = account.virtual_op_count()
-        for h in account.history(start=max_index - 4, use_block_num=False, batch_size=2, raw_output=False):
+        for h in account.history(start=max_index - 4, stop=max_index, use_block_num=False, batch_size=2, raw_output=False):
             h_list.append(h)
         self.assertEqual(len(h_list), 5)
         for i in range(1, 5):
             self.assertEqual(h_list[i]["index"] - h_list[i - 1]["index"], 1)
 
         h_list = []
-        max_index = account.virtual_op_count()
-        for h in account.history(start=max_index - 4, use_block_num=False, batch_size=6, raw_output=False):
+        for h in account.history(start=max_index - 4, stop=max_index, use_block_num=False, batch_size=6, raw_output=False):
             h_list.append(h)
         self.assertEqual(len(h_list), 5)
         for i in range(1, 5):
             self.assertEqual(h_list[i]["index"] - h_list[i - 1]["index"], 1)
 
         h_list = []
-        max_index = account.virtual_op_count()
-        for h in account.history(start=max_index - 4, use_block_num=False, batch_size=2, raw_output=True):
+        for h in account.history(start=max_index - 4, stop=max_index, use_block_num=False, batch_size=2, raw_output=True):
             h_list.append(h)
         self.assertEqual(len(h_list), 5)
         for i in range(1, 5):
             self.assertEqual(h_list[i][0] - h_list[i - 1][0], 1)
 
         h_list = []
-        max_index = account.virtual_op_count()
-        for h in account.history(start=max_index - 4, use_block_num=False, batch_size=6, raw_output=True):
+        for h in account.history(start=max_index - 4, stop=max_index, use_block_num=False, batch_size=6, raw_output=True):
             h_list.append(h)
         self.assertEqual(len(h_list), 5)
         for i in range(1, 5):
@@ -242,31 +239,28 @@ class Testcases(unittest.TestCase):
         account = Account("gtg", steem_instance=stm)
         h_list = []
         max_index = account.virtual_op_count()
-        for h in account.history_reverse(stop=max_index - 4, use_block_num=False, batch_size=2, raw_output=False):
+        for h in account.history_reverse(start=max_index, stop=max_index - 4, use_block_num=False, batch_size=2, raw_output=False):
             h_list.append(h)
         self.assertEqual(len(h_list), 5)
         for i in range(1, 5):
             self.assertEqual(h_list[i]["index"] - h_list[i - 1]["index"], -1)
 
         h_list = []
-        max_index = account.virtual_op_count()
-        for h in account.history_reverse(stop=max_index - 4, use_block_num=False, batch_size=6, raw_output=False):
+        for h in account.history_reverse(start=max_index, stop=max_index - 4, use_block_num=False, batch_size=6, raw_output=False):
             h_list.append(h)
         self.assertEqual(len(h_list), 5)
         for i in range(1, 5):
             self.assertEqual(h_list[i]["index"] - h_list[i - 1]["index"], -1)
 
         h_list = []
-        max_index = account.virtual_op_count()
-        for h in account.history_reverse(stop=max_index - 4, use_block_num=False, batch_size=6, raw_output=True):
+        for h in account.history_reverse(start=max_index, stop=max_index - 4, use_block_num=False, batch_size=6, raw_output=True):
             h_list.append(h)
         self.assertEqual(len(h_list), 5)
         for i in range(1, 5):
             self.assertEqual(h_list[i][0] - h_list[i - 1][0], -1)
 
         h_list = []
-        max_index = account.virtual_op_count()
-        for h in account.history_reverse(stop=max_index - 4, use_block_num=False, batch_size=2, raw_output=True):
+        for h in account.history_reverse(start=max_index, stop=max_index - 4, use_block_num=False, batch_size=2, raw_output=True):
             h_list.append(h)
         self.assertEqual(len(h_list), 5)
         for i in range(1, 5):

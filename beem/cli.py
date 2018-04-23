@@ -16,6 +16,7 @@ from beem.profile import Profile
 from beem.witness import Witness, WitnessesRankedByVote, WitnessesVotedByAccount
 from beem.blockchain import Blockchain
 from beem.utils import formatTimeString
+from beem.vote import AccountVotes, ActiveVotes
 from beem import exceptions
 from beem.version import version as __version__
 from datetime import datetime, timedelta
@@ -1213,6 +1214,30 @@ def witnesses(account, limit):
     else:
         witnesses = WitnessesRankedByVote(limit=limit, steem_instance=stm)
     witnesses.printAsTable()
+
+
+@cli.command()
+@click.argument('account', nargs=1, required=False)
+@click.option('--direction', default="in", help="in or out (default: in)")
+@click.option('--days', default=2, help="Limit shown vote history by this amount of days (default: 2)")
+def votes(account, direction, days):
+    """ List outgoing/incoming account votes
+    """
+    stm = shared_steem_instance()
+    if not account:
+        account = stm.config["default_account"]
+    utc = pytz.timezone('UTC')
+    limit_time = utc.localize(datetime.utcnow()) - timedelta(days=days)
+    if direction == "out":
+        votes = AccountVotes(account, steem_instance=stm)
+        votes.printAsTable(start=limit_time)
+    else:
+        account = Account(account, steem_instance=stm)
+        votes_list = []
+        for v in account.history(start=limit_time, only_ops=["vote"]):
+            votes_list.append(v)
+        votes = ActiveVotes(votes_list, steem_instance=stm)
+        votes.printAsTable(votee=account["name"])
 
 
 @cli.command()

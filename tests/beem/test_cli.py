@@ -217,6 +217,13 @@ class Testcases(unittest.TestCase):
         result = runner.invoke(cli, ['witnesses'])
         self.assertEqual(result.exit_code, 0)
 
+    def test_votes(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['votes', '--direction', 'out'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['votes', '--direction', 'in'])
+        self.assertEqual(result.exit_code, 0)
+
     def test_approvewitness(self):
         runner = CliRunner()
         result = runner.invoke(cli, ['-o', 'approvewitness', 'beem1'], input="test\n")
