@@ -13,9 +13,10 @@ import logging
 from prettytable import PrettyTable
 from beem.instance import shared_steem_instance
 from .exceptions import AccountDoesNotExistsException
+from beemapi.exceptions import ApiNotSupported
 from .blockchainobject import BlockchainObject
 from .blockchain import Blockchain
-from .utils import formatTimeString, formatTimedelta, remove_from_dict, reputation_to_score
+from .utils import formatTimeString, formatTimedelta, remove_from_dict, reputation_to_score, addTzInfo
 from beem.amount import Amount
 from beembase import operations
 from beemgraphenebase.account import PrivateKey, PublicKey
@@ -130,7 +131,7 @@ class Account(BlockchainObject):
             "received_vesting_shares"
         ]
         for p in amounts:
-            if p in self and isinstance(self.get(p), (string_types, list)):
+            if p in self and isinstance(self.get(p), (string_types, list, dict)):
                 self[p] = Amount(self[p], steem_instance=self.steem)
 
     def json(self):
@@ -212,7 +213,7 @@ class Account(BlockchainObject):
         ret += "%.2f %%, full in %s" % (self.get_voting_power(), self.get_recharge_time_str())
         ret += " VP = %.2f $\n" % (self.get_voting_value_SBD())
         ret += "%.2f SP, " % (self.get_steem_power())
-        ret += "%.3f, %.3f" % (self.balances["available"][0], self.balances["available"][1])
+        ret += "%s, %s" % (str(self.balances["available"][0]), str(self.balances["available"][1]))
         bandwidth = self.get_bandwidth()
         if bandwidth["allocated"] > 0:
             ret += "\n"
@@ -627,11 +628,6 @@ class Account(BlockchainObject):
             account = Account(account, steem_instance=self.steem)
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.get_account_votes(account["name"])
-            # vote_hist = account.history_reverse(only_ops=["vote"], batch_size=1000, raw_output=True)
-            # votes = []
-            # for vote in vote_hist:
-            #     votes.append(vote[1]["op"][1])
-            # return votes
         else:
             return self.steem.rpc.get_account_votes(account["name"])
 
@@ -669,11 +665,11 @@ class Account(BlockchainObject):
         else:
             try:
                 op_count = 0
-                self.steem.rpc.set_next_node_on_empty_reply(True)
+                # self.steem.rpc.set_next_node_on_empty_reply(True)
                 if self.steem.rpc.get_use_appbase():
                     try:
                         op_count = self.steem.rpc.get_account_history({'account': self["name"], 'start': -1, 'limit': 0}, api="account_history")['history']
-                    except:
+                    except ApiNotSupported:
                         op_count = self.steem.rpc.get_account_history(self["name"], -1, 0)
                 else:
                     op_count = self.steem.rpc.get_account_history(self["name"], -1, 0, api="database")
@@ -733,20 +729,16 @@ class Account(BlockchainObject):
         """
         if order != -1 and order != 1:
             raise ValueError("order must be -1 or 1!")
+        # self.steem.rpc.set_next_node_on_empty_reply(True)
         if self.steem.rpc.get_use_appbase():
             try:
                 txs = self.steem.rpc.get_account_history({'account': self["name"], 'start': index, 'limit': limit}, api="account_history")['history']
-            except:
+            except ApiNotSupported:
                 txs = self.steem.rpc.get_account_history(self["name"], index, limit)
         else:
             txs = self.steem.rpc.get_account_history(self["name"], index, limit, api="database")
-
-        if start and isinstance(start, datetime) and start.tzinfo is None:
-            utc = pytz.timezone('UTC')
-            start = utc.localize(start)
-        if stop and isinstance(stop, datetime) and stop.tzinfo is None:
-            utc = pytz.timezone('UTC')
-            stop = utc.localize(stop)
+        start = addTzInfo(start)
+        stop = addTzInfo(stop)
 
         if order == -1:
             txs_list = reversed(txs)
@@ -842,14 +834,14 @@ class Account(BlockchainObject):
             start_index = start
         else:
             start_index = 0
-        if start and isinstance(start, datetime) and start.tzinfo is None:
-            utc = pytz.timezone('UTC')
-            start = utc.localize(start)
-        if stop and isinstance(stop, datetime) and stop.tzinfo is None:
-            utc = pytz.timezone('UTC')
-            stop = utc.localize(stop)
+        start = addTzInfo(start)
+        stop = addTzInfo(stop)
 
         first = start_index + _limit
+        if first > max_index:
+            _limit = max_index - start_index + 1
+            first = start_index + _limit
+        last_round = False
         while True:
             # RPC call
             for item in self.get_account_history(first, _limit, start=None, stop=None, order=1, raw_output=raw_output):
@@ -884,11 +876,16 @@ class Account(BlockchainObject):
                     continue
                 if not only_ops or op_type in only_ops:
                     yield item
-            first += (_limit + 1)
-            if stop and not use_block_num and isinstance(stop, int) and first >= stop + _limit:
-                break
-            elif first >= max_index + _limit:
-                break
+            if first < max_index and first + _limit >= max_index and not last_round:
+                _limit = max_index - first - 1
+                first = max_index
+                last_round = True
+            else:
+                first += (_limit + 1)
+                if stop and not use_block_num and isinstance(stop, int) and first >= stop + _limit:
+                    break
+                elif first > max_index or last_round:
+                    break
 
     def history_reverse(
         self, start=None, stop=None, use_block_num=True,
@@ -928,12 +925,8 @@ class Account(BlockchainObject):
             first = start
         if stop is not None and isinstance(stop, int) and stop < 0 and not use_block_num:
             stop += first
-        if start and isinstance(start, datetime) and start.tzinfo is None:
-            utc = pytz.timezone('UTC')
-            start = utc.localize(start)
-        if stop and isinstance(stop, datetime) and stop.tzinfo is None:
-            utc = pytz.timezone('UTC')
-            stop = utc.localize(stop)
+        start = addTzInfo(start)
+        stop = addTzInfo(stop)
 
         while True:
             # RPC call
@@ -1620,6 +1613,54 @@ class AccountsObject(list):
         for acc in self:
             t.add_row([acc['name']])
         print(t)
+
+    def print_summarize_table(self, tag_type="Follower", return_str=False, **kwargs):
+        t = PrettyTable([
+            "Key", "value"
+        ])
+        t.align = "r"
+        t.add_row([tag_type + " count", str(len(self))])
+        own_mvest = []
+        eff_sp = []
+        rep = []
+        last_vote_h = []
+        last_post_d = []
+        no_vote = 0
+        no_post = 0
+        for f in self:
+            rep.append(f.rep)
+            own_mvest.append(f.balances["available"][2].amount / 1e6)
+            eff_sp.append(f.get_steem_power())
+            utc = pytz.timezone('UTC')
+            last_vote = utc.localize(datetime.utcnow()) - (f["last_vote_time"])
+            if last_vote.days >= 365:
+                no_vote += 1
+            else:
+                last_vote_h.append(last_vote.total_seconds() / 60 / 60)
+            last_post = utc.localize(datetime.utcnow()) - (f["last_root_post"])
+            if last_post.days >= 365:
+                no_post += 1
+            else:
+                last_post_d.append(last_post.total_seconds() / 60 / 60 / 24)
+
+        t.add_row(["Summed MVest value", "%.2f" % sum(own_mvest)])
+        if (len(rep) > 0):
+            t.add_row(["Mean Rep.", "%.2f" % (sum(rep) / len(rep))])
+            t.add_row(["Max Rep.", "%.2f" % (max(rep))])
+        if (len(eff_sp) > 0):
+            t.add_row(["Summed eff. SP", "%.2f" % sum(eff_sp)])
+            t.add_row(["Mean eff. SP", "%.2f" % (sum(eff_sp) / len(eff_sp))])
+            t.add_row(["Max eff. SP", "%.2f" % max(eff_sp)])
+        if (len(last_vote_h) > 0):
+            t.add_row(["Mean last vote diff in hours", "%.2f" % (sum(last_vote_h) / len(last_vote_h))])
+        if len(last_post_d) > 0:
+            t.add_row(["Mean last post diff in days", "%.2f" % (sum(last_post_d) / len(last_post_d))])
+        t.add_row([tag_type + " without vote in 365 days", no_vote])
+        t.add_row([tag_type + " without post in 365 days", no_post])
+        if return_str:
+            return t.get_string(**kwargs)
+        else:
+            print(t.get_string(**kwargs))
 
 
 class Accounts(AccountsObject):

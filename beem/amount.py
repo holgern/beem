@@ -55,19 +55,27 @@ class Amount(dict):
             a /= 2.0
 
     """
-    def __init__(self, amount, asset=None, steem_instance=None):
+    def __init__(self, amount, asset=None, new_appbase_format=False, steem_instance=None):
         self["asset"] = {}
-
+        self.new_appbase_format = new_appbase_format
         self.steem = steem_instance or shared_steem_instance()
         if amount and asset is None and isinstance(amount, Amount):
             # Copy Asset object
             self["amount"] = amount["amount"]
             self["symbol"] = amount["symbol"]
             self["asset"] = amount["asset"]
+
         elif amount and asset is None and isinstance(amount, list) and len(amount) == 3:
             # Copy Asset object
             self["amount"] = int(amount[0]) / (10 ** amount[1])
             self["asset"] = Asset(amount[2], steem_instance=self.steem)
+            self["symbol"] = self["asset"]["symbol"]
+
+        elif amount and asset is None and isinstance(amount, dict) and "amount" in amount and "nai" in amount and "precision" in amount:
+            # Copy Asset object
+            self.new_appbase_format = True
+            self["amount"] = int(amount["amount"]) / (10 ** amount["precision"])
+            self["asset"] = Asset(amount["nai"], steem_instance=self.steem)
             self["symbol"] = self["asset"]["symbol"]
 
         elif amount is not None and asset is None and isinstance(amount, string_types):
@@ -99,14 +107,17 @@ class Amount(dict):
             self["amount"] = amount
             self["asset"] = Asset(asset, steem_instance=self.steem)
             self["symbol"] = self["asset"]["symbol"]
+
         elif isinstance(amount, (integer_types, float)) and asset and isinstance(asset, Asset):
             self["amount"] = amount
             self["asset"] = asset
             self["symbol"] = self["asset"]["symbol"]
+
         elif isinstance(amount, (integer_types, float)) and asset and isinstance(asset, dict):
             self["amount"] = amount
             self["asset"] = asset
             self["symbol"] = self["asset"]["symbol"]
+
         elif isinstance(amount, (integer_types, float)) and asset and isinstance(asset, string_types):
             self["amount"] = amount
             self["asset"] = Asset(asset, steem_instance=self.steem)
@@ -123,6 +134,7 @@ class Amount(dict):
         return Amount(
             amount=self["amount"],
             asset=self["asset"].copy(),
+            new_appbase_format=self.new_appbase_format,
             steem_instance=self.steem)
 
     @property
@@ -150,7 +162,10 @@ class Amount(dict):
 
     def json(self):
         if not self.steem.offline and self.steem.rpc.get_use_appbase():
-            return [str(int(self)), self["asset"]["precision"], self["asset"]["asset"]]
+            if self.new_appbase_format:
+                return {'amount': str(int(self)), 'nai': self["asset"]["asset"], 'precision': self["asset"]["precision"]}
+            else:
+                return [str(int(self)), self["asset"]["precision"], self["asset"]["asset"]]
         else:
             return str(self)
 

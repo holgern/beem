@@ -68,7 +68,7 @@ class Comment(BlockchainObject):
             "promoted",
         ]
         for p in sbd_amounts:
-            if p in self and isinstance(self.get(p), string_types):
+            if p in self and isinstance(self.get(p), (string_types, list, dict)):
                 self[p] = Amount(self.get(p, "0.000 SBD"), steem_instance=self.steem)
 
         # turn json_metadata into python dict

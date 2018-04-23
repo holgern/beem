@@ -126,6 +126,13 @@ class Testcases(unittest.TestCase):
             amount.json(),
             [str(1 * 10 ** asset.precision), asset.precision, asset.asset])
 
+    def test_json_appbase2(self):
+        asset = Asset("SBD", steem_instance=self.appbase)
+        amount = Amount("1", asset, new_appbase_format=True, steem_instance=self.appbase)
+        self.assertEqual(
+            amount.json(),
+            {'amount': str(1 * 10 ** asset.precision), 'nai': asset.asset, 'precision': asset.precision})
+
     def test_string(self):
         self.assertEqual(
             str(Amount("10000", self.symbol)),

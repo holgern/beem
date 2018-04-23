@@ -38,6 +38,14 @@ def formatTimeString(t):
     return utc.localize(datetime.strptime(t, timeFormat))
 
 
+def addTzInfo(t, timezone='UTC'):
+    """Returns a datetime object with tzinfo added"""
+    if t and isinstance(t, datetime) and t.tzinfo is None:
+        utc = pytz.timezone(timezone)
+        t = utc.localize(t)
+    return t
+
+
 def formatTimeFromNow(secs=0):
     """ Properly Format Time that is `x` seconds in the future
 
@@ -243,10 +251,13 @@ def findall_patch_hunks(body=None):
     return RE_HUNK_HEADER.findall(body)
 
 
-def get_node_list(appbase=False):
+def get_node_list(appbase=False, testing=False):
     """Returns node list"""
     if appbase:
-        return ["https://api.steemit.com", "wss://appbasetest.timcliff.com", "https://api.steem.house"]
+        node_list = ["https://api.steemit.com", "wss://appbasetest.timcliff.com", "https://api.steem.house"]
+        if testing:
+            node_list = ["https://api.steemitdev.com", "https://api.steemitstage.com"] + node_list
+        return node_list
     else:
         return ["wss://steemd.privex.io", "wss://steemd.pevo.science", "wss://rpc.buildteam.io", "wss://rpc.steemliberator.com", "wss://gtg.steem.house:8090",
                 "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://steemd.steemgigs.org", "wss://steemd.minnowsupportproject.org", "https://rpc.buildteam.io",

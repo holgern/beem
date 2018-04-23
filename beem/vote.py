@@ -4,19 +4,21 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
-from beemgraphenebase.py23 import integer_types, string_types, text_type
-from .instance import shared_steem_instance
-from .account import Account
-from .exceptions import VoteDoesNotExistsException
-from .utils import resolve_authorperm, resolve_authorpermvoter, construct_authorpermvoter, construct_authorperm, formatTimeString
-from .blockchainobject import BlockchainObject
-from .comment import Comment
-from datetime import datetime
-from beemapi.exceptions import UnkownKey
 import json
 import math
 import pytz
 import logging
+from prettytable import PrettyTable
+from datetime import datetime
+from beemgraphenebase.py23 import integer_types, string_types, text_type
+from .instance import shared_steem_instance
+from .account import Account
+from .exceptions import VoteDoesNotExistsException
+from .utils import resolve_authorperm, resolve_authorpermvoter, construct_authorpermvoter, construct_authorperm, formatTimeString, addTzInfo
+from .blockchainobject import BlockchainObject
+from .comment import Comment
+from beemapi.exceptions import UnkownKey
+
 log = logging.getLogger(__name__)
 
 
@@ -118,28 +120,39 @@ class Vote(BlockchainObject):
         return self["voter"]
 
     @property
+    def votee(self):
+        votee = ''
+        authorperm = self.get("authorperm", "")
+        authorpermvoter = self.get("authorpermvoter", "")
+        if authorperm != "":
+            votee = resolve_authorperm(authorperm)[0]
+        elif authorpermvoter != "":
+            votee = resolve_authorpermvoter(authorpermvoter)[0]
+        return votee
+
+    @property
     def weight(self):
         return self["weight"]
 
     @property
     def sbd(self):
-        return self.steem.rshares_to_sbd(int(self["rshares"]))
+        return self.steem.rshares_to_sbd(int(self.get("rshares", 0)))
 
     @property
     def rshares(self):
-        return int(self["rshares"])
+        return int(self.get("rshares", 0))
 
     @property
     def percent(self):
-        return self["percent"]
+        return self.get("percent", 0)
 
     @property
     def reputation(self):
-        return self["reputation"]
+        return self.get("reputation", 0)
 
     @property
     def rep(self):
-        rep = int(self['reputation'])
+        rep = int(self.reputation)
         if rep == 0:
             return 25.
         score = max([math.log10(abs(rep)) - 9, 0])
@@ -150,35 +163,114 @@ class Vote(BlockchainObject):
 
     @property
     def time(self):
-        return self["time"]
+        t = self.get("time", '')
+        if t == '':
+            t = self.get("timestamp", '')
+        return t
 
 
 class VotesObject(list):
-    def printAsTable(self, sort_key="sbd", reverse=True):
+    def get_sorted_list(self, sort_key="time", reverse=True):
         utc = pytz.timezone('UTC')
+
         if sort_key == 'sbd':
-            sortedList = sorted(self, key=lambda self: int(self['rshares']), reverse=reverse)
+            sortedList = sorted(self, key=lambda self: self.rshares, reverse=reverse)
         elif sort_key == 'voter':
             sortedList = sorted(self, key=lambda self: self[sort_key], reverse=reverse)
         elif sort_key == 'time':
-            sortedList = sorted(self, key=lambda self: (utc.localize(datetime.now()) - formatTimeString(self['time'])).total_seconds(), reverse=reverse)
+            sortedList = sorted(self, key=lambda self: (utc.localize(datetime.now()) - formatTimeString(self.time)).total_seconds(), reverse=reverse)
         elif sort_key == 'rshares':
             sortedList = sorted(self, key=lambda self: self[sort_key], reverse=reverse)
         elif sort_key == 'percent':
             sortedList = sorted(self, key=lambda self: self[sort_key], reverse=reverse)
         elif sort_key == 'weight':
             sortedList = sorted(self, key=lambda self: self[sort_key], reverse=reverse)
-        elif sort_key == 'reputation':
-            sortedList = sorted(self, key=lambda self: int(self[sort_key]), reverse=reverse)
+        elif sort_key == 'votee':
+            sortedList = sorted(self, key=lambda self: self.votee, reverse=reverse)
         else:
-            sortedList = sorted(self, key=lambda self: self[sort_key], reverse=reverse)
-        for vote in sortedList:
-            outstr = ''
-            outstr += vote['voter'][:15].ljust(15) + " (" + str(round(vote.rep, 2)) + ")\t " + str(round(vote.sbd, 2)).ljust(5) + " $ - "
-            outstr += str(vote['percent']).ljust(5) + " % - weight:" + str(vote['weight'])
-            td = utc.localize(datetime.now()) - formatTimeString(vote['time'])
-            outstr += " " + str(td.days) + " days " + str(td.seconds // 3600) + ":" + str((td.seconds // 60) % 60) + " \t "
-            print(outstr)
+            sortedList = self
+        return sortedList
+
+    def printAsTable(self, voter=None, votee=None, start=None, stop=None, start_percent=None, stop_percent=None, sort_key="time", reverse=True, allow_refresh=True, return_str=False, **kwargs):
+        utc = pytz.timezone('UTC')
+        table_header = ["voter", "votee", "sbd", "time", "rshares", "percent", "weight"]
+        t = PrettyTable(table_header)
+        t.align = "l"
+        start = addTzInfo(start)
+        stop = addTzInfo(stop)
+        for vote in self.get_sorted_list(sort_key=sort_key, reverse=reverse):
+            if not allow_refresh:
+                vote.cached = True
+            time = vote.time
+            if time != '':
+                d_time = formatTimeString(time)
+                td = utc.localize(datetime.now()) - d_time
+                timestr = str(td.days) + " days " + str(td.seconds // 3600) + ":" + str((td.seconds // 60) % 60)
+            else:
+                start = None
+                stop = None
+                timestr = ""
+            percent = vote.get('percent', '')
+            if percent == '':
+                start_percent = None
+                stop_percent = None
+            if (start is None or d_time >= start) and (stop is None or d_time <= stop) and\
+                (start_percent is None or percent >= start_percent) and (stop_percent is None or percent <= stop_percent) and\
+                (voter is None or vote["voter"] == voter) and (votee is None or vote.votee == votee):
+                t.add_row([vote['voter'],
+                           vote.votee,
+                           str(round(vote.sbd, 2)).ljust(5) + "$",
+                           timestr,
+                           vote.get("rshares", ""),
+                           str(vote.get('percent', '')),
+                           str(vote['weight'])])
+
+        if return_str:
+            return t.get_string(**kwargs)
+        else:
+            print(t.get_string(**kwargs))
+
+    def get_list(self, var="voter", voter=None, votee=None, start=None, stop=None, start_percent=None, stop_percent=None, sort_key="time", reverse=True):
+        vote_list = []
+        start = addTzInfo(start)
+        stop = addTzInfo(stop)
+        for vote in self.get_sorted_list(sort_key=sort_key, reverse=reverse):
+            time = vote.time
+            if time != '':
+                d_time = formatTimeString(time)
+            else:
+                start = None
+                stop = None
+            percent = vote.get('percent', '')
+            if percent == '':
+                start_percent = None
+                stop_percent = None
+            if (start is None or d_time >= start) and (stop is None or d_time <= stop) and\
+                (start_percent is None or percent >= start_percent) and (stop_percent is None or percent <= stop_percent) and\
+                (voter is None or vote["voter"] == voter) and (votee is None or vote.votee == votee):
+                v = ''
+                if var == "voter":
+                    v = vote["voter"]
+                elif var == "votee":
+                    v = vote.votee
+                elif var == "sbd":
+                    v = vote.sbd
+                elif var == "time":
+                    v = d_time
+                elif var == "rshares":
+                    v = vote.get("rshares", "")
+                elif var == "percent":
+                    v = percent
+                elif var == "weight":
+                    v = vote['weight']
+                vote_list.append(v)
+        return vote_list
+
+    def print_stats(self, return_str=False, **kwargs):
+        # utc = pytz.timezone('UTC')
+        table_header = ["voter", "votee", "sbd", "time", "rshares", "percent", "weight"]
+        t = PrettyTable(table_header)
+        t.align = "l"
 
 
 class ActiveVotes(VotesObject):
@@ -236,15 +328,20 @@ class AccountVotes(VotesObject):
         :param str account: Account name
         :param steem steem_instance: Steem() instance to use when accesing a RPC
     """
-    def __init__(self, account, steem_instance=None):
+    def __init__(self, account, start=None, stop=None, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
-
+        start = addTzInfo(start)
+        stop = addTzInfo(stop)
         account = Account(account, steem_instance=self.steem)
         votes = account.get_account_votes()
+        vote_list = []
+        for x in votes:
+            time = x.get("time", "")
+            if time != "":
+                d_time = formatTimeString(time)
+            else:
+                d_time = addTzInfo(datetime(1970, 1, 1, 0, 0, 0))
+            if (start is None or d_time >= start) and (stop is None or d_time <= stop):
+                vote_list.append(Vote(x, authorperm=account["name"], steem_instance=self.steem))
 
-        super(AccountVotes, self).__init__(
-            [
-                Vote(x, authorperm=account["name"], steem_instance=self.steem)
-                for x in votes
-            ]
-        )
+        super(AccountVotes, self).__init__(vote_list)

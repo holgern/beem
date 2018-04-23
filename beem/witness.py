@@ -139,9 +139,10 @@ class Witness(BlockchainObject):
 
 
 class WitnessesObject(list):
-    def printAsTable(self, sort_key="votes", reverse=True):
+    def printAsTable(self, sort_key="votes", reverse=True, return_str=False, **kwargs):
         utc = pytz.timezone('UTC')
-        t = PrettyTable(["name", "Votes [PV]", "disabled", "missed blocks", "feed base", "feed quote", "feed update", "fee", "size", "interest", "version"])
+        table_header = ["name", "Votes [PV]", "disabled", "missed", "feed base", "feed quote", "feed update", "fee", "size", "interest", "version"]
+        t = PrettyTable(table_header)
         t.align = "l"
         if sort_key == 'base':
             sortedList = sorted(self, key=lambda self: self['sbd_exchange_rate']['base'], reverse=reverse)
@@ -175,7 +176,10 @@ class WitnessesObject(list):
                        str(witness['props']['maximum_block_size']),
                        str(witness['props']['sbd_interest_rate'] / 100) + " %",
                        witness['running_version']])
-        print(t)
+        if return_str:
+            return t.get_string(**kwargs)
+        else:
+            print(t.get_string(**kwargs))
 
 
 class Witnesses(WitnessesObject):

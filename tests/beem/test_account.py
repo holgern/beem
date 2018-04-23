@@ -32,7 +32,7 @@ class Testcases(unittest.TestCase):
             num_retries=10
         )
         cls.appbase = Steem(
-            node=get_node_list(appbase=True),
+            node=get_node_list(appbase=True, testing=True),
             nobroadcast=True,
             bundle=False,
             # Overwrite wallet to use this list of wifs only
@@ -90,7 +90,7 @@ class Testcases(unittest.TestCase):
             zero_element = 0
         else:
             account = self.account_appbase
-            zero_element = 1  # Bug in steem
+            zero_element = 0  # Bug in steem
         h_all_raw = []
         for h in account.history_reverse(raw_output=True):
             h_all_raw.append(h)
@@ -192,13 +192,97 @@ class Testcases(unittest.TestCase):
         ("non_appbase"),
         ("appbase"),
     ])
+    def test_history2(self, node_param):
+        if node_param == "non_appbase":
+            stm = self.bts
+        else:
+            stm = self.appbase
+        account = Account("gtg", steem_instance=stm)
+        h_list = []
+        max_index = account.virtual_op_count()
+        for h in account.history(start=max_index - 4, use_block_num=False, batch_size=2, raw_output=False):
+            h_list.append(h)
+        self.assertEqual(len(h_list), 5)
+        for i in range(1, 5):
+            self.assertEqual(h_list[i]["index"] - h_list[i - 1]["index"], 1)
+
+        h_list = []
+        max_index = account.virtual_op_count()
+        for h in account.history(start=max_index - 4, use_block_num=False, batch_size=6, raw_output=False):
+            h_list.append(h)
+        self.assertEqual(len(h_list), 5)
+        for i in range(1, 5):
+            self.assertEqual(h_list[i]["index"] - h_list[i - 1]["index"], 1)
+
+        h_list = []
+        max_index = account.virtual_op_count()
+        for h in account.history(start=max_index - 4, use_block_num=False, batch_size=2, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(len(h_list), 5)
+        for i in range(1, 5):
+            self.assertEqual(h_list[i][0] - h_list[i - 1][0], 1)
+
+        h_list = []
+        max_index = account.virtual_op_count()
+        for h in account.history(start=max_index - 4, use_block_num=False, batch_size=6, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(len(h_list), 5)
+        for i in range(1, 5):
+            self.assertEqual(h_list[i][0] - h_list[i - 1][0], 1)
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_history_reverse2(self, node_param):
+        if node_param == "non_appbase":
+            stm = self.bts
+        else:
+            stm = self.appbase
+        account = Account("gtg", steem_instance=stm)
+        h_list = []
+        max_index = account.virtual_op_count()
+        for h in account.history_reverse(stop=max_index - 4, use_block_num=False, batch_size=2, raw_output=False):
+            h_list.append(h)
+        self.assertEqual(len(h_list), 5)
+        for i in range(1, 5):
+            self.assertEqual(h_list[i]["index"] - h_list[i - 1]["index"], -1)
+
+        h_list = []
+        max_index = account.virtual_op_count()
+        for h in account.history_reverse(stop=max_index - 4, use_block_num=False, batch_size=6, raw_output=False):
+            h_list.append(h)
+        self.assertEqual(len(h_list), 5)
+        for i in range(1, 5):
+            self.assertEqual(h_list[i]["index"] - h_list[i - 1]["index"], -1)
+
+        h_list = []
+        max_index = account.virtual_op_count()
+        for h in account.history_reverse(stop=max_index - 4, use_block_num=False, batch_size=6, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(len(h_list), 5)
+        for i in range(1, 5):
+            self.assertEqual(h_list[i][0] - h_list[i - 1][0], -1)
+
+        h_list = []
+        max_index = account.virtual_op_count()
+        for h in account.history_reverse(stop=max_index - 4, use_block_num=False, batch_size=2, raw_output=True):
+            h_list.append(h)
+        self.assertEqual(len(h_list), 5)
+        for i in range(1, 5):
+            self.assertEqual(h_list[i][0] - h_list[i - 1][0], -1)
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
     def test_history_block_num(self, node_param):
         if node_param == "non_appbase":
             account = self.account
             zero_element = 0
         else:
             account = self.account_appbase
-            zero_element = 1  # bug in steem
+            zero_element = 0  # bug in steem
         h_all_raw = []
         for h in account.history_reverse(raw_output=True):
             h_all_raw.append(h)

@@ -81,52 +81,6 @@ def unlock_wallet(stm, password=None):
         return True
 
 
-def print_account_table(tag_account_list, tag_type="Follower"):
-    t = PrettyTable([
-        "Key", "value"
-    ])
-    t.align = "r"
-    t.add_row([tag_type + " count", str(len(tag_account_list))])
-    own_mvest = []
-    eff_sp = []
-    rep = []
-    last_vote_h = []
-    last_post_d = []
-    no_vote = 0
-    no_post = 0
-    for f in tag_account_list:
-        rep.append(f.rep)
-        own_mvest.append(f.balances["available"][2].amount / 1e6)
-        eff_sp.append(f.get_steem_power())
-        utc = pytz.timezone('UTC')
-        last_vote = utc.localize(datetime.utcnow()) - (f["last_vote_time"])
-        if last_vote.days >= 365:
-            no_vote += 1
-        else:
-            last_vote_h.append(last_vote.total_seconds() / 60 / 60)
-        last_post = utc.localize(datetime.utcnow()) - (f["last_root_post"])
-        if last_post.days >= 365:
-            no_post += 1
-        else:
-            last_post_d.append(last_post.total_seconds() / 60 / 60 / 24)
-
-    t.add_row(["Summed MVest value", "%.2f" % sum(own_mvest)])
-    if (len(rep) > 0):
-        t.add_row(["Mean Rep.", "%.2f" % (sum(rep) / len(rep))])
-        t.add_row(["Max Rep.", "%.2f" % (max(rep))])
-    if (len(eff_sp) > 0):
-        t.add_row(["Summed eff. SP", "%.2f" % sum(eff_sp)])
-        t.add_row(["Mean eff. SP", "%.2f" % (sum(eff_sp) / len(eff_sp))])
-        t.add_row(["Max eff. SP", "%.2f" % max(eff_sp)])
-    if (len(last_vote_h) > 0):
-        t.add_row(["Mean last vote diff in hours", "%.2f" % (sum(last_vote_h) / len(last_vote_h))])
-    if len(last_post_d) > 0:
-        t.add_row(["Mean last post diff in days", "%.2f" % (sum(last_post_d) / len(last_post_d))])
-    t.add_row([tag_type + " without vote in 365 days", no_vote])
-    t.add_row([tag_type + " without post in 365 days", no_post])
-    print(t)
-
-
 @click.group(chain=True)
 @click.option(
     '--node', '-n', default="", help="URL for public Steem API (e.g. https://api.steemit.com)")
@@ -599,7 +553,7 @@ def follower(account):
         a = Account(a, steem_instance=stm)
         print("\nFollowers statistics for @%s (please wait...)" % a.name)
         followers = a.get_followers(False)
-        print_account_table(followers, tag_type="Followers")
+        followers.print_summarize_table(tag_type="Followers")
 
 
 @cli.command()
@@ -615,7 +569,7 @@ def following(account):
         a = Account(a, steem_instance=stm)
         print("\nFollowing statistics for @%s (please wait...)" % a.name)
         following = a.get_following(False)
-        print_account_table(following, tag_type="Following")
+        following.print_summarize_table(tag_type="Following")
 
 
 @cli.command()
@@ -631,7 +585,7 @@ def muter(account):
         a = Account(a, steem_instance=stm)
         print("\nMuters statistics for @%s (please wait...)" % a.name)
         muters = a.get_muters(False)
-        print_account_table(muters, tag_type="Muters")
+        muters.print_summarize_table(tag_type="Muters")
 
 
 @cli.command()
@@ -647,7 +601,7 @@ def muting(account):
         a = Account(a, steem_instance=stm)
         print("\nMuting statistics for @%s (please wait...)" % a.name)
         muting = a.get_mutings(False)
-        print_account_table(muting, tag_type="Muting")
+        muting.print_summarize_table(tag_type="Muting")
 
 
 @cli.command()
