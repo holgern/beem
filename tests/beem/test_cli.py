@@ -265,12 +265,20 @@ class Testcases(unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['-d', 'buy', '1', 'STEEM'], input="y\ntest\n")
         self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['-d', 'buy', '1', 'SBD', '2.2'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['-d', 'buy', '1', 'SBD'], input="y\ntest\n")
+        self.assertEqual(result.exit_code, 0)
 
     def test_sell(self):
         runner = CliRunner()
         result = runner.invoke(cli, ['-d', 'sell', '1', 'STEEM', '2.2'], input="test\n")
         self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['-d', 'sell', '1', 'SBD', '2.2'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['-d', 'sell', '1', 'STEEM'], input="y\ntest\n")
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['-d', 'sell', '1', 'SBD'], input="y\ntest\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_cancel(self):

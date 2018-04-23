@@ -19,9 +19,9 @@ import random
 class Market(dict):
     """ This class allows to easily access Markets on the blockchain for trading, etc.
 
-        :param steem.steem.Steem steem_instance: Steem instance
-        :param steem.asset.Asset base: Base asset
-        :param steem.asset.Asset quote: Quote asset
+        :param beem.steem.Steem steem_instance: Steem instance
+        :param beem.asset.Asset base: Base asset
+        :param beem.asset.Asset quote: Quote asset
         :returns: Blockchain Market
         :rtype: dictionary with overloaded methods
 
@@ -50,14 +50,20 @@ class Market(dict):
     def __init__(
         self,
         steem_instance=None,
+        *args,
+        **kwargs
     ):
         """
         Init Market
+
+            :param beem.steem.Steem steem_instance: Steem instance
+            :param beem.asset.Asset base: Base asset
+            :param beem.asset.Asset quote: Quote asset
         """
         self.steem = steem_instance or shared_steem_instance()
+        base = kwargs.get("base", Asset("SBD", steem_instance=self.steem))
+        quote = kwargs.get("quote", Asset("STEEM", steem_instance=self.steem))
 
-        quote = Asset("STEEM", steem_instance=self.steem)
-        base = Asset("SBD", steem_instance=self.steem)
         super(Market, self).__init__({"base": base, "quote": quote})
 
     def get_string(self, separator=":"):

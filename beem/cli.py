@@ -13,6 +13,7 @@ from beem.comment import Comment
 from beem.market import Market
 from beem.block import Block
 from beem.profile import Profile
+from beem.asset import Asset
 from beem.witness import Witness, WitnessesRankedByVote, WitnessesVotedByAccount
 from beem.blockchain import Blockchain
 from beem.utils import formatTimeString
@@ -981,16 +982,21 @@ def buy(amount, asset, price, account, orderid):
         Limit buy price denoted in (SBD per STEEM)
     """
     stm = shared_steem_instance()
-    market = Market(steem_instance=stm)
     if not account:
         account = stm.config["default_account"]
+    if asset == "SBD":
+        market = Market(base=Asset("STEEM"), quote=Asset("SBD"), steem_instance=stm)
+    else:
+        market = Market(base=Asset("SBD"), quote=Asset("STEEM"), steem_instance=stm)
     if not price:
         orderbook = market.orderbook(limit=1, raw_data=False)
         if asset == "STEEM" and len(orderbook["bids"]) > 0:
             p = Price(orderbook["bids"][0]["base"], orderbook["bids"][0]["quote"], steem_instance=stm).invert()
+            p_show = p
         else:
             p = Price(orderbook["asks"][0]["base"], orderbook["asks"][0]["quote"], steem_instance=stm).invert()
-        price_ok = click.prompt("Is the following Price ok: %s [y/n]" % (str(p)))
+            p_show = p
+        price_ok = click.prompt("Is the following Price ok: %s [y/n]" % (str(p_show)))
         if price_ok not in ["y", "ye", "yes"]:
             return
     else:
@@ -1017,16 +1023,21 @@ def sell(amount, asset, price, account, orderid):
         Limit sell price denoted in (SBD per STEEM)
     """
     stm = shared_steem_instance()
-    market = Market(steem_instance=stm)
+    if asset == "SBD":
+        market = Market(base=Asset("STEEM"), quote=Asset("SBD"), steem_instance=stm)
+    else:
+        market = Market(base=Asset("SBD"), quote=Asset("STEEM"), steem_instance=stm)
     if not account:
         account = stm.config["default_account"]
     if not price:
         orderbook = market.orderbook(limit=1, raw_data=False)
         if asset == "SBD" and len(orderbook["bids"]) > 0:
             p = Price(orderbook["bids"][0]["base"], orderbook["bids"][0]["quote"], steem_instance=stm).invert()
+            p_show = p
         else:
             p = Price(orderbook["asks"][0]["base"], orderbook["asks"][0]["quote"], steem_instance=stm).invert()
-        price_ok = click.prompt("Is the following Price ok: %s [y/n]" % (str(p)))
+            p_show = p
+        price_ok = click.prompt("Is the following Price ok: %s [y/n]" % (str(p_show)))
         if price_ok not in ["y", "ye", "yes"]:
             return
     else:
