@@ -320,17 +320,6 @@ class Testcases(unittest.TestCase):
         ("non_appbase"),
         ("appbase"),
     ])
-    def test_set_default_account(self, node_param):
-        if node_param == "non_appbase":
-            bts = self.bts
-        elif node_param == "appbase":
-            bts = self.appbase
-        bts.set_default_account("test")
-
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
     def test_info(self, node_param):
         if node_param == "non_appbase":
             bts = self.bts

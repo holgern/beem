@@ -137,3 +137,9 @@ class KeyNotFound(Exception):
     """ Key not found
     """
     pass
+
+
+class NoWriteAccess(Exception):
+    """ Cannot store to sqlite3 database due to missing write access
+    """
+    pass

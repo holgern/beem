@@ -41,7 +41,6 @@ class Testcases(unittest.TestCase):
         )
         cls.account = Account("test", full=True, steem_instance=cls.bts)
         cls.account_appbase = Account("test", full=True, steem_instance=cls.appbase)
-        cls.bts.set_default_account("test")
         set_shared_steem_instance(cls.bts)
 
     @parameterized.expand([

@@ -17,7 +17,7 @@ import logging
 from binascii import hexlify
 import random
 import hashlib
-from .exceptions import WrongMasterPasswordException
+from .exceptions import WrongMasterPasswordException, NoWriteAccess
 from .utils import get_node_list
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -67,13 +67,17 @@ class DataDir(object):
             try:
                 os.makedirs(self.data_dir)
             except FileExistsError:
+                self.sqlDataBaseFile = ":memory:"
                 return
             except OSError:
-                raise
+                self.sqlDataBaseFile = ":memory:"
+                return
 
     def sqlite3_backup(self, backupdir):
         """ Create timestamped database copy
         """
+        if self.sqlDataBaseFile == ":memory:":
+            return
         if not os.path.isdir(backupdir):
             os.mkdir(backupdir)
         backup_file = os.path.join(
@@ -85,6 +89,8 @@ class DataDir(object):
 
     def sqlite3_copy(self, src, dst):
         """Copy sql file from src to dst"""
+        if self.sqlDataBaseFile == ":memory:":
+            return
         if not os.path.isfile(src):
             return
         connection = sqlite3.connect(self.sqlDataBaseFile)
@@ -100,6 +106,8 @@ class DataDir(object):
     def recover_with_latest_backup(self, backupdir="backups"):
         """ Replace database with latest backup"""
         file_date = 0
+        if self.sqlDataBaseFile == ":memory:":
+            return
         if not os.path.isdir(backupdir):
             backupdir = os.path.join(self.data_dir, backupdir)
         if not os.path.isdir(backupdir):
@@ -117,6 +125,8 @@ class DataDir(object):
     def clean_data(self):
         """ Delete files older than 70 days
         """
+        if self.sqlDataBaseFile == ":memory:":
+            return
         log.info("Cleaning up old backups")
         for filename in os.listdir(self.data_dir):
             backup_file = os.path.join(self.data_dir, filename)
@@ -148,10 +158,15 @@ class Key(DataDir):
         """
         query = ("SELECT name FROM sqlite_master "
                  "WHERE type='table' AND name=?", (self.__tablename__, ))
-        connection = sqlite3.connect(self.sqlDataBaseFile)
-        cursor = connection.cursor()
-        cursor.execute(*query)
-        return True if cursor.fetchone() else False
+        try:
+            connection = sqlite3.connect(self.sqlDataBaseFile)
+            cursor = connection.cursor()
+            cursor.execute(*query)
+            return True if cursor.fetchone() else False
+        except sqlite3.OperationalError:
+            self.sqlDataBaseFile = ":memory:"
+            log.warning("Could not read(database: %s)" % (self.sqlDataBaseFile))
+            return True
 
     def create_table(self):
         """ Create the new table in the SQLite database
@@ -171,9 +186,12 @@ class Key(DataDir):
         query = ("SELECT pub from {0} ".format(self.__tablename__))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
-        cursor.execute(query)
-        results = cursor.fetchall()
-        return [x[0] for x in results]
+        try:
+            cursor.execute(query)
+            results = cursor.fetchall()
+            return [x[0] for x in results]
+        except sqlite3.OperationalError:
+            return []
 
     def getPrivateKeyForPublicKey(self, pub):
         """ Returns the (possibly encrypted) private key that
@@ -270,10 +288,15 @@ class Configuration(DataDir):
         """
         query = ("SELECT name FROM sqlite_master "
                  "WHERE type='table' AND name=?", (self.__tablename__,))
-        connection = sqlite3.connect(self.sqlDataBaseFile)
-        cursor = connection.cursor()
-        cursor.execute(*query)
-        return True if cursor.fetchone() else False
+        try:
+            connection = sqlite3.connect(self.sqlDataBaseFile)
+            cursor = connection.cursor()
+            cursor.execute(*query)
+            return True if cursor.fetchone() else False
+        except sqlite3.OperationalError:
+            self.sqlDataBaseFile = ":memory:"
+            log.warning("Could not read(database: %s)" % (self.sqlDataBaseFile))
+            return True
 
     def create_table(self):
         """ Create the new table in the SQLite database
@@ -284,8 +307,12 @@ class Configuration(DataDir):
                  "value STRING(256))".format(self.__tablename__))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
-        cursor.execute(query)
-        connection.commit()
+        try:
+            cursor.execute(query)
+            connection.commit()
+        except sqlite3.OperationalError:
+            log.error("Could not write to database: %s" % (self.__tablename__))
+            raise NoWriteAccess("Could not write to database: %s" % (self.__tablename__))
 
     def checkBackup(self):
         """ Backup the SQL database every 7 days
@@ -311,8 +338,12 @@ class Configuration(DataDir):
         query = ("SELECT value FROM {0} WHERE key=?".format(self.__tablename__), (key,))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
-        cursor.execute(*query)
-        return True if cursor.fetchone() else False
+        try:
+            cursor.execute(*query)
+            return True if cursor.fetchone() else False
+        except sqlite3.OperationalError:
+            log.warning("Could not read %s (database: %s)" % (str(key), self.__tablename__))
+            return False
 
     def __getitem__(self, key):
         """ This method behaves differently from regular `dict` in that
@@ -321,11 +352,18 @@ class Configuration(DataDir):
         query = ("SELECT value FROM {0} WHERE key=?".format(self.__tablename__), (key,))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
-        cursor.execute(*query)
-        result = cursor.fetchone()
-        if result:
-            return result[0]
-        else:
+        try:
+            cursor.execute(*query)
+            result = cursor.fetchone()
+            if result:
+                return result[0]
+            else:
+                if key in self.config_defaults:
+                    return self.config_defaults[key]
+                else:
+                    return None
+        except sqlite3.OperationalError:
+            log.warning("Could not read %s (database: %s)" % (str(key), self.__tablename__))
             if key in self.config_defaults:
                 return self.config_defaults[key]
             else:
@@ -352,8 +390,12 @@ class Configuration(DataDir):
             query = ("INSERT INTO {0} (key, value) VALUES (?, ?)".format(self.__tablename__), (key, value))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
-        cursor.execute(*query)
-        connection.commit()
+        try:
+            cursor.execute(*query)
+            connection.commit()
+        except sqlite3.OperationalError:
+            log.error("Could not write to %s (database: %s)" % (str(key), self.__tablename__))
+            raise NoWriteAccess("Could not write to %s (database: %s)" % (str(key), self.__tablename__))
 
     def delete(self, key):
         """ Delete a key from the configuration store
@@ -361,8 +403,12 @@ class Configuration(DataDir):
         query = ("DELETE FROM {0} WHERE key=?".format(self.__tablename__), (key,))
         connection = sqlite3.connect(self.sqlDataBaseFile)
         cursor = connection.cursor()
-        cursor.execute(*query)
-        connection.commit()
+        try:
+            cursor.execute(*query)
+            connection.commit()
+        except sqlite3.OperationalError:
+            log.error("Could not write to %s (database: %s)" % (str(key), self.__tablename__))
+            raise NoWriteAccess("Could not write to %s (database: %s)" % (str(key), self.__tablename__))
 
     def __iter__(self):
         return iter(list(self.items()))
