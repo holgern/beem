@@ -324,3 +324,24 @@ class Testcases(unittest.TestCase):
         runner = CliRunner()
         result = runner.invoke(cli, ['power'])
         self.assertEqual(result.exit_code, 0)
+
+    def test_nextnode(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['-o', 'nextnode'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_pingnode(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['pingnode'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['pingnode', '--raw'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_currentnode(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['currentnode'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['currentnode', '--url'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['currentnode', '--version'])
+        self.assertEqual(result.exit_code, 0)

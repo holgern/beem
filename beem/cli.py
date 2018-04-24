@@ -22,6 +22,7 @@ from beem import exceptions
 from beem.version import version as __version__
 from datetime import datetime, timedelta
 import pytz
+from timeit import default_timer as timer
 from beembase import operations
 
 from beemgraphenebase.account import PrivateKey, PublicKey
@@ -157,6 +158,62 @@ def set(key, value):
 
 
 @cli.command()
+def nextnode():
+    """ Uses the next node in list
+    """
+    stm = shared_steem_instance()
+    node = stm.get_default_nodes()
+    node = node[1:] + [node[0]]
+    stm.set_default_nodes(node)
+
+
+@cli.command()
+@click.option(
+    '--raw', is_flag=True, default=False,
+    help="Returns only the raw value")
+def pingnode(raw):
+    """ Returns the answer time in milliseconds
+    """
+    stm = shared_steem_instance()
+    start = timer()
+    stm.get_config(use_stored_data=False)
+    stop = timer()
+    rpc_answer_time = stop - start
+    rpc_time_str = "%.2f" % (rpc_answer_time * 1000)
+    if raw:
+        print(rpc_time_str)
+        return
+    t = PrettyTable(["Node", "Answer time [ms]"])
+    t.align = "l"
+    t.add_row([stm.rpc.url, rpc_time_str])
+    print(t)
+
+
+@cli.command()
+@click.option(
+    '--version', is_flag=True, default=False,
+    help="Returns only the raw version value")
+@click.option(
+    '--url', is_flag=True, default=False,
+    help="Returns only the raw url value")
+def currentnode(version, url):
+    """ Returns the current node
+    """
+    stm = shared_steem_instance()
+    if version:
+        print(stm.get_blockchain_version())
+        return
+    if url:
+        print(stm.rpc.url)
+        return
+    t = PrettyTable(["Key", "Value"])
+    t.align = "l"
+    t.add_row(["Node-Url", stm.rpc.url])
+    t.add_row(["Version", stm.get_blockchain_version()])
+    print(t)
+
+
+@cli.command()
 def config():
     """ Shows local configuration
     """
@@ -167,10 +224,7 @@ def config():
         # hide internal config data
         if key in availableConfigurationKeys:
             t.add_row([key, stm.config[key]])
-    if "default_nodes" in stm.config and bool(stm.config["default_nodes"]):
-        node = stm.config["default_nodes"]
-    elif "node" in stm.config:
-        node = stm.config["node"]
+    node = stm.get_default_nodes()
     nodes = json.dumps(node, indent=4)
     t.add_row(["nodes", nodes])
     t.add_row(["data_dir", stm.config.data_dir])
@@ -484,7 +538,8 @@ def power(account):
             account = [stm.config["default_account"]]
     for name in account:
         a = Account(name, steem_instance=stm)
-        a.print_info()
+        print("\n@%s" % a.name)
+        a.print_info(use_table=True)
 
 
 @cli.command()

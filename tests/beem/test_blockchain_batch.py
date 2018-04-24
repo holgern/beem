@@ -13,16 +13,16 @@ from beem import Steem
 from beem.blockchain import Blockchain
 from beem.block import Block
 from beem.instance import set_shared_steem_instance
+from beem.utils import formatTimeString, get_node_list
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-nodes = ["https://api.steem.house", "https://api.steemit.com"]
 
 
 class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.bts = Steem(
-            node=nodes,
+            node=get_node_list(appbase=True, testing=False),
             nobroadcast=True,
             num_retries=10,
             keys={"active": wif},

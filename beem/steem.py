@@ -9,6 +9,7 @@ import json
 import logging
 import re
 import math
+import ast
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from datetime import datetime, timedelta
 from beemapi.steemnoderpc import SteemNodeRPC
@@ -180,9 +181,8 @@ class Steem(object):
         """ Connect to Steem network (internal use only)
         """
         if not node:
-            if "node" in config:
-                node = config["node"]
-            else:
+            node = self.get_default_nodes()
+            if not bool(node):
                 raise ValueError("A Steem node needs to be provided!")
 
         if not rpcuser and "rpcuser" in config:
@@ -579,9 +579,25 @@ class Steem(object):
         """ Set the default nodes to be used
         """
         if bool(nodes):
+            if isinstance(nodes, list):
+                nodes = str(nodes)
             config["node"] = nodes
         else:
             config.delete("node")
+
+    def get_default_nodes(self):
+        """Returns the default nodes"""
+        if "node" in config:
+            nodes = config["node"]
+        elif "nodes" in config:
+            nodes = config["nodes"]
+        elif "default_nodes" in config and bool(config["default_nodes"]):
+            nodes = config["default_nodes"]
+        else:
+            nodes = []
+        if isinstance(nodes, str) and nodes[0] == '[' and nodes[-1] == ']':
+            nodes = ast.literal_eval(nodes)
+        return nodes
 
     def set_default_vote_weight(self, vote_weight):
         """ Set the default vote weight to be used

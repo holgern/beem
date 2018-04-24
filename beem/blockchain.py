@@ -13,6 +13,7 @@ import json
 import math
 from datetime import datetime, timedelta
 from .block import Block
+from .exceptions import BatchedCallsNotSupported
 from .blockchainobject import BlockchainObject
 from beemgraphenebase.py23 import py23_bytes
 from beem.instance import shared_steem_instance
@@ -230,6 +231,8 @@ class Blockchain(object):
                             block_batch = self.steem.rpc.get_block({"block_num": latest_block}, api="block", add_to_queue=False)
                         else:
                             block_batch = self.steem.rpc.get_block(latest_block, add_to_queue=False)
+                        if not bool(block_batch):
+                            raise BatchedCallsNotSupported()
                         blocknum = latest_block - len(block_batch) + 1
                         if not isinstance(block_batch, list):
                             block_batch = [block_batch]
@@ -337,7 +340,10 @@ class Blockchain(object):
                 print(block.identifier + " " + block["timestamp"])
             for tx in block["transactions"]:
                 for op in tx["operations"]:
-                    ops_stat[op[0]] += 1
+                    if isinstance(op, list):
+                        ops_stat[op[0]] += 1
+                    elif isinstance(op, dict):
+                        ops_stat[op["type"][:-10]] += 1
         return ops_stat
 
     def stream(self, opNames=[], *args, **kwargs):
@@ -356,14 +362,24 @@ class Blockchain(object):
             on the actualy operation.
         """
         for op in self.ops(**kwargs):
-            if not opNames or op["op"][0] in opNames:
-                r = {
-                    "type": op["op"][0],
-                    "timestamp": op.get("timestamp"),
-                    "block_num": op.get("block_num"),
-                }
-                r.update(op["op"][1])
-                yield r
+            if isinstance(op["op"], list):
+                if not opNames or op["op"][0] in opNames:
+                    r = {
+                        "type": op["op"][0],
+                        "timestamp": op.get("timestamp"),
+                        "block_num": op.get("block_num"),
+                    }
+                    r.update(op["op"][1])
+                    yield r
+            elif isinstance(op["op"], dict):
+                if not opNames or op["op"]["type"][:-10] in opNames:
+                    r = {
+                        "type": op["op"]["type"][:-10],
+                        "timestamp": op.get("timestamp"),
+                        "block_num": op.get("block_num"),
+                    }
+                    r.update(op["op"]["value"])
+                    yield r
 
     def awaitTxConfirmation(self, transaction, limit=10):
         """ Returns the transaction as seen by the blockchain after being

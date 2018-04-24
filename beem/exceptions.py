@@ -143,3 +143,9 @@ class NoWriteAccess(Exception):
     """ Cannot store to sqlite3 database due to missing write access
     """
     pass
+
+
+class BatchedCallsNotSupported(Exception):
+    """ Batch calls do not work
+    """
+    pass

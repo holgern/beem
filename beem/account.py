@@ -203,25 +203,48 @@ class Account(BlockchainObject):
     def vp(self):
         return self.get_voting_power()
 
-    def print_info(self, force_refresh=False, return_str=False):
+    def print_info(self, force_refresh=False, return_str=False, use_table=False, **kwargs):
         """ Prints import information about the account
         """
         if force_refresh:
             self.refresh()
             self.steem.refresh_data(True)
-        ret = self.name + " (%.2f) " % (self.rep)
-        ret += "%.2f %%, full in %s" % (self.get_voting_power(), self.get_recharge_time_str())
-        ret += " VP = %.2f $\n" % (self.get_voting_value_SBD())
-        ret += "%.2f SP, " % (self.get_steem_power())
-        ret += "%s, %s" % (str(self.balances["available"][0]), str(self.balances["available"][1]))
         bandwidth = self.get_bandwidth()
         if bandwidth["allocated"] > 0:
-            ret += "\n"
-            ret += "Remaining Bandwidth: %.2f %%" % (100 - bandwidth["used"] / bandwidth["allocated"] * 100)
-            ret += " (%.0f kb of %.0f mb)" % (bandwidth["used"] / 1024, bandwidth["allocated"] / 1024 / 1024)
-        if return_str:
-            return ret
-        print(ret)
+            remaining = 100 - bandwidth["used"] / bandwidth["allocated"] * 100
+            used_kb = bandwidth["used"] / 1024
+            allocated_mb = bandwidth["allocated"] / 1024 / 1024
+        if use_table:
+            t = PrettyTable(["Key", "Vale"])
+            t.align = "l"
+            t.add_row(["Name (rep)", self.name + " (%.2f)" % (self.rep)])
+            t.add_row(["Voting Power", "%.2f %%, " % (self.get_voting_power())])
+            t.add_row(["Vote Value", "%.2f $" % (self.get_voting_value_SBD())])
+            t.add_row(["Full in ", "%s" % (self.get_recharge_time_str())])
+            t.add_row(["Balance", "%.2f SP, %s, %s" % (self.get_steem_power(), str(self.balances["available"][0]), str(self.balances["available"][1]))])
+            if bandwidth["allocated"] > 0:
+                t.add_row(["Remaining Bandwidth", "%.2f %%" % (remaining)])
+                t.add_row(["used/allocated Bandwidth", "(%.0f kb of %.0f mb)" % (used_kb, allocated_mb)])
+            if return_str:
+                return t.get_string(**kwargs)
+            else:
+                print(t.get_string(**kwargs))
+        else:
+            ret = self.name + " (%.2f) \n" % (self.rep)
+            ret += "--- Voting Power ---\n"
+            ret += "%.2f %%, " % (self.get_voting_power())
+            ret += " VP = %.2f $\n" % (self.get_voting_value_SBD())
+            ret += "full in %s \n" % (self.get_recharge_time_str())
+            ret += "--- Balance ---\n"
+            ret += "%.2f SP, " % (self.get_steem_power())
+            ret += "%s, %s\n" % (str(self.balances["available"][0]), str(self.balances["available"][1]))
+            if bandwidth["allocated"] > 0:
+                ret += "--- Bandwidth ---\n"
+                ret += "Remaining: %.2f %%" % (remaining)
+                ret += " (%.0f kb of %.0f mb)" % (used_kb, allocated_mb)
+            if return_str:
+                return ret
+            print(ret)
 
     def get_reputation(self):
         """ Returns the account reputation
