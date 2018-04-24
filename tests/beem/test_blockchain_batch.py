@@ -36,6 +36,7 @@ class Testcases(unittest.TestCase):
         num = b.get_current_block_num()
         cls.start = num - 25
         cls.stop = num
+        cls.max_batch_size = 1  # appbase does not support batch rpc calls at the momement (internal error)
 
     def test_stream_batch(self):
         bts = self.bts
@@ -47,7 +48,7 @@ class Testcases(unittest.TestCase):
         self.assertTrue(len(ops_stream) > 0)
         op_stat = b.ops_statistics(start=self.start, stop=self.stop)
         ops_blocks = []
-        for op in b.blocks(start=self.start, stop=self.stop, max_batch_size=2, threading=False):
+        for op in b.blocks(start=self.start, stop=self.stop, max_batch_size=self.max_batch_size, threading=False):
             ops_blocks.append(op)
         op_stat4 = {"transfer": 0, "vote": 0}
         self.assertTrue(len(ops_blocks) > 0)

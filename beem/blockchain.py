@@ -224,7 +224,7 @@ class Blockchain(object):
                         else:
                             self.steem.rpc.get_block(blocknum, add_to_queue=True)
                         latest_block = blocknum
-                    if batches > 1:
+                    if batches >= 1:
                         latest_block += 1
                     if latest_block <= head_block:
                         if self.steem.rpc.get_use_appbase():

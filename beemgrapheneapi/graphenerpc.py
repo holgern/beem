@@ -364,8 +364,6 @@ class GrapheneRPC(object):
                 self.rpc_queue.append(query)
                 query = self.rpc_queue
                 self.rpc_queue = []
-            if isinstance(query, list):
-                self._request_id += len(query) - 1
             r = self.rpcexec(query)
             return r
         return method

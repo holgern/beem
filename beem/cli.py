@@ -163,6 +163,9 @@ def nextnode():
     """
     stm = shared_steem_instance()
     node = stm.get_default_nodes()
+    if len(node) < 2:
+        print("At least two nodes are needed!")
+        return
     node = node[1:] + [node[0]]
     stm.set_default_nodes(node)
 

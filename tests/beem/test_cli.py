@@ -327,8 +327,10 @@ class Testcases(unittest.TestCase):
 
     def test_nextnode(self):
         runner = CliRunner()
+        runner.invoke(cli, ['-o', 'set', 'nodes', ''])
         result = runner.invoke(cli, ['-o', 'nextnode'])
         self.assertEqual(result.exit_code, 0)
+        runner.invoke(cli, ['-o', 'set', 'nodes', 'wss://testnet.steem.vc'])
 
     def test_pingnode(self):
         runner = CliRunner()

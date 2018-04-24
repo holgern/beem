@@ -130,7 +130,7 @@ Changelog
 =========
 0.19.23
 -------
-* new function for beempy added: power, follower, following, muter, muting
+* new function for beempy added: power, follower, following, muter, muting, mute, nextnode, pingnode, currentnode 
 * support for read-only systems added
 * more unit tests
 * Several improvements and bug fixes
