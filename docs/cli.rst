@@ -126,6 +126,7 @@ You can see all available commands with ``beempy --help``
      config                  Shows local configuration
      convert                 Convert STEEMDollars to Steem (takes a week...
      createwallet            Create new wallet with password
+     currentnode             Returns the current node
      delkey                  Delete key from the wallet PUB is the public...
      delprofile              Delete a variable in an account's profile
      disallow                Remove allowance an account/key to interact...
@@ -139,10 +140,17 @@ You can see all available commands with ``beempy --help``
      interest                Get information about interest payment
      listaccounts            Show stored accounts
      listkeys                Show stored keys
+     mute                    Mute another account
+     muter                   Get information about muter
+     muting                  Get information about muting
      newaccount              Create a new account
+     nextnode                Uses the next node in list
      openorders              Show open orders
      orderbook               Obtain orderbook of the internal market
+     parsewif                Parse a WIF private key without importing
      permissions             Show permissions of an account
+     pingnode                Returns the answer time in milliseconds
+     power                   Shows vote power and bandwidth
      powerdown               Power down (start withdrawing VESTS from...
      powerdownroute          Setup a powerdown route
      powerup                 Power up (vest STEEM as STEEM POWER)
@@ -152,12 +160,14 @@ You can see all available commands with ``beempy --help``
      setprofile              Set a variable in an account's profile
      sign                    Sign a provided transaction with available...
      transfer                Transfer SBD/STEEM
-     unfollow                Unfollow another account
+     unfollow                Unfollow/Unmute another account
      updatememokey           Update an account's memo key
      upvote                  Upvote a post/comment POST is...
+     votes                   List outgoing/incoming account votes
      walletinfo              Show info about wallet
      witnesscreate           Create a witness
      witnesses               List witnesses
      witnessupdate           Change witness properties
+
 
 

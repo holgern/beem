@@ -215,7 +215,7 @@ class Account(BlockchainObject):
             used_kb = bandwidth["used"] / 1024
             allocated_mb = bandwidth["allocated"] / 1024 / 1024
         if use_table:
-            t = PrettyTable(["Key", "Vale"])
+            t = PrettyTable(["Key", "Value"])
             t.align = "l"
             t.add_row(["Name (rep)", self.name + " (%.2f)" % (self.rep)])
             t.add_row(["Voting Power", "%.2f %%, " % (self.get_voting_power())])
@@ -1686,7 +1686,7 @@ class Account(BlockchainObject):
 
 class AccountsObject(list):
     def printAsTable(self):
-        t = PrettyTable(["name"])
+        t = PrettyTable(["Name"])
         t.align = "l"
         for acc in self:
             t.add_row([acc['name']])
@@ -1694,7 +1694,7 @@ class AccountsObject(list):
 
     def print_summarize_table(self, tag_type="Follower", return_str=False, **kwargs):
         t = PrettyTable([
-            "Key", "value"
+            "Key", "Value"
         ])
         t.align = "r"
         t.add_row([tag_type + " count", str(len(self))])

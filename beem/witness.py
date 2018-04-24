@@ -141,7 +141,7 @@ class Witness(BlockchainObject):
 class WitnessesObject(list):
     def printAsTable(self, sort_key="votes", reverse=True, return_str=False, **kwargs):
         utc = pytz.timezone('UTC')
-        table_header = ["name", "Votes [PV]", "disabled", "missed", "feed base", "feed quote", "feed update", "fee", "size", "interest", "version"]
+        table_header = ["Name", "Votes [PV]", "Disabled", "Missed", "Feed base", "Feed quote", "Feed update", "Fee", "Size", "Interest", "Version"]
         t = PrettyTable(table_header)
         t.align = "l"
         if sort_key == 'base':

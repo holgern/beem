@@ -17,20 +17,34 @@ logging.basicConfig(level=logging.INFO)
 if __name__ == "__main__":
     stm = Steem(node="https://api.steemit.com")
     # stm = Steem(node="wss://appbasetest.timcliff.com")
+    # stm = Steem(node="https://api.steemitstage.com")
+    # stm = Steem(node="https://api.steemitdev.com")
     all_calls = stm.rpc.get_methods(api="jsonrpc")
     t = PrettyTable(["method", "args", "ret"])
     t.align = "l"
-    include_condenser_methods = False
+    t_condenser = PrettyTable(["method", "args", "ret"])
+    t_condenser.align = "l"
     for call in all_calls:
-        if include_condenser_methods or "condenser" not in call:
+        if "condenser" not in call:
             ret = stm.rpc.get_signature({'method': call}, api="jsonrpc")
             t.add_row([
                 call,
                 ret['args'],
                 ret['ret']
             ])
-    print(t)
+        else:
+            ret = stm.rpc.get_signature({'method': call}, api="jsonrpc")
+            t_condenser.add_row([
+                call,
+                ret['args'],
+                ret['ret']
+            ])
+    print("Finished. Write results...")
     with open('print_appbase.txt', 'w') as w:
         w.write(str(t))
     with open('print_appbase.html', 'w') as w:
         w.write(str(t.get_html_string()))
+    with open('print_appbase_condenser.txt', 'w') as w:
+        w.write(str(t_condenser))
+    with open('print_appbase_condenser.html', 'w') as w:
+        w.write(str(t_condenser.get_html_string()))

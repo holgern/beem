@@ -997,7 +997,7 @@ def orderbook(chart):
     stm = shared_steem_instance()
     market = Market(steem_instance=stm)
     orderbook = market.orderbook(limit=25, raw_data=False)
-    t = PrettyTable(["asks-date", "asks", "bids-date", "bids"], hrules=0)
+    t = PrettyTable(["Asks date", "Asks", "Bids date", "Bids"], hrules=0)
     t.align = "r"
     asks = []
     bids = []
@@ -1150,7 +1150,7 @@ def openorders(account):
         account = stm.config["default_account"]
     acc = Account(account, steem_instance=stm)
     openorders = market.accountopenorders(account=acc)
-    t = PrettyTable(["orderid", "created", "order", "account"], hrules=0)
+    t = PrettyTable(["Orderid", "Created", "Order", "Account"], hrules=0)
     t.align = "r"
     for order in openorders:
         t.add_row([order["orderid"],
