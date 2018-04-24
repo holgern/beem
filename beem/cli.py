@@ -475,6 +475,20 @@ def changewalletpassphrase(oldpassword, newpassword):
 
 @cli.command()
 @click.argument('account', nargs=-1)
+def power(account):
+    """ Shows vote power and bandwidth
+    """
+    stm = shared_steem_instance()
+    if len(account) == 0:
+        if "default_account" in stm.config:
+            account = [stm.config["default_account"]]
+    for name in account:
+        a = Account(name, steem_instance=stm)
+        a.print_info()
+
+
+@cli.command()
+@click.argument('account', nargs=-1)
 def balance(account):
     """ Shows balance
     """

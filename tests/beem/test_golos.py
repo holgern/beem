@@ -53,18 +53,6 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         self.assertEqual(bts.prefix, "GLS")
 
-    def test_info(self):
-        info = self.bts.info()
-        for key in ['current_witness',
-                    'head_block_id',
-                    'head_block_number',
-                    'id',
-                    'last_irreversible_block_num',
-                    'current_witness',
-                    'total_pow',
-                    'time']:
-            self.assertTrue(key in info)
-
     def test_weight_threshold(self):
         bts = self.bts
         auth = {'account_auths': [['test', 1]],

@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from builtins import int, str
 from beemgraphenebase.signedtransactions import Signed_Transaction as GrapheneSigned_Transaction
 from .operations import Operation
-from .chains import known_chains
+from beemgraphenebase.chains import known_chains
 import logging
 log = logging.getLogger(__name__)
 

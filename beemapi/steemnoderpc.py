@@ -8,7 +8,7 @@ import sys
 from beemgrapheneapi.graphenerpc import GrapheneRPC
 from beemgrapheneapi.rpcutils import sleep_and_check_retries
 from beemgrapheneapi.exceptions import CallRetriesReached
-from beembase.chains import known_chains
+from beemgraphenebase.chains import known_chains
 from . import exceptions
 import logging
 log = logging.getLogger(__name__)
@@ -29,7 +29,6 @@ class SteemNodeRPC(GrapheneRPC):
         super(SteemNodeRPC, self).__init__(*args, **kwargs)
         self.appbase = kwargs.get("appbase", False)
         self.next_node_on_empty_reply = False
-        self.chain_params = self.get_network()
 
     def get_use_appbase(self):
         """Returns True if appbase ready and appbase calls are set"""
@@ -175,28 +174,3 @@ class SteemNodeRPC(GrapheneRPC):
         """
         if isinstance(name, str):
             return self.get_accounts([name], **kwargs)
-
-    def get_network(self):
-        """ Identify the connected network. This call returns a
-            dictionary with keys chain_id, core_symbol and prefix
-        """
-        props = self.get_config(api="database")
-        if "STEEMIT_CHAIN_ID" in props:
-            chain_id = props["STEEMIT_CHAIN_ID"]
-            network_version = props['STEEMIT_BLOCKCHAIN_VERSION']
-        elif "STEEM_CHAIN_ID" in props:
-            chain_id = props["STEEM_CHAIN_ID"]
-            network_version = props['STEEM_BLOCKCHAIN_VERSION']
-        else:
-            raise("Connecting to unknown network!")
-        highest_version_chain = None
-        for k, v in list(known_chains.items()):
-            if v["chain_id"] == chain_id and v["min_version"] <= network_version:
-                if highest_version_chain is None:
-                    highest_version_chain = v
-                elif v["min_version"] > highest_version_chain["min_version"]:
-                    highest_version_chain = v
-        if highest_version_chain is None:
-            raise("Connecting to unknown network!")
-        else:
-            return highest_version_chain

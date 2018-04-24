@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 from binascii import hexlify, unhexlify
 import struct
 from beemgraphenebase.account import PublicKey
-from .chains import known_chains
 from .signedtransactions import Signed_Transaction
 from .operations import (
     Op_wrapper,

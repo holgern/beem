@@ -24,6 +24,7 @@ from .rpcutils import (
     get_api_name, get_query
 )
 from beem.version import version as beem_version
+from beemgraphenebase.chains import known_chains
 
 WEBSOCKET_MODULE = None
 if not WEBSOCKET_MODULE:
@@ -178,6 +179,7 @@ class GrapheneRPC(object):
                         self.current_rpc = self.rpc_methods["wsappbase"]
                     else:
                         self.current_rpc = self.rpc_methods["appbase"]
+                self.chain_params = self.get_network(props)
                 self.rpclogin(self.user, self.password)
                 break
             except KeyboardInterrupt:
@@ -212,6 +214,32 @@ class GrapheneRPC(object):
         self.ws.send(payload)
         reply = self.ws.recv()
         return reply
+
+    def get_network(self, props=None):
+        """ Identify the connected network. This call returns a
+            dictionary with keys chain_id, core_symbol and prefix
+        """
+        if props is None:
+            props = self.get_config(api="database")
+        if "STEEMIT_CHAIN_ID" in props:
+            chain_id = props["STEEMIT_CHAIN_ID"]
+            network_version = props['STEEMIT_BLOCKCHAIN_VERSION']
+        elif "STEEM_CHAIN_ID" in props:
+            chain_id = props["STEEM_CHAIN_ID"]
+            network_version = props['STEEM_BLOCKCHAIN_VERSION']
+        else:
+            raise("Connecting to unknown network!")
+        highest_version_chain = None
+        for k, v in list(known_chains.items()):
+            if v["chain_id"] == chain_id and v["min_version"] <= network_version:
+                if highest_version_chain is None:
+                    highest_version_chain = v
+                elif v["min_version"] > highest_version_chain["min_version"]:
+                    highest_version_chain = v
+        if highest_version_chain is None:
+            raise("Connecting to unknown network!")
+        else:
+            return highest_version_chain
 
     def _check_for_server_error(self, reply):
         """Checks for server error message in reply"""

@@ -128,6 +128,13 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.23
+-------
+* new function for beempy added: power, follower, following, muter, muting
+* support for read-only systems added
+* more unit tests
+* Several improvements and bug fixes
+
 0.19.22
 -------
 * beempy (command line tool) improved and all missing functions which are available in steempy are added

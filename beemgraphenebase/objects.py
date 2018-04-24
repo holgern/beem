@@ -17,7 +17,6 @@ from beemgraphenebase.types import (
 from .py23 import py23_bytes, bytes_types, integer_types, string_types
 from .chains import known_chains
 from .objecttypes import object_type
-from .chains import default_prefix
 from .operationids import operations
 
 

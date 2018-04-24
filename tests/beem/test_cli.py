@@ -319,3 +319,8 @@ class Testcases(unittest.TestCase):
         runner = CliRunner()
         result = runner.invoke(cli, ['-d', 'claimreward'], input="test\n")
         self.assertEqual(result.exit_code, 0)
+
+    def test_power(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['power'])
+        self.assertEqual(result.exit_code, 0)

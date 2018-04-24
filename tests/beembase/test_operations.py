@@ -17,7 +17,6 @@ from beem.amount import Amount
 from beembase.operations import Transfer
 from beembase.objects import Operation
 from beembase.signedtransactions import Signed_Transaction
-from beembase.chains import known_chains
 
 wif = "5J4KCbg1G3my9b9hCaQXnHSm6vrwW9xQTJS6ZciW2Kek7cCkCEk"
 

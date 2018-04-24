@@ -12,7 +12,7 @@ import math
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from datetime import datetime, timedelta
 from beemapi.steemnoderpc import SteemNodeRPC
-from beemapi.exceptions import NoAccessApi
+from beemapi.exceptions import NoAccessApi, NoApiWithName
 from beemgraphenebase.account import PrivateKey, PublicKey
 from beembase import transactions, operations
 from .account import Account
@@ -233,15 +233,8 @@ class Steem(object):
             return self.data['dynamic_global_properties']
         if self.rpc is None:
             return None
-        count = 0
-        ret = None
-        while ret is None and count < 2:
-            try:
-                ret = self.rpc.get_dynamic_global_properties(api="database")
-            except:
-                ret = None
-            count += 1
-        return ret
+        self.rpc.set_next_node_on_empty_reply(True)
+        return self.rpc.get_dynamic_global_properties(api="database")
 
     def get_reserve_ratio(self, use_stored_data=True):
         """ This call returns the *dynamic global properties*
@@ -254,21 +247,16 @@ class Steem(object):
 
         if self.rpc is None:
             return None
-        count = 0
-        ret = None
-        while ret is None and count < 2:
-            try:
-                if self.rpc.get_use_appbase():
-                    return self.rpc.get_reserve_ratio(api="witness")
-                else:
-                    props = self.get_dynamic_global_properties()
-                    return {'id': 0, 'average_block_size': props['average_block_size'],
-                            'current_reserve_ratio': props['current_reserve_ratio'],
-                            'max_virtual_bandwidth': props['max_virtual_bandwidth']}
-            except:
-                ret = None
-            count += 1
-        return ret
+        self.rpc.set_next_node_on_empty_reply(True)
+        if self.rpc.get_use_appbase():
+            return self.rpc.get_reserve_ratio(api="witness")
+        else:
+            props = self.get_dynamic_global_properties()
+            # conf = self.get_config()
+            reserve_ratio = {'id': 0, 'average_block_size': props['average_block_size'],
+                             'current_reserve_ratio': props['current_reserve_ratio'],
+                             'max_virtual_bandwidth': props['max_virtual_bandwidth']}
+            return reserve_ratio
 
     def get_feed_history(self, use_stored_data=True):
         """ Returns the feed_history
@@ -280,15 +268,8 @@ class Steem(object):
             return self.data['feed_history']
         if self.rpc is None:
             return None
-        count = 0
-        ret = None
-        while ret is None and count < 2:
-            try:
-                ret = self.rpc.get_feed_history(api="database")
-            except:
-                ret = None
-            count += 1
-        return ret
+        self.rpc.set_next_node_on_empty_reply(True)
+        return self.rpc.get_feed_history(api="database")
 
     def get_reward_funds(self, use_stored_data=True):
         """ Get details for a reward fund.
@@ -301,20 +282,15 @@ class Steem(object):
 
         if self.rpc is None:
             return None
-        count = 0
         ret = None
-        while ret is None and count < 2:
-            try:
-                if self.rpc.get_use_appbase():
-                    funds = self.rpc.get_reward_funds(api="database")['funds']
-                    if len(funds) > 0:
-                        funds = funds[0]
-                    ret = funds
-                else:
-                    ret = self.rpc.get_reward_fund("post")
-            except:
-                ret = None
-            count += 1
+        self.rpc.set_next_node_on_empty_reply(True)
+        if self.rpc.get_use_appbase():
+            funds = self.rpc.get_reward_funds(api="database")['funds']
+            if len(funds) > 0:
+                funds = funds[0]
+            ret = funds
+        else:
+            ret = self.rpc.get_reward_fund("post", api="database")
         return ret
 
     def get_current_median_history(self, use_stored_data=True):
@@ -330,17 +306,12 @@ class Steem(object):
                 return None
         if self.rpc is None:
             return None
-        count = 0
         ret = None
-        while ret is None and count < 2:
-            try:
-                if self.rpc.get_use_appbase():
-                    ret = self.rpc.get_feed_history(api="database")['current_median_history']
-                else:
-                    ret = self.rpc.get_current_median_history_price(api="database")
-            except:
-                ret = None
-            count += 1
+        self.rpc.set_next_node_on_empty_reply(True)
+        if self.rpc.get_use_appbase():
+            ret = self.rpc.get_feed_history(api="database")['current_median_history']
+        else:
+            ret = self.rpc.get_current_median_history_price(api="database")
         return ret
 
     def get_hardfork_properties(self, use_stored_data=True):
@@ -353,17 +324,13 @@ class Steem(object):
             return self.data['hardfork_properties']
         if self.rpc is None:
             return None
-        count = 0
         ret = None
-        while ret is None and count < 2:
-            try:
-                if self.rpc.get_use_appbase():
-                    ret = self.rpc.get_hardfork_properties(api="database")
-                else:
-                    ret = self.rpc.get_next_scheduled_hardfork(api="database")
-            except:
-                ret = None
-            count += 1
+        self.rpc.set_next_node_on_empty_reply(True)
+        if self.rpc.get_use_appbase():
+            ret = self.rpc.get_hardfork_properties(api="database")
+        else:
+            ret = self.rpc.get_next_scheduled_hardfork(api="database")
+
         return ret
 
     def get_network(self, use_stored_data=True):
@@ -576,15 +543,8 @@ class Steem(object):
 
         if self.rpc is None:
             return None
-        count = 0
-        ret = None
-        while ret is None and count < 2:
-            try:
-                ret = self.rpc.get_witness_schedule(api="database")
-            except:
-                ret = None
-            count += 1
-        return ret
+        self.rpc.set_next_node_on_empty_reply(True)
+        return self.rpc.get_witness_schedule(api="database")
 
     def get_config(self, use_stored_data=True):
         """ Returns internal chain configuration.
@@ -594,20 +554,13 @@ class Steem(object):
             return self.data['config']
         if self.rpc is None:
             return None
-        count = 0
-        ret = None
-        while ret is None and count < 2:
-            try:
-                ret = self.rpc.get_config(api="database")
-            except:
-                ret = None
-            count += 1
-        return ret
+        self.rpc.set_next_node_on_empty_reply(True)
+        return self.rpc.get_config(api="database")
 
     @property
     def chain_params(self):
         if self.offline:
-            from beembase.chains import known_chains
+            from beemgraphenebase.chains import known_chains
             return known_chains["STEEM"]
         else:
             return self.rpc.chain_params

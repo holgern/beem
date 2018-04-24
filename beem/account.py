@@ -539,41 +539,51 @@ class Account(BlockchainObject):
             self.full = True
             self.refresh()
 
-    def get_bandwidth(self, bandwidth_type=1, account=None, raw_data=False):
+    def get_account_bandwidth(self, bandwidth_type=1, account=None):
         """ get_account_bandwidth """
         if account is None:
             account = self["name"]
-        if raw_data and self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.get_account_bandwidth({'account': account, 'type': 'post'}, api="witness")
-        elif raw_data and not self.steem.rpc.get_use_appbase():
+        if self.steem.rpc.get_use_appbase():
+            # return self.steem.rpc.get_account_bandwidth({'account': account, 'type': 'post'}, api="witness")
             return self.steem.rpc.get_account_bandwidth(account, bandwidth_type)
         else:
-            global_properties = self.steem.get_dynamic_global_properties()
-            reserve_ratio = self.steem.get_reserve_ratio()
-            received_vesting_shares = self["received_vesting_shares"].amount
-            vesting_shares = self["vesting_shares"].amount
-            max_virtual_bandwidth = float(reserve_ratio["max_virtual_bandwidth"])
-            total_vesting_shares = Amount(global_properties["total_vesting_shares"], steem_instance=self.steem).amount
-            allocated_bandwidth = (max_virtual_bandwidth * (vesting_shares + received_vesting_shares) / total_vesting_shares)
-            allocated_bandwidth = round(allocated_bandwidth / 1000000)
-            if self.steem.rpc.get_use_appbase():
+            return self.steem.rpc.get_account_bandwidth(account, bandwidth_type)
+
+    def get_bandwidth(self):
+        """Returns used and allocated bandwidth"""
+        account = self["name"]
+        global_properties = self.steem.get_dynamic_global_properties()
+        reserve_ratio = self.steem.get_reserve_ratio()
+        received_vesting_shares = self["received_vesting_shares"].amount
+        vesting_shares = self["vesting_shares"].amount
+        max_virtual_bandwidth = float(reserve_ratio["max_virtual_bandwidth"])
+        total_vesting_shares = Amount(global_properties["total_vesting_shares"], steem_instance=self.steem).amount
+        allocated_bandwidth = (max_virtual_bandwidth * (vesting_shares + received_vesting_shares) / total_vesting_shares)
+        allocated_bandwidth = round(allocated_bandwidth / 1000000)
+        if self.steem.rpc.get_use_appbase():
+            account_bandwidth = self.get_account_bandwidth(bandwidth_type=1, account=account)
+            if account_bandwidth is None:
                 return {"used": 0,
                         "allocated": allocated_bandwidth}
-            total_seconds = 604800
-            date_bandwidth = (self["last_bandwidth_update"])
-            utc = pytz.timezone('UTC')
-            seconds_since_last_update = utc.localize(datetime.utcnow()) - date_bandwidth
-            seconds_since_last_update = seconds_since_last_update.total_seconds()
+            last_bandwidth_update = formatTimeString(account_bandwidth["last_bandwidth_update"])
+            average_bandwidth = float(account_bandwidth["average_bandwidth"])
+        else:
+            last_bandwidth_update = (self["last_bandwidth_update"])
             average_bandwidth = float(self["average_bandwidth"])
-            used_bandwidth = 0
-            if seconds_since_last_update < total_seconds:
-                used_bandwidth = (((total_seconds - seconds_since_last_update) * average_bandwidth) / total_seconds)
-            used_bandwidth = round(used_bandwidth / 1000000)
+        total_seconds = 604800
 
-            return {"used": used_bandwidth,
-                    "allocated": allocated_bandwidth}
-            # print("bandwidth percent used: " + str(100 * used_bandwidth / allocated_bandwidth))
-            # print("bandwidth percent remaining: " + str(100 - (100 * used_bandwidth / allocated_bandwidth)))
+        utc = pytz.timezone('UTC')
+        seconds_since_last_update = utc.localize(datetime.utcnow()) - last_bandwidth_update
+        seconds_since_last_update = seconds_since_last_update.total_seconds()
+        used_bandwidth = 0
+        if seconds_since_last_update < total_seconds:
+            used_bandwidth = (((total_seconds - seconds_since_last_update) * average_bandwidth) / total_seconds)
+        used_bandwidth = round(used_bandwidth / 1000000)
+
+        return {"used": used_bandwidth,
+                "allocated": allocated_bandwidth}
+        # print("bandwidth percent used: " + str(100 * used_bandwidth / allocated_bandwidth))
+        # print("bandwidth percent remaining: " + str(100 - (100 * used_bandwidth / allocated_bandwidth)))
 
     def get_owner_history(self, account=None):
         """ get_owner_history """
