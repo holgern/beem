@@ -16,19 +16,32 @@ executed in the same order as they are added to the transaction.
   from pprint import pprint
   from beem import Steem
   from beem.account import Account
+  from beem.comment import Comment
+  from beem.instance import set_shared_steem_instance
 
+  # Only for testing not a real working key
+  wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
+
+  # set nobroadcast always to True, when testing
   testnet = Steem(
       nobroadcast=True,
       bundle=True,
+      keys=[wif],
   )
-  
-  account = Account("test", steem_instance=testnet)
-  account.steem.wallet.unlock("supersecret")
+  # Set testnet as shared instance
+  set_shared_steem_instance(testnet)
 
-  account.transfer("test1", 1, "STEEM", account="test")
-  account.transfer("test1", 1, "STEEM", account="test")
-  account.transfer("test1", 1, "STEEM", account="test")
-  account.transfer("test1", 1, "STEEM", account="test")
+  # Account and Comment will use now testnet
+  account = Account("test")
+
+  # Post 
+  c = Comment("@gtg/witness-gtg-log")
+
+  account.transfer("test1", 1, "STEEM")
+  account.transfer("test2", 1, "STEEM")
+  account.transfer("test3", 1, "SBD")
+  # Upvote post with 25%
+  c.upvote(25, voter=account)
 
   pprint(testnet.broadcast())
 
@@ -42,25 +55,24 @@ Simple Sell Script
     from beem.market import Market
     from beem.price import Price
     from beem.amount import Amount
-
+    
+    # Only for testing not a real working key
+    wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
+  
     #
     # Instanciate Steem (pick network via API node)
     #
     steem = Steem(
-        nobroadcast=True   # <<--- set this to False when you want to fire!
+        nobroadcast=True,   # <<--- set this to False when you want to fire!
+        keys=[wif]          # <<--- use your real keys, when going live!
     )
-
-    #
-    # Unlock the Wallet
-    #
-    steem.wallet.unlock("<supersecret>")
 
     #
     # This defines the market we are looking at.
     # The first asset in the first argument is the *quote*
     # Sell and buy calls always refer to the *quote*
     #
-    market = Market(
+    market = Market("SBD:STEEM",
         steem_instance=steem
     )
 
@@ -69,7 +81,7 @@ Simple Sell Script
     #
     print(market.sell(
         Price(100.0, "STEEM/SBD"),
-        Amount("0.01 STEEM")
+        Amount("0.01 SBD")
     ))
 
 
@@ -84,13 +96,15 @@ Sell at a timely rate
     from beem.price import Price
     from beem.amount import Amount
 
+    # Only for testing not a real working key
+    wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
     def sell():
         """ Sell an asset for a price with amount (quote)
         """
         print(market.sell(
-            Price(100.0, "USD/GOLD"),
-            Amount("0.01 GOLD")
+            Price(100.0, "SBD/STEEM"),
+            Amount("0.01 STEEM")
         ))
 
         threading.Timer(60, sell).start()
@@ -101,20 +115,16 @@ Sell at a timely rate
         # Instanciate Steem (pick network via API node)
         #
         steem = Steem(
-            nobroadcast=True   # <<--- set this to False when you want to fire!
+            nobroadcast=True,   # <<--- set this to False when you want to fire!
+            keys=[wif]          # <<--- use your real keys, when going live!
         )
-
-        #
-        # Unlock the Wallet
-        #
-        steem.wallet.unlock("<supersecret>")
 
         #
         # This defines the market we are looking at.
         # The first asset in the first argument is the *quote*
         # Sell and buy calls always refer to the *quote*
         #
-        market = Market(
+        market = Market("STEEM:SBD",
             steem_instance=steem
         )
 

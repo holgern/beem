@@ -858,6 +858,28 @@ class Account(BlockchainObject):
                 The full list of operation ID's can be found in
                 beembase.operationids.ops.
                 Example: ['transfer', 'vote']
+
+            Example::
+                from beem.account import Account
+                from beem.blockchain import Blockchain
+                from datetime import datetime
+                acc = Account("test")
+                max_op_count = acc.virtual_op_count()
+                # Returns the 100 latest operations
+                for h in acc.history(start=max_op_count-100, stop=max_op_count, use_block_num=False):
+                    print(h)
+
+                b = Blockchain()
+                max_block = b.get_current_block_num()
+                # Returns the account operation inside the last 100 block. This can be empty.
+                for h in acc.history(start=max_block-100, stop=max_block, use_block_num=True):
+                    print(h)
+
+                start_time = datetime(2018, 3, 1, 0, 0, 0)
+                stop_time = datetime(2018, 4, 1, 0, 0, 0)
+                # Returns the account operation from 1.4.2018 back to 1.3.2018
+                for h in acc.history(start=start_time, stop=stop_time):
+                    print(h)
         """
         _limit = batch_size
         max_index = self.virtual_op_count()
@@ -947,6 +969,29 @@ class Account(BlockchainObject):
                 The full list of operation ID's can be found in
                 beembase.operationids.ops.
                 Example: ['transfer', 'vote']
+
+            Example::
+                from beem.account import Account
+                from beem.blockchain import Blockchain
+                from datetime import datetime
+                acc = Account("test")
+                max_op_count = acc.virtual_op_count()
+                # Returns the 100 latest operations
+                for h in acc.history_reverse(start=max_op_count, stop=max_op_count-100, use_block_num=False):
+                    print(h)
+
+                b = Blockchain()
+                max_block = b.get_current_block_num()
+                # Returns the account operation inside the last 100 block. This can be empty.
+                for h in acc.history_reverse(start=max_block, stop=max_block-100, use_block_num=True):
+                    print(h)
+
+                start_time = datetime(2018, 4, 1, 0, 0, 0)
+                stop_time = datetime(2018, 3, 1, 0, 0, 0)
+                # Returns the account operation from 1.4.2018 back to 1.3.2018
+                for h in acc.history_reverse(start=start_time, stop=stop_time):
+                    print(h)
+
         """
         _limit = batch_size
         first = self.virtual_op_count()

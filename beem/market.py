@@ -4,8 +4,9 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
-from beem.instance import shared_steem_instance
+import random
 from datetime import datetime, timedelta
+from beem.instance import shared_steem_instance
 from .utils import (
     formatTimeFromNow, formatTime, formatTimeString, assets_from_string, parse_time)
 from .asset import Asset
@@ -13,7 +14,6 @@ from .amount import Amount
 from .price import Price, Order, FilledOrder
 from .account import Account
 from beembase import operations
-import random
 
 
 class Market(dict):
@@ -32,26 +32,26 @@ class Market(dict):
         This class tries to identify **two** assets as provided in the
         parameters in one of the following forms:
 
-        * ``base`` and ``quote`` are valid assets (according to :class:`steem.asset.Asset`)
+        * ``base`` and ``quote`` are valid assets (according to :class:`beem.asset.Asset`)
         * ``base:quote`` separated with ``:``
         * ``base/quote`` separated with ``/``
         * ``base-quote`` separated with ``-``
 
         .. note:: Throughout this library, the ``quote`` symbol will be
-                  presented first (e.g. ``USD:BTS`` with ``USD`` being the
+                  presented first (e.g. ``STEEM:SBD`` with ``STEEM`` being the
                   quote), while the ``base`` only refers to a secondary asset
                   for a trade. This means, if you call
-                  :func:`steem.market.Market.sell` or
-                  :func:`steem.market.Market.buy`, you will sell/buy **only
+                  :func:`beem.market.Market.sell` or
+                  :func:`beem.market.Market.buy`, you will sell/buy **only
                   quote** and obtain/pay **only base**.
 
     """
 
     def __init__(
         self,
+        base=None,
+        quote=None,
         steem_instance=None,
-        *args,
-        **kwargs
     ):
         """
         Init Market
@@ -61,17 +61,45 @@ class Market(dict):
             :param beem.asset.Asset quote: Quote asset
         """
         self.steem = steem_instance or shared_steem_instance()
-        base = kwargs.get("base", Asset("SBD", steem_instance=self.steem))
-        quote = kwargs.get("quote", Asset("STEEM", steem_instance=self.steem))
 
-        super(Market, self).__init__({"base": base, "quote": quote})
+        if quote is None and isinstance(base, str):
+            quote_symbol, base_symbol = assets_from_string(base)
+            quote = Asset(quote_symbol, steem_instance=self.steem)
+            base = Asset(base_symbol, steem_instance=self.steem)
+            super(Market, self).__init__({"base": base, "quote": quote})
+        elif base and quote:
+            quote = Asset(quote, steem_instance=self.steem)
+            base = Asset(base, steem_instance=self.steem)
+            super(Market, self).__init__({"base": base, "quote": quote})
+        elif base is None and quote is None:
+            quote = Asset("SBD", steem_instance=self.steem)
+            base = Asset("STEEM", steem_instance=self.steem)
+            super(Market, self).__init__({"base": base, "quote": quote})
+        else:
+            raise ValueError("Unknown Market config")
 
     def get_string(self, separator=":"):
-        """ Return a formated string that identifies the market, e.g. ``USD:BTS``
+        """ Return a formated string that identifies the market, e.g. ``STEEM:SBD``
 
             :param str separator: The separator of the assets (defaults to ``:``)
         """
         return "%s%s%s" % (self["quote"]["symbol"], separator, self["base"]["symbol"])
+
+    def __eq__(self, other):
+        if isinstance(other, str):
+            quote_symbol, base_symbol = assets_from_string(other)
+            return (
+                self["quote"]["symbol"] == quote_symbol and
+                self["base"]["symbol"] == base_symbol
+            ) or (
+                self["quote"]["symbol"] == base_symbol and
+                self["base"]["symbol"] == quote_symbol
+            )
+        elif isinstance(other, Market):
+            return (
+                self["quote"]["symbol"] == other["quote"]["symbol"] and
+                self["base"]["symbol"] == other["base"]["symbol"]
+            )
 
     def ticker(self, raw_data=False):
         """ Returns the ticker for all markets.

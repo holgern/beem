@@ -102,7 +102,7 @@ Quickstart
 .. code-block:: python
 
    from beem.market import Market
-   market = Market()
+   market = Market("SBD:STEEM")
    print(market.ticker())
    market.steem.wallet.unlock("wallet-passphrase")
    print(market.sell(300, 100)  # sell 100 STEEM for 300 STEEM/SBD
