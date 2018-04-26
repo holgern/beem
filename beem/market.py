@@ -5,10 +5,11 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
 import random
+import pytz
 from datetime import datetime, timedelta
 from beem.instance import shared_steem_instance
 from .utils import (
-    formatTimeFromNow, formatTime, formatTimeString, assets_from_string, parse_time)
+    formatTimeFromNow, formatTime, formatTimeString, assets_from_string, parse_time, addTzInfo)
 from .asset import Asset
 from .amount import Amount
 from .price import Price, Order, FilledOrder
@@ -106,31 +107,26 @@ class Market(dict):
 
             Output Parameters:
 
-            * ``last``: Price of the order last filled
-            * ``lowestAsk``: Price of the lowest ask
-            * ``highestBid``: Price of the highest bid
-            * ``baseVolume``: Volume of the base asset
-            * ``quoteVolume``: Volume of the quote asset
-            * ``percentChange``: 24h change percentage (in %)
-            * ``settlement_price``: Settlement Price for borrow/settlement
-            * ``core_exchange_rate``: Core exchange rate for payment of fee in non-BTS asset
-            * ``price24h``: the price 24h ago
+            * ``latest``: Price of the order last filled
+            * ``lowest_ask``: Price of the lowest ask
+            * ``highest_bid``: Price of the highest bid
+            * ``sbd_volume``: Volume of SBD
+            * ``steem_volume``: Volume of STEEM
+            * ``percent_change``: 24h change percentage (in %)
+
+            .. note::
+                Market is STEEM:SBD and prices are SBD per STEEM!
 
             Sample Output:
 
             .. code-block:: js
 
-                {
-                    {
-                        "quoteVolume": 48328.73333,
-                        "quoteSettlement_price": 332.3344827586207,
-                        "lowestAsk": 340.0,
-                        "baseVolume": 144.1862,
-                        "percentChange": -1.9607843231354893,
-                        "highestBid": 334.20000000000005,
-                        "latest": 333.33333330133934,
-                    }
-                }
+                 {'highest_bid': 0.30100226633322913,
+                  'latest': 0.0,
+                  'lowest_ask': 0.3249636958897082,
+                  'percent_change': 0.0,
+                  'sbd_volume': 108329611.0,
+                  'steem_volume': 355094043.0}
 
         """
         data = {}
@@ -141,15 +137,7 @@ class Market(dict):
         if raw_data:
             return ticker
 
-        data["sbdVolume"] = Amount(ticker["sbd_volume"], steem_instance=self.steem)
-        data["steemVolume"] = Amount(ticker["steem_volume"], steem_instance=self.steem)
-        data["lowestAsk"] = Price(
-            ticker["lowest_ask"],
-            base=self["base"],
-            quote=self["quote"],
-            steem_instance=self.steem
-        )
-        data["highestBid"] = Price(
+        data["highest_bid"] = Price(
             ticker["highest_bid"],
             base=self["base"],
             quote=self["quote"],
@@ -161,7 +149,15 @@ class Market(dict):
             base=self["base"],
             steem_instance=self.steem
         )
-        data["percentChange"] = float(ticker["percent_change"])
+        data["lowest_ask"] = Price(
+            ticker["lowest_ask"],
+            base=self["base"],
+            quote=self["quote"],
+            steem_instance=self.steem
+        )
+        data["percent_change"] = float(ticker["percent_change"])
+        data["sbd_volume"] = Amount(ticker["sbd_volume"], steem_instance=self.steem)
+        data["steem_volume"] = Amount(ticker["steem_volume"], steem_instance=self.steem)
 
         return data
 
@@ -173,8 +169,8 @@ class Market(dict):
             .. code-block:: js
 
                 {
-                    "BTS": 361666.63617,
-                    "USD": 1087.0
+                    "STEEM": 361666.63617,
+                    "SBD": 1087.0
                 }
 
         """
@@ -188,8 +184,7 @@ class Market(dict):
         }
 
     def orderbook(self, limit=25, raw_data=False):
-        """ Returns the order book for a given market. You may also
-            specify "all" to get the orderbooks of all markets.
+        """ Returns the order book for SBD/STEEM market.
             :param int limit: Limit the amount of orders (default: 25)
             Sample output:
             .. code-block:: js
@@ -204,7 +199,7 @@ class Market(dict):
                 0.003772 USD/BTS (4.5200 USD|1198.14798 BTS),
                 0.003799 USD/BTS (148.4975 USD|39086.59741 BTS)]}
             .. note:: Each bid is an instance of
-                class:`steem.price.Order` and thus carries the keys
+                class:`beem.price.Order` and thus carries the keys
                 ``base``, ``quote`` and ``price``. From those you can
                 obtain the actual amounts for sale
         """
@@ -266,20 +261,69 @@ class Market(dict):
         filled_order = list([FilledOrder(x, steem_instance=self.steem) for x in orders])
         return filled_order
 
-    def trades(self, limit=25, start=None, stop=None, raw_data=False):
+    def trade_history(self, start=None, stop=None, intervall=None, limit=25, raw_data=False):
+        """ Returns the trade history for the internal market
+
+            This function allows to fetch a fixed number of trades at fixed
+            intervall times to reduce the call duration time. E.g. it is possible to
+            receive the trades from the last 7 days, by fetching 100 trades each 6 hours.
+
+            When intervall is set to None, all trades are recieved between start and stop.
+            This can take a while.
+
+            :param datetime start: Start date
+            :param datetime stop: Stop date
+            :param timedelta intervall: Defines the intervall
+            :param int limit: Defines how many trades are fetched at each intervall point
+            :param bool raw_data: when True, the raw data are returned
+        """
+        utc = pytz.timezone('UTC')
+        if not stop:
+            stop = utc.localize(datetime.utcnow())
+        if not start:
+            start = stop - timedelta(hours=1)
+        start = addTzInfo(start)
+        stop = addTzInfo(stop)
+        current_start = start
+        filled_order = []
+        fo = self.trades(start=current_start, stop=stop, limit=limit, raw_data=raw_data)
+        if intervall is None and len(fo) > 0:
+            current_start = fo[-1]["date"]
+            filled_order += fo
+        elif intervall is not None:
+            current_start += intervall
+            filled_order += [fo]
+        last_date = fo[-1]["date"]
+        while (len(fo) > 0 and last_date < stop):
+            fo = self.trades(start=current_start, stop=stop, limit=limit, raw_data=raw_data)
+            if len(fo) == 0 or fo[-1]["date"] == last_date:
+                break
+            last_date = fo[-1]["date"]
+            if intervall is None:
+                current_start = last_date
+                filled_order += fo
+            else:
+                current_start += intervall
+                filled_order += [fo]
+        return filled_order
+
+    def trades(self, limit=100, start=None, stop=None, raw_data=False):
         """ Returns your trade history for a given market.
 
-            :param int limit: Limit the amount of orders (default: 25)
+            :param int limit: Limit the amount of orders (default: 100)
             :param datetime start: start time
             :param datetime stop: stop time
 
         """
         # FIXME, this call should also return whether it was a buy or
         # sell
+        utc = pytz.timezone('UTC')
         if not stop:
-            stop = datetime.now()
+            stop = utc.localize(datetime.utcnow())
         if not start:
             start = stop - timedelta(hours=24)
+        start = addTzInfo(start)
+        stop = addTzInfo(stop)
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             orders = self.steem.rpc.get_trade_history({'start': formatTimeString(start),
@@ -304,6 +348,29 @@ class Market(dict):
             return ret
 
     def market_history(self, bucket_seconds=300, start_age=3600, end_age=0):
+        """ Return the market history (filled orders).
+            :param int bucket_seconds: Bucket size in seconds (see
+            `returnMarketHistoryBuckets()`)
+            :param int start_age: Age (in seconds) of the start of the
+            window (default: 1h/3600)
+            :param int end_age: Age (in seconds) of the end of the window
+            (default: now/0)
+            Example:
+            .. code-block:: js
+                 {'close_sbd': 2493387,
+                  'close_steem': 7743431,
+                  'high_sbd': 1943872,
+                  'high_steem': 5999610,
+                  'id': '7.1.5252',
+                  'low_sbd': 534928,
+                  'low_steem': 1661266,
+                  'open': '2016-07-08T11:25:00',
+                  'open_sbd': 534928,
+                  'open_steem': 1661266,
+                  'sbd_volume': 9714435,
+                  'seconds': 300,
+                  'steem_volume': 30088443},
+        """
         buckets = self.market_history_buckets()
         if bucket_seconds < 5 and bucket_seconds >= 0:
             bucket_seconds = buckets[bucket_seconds]

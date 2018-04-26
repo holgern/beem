@@ -22,6 +22,11 @@ from .exceptions import (
 )
 from beemapi.exceptions import NoAccessApi
 from .storage import configStorage as config
+try:
+    import keyring
+    KEYRING_AVAILABLE = True
+except ImportError:
+    KEYRING_AVAILABLE = False
 
 log = logging.getLogger(__name__)
 
@@ -172,10 +177,19 @@ class Wallet(object):
                 self.masterpassword = self.masterpwd.decrypted_master
 
     def tryUnlockFromEnv(self):
+        """Try to fetch the unlock password first from 'UNLOCK' environment variable
+            and then from the keyring module keyring.get_password('beem', 'wallet')
+
+            In order to use this, you have to store the password in the 'UNLOCK' variable
+            or in the keyring by python -m keyring set beem wallet
+        """
         if "UNLOCK" in os.environ:
             log.debug("Trying to use environmental variable to unlock wallet")
             pwd = os.environ.get("UNLOCK")
             self.unlock(pwd)
+        elif KEYRING_AVAILABLE:
+            log.debug("Trying to use keyring to unlock wallet")
+            pwd = keyring.get_password("beem", "wallet")
         else:
             raise WrongMasterPasswordException
 
