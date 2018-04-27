@@ -284,7 +284,7 @@ class Comment(BlockchainObject):
         vote_weight = int(weight * STEEMIT_1_PERCENT)
         if vote_weight > STEEMIT_100_PERCENT:
             vote_weight = STEEMIT_100_PERCENT
-        if vote_weight < STEEMIT_100_PERCENT:
+        if vote_weight < -STEEMIT_100_PERCENT:
             vote_weight = -STEEMIT_100_PERCENT
 
         op = operations.Vote(
