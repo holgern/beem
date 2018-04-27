@@ -39,7 +39,7 @@ class Testcases(unittest.TestCase):
         result = runner.invoke(cli, ['-o', 'set', 'nodes', 'wss://testnet.steem.vc'])
         if result.exit_code != 0:
             raise AssertionError(str(result))
-        result = runner.invoke(cli, ['createwallet'], input="y\ntest\ntest\n")
+        result = runner.invoke(cli, ['createwallet', '--wipe'], input="test\ntest\n")
         if result.exit_code != 0:
             raise AssertionError(str(result))
         result = runner.invoke(cli, ['addkey'], input="test\n" + wif + "\n")
@@ -74,7 +74,7 @@ class Testcases(unittest.TestCase):
 
     def test_addkey(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['createwallet'], input="y\ntest\ntest\n")
+        result = runner.invoke(cli, ['createwallet', '--wipe'], input="test\ntest\n")
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['addkey'], input="test\n" + wif + "\n")
         self.assertEqual(result.exit_code, 0)

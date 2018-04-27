@@ -229,22 +229,55 @@ def nextnode(results):
 @click.option(
     '--raw', is_flag=True, default=False,
     help="Returns only the raw value")
-def pingnode(raw):
+@click.option(
+    '--sort', is_flag=True, default=False,
+    help="Sort all nodes by ping value")
+@click.option(
+    '--remove', is_flag=True, default=False,
+    help="Remove node with errors from list")
+def pingnode(raw, sort, remove):
     """ Returns the answer time in milliseconds
     """
     stm = shared_steem_instance()
-    start = timer()
-    stm.get_config(use_stored_data=False)
-    stop = timer()
-    rpc_answer_time = stop - start
-    rpc_time_str = "%.2f" % (rpc_answer_time * 1000)
-    if raw:
-        print(rpc_time_str)
-        return
-    t = PrettyTable(["Node", "Answer time [ms]"])
-    t.align = "l"
-    t.add_row([stm.rpc.url, rpc_time_str])
-    print(t)
+    nodes = stm.get_default_nodes()
+    if not raw:
+        t = PrettyTable(["Node", "Answer time [ms]"])
+        t.align = "l"
+    if sort:
+        ping_times = []
+        for node in nodes:
+            try:
+                stm_local = Steem(node=node, num_retries=2, num_retries_call=3, timeout=5)
+                start = timer()
+                stm_local.get_config(use_stored_data=False)
+                stop = timer()
+                rpc_answer_time = stop - start
+                ping_times.append(rpc_answer_time)
+            except:
+                ping_times.append(float("inf"))
+        sorted_arg = sorted(range(len(ping_times)), key=ping_times.__getitem__)
+        sorted_nodes = []
+        for i in sorted_arg:
+            if not remove or ping_times[i] != float("inf"):
+                sorted_nodes.append(nodes[i])
+        stm.set_default_nodes(sorted_nodes)
+        if not raw:
+            for i in sorted_arg:
+                t.add_row([nodes[i], "%.2f" % (ping_times[i] * 1000)])
+            print(t)
+        else:
+            print(ping_times[sorted_arg])
+    else:
+        start = timer()
+        stm.get_config(use_stored_data=False)
+        stop = timer()
+        rpc_answer_time = stop - start
+        rpc_time_str = "%.2f" % (rpc_answer_time * 1000)
+        if raw:
+            print(rpc_time_str)
+            return
+        t.add_row([stm.rpc.url, rpc_time_str])
+        print(t)
 
 
 @cli.command()
@@ -304,17 +337,21 @@ def config():
 
 
 @cli.command()
-def createwallet():
+@click.option('--wipe', is_flag=True, default=False,
+              help="Wipe old wallet without prompt.")
+def createwallet(wipe):
     """ Create new wallet with a new password
     """
     stm = shared_steem_instance()
-    if stm.wallet.created():
+    if stm.wallet.created() and not wipe:
         wipe_answer = click.prompt("'Do you want to wipe your wallet? Are your sure? This is IRREVERSIBLE! If you dont have a backup you may lose access to your account! [y/n]",
                                    default="n")
         if wipe_answer in ["y", "ye", "yes"]:
             stm.wallet.wipe(True)
         else:
             return
+    elif wipe:
+        stm.wallet.wipe(True)
     password = None
     password = click.prompt("New wallet password", confirmation_prompt=True, hide_input=True)
     if not bool(password):
