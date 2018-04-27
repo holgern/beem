@@ -30,7 +30,7 @@ class Comment(BlockchainObject):
     def __init__(
         self,
         authorperm,
-        full=False,
+        full=True,
         lazy=False,
         steem_instance=None
     ):

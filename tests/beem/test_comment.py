@@ -38,14 +38,8 @@ class Testcases(unittest.TestCase):
         cls.title = 'gtg witness log'
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
-        set_shared_steem_instance(cls.bts)
-        cls.bts.set_default_account("test")
-        cnt = 0
-        title = ''
-        while cnt < 5 and title == '':
-            c = Comment(cls.authorperm, steem_instance=cls.bts)
-            title = c["title"]
-            cls.bts.rpc.next()
+        # set_shared_steem_instance(cls.bts)
+        # cls.bts.set_default_account("test")
 
     @parameterized.expand([
         ("non_appbase"),
@@ -107,7 +101,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual(op["weight"], 10000)
         tx = c.upvote(weight=99.9, voter="test")
         op = tx["operations"][0][1]
-        self.assertEqual(op["weight"], 9990)        
+        self.assertEqual(op["weight"], 9990)
         tx = c.downvote(weight=-150, voter="test")
         op = tx["operations"][0][1]
         self.assertEqual(op["weight"], -10000)
