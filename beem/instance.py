@@ -8,6 +8,7 @@ import beem as stm
 
 
 class SharedInstance(object):
+    """Singelton for the Steem Instance"""
     instance = None
     config = {}
 
@@ -58,3 +59,7 @@ def set_shared_config(config):
     if not isinstance(config, dict):
         raise AssertionError()
     SharedInstance.config = config
+    # if one is already set, delete
+    if SharedInstance.instance:
+        clear_cache()
+        SharedInstance.instance = None

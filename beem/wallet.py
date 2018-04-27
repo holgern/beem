@@ -180,12 +180,7 @@ class Wallet(object):
                 self.masterpassword = self.masterpwd.decrypted_master
 
     def tryUnlockFromEnv(self):
-        """Try to fetch the unlock password first from 'UNLOCK' environment variable.
-            This is only done, when steem.config['password_storage'] == 'environment'.
-            and then from the keyring module keyring.get_password('beem', 'wallet'),
-            when steem.config['password_storage'] == 'keyring'
-            In order to use this, you have to store the password in the 'UNLOCK' variable
-            or in the keyring by python -m keyring set beem wallet
+        """ Try to fetch the unlock password from UNLOCK environment variable and keyring when no password is given.
         """
         password_storage = self.steem.config["password_storage"]
         if password_storage == "environment" and "UNLOCK" in os.environ:

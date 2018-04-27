@@ -177,12 +177,15 @@ class Memo(object):
         if not memo_wif:
             raise MissingKeyError("Memo key for %s missing!" % self.from_account["name"])
 
+        if not hasattr(self, 'chain_prefix'):
+            self.chain_prefix = self.steem.prefix
+
         if bts_encrypt:
             enc = BtsMemo.encode_memo_bts(
                 PrivateKey(memo_wif),
                 PublicKey(
                     self.to_account["memo_key"],
-                    prefix=self.steem.prefix
+                    prefix=self.chain_prefix
                 ),
                 nonce,
                 memo
@@ -199,11 +202,11 @@ class Memo(object):
                 PrivateKey(memo_wif),
                 PublicKey(
                     self.to_account["memo_key"],
-                    prefix=self.steem.prefix
+                    prefix=self.chain_prefix
                 ),
                 nonce,
                 memo,
-                prefix=self.steem.prefix
+                prefix=self.chain_prefix
             )
 
             return {
@@ -255,6 +258,9 @@ class Memo(object):
                     "Need any of {}".format(
                     [memo_to["name"], memo_from["name"]]))
 
+        if not hasattr(self, 'chain_prefix'):
+            self.chain_prefix = self.steem.prefix
+
         if message[0] == '#':
             return BtsMemo.decode_memo(
                 PrivateKey(memo_wif),
@@ -263,7 +269,7 @@ class Memo(object):
         else:
             return BtsMemo.decode_memo_bts(
                 PrivateKey(memo_wif),
-                PublicKey(pubkey, prefix=self.steem.prefix),
+                PublicKey(pubkey, prefix=self.chain_prefix),
                 nonce,
                 message
             )

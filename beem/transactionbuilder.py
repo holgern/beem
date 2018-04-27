@@ -276,6 +276,7 @@ class TransactionBuilder(dict):
 
         signedtx.sign(self.wifs, chain=self.steem.rpc.chain_params)
         self["signatures"].extend(signedtx.json().get("signatures"))
+        return signedtx
 
     def verify_authority(self):
         """ Verify the authority of the signed transaction
