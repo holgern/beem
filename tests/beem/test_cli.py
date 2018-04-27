@@ -30,13 +30,27 @@ class Testcases(unittest.TestCase):
         stm = shared_steem_instance()
         stm.config.refreshBackup()
         runner = CliRunner()
-        runner.invoke(cli, ['-o', 'set', 'default_vote_weight', '100'])
-        runner.invoke(cli, ['-o', 'set', 'default_account', 'beem'])
-        runner.invoke(cli, ['-o', 'set', 'nodes', 'wss://testnet.steem.vc'])
-        runner.invoke(cli, ['createwallet'], input="y\ntest\ntest\n")
-        runner.invoke(cli, ['addkey'], input="test\n" + wif + "\n")
-        runner.invoke(cli, ['addkey'], input="test\n" + posting_key + "\n")
-        runner.invoke(cli, ['addkey'], input="test\n" + memo_key + "\n")
+        result = runner.invoke(cli, ['-o', 'set', 'default_vote_weight', '100'])
+        if result != 0:
+            raise AssertionError("setup failed!")
+        result = runner.invoke(cli, ['-o', 'set', 'default_account', 'beem'])
+        if result != 0:
+            raise AssertionError("setup failed!")        
+        result = runner.invoke(cli, ['-o', 'set', 'nodes', 'wss://testnet.steem.vc'])
+        if result != 0:
+            raise AssertionError("setup failed!")        
+        result = runner.invoke(cli, ['createwallet'], input="y\ntest\ntest\n")
+        if result != 0:
+            raise AssertionError("setup failed!")        
+        result = runner.invoke(cli, ['addkey'], input="test\n" + wif + "\n")
+        if result != 0:
+            raise AssertionError("setup failed!")        
+        result = runner.invoke(cli, ['addkey'], input="test\n" + posting_key + "\n")
+        if result != 0:
+            raise AssertionError("setup failed!")        
+        result = runner.invoke(cli, ['addkey'], input="test\n" + memo_key + "\n")
+        if result != 0:
+            raise AssertionError("setup failed!")        
 
     @classmethod
     def tearDownClass(cls):
