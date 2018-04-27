@@ -276,6 +276,7 @@ class Configuration(DataDir):
     nodes = get_node_list(appbase=False) + get_node_list(appbase=True)
     config_defaults = {
         "node": nodes,
+        "password_storage": "environment",
         "rpcpassword": "",
         "rpcuser": "",
         "order-expiration": 7 * 24 * 60 * 60}

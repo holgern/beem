@@ -256,12 +256,14 @@ class Testcases(unittest.TestCase):
 
     def test_orderbook(self):
         runner = CliRunner()
+        runner.invoke(cli, ['set', 'nodes', ''])
         result = runner.invoke(cli, ['orderbook'])
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['orderbook', '--date'])
+        result = runner.invoke(cli, ['orderbook', '--show-date'])
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['orderbook', '--chart'])
         self.assertEqual(result.exit_code, 0)
+        runner.invoke(cli, ['set', 'nodes', 'wss://testnet.steem.vc'])
 
     def test_buy(self):
         runner = CliRunner()
@@ -345,12 +347,14 @@ class Testcases(unittest.TestCase):
 
     def test_currentnode(self):
         runner = CliRunner()
+        runner.invoke(cli, ['set', 'nodes', ''])
         result = runner.invoke(cli, ['currentnode'])
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['currentnode', '--url'])
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['currentnode', '--version'])
         self.assertEqual(result.exit_code, 0)
+        runner.invoke(cli, ['set', 'nodes', 'wss://testnet.steem.vc'])
 
     def test_ticker(self):
         runner = CliRunner()
@@ -359,10 +363,14 @@ class Testcases(unittest.TestCase):
 
     def test_pricehistory(self):
         runner = CliRunner()
+        runner.invoke(cli, ['set', 'nodes', ''])
         result = runner.invoke(cli, ['pricehistory'])
         self.assertEqual(result.exit_code, 0)
+        runner.invoke(cli, ['set', 'nodes', 'wss://testnet.steem.vc'])
 
     def test_tradehistory(self):
         runner = CliRunner()
+        runner.invoke(cli, ['set', 'nodes', ''])
         result = runner.invoke(cli, ['tradehistory'])
         self.assertEqual(result.exit_code, 0)
+        runner.invoke(cli, ['set', 'nodes', 'wss://testnet.steem.vc'])

@@ -575,6 +575,21 @@ class Steem(object):
         Account(account, steem_instance=self)
         config["default_account"] = account
 
+    def set_password_storage(self, password_storage):
+        """ Set the password storage mode.
+
+            When set to "no", the password has to provided everytime.
+            When set to "environment" the password is taken from the
+                UNLOCK variable
+            When set to "keyring" the password is taken from the
+            python keyring module. A wallet password can be stored with
+            python -m keyring set beem wallet password
+            :param str password_storage: can be "no",
+                "keyring" or "environment"
+
+        """
+        config["password_storage"] = password_storage
+
     def set_default_nodes(self, nodes):
         """ Set the default nodes to be used
         """
@@ -598,6 +613,18 @@ class Steem(object):
         if isinstance(nodes, str) and nodes[0] == '[' and nodes[-1] == ']':
             nodes = ast.literal_eval(nodes)
         return nodes
+
+    def move_current_node_to_front(self):
+        """Returns the default node list, until the first entry
+            is equal to the current working node url
+        """
+        node = self.get_default_nodes()
+        if len(node) < 2:
+            return
+        offline = self.offline
+        while not offline and node[0] != self.rpc.url and len(node) > 1:
+            node = node[1:] + [node[0]]
+        self.set_default_nodes(node)
 
     def set_default_vote_weight(self, vote_weight):
         """ Set the default vote weight to be used

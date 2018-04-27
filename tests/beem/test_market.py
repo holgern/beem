@@ -72,8 +72,8 @@ class Testcases(unittest.TestCase):
         m = Market(u'STEEM:SBD', steem_instance=bts)
         ticker = m.ticker()
         self.assertEqual(len(ticker), 6)
-        self.assertEqual(ticker['steemVolume']["symbol"], u'STEEM')
-        self.assertEqual(ticker['sbdVolume']["symbol"], u'SBD')
+        self.assertEqual(ticker['steem_volume']["symbol"], u'STEEM')
+        self.assertEqual(ticker['sbd_volume']["symbol"], u'SBD')
 
     @parameterized.expand([
         ("non_appbase"),
@@ -132,7 +132,9 @@ class Testcases(unittest.TestCase):
         m = Market(u'STEEM:SBD', steem_instance=bts)
         trades = m.trades(limit=10)
         trades_raw = m.trades(limit=10, raw_data=True)
+        trades_history = m.trade_history(limit=10)
         self.assertEqual(len(trades), 10)
+        self.assertEqual(len(trades_history), 10)
         self.assertEqual(len(trades_raw), 10)
 
     @parameterized.expand([

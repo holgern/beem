@@ -40,7 +40,10 @@ click.disable_unicode_literals_warning = True
 log = logging.getLogger(__name__)
 try:
     import keyring
-    KEYRING_AVAILABLE = True
+    if not isinstance(keyring.get_keyring(), keyring.backends.fail.Keyring):
+        KEYRING_AVAILABLE = True
+    else:
+        KEYRING_AVAILABLE = False
 except ImportError:
     KEYRING_AVAILABLE = False
 
@@ -49,6 +52,7 @@ availableConfigurationKeys = [
     "default_account",
     "default_vote_weight",
     "nodes",
+    "password_storage"
 ]
 
 
@@ -74,9 +78,10 @@ def prompt_flag_callback(ctx, param, value):
 
 
 def unlock_wallet(stm, password=None):
-    if not password and KEYRING_AVAILABLE:
+    password_storage = stm.config["password_storage"]
+    if not password and KEYRING_AVAILABLE and password_storage == "keyring":
         password = keyring.get_password("beem", "wallet")
-    if not password:
+    if not password and password_storage == "environment":
         password = os.environ.get("UNLOCK")
     if bool(password):
         stm.wallet.unlock(password)
@@ -85,7 +90,12 @@ def unlock_wallet(stm, password=None):
         stm.wallet.unlock(password)
 
     if stm.wallet.locked():
-        print("Wallet could not be unlocked!")
+        if password_storage == "keyring" or password_storage == "environment":
+            print("Wallet could not be unlocked with %s!" % password_storage)
+            password = click.prompt("Password to unlock wallet", confirmation_prompt=False, hide_input=True)
+            unlock_wallet(stm, password=password)
+        else:
+            print("Wallet could not be unlocked!")
         return False
     else:
         print("Wallet Unlocked!")
@@ -161,21 +171,55 @@ def set(key, value):
             stm.set_default_nodes(value)
         else:
             stm.set_default_nodes("")
+    elif key == "password_storage":
+        stm.config["password_storage"] = value
+        if KEYRING_AVAILABLE and value == "keyring":
+            password = click.prompt("Password to unlock wallet (Will be stored in keyring)", confirmation_prompt=False, hide_input=True)
+            password = keyring.set_password("beem", "wallet", password)
+        elif KEYRING_AVAILABLE and value != "keyring":
+            try:
+                keyring.delete_password("beem", "wallet")
+            except keyring.errors.PasswordDeleteError:
+                print("")
+        if value == "environment":
+            print("The wallet password can be stored in the UNLOCK invironment variable to skip password prompt!")
     else:
         print("wrong key")
 
 
 @cli.command()
-def nextnode():
+@click.option('--results', is_flag=True, default=False, help="Shows result of changing the node.")
+def nextnode(results):
     """ Uses the next node in list
     """
     stm = shared_steem_instance()
+    stm.move_current_node_to_front()
     node = stm.get_default_nodes()
+    offline = stm.offline
     if len(node) < 2:
         print("At least two nodes are needed!")
         return
     node = node[1:] + [node[0]]
+    if not offline:
+        stm.rpc.next()
+        stm.get_blockchain_version()
+    while not offline and node[0] != stm.rpc.url and len(node) > 1:
+        node = node[1:] + [node[0]]
     stm.set_default_nodes(node)
+    if not results:
+        return
+
+    t = PrettyTable(["Key", "Value"])
+    t.align = "l"
+    if not offline:
+        t.add_row(["Node-Url", stm.rpc.url])
+    else:
+        t.add_row(["Node-Url", node[0]])
+    if not offline:
+        t.add_row(["Version", stm.get_blockchain_version()])
+    else:
+        t.add_row(["Version", "steempy is in offline mode..."])
+    print(t)
 
 
 @cli.command()
@@ -208,19 +252,31 @@ def pingnode(raw):
     '--url', is_flag=True, default=False,
     help="Returns only the raw url value")
 def currentnode(version, url):
-    """ Returns the current node
+    """ Sets the currently working node at the first place in the list
     """
     stm = shared_steem_instance()
-    if version:
+    offline = stm.offline
+    stm.move_current_node_to_front()
+    node = stm.get_default_nodes()
+    if version and not offline:
         print(stm.get_blockchain_version())
         return
-    if url:
+    elif version and offline:
+        print("Node is offline")
+        return
+    if url and not offline:
         print(stm.rpc.url)
         return
     t = PrettyTable(["Key", "Value"])
     t.align = "l"
-    t.add_row(["Node-Url", stm.rpc.url])
-    t.add_row(["Version", stm.get_blockchain_version()])
+    if not offline:
+        t.add_row(["Node-Url", stm.rpc.url])
+    else:
+        t.add_row(["Node-Url", node[0]])
+    if not offline:
+        t.add_row(["Version", stm.get_blockchain_version()])
+    else:
+        t.add_row(["Version", "steempy is in offline mode..."])
     print(t)
 
 
@@ -233,36 +289,39 @@ def config():
     t.align = "l"
     for key in stm.config:
         # hide internal config data
-        if key in availableConfigurationKeys:
+        if key in availableConfigurationKeys and key != "nodes" and key != "node":
             t.add_row([key, stm.config[key]])
     node = stm.get_default_nodes()
     nodes = json.dumps(node, indent=4)
     t.add_row(["nodes", nodes])
+    if "password_storage" not in availableConfigurationKeys:
+        t.add_row(["password_storage", stm.config["password_storage"]])
     t.add_row(["data_dir", stm.config.data_dir])
     print(t)
 
 
 @cli.command()
-@click.option(
-    '--wipe', is_flag=True, default=False,
-    prompt='Do you want to wipe your wallet? Are your sure? This is IRREVERSIBLE! If you dont have a backup you may lose access to your account!',
-    help="Delete old wallet. All wallet data are deleted!")
-@click.option('--password', prompt=True, hide_input=True,
-              confirmation_prompt=True)
-def createwallet(wipe, password):
-    """ Create new wallet with password
+def createwallet():
+    """ Create new wallet with a new password
     """
     stm = shared_steem_instance()
-    if wipe:
-        stm.wallet.wipe(True)
-    if not password and KEYRING_AVAILABLE:
-        password = keyring.get_password("beem", "wallet")
-    if not password:
-        password = os.environ.get("UNLOCK")
-    if bool(password):
-        stm.wallet.unlock(password)
-    else:
-        password = click.prompt("Password to unlock wallet", confirmation_prompt=False, hide_input=True)
+    if stm.wallet.created():
+        wipe_answer = click.prompt("'Do you want to wipe your wallet? Are your sure? This is IRREVERSIBLE! If you dont have a backup you may lose access to your account! [y/n]",
+                                   default="n")
+        if wipe_answer in ["y", "ye", "yes"]:
+            stm.wallet.wipe(True)
+        else:
+            return
+    password = None
+    password = click.prompt("New wallet password", confirmation_prompt=True, hide_input=True)
+    if not bool(password):
+        print("Password cannot be empty! Quitting...")
+        return
+    password_storage = stm.config["password_storage"]
+    if KEYRING_AVAILABLE and password_storage == "keyring":
+        password = keyring.set_password("beem", "wallet", password)
+    elif password_storage == "environment":
+        print("The new wallet password can be stored in the UNLOCK invironment variable to skip password prompt!")
     stm.wallet.create(password)
     set_shared_steem_instance(stm)
 
@@ -279,6 +338,8 @@ def walletinfo(test_unlock):
     t.add_row(["locked", stm.wallet.locked()])
     t.add_row(["Number of stored keys", len(stm.wallet.getPublicKeys())])
     t.add_row(["sql-file", stm.wallet.keyStorage.sqlDataBaseFile])
+    password_storage = stm.config["password_storage"]
+    t.add_row(["password_storage", password_storage])
     password = os.environ.get("UNLOCK")
     if password is not None:
         t.add_row(["UNLOCK env set", "yes"])
@@ -548,16 +609,22 @@ def convert(amount, account):
 
 
 @cli.command()
-@click.option('--oldpassword', prompt=True, hide_input=True,
-              confirmation_prompt=False, help='Password to unlock wallet')
-@click.option('--newpassword', prompt=True, hide_input=True,
-              confirmation_prompt=True, help='Set new password to unlock wallet')
-def changewalletpassphrase(oldpassword, newpassword):
+def changewalletpassphrase():
     """ Change wallet password
     """
     stm = shared_steem_instance()
-    if not unlock_wallet(stm, oldpassword):
+    if not unlock_wallet(stm):
         return
+    newpassword = None
+    newpassword = click.prompt("New wallet password", confirmation_prompt=True, hide_input=True)
+    if not bool(newpassword):
+        print("Password cannot be empty! Quitting...")
+        return
+    password_storage = stm.config["password_storage"]
+    if KEYRING_AVAILABLE and password_storage == "keyring":
+        keyring.set_password("beem", "wallet", newpassword)
+    elif password_storage == "environment":
+        print("The new wallet password can be stored in the UNLOCK invironment variable to skip password prompt!")
     stm.wallet.changePassphrase(newpassword)
 
 
