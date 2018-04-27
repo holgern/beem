@@ -21,10 +21,10 @@ from beem.vote import AccountVotes, ActiveVotes
 from beem import exceptions
 from beem.version import version as __version__
 from datetime import datetime, timedelta
+from beem.asciichart import AsciiChart
 import pytz
 from timeit import default_timer as timer
 from beembase import operations
-
 from beemgraphenebase.account import PrivateKey, PublicKey
 import os
 import ast
@@ -35,8 +35,14 @@ import random
 import logging
 import click
 import re
+
 click.disable_unicode_literals_warning = True
 log = logging.getLogger(__name__)
+try:
+    import keyring
+    KEYRING_AVAILABLE = True
+except ImportError:
+    KEYRING_AVAILABLE = False
 
 
 availableConfigurationKeys = [
@@ -68,6 +74,8 @@ def prompt_flag_callback(ctx, param, value):
 
 
 def unlock_wallet(stm, password=None):
+    if not password and KEYRING_AVAILABLE:
+        password = keyring.get_password("beem", "wallet")
     if not password:
         password = os.environ.get("UNLOCK")
     if bool(password):
@@ -247,12 +255,21 @@ def createwallet(wipe, password):
     stm = shared_steem_instance()
     if wipe:
         stm.wallet.wipe(True)
+    if not password and KEYRING_AVAILABLE:
+        password = keyring.get_password("beem", "wallet")
+    if not password:
+        password = os.environ.get("UNLOCK")
+    if bool(password):
+        stm.wallet.unlock(password)
+    else:
+        password = click.prompt("Password to unlock wallet", confirmation_prompt=False, hide_input=True)
     stm.wallet.create(password)
     set_shared_steem_instance(stm)
 
 
 @cli.command()
-def walletinfo():
+@click.option('--test-unlock', is_flag=True, default=False, help='test if unlock is sucessful')
+def walletinfo(test_unlock):
     """ Show info about wallet
     """
     stm = shared_steem_instance()
@@ -262,6 +279,20 @@ def walletinfo():
     t.add_row(["locked", stm.wallet.locked()])
     t.add_row(["Number of stored keys", len(stm.wallet.getPublicKeys())])
     t.add_row(["sql-file", stm.wallet.keyStorage.sqlDataBaseFile])
+    password = os.environ.get("UNLOCK")
+    if password is not None:
+        t.add_row(["UNLOCK env set", "yes"])
+    else:
+        t.add_row(["UNLOCK env set", "no"])
+    if KEYRING_AVAILABLE:
+        t.add_row(["keyring installed", "yes"])
+    else:
+        t.add_row(["keyring installed", "no"])
+    if test_unlock:
+        if unlock_wallet(stm):
+            t.add_row(["Wallet unlock", "sucessful"])
+        else:
+            t.add_row(["Wallet unlock", "not working"])
     # t.add_row(["getPublicKeys", str(stm.wallet.getPublicKeys())])
     print(t)
 
@@ -991,40 +1022,143 @@ def broadcast(file):
 
 
 @cli.command()
-@click.option('--chart', help='Enable charting (requires matplotlib)', is_flag=True)
-def orderbook(chart):
+def ticker():
+    """ Show ticker
+    """
+    stm = shared_steem_instance()
+    t = PrettyTable(["Key", "Value"])
+    t.align = "l"
+    market = Market(steem_instance=stm)
+    ticker = market.ticker()
+    for key in ticker:
+        t.add_row([key, str(ticker[key])])
+    print(t)
+
+
+@cli.command()
+@click.option('--width', help='Plot width (default 75)', default=75)
+@click.option('--height', help='Plot height (default 15)', default=15)
+def pricehistory(width, height):
+    """ Show price history
+    """
+    stm = shared_steem_instance()
+    feed_history = stm.get_feed_history()
+    current_base = Amount(feed_history['current_median_history']["base"], steem_instance=stm)
+    current_quote = Amount(feed_history['current_median_history']["quote"], steem_instance=stm)
+    price_history = feed_history["price_history"]
+    price = []
+    for h in price_history:
+        base = Amount(h["base"])
+        quote = Amount(h["quote"])
+        price.append(base.amount / quote.amount)
+    chart = AsciiChart(height=height, width=width, offset=4, placeholder='{:6.2f} $')
+    print("\n            Price history for STEEM (median price %4.2f $)\n" % (float(current_base) / float(current_quote)))
+
+    chart.adapt_on_series(price)
+    chart.new_chart()
+    chart.add_axis()
+    chart._draw_h_line(chart._map_y(float(current_base) / float(current_quote)), 1, int(chart.n / chart.skip), line='┈')
+    chart.add_curve(price)
+    print(str(chart))
+
+
+@cli.command()
+@click.option('--days', help='Limit the days of shown trade history (default 7)', default=7)
+@click.option('--hours', help='Limit the intervall history intervall (default 2 hours)', default=2.0)
+@click.option('--limit', help='Limit number of trades which is fetched at each intervall point (default 100)', default=100)
+@click.option('--width', help='Plot width (default 75)', default=75)
+@click.option('--height', help='Plot height (default 15)', default=15)
+def tradehistory(days, hours, limit, width, height):
+    """ Show price history
+    """
+    stm = shared_steem_instance()
+    m = Market(steem_instance=stm)
+    utc = pytz.timezone('UTC')
+    stop = utc.localize(datetime.utcnow())
+    start = stop - timedelta(days=days)
+    intervall = timedelta(hours=hours)
+    trades = m.trade_history(start=start, stop=stop, limit=limit, intervall=intervall)
+    price = []
+    for trade in trades:
+        base = 0
+        quote = 0
+        for order in trade:
+            base += float(order.as_base("SBD")["base"])
+            quote += float(order.as_base("SBD")["quote"])
+        price.append(base / quote)
+    chart = AsciiChart(height=height, width=width, offset=3, placeholder='{:6.2f} ')
+    print("\n     Trade history %s - %s \n\nSTEEM/SBD" % (formatTimeString(start), formatTimeString(stop)))
+    chart.plot(price)
+
+
+@cli.command()
+@click.option('--chart', help='Enable charting', is_flag=True)
+@click.option('--limit', help='Limit number of returned open orders (default 25)', default=25)
+@click.option('--show-date', help='Show dates', is_flag=True, default=False)
+@click.option('--width', help='Plot width (default 75)', default=75)
+@click.option('--height', help='Plot height (default 15)', default=15)
+def orderbook(chart, limit, show_date, width, height):
     """Obtain orderbook of the internal market"""
     stm = shared_steem_instance()
     market = Market(steem_instance=stm)
-    orderbook = market.orderbook(limit=25, raw_data=False)
-    t = PrettyTable(["Asks date", "Asks", "Bids date", "Bids"], hrules=0)
+    orderbook = market.orderbook(limit=limit, raw_data=False)
+    if not show_date:
+        header = ["Asks Sum SBD", "Sell Orders", "Bids Sum SBD", "Buy Orders"]
+    else:
+        header = ["Asks date", "Sell Orders", "Bids date", "Buy Orders"]
+    t = PrettyTable(header, hrules=0)
     t.align = "r"
     asks = []
     bids = []
     asks_date = []
     bids_date = []
+    sumsum_asks = []
+    sum_asks = 0
+    sumsum_bids = []
+    sum_bids = 0
     n = 0
     for order in orderbook["asks"]:
         asks.append(order)
+        sum_asks += float(order.as_base("SBD")["base"])
+        sumsum_asks.append(sum_asks)
     if n < len(asks):
         n = len(asks)
     for order in orderbook["bids"]:
         bids.append(order)
+        sum_bids += float(order.as_base("SBD")["base"])
+        sumsum_bids.append(sum_bids)
     if n < len(bids):
         n = len(bids)
-    for order in orderbook["asks_date"]:
-        asks_date.append(order)
-    if n < len(asks_date):
-        n = len(asks_date)
-    for order in orderbook["bids_date"]:
-        bids_date.append(order)
-    if n < len(bids_date):
-        n = len(bids_date)
+    if show_date:
+        for order in orderbook["asks_date"]:
+            asks_date.append(order)
+        if n < len(asks_date):
+            n = len(asks_date)
+        for order in orderbook["bids_date"]:
+            bids_date.append(order)
+        if n < len(bids_date):
+            n = len(bids_date)
+    if chart:
+        chart = AsciiChart(height=height, width=width, offset=4, placeholder=' {:10.2f} $')
+        print("\n            Orderbook \n")
+        chart.adapt_on_series(sumsum_asks[::-1] + sumsum_bids)
+        chart.new_chart()
+        chart.add_axis()
+        y0 = chart._map_y(chart.minimum)
+        y1 = chart._map_y(chart.maximum)
+        chart._draw_v_line(y0 + 1, y1, int(chart.n / chart.skip / 2), line='┊')
+        chart.add_curve(sumsum_asks[::-1] + sumsum_bids)
+        print(str(chart))
+        return
     for i in range(n):
         row = []
         if len(asks_date) > i:
             row.append(formatTimeString(asks_date[i]))
-        else:
+        elif show_date:
+            row.append([""])
+        if len(sumsum_asks) > i and not show_date:
+            row.append("%.2f" % sumsum_asks[i])
+        elif not show_date:
             row.append([""])
         if len(asks) > i:
             row.append(str(asks[i]))
@@ -1032,7 +1166,11 @@ def orderbook(chart):
             row.append([""])
         if len(bids_date) > i:
             row.append(formatTimeString(bids_date[i]))
-        else:
+        elif show_date:
+            row.append([""])
+        if len(sumsum_bids) > i and not show_date:
+            row.append("%.2f" % sumsum_bids[i])
+        elif not show_date:
             row.append([""])
         if len(bids) > i:
             row.append(str(bids[i]))

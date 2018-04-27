@@ -258,6 +258,10 @@ class Testcases(unittest.TestCase):
         runner = CliRunner()
         result = runner.invoke(cli, ['orderbook'])
         self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['orderbook', '--date'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['orderbook', '--chart'])
+        self.assertEqual(result.exit_code, 0)
 
     def test_buy(self):
         runner = CliRunner()
@@ -346,4 +350,19 @@ class Testcases(unittest.TestCase):
         result = runner.invoke(cli, ['currentnode', '--url'])
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['currentnode', '--version'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_ticker(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['ticker'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_pricehistory(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['pricehistory'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_tradehistory(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['tradehistory'])
         self.assertEqual(result.exit_code, 0)
