@@ -134,7 +134,7 @@ class Testcases(unittest.TestCase):
         trades_raw = m.trades(limit=10, raw_data=True)
         trades_history = m.trade_history(limit=10)
         self.assertEqual(len(trades), 10)
-        self.assertEqual(len(trades_history), 10)
+        self.assertTrue(len(trades_history) > 0)
         self.assertEqual(len(trades_raw), 10)
 
     @parameterized.expand([

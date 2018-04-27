@@ -10,7 +10,7 @@ from beem import Steem, exceptions
 from beem.comment import Comment, RecentReplies, RecentByPath
 from beem.vote import Vote
 from beem.instance import set_shared_steem_instance
-from beem.utils import get_node_list
+from beem.utils import get_node_list, resolve_authorperm
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
@@ -30,7 +30,12 @@ class Testcases(unittest.TestCase):
             keys={"active": wif},
             num_retries=10
         )
-        cls.authorperm = "@gtg/witness-gtg-log"
+        cls.authorperm = "@gtg/ffdhu-gtg-witness-log"
+        [author, permlink] = resolve_authorperm(cls.authorperm)
+        cls.author = author
+        cls.permlink = permlink
+        cls.category = 'witness-category'
+        cls.title = 'gtg witness log'
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(cls.bts)
@@ -38,7 +43,7 @@ class Testcases(unittest.TestCase):
         cnt = 0
         title = ''
         while cnt < 5 and title == '':
-            c = Comment("@gtg/witness-gtg-log", steem_instance=cls.bts)
+            c = Comment(cls.authorperm, steem_instance=cls.bts)
             title = c["title"]
             cls.bts.rpc.next()
 
@@ -55,16 +60,16 @@ class Testcases(unittest.TestCase):
             exceptions.ContentDoesNotExistsException
         ):
             Comment("@abcdef/abcdef", steem_instance=bts)
-        c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
+        c = Comment(self.authorperm, steem_instance=bts)
         self.assertTrue(isinstance(c.id, int))
         self.assertTrue(c.id > 0)
-        self.assertEqual(c.author, "gtg")
-        self.assertEqual(c.permlink, "witness-gtg-log")
-        self.assertEqual(c.authorperm, "@gtg/witness-gtg-log")
-        self.assertEqual(c.category, 'witness-category')
+        self.assertEqual(c.author, self.author)
+        self.assertEqual(c.permlink, self.permlink)
+        self.assertEqual(c.authorperm, self.authorperm)
+        self.assertEqual(c.category, self.category)
         self.assertEqual(c.parent_author, '')
-        self.assertEqual(c.parent_permlink, 'witness-category')
-        self.assertEqual(c.title, 'witness gtg log')
+        self.assertEqual(c.parent_permlink, self.category)
+        self.assertEqual(c.title, self.title)
         self.assertTrue(len(c.body) > 0)
         for key in ['tags', 'users', 'image', 'links', 'app', 'format']:
             self.assertIn(key, list(c.json_metadata.keys()))
@@ -86,7 +91,7 @@ class Testcases(unittest.TestCase):
             bts = self.bts
         else:
             bts = self.appbase
-        c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
+        c = Comment(self.authorperm, steem_instance=bts)
         tx = c.vote(100, account="test")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -111,12 +116,12 @@ class Testcases(unittest.TestCase):
     def test_export(self, node_param):
         if node_param == "non_appbase":
             bts = self.bts
-            content = bts.rpc.get_content("gtg", "witness-gtg-log")
+            content = bts.rpc.get_content(self.author, self.permlink)
         else:
             bts = self.appbase
-            content = bts.rpc.get_discussion({'author': 'gtg', 'permlink': 'witness-gtg-log'}, api="tags")
+            content = bts.rpc.get_discussion({'author': self.author, 'permlink': self.permlink}, api="tags")
 
-        c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
+        c = Comment(self.authorperm, steem_instance=bts)
         keys = list(content.keys())
         json_content = c.json()
 
@@ -126,7 +131,7 @@ class Testcases(unittest.TestCase):
 
     def test_resteem(self):
         bts = self.bts
-        c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
+        c = Comment(self.authorperm, steem_instance=bts)
         tx = c.resteem(account="test")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -135,7 +140,7 @@ class Testcases(unittest.TestCase):
 
     def test_reply(self):
         bts = self.bts
-        c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
+        c = Comment(self.authorperm, steem_instance=bts)
         tx = c.reply(body="Good post!", author="test")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -148,7 +153,7 @@ class Testcases(unittest.TestCase):
 
     def test_delete(self):
         bts = self.bts
-        c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
+        c = Comment(self.authorperm, steem_instance=bts)
         tx = c.delete(account="test")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -156,12 +161,12 @@ class Testcases(unittest.TestCase):
         )
         op = tx["operations"][0][1]
         self.assertIn(
-            "gtg",
+            self.author,
             op["author"])
 
     def test_edit(self):
         bts = self.bts
-        c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
+        c = Comment(self.authorperm, steem_instance=bts)
         c.edit(c.body, replace=False)
         body = c.body + "test"
         tx = c.edit(body, replace=False)
@@ -171,12 +176,12 @@ class Testcases(unittest.TestCase):
         )
         op = tx["operations"][0][1]
         self.assertIn(
-            "gtg",
+            self.author,
             op["author"])
 
     def test_edit_replace(self):
         bts = self.bts
-        c = Comment("@gtg/witness-gtg-log", steem_instance=bts)
+        c = Comment(self.authorperm, steem_instance=bts)
         body = c.body + "test"
         tx = c.edit(body, meta=c["json_metadata"], replace=True)
         self.assertEqual(
@@ -185,13 +190,13 @@ class Testcases(unittest.TestCase):
         )
         op = tx["operations"][0][1]
         self.assertIn(
-            "gtg",
+            self.author,
             op["author"])
         self.assertEqual(body, op["body"])
 
     def test_recent_replies(self):
         bts = self.bts
-        r = RecentReplies("gtg", skip_own=True, steem_instance=bts)
+        r = RecentReplies(self.author, skip_own=True, steem_instance=bts)
         self.assertTrue(len(r) > 0)
         self.assertTrue(r[0] is not None)
 
