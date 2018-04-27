@@ -81,7 +81,7 @@ def unlock_wallet(stm, password=None):
     password_storage = stm.config["password_storage"]
     if not password and KEYRING_AVAILABLE and password_storage == "keyring":
         password = keyring.get_password("beem", "wallet")
-    if not password and password_storage == "environment":
+    if not password and password_storage == "environment" and "UNLOCK" in os.environ:
         password = os.environ.get("UNLOCK")
     if bool(password):
         stm.wallet.unlock(password)
@@ -93,7 +93,10 @@ def unlock_wallet(stm, password=None):
         if password_storage == "keyring" or password_storage == "environment":
             print("Wallet could not be unlocked with %s!" % password_storage)
             password = click.prompt("Password to unlock wallet", confirmation_prompt=False, hide_input=True)
-            unlock_wallet(stm, password=password)
+            if bool(password):
+                unlock_wallet(stm, password=password)
+                if not stm.wallet.locked():
+                    return True
         else:
             print("Wallet could not be unlocked!")
         return False
