@@ -129,7 +129,7 @@ class Steem(object):
                 "irrversible")
             :param bool bundle: Do not broadcast transactions right away, but allow
                 to bundle operations *(optional)*
-            :param bool appbase: Use the new appbase rpc protocol on nodes with version
+            :param bool use_condenser: Use the old condenser_api rpc protocol on nodes with version
                 0.19.4 or higher. The settings has no effect on nodes with version of 0.19.3 or lower.
             :param int num_retries: Set the maximum number of reconnects to the nodes before
                 NumRetriesReached is raised. Disabled for -1. (default is -1)
@@ -146,7 +146,6 @@ class Steem(object):
         self.expiration = int(kwargs.get("expiration", 30))
         self.bundle = bool(kwargs.get("bundle", False))
         self.blocking = kwargs.get("blocking", False)
-        appbase = kwargs.get("appbase", True)
 
         # Store config for access through other Classes
         self.config = config
@@ -156,7 +155,6 @@ class Steem(object):
                          rpcuser=rpcuser,
                          rpcpassword=rpcpassword,
                          **kwargs)
-            self.rpc.appbase = appbase
 
         self.data = {'last_refresh': None, 'dynamic_global_properties': None, 'feed_history': None,
                      'get_feed_history': None, 'hardfork_properties': None,

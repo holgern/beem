@@ -136,6 +136,7 @@ Changelog
 * Memory consumption fer requests and websocket reduced when creating more instances of steem
 * trade_history added to market
 * Issue #4 fixed
+* Steem(use_condenser=True) activates condenser_api calls for 19.4 nodes
 
 0.19.23
 -------

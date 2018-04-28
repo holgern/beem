@@ -27,12 +27,7 @@ class SteemNodeRPC(GrapheneRPC):
 
     def __init__(self, *args, **kwargs):
         super(SteemNodeRPC, self).__init__(*args, **kwargs)
-        self.appbase = kwargs.get("appbase", False)
         self.next_node_on_empty_reply = False
-
-    def get_use_appbase(self):
-        """Returns True if appbase ready and appbase calls are set"""
-        return self.appbase and self.is_appbase_ready()
 
     def set_next_node_on_empty_reply(self, next_node_on_empty_reply=True):
         """Switch to next node on empty reply for the next rpc call"""

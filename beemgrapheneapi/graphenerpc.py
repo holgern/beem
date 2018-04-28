@@ -161,6 +161,7 @@ class GrapheneRPC(object):
         self.rpc_queue = []
         self.timeout = kwargs.get('timeout', 60)
         self.num_retries = kwargs.get("num_retries", -1)
+        self.use_condenser = kwargs.get("use_condenser", False)
         self.error_cnt = {}
         self.num_retries_call = kwargs.get("num_retries_call", 5)
         self.error_cnt_call = 0
@@ -184,6 +185,10 @@ class GrapheneRPC(object):
     def is_appbase_ready(self):
         """Check if node is appbase ready"""
         return self.current_rpc >= 2
+
+    def get_use_appbase(self):
+        """Returns True if appbase ready and appbase calls are set"""
+        return not self.use_condenser and self.is_appbase_ready()
 
     def rpcconnect(self, next_url=True):
         """Connect to next url in a loop."""
@@ -216,7 +221,10 @@ class GrapheneRPC(object):
                     self.rpclogin(self.user, self.password)
                 try:
                     props = None
-                    props = self.get_config(api="database")
+                    if not self.use_condenser:
+                        props = self.get_config(api="database")
+                    else:
+                        props = self.get_config()
                 except Exception as e:
                     if re.search("Bad Cast:Invalid cast from type", str(e)):
                         self.current_rpc += 2
@@ -400,11 +408,13 @@ class GrapheneRPC(object):
         def method(*args, **kwargs):
 
             api_name = get_api_name(self.is_appbase_ready(), *args, **kwargs)
+            if self.is_appbase_ready() and self.use_condenser:
+                api_name = "condenser_api"
 
             # let's be able to define the num_retries per query
             self.num_retries_call = kwargs.get("num_retries_call", self.num_retries_call)
             add_to_queue = kwargs.get("add_to_queue", False)
-            query = get_query(self.is_appbase_ready(), self.get_request_id(), api_name, name, args)
+            query = get_query(self.is_appbase_ready() and not self.use_condenser, self.get_request_id(), api_name, name, args)
             if add_to_queue:
                 self.rpc_queue.append(query)
                 return None

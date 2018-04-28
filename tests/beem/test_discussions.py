@@ -25,7 +25,8 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.bts = Steem(
-            node=get_node_list(appbase=False),
+            node=get_node_list(appbase=True),
+            use_condenser=True,
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10
