@@ -128,6 +128,10 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.25
+-------
+* bug fix release
+
 0.19.24
 -------
 * AsciiChart for beempy: pricehistory, tradehistory and orderbook
