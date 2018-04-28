@@ -401,8 +401,8 @@ class Testcases(unittest.TestCase):
         runner = CliRunner()
         runner.invoke(cli, ['-o', 'set', 'nodes', ''])
         result = runner.invoke(cli, ['pricehistory'])
-        self.assertEqual(result.exit_code, 0)
         runner.invoke(cli, ['-o', 'set', 'nodes', 'wss://testnet.steem.vc'])
+        self.assertEqual(result.exit_code, 0)
 
     def test_tradehistory(self):
         runner = CliRunner()

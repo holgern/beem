@@ -22,7 +22,7 @@ class AsciiChart(object):
         :param int offset: Offset between tick strings and y-axis (default is 3)
         :param str placeholder: Defines how the numbers on the y-axes are formated (default is '{:8.2f} ')
     """
-    def __init__(self, height=None, width=None, offset=3, placeholder='{:8.2f} '):
+    def __init__(self, height=None, width=None, offset=3, placeholder=u'{:8.2f} '):
         self.height = height
         self.width = width
         self.offset = offset
@@ -137,7 +137,7 @@ class AsciiChart(object):
         if n is not None:
             self.n = n
         self._calc_plot_parameter()
-        self.canvas = [[' '] * (int(self.n / self.skip) + self.offset) for i in range(self.rows + 1)]
+        self.canvas = [[u' '] * (int(self.n / self.skip) + self.offset) for i in range(self.rows + 1)]
 
     def add_axis(self):
         """Adds a y-axis to the canvas
@@ -164,7 +164,7 @@ class AsciiChart(object):
     def _set_y_axis_elem(self, y, label):
         intmin2 = int(self.min2)
         self.canvas[y - intmin2][max(self.offset - len(label), 0)] = label
-        self.canvas[y - intmin2][self.offset - 1] = '┼' if y == 0 else '┤'
+        self.canvas[y - intmin2][self.offset - 1] = u'┼' if y == 0 else u'┤'
 
     def _map_y(self, y_float):
         intmin2 = int(self.min2)
@@ -191,7 +191,7 @@ class AsciiChart(object):
         if len(self.canvas) == 0:
             self.new_chart()
         y0 = self._map_y(series[0])
-        self._set_elem(y0, -1, '┼')
+        self._set_elem(y0, -1, u'┼')
         for x in range(0, len(series[::self.skip]) - 1):
             y0 = self._map_y(series[::self.skip][x + 0])
             y1 = self._map_y(series[::self.skip][x + 1])
@@ -206,20 +206,20 @@ class AsciiChart(object):
     def _draw_diag(self, y0, y1, x):
         """Plot diagonal element"""
         if y0 > y1:
-            c1 = '╰'
-            c0 = '╮'
+            c1 = u'╰'
+            c0 = u'╮'
         else:
-            c1 = '╭'
-            c0 = '╯'
+            c1 = u'╭'
+            c0 = u'╯'
         self._set_elem(y1, x, c1)
         self._set_elem(y0, x, c0)
 
-    def _draw_h_line(self, y, x_start, x_end, line='─'):
+    def _draw_h_line(self, y, x_start, x_end, line=u'─'):
         """Plot horizontal line"""
         for x in range(x_start, x_end):
             self._set_elem(y, x, line)
 
-    def _draw_v_line(self, y_start, y_end, x, line='│'):
+    def _draw_v_line(self, y_start, y_end, x, line=u'│'):
         """Plot vertical line"""
         for y in range(y_start, y_end):
             self._set_elem(y, x, line)
