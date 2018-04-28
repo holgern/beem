@@ -128,6 +128,15 @@ Documentation is available at http://beem.readthedocs.io/en/latest/
 
 Changelog
 =========
+0.19.24
+-------
+* AsciiChart for beempy: pricehistory, tradehistory and orderbook
+* Sort nodes regarding their ping times (beempy ping --sort --remove)
+* currentnode and nextnode skip not working nodes
+* Memory consumption fer requests and websocket reduced when creating more instances of steem
+* trade_history added to market
+* Issue #4 fixed
+
 0.19.23
 -------
 * new function for beempy added: power, follower, following, muter, muting, mute, nextnode, pingnode, currentnode 

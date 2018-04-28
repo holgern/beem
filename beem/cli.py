@@ -247,15 +247,20 @@ def pingnode(raw, sort, remove):
     if sort:
         ping_times = []
         for node in nodes:
+            ping_times.append(1000.)
+        for i in range(len(nodes)):
             try:
-                stm_local = Steem(node=node, num_retries=2, num_retries_call=3, timeout=5)
+                stm_local = Steem(node=nodes[i], num_retries=2, num_retries_call=3, timeout=10)
                 start = timer()
                 stm_local.get_config(use_stored_data=False)
                 stop = timer()
                 rpc_answer_time = stop - start
-                ping_times.append(rpc_answer_time)
+                ping_times[i] = rpc_answer_time
+            except KeyboardInterrupt:
+                break
             except:
-                ping_times.append(float("inf"))
+                ping_times[i] = float("inf")
+            print("node %s results in %.2f" % (nodes[i], ping_times[i]))
         sorted_arg = sorted(range(len(ping_times)), key=ping_times.__getitem__)
         sorted_nodes = []
         for i in sorted_arg:

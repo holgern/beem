@@ -40,7 +40,7 @@ if __name__ == "__main__":
     for node in nodes:
         print("Current node:", node)
         try:
-            stm = Steem(node=node, num_retries=2, num_retries_call=3, timeout=5)
+            stm = Steem(node=node, num_retries=2, num_retries_call=3, timeout=10)
             blockchain = Blockchain(steem_instance=stm)
             account = Account("gtg", steem_instance=stm)
             virtual_op_count = account.virtual_op_count()
