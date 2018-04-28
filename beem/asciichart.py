@@ -4,6 +4,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import bytes, int, str
+import sys
 from math import cos
 from math import sin
 from math import pi
@@ -21,13 +22,38 @@ class AsciiChart(object):
         :param int width: Width of the plot
         :param int offset: Offset between tick strings and y-axis (default is 3)
         :param str placeholder: Defines how the numbers on the y-axes are formated (default is '{:8.2f} ')
+        :param str charset: sets the charset for plotting, uft8 or ascii (default: utf8)
     """
-    def __init__(self, height=None, width=None, offset=3, placeholder=u'{:8.2f} '):
+    def __init__(self, height=None, width=None, offset=3, placeholder=u'{:8.2f} ', charset=u'utf8'):
         self.height = height
         self.width = width
         self.offset = offset
         self.placeholder = placeholder
         self.clear_data()
+        if charset == u'ascii' or sys.version_info[0] < 3:
+            self.char_set = {'first_axis_elem': u'|',
+                             'axis_elem': u'|',
+                             'axis_elem_with_graph': u'|',
+                             'curve_ar': u'\\',
+                             'curve_lb': u'\\',
+                             'curve_br': u'/',
+                             'curve_la': u'/',
+                             'curve_hl': u'-',
+                             'curve_vl': u'|',
+                             'curve_hl_dot': u'-',
+                             'curve_vl_dot': u'|'}
+        else:
+            self.char_set = {'first_axis_elem': u'┼',
+                             'axis_elem': u'┤',
+                             'axis_elem_with_graph': u'┼',
+                             'curve_ar': u'╰',
+                             'curve_lb': u'╮',
+                             'curve_br': u'╭',
+                             'curve_la': u'╯',
+                             'curve_hl': u'─',
+                             'curve_vl': u'│',
+                             'curve_hl_dot': u'┈',
+                             'curve_vl_dot': u'┊'}
 
     def clear_data(self):
         """Clears all data"""
@@ -164,7 +190,10 @@ class AsciiChart(object):
     def _set_y_axis_elem(self, y, label):
         intmin2 = int(self.min2)
         self.canvas[y - intmin2][max(self.offset - len(label), 0)] = label
-        self.canvas[y - intmin2][self.offset - 1] = u'┼' if y == 0 else u'┤'
+        if y == 0:
+            self.canvas[y - intmin2][self.offset - 1] = self.char_set["first_axis_elem"]
+        else:
+            self.canvas[y - intmin2][self.offset - 1] = self.char_set["axis_elem"]
 
     def _map_y(self, y_float):
         intmin2 = int(self.min2)
@@ -191,35 +220,35 @@ class AsciiChart(object):
         if len(self.canvas) == 0:
             self.new_chart()
         y0 = self._map_y(series[0])
-        self._set_elem(y0, -1, u'┼')
+        self._set_elem(y0, -1, self.char_set["axis_elem_with_graph"])
         for x in range(0, len(series[::self.skip]) - 1):
             y0 = self._map_y(series[::self.skip][x + 0])
             y1 = self._map_y(series[::self.skip][x + 1])
             if y0 == y1:
-                self._draw_h_line(y0, x, x + 1)
+                self._draw_h_line(y0, x, x + 1, line=self.char_set["curve_hl"])
             else:
                 self._draw_diag(y0, y1, x)
                 start = min(y0, y1) + 1
                 end = max(y0, y1)
-                self._draw_v_line(start, end, x)
+                self._draw_v_line(start, end, x, line=self.char_set["curve_vl"])
 
     def _draw_diag(self, y0, y1, x):
         """Plot diagonal element"""
         if y0 > y1:
-            c1 = u'╰'
-            c0 = u'╮'
+            c1 = self.char_set["curve_ar"]
+            c0 = self.char_set["curve_lb"]
         else:
-            c1 = u'╭'
-            c0 = u'╯'
+            c1 = self.char_set["curve_br"]
+            c0 = self.char_set["curve_la"]
         self._set_elem(y1, x, c1)
         self._set_elem(y0, x, c0)
 
-    def _draw_h_line(self, y, x_start, x_end, line=u'─'):
+    def _draw_h_line(self, y, x_start, x_end, line=u'-'):
         """Plot horizontal line"""
         for x in range(x_start, x_end):
             self._set_elem(y, x, line)
 
-    def _draw_v_line(self, y_start, y_end, x, line=u'│'):
+    def _draw_v_line(self, y_start, y_end, x, line=u'|'):
         """Plot vertical line"""
         for y in range(y_start, y_end):
             self._set_elem(y, x, line)

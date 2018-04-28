@@ -1165,12 +1165,9 @@ def pricehistory(width, height):
     chart.adapt_on_series(price)
     chart.new_chart()
     chart.add_axis()
-    chart._draw_h_line(chart._map_y(float(current_base) / float(current_quote)), 1, int(chart.n / chart.skip), line=u'┈')
+    chart._draw_h_line(chart._map_y(float(current_base) / float(current_quote)), 1, int(chart.n / chart.skip), line=chart.char_set["curve_hl_dot"])
     chart.add_curve(price)
-    if sys.version_info[0] < 3:
-        print(str(chart).encode('utf-8'))
-    else:
-        print(str(chart))
+    print(str(chart))
 
 
 @cli.command()
@@ -1203,10 +1200,7 @@ def tradehistory(days, hours, limit, width, height):
     chart.new_chart()
     chart.add_axis()
     chart.add_curve(price)
-    if sys.version_info[0] < 3:
-        print(str(chart).encode('utf-8'))
-    else:
-        print(str(chart))
+    print(str(chart))
 
 
 @cli.command()
@@ -1264,12 +1258,9 @@ def orderbook(chart, limit, show_date, width, height):
         chart.add_axis()
         y0 = chart._map_y(chart.minimum)
         y1 = chart._map_y(chart.maximum)
-        chart._draw_v_line(y0 + 1, y1, int(chart.n / chart.skip / 2), line=u'┊')
+        chart._draw_v_line(y0 + 1, y1, int(chart.n / chart.skip / 2), line=chart.char_set["curve_vl_dot"])
         chart.add_curve(sumsum_asks[::-1] + sumsum_bids)
-        if sys.version_info[0] < 3:
-            print(str(chart).encode('utf-8'))
-        else:
-            print(str(chart))
+        print(str(chart))
         return
     for i in range(n):
         row = []
