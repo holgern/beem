@@ -190,6 +190,7 @@ class Wallet(object):
         elif password_storage == "keyring" and KEYRING_AVAILABLE:
             log.debug("Trying to use keyring to unlock wallet")
             pwd = keyring.get_password("beem", "wallet")
+            self.unlock(pwd)
         else:
             raise WrongMasterPasswordException
 
