@@ -30,9 +30,9 @@ class TransactionBuilder(dict):
         operations and signers.
         To build your own transactions and sign them
 
-        param dict tx: transaction (Optional). If not set, the new transaction is created.
-        param str expiration: expiration date
-        param Steem steem_instance: If not set, shared_steem_instance() is used
+        :param dict tx: transaction (Optional). If not set, the new transaction is created.
+        :param str expiration: expiration date
+        :param Steem steem_instance: If not set, shared_steem_instance() is used
 
         .. code-block:: python
 
@@ -250,6 +250,7 @@ class TransactionBuilder(dict):
             :param bool reconstruct_tx: when set to False and tx
                 is already contructed, it will not reconstructed
                 and already added signatures remain
+
         """
         if not self._is_constructed() or (self._is_constructed() and reconstruct_tx):
             self.constructTx()
@@ -302,6 +303,7 @@ class TransactionBuilder(dict):
 
             :param int max_block_age: paramerter only used
                 for appbase ready nodes
+
         """
         # Cannot broadcast an empty transaction
         if not self._is_signed():
@@ -358,6 +360,7 @@ class TransactionBuilder(dict):
             :param bool reconstruct_tx: when set to False and tx
                 is already contructed, it will not reconstructed
                 and already added signatures remain
+
         """
         if not self._is_constructed() or (self._is_constructed() and reconstruct_tx):
             self.constructTx()

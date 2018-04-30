@@ -57,6 +57,7 @@ class Message(object):
                 (defaults to ``default_account``)
 
             :returns: the signed message encapsulated in a known format
+
         """
         if not account:
             if "default_account" in config:
@@ -98,7 +99,9 @@ class Message(object):
                 (defaults to ``default_account``)
 
             :returns: True if the message is verified successfully
-            :raises InvalidMessageSignature if the signature is not ok
+
+            :raises: InvalidMessageSignature if the signature is not ok
+
         """
         # Split message into its parts
         parts = re.split("|".join(MESSAGE_SPLIT), self.message)

@@ -466,7 +466,7 @@ class Account(BlockchainObject):
     @property
     def available_balances(self):
         """ List balances of an account. This call returns instances of
-            :class:`steem.amount.Amount`.
+            :class:`beem.amount.Amount`.
         """
         amount_list = ["balance", "sbd_balance", "vesting_shares"]
         available_amount = []
@@ -519,7 +519,7 @@ class Account(BlockchainObject):
 
     def get_balance(self, balances, symbol):
         """ Obtain the balance of a specific Asset. This call returns instances of
-            :class:`steem.amount.Amount`.
+            :class:`beem.amount.Amount`.
         """
         if isinstance(balances, string_types):
             if balances == "available":
@@ -745,10 +745,9 @@ class Account(BlockchainObject):
     def get_account_history(self, index, limit, order=-1, start=None, stop=None, use_block_num=True, only_ops=[], exclude_ops=[], raw_output=False):
         """ Returns a generator for individual account transactions. This call can be used in a
             ``for`` loop.
-            :param int index: first number of transactions to
-                return
-            :param int limit: limit number of transactions to
-                return
+
+            :param int index: first number of transactions to return
+            :param int limit: limit number of transactions to return
             :param int/datetime start: start number/date of transactions to
                 return (*optional*)
             :param int/datetime stop: stop number/date of transactions to
@@ -768,6 +767,7 @@ class Account(BlockchainObject):
                 The full list of operation ID's can be found in
                 beembase.operationids.ops.
                 Example: ['transfer', 'vote']
+
         """
         if order != -1 and order != 1:
             raise ValueError("order must be -1 or 1!")
@@ -987,6 +987,7 @@ class Account(BlockchainObject):
                 Example: ['transfer', 'vote']
 
             .. code-block:: python
+
                 >>> from beem.account import Account
                 >>> from datetime import datetime
                 >>> acc = Account("gtg")
@@ -1071,22 +1072,27 @@ class Account(BlockchainObject):
 
     def mute(self, mute, account=None):
         """ Mute another account
+
             :param str mute: Mute this account
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
+
         """
         return self.follow(mute, what=["ignore"], account=account)
 
     def unfollow(self, unfollow, account=None):
         """ Unfollow/Unmute another account's blog
+
             :param str unfollow: Unfollow/Unmute this account
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
+
         """
         return self.follow(unfollow, what=[], account=account)
 
     def follow(self, other, what=["blog"], account=None):
         """ Follow/Unfollow/Mute/Unmute another account's blog
+
             :param str other: Follow this account
             :param list what: List of states to follow.
                 ``['blog']`` means to follow ``other``,
@@ -1095,6 +1101,7 @@ class Account(BlockchainObject):
                 (defaults to ``['blog']``)
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
+
         """
         if not account:
             account = self["name"]
@@ -1115,10 +1122,12 @@ class Account(BlockchainObject):
 
     def update_account_profile(self, profile, account=None):
         """ Update an account's meta data (json_meta)
+
             :param dict json: The meta data to use (i.e. use Profile() from
                 account.py)
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
+
         """
         if not account:
             account = self
@@ -1143,6 +1152,7 @@ class Account(BlockchainObject):
             :param list witnesses: list of Witness name or id
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
+
         """
         if not account:
             account = self["name"]
@@ -1275,11 +1285,13 @@ class Account(BlockchainObject):
 
     def convert(self, amount, account=None, request_id=None):
         """ Convert SteemDollars to Steem (takes one week to settle)
+
             :param float amount: number of VESTS to withdraw
             :param str account: (optional) the source account for the transfer
-            if not ``default_account``
+                if not ``default_account``
             :param str request_id: (optional) identifier for tracking the
-            conversion`
+                conversion`
+
         """
         if not account:
             account = self
@@ -1308,13 +1320,15 @@ class Account(BlockchainObject):
 
     def transfer_to_savings(self, amount, asset, memo, to=None, account=None):
         """ Transfer SBD or STEEM into a 'savings' account.
+
             :param float amount: STEEM or SBD amount
             :param float asset: 'STEEM' or 'SBD'
             :param str memo: (optional) Memo
             :param str to: (optional) the source account for the transfer if
-            not ``default_account``
+                not ``default_account``
             :param str account: (optional) the source account for the transfer
-            if not ``default_account``
+                if not ``default_account``
+
         """
         if asset not in ['STEEM', 'SBD']:
             raise AssertionError()
@@ -1346,15 +1360,17 @@ class Account(BlockchainObject):
                               to=None,
                               account=None):
         """ Withdraw SBD or STEEM from 'savings' account.
+
             :param float amount: STEEM or SBD amount
             :param float asset: 'STEEM' or 'SBD'
             :param str memo: (optional) Memo
             :param str request_id: (optional) identifier for tracking or
-            cancelling the withdrawal
+                cancelling the withdrawal
             :param str to: (optional) the source account for the transfer if
-            not ``default_account``
+                not ``default_account``
             :param str account: (optional) the source account for the transfer
-            if not ``default_account``
+                if not ``default_account``
+
         """
         if asset not in ['STEEM', 'SBD']:
             raise AssertionError()
@@ -1385,10 +1401,12 @@ class Account(BlockchainObject):
 
     def cancel_transfer_from_savings(self, request_id, account=None):
         """ Cancel a withdrawal from 'savings' account.
+
             :param str request_id: Identifier for tracking or cancelling
-            the withdrawal
+                the withdrawal
             :param str account: (optional) the source account for the transfer
-            if not ``default_account``
+                if not ``default_account``
+
         """
         if not account:
             account = self
@@ -1411,12 +1429,13 @@ class Account(BlockchainObject):
         By default, this will claim ``all`` outstanding balances. To bypass
         this behaviour, set desired claim amount by setting any of
         `reward_steem`, `reward_sbd` or `reward_vests`.
-        Args:
-            reward_steem (string): Amount of STEEM you would like to claim.
-            reward_sbd (string): Amount of SBD you would like to claim.
-            reward_vests (string): Amount of VESTS you would like to claim.
-            account (string): The source account for the claim if not
+
+        :param str reward_steem: Amount of STEEM you would like to claim.
+        :param str reward_sbd: Amount of SBD you would like to claim.
+        :param str reward_vests: Amount of VESTS you would like to claim.
+        :param str account: The source account for the claim if not
             ``default_account`` is used.
+
         """
         if not account:
             account = self
@@ -1465,12 +1484,12 @@ class Account(BlockchainObject):
     def delegate_vesting_shares(self, to_account, vesting_shares,
                                 account=None):
         """ Delegate SP to another account.
-        Args:
-            to_account (string): Account we are delegating shares to
+
+        :param str to_account: Account we are delegating shares to
             (delegatee).
-            vesting_shares (string): Amount of VESTS to delegate eg. `10000
+        :param str vesting_shares: Amount of VESTS to delegate eg. `10000
             VESTS`.
-            account (string): The source account (delegator). If not specified,
+        :param str account: The source account (delegator). If not specified,
             ``default_account`` is used.
         """
         if not account:
@@ -1495,10 +1514,12 @@ class Account(BlockchainObject):
 
     def withdraw_vesting(self, amount, account=None):
         """ Withdraw VESTS from the vesting account.
+
             :param float amount: number of VESTS to withdraw over a period of
-            104 weeks
+                104 weeks
             :param str account: (optional) the source account for the transfer
-            if not ``default_account``
+                if not ``default_account``
+
     """
         if not account:
             account = self
@@ -1528,6 +1549,7 @@ class Account(BlockchainObject):
         """ Set up a vesting withdraw route. When vesting shares are
             withdrawn, they will be routed to these accounts based on the
             specified weights.
+
             :param str to: Recipient of the vesting withdrawal
             :param float percentage: The percent of the withdraw to go
                 to the 'to' account.
@@ -1535,6 +1557,7 @@ class Account(BlockchainObject):
             :param bool auto_vest: Set to true if the from account
                 should receive the VESTS as VESTS, or false if it should
                 receive them as STEEM. (defaults to ``False``)
+
         """
         if not account:
             account = self

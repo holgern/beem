@@ -53,7 +53,8 @@ class Steem(object):
             in a block and return full transaction (can be "head" or
             "irrversible")
         :param bool bundle: Do not broadcast transactions right away, but allow
-            to bundle operations *(optional)*
+            to bundle operations. It is not possible to send out more than one
+            vote operation and more than one comment operation in a single broadcast *(optional)*
         :param bool appbase: Use the new appbase rpc protocol on nodes with version
             0.19.4 or higher. The settings has no effect on nodes with version of 0.19.3 or lower.
         :param int num_retries: Set the maximum number of reconnects to the nodes before
@@ -579,10 +580,12 @@ class Steem(object):
 
             When set to "no", the password has to provided everytime.
             When set to "environment" the password is taken from the
-                UNLOCK variable
+            UNLOCK variable
+
             When set to "keyring" the password is taken from the
             python keyring module. A wallet password can be stored with
             python -m keyring set beem wallet password
+
             :param str password_storage: can be "no",
                 "keyring" or "environment"
 
@@ -1035,16 +1038,20 @@ class Steem(object):
 
     def witness_update(self, signing_key, url, props, account=None):
         """ Creates/updates a witness
+
             :param pubkey signing_key: Signing key
             :param str url: URL
             :param dict props: Properties
             :param str account: (optional) witness account name
+
              Properties:::
+
                 {
                     "account_creation_fee": x,
                     "maximum_block_size": x,
                     "sbd_interest_rate": x,
                 }
+
         """
         if not account and config["default_account"]:
             account = config["default_account"]
@@ -1092,11 +1099,13 @@ class Steem(object):
                     required_auths=[],
                     required_posting_auths=[]):
         """ Create a custom json operation
+
             :param str id: identifier for the custom json (max length 32 bytes)
             :param json json_data: the json data to put into the custom_json
                 operation
             :param list required_auths: (optional) required auths
             :param list required_posting_auths: (optional) posting auths
+
         """
         account = None
         if len(required_auths):
@@ -1137,19 +1146,21 @@ class Steem(object):
         the newly created post as an author.
         Setting category, tags or community will override the values provided
         in json_metadata and/or comment_options where appropriate.
-        Args:
-        title (str): Title of the post
-        body (str): Body of the post/comment
-        author (str): Account are you posting from
-        permlink (str): Manually set the permlink (defaults to None).
+
+        :param str title: Title of the post
+        :param str body: Body of the post/comment
+        :param str author: Account are you posting from
+        :param str permlink: Manually set the permlink (defaults to None).
             If left empty, it will be derived from title automatically.
-        reply_identifier (str): Identifier of the parent post/comment (only
+        :param str reply_identifier: Identifier of the parent post/comment (only
             if this post is a reply/comment).
-        json_metadata (str, dict): JSON meta object that can be attached to
+        :param (str, dict) json_metadata: JSON meta object that can be attached to
             the post.
-        comment_options (str, dict): JSON options object that can be
+        :param (str, dict) comment_options: JSON options object that can be
             attached to the post.
+
         Example::
+
             comment_options = {
                 'max_accepted_payout': '1000000.000 SBD',
                 'percent_steem_dollars': 10000,
@@ -1162,26 +1173,31 @@ class Steem(object):
                     ]}
                 ]]
             }
-        community (str): (Optional) Name of the community we are posting
+
+        :param str community: (Optional) Name of the community we are posting
             into. This will also override the community specified in
             `json_metadata`.
-        app (str): (Optional) Name of the app which are used for posting
+        :param str app: (Optional) Name of the app which are used for posting
             when not set, beem/<version> is used
-        tags (str, list): (Optional) A list of tags (5 max) to go with the
+        :param (str, list) tags: (Optional) A list of tags (5 max) to go with the
             post. This will also override the tags specified in
             `json_metadata`. The first tag will be used as a 'category'. If
             provided as a string, it should be space separated.
-        beneficiaries (list of dicts): (Optional) A list of beneficiaries
+        :param (list of dicts) beneficiaries: (Optional) A list of beneficiaries
             for posting reward distribution. This argument overrides
             beneficiaries as specified in `comment_options`.
+
         For example, if we would like to split rewards between account1 and
         account2::
+
             beneficiaries = [
                 {'account': 'account1', 'weight': 5000},
                 {'account': 'account2', 'weight': 5000}
             ]
-        self_vote (bool): (Optional) Upvote the post as author, right after
+
+        :param bool self_vote: (Optional) Upvote the post as author, right after
             posting.
+
         """
 
         # prepare json_metadata
@@ -1313,11 +1329,14 @@ class Steem(object):
 
     def comment_options(self, options, identifier, account=None):
         """ Set the comment options
+
             :param str identifier: Post identifier
             :param dict options: The options to define.
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
+
             For the options, you have these defaults:::
+
                     {
                         "author": "",
                         "permlink": "",
@@ -1326,6 +1345,7 @@ class Steem(object):
                         "allow_votes": True,
                         "allow_curation_rewards": True,
                     }
+
         """
         if not account and config["default_account"]:
             account = config["default_account"]

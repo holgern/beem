@@ -1,11 +1,7 @@
-****************
-SteemNodeRPC
-****************
+beemapi\.steemnoderpc
+=====================
 
-This class allows to call API methods exposed by the witness node via
-websockets.
-
-Defintion
-=========
-.. autoclass:: beemapi.steemnoderpc.SteemNodeRPC
-    :members: rpcexec, __getattr__
+.. automodule:: beemapi.steemnoderpc
+    :members:
+    :undoc-members:
+    :show-inheritance:

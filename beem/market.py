@@ -186,8 +186,10 @@ class Market(dict):
     def orderbook(self, limit=25, raw_data=False):
         """ Returns the order book for SBD/STEEM market.
             :param int limit: Limit the amount of orders (default: 25)
+
             Sample output:
             .. code-block:: js
+
                 {'bids': [0.003679 USD/BTS (1.9103 USD|519.29602 BTS),
                 0.003676 USD/BTS (299.9997 USD|81606.16394 BTS),
                 0.003665 USD/BTS (288.4618 USD|78706.21881 BTS),
@@ -198,10 +200,12 @@ class Market(dict):
                 0.003742 USD/BTS (182.6881 USD|48820.22081 BTS),
                 0.003772 USD/BTS (4.5200 USD|1198.14798 BTS),
                 0.003799 USD/BTS (148.4975 USD|39086.59741 BTS)]}
+
             .. note:: Each bid is an instance of
                 class:`beem.price.Order` and thus carries the keys
                 ``base``, ``quote`` and ``price``. From those you can
                 obtain the actual amounts for sale
+
         """
         self.steem.rpc.set_next_node_on_empty_reply(True)
         if self.steem.rpc.get_use_appbase():
@@ -349,14 +353,17 @@ class Market(dict):
 
     def market_history(self, bucket_seconds=300, start_age=3600, end_age=0):
         """ Return the market history (filled orders).
+
             :param int bucket_seconds: Bucket size in seconds (see
-            `returnMarketHistoryBuckets()`)
+                `returnMarketHistoryBuckets()`)
             :param int start_age: Age (in seconds) of the start of the
-            window (default: 1h/3600)
+                window (default: 1h/3600)
             :param int end_age: Age (in seconds) of the end of the window
-            (default: now/0)
+                (default: now/0)
+
             Example:
             .. code-block:: js
+
                  {'close_sbd': 2493387,
                   'close_steem': 7743431,
                   'high_sbd': 1943872,
@@ -370,6 +377,7 @@ class Market(dict):
                   'sbd_volume': 9714435,
                   'seconds': 300,
                   'steem_volume': 30088443},
+
         """
         buckets = self.market_history_buckets()
         if bucket_seconds < 5 and bucket_seconds >= 0:
@@ -440,7 +448,7 @@ class Market(dict):
             :param bool killfill: flag that indicates if the order shall be killed if it is not filled (defaults to False)
             :param string account: Account name that executes that order
             :param string returnOrderId: If set to "head" or "irreversible" the call will wait for the tx to appear in
-                                        the head/irreversible block and add the key "orderid" to the tx output
+                the head/irreversible block and add the key "orderid" to the tx output
 
             Prices/Rates are denoted in 'base', i.e. the USD_BTS market
             is priced in BTS per USD.
@@ -537,7 +545,7 @@ class Market(dict):
             :param bool killfill: flag that indicates if the order shall be killed if it is not filled (defaults to False)
             :param string account: Account name that executes that order
             :param string returnOrderId: If set to "head" or "irreversible" the call will wait for the tx to appear in
-                                        the head/irreversible block and add the key "orderid" to the tx output
+                the head/irreversible block and add the key "orderid" to the tx output
 
             Prices/Rates are denoted in 'base', i.e. the USD_BTS market
             is priced in BTS per USD.

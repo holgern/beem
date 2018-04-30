@@ -49,7 +49,6 @@ class Memo(object):
         if ``op_data`` being the payload of a transfer operation.
 
         Memo Keys
-        #########
 
         In Steem, memos are AES-256 encrypted with a shared secret between sender and
         receiver. It is derived from the memo private key of the sender and the memo
@@ -76,7 +75,6 @@ class Memo(object):
         while the memo private key can be dumped with `dump_private_keys`
 
         Memo Message
-        ############
 
         The take the following form:
 
@@ -93,13 +91,9 @@ class Memo(object):
         The `nonce` is a random integer that is used for the seed of the AES encryption
         of the message.
 
-        Example
-        #######
-
         Encrypting a memo
-        ~~~~~~~~~~~~~~~~~
 
-        The high level memo class makes use of the pysteem wallet to obtain keys
+        The high level memo class makes use of the beem wallet to obtain keys
         for the corresponding accounts.
 
         .. code-block:: python
@@ -114,7 +108,6 @@ class Memo(object):
             encrypted_memo = memoObj.encrypt(memo)
 
         Decoding of a received memo
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         .. code-block:: python
 

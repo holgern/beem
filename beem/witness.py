@@ -123,16 +123,20 @@ class Witness(BlockchainObject):
 
     def update(self, signing_key, url, props, account=None):
         """ Update witness
+
             :param pubkey signing_key: Signing key
             :param str url: URL
             :param dict props: Properties
             :param str account: (optional) witness account name
-             Properties:::
+
+            Properties:::
+
                 {
                     "account_creation_fee": x,
                     "maximum_block_size": x,
                     "sbd_interest_rate": x,
                 }
+
         """
         if not account:
             account = self["owner"]

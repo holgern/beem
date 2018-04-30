@@ -136,10 +136,39 @@ Receiving information about blocks, accounts, votes, comments, market and witnes
    witness = Witness("gtg")
    print(witness.is_active)
 
+Sending transaction to the blockchain
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   from beem import Steem
+   steem = Steem()
+   steem.wallet.unlock("wallet-passphrase")
+   account = Account("test", steem_instance=steem)
+   account.transfer("null", 1, "SBD", "test")
+
+.. code-block:: python
+
+   from beem.comment import Comment
+   from beem import Steem
+   steem = Steem()
+   steem.wallet.unlock("wallet-passphrase")
+   comment = Comment("@gtg/ffdhu-gtg-witness-log", steem_instance=steem)
+   comment.upvote(weight=10, voter="test")
+
+.. code-block:: python
+
+   from beem import Steem
+   steem = Steem()
+   steem.wallet.unlock("wallet-passphrase")
+   steem.post("title", "body", author="test", tags=["a", "b", "c", "d", "e"], self_vote=True)
+
 .. code-block:: python
 
    from beem.market import Market
-   market = Market("SBD:STEEM")
+   from beem import Steem
+   steem.wallet.unlock("wallet-passphrase")
+   market = Market("SBD:STEEM", steem_instance=steem)
    print(market.ticker())
    market.steem.wallet.unlock("wallet-passphrase")
    print(market.sell(300, 100)  # sell 100 STEEM for 300 STEEM/SBD

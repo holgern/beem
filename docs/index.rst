@@ -118,52 +118,11 @@ General
    tutorials
    cli
    configuration
+   modules
    contribute
    support
 
-Packages
---------
 
-
-beem
-~~~~
-
-.. toctree::
-   :maxdepth: 3
-
-   beem
-
-beembase
-~~~~~~~~
-
-.. toctree::
-   :maxdepth: 3
-
-   beembase
-
-beemapi
-~~~~~~~
-
-.. toctree::
-   :maxdepth: 3
-
-   beemapi
-
-beemgraphenebase
-~~~~~~~~~~~~~~~~
-
-.. toctree::
-   :maxdepth: 3
-
-   beemgraphenebase
-
-beemgrapheneapi
-~~~~~~~~~~~~~~~
-
-.. toctree::
-   :maxdepth: 3
-
-   beemgrapheneapi
    
 Glossary
 ========

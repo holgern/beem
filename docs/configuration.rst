@@ -28,7 +28,3 @@ can load the configuration directly by using:
 
     from beem.storage import configStorage as config
 
-API
----
-.. autoclass:: beem.storage.Configuration
-   :members:

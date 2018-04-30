@@ -42,23 +42,36 @@ class Blockchain(object):
         Read blockchain related data:
         .. code-block:: python
 
-            from beem.blockchain import Blockchain
-            chain = Blockchain()
+            >>> from beem.blockchain import Blockchain
+            >>> chain = Blockchain()
 
         Read current block and blockchain info
         .. code-block:: python
-            print(chain.get_current_block())
-            print(chain.steem.info())
 
-        Monitor for new blocks ..
+            >>> from beem.blockchain import Blockchain
+            >>> chain = Blockchain()
+            >>> print(chain.get_current_block())  # doctest: +SKIP
+            >>> print(chain.steem.info())  # doctest: +SKIP
+
+        Monitor for new blocks. When ``stop`` is not set, monitoring will never stop.
         .. code-block:: python
-            for block in chain.blocks():
-                print(block)
+
+            >>> from beem.blockchain import Blockchain
+            >>> chain = Blockchain()
+            >>> blocks = []
+            >>> current_num = chain.get_current_block_num()
+            >>> for block in chain.blocks(start=current_num - 99, stop=current_num): blocks.append(block)
+            >>> len(blocks)
+            100
 
         or each operation individually:
         .. code-block:: python
-            for operations in chain.ops():
-                print(operations)
+
+            >>> from beem.blockchain import Blockchain
+            >>> chain = Blockchain()
+            >>> ops = []
+            >>> current_num = chain.get_current_block_num()
+            >>> for operation in chain.ops(start=current_num - 99, stop=current_num): ops.append(operation)
 
     """
     def __init__(
@@ -263,7 +276,8 @@ class Blockchain(object):
             then we wait, but a maxmimum of blocks_waiting_for * max_block_wait_repetition time before failure.
             :param int block_number: desired block number
             :param int blocks_waiting_for: (default) difference between block_number and current head
-                                           how many blocks we are willing to wait, positive int
+            how many blocks we are willing to wait, positive int
+
         """
         if last_fetched_block_num is None or (last_fetched_block_num is not None and block_number > last_fetched_block_num):
             if not blocks_waiting_for:
@@ -319,9 +333,11 @@ class Blockchain(object):
 
             :param int start: Starting block
             :param int stop: Stop at this block, if set to None, the current_block_num is taken
-            :param dict add_to_ops_stat, if set, the result is added to add_to_ops_stat
-            :param bool verbose, if True, the current block number and timestamp is printed
+            :param dict add_to_ops_stat: if set, the result is added to add_to_ops_stat
+            :param bool verbose: if True, the current block number and timestamp is printed
+
             This call returns a dict with all possible operations and their occurence.
+
         """
         if add_to_ops_stat is None:
             import beembase.operationids

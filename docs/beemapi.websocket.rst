@@ -1,6 +1,5 @@
-******************
-SteemWebsocket
-******************
+beemapi\.websocket
+==================
 
 This class allows subscribe to push notifications from the Steem
 node.
@@ -18,10 +17,11 @@ node.
 
     ws.run_forever()
 
-Defintion
-=========
+
 .. autoclass:: beemapi.websocket.SteemWebsocket
     :members:
     :undoc-members:
     :private-members:
     :special-members:
+
+
