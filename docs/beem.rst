@@ -1,5 +1,5 @@
 beem package
-=================
+============
 
 Submodules
 ----------
@@ -8,6 +8,7 @@ Submodules
 
    beem.account
    beem.aes
+   beem.asciichart
    beem.amount
    beem.asset
    beem.steem

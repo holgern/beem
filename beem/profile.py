@@ -16,7 +16,6 @@ class DotDict(dict):
                 >>> keys = ['profile.url', 'profile.img']
                 >>> values = ["http:", "foobar"]
                 >>> print(Profile(keys, values))
-
                 {"profile": {"url": "http:", "img": "foobar"}}
 
         """

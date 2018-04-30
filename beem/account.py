@@ -44,14 +44,16 @@ class Account(BlockchainObject):
 
         .. code-block:: python
 
-            from beem.account import Account
-            account = Account("test")
-            print(account)
-            print(account.balances)
+            >>> from beem.account import Account
+            >>> account = Account("test")
+            >>> print(account)
+            <Account test>
+            >>> print(account.balances) # doctest: +SKIP
 
         .. note:: This class comes with its own caching function to reduce the
                   load on the API server. Instances of this class can be
-                  refreshed with ``Account.refresh()``.
+                  refreshed with ``Account.refresh()``. The chache can be cleared with
+                  ``Account.clear_cache()``
 
     """
 
@@ -168,7 +170,14 @@ class Account(BlockchainObject):
         return json.loads(str(json.dumps(output)))
 
     def getSimilarAccountNames(self, limit=5):
-        """ Returns limit similar accounts with name as array
+        """ Returns limit similar accounts with name as list
+
+        .. code-block:: python
+
+            >>> from beem.account import Account
+            >>> account = Account("test")
+            >>> account.getSimilarAccountNames(limit=5)
+            ['test', 'test-1', 'test-2', 'test-ico', 'test-ilionx-123']
         """
         if self.steem.rpc.get_use_appbase():
             account = self.steem.rpc.list_accounts({'start': self.name, 'limit': limit}, api="database")
@@ -547,7 +556,7 @@ class Account(BlockchainObject):
             "interest": interest_amount,
             "last_payment": last_payment,
             "next_payment": next_payment,
-            "next_payment_duration": next_payment - utc.localize(datetime.now()),
+            "next_payment_duration": next_payment - utc.localize(datetime.utcnow()),
             "interest_rate": interest_rate,
         }
 
@@ -859,27 +868,34 @@ class Account(BlockchainObject):
                 beembase.operationids.ops.
                 Example: ['transfer', 'vote']
 
-            Example::
-                from beem.account import Account
-                from beem.blockchain import Blockchain
-                from datetime import datetime
-                acc = Account("test")
-                max_op_count = acc.virtual_op_count()
-                # Returns the 100 latest operations
-                for h in acc.history(start=max_op_count-100, stop=max_op_count, use_block_num=False):
-                    print(h)
+            .. code-block:: python
 
-                b = Blockchain()
-                max_block = b.get_current_block_num()
-                # Returns the account operation inside the last 100 block. This can be empty.
-                for h in acc.history(start=max_block-100, stop=max_block, use_block_num=True):
-                    print(h)
+                >>> from beem.account import Account
+                >>> from datetime import datetime
+                >>> acc = Account("gtg")
+                >>> max_op_count = acc.virtual_op_count()
+                >>> # Returns the 100 latest operations
+                >>> acc_op = []
+                >>> for h in acc.history(start=max_op_count - 99, stop=max_op_count, use_block_num=False): acc_op.append(h)
+                >>> len(acc_op)
+                100
 
-                start_time = datetime(2018, 3, 1, 0, 0, 0)
-                stop_time = datetime(2018, 4, 1, 0, 0, 0)
-                # Returns the account operation from 1.4.2018 back to 1.3.2018
-                for h in acc.history(start=start_time, stop=stop_time):
-                    print(h)
+                >>> acc = Account("test")
+                >>> max_block = 21990141
+                >>> # Returns the account operation inside the last 100 block. This can be empty.
+                >>> acc_op = []
+                >>> for h in acc.history(start=max_block - 99, stop=max_block, use_block_num=True): acc_op.append(h)
+                >>> len(acc_op)
+                0
+
+                >>> start_time = datetime(2018, 3, 1, 0, 0, 0)
+                >>> stop_time = datetime(2018, 3, 2, 0, 0, 0)
+                >>> # Returns the account operation from 1.4.2018 back to 1.3.2018
+                >>> acc_op = []
+                >>> for h in acc.history(start=start_time, stop=stop_time): acc_op.append(h)
+                >>> len(acc_op)
+                0
+
         """
         _limit = batch_size
         max_index = self.virtual_op_count()
@@ -970,27 +986,32 @@ class Account(BlockchainObject):
                 beembase.operationids.ops.
                 Example: ['transfer', 'vote']
 
-            Example::
-                from beem.account import Account
-                from beem.blockchain import Blockchain
-                from datetime import datetime
-                acc = Account("test")
-                max_op_count = acc.virtual_op_count()
-                # Returns the 100 latest operations
-                for h in acc.history_reverse(start=max_op_count, stop=max_op_count-100, use_block_num=False):
-                    print(h)
+            .. code-block:: python
+                >>> from beem.account import Account
+                >>> from datetime import datetime
+                >>> acc = Account("gtg")
+                >>> max_op_count = acc.virtual_op_count()
+                >>> # Returns the 100 latest operations
+                >>> acc_op = []
+                >>> for h in acc.history_reverse(start=max_op_count, stop=max_op_count - 99, use_block_num=False): acc_op.append(h)
+                >>> len(acc_op)
+                100
 
-                b = Blockchain()
-                max_block = b.get_current_block_num()
-                # Returns the account operation inside the last 100 block. This can be empty.
-                for h in acc.history_reverse(start=max_block, stop=max_block-100, use_block_num=True):
-                    print(h)
+                >>> max_block = 21990141
+                >>> acc = Account("test")
+                >>> # Returns the account operation inside the last 100 block. This can be empty.
+                >>> acc_op = []
+                >>> for h in acc.history_reverse(start=max_block, stop=max_block-100, use_block_num=True): acc_op.append(h)
+                >>> len(acc_op)
+                0
 
-                start_time = datetime(2018, 4, 1, 0, 0, 0)
-                stop_time = datetime(2018, 3, 1, 0, 0, 0)
-                # Returns the account operation from 1.4.2018 back to 1.3.2018
-                for h in acc.history_reverse(start=start_time, stop=stop_time):
-                    print(h)
+                >>> start_time = datetime(2018, 4, 1, 0, 0, 0)
+                >>> stop_time = datetime(2018, 3, 1, 0, 0, 0)
+                >>> # Returns the account operation from 1.4.2018 back to 1.3.2018
+                >>> acc_op = []
+                >>> for h in acc.history_reverse(start=start_time, stop=stop_time): acc_op.append(h)
+                >>> len(acc_op)
+                0
 
         """
         _limit = batch_size

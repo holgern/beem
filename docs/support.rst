@@ -2,8 +2,6 @@
 Support and Questions
 *********************
 
-We have currently not setup a distinct channel for development around
-pysteemi. However, many of the contributors are frequently reading
-through these channels:
+Help and discussion channel for beem can be found here:
 
-
+* https://discord.gg/4HM592V

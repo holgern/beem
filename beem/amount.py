@@ -44,15 +44,17 @@ class Amount(dict):
 
         .. code-block:: python
 
-            from beem.amount import Amount
-            from beem.asset import Asset
-            a = Amount("1 STEEM")
-            b = Amount(1, "STEEM")
-            c = Amount("20", Asset("STEEM"))
-            a + b
-            a * 2
-            a += b
-            a /= 2.0
+            >>> from beem.amount import Amount
+            >>> from beem.asset import Asset
+            >>> a = Amount("1 STEEM")
+            >>> b = Amount(1, "STEEM")
+            >>> c = Amount("20", Asset("STEEM"))
+            >>> a + b
+            2.000 STEEM
+            >>> a * 2
+            2.000 STEEM
+            >>> a += b
+            >>> a /= 2.0
 
     """
     def __init__(self, amount, asset=None, new_appbase_format=False, steem_instance=None):

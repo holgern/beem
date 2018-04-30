@@ -67,7 +67,7 @@ class Price(dict):
 
             >>> from beem.price import Price
             >>> Price("0.3314 SBD/STEEM") * 2
-            0.662600000 SBD/STEEM
+            0.662804 SBD/STEEM
 
     """
     def __init__(

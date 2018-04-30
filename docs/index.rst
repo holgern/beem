@@ -25,7 +25,7 @@ software) that allows for fast transactions and ascalable blockchain
 solution. In case of Steem, it comes with decentralized publishing of
 content.
 
-The Steem library has been designed to allow developers to easily
+The beem library has been designed to allow developers to easily
 access its routines and make use of the network without dealing with all
 the related blockchain technology and cryptography. This library can be
 used to do anything that is allowed according to the Steem

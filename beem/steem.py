@@ -94,9 +94,10 @@ class Steem(object):
 
         .. code-block:: python
 
-            from beem import Steem
-            steem = Steem()
-            print(steem.info())
+            >>> from beem import Steem
+            >>> steem = Steem()
+            >>> steem.get_blockchain_version()
+            '0.19.2'
 
         This class also deals with edits, votes and reading content.
     """
@@ -208,9 +209,9 @@ class Steem(object):
         if data_refresh_time_seconds is not None:
             self.data_refresh_time_seconds = data_refresh_time_seconds
         if self.data['last_refresh'] is not None and not force_refresh:
-            if (datetime.now() - self.data['last_refresh']).total_seconds() < self.data_refresh_time_seconds:
+            if (datetime.utcnow() - self.data['last_refresh']).total_seconds() < self.data_refresh_time_seconds:
                 return
-        self.data['last_refresh'] = datetime.now()
+        self.data['last_refresh'] = datetime.utcnow()
         self.data["dynamic_global_properties"] = self.get_dynamic_global_properties(False)
         self.data['feed_history'] = self.get_feed_history(False)
         self.data['get_feed_history'] = self.get_feed_history(False)

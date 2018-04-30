@@ -7,3 +7,5 @@ beem
    beem
    beemapi
    beembase
+   beemgraphenebase
+   beemgrapheneapi

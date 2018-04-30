@@ -1,7 +1,7 @@
-beembase\.chains module
+beem\.asciichart module
 =======================
 
-.. automodule:: beembase.chains
+.. automodule:: beem.asciichart
     :members:
     :undoc-members:
     :show-inheritance:

@@ -22,7 +22,7 @@ from .rpcutils import (
     is_network_appbase_ready, sleep_and_check_retries,
     get_api_name, get_query
 )
-from beem.version import version as beem_version
+from beemgraphenebase.version import version as beem_version
 from beemgraphenebase.chains import known_chains
 
 WEBSOCKET_MODULE = None

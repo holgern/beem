@@ -6,7 +6,6 @@ Submodules
 
 .. toctree::
 
-   beembase.chains
    beembase.memo
    beembase.objects
    beembase.objecttypes
