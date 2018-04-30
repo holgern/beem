@@ -17,7 +17,6 @@ class Asset(BlockchainObject):
         :param beem.steem.Steem steem_instance: Steem
             instance
         :returns: All data of an asset
-        :rtype: dict
 
         .. note:: This class comes with its own caching function to reduce the
                   load on the API server. Instances of this class can be

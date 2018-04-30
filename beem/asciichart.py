@@ -78,16 +78,16 @@ class AsciiChart(object):
 
             :param list series: time series to plot
 
-            .. code-block:: python
+            .. testcode::
 
-                >>> from beem.asciichart import AsciiChart
-                >>> chart = AsciiChart()
-                >>> series = [1, 2, 3, 7, 2, -4, -2]
-                >>> chart.adapt_on_series(series)
-                >>> chart.new_chart()
-                >>> chart.add_axis()
-                >>> chart.add_curve(series)
-                >>> print(str(chart))  # doctest: +SKIP
+                from beem.asciichart import AsciiChart
+                chart = AsciiChart()
+                series = [1, 2, 3, 7, 2, -4, -2]
+                chart.adapt_on_series(series)
+                chart.new_chart()
+                chart.add_axis()
+                chart.add_curve(series)
+                print(str(chart))  # doctest: +SKIP
 
         """
         self.minimum = min(series)
@@ -129,12 +129,12 @@ class AsciiChart(object):
     def plot(self, series, return_str=False):
         """All in one function for plotting
 
-            .. code-block:: python
+            .. testcode::
 
-                >>> from beem.asciichart import AsciiChart
-                >>> chart = AsciiChart()
-                >>> series = [1, 2, 3, 7, 2, -4, -2]
-                >>> chart.plot(series)  # doctest: +SKIP
+                from beem.asciichart import AsciiChart
+                chart = AsciiChart()
+                series = [1, 2, 3, 7, 2, -4, -2]
+                chart.plot(series)  # doctest: +SKIP
         """
         self.clear_data()
         self.adapt_on_series(series)
@@ -149,16 +149,17 @@ class AsciiChart(object):
     def new_chart(self, minimum=None, maximum=None, n=None):
         """Clears the canvas
 
-            .. code-block:: python
+            .. testcode::
 
-                >>> from beem.asciichart import AsciiChart
-                >>> chart = AsciiChart()
-                >>> series = [1, 2, 3, 7, 2, -4, -2]
-                >>> chart.adapt_on_series(series)
-                >>> chart.new_chart()
-                >>> chart.add_axis()
-                >>> chart.add_curve(series)
-                >>> print(str(chart))  # doctest: +SKIP
+                from beem.asciichart import AsciiChart
+                chart = AsciiChart()
+                series = [1, 2, 3, 7, 2, -4, -2]
+                chart.adapt_on_series(series)
+                chart.new_chart()
+                chart.add_axis()
+                chart.add_curve(series)
+                print(str(chart))  # doctest: +SKIP
+
         """
         if minimum is not None:
             self.minimum = minimum
@@ -172,16 +173,16 @@ class AsciiChart(object):
     def add_axis(self):
         """Adds a y-axis to the canvas
 
-            .. code-block:: python
+            .. testcode::
 
-                >>> from beem.asciichart import AsciiChart
-                >>> chart = AsciiChart()
-                >>> series = [1, 2, 3, 7, 2, -4, -2]
-                >>> chart.adapt_on_series(series)
-                >>> chart.new_chart()
-                >>> chart.add_axis()
-                >>> chart.add_curve(series)
-                >>> print(str(chart))  # doctest: +SKIP
+                from beem.asciichart import AsciiChart
+                chart = AsciiChart()
+                series = [1, 2, 3, 7, 2, -4, -2]
+                chart.adapt_on_series(series)
+                chart.new_chart()
+                chart.add_axis()
+                chart.add_curve(series)
+                print(str(chart))  # doctest: +SKIP
 
         """
         # axis and labels
@@ -210,16 +211,16 @@ class AsciiChart(object):
 
             :param list series: List width float data points
 
-            .. code-block:: python
+            .. testcode::
 
-                >>> from beem.asciichart import AsciiChart
-                >>> chart = AsciiChart()
-                >>> series = [1, 2, 3, 7, 2, -4, -2]
-                >>> chart.adapt_on_series(series)
-                >>> chart.new_chart()
-                >>> chart.add_axis()
-                >>> chart.add_curve(series)
-                >>> print(str(chart))  # doctest: +SKIP
+                from beem.asciichart import AsciiChart
+                chart = AsciiChart()
+                series = [1, 2, 3, 7, 2, -4, -2]
+                chart.adapt_on_series(series)
+                chart.new_chart()
+                chart.add_axis()
+                chart.add_curve(series)
+                print(str(chart))  # doctest: +SKIP
 
         """
         if self.n is None:

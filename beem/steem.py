@@ -1337,14 +1337,14 @@ class Steem(object):
 
             For the options, you have these defaults:::
 
-                    {
-                        "author": "",
-                        "permlink": "",
-                        "max_accepted_payout": "1000000.000 SBD",
-                        "percent_steem_dollars": 10000,
-                        "allow_votes": True,
-                        "allow_curation_rewards": True,
-                    }
+                {
+                    "author": "",
+                    "permlink": "",
+                    "max_accepted_payout": "1000000.000 SBD",
+                    "percent_steem_dollars": 10000,
+                    "allow_votes": True,
+                    "allow_curation_rewards": True,
+                }
 
         """
         if not account and config["default_account"]:

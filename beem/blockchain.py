@@ -40,38 +40,37 @@ class Blockchain(object):
 
         This class let's you deal with blockchain related data and methods.
         Read blockchain related data:
-        .. code-block:: python
+        .. testsetup::
 
-            >>> from beem.blockchain import Blockchain
-            >>> chain = Blockchain()
+            from beem.blockchain import Blockchain
+            chain = Blockchain()
 
         Read current block and blockchain info
-        .. code-block:: python
+        .. testcode::
 
-            >>> from beem.blockchain import Blockchain
-            >>> chain = Blockchain()
-            >>> print(chain.get_current_block())  # doctest: +SKIP
-            >>> print(chain.steem.info())  # doctest: +SKIP
+            print(chain.get_current_block())  # doctest: +SKIP
+            print(chain.steem.info())  # doctest: +SKIP
 
         Monitor for new blocks. When ``stop`` is not set, monitoring will never stop.
-        .. code-block:: python
+        .. testcode::
 
-            >>> from beem.blockchain import Blockchain
-            >>> chain = Blockchain()
-            >>> blocks = []
-            >>> current_num = chain.get_current_block_num()
-            >>> for block in chain.blocks(start=current_num - 99, stop=current_num): blocks.append(block)
-            >>> len(blocks)
+            blocks = []
+            current_num = chain.get_current_block_num()
+            for block in chain.blocks(start=current_num - 99, stop=current_num):
+                blocks.append(block)
+            len(blocks)
+
+        .. testoutput::
+
             100
 
         or each operation individually:
-        .. code-block:: python
+        .. testcode::
 
-            >>> from beem.blockchain import Blockchain
-            >>> chain = Blockchain()
-            >>> ops = []
-            >>> current_num = chain.get_current_block_num()
-            >>> for operation in chain.ops(start=current_num - 99, stop=current_num): ops.append(operation)
+            ops = []
+            current_num = chain.get_current_block_num()
+            for operation in chain.ops(start=current_num - 99, stop=current_num):
+                ops.append(operation)
 
     """
     def __init__(
@@ -274,9 +273,10 @@ class Blockchain(object):
     def wait_for_and_get_block(self, block_number, blocks_waiting_for=None, last_fetched_block_num=None):
         """ Get the desired block from the chain, if the current head block is smaller (for both head and irreversible)
             then we wait, but a maxmimum of blocks_waiting_for * max_block_wait_repetition time before failure.
+
             :param int block_number: desired block number
             :param int blocks_waiting_for: (default) difference between block_number and current head
-            how many blocks we are willing to wait, positive int
+                how many blocks we are willing to wait, positive int
 
         """
         if last_fetched_block_num is None or (last_fetched_block_num is not None and block_number > last_fetched_block_num):

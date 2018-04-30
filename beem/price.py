@@ -68,6 +68,8 @@ class Price(dict):
             >>> from beem.price import Price
             >>> Price("0.3314 SBD/STEEM") * 2
             0.662804 SBD/STEEM
+            >>> Price(0.3314, "SBD", "STEEM")
+            0.331402 SBD/STEEM
 
     """
     def __init__(
@@ -160,7 +162,8 @@ class Price(dict):
         return Price(
             None,
             base=self["base"].copy(),
-            quote=self["quote"].copy())
+            quote=self["quote"].copy(),
+            steem_instance=self.steem)
 
     def _safedivide(self, a, b):
         if b != 0.0:
@@ -175,6 +178,13 @@ class Price(dict):
         """ Returns the price instance so that the base asset is ``base``.
 
             Note: This makes a copy of the object!
+
+            .. code-block:: python
+
+                >>> from beem.price import Price
+                >>> Price("0.3314 SBD/STEEM").as_base("STEEM")
+                3.017483 STEEM/SBD
+
         """
         if base == self["base"]["symbol"]:
             return self.copy()
@@ -187,6 +197,13 @@ class Price(dict):
         """ Returns the price instance so that the quote asset is ``quote``.
 
             Note: This makes a copy of the object!
+
+            .. code-block:: python
+
+                >>> from beem.price import Price
+                >>> Price("0.3314 SBD/STEEM").as_quote("SBD")
+                3.017483 STEEM/SBD
+
         """
         if quote == self["quote"]["symbol"]:
             return self.copy()
@@ -197,6 +214,13 @@ class Price(dict):
 
     def invert(self):
         """ Invert the price (e.g. go from ``SBD/STEEM`` into ``STEEM/SBD``)
+
+            .. code-block:: python
+
+                >>> from beem.price import Price
+                >>> Price("0.3314 SBD/STEEM").invert()
+                3.017483 STEEM/SBD
+
         """
         tmp = self["quote"]
         self["quote"] = self["base"]

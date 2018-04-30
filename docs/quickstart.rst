@@ -32,7 +32,8 @@ By creating this object different options can be set.
 
 Wallet and Keys
 ---------------
-Each account has a:
+Each account has the following keys:
+
 * Posting key (allows accounts to post, vote, edit, resteem and follow/mute)
 * Active key (allows accounts to transfer, power up/down, voting for witness, ...)
 * Memo key (Can be used to encrypt/decrypt memos)

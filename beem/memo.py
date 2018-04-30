@@ -111,26 +111,26 @@ class Memo(object):
 
         .. code-block:: python
 
-             from getpass import getpass
-             from beem.block import Block
-             from beem.memo import Memo
+            from getpass import getpass
+            from beem.block import Block
+            from beem.memo import Memo
 
-             # Obtain a transfer from the blockchain
-             block = Block(23755086)                   # block
-             transaction = block["transactions"][3]    # transactions
-             op = transaction["operations"][0]         # operation
-             op_id = op[0]                             # operation type
-             op_data = op[1]                           # operation payload
+            # Obtain a transfer from the blockchain
+            block = Block(23755086)                   # block
+            transaction = block["transactions"][3]    # transactions
+            op = transaction["operations"][0]         # operation
+            op_id = op[0]                             # operation type
+            op_data = op[1]                           # operation payload
 
-             # Instantiate Memo for decoding
-             memo = Memo()
+            # Instantiate Memo for decoding
+            memo = Memo()
 
-             # Unlock wallet
-             memo.unlock_wallet(getpass())
+            # Unlock wallet
+            memo.unlock_wallet(getpass())
 
-             # Decode memo
-             # Raises exception if required keys not available in the wallet
-             print(memo.decrypt(op_data["transfer"]))
+            # Decode memo
+            # Raises exception if required keys not available in the wallet
+            print(memo.decrypt(op_data["transfer"]))
 
     """
     def __init__(
