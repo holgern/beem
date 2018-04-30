@@ -15,3 +15,4 @@ mock
 appdirs
 Click
 prettytable
+sphinx_rtd_theme
