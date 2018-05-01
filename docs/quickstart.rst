@@ -93,7 +93,7 @@ Private keys can also set temporary
 Receiving information about blocks, accounts, votes, comments, market and witness
 ---------------------------------------------------------------------------------
 
-Recieve all Blocks from the Blockchain
+Receive all Blocks from the Blockchain
 
 .. code-block:: python
 
