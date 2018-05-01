@@ -42,9 +42,11 @@ Current build status
    :target: https://codeclimate.com/github/holgern/beem/test_coverage
    :alt: Test Coverage
 
-Support
-=======
-You may find help at https://discord.gg/4HM592V. The discord channel can also be used to discuss things about beem.
+Support & Documentation
+=======================
+You may find help in the `discord-channel`_. The discord channel can also be used to discuss things about beem.
+
+A complete library documentation is available at  `beem-readthedocs-io`_.
 
 Installation
 ============
@@ -116,15 +118,11 @@ Signing and Verify can be fasten (200 %) by installing cryptography::
     conda install cryptography
     
 
-CLI tool bundled
-----------------
-I started to work on a CLI tool::
+CLI tool beempy
+---------------
+A command line tool is available. The help output shows the available commands:
 
-    beempy
-
-Documentation
-=============
-Documentation is available at http://beem.readthedocs.io/en/latest/
+    beempy --help
 
 Changelog
 =========
@@ -310,3 +308,5 @@ Acknowledgements
 .. _python-bitshares: https://github.com/xeroc/python-bitshares
 .. _Python: http://python.org
 .. _Anaconda: https://www.continuum.io
+.. _beem-readthedocs-io: http://beem.readthedocs.io/en/latest/
+.. _discord-channel: https://discord.gg/4HM592V

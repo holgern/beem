@@ -121,12 +121,14 @@ class Market(dict):
 
             .. code-block:: js
 
-                 {'highest_bid': 0.30100226633322913,
-                  'latest': 0.0,
-                  'lowest_ask': 0.3249636958897082,
-                  'percent_change': 0.0,
-                  'sbd_volume': 108329611.0,
-                  'steem_volume': 355094043.0}
+                 {
+                    'highest_bid': 0.30100226633322913,
+                    'latest': 0.0,
+                    'lowest_ask': 0.3249636958897082,
+                    'percent_change': 0.0,
+                    'sbd_volume': 108329611.0,
+                    'steem_volume': 355094043.0
+                }
 
         """
         data = {}

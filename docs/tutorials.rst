@@ -10,6 +10,7 @@ transactions. This can be used to do a multi-send (one sender, multiple
 receivers), but it also allows to use any other kind of operation. The
 advantage here is that the user can be sure that the operations are
 executed in the same order as they are added to the transaction.
+
 A block can only include one vote operation and
 one comment operation from each sender.
 
@@ -21,19 +22,18 @@ one comment operation from each sender.
   from beem.comment import Comment
   from beem.instance import set_shared_steem_instance
 
-  # Only for testing not a real working key
+  # not a real working key
   wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
-  # set nobroadcast always to True, when testing
-  testnet = Steem(
-      nobroadcast=True,
-      bundle=True,
+  stm = Steem(
+      bundle=True, # Enable bundle broadcast
+      # nobroadcast=True, # Enable this for testing
       keys=[wif],
   )
-  # Set testnet as shared instance
-  set_shared_steem_instance(testnet)
+  # Set stm as shared instance
+  set_shared_steem_instance(stm)
 
-  # Account and Comment will use now testnet
+  # Account and Comment will use now stm
   account = Account("test")
 
   # Post 
@@ -47,6 +47,71 @@ one comment operation from each sender.
 
   pprint(testnet.broadcast())
 
+
+Use nobroadcast for testing
+---------------------------
+
+When using  `nobroadcast=True` the transaction is not broadcasted but printed.
+
+.. code-block:: python
+
+  from pprint import pprint
+  from beem import Steem
+  from beem.account import Account
+  from beem.instance import set_shared_steem_instance
+
+  # Only for testing not a real working key
+  wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
+
+  # set nobroadcast always to True, when testing
+  testnet = Steem(
+      nobroadcast=True, # Set to false when want to go live
+      keys=[wif],
+  )
+  # Set testnet as shared instance
+  set_shared_steem_instance(testnet)
+
+  # Account will use now testnet
+  account = Account("test")
+
+  pprint(account.transfer("test1", 1, "STEEM"))
+
+When excecuting the script above, the output will be similar to the following:
+
+.. code-block:: js
+
+    Not broadcasting anything!
+    {'expiration': '2018-05-01T16:16:57',
+     'extensions': [],
+     'operations': [['transfer',
+                     {'amount': '1.000 STEEM',
+                      'from': 'test',
+                      'memo': '',
+                      'to': 'test1'}]],
+     'ref_block_num': 33020,
+     'ref_block_prefix': 2523628005,
+     'signatures': ['1f57da50f241e70c229ed67b5d61898e792175c0f18ae29df8af414c46ae91eb5729c867b5d7dcc578368e7024e414c237f644629cb0aa3ecafac3640871ffe785']}
+
+Clear BlockchainObject Caching
+------------------------------
+
+Each BlockchainObject (Account, Comment, Vote, Witness, Amount, ...) has a glocal cache. This cache
+stores all objects and could lead to increased memory consumption. The global cache can be cleared
+with a `clear_cache()` call from any BlockchainObject.
+
+.. code-block:: python
+
+  from pprint import pprint
+  from beem.account import Account
+
+  account = Account("test")
+  pprint(str(account._cache))
+  account1 = Account("test1")
+  pprint(str(account._cache))
+  pprint(str(account1._cache))
+  account.clear_cache()
+  pprint(str(account._cache))
+  pprint(str(account1._cache))
 
 Simple Sell Script
 ------------------
