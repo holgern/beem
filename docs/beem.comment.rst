@@ -1,5 +1,5 @@
-beem\.comment module
-====================
+beem\.comment
+=============
 
 .. automodule:: beem.comment
     :members:

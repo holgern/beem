@@ -1,5 +1,5 @@
-beemgraphenebase\.operations module
-===================================
+beemgraphenebase\.operations
+============================
 
 .. automodule:: beemgraphenebase.operationids
     :members:

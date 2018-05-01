@@ -1,5 +1,5 @@
-beem\.discussions module
-========================
+beem\.discussions
+=================
 
 .. automodule:: beem.discussions
     :members:

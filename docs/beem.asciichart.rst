@@ -1,5 +1,5 @@
-beem\.asciichart module
-=======================
+beem\.asciichart
+================
 
 .. automodule:: beem.asciichart
     :members:

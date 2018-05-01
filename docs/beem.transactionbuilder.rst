@@ -1,5 +1,5 @@
-beem\.transactionbuilder module
-===============================
+beem\.transactionbuilder
+========================
 
 .. automodule:: beem.transactionbuilder
     :members:

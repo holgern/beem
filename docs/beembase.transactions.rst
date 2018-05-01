@@ -1,5 +1,5 @@
-beembase\.transactions module
-===================================
+beembase\.transactions
+======================
 
 .. automodule:: beembase.transactions
     :members:

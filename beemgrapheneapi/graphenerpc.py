@@ -110,7 +110,8 @@ class GrapheneRPC(object):
     :param int num_retries: Try x times to num_retries to a node on disconnect, -1 for indefinitely
     :param int num_retries_call: Repeat num_retries_call times a rpc call on node error (default is 5)
     :param int timeout: Timeout setting for https nodes (default is 60)
-    Available APIs
+
+    Available APIs:
 
           * database
           * network_node

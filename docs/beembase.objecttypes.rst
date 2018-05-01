@@ -1,5 +1,5 @@
-beembase\.objecttypes module
-============================
+beembase\.objecttypes
+=====================
 
 .. automodule:: beembase.objecttypes
     :members:

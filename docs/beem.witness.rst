@@ -1,5 +1,5 @@
-beem\.witness module
-====================
+beem\.witness
+=============
 
 .. automodule:: beem.witness
     :members:

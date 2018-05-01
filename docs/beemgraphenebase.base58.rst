@@ -1,5 +1,5 @@
-beemgraphenebase\.base58 module
-===============================
+beemgraphenebase\.base58
+========================
 
 .. automodule:: beemgraphenebase.base58
     :members:

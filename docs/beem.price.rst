@@ -1,5 +1,5 @@
-beem\.price module
-==================
+beem\.price
+===========
 
 .. automodule:: beem.price
     :members:

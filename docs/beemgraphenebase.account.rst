@@ -1,5 +1,5 @@
-beemgraphenebase\.account module
-================================
+beemgraphenebase\.account
+=========================
 
 .. automodule:: beemgraphenebase.account
     :members:

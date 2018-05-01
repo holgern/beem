@@ -1,5 +1,5 @@
-beem\.exceptions module
-=======================
+beem\.exceptions
+================
 
 .. automodule:: beem.exceptions
     :members:

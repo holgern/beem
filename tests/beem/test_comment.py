@@ -81,6 +81,25 @@ class Testcases(unittest.TestCase):
         ("non_appbase"),
         ("appbase"),
     ])
+    def test_comment_dict(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        else:
+            bts = self.appbase
+        c = Comment({'author': self.author, 'permlink': self.permlink}, steem_instance=bts)
+        c.refresh()
+        self.assertEqual(c.author, self.author)
+        self.assertEqual(c.permlink, self.permlink)
+        self.assertEqual(c.authorperm, self.authorperm)
+        self.assertEqual(c.category, self.category)
+        self.assertEqual(c.parent_author, '')
+        self.assertEqual(c.parent_permlink, self.category)
+        self.assertEqual(c.title, self.title)
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
     def test_vote(self, node_param):
         if node_param == "non_appbase":
             bts = self.bts

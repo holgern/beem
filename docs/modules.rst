@@ -1,7 +1,7 @@
 Modules
 =======
 
-Beem submodules
+beem Modules
 ---------------
 
 .. toctree::
@@ -31,7 +31,7 @@ Beem submodules
    beem.wallet
    beem.witness
 
-beemapi Submodules
+beemapi Modules
 ------------------
 
 .. toctree::
@@ -40,7 +40,7 @@ beemapi Submodules
    beemapi.exceptions
    beemapi.websocket
 
-beembase Submodules
+beembase Modules
 -------------------
 
 .. toctree::
@@ -53,7 +53,7 @@ beembase Submodules
    beembase.signedtransactions
    beembase.transactions
 
-beemgrapheneapi Submodules
+beemgrapheneapi Modules
 --------------------------
 
 .. toctree::
@@ -61,7 +61,7 @@ beemgrapheneapi Submodules
    beemgrapheneapi.graphenenerpc
 
 
-beemgraphenebase Submodules
+beemgraphenebase Modules
 ---------------------------
 
 .. toctree::

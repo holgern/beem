@@ -115,21 +115,47 @@ Setting password_storage
 The password_storage can be set to:
 
 * environment, this is the default setting. The master password for the wallet can be provided in the environment variable `UNLOCK`.
-* keyring
-
-.. code-block:: python
-
-    from beem import Steem
-    steem = Steem()
-    steem.config["password_storage"] = "environment"
-    steem.config["password_storage"] = "keyring"
-
-or by beempy with
+* keyring (when set with beempy, it asks for the wallet password)
 
 .. code-block:: bash
 
         beempy set password_storage environment
         beempy set password_storage keyring
+
+
+
+Environment variable for storing the master password
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When `password_storage` is set to `environment`, the master password can be stored in `UNLOCK`
+for unlocking automatically the wallet.
+
+Keyring support for beempy and wallet
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In order to use keyring for storing the wallet password, the following steps are necessary:
+
+* Install keyring: `pip install keyring`
+* Change `password_storage` to `keyring` with `beempy` and enter the wallet password.
+
+It also possible to change the password in the keyring by
+
+.. code-block:: bash
+
+    python -m keyring set beem wallet
+
+The stored master password can be displayed in the terminal by
+
+.. code-block:: bash
+
+    python -m keyring get beem wallet
+
+When keyring is set as `password_storage` and the stored password in the keyring
+is identically to the set master password of the wallet, the wallet is automatically
+unlocked everytime it is used.
+
+Testing if unlocking works
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Testing if the master password is correctly provided by keyring or the `UNLOCK` variable:
 

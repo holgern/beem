@@ -1,5 +1,5 @@
-beem\.blockchain module
-=======================
+beem\.blockchain
+================
 
 .. automodule:: beem.blockchain
     :members:

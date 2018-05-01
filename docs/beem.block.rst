@@ -1,5 +1,5 @@
-beem\.block module
-==================
+beem\.block
+===========
 
 .. automodule:: beem.block
     :members:

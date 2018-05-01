@@ -1,5 +1,5 @@
-beem\.utils module
-==================
+beem\.utils
+===========
 
 .. automodule:: beem.utils
     :members:

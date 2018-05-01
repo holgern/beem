@@ -117,18 +117,10 @@ class Testcases(unittest.TestCase):
         d = Discussions_by_active(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
     def test_cashout(self, node_param):
-        if node_param == "non_appbase":
-            bts = self.bts
-        else:
-            bts = self.appbase
-        query = Query()
-        query["limit"] = 10
-        Discussions_by_cashout({"limit": 10}, steem_instance=bts)
+        bts = self.appbase
+        query = Query(limit=10)
+        Discussions_by_cashout(query, steem_instance=bts)
         # self.assertEqual(len(d), 10)
 
     @parameterized.expand([

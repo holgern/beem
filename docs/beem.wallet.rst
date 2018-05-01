@@ -1,5 +1,5 @@
-beem\.wallet module
-===================
+beem\.wallet
+============
 
 .. automodule:: beem.wallet
     :members:

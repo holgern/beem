@@ -1,5 +1,5 @@
-beemgraphenebase\.ecdasig module
-================================
+beemgraphenebase\.ecdasig
+=========================
 
 .. automodule:: beemgraphenebase.ecdasig
     :members:

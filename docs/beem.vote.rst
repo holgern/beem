@@ -1,5 +1,5 @@
-beem\.vote module
-=================
+beem\.vote
+==========
 
 .. automodule:: beem.vote
     :members:
