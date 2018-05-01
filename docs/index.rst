@@ -121,14 +121,8 @@ General
    modules
    contribute
    support
+   indices
 
-
-   
-Glossary
-========
-
-.. toctree::
-   :maxdepth: 1
 
 
 Indices and tables
