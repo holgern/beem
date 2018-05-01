@@ -117,7 +117,7 @@ class Testcases(unittest.TestCase):
         d = Discussions_by_active(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
-    def test_cashout(self, node_param):
+    def test_cashout(self):
         bts = self.appbase
         query = Query(limit=10)
         Discussions_by_cashout(query, steem_instance=bts)
