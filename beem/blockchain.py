@@ -40,18 +40,21 @@ class Blockchain(object):
 
         This class let's you deal with blockchain related data and methods.
         Read blockchain related data:
+
         .. testsetup::
 
             from beem.blockchain import Blockchain
             chain = Blockchain()
 
         Read current block and blockchain info
+
         .. testcode::
 
-            print(chain.get_current_block())  # doctest: +SKIP
-            print(chain.steem.info())  # doctest: +SKIP
+            print(chain.get_current_block())
+            print(chain.steem.info())
 
         Monitor for new blocks. When ``stop`` is not set, monitoring will never stop.
+
         .. testcode::
 
             blocks = []
@@ -65,6 +68,7 @@ class Blockchain(object):
             100
 
         or each operation individually:
+
         .. testcode::
 
             ops = []

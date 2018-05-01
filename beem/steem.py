@@ -649,18 +649,16 @@ class Steem(object):
                 TransactionBuilder (see :func:`steem.new_tx()`) to specify
                 where to put a specific operation.
 
-            ... note:: ``append_to`` is exposed to every method used in the
+            .. note:: ``append_to`` is exposed to every method used in the
                 Steem class
 
-            ... note::
+            .. note::   If ``ops`` is a list of operation, they all need to be
+                        signable by the same key! Thus, you cannot combine ops
+                        that require active permission with ops that require
+                        posting permission. Neither can you use different
+                        accounts for different operations!
 
-                If ``ops`` is a list of operation, they all need to be
-                signable by the same key! Thus, you cannot combine ops
-                that require active permission with ops that require
-                posting permission. Neither can you use different
-                accounts for different operations!
-
-            ... note:: This uses ``beem.txbuffer`` as instance of
+            .. note:: This uses ``beem.txbuffer`` as instance of
                 :class:`beem.transactionbuilder.TransactionBuilder`.
                 You may want to use your own txbuffer
         """
@@ -1044,7 +1042,7 @@ class Steem(object):
             :param dict props: Properties
             :param str account: (optional) witness account name
 
-             Properties:::
+            Properties:::
 
                 {
                     "account_creation_fee": x,

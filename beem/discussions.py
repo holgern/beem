@@ -26,6 +26,7 @@ class Query(dict):
         :param str parent_permlink:
 
         .. testcode::
+
             from beem.discussions import Query
             query = Query(limit=10, tag="steemit")
 

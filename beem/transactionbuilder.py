@@ -34,19 +34,19 @@ class TransactionBuilder(dict):
         :param str expiration: expiration date
         :param Steem steem_instance: If not set, shared_steem_instance() is used
 
-        .. code-block:: python
+        .. testcode::
 
-           >>> from beem.transactionbuilder import TransactionBuilder
-           >>> from beembase.operations import Transfer
-           >>> from beem import Steem
-           >>> wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-           >>> stm = Steem(nobroadcast=True, keys={'active': wif})
-           >>> tx = TransactionBuilder(steem_instance=stm)
-           >>> transfer = {"from": "test", "to": "test1", "amount": "1 STEEM", "memo": ""}
-           >>> tx.appendOps(Transfer(transfer))
-           >>> tx.appendSigner("test", "active") # or tx.appendWif(wif)
-           >>> signed_tx = tx.sign()
-           >>> broadcast_tx = tx.broadcast()
+           from beem.transactionbuilder import TransactionBuilder
+           from beembase.operations import Transfer
+           from beem import Steem
+           wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
+           stm = Steem(nobroadcast=True, keys={'active': wif})
+           tx = TransactionBuilder(steem_instance=stm)
+           transfer = {"from": "test", "to": "test1", "amount": "1 STEEM", "memo": ""}
+           tx.appendOps(Transfer(transfer))
+           tx.appendSigner("test", "active") # or tx.appendWif(wif)
+           signed_tx = tx.sign()
+           broadcast_tx = tx.broadcast()
 
     """
     def __init__(

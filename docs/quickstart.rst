@@ -91,7 +91,9 @@ Private keys can also set temporary
    account.transfer("<to>", "<amount>", "<asset>", "<memo>")
 
 Receiving information about blocks, accounts, votes, comments, market and witness
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------------------------------------------------------
+
+Recieve all Blocks from the Blockchain
 
 .. code-block:: python
 
@@ -100,10 +102,14 @@ Receiving information about blocks, accounts, votes, comments, market and witnes
    for op in Blockchain.ops():
        print(op)
 
+Access one Block
+
 .. code-block:: python
 
    from beem.block import Block
    print(Block(1))
+
+Access an account
 
 .. code-block:: python
 
@@ -113,11 +119,22 @@ Receiving information about blocks, accounts, votes, comments, market and witnes
    for h in account.history():
        print(h)
 
+A single vote
+
 .. code-block:: python
 
    from beem.vote import Vote
    vote = Vote(u"@gtg/ffdhu-gtg-witness-log|gandalf")
    print(vote.json())
+
+All votes from an account
+
+.. code-block:: python
+
+   from beem.vote import AccountVotes
+   allVotes = AccountVotes("gtg")
+
+Access a post
 
 .. code-block:: python
 
@@ -125,11 +142,15 @@ Receiving information about blocks, accounts, votes, comments, market and witnes
    comment = Comment("@gtg/ffdhu-gtg-witness-log")
    print(comment["active_votes"])
 
+Access the market
+
 .. code-block:: python
 
    from beem.market import Market
    market = Market("SBD:STEEM")
    print(market.ticker())
+
+Access a witness
 
 .. code-block:: python
 
@@ -138,7 +159,9 @@ Receiving information about blocks, accounts, votes, comments, market and witnes
    print(witness.is_active)
 
 Sending transaction to the blockchain
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------
+
+Sending a Transfer
 
 .. code-block:: python
 
@@ -147,6 +170,8 @@ Sending transaction to the blockchain
    steem.wallet.unlock("wallet-passphrase")
    account = Account("test", steem_instance=steem)
    account.transfer("null", 1, "SBD", "test")
+
+Upvote a post
 
 .. code-block:: python
 
@@ -157,12 +182,16 @@ Sending transaction to the blockchain
    comment = Comment("@gtg/ffdhu-gtg-witness-log", steem_instance=steem)
    comment.upvote(weight=10, voter="test")
 
+Publish a post to the blockchain
+
 .. code-block:: python
 
    from beem import Steem
    steem = Steem()
    steem.wallet.unlock("wallet-passphrase")
    steem.post("title", "body", author="test", tags=["a", "b", "c", "d", "e"], self_vote=True)
+
+Sell STEEM on the market
 
 .. code-block:: python
 
