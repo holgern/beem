@@ -44,9 +44,9 @@ Current build status
 
 Support & Documentation
 =======================
-You may find help in the `discord-channel`_. The discord channel can also be used to discuss things about beem.
+You may find help in the  `beem-discord-channel`_. The discord channel can also be used to discuss things about beem.
 
-A complete library documentation is available at  `beem-readthedocs-io`_.
+A complete library documentation is available at  `beem.readthedocs.io`_.
 
 Installation
 ============
@@ -308,5 +308,5 @@ Acknowledgements
 .. _python-bitshares: https://github.com/xeroc/python-bitshares
 .. _Python: http://python.org
 .. _Anaconda: https://www.continuum.io
-.. _beem-readthedocs-io: http://beem.readthedocs.io/en/latest/
-.. _discord-channel: https://discord.gg/4HM592V
+.. _beem.readthedocs.io: http://beem.readthedocs.io/en/latest/
+.. _beem-discord-channel: https://discord.gg/4HM592V
