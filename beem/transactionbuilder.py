@@ -30,24 +30,23 @@ class TransactionBuilder(dict):
         operations and signers.
         To build your own transactions and sign them
 
-        param dict tx: transaction (Optional). If not set, the new transaction is created.
-        param str expiration: expiration date
-        param Steem steem_instance: If not set, shared_steem_instance() is used
+        :param dict tx: transaction (Optional). If not set, the new transaction is created.
+        :param str expiration: expiration date
+        :param Steem steem_instance: If not set, shared_steem_instance() is used
 
-        .. code-block:: python
+        .. testcode::
 
            from beem.transactionbuilder import TransactionBuilder
            from beembase.operations import Transfer
-           tx = TransactionBuilder()
-           tx.appendOps(Transfer(**{
-                    "from": "test",
-                    "to": "test1",
-                    "amount": "1 STEEM",
-                    "memo": ""
-                }))
-           tx.appendSigner("test", "active")
-           tx.sign()
-           tx.broadcast()
+           from beem import Steem
+           wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
+           stm = Steem(nobroadcast=True, keys={'active': wif})
+           tx = TransactionBuilder(steem_instance=stm)
+           transfer = {"from": "test", "to": "test1", "amount": "1 STEEM", "memo": ""}
+           tx.appendOps(Transfer(transfer))
+           tx.appendSigner("test", "active") # or tx.appendWif(wif)
+           signed_tx = tx.sign()
+           broadcast_tx = tx.broadcast()
 
     """
     def __init__(
@@ -251,6 +250,7 @@ class TransactionBuilder(dict):
             :param bool reconstruct_tx: when set to False and tx
                 is already contructed, it will not reconstructed
                 and already added signatures remain
+
         """
         if not self._is_constructed() or (self._is_constructed() and reconstruct_tx):
             self.constructTx()
@@ -303,6 +303,7 @@ class TransactionBuilder(dict):
 
             :param int max_block_age: paramerter only used
                 for appbase ready nodes
+
         """
         # Cannot broadcast an empty transaction
         if not self._is_signed():
@@ -359,6 +360,7 @@ class TransactionBuilder(dict):
             :param bool reconstruct_tx: when set to False and tx
                 is already contructed, it will not reconstructed
                 and already added signatures remain
+
         """
         if not self._is_constructed() or (self._is_constructed() and reconstruct_tx):
             self.constructTx()

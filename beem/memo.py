@@ -49,7 +49,6 @@ class Memo(object):
         if ``op_data`` being the payload of a transfer operation.
 
         Memo Keys
-        #########
 
         In Steem, memos are AES-256 encrypted with a shared secret between sender and
         receiver. It is derived from the memo private key of the sender and the memo
@@ -76,7 +75,6 @@ class Memo(object):
         while the memo private key can be dumped with `dump_private_keys`
 
         Memo Message
-        ############
 
         The take the following form:
 
@@ -93,13 +91,9 @@ class Memo(object):
         The `nonce` is a random integer that is used for the seed of the AES encryption
         of the message.
 
-        Example
-        #######
-
         Encrypting a memo
-        ~~~~~~~~~~~~~~~~~
 
-        The high level memo class makes use of the pysteem wallet to obtain keys
+        The high level memo class makes use of the beem wallet to obtain keys
         for the corresponding accounts.
 
         .. code-block:: python
@@ -114,30 +108,29 @@ class Memo(object):
             encrypted_memo = memoObj.encrypt(memo)
 
         Decoding of a received memo
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         .. code-block:: python
 
-             from getpass import getpass
-             from beem.block import Block
-             from beem.memo import Memo
+            from getpass import getpass
+            from beem.block import Block
+            from beem.memo import Memo
 
-             # Obtain a transfer from the blockchain
-             block = Block(23755086)                   # block
-             transaction = block["transactions"][3]    # transactions
-             op = transaction["operations"][0]         # operation
-             op_id = op[0]                             # operation type
-             op_data = op[1]                           # operation payload
+            # Obtain a transfer from the blockchain
+            block = Block(23755086)                   # block
+            transaction = block["transactions"][3]    # transactions
+            op = transaction["operations"][0]         # operation
+            op_id = op[0]                             # operation type
+            op_data = op[1]                           # operation payload
 
-             # Instantiate Memo for decoding
-             memo = Memo()
+            # Instantiate Memo for decoding
+            memo = Memo()
 
-             # Unlock wallet
-             memo.unlock_wallet(getpass())
+            # Unlock wallet
+            memo.unlock_wallet(getpass())
 
-             # Decode memo
-             # Raises exception if required keys not available in the wallet
-             print(memo.decrypt(op_data["transfer"]))
+            # Decode memo
+            # Raises exception if required keys not available in the wallet
+            print(memo.decrypt(op_data["transfer"]))
 
     """
     def __init__(

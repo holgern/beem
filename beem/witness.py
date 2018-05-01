@@ -27,8 +27,9 @@ class Witness(BlockchainObject):
 
         .. code-block:: python
 
-           from beem.witness import Witness
-           Witness("gtg")
+           >>> from beem.witness import Witness
+           >>> Witness("gtg")
+           <Witness gtg>
 
     """
     type_id = 3
@@ -122,16 +123,20 @@ class Witness(BlockchainObject):
 
     def update(self, signing_key, url, props, account=None):
         """ Update witness
+
             :param pubkey signing_key: Signing key
             :param str url: URL
             :param dict props: Properties
             :param str account: (optional) witness account name
-             Properties:::
+
+            Properties:::
+
                 {
                     "account_creation_fee": x,
                     "maximum_block_size": x,
                     "sbd_interest_rate": x,
                 }
+
         """
         if not account:
             account = self["owner"]
@@ -149,7 +154,7 @@ class WitnessesObject(list):
         elif sort_key == 'quote':
             sortedList = sorted(self, key=lambda self: self['sbd_exchange_rate']['quote'], reverse=reverse)
         elif sort_key == 'last_sbd_exchange_update':
-            sortedList = sorted(self, key=lambda self: (utc.localize(datetime.now()) - formatTimeString(self['last_sbd_exchange_update'])).total_seconds(), reverse=reverse)
+            sortedList = sorted(self, key=lambda self: (utc.localize(datetime.utcnow()) - formatTimeString(self['last_sbd_exchange_update'])).total_seconds(), reverse=reverse)
         elif sort_key == 'account_creation_fee':
             sortedList = sorted(self, key=lambda self: self['props']['account_creation_fee'], reverse=reverse)
         elif sort_key == 'sbd_interest_rate':
@@ -161,7 +166,7 @@ class WitnessesObject(list):
         else:
             sortedList = sorted(self, key=lambda self: self[sort_key], reverse=reverse)
         for witness in sortedList:
-            td = utc.localize(datetime.now()) - formatTimeString(witness['last_sbd_exchange_update'])
+            td = utc.localize(datetime.utcnow()) - formatTimeString(witness['last_sbd_exchange_update'])
             disabled = ""
             if not witness.is_active:
                 disabled = "yes"

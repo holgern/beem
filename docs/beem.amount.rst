@@ -1,5 +1,5 @@
-beem\.amount module
-===================
+beem\.amount
+============
 
 .. automodule:: beem.amount
     :members:

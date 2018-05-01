@@ -47,15 +47,6 @@ class SteemWebsocket(Events):
             ws.on_block += print
             ws.run_forever()
 
-        Notices:
-
-        * ``on_block``:
-
-            .. code-block:: js
-
-                '0062f19df70ecf3a478a84b4607d9ad8b3e3b607'
-
-
     """
     __events__ = [
         'on_block',

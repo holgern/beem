@@ -78,7 +78,8 @@ class AsciiChart(object):
 
             :param list series: time series to plot
 
-            .. code-block:: python
+            .. testcode::
+
                 from beem.asciichart import AsciiChart
                 chart = AsciiChart()
                 series = [1, 2, 3, 7, 2, -4, -2]
@@ -87,6 +88,7 @@ class AsciiChart(object):
                 chart.add_axis()
                 chart.add_curve(series)
                 print(str(chart))
+
         """
         self.minimum = min(series)
         self.maximum = max(series)
@@ -127,7 +129,8 @@ class AsciiChart(object):
     def plot(self, series, return_str=False):
         """All in one function for plotting
 
-            .. code-block:: python
+            .. testcode::
+
                 from beem.asciichart import AsciiChart
                 chart = AsciiChart()
                 series = [1, 2, 3, 7, 2, -4, -2]
@@ -146,7 +149,8 @@ class AsciiChart(object):
     def new_chart(self, minimum=None, maximum=None, n=None):
         """Clears the canvas
 
-            .. code-block:: python
+            .. testcode::
+
                 from beem.asciichart import AsciiChart
                 chart = AsciiChart()
                 series = [1, 2, 3, 7, 2, -4, -2]
@@ -155,6 +159,7 @@ class AsciiChart(object):
                 chart.add_axis()
                 chart.add_curve(series)
                 print(str(chart))
+
         """
         if minimum is not None:
             self.minimum = minimum
@@ -168,7 +173,8 @@ class AsciiChart(object):
     def add_axis(self):
         """Adds a y-axis to the canvas
 
-            .. code-block:: python
+            .. testcode::
+
                 from beem.asciichart import AsciiChart
                 chart = AsciiChart()
                 series = [1, 2, 3, 7, 2, -4, -2]
@@ -177,6 +183,7 @@ class AsciiChart(object):
                 chart.add_axis()
                 chart.add_curve(series)
                 print(str(chart))
+
         """
         # axis and labels
         interval = abs(float(self.maximum) - float(self.minimum))
@@ -204,7 +211,8 @@ class AsciiChart(object):
 
             :param list series: List width float data points
 
-            .. code-block:: python
+            .. testcode::
+
                 from beem.asciichart import AsciiChart
                 chart = AsciiChart()
                 series = [1, 2, 3, 7, 2, -4, -2]

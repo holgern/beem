@@ -1,5 +1,5 @@
-beemgraphenebase\.objects module
-================================
+beemgraphenebase\.objects
+=========================
 
 .. automodule:: beemgraphenebase.objects
     :members:

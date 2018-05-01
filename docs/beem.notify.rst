@@ -1,5 +1,5 @@
-beem\.notify module
-===================
+beem\.notify
+============
 
 .. automodule:: beem.notify
     :members:

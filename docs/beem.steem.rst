@@ -1,5 +1,5 @@
-beem\.steem module
-==================
+beem\.steem
+===========
 
 .. automodule:: beem.steem
     :members:

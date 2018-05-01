@@ -1,8 +1,7 @@
-beembase\.operationids
+beem\.blockchainobject
 ======================
 
-.. automodule:: beembase.operationids
+.. automodule:: beem.blockchainobject
     :members:
-    :noindex:
     :undoc-members:
     :show-inheritance:

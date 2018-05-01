@@ -239,15 +239,17 @@ class Beneficiaries(GrapheneObject):
 
 class CommentOptionExtensions(Static_variant):
     """ Serialize Comment Payout Beneficiaries.
-    Args:
-        beneficiaries (list): A static_variant containing beneficiaries.
-    Example:
-        ::
+
+        :param list beneficiaries: A static_variant containing beneficiaries.
+
+        Example::
+
             [0,
                 {'beneficiaries': [
                     {'account': 'furion', 'weight': 10000}
                 ]}
             ]
+
     """
     def __init__(self, o):
         type_id, data = o

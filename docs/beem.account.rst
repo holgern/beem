@@ -1,5 +1,5 @@
-beem\.account module
-====================
+beem\.account
+=============
 
 .. automodule:: beem.account
     :members:

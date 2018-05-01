@@ -1,5 +1,5 @@
-beem\.market module
-===================
+beem\.market
+============
 
 .. automodule:: beem.market
     :members:

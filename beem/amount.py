@@ -42,7 +42,7 @@ class Amount(dict):
         Instances of this class can be used in regular mathematical expressions
         (``+-*/%``) such as:
 
-        .. code-block:: python
+        .. testcode::
 
             from beem.amount import Amount
             from beem.asset import Asset
@@ -53,6 +53,11 @@ class Amount(dict):
             a * 2
             a += b
             a /= 2.0
+
+        .. testoutput::
+
+            2.000 STEEM
+            2.000 STEEM
 
     """
     def __init__(self, amount, asset=None, new_appbase_format=False, steem_instance=None):

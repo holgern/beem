@@ -83,9 +83,9 @@ class DataDir(object):
         backup_file = os.path.join(
             backupdir,
             os.path.basename(self.storageDatabase) +
-            datetime.now().strftime("-" + timeformat))
+            datetime.utcnow().strftime("-" + timeformat))
         self.sqlite3_copy(self.sqlDataBaseFile, backup_file)
-        configStorage["lastBackup"] = datetime.now().strftime(timeformat)
+        configStorage["lastBackup"] = datetime.utcnow().strftime(timeformat)
 
     def sqlite3_copy(self, src, dst):
         """Copy sql file from src to dst"""
@@ -324,7 +324,7 @@ class Configuration(DataDir):
             self.refreshBackup()
         try:
             if (
-                datetime.now() -
+                datetime.utcnow() -
                 datetime.strptime(configStorage["lastBackup"],
                                   timeformat)
             ).days > 7:

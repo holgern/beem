@@ -1,5 +1,5 @@
-beembase\.signedtransactions module
-===================================
+beembase\.signedtransactions
+============================
 
 .. automodule:: beembase.signedtransactions
     :members:

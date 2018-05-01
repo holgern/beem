@@ -1,7 +1,7 @@
-beem\.blockchain
+beem\.asciichart
 ================
 
-.. automodule:: beem.blockchain
+.. automodule:: beem.asciichart
     :members:
     :undoc-members:
     :show-inheritance:

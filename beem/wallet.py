@@ -60,9 +60,6 @@ class Wallet(object):
           any account. This mode is only used for *foreign*
           signatures!
 
-        Create a new wallet
-        -------------------
-
         A new wallet can be created by using:
 
         .. code-block:: python
@@ -74,8 +71,6 @@ class Wallet(object):
 
         This will raise an exception if you already have a wallet installed.
 
-        Unlocking the wallet for signing
-        --------------------------------
 
         The wallet can be unlocked for signing using
 
@@ -84,9 +79,6 @@ class Wallet(object):
            from beem import Steem
            steem = Steem()
            steem.wallet.unlock("supersecret-passphrase")
-
-        Adding a Private Key
-        --------------------
 
         A private key can be added by using the
         :func:`steem.wallet.Wallet.addPrivateKey` method that is available

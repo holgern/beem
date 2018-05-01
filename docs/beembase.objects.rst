@@ -1,5 +1,5 @@
-beembase\.objects module
-========================
+beembase\.objects
+=================
 
 .. automodule:: beembase.objects
     :members:

@@ -1,5 +1,5 @@
-beem\.instance module
-=====================
+beem\.instance
+==============
 
 .. automodule:: beem.instance
     :members:

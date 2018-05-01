@@ -12,17 +12,24 @@ log = logging.getLogger(__name__)
 
 
 class Query(dict):
-    """
-    :param int limit
-    :param str tag
-    :param int truncate_body
-    :param array filter_tags
-    :param array select_authors
-    :param array select_tags
-    :param str start_author
-    :param str start_permlink
-    :param str parent_author
-    :param str parent_permlink
+    """ Query to be used for all discussion queries
+
+        :param int limit: limits the number of posts
+        :param str tag: tag query
+        :param int truncate_body:
+        :param array filter_tags:
+        :param array select_authors:
+        :param array select_tags:
+        :param str start_author:
+        :param str start_permlink:
+        :param str parent_author:
+        :param str parent_permlink:
+
+        .. testcode::
+
+            from beem.discussions import Query
+            query = Query(limit=10, tag="steemit")
+
     """
     def __init__(self, limit=0, tag="", truncate_body=0,
                  filter_tags=[], select_authors=[], select_tags=[],
@@ -40,10 +47,11 @@ class Query(dict):
 
 
 class Discussions_by_trending(list):
-    """ get_discussions_by_trending
+    """ Get Discussions by trending
 
-        :param Query discussion_query
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param beem.discussions.Query: discussion_query
+        :param beem.steem.Steem steem_instance: Steem instance
+
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
@@ -62,10 +70,11 @@ class Discussions_by_trending(list):
 
 
 class Comment_discussions_by_payout(list):
-    """ get_comment_discussions_by_payout
+    """ Get comment_discussions_by_payout
 
-        :param str discussion_query
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param beem.discussions.Query: discussion_query
+        :param beem.steem.Steem steem_instance: Steem instance
+
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
@@ -84,10 +93,10 @@ class Comment_discussions_by_payout(list):
 
 
 class Post_discussions_by_payout(list):
-    """ get_post_discussions_by_payout
+    """ Get post_discussions_by_payout
 
-        :param str discussion_query
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param beem.discussions.Query: discussion_query
+        :param beem.steem.Steem steem_instance: Steem instance
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
@@ -106,10 +115,10 @@ class Post_discussions_by_payout(list):
 
 
 class Discussions_by_created(list):
-    """ get_discussions_by_created
+    """ Get discussions_by_created
 
-        :param str discussion_query
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param beem.discussions.Query: discussion_query
+        :param beem.steem.Steem steem_instance: Steem instance
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
@@ -150,11 +159,11 @@ class Discussions_by_active(list):
 
 
 class Discussions_by_cashout(list):
-    """ get_discussions_by_cashout. This query seems to be broken at the moment.
+    """ Get discussions_by_cashout. This query seems to be broken at the moment.
         The output is always empty.
 
-        :param str discussion_query
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param beem.discussions.Query: discussion_query
+        :param beem.steem.Steem steem_instance: Steem instance
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
@@ -173,10 +182,10 @@ class Discussions_by_cashout(list):
 
 
 class Discussions_by_votes(list):
-    """ get_discussions_by_votes
+    """ Get discussions_by_votes
 
-        :param str discussion_query
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param beem.discussions.Query: discussion_query
+        :param beem.steem.Steem steem_instance: Steem instance
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
@@ -195,10 +204,10 @@ class Discussions_by_votes(list):
 
 
 class Discussions_by_children(list):
-    """ get_discussions_by_children
+    """ Get discussions by children
 
-        :param str discussion_query
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param beem.discussions.Query: discussion_query
+        :param beem.steem.Steem steem_instance: Steem instance
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
@@ -217,10 +226,10 @@ class Discussions_by_children(list):
 
 
 class Discussions_by_hot(list):
-    """ get_discussions_by_hot
+    """ Get discussions by hot
 
-        :param str discussion_query
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param beem.discussions.Query: discussion_query
+        :param beem.steem.Steem steem_instance: Steem instance
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
@@ -239,10 +248,10 @@ class Discussions_by_hot(list):
 
 
 class Discussions_by_feed(list):
-    """ get_discussions_by_feed
+    """ Get discussions by feed
 
-        :param str discussion_query, tag musst be set to a username
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param beem.discussions.Query: discussion_query, tag musst be set to a username
+        :param beem.steem.Steem steem_instance: Steem instance
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
@@ -265,10 +274,10 @@ class Discussions_by_feed(list):
 
 
 class Discussions_by_blog(list):
-    """ get_discussions_by_blog
+    """ Get discussions by blog
 
-        :param str discussion_query, tag musst be set to a username
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param beem.discussions.Query: discussion_query, tag musst be set to a username
+        :param beem.steem.Steem steem_instance: Steem instance
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
@@ -291,10 +300,10 @@ class Discussions_by_blog(list):
 
 
 class Discussions_by_comments(list):
-    """ get_discussions_by_comments
+    """ Get discussions by comments
 
-        :param str discussion_query
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param beem.discussions.Query: discussion_query
+        :param beem.steem.Steem steem_instance: Steem instance
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
@@ -313,10 +322,10 @@ class Discussions_by_comments(list):
 
 
 class Discussions_by_promoted(list):
-    """ get_discussions_by_promoted
+    """ Get discussions by promoted
 
-        :param str discussion_query
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param beem.discussions.Query: discussion_query
+        :param beem.steem.Steem steem_instance: Steem instance
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()

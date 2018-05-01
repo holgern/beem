@@ -44,14 +44,16 @@ class Account(BlockchainObject):
 
         .. code-block:: python
 
-            from beem.account import Account
-            account = Account("test")
-            print(account)
-            print(account.balances)
+            >>> from beem.account import Account
+            >>> account = Account("test")
+            >>> print(account)
+            <Account test>
+            >>> print(account.balances) # doctest: +SKIP
 
         .. note:: This class comes with its own caching function to reduce the
                   load on the API server. Instances of this class can be
-                  refreshed with ``Account.refresh()``.
+                  refreshed with ``Account.refresh()``. The chache can be cleared with
+                  ``Account.clear_cache()``
 
     """
 
@@ -168,7 +170,23 @@ class Account(BlockchainObject):
         return json.loads(str(json.dumps(output)))
 
     def getSimilarAccountNames(self, limit=5):
-        """ Returns limit similar accounts with name as array
+        """Depriated, please use get_similar_account_names"""
+        return self.get_similar_account_names(limit=limit)
+
+    def get_similar_account_names(self, limit=5):
+        """ Returns limit similar accounts with name as list
+
+        :param int limit: limits the number of accounts, which will be returned
+        :returns: Similar account names as list
+        :rtype: list
+
+        .. code-block:: python
+
+            >>> from beem.account import Account
+            >>> account = Account("test")
+            >>> len(account.get_similar_account_names(limit=5))
+            5
+
         """
         if self.steem.rpc.get_use_appbase():
             account = self.steem.rpc.list_accounts({'start': self.name, 'limit': limit}, api="database")
@@ -457,7 +475,7 @@ class Account(BlockchainObject):
     @property
     def available_balances(self):
         """ List balances of an account. This call returns instances of
-            :class:`steem.amount.Amount`.
+            :class:`beem.amount.Amount`.
         """
         amount_list = ["balance", "sbd_balance", "vesting_shares"]
         available_amount = []
@@ -497,10 +515,28 @@ class Account(BlockchainObject):
 
     @property
     def balances(self):
+        """ Returns all account balances as dictionary
+        """
         return self.get_balances()
 
     def get_balances(self):
+        """ Returns all account balances as dictionary
 
+            :returns: Account balances
+            :rtype: dictionary
+
+            Sample output:
+
+                .. code-block:: js
+
+                    {
+                        'available': [102.985 STEEM, 0.008 SBD, 146273.695970 VESTS],
+                        'savings': [0.000 STEEM, 0.000 SBD],
+                        'rewards': [0.000 STEEM, 0.000 SBD, 0.000000 VESTS],
+                        'total': [102.985 STEEM, 0.008 SBD, 146273.695970 VESTS]
+                    }
+
+        """
         return {
             'available': self.available_balances,
             'savings': self.saving_balances,
@@ -510,14 +546,30 @@ class Account(BlockchainObject):
 
     def get_balance(self, balances, symbol):
         """ Obtain the balance of a specific Asset. This call returns instances of
-            :class:`steem.amount.Amount`.
+            :class:`beem.amount.Amount`. Available balance types:
+
+            * "available"
+            * "saving"
+            * "reward"
+            * "total"
+
+            :param str balances: Defines the balance type
+            :param (str, dict) symbol: Can be "SBD", "STEEM" or "VESTS
+
+            .. code-block:: python
+
+                >>> from beem.account import Account
+                >>> account = Account("test")
+                >>> account.get_balance("rewards", "SBD")
+                0.000 SBD
+
         """
         if isinstance(balances, string_types):
             if balances == "available":
                 balances = self.available_balances
-            elif balances == "saving":
+            elif balances == "savings":
                 balances = self.saving_balances
-            elif balances == "reward":
+            elif balances == "rewards":
                 balances = self.reward_balances
             elif balances == "total":
                 balances = self.total_balances
@@ -533,8 +585,23 @@ class Account(BlockchainObject):
         return Amount(0, symbol, steem_instance=self.steem)
 
     def interest(self):
-        """ Caluclate interest for an account
+        """ Calculate interest for an account
+
             :param str account: Account name to get interest for
+            :rtype: dictionary
+
+            Sample output:
+
+            .. code-block:: js
+
+                {
+                    'interest': 0.0,
+                    'last_payment': datetime.datetime(2018, 1, 26, 5, 50, 27, tzinfo=<UTC>),
+                    'next_payment': datetime.datetime(2018, 2, 25, 5, 50, 27, tzinfo=<UTC>),
+                    'next_payment_duration': datetime.timedelta(-65, 52132, 684026),
+                    'interest_rate': 0.0
+                }
+
         """
         last_payment = (self["sbd_last_interest_payment"])
         next_payment = last_payment + timedelta(days=30)
@@ -547,17 +614,20 @@ class Account(BlockchainObject):
             "interest": interest_amount,
             "last_payment": last_payment,
             "next_payment": next_payment,
-            "next_payment_duration": next_payment - utc.localize(datetime.now()),
+            "next_payment_duration": next_payment - utc.localize(datetime.utcnow()),
             "interest_rate": interest_rate,
         }
 
     @property
     def is_fully_loaded(self):
         """ Is this instance fully loaded / e.g. all data available?
+
+            :rtype: bool
         """
         return (self.full)
 
     def ensure_full(self):
+        """Ensure that all data are loaded"""
         if not self.is_fully_loaded:
             self.full = True
             self.refresh()
@@ -573,7 +643,20 @@ class Account(BlockchainObject):
             return self.steem.rpc.get_account_bandwidth(account, bandwidth_type)
 
     def get_bandwidth(self):
-        """Returns used and allocated bandwidth"""
+        """ Returns used and allocated bandwidth
+
+            :rtype: dict
+
+            Sample output:
+
+                .. code-block:: js
+
+                    {
+                        'used': 0,
+                        'allocated': 2211037
+                    }
+
+        """
         account = self["name"]
         global_properties = self.steem.get_dynamic_global_properties()
         reserve_ratio = self.steem.get_reserve_ratio()
@@ -609,7 +692,11 @@ class Account(BlockchainObject):
         # print("bandwidth percent remaining: " + str(100 - (100 * used_bandwidth / allocated_bandwidth)))
 
     def get_owner_history(self, account=None):
-        """ get_owner_history """
+        """ get_owner_history
+
+            :rtype: list
+
+        """
         if account is None:
             account = self["name"]
         if self.steem.rpc.get_use_appbase():
@@ -618,7 +705,11 @@ class Account(BlockchainObject):
             return self.steem.rpc.get_owner_history(account)
 
     def get_conversion_requests(self, account=None):
-        """ get_owner_history """
+        """ Returns get_owner_history
+
+            :rtype: list
+
+        """
         if account is None:
             account = self["name"]
         if self.steem.rpc.get_use_appbase():
@@ -627,7 +718,11 @@ class Account(BlockchainObject):
             return self.steem.rpc.get_conversion_requests(account)
 
     def get_withdraw_routes(self, account=None):
-        """Returns withdraw_routes """
+        """ Returns withdraw_routes
+
+            :rtype: list
+
+        """
         if account is None:
             account = self["name"]
         if self.steem.rpc.get_use_appbase():
@@ -636,7 +731,11 @@ class Account(BlockchainObject):
             return self.steem.rpc.get_withdraw_routes(account, 'all')
 
     def get_recovery_request(self, account=None):
-        """ get_recovery_request """
+        """ Returns get_recovery_request
+
+            :rtype: list
+
+        """
         if account is None:
             account = self["name"]
         if self.steem.rpc.get_use_appbase():
@@ -687,7 +786,10 @@ class Account(BlockchainObject):
         return self["name"] in active_votes
 
     def virtual_op_count(self, until=None):
-        """Returns the number of individual account transactions"""
+        """ Returns the number of individual account transactions
+
+            :rtype: list
+        """
         if until is not None and isinstance(until, datetime):
             limit = until
             last_gen = self.history_reverse(limit=limit)
@@ -728,6 +830,20 @@ class Account(BlockchainObject):
     def curation_stats(self):
         """Returns the curation reward of the last 24h and 7d and the average
             of the last 7 days
+
+            :returns: Account curation
+            :rtype: dictionary
+
+            Sample output:
+
+            .. code-block:: js
+
+                {
+                    '24hr': 0.0,
+                    '7d': 0.0,
+                    'avg': 0.0
+                }
+
         """
         return {"24hr": self.get_curation_reward(days=1),
                 "7d": self.get_curation_reward(days=7),
@@ -736,10 +852,9 @@ class Account(BlockchainObject):
     def get_account_history(self, index, limit, order=-1, start=None, stop=None, use_block_num=True, only_ops=[], exclude_ops=[], raw_output=False):
         """ Returns a generator for individual account transactions. This call can be used in a
             ``for`` loop.
-            :param int index: first number of transactions to
-                return
-            :param int limit: limit number of transactions to
-                return
+
+            :param int index: first number of transactions to return
+            :param int limit: limit number of transactions to return
             :param int/datetime start: start number/date of transactions to
                 return (*optional*)
             :param int/datetime stop: stop number/date of transactions to
@@ -759,6 +874,7 @@ class Account(BlockchainObject):
                 The full list of operation ID's can be found in
                 beembase.operationids.ops.
                 Example: ['transfer', 'vote']
+
         """
         if order != -1 and order != 1:
             raise ValueError("order must be -1 or 1!")
@@ -859,27 +975,57 @@ class Account(BlockchainObject):
                 beembase.operationids.ops.
                 Example: ['transfer', 'vote']
 
-            Example::
+            .. testsetup:: *
+
                 from beem.account import Account
-                from beem.blockchain import Blockchain
                 from datetime import datetime
-                acc = Account("test")
+                acc = Account("gtg")
+
+            .. testcode::
+
+                from beem.account import Account
+                from datetime import datetime
+                acc = Account("gtg")
                 max_op_count = acc.virtual_op_count()
                 # Returns the 100 latest operations
-                for h in acc.history(start=max_op_count-100, stop=max_op_count, use_block_num=False):
-                    print(h)
+                acc_op = []
+                for h in acc.history(start=max_op_count - 99, stop=max_op_count, use_block_num=False):
+                    acc_op.append(h)
+                len(acc_op)
 
-                b = Blockchain()
-                max_block = b.get_current_block_num()
+            .. testoutput::
+
+                100
+
+            .. testcode::
+
+                acc = Account("test")
+                max_block = 21990141
                 # Returns the account operation inside the last 100 block. This can be empty.
-                for h in acc.history(start=max_block-100, stop=max_block, use_block_num=True):
-                    print(h)
+                acc_op = []
+                for h in acc.history(start=max_block - 99, stop=max_block, use_block_num=True):
+                    acc_op.append(h)
+                len(acc_op)
 
+            .. testoutput::
+
+                0
+
+            .. testcode::
+
+                acc = Account("test")
                 start_time = datetime(2018, 3, 1, 0, 0, 0)
-                stop_time = datetime(2018, 4, 1, 0, 0, 0)
+                stop_time = datetime(2018, 3, 2, 0, 0, 0)
                 # Returns the account operation from 1.4.2018 back to 1.3.2018
+                acc_op = []
                 for h in acc.history(start=start_time, stop=stop_time):
-                    print(h)
+                    acc_op.append(h)
+                len(acc_op)
+
+            .. testoutput::
+
+                0
+
         """
         _limit = batch_size
         max_index = self.virtual_op_count()
@@ -970,27 +1116,55 @@ class Account(BlockchainObject):
                 beembase.operationids.ops.
                 Example: ['transfer', 'vote']
 
-            Example::
+            .. testsetup::
+
                 from beem.account import Account
-                from beem.blockchain import Blockchain
                 from datetime import datetime
-                acc = Account("test")
+                acc = Account("gtg")
+
+            .. testcode::
+
+                from beem.account import Account
+                from datetime import datetime
+                acc = Account("gtg")
                 max_op_count = acc.virtual_op_count()
                 # Returns the 100 latest operations
-                for h in acc.history_reverse(start=max_op_count, stop=max_op_count-100, use_block_num=False):
-                    print(h)
+                acc_op = []
+                for h in acc.history_reverse(start=max_op_count, stop=max_op_count - 99, use_block_num=False):
+                    acc_op.append(h)
+                len(acc_op)
 
-                b = Blockchain()
-                max_block = b.get_current_block_num()
+            .. testoutput::
+
+                100
+
+            .. testcode::
+
+                max_block = 21990141
+                acc = Account("test")
                 # Returns the account operation inside the last 100 block. This can be empty.
+                acc_op = []
                 for h in acc.history_reverse(start=max_block, stop=max_block-100, use_block_num=True):
-                    print(h)
+                    acc_op.append(h)
+                len(acc_op)
+
+            .. testoutput::
+
+                0
+
+            .. testcode::
 
                 start_time = datetime(2018, 4, 1, 0, 0, 0)
                 stop_time = datetime(2018, 3, 1, 0, 0, 0)
                 # Returns the account operation from 1.4.2018 back to 1.3.2018
+                acc_op = []
                 for h in acc.history_reverse(start=start_time, stop=stop_time):
-                    print(h)
+                    acc_op.append(h)
+                len(acc_op)
+
+            .. testoutput::
+
+                0
 
         """
         _limit = batch_size
@@ -1050,22 +1224,27 @@ class Account(BlockchainObject):
 
     def mute(self, mute, account=None):
         """ Mute another account
+
             :param str mute: Mute this account
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
+
         """
         return self.follow(mute, what=["ignore"], account=account)
 
     def unfollow(self, unfollow, account=None):
         """ Unfollow/Unmute another account's blog
+
             :param str unfollow: Unfollow/Unmute this account
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
+
         """
         return self.follow(unfollow, what=[], account=account)
 
     def follow(self, other, what=["blog"], account=None):
         """ Follow/Unfollow/Mute/Unmute another account's blog
+
             :param str other: Follow this account
             :param list what: List of states to follow.
                 ``['blog']`` means to follow ``other``,
@@ -1074,6 +1253,7 @@ class Account(BlockchainObject):
                 (defaults to ``['blog']``)
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
+
         """
         if not account:
             account = self["name"]
@@ -1094,10 +1274,12 @@ class Account(BlockchainObject):
 
     def update_account_profile(self, profile, account=None):
         """ Update an account's meta data (json_meta)
+
             :param dict json: The meta data to use (i.e. use Profile() from
                 account.py)
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
+
         """
         if not account:
             account = self
@@ -1122,6 +1304,7 @@ class Account(BlockchainObject):
             :param list witnesses: list of Witness name or id
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
+
         """
         if not account:
             account = self["name"]
@@ -1254,11 +1437,13 @@ class Account(BlockchainObject):
 
     def convert(self, amount, account=None, request_id=None):
         """ Convert SteemDollars to Steem (takes one week to settle)
+
             :param float amount: number of VESTS to withdraw
             :param str account: (optional) the source account for the transfer
-            if not ``default_account``
+                if not ``default_account``
             :param str request_id: (optional) identifier for tracking the
-            conversion`
+                conversion`
+
         """
         if not account:
             account = self
@@ -1287,13 +1472,15 @@ class Account(BlockchainObject):
 
     def transfer_to_savings(self, amount, asset, memo, to=None, account=None):
         """ Transfer SBD or STEEM into a 'savings' account.
+
             :param float amount: STEEM or SBD amount
             :param float asset: 'STEEM' or 'SBD'
             :param str memo: (optional) Memo
             :param str to: (optional) the source account for the transfer if
-            not ``default_account``
+                not ``default_account``
             :param str account: (optional) the source account for the transfer
-            if not ``default_account``
+                if not ``default_account``
+
         """
         if asset not in ['STEEM', 'SBD']:
             raise AssertionError()
@@ -1325,15 +1512,17 @@ class Account(BlockchainObject):
                               to=None,
                               account=None):
         """ Withdraw SBD or STEEM from 'savings' account.
+
             :param float amount: STEEM or SBD amount
             :param float asset: 'STEEM' or 'SBD'
             :param str memo: (optional) Memo
             :param str request_id: (optional) identifier for tracking or
-            cancelling the withdrawal
+                cancelling the withdrawal
             :param str to: (optional) the source account for the transfer if
-            not ``default_account``
+                not ``default_account``
             :param str account: (optional) the source account for the transfer
-            if not ``default_account``
+                if not ``default_account``
+
         """
         if asset not in ['STEEM', 'SBD']:
             raise AssertionError()
@@ -1364,10 +1553,12 @@ class Account(BlockchainObject):
 
     def cancel_transfer_from_savings(self, request_id, account=None):
         """ Cancel a withdrawal from 'savings' account.
+
             :param str request_id: Identifier for tracking or cancelling
-            the withdrawal
+                the withdrawal
             :param str account: (optional) the source account for the transfer
-            if not ``default_account``
+                if not ``default_account``
+
         """
         if not account:
             account = self
@@ -1390,12 +1581,13 @@ class Account(BlockchainObject):
         By default, this will claim ``all`` outstanding balances. To bypass
         this behaviour, set desired claim amount by setting any of
         `reward_steem`, `reward_sbd` or `reward_vests`.
-        Args:
-            reward_steem (string): Amount of STEEM you would like to claim.
-            reward_sbd (string): Amount of SBD you would like to claim.
-            reward_vests (string): Amount of VESTS you would like to claim.
-            account (string): The source account for the claim if not
+
+        :param str reward_steem: Amount of STEEM you would like to claim.
+        :param str reward_sbd: Amount of SBD you would like to claim.
+        :param str reward_vests: Amount of VESTS you would like to claim.
+        :param str account: The source account for the claim if not
             ``default_account`` is used.
+
         """
         if not account:
             account = self
@@ -1444,12 +1636,12 @@ class Account(BlockchainObject):
     def delegate_vesting_shares(self, to_account, vesting_shares,
                                 account=None):
         """ Delegate SP to another account.
-        Args:
-            to_account (string): Account we are delegating shares to
+
+        :param str to_account: Account we are delegating shares to
             (delegatee).
-            vesting_shares (string): Amount of VESTS to delegate eg. `10000
+        :param str vesting_shares: Amount of VESTS to delegate eg. `10000
             VESTS`.
-            account (string): The source account (delegator). If not specified,
+        :param str account: The source account (delegator). If not specified,
             ``default_account`` is used.
         """
         if not account:
@@ -1474,10 +1666,12 @@ class Account(BlockchainObject):
 
     def withdraw_vesting(self, amount, account=None):
         """ Withdraw VESTS from the vesting account.
+
             :param float amount: number of VESTS to withdraw over a period of
-            104 weeks
+                104 weeks
             :param str account: (optional) the source account for the transfer
-            if not ``default_account``
+                if not ``default_account``
+
     """
         if not account:
             account = self
@@ -1507,6 +1701,7 @@ class Account(BlockchainObject):
         """ Set up a vesting withdraw route. When vesting shares are
             withdrawn, they will be routed to these accounts based on the
             specified weights.
+
             :param str to: Recipient of the vesting withdrawal
             :param float percentage: The percent of the withdraw to go
                 to the 'to' account.
@@ -1514,6 +1709,7 @@ class Account(BlockchainObject):
             :param bool auto_vest: Set to true if the from account
                 should receive the VESTS as VESTS, or false if it should
                 receive them as STEEM. (defaults to ``False``)
+
         """
         if not account:
             account = self

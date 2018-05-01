@@ -1,5 +1,5 @@
-beem\.message module
-====================
+beem\.message
+=============
 
 .. automodule:: beem.message
     :members:

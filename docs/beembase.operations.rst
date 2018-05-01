@@ -1,5 +1,5 @@
-beembase\.operations module
-===========================
+beembase\.operations
+====================
 
 .. automodule:: beembase.operationids
     :members:

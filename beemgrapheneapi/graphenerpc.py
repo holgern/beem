@@ -22,7 +22,7 @@ from .rpcutils import (
     is_network_appbase_ready, sleep_and_check_retries,
     get_api_name, get_query
 )
-from beem.version import version as beem_version
+from beemgraphenebase.version import version as beem_version
 from beemgraphenebase.chains import known_chains
 
 WEBSOCKET_MODULE = None
@@ -110,7 +110,8 @@ class GrapheneRPC(object):
     :param int num_retries: Try x times to num_retries to a node on disconnect, -1 for indefinitely
     :param int num_retries_call: Repeat num_retries_call times a rpc call on node error (default is 5)
     :param int timeout: Timeout setting for https nodes (default is 60)
-    Available APIs
+
+    Available APIs:
 
           * database
           * network_node
@@ -118,13 +119,14 @@ class GrapheneRPC(object):
 
     Usage:
 
-    .. code-block:: python
-        from beemgrapheneapi.graphenerpc import GrapheneRPC
-        ws = GrapheneRPC("wss://steemd.pevo.science","","")
-        print(ws.get_account_count())
+        .. code-block:: python
 
-        ws = GrapheneRPC("https://api.steemit.com","","")
-        print(ws.get_account_count())
+            from beemgrapheneapi.graphenerpc import GrapheneRPC
+            ws = GrapheneRPC("wss://steemd.pevo.science","","")
+            print(ws.get_account_count())
+
+            ws = GrapheneRPC("https://api.steemit.com","","")
+            print(ws.get_account_count())
 
     .. note:: This class allows to call methods available via
               websocket. If you want to use the notification

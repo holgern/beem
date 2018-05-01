@@ -1,5 +1,5 @@
-beembase\.memo module
-=====================
+beembase\.memo
+==============
 
 .. automodule:: beembase.memo
     :members:

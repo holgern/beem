@@ -1,5 +1,5 @@
-beem\.aes module
-================
+beem\.aes
+=========
 
 .. automodule:: beem.aes
     :members:

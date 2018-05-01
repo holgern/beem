@@ -121,12 +121,14 @@ class Market(dict):
 
             .. code-block:: js
 
-                 {'highest_bid': 0.30100226633322913,
-                  'latest': 0.0,
-                  'lowest_ask': 0.3249636958897082,
-                  'percent_change': 0.0,
-                  'sbd_volume': 108329611.0,
-                  'steem_volume': 355094043.0}
+                 {
+                    'highest_bid': 0.30100226633322913,
+                    'latest': 0.0,
+                    'lowest_ask': 0.3249636958897082,
+                    'percent_change': 0.0,
+                    'sbd_volume': 108329611.0,
+                    'steem_volume': 355094043.0
+                }
 
         """
         data = {}
@@ -186,22 +188,58 @@ class Market(dict):
     def orderbook(self, limit=25, raw_data=False):
         """ Returns the order book for SBD/STEEM market.
             :param int limit: Limit the amount of orders (default: 25)
-            Sample output:
-            .. code-block:: js
-                {'bids': [0.003679 USD/BTS (1.9103 USD|519.29602 BTS),
-                0.003676 USD/BTS (299.9997 USD|81606.16394 BTS),
-                0.003665 USD/BTS (288.4618 USD|78706.21881 BTS),
-                0.003665 USD/BTS (3.5285 USD|962.74409 BTS),
-                0.003665 USD/BTS (72.5474 USD|19794.41299 BTS)],
-                'asks': [0.003738 USD/BTS (36.4715 USD|9756.17339 BTS),
-                0.003738 USD/BTS (18.6915 USD|5000.00000 BTS),
-                0.003742 USD/BTS (182.6881 USD|48820.22081 BTS),
-                0.003772 USD/BTS (4.5200 USD|1198.14798 BTS),
-                0.003799 USD/BTS (148.4975 USD|39086.59741 BTS)]}
+
+            Sample output (raw_data=False):
+                .. code-block:: js
+
+                    {
+                        'asks': [
+                            380.510 STEEM 460.291 SBD @ 1.209669 SBD/STEEM,
+                            53.785 STEEM 65.063 SBD @ 1.209687 SBD/STEEM
+                        ],
+                        'bids': [
+                            0.292 STEEM 0.353 SBD @ 1.208904 SBD/STEEM,
+                            8.498 STEEM 10.262 SBD @ 1.207578 SBD/STEEM
+                        ],
+                        'asks_date': [
+                            datetime.datetime(2018, 4, 30, 21, 7, 24, tzinfo=<UTC>),
+                            datetime.datetime(2018, 4, 30, 18, 12, 18, tzinfo=<UTC>)
+                        ],
+                        'bids_date': [
+                            datetime.datetime(2018, 4, 30, 21, 1, 21, tzinfo=<UTC>),
+                            datetime.datetime(2018, 4, 30, 20, 38, 21, tzinfo=<UTC>)
+                        ]
+                    }
+
+            Sample output (raw_data=True):
+                .. code-block:: js
+
+                    {
+                        'asks': [
+                            {
+                                'order_price': {'base': '8.000 STEEM', 'quote': '9.618 SBD'},
+                                'real_price': '1.20225000000000004',
+                                'steem': 4565,
+                                'sbd': 5488,
+                                'created': '2018-04-30T21:12:45'
+                            }
+                        ],
+                        'bids': [
+                            {
+                                'order_price': {'base': '10.000 SBD', 'quote': '8.333 STEEM'},
+                                'real_price': '1.20004800192007677',
+                                'steem': 8333,
+                                'sbd': 10000,
+                                'created': '2018-04-30T20:29:33'
+                            }
+                        ]
+                    }
+
             .. note:: Each bid is an instance of
                 class:`beem.price.Order` and thus carries the keys
                 ``base``, ``quote`` and ``price``. From those you can
                 obtain the actual amounts for sale
+
         """
         self.steem.rpc.set_next_node_on_empty_reply(True)
         if self.steem.rpc.get_use_appbase():
@@ -228,22 +266,32 @@ class Market(dict):
             specify "all" to get the orderbooks of all markets.
 
             :param int limit: Limit the amount of orders (default: 25)
+            :param bool raw_data: when False, FilledOrder objects will be
+                returned
 
-            Sample output:
+            Sample output (raw_data=False):
 
-            .. code-block:: js
+                .. code-block:: js
 
-                {'bids': [0.003679 USD/BTS (1.9103 USD|519.29602 BTS),
-                0.003676 USD/BTS (299.9997 USD|81606.16394 BTS),
-                0.003665 USD/BTS (288.4618 USD|78706.21881 BTS),
-                0.003665 USD/BTS (3.5285 USD|962.74409 BTS),
-                0.003665 USD/BTS (72.5474 USD|19794.41299 BTS)],
-                'asks': [0.003738 USD/BTS (36.4715 USD|9756.17339 BTS),
-                0.003738 USD/BTS (18.6915 USD|5000.00000 BTS),
-                0.003742 USD/BTS (182.6881 USD|48820.22081 BTS),
-                0.003772 USD/BTS (4.5200 USD|1198.14798 BTS),
-                0.003799 USD/BTS (148.4975 USD|39086.59741 BTS)]}
+                    [
+                        (2018-04-30 21:00:54+00:00) 0.267 STEEM 0.323 SBD @ 1.209738 SBD/STEEM,
+                        (2018-04-30 20:59:30+00:00) 0.131 STEEM 0.159 SBD @ 1.213740 SBD/STEEM,
+                        (2018-04-30 20:55:45+00:00) 0.093 STEEM 0.113 SBD @ 1.215054 SBD/STEEM,
+                        (2018-04-30 20:55:30+00:00) 26.501 STEEM 32.058 SBD @ 1.209690 SBD/STEEM,
+                        (2018-04-30 20:55:18+00:00) 2.108 STEEM 2.550 SBD @ 1.209677 SBD/STEEM,
+                    ]
 
+            Sample output (raw_data=True):
+
+                .. code-block:: js
+
+                    [
+                        {'date': '2018-04-30T21:02:45', 'current_pays': '0.235 SBD', 'open_pays': '0.194 STEEM'},
+                        {'date': '2018-04-30T21:02:03', 'current_pays': '24.494 SBD', 'open_pays': '20.248 STEEM'},
+                        {'date': '2018-04-30T20:48:30', 'current_pays': '175.464 STEEM', 'open_pays': '211.955 SBD'},
+                        {'date': '2018-04-30T20:48:30', 'current_pays': '0.999 STEEM', 'open_pays': '1.207 SBD'},
+                        {'date': '2018-04-30T20:47:54', 'current_pays': '0.273 SBD', 'open_pays': '0.225 STEEM'},
+                    ]
 
             .. note:: Each bid is an instance of
                 class:`steem.price.Order` and thus carries the keys
@@ -349,27 +397,33 @@ class Market(dict):
 
     def market_history(self, bucket_seconds=300, start_age=3600, end_age=0):
         """ Return the market history (filled orders).
+
             :param int bucket_seconds: Bucket size in seconds (see
-            `returnMarketHistoryBuckets()`)
+                `returnMarketHistoryBuckets()`)
             :param int start_age: Age (in seconds) of the start of the
-            window (default: 1h/3600)
+                window (default: 1h/3600)
             :param int end_age: Age (in seconds) of the end of the window
-            (default: now/0)
+                (default: now/0)
+
             Example:
-            .. code-block:: js
-                 {'close_sbd': 2493387,
-                  'close_steem': 7743431,
-                  'high_sbd': 1943872,
-                  'high_steem': 5999610,
-                  'id': '7.1.5252',
-                  'low_sbd': 534928,
-                  'low_steem': 1661266,
-                  'open': '2016-07-08T11:25:00',
-                  'open_sbd': 534928,
-                  'open_steem': 1661266,
-                  'sbd_volume': 9714435,
-                  'seconds': 300,
-                  'steem_volume': 30088443},
+                .. code-block:: js
+
+                    {
+                        'close_sbd': 2493387,
+                        'close_steem': 7743431,
+                        'high_sbd': 1943872,
+                        'high_steem': 5999610,
+                        'id': '7.1.5252',
+                        'low_sbd': 534928,
+                        'low_steem': 1661266,
+                        'open': '2016-07-08T11:25:00',
+                        'open_sbd': 534928,
+                        'open_steem': 1661266,
+                        'sbd_volume': 9714435,
+                        'seconds': 300,
+                        'steem_volume': 30088443
+                    }
+
         """
         buckets = self.market_history_buckets()
         if bucket_seconds < 5 and bucket_seconds >= 0:
@@ -440,18 +494,18 @@ class Market(dict):
             :param bool killfill: flag that indicates if the order shall be killed if it is not filled (defaults to False)
             :param string account: Account name that executes that order
             :param string returnOrderId: If set to "head" or "irreversible" the call will wait for the tx to appear in
-                                        the head/irreversible block and add the key "orderid" to the tx output
+                the head/irreversible block and add the key "orderid" to the tx output
 
-            Prices/Rates are denoted in 'base', i.e. the USD_BTS market
-            is priced in BTS per USD.
+            Prices/Rates are denoted in 'base', i.e. the SBD_STEEM market
+            is priced in STEEM per SBD.
 
-            **Example:** in the USD_BTS market, a price of 300 means
-            a USD is worth 300 BTS
+            **Example:** in the SBD_STEEM market, a price of 300 means
+            a SBD is worth 300 STEEM
 
             .. note::
 
                 All prices returned are in the **reversed** orientation as the
-                market. I.e. in the BTC/BTS market, prices are BTS per BTC.
+                market. I.e. in the STEEM/SBD market, prices are SBD per STEEM.
                 That way you can multiply prices with `1.05` to get a +5%.
 
             .. warning::
@@ -462,9 +516,9 @@ class Market(dict):
                 buy asset than you placed the order
                 for. Example:
 
-                    * You place and order to buy 10 USD for 100 BTS/USD
-                    * This means that you actually place a sell order for 1000 BTS in order to obtain **at least** 10 USD
-                    * If an order on the market exists that sells USD for cheaper, you will end up with more than 10 USD
+                    * You place and order to buy 10 SBD for 100 STEEM/SBD
+                    * This means that you actually place a sell order for 1000 STEEM in order to obtain **at least** 10 SBD
+                    * If an order on the market exists that sells SBD for cheaper, you will end up with more than 10 SBD
         """
         if not expiration:
             expiration = self.steem.config["order-expiration"]
@@ -537,18 +591,18 @@ class Market(dict):
             :param bool killfill: flag that indicates if the order shall be killed if it is not filled (defaults to False)
             :param string account: Account name that executes that order
             :param string returnOrderId: If set to "head" or "irreversible" the call will wait for the tx to appear in
-                                        the head/irreversible block and add the key "orderid" to the tx output
+                the head/irreversible block and add the key "orderid" to the tx output
 
-            Prices/Rates are denoted in 'base', i.e. the USD_BTS market
-            is priced in BTS per USD.
+            Prices/Rates are denoted in 'base', i.e. the SBD_STEEM market
+            is priced in STEEM per SBD.
 
-            **Example:** in the USD_BTS market, a price of 300 means
-            a USD is worth 300 BTS
+            **Example:** in the SBD_STEEM market, a price of 300 means
+            a SBD is worth 300 STEEM
 
             .. note::
 
                 All prices returned are in the **reversed** orientation as the
-                market. I.e. in the BTC/BTS market, prices are BTS per BTC.
+                market. I.e. in the STEEM/SBD market, prices are SBD per STEEM.
                 That way you can multiply prices with `1.05` to get a +5%.
         """
         if not expiration:
@@ -604,9 +658,9 @@ class Market(dict):
 
     def cancel(self, orderNumbers, account=None, **kwargs):
         """ Cancels an order you have placed in a given market. Requires
-            only the "orderNumbers". An order number takes the form
-            ``1.7.xxx``.
-            :param str orderNumbers: The Order Object ide of the form ``1.7.xxxx``
+            only the "orderNumbers".
+
+            :param int/list orderNumbers: A single order number or a list of order numbers
         """
         if not account:
             if "default_account" in self.steem.config:

@@ -24,9 +24,10 @@ class Block(BlockchainObject):
 
         .. code-block:: python
 
-            from beem.block import Block
-            block = Block(1)
-            print(block)
+            >>> from beem.block import Block
+            >>> block = Block(1)
+            >>> print(block)
+            <Block 1>
 
         .. note:: This class comes with its own caching function to reduce the
                   load on the API server. Instances of this class can be

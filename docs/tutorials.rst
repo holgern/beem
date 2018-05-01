@@ -11,6 +11,9 @@ receivers), but it also allows to use any other kind of operation. The
 advantage here is that the user can be sure that the operations are
 executed in the same order as they are added to the transaction.
 
+A block can only include one vote operation and
+one comment operation from each sender.
+
 .. code-block:: python
 
   from pprint import pprint
@@ -19,19 +22,18 @@ executed in the same order as they are added to the transaction.
   from beem.comment import Comment
   from beem.instance import set_shared_steem_instance
 
-  # Only for testing not a real working key
+  # not a real working key
   wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
-  # set nobroadcast always to True, when testing
-  testnet = Steem(
-      nobroadcast=True,
-      bundle=True,
+  stm = Steem(
+      bundle=True, # Enable bundle broadcast
+      # nobroadcast=True, # Enable this for testing
       keys=[wif],
   )
-  # Set testnet as shared instance
-  set_shared_steem_instance(testnet)
+  # Set stm as shared instance
+  set_shared_steem_instance(stm)
 
-  # Account and Comment will use now testnet
+  # Account and Comment will use now stm
   account = Account("test")
 
   # Post 
@@ -45,6 +47,71 @@ executed in the same order as they are added to the transaction.
 
   pprint(testnet.broadcast())
 
+
+Use nobroadcast for testing
+---------------------------
+
+When using  `nobroadcast=True` the transaction is not broadcasted but printed.
+
+.. code-block:: python
+
+  from pprint import pprint
+  from beem import Steem
+  from beem.account import Account
+  from beem.instance import set_shared_steem_instance
+
+  # Only for testing not a real working key
+  wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
+
+  # set nobroadcast always to True, when testing
+  testnet = Steem(
+      nobroadcast=True, # Set to false when want to go live
+      keys=[wif],
+  )
+  # Set testnet as shared instance
+  set_shared_steem_instance(testnet)
+
+  # Account will use now testnet
+  account = Account("test")
+
+  pprint(account.transfer("test1", 1, "STEEM"))
+
+When executing the script above, the output will be similar to the following:
+
+.. code-block:: js
+
+    Not broadcasting anything!
+    {'expiration': '2018-05-01T16:16:57',
+     'extensions': [],
+     'operations': [['transfer',
+                     {'amount': '1.000 STEEM',
+                      'from': 'test',
+                      'memo': '',
+                      'to': 'test1'}]],
+     'ref_block_num': 33020,
+     'ref_block_prefix': 2523628005,
+     'signatures': ['1f57da50f241e70c229ed67b5d61898e792175c0f18ae29df8af414c46ae91eb5729c867b5d7dcc578368e7024e414c237f644629cb0aa3ecafac3640871ffe785']}
+
+Clear BlockchainObject Caching
+------------------------------
+
+Each BlockchainObject (Account, Comment, Vote, Witness, Amount, ...) has a glocal cache. This cache
+stores all objects and could lead to increased memory consumption. The global cache can be cleared
+with a `clear_cache()` call from any BlockchainObject.
+
+.. code-block:: python
+
+  from pprint import pprint
+  from beem.account import Account
+
+  account = Account("test")
+  pprint(str(account._cache))
+  account1 = Account("test1")
+  pprint(str(account._cache))
+  pprint(str(account1._cache))
+  account.clear_cache()
+  pprint(str(account._cache))
+  pprint(str(account1._cache))
 
 Simple Sell Script
 ------------------
@@ -129,3 +196,86 @@ Sell at a timely rate
         )
 
         sell()
+
+Batch api calls on AppBase
+--------------------------
+
+Batch api calls are possible with AppBase RPC nodes.
+If you call a Api-Call with add_to_queue=True it is not submitted but stored in rpc_queue.
+When a call with add_to_queue=False (default setting) is started,
+the complete queue is sended at once to the node. The result is a list with replies.
+
+.. code-block:: python
+
+    from beem import Steem
+    stm = Steem("https://api.steemit.com")
+    stm.rpc.get_config(add_to_queue=True)
+    stm.rpc.rpc_queue
+
+.. code-block:: python
+
+    [{'method': 'condenser_api.get_config', 'jsonrpc': '2.0', 'params': [], 'id': 6}]
+
+.. code-block:: python
+
+    result = stm.rpc.get_block({"block_num":1}, api="block", add_to_queue=False)
+    len(result)
+
+.. code-block:: python
+
+    2
+
+
+Account history
+---------------
+Lets calculate the curation reward from the last 7 days:
+
+.. code-block:: python
+
+    from datetime import datetime, timedelta
+    from beem.account import Account
+    from beem.amount import Amount
+    
+    acc = Account("gtg")
+    stop = datetime.utcnow() - timedelta(days=7)
+    reward_vests = Amount("0 VESTS")
+    for reward in acc.history_reverse(stop=stop, only_ops=["curation_reward"]):
+                reward_vests += Amount(reward['reward'])
+    curation_rewards_SP = acc.steem.vests_to_sp(reward_vests.amount)
+    print("Rewards are %.3f SP" % curation_rewards_SP)
+
+Transactionbuilder
+------------------
+Sign transactions with beem without using the wallet and build the transaction by hand.
+Example without using the wallet:
+
+.. code-block:: python
+
+    from beem import Steem
+    from beem.transactionbuilder import TransactionBuilder
+    stm = Steem()
+    tx = TransactionBuilder(steem_instance=stm)
+    tx.appendOps(Transfer(**{"from": 'user_a',
+                             "to": 'user_b',
+                             "amount": '1.000 SBD',
+                             "memo": 'test 2'}))
+    tx.appendWif('5.....') # `user_a`
+    tx.sign()
+    tx.broadcast()
+
+Example with using the wallet:
+
+.. code-block:: python
+
+    from beem.transactionbuilder import TransactionBuilder
+    from beem import Steem
+    stm = Steem()
+    stm.wallet.unlock("secret_password")
+    tx = TransactionBuilder(steem_instance=stm)
+    tx.appendOps(Transfer(**{"from": 'user_a',
+                             "to": 'user_b',
+                             "amount": '1.000 SBD',
+                             "memo": 'test 2'}))
+    tx.appendSigner('user_a', 'active')
+    tx.sign()
+    tx.broadcast()

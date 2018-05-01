@@ -30,8 +30,8 @@ class Vote(BlockchainObject):
 
         .. code-block:: python
 
-           from beem.vote import Vote
-           v = Vote("theaussiegame/cryptokittie-giveaway-number-2|")
+           >>> from beem.vote import Vote
+           >>> v = Vote("@gtg/ffdhu-gtg-witness-log|gandalf")
 
     """
     type_id = 11
@@ -178,7 +178,7 @@ class VotesObject(list):
         elif sort_key == 'voter':
             sortedList = sorted(self, key=lambda self: self[sort_key], reverse=reverse)
         elif sort_key == 'time':
-            sortedList = sorted(self, key=lambda self: (utc.localize(datetime.now()) - formatTimeString(self.time)).total_seconds(), reverse=reverse)
+            sortedList = sorted(self, key=lambda self: (utc.localize(datetime.utcnow()) - formatTimeString(self.time)).total_seconds(), reverse=reverse)
         elif sort_key == 'rshares':
             sortedList = sorted(self, key=lambda self: self[sort_key], reverse=reverse)
         elif sort_key == 'percent':
@@ -204,7 +204,7 @@ class VotesObject(list):
             time = vote.time
             if time != '':
                 d_time = formatTimeString(time)
-                td = utc.localize(datetime.now()) - d_time
+                td = utc.localize(datetime.utcnow()) - d_time
                 timestr = str(td.days) + " days " + str(td.seconds // 3600) + ":" + str((td.seconds // 60) % 60)
             else:
                 start = None

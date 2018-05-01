@@ -1,5 +1,5 @@
-beem\.storage module
-====================
+beem\.storage
+=============
 
 .. automodule:: beem.storage
     :members:

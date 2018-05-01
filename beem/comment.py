@@ -239,9 +239,11 @@ class Comment(BlockchainObject):
 
     def upvote(self, weight=+100, voter=None):
         """ Upvote the post
+
             :param float weight: (optional) Weight for posting (-100.0 -
-            +100.0) defaults to +100.0
+                +100.0) defaults to +100.0
             :param str voter: (optional) Voting account
+
         """
         if self.get('net_rshares', None) is None:
             raise VotingInvalidOnArchivedPost
@@ -249,9 +251,11 @@ class Comment(BlockchainObject):
 
     def downvote(self, weight=-100, voter=None):
         """ Downvote the post
+
             :param float weight: (optional) Weight for posting (-100.0 -
-            +100.0) defaults to -100.0
+                +100.0) defaults to -100.0
             :param str voter: (optional) Voting account
+
         """
         if self.get('net_rshares', None) is None:
             raise VotingInvalidOnArchivedPost
@@ -259,11 +263,13 @@ class Comment(BlockchainObject):
 
     def vote(self, weight, account=None, identifier=None, **kwargs):
         """ Vote for a post
+
             :param str identifier: Identifier for the post to upvote Takes
-                                   the form ``@author/permlink``
+                the form ``@author/permlink``
             :param float weight: Voting weight. Range: -100.0 - +100.0. May
-                                 not be 0.0
+                not be 0.0
             :param str account: Voter to use for voting. (Optional)
+
             If ``voter`` is not defines, the ``default_account`` will be taken
             or a ValueError will be raised
         """
@@ -299,11 +305,13 @@ class Comment(BlockchainObject):
 
     def edit(self, body, meta=None, replace=False):
         """ Edit an existing post
+
             :param str body: Body of the reply
             :param json meta: JSON meta object that can be attached to the
-                              post. (optional)
+                post. (optional)
             :param bool replace: Instead of calculating a *diff*, replace
-                                 the post entirely (defaults to ``False``)
+                the post entirely (defaults to ``False``)
+
         """
         if not meta:
             meta = {}
@@ -338,13 +346,15 @@ class Comment(BlockchainObject):
 
     def reply(self, body, title="", author="", meta=None):
         """ Reply to an existing post
+
             :param str body: Body of the reply
             :param str title: Title of the reply post
             :param str author: Author of reply (optional) if not provided
-                               ``default_user`` will be used, if present, else
-                               a ``ValueError`` will be raised.
+                ``default_user`` will be used, if present, else
+                a ``ValueError`` will be raised.
             :param json meta: JSON meta object that can be attached to the
-                              post. (optional)
+                post. (optional)
+
         """
         return self.steem.post(
             title,
@@ -355,9 +365,11 @@ class Comment(BlockchainObject):
 
     def delete(self, account=None, identifier=None):
         """ Delete an existing post/comment
+
             :param str identifier: Identifier for the post to upvote Takes
-                                   the form ``@author/permlink``
+                the form ``@author/permlink``
             :param str account: Voter to use for voting. (Optional)
+
             If ``voter`` is not defines, the ``default_account`` will be taken
             or a ValueError will be raised
         """
@@ -379,9 +391,11 @@ class Comment(BlockchainObject):
 
     def resteem(self, identifier=None, account=None):
         """ Resteem a post
+
             :param str identifier: post identifier (@<account>/<permlink>)
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
+
         """
         if not account:
             account = self.steem.configStorage.get("default_account")

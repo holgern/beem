@@ -69,6 +69,7 @@ def init_aes_bts(shared_secret, nonce):
 
 def init_aes(shared_secret, nonce):
     """ Initialize AES instance
+
         :param hex shared_secret: Shared Secret to use as encryption key
         :param int nonce: Random nonce
         :return: AES instance and checksum of the encryption key
@@ -154,6 +155,7 @@ def decode_memo_bts(priv, pub, nonce, message):
 
 def encode_memo(priv, pub, nonce, message, **kwargs):
     """ Encode a message with a shared secret between Alice and Bob
+
         :param PrivateKey priv: Private Key (of Alice)
         :param PublicKey pub: Public Key (of Bob)
         :param int nonce: Random nonce
@@ -186,6 +188,7 @@ def encode_memo(priv, pub, nonce, message, **kwargs):
 
 def decode_memo(priv, message):
     """ Decode a message with a shared secret between Alice and Bob
+
         :param PrivateKey priv: Private Key (of Bob)
         :param base58encoded message: Encrypted Memo message
         :return: Decrypted message

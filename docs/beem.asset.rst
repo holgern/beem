@@ -1,5 +1,5 @@
-beem\.asset module
-==================
+beem\.asset
+===========
 
 .. automodule:: beem.asset
     :members:

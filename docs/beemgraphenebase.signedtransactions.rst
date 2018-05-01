@@ -1,5 +1,5 @@
-beemgraphenebase\.signedtransactions module
-===========================================
+beemgraphenebase\.signedtransactions 
+====================================
 
 .. automodule:: beemgraphenebase.signedtransactions
     :members:
