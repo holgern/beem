@@ -170,6 +170,10 @@ class Account(BlockchainObject):
         return json.loads(str(json.dumps(output)))
 
     def getSimilarAccountNames(self, limit=5):
+        """Depriated, please use get_similar_account_names"""
+        return self.get_similar_account_names(limit=limit)
+
+    def get_similar_account_names(self, limit=5):
         """ Returns limit similar accounts with name as list
 
         :param int limit: limits the number of accounts, which will be returned
@@ -180,7 +184,7 @@ class Account(BlockchainObject):
 
             >>> from beem.account import Account
             >>> account = Account("test")
-            >>> account.getSimilarAccountNames(limit=5)
+            >>> print(account.get_similar_account_names(limit=5))
             ['test', 'test-1', 'test-2', 'test-ico', 'test-ilionx-123']
 
         """

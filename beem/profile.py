@@ -13,6 +13,7 @@ class DotDict(dict):
         """ This class simplifies the use of "."-separated
             keys when defining a nested dictionary:::
 
+                >>> from beem.profile import Profile
                 >>> keys = ['profile.url', 'profile.img']
                 >>> values = ["http:", "foobar"]
                 >>> print(Profile(keys, values))

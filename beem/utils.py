@@ -138,10 +138,10 @@ def construct_authorperm(*args):
         .. code-block:: python
 
             >>> from beem.utils import construct_authorperm
-            >>> construct_authorperm('username', 'permlink')
-            '@username/permlink'
-            >>> construct_authorperm({'author': 'username', 'permlink': 'permlink'})
-            '@username/permlink'
+            >>> print(construct_authorperm('username', 'permlink'))
+            @username/permlink
+            >>> print(construct_authorperm({'author': 'username', 'permlink': 'permlink'}))
+            @username/permlink
 
     """
     username_prefix = '@'
@@ -189,10 +189,10 @@ def construct_authorpermvoter(*args):
         .. code-block:: python
 
             >>> from beem.utils import construct_authorpermvoter
-            >>> construct_authorpermvoter('username', 'permlink', 'voter')
-            '@username/permlink|voter'
-            >>> construct_authorpermvoter({'author': 'username', 'permlink': 'permlink', 'voter': 'voter'})
-            '@username/permlink|voter'
+            >>> print(construct_authorpermvoter('username', 'permlink', 'voter'))
+            @username/permlink|voter
+            >>> print(construct_authorpermvoter({'author': 'username', 'permlink': 'permlink', 'voter': 'voter'}))
+            @username/permlink|voter
 
     """
     username_prefix = '@'

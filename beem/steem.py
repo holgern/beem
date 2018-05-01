@@ -97,8 +97,8 @@ class Steem(object):
 
             >>> from beem import Steem
             >>> steem = Steem()
-            >>> steem.get_blockchain_version()
-            '0.19.2'
+            >>> print(steem.get_blockchain_version())
+            0.19.2
 
         This class also deals with edits, votes and reading content.
     """
