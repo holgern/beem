@@ -76,7 +76,7 @@ When using  `nobroadcast=True` the transaction is not broadcasted but printed.
 
   pprint(account.transfer("test1", 1, "STEEM"))
 
-When excecuting the script above, the output will be similar to the following:
+When executing the script above, the output will be similar to the following:
 
 .. code-block:: js
 
