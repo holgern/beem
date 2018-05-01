@@ -16,3 +16,4 @@ appdirs
 Click
 prettytable
 sphinx_rtd_theme
+sphinx-click

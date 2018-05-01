@@ -5,9 +5,11 @@ Configuration
 The pysteem library comes with its own local configuration database
 that stores information like
 
-* API node URL
+* API node URLs
 * default account name
 * the encrypted master password
+* the default voting weight
+* if keyring should be used for unlocking the wallet
 
 and potentially more.
 
@@ -21,10 +23,127 @@ You can access those variables like a regular dictionary by using
 
 Keys can be added and changed like they are for regular dictionaries.
 
-If you don't want to load the :class:`steem.Steem` class, you
+If you don't want to load the :class:`beem.Steem` class, you
 can load the configuration directly by using:
 
 .. code-block:: python
 
     from beem.storage import configStorage as config
 
+It is also possible to access the configuration with the commandline tool `beempy`:
+
+.. code-block:: bash
+
+    beempy config
+
+API node URLs
+-------------
+
+The default node URLs which will be used when  `node` is  `None` in :class:`beem.Steem` class
+is stored in `config["nodes"]` as string. The list can be get and set by:
+
+.. code-block:: python
+
+    from beem import Steem
+    steem = Steem()
+    node_list = steem.get_default_nodes()
+    node_list = node_list[1:] + [node_list[0]]
+    steem.set_default_nodes(node_list)
+
+beempy can also be used to set nodes:
+
+.. code-block:: bash
+
+        beempy set nodes wss://steemd.privex.io
+        beempy set nodes "['wss://steemd.privex.io', 'wss://gtg.steem.house:8090']"
+
+The default nodes can be resetted to the default value. When the first node does not
+answer, steem should be set to the offline mode. This can be done by:
+
+.. code-block:: bash
+
+        beempy -o set nodes ""
+
+or
+
+.. code-block:: python
+
+    from beem import Steem
+    steem = Steem(offline=True)
+    steem.set_default_nodes("")
+
+Default account
+---------------
+
+The default account name is used in some functions, when no account name is given.
+It is also used in  `beempy` for all account related functions.
+
+.. code-block:: python
+
+    from beem import Steem
+    steem = Steem()
+    steem.set_default_account("test")
+    steem.config["default_account"] = "test"
+
+or by beempy with
+
+.. code-block:: bash
+
+        beempy set default_account test
+
+Default voting weight
+---------------------
+
+The default vote weight is used for voting, when no vote weight is given.
+
+.. code-block:: python
+
+    from beem import Steem
+    steem = Steem()
+    steem.config["default_vote_weight"] = 100
+
+or by beempy with
+
+.. code-block:: bash
+
+        beempy set default_vote_weight 100
+
+
+Setting password_storage
+------------------------
+
+The password_storage can be set to:
+
+* environment, this is the default setting. The master password for the wallet can be provided in the environment variable `UNLOCK`.
+* keyring
+
+.. code-block:: python
+
+    from beem import Steem
+    steem = Steem()
+    steem.config["password_storage"] = "environment"
+    steem.config["password_storage"] = "keyring"
+
+or by beempy with
+
+.. code-block:: bash
+
+        beempy set password_storage environment
+        beempy set password_storage keyring
+
+Testing if the master password is correctly provided by keyring or the `UNLOCK` variable:
+
+.. code-block:: python
+
+    from beem import Steem
+    steem = Steem()
+    print(steem.wallet.locked())
+
+When the output is False, automatic unlocking with keyring or the `UNLOCK` variable works.
+It can also tested by beempy with
+
+.. code-block:: bash
+
+        beempy walletinfo --test-unlock
+
+When no password prompt is shown, unlocking with keyring or the `UNLOCK` variable works.

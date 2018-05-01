@@ -87,7 +87,7 @@ class AsciiChart(object):
                 chart.new_chart()
                 chart.add_axis()
                 chart.add_curve(series)
-                print(str(chart))  # doctest: +SKIP
+                print(str(chart))
 
         """
         self.minimum = min(series)
@@ -134,7 +134,7 @@ class AsciiChart(object):
                 from beem.asciichart import AsciiChart
                 chart = AsciiChart()
                 series = [1, 2, 3, 7, 2, -4, -2]
-                chart.plot(series)  # doctest: +SKIP
+                chart.plot(series)
         """
         self.clear_data()
         self.adapt_on_series(series)
@@ -158,7 +158,7 @@ class AsciiChart(object):
                 chart.new_chart()
                 chart.add_axis()
                 chart.add_curve(series)
-                print(str(chart))  # doctest: +SKIP
+                print(str(chart))
 
         """
         if minimum is not None:
@@ -182,7 +182,7 @@ class AsciiChart(object):
                 chart.new_chart()
                 chart.add_axis()
                 chart.add_curve(series)
-                print(str(chart))  # doctest: +SKIP
+                print(str(chart))
 
         """
         # axis and labels
@@ -220,7 +220,7 @@ class AsciiChart(object):
                 chart.new_chart()
                 chart.add_axis()
                 chart.add_curve(series)
-                print(str(chart))  # doctest: +SKIP
+                print(str(chart))
 
         """
         if self.n is None:

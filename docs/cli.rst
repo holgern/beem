@@ -90,9 +90,15 @@ If you've set up your `default_account`, you can now send funds by omitting this
 
     beempy transfer <recipient_name> 100 STEEM memo
 
+Commands
+--------
 
-Help
-----
+.. click:: beem.cli:cli
+    :prog: beempy
+    :show-nested:
+
+beempy --help
+-------------
 You can see all available commands with ``beempy --help``
 
 ::

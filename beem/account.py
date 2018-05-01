@@ -184,8 +184,8 @@ class Account(BlockchainObject):
 
             >>> from beem.account import Account
             >>> account = Account("test")
-            >>> print(account.get_similar_account_names(limit=5))
-            ['test', 'test-1', 'test-2', 'test-ico', 'test-ilionx-123']
+            >>> len(account.get_similar_account_names(limit=5))
+            5
 
         """
         if self.steem.rpc.get_use_appbase():
