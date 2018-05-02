@@ -17,117 +17,144 @@ from beem.utils import parse_time, formatTimedelta, get_node_list, construct_aut
 from beem.comment import Comment
 from beem.vote import Vote
 from beemgrapheneapi.rpcutils import NumRetriesReached
+FUTURES_MODULE = None
+if not FUTURES_MODULE:
+    try:
+        from concurrent.futures import ThreadPoolExecutor, wait, as_completed
+        FUTURES_MODULE = "futures"
+    except ImportError:
+        FUTURES_MODULE = None
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+quit_thread = False
 
 
-if __name__ == "__main__":
-    how_many_seconds = 15
-    how_many_minutes = 10
+def benchmark_node(node, how_many_minutes=10, how_many_seconds=30):
+    block_count = 0
+    history_count = 0
+    access_time = 0
+    blockchain_version = u'0.0.0'
+    sucessfull = False
+    error_msg = None
+    start_total = timer()
     max_batch_size = None
     threading = False
     thread_num = 16
+    try:
+        stm = Steem(node=node, num_retries=2, num_retries_call=3, timeout=10)
+        blockchain = Blockchain(steem_instance=stm)
+        account = Account("gtg", steem_instance=stm)
+        blockchain_version = stm.get_blockchain_version()
+
+        last_block_id = 19273700
+        last_block = Block(last_block_id, steem_instance=stm)
+
+        stopTime = last_block.time() + timedelta(seconds=how_many_minutes * 60)
+        total_transaction = 0
+
+        start = timer()
+        for entry in blockchain.blocks(start=last_block_id, max_batch_size=max_batch_size, threading=threading, thread_num=thread_num):
+            block_no = entry.identifier
+            block_count += 1
+            if "block" in entry:
+                trxs = entry["block"]["transactions"]
+            else:
+                trxs = entry["transactions"]
+
+            for tx in trxs:
+                for op in tx["operations"]:
+                    total_transaction += 1
+            if "block" in entry:
+                block_time = parse_time(entry["block"]["timestamp"])
+            else:
+                block_time = parse_time(entry["timestamp"])
+
+            if block_time > stopTime:
+                last_block_id = block_no
+                break
+            if timer() - start > how_many_seconds or quit_thread:
+                break
+
+        start = timer()
+        for acc_op in account.history_reverse(batch_size=100):
+            history_count += 1
+            if timer() - start > how_many_seconds or quit_thread:
+                break
+        start = timer()
+        Vote(authorpermvoter, steem_instance=stm)
+        stop = timer()
+        vote_time = stop - start
+        start = timer()
+        Comment(authorperm, steem_instance=stm)
+        stop = timer()
+        comment_time = stop - start
+        start = timer()
+        Account(author, steem_instance=stm)
+        stop = timer()
+        account_time = stop - start
+        access_time = (vote_time + comment_time + account_time) / 3.0
+        sucessfull = True
+    except NumRetriesReached:
+        error_msg = 'NumRetriesReached'
+    except KeyboardInterrupt:
+        error_msg = 'KeyboardInterrupt'
+        # quit = True
+    except Exception as e:
+        error_msg = str(e)
+    return {'sucessfull': sucessfull, 'node': node, 'error': error_msg,
+            'total_duration': timer() - start_total, 'block_count': block_count,
+            'history_count': history_count, 'access_time': access_time,
+            'version': blockchain_version}
+
+
+if __name__ == "__main__":
+    how_many_seconds = 30
+    how_many_minutes = 10
+    threading = True
+    set_default_nodes = True
+    quit_thread = False
+    benchmark_time = timer()
 
     authorpermvoter = u"@gtg/ffdhu-gtg-witness-log|gandalf"
     [author, permlink, voter] = resolve_authorpermvoter(authorpermvoter)
     authorperm = construct_authorperm(author, permlink)
 
     nodes = get_node_list(appbase=False) + get_node_list(appbase=True)
-
-    t = PrettyTable(["node", "N blocks", "N acc hist", "dur. call in s", "version"])
+    t = PrettyTable(["node", "N blocks", "N acc hist", "dur. call in s"])
     t.align = "l"
-
-    for node in nodes:
-        print("Current node:", node)
+    working_nodes = []
+    results = []
+    if threading and FUTURES_MODULE:
+        pool = ThreadPoolExecutor(max_workers=len(nodes) + 1)
+        futures = []
+        for node in nodes:
+            futures.append(pool.submit(benchmark_node, node, how_many_minutes, how_many_seconds))
         try:
-            stm = Steem(node=node, num_retries=2, num_retries_call=3, timeout=10)
-            blockchain = Blockchain(steem_instance=stm)
-            account = Account("gtg", steem_instance=stm)
-            virtual_op_count = account.virtual_op_count()
-            blockchain_version = stm.get_blockchain_version()
+            results = [r.result() for r in as_completed(futures)]
+        except KeyboardInterrupt:
+            quit_thread = True
+            print("benchmark aborted.")
+    else:
+        for node in nodes:
+            print("Current node:", node)
+            result = benchmark_node(node, how_many_minutes, how_many_seconds)
+            results.append(result)
 
-            last_block_id = 19273700
-            last_block = Block(last_block_id, steem_instance=stm)
-            startTime = datetime.now()
-
-            stopTime = last_block.time() + timedelta(seconds=how_many_minutes * 60)
-            ltime = time.time()
-            cnt = 0
-            total_transaction = 0
-
-            last_node = blockchain.steem.rpc.url
-            start = timer()
-            block_count = 0
-            for entry in blockchain.blocks(start=last_block_id, max_batch_size=max_batch_size, threading=threading, thread_num=thread_num):
-                block_no = entry.identifier
-                block_count += 1
-                if "block" in entry:
-                    trxs = entry["block"]["transactions"]
-                else:
-                    trxs = entry["transactions"]
-
-                for tx in trxs:
-                    for op in tx["operations"]:
-                        total_transaction += 1
-                if "block" in entry:
-                    block_time = parse_time(entry["block"]["timestamp"])
-                else:
-                    block_time = parse_time(entry["timestamp"])
-
-                if block_time > stopTime:
-                    total_duration = formatTimedelta(datetime.now() - startTime)
-                    last_block_id = block_no
-                    avtran = total_transaction / (last_block_id - 19273700)
-                    break
-                if timer() - start > how_many_seconds:
-                    break
-
-            start = timer()
-            history_count = 0
-            for acc_op in account.history_reverse():
-                history_count += 1
-                if timer() - start > how_many_seconds:
-                    break
-            start = timer()
-            if stm.rpc.get_use_appbase():
-                votes = stm.rpc.get_active_votes({'author': author, 'permlink': permlink}, api="tags")['votes']
-            else:
-                votes = stm.rpc.get_active_votes(author, permlink, api="database_api")
-            stop = timer()
-            vote_time = stop - start
-            print("votes: %d in %.2f s" % (len(votes), vote_time))
-            start = timer()
-            if stm.rpc.get_use_appbase():
-                content = stm.rpc.get_discussion({'author': author, 'permlink': permlink}, api="tags")
-            else:
-                content = stm.rpc.get_content(author, permlink)
-            stop = timer()
-            comment_time = stop - start
-            print("content: %s, %s, votes: %d in %.2f s" %
-                  (content["author"], content["permlink"], len(content["active_votes"]), comment_time))
-            start = timer()
-            if stm.rpc.get_use_appbase():
-                acc = stm.rpc.find_accounts({'accounts': [author]}, api="database")["accounts"][0]
-            else:
-                acc = stm.rpc.get_accounts([author])[0]
-            stop = timer()
-            account_time = stop - start
-            print("account: %s in %.2f s" % (acc["active"]["key_auths"][0][0], account_time))
-
-            print("* Processed %d blocks in %.2f seconds" % (block_count, how_many_seconds))
-            print("* Processed %d account ops in %.2f seconds" % (history_count, how_many_seconds))
-            print("* blockchain version: %s" % (blockchain_version))
+    sortedList = sorted(results, key=lambda self: self["total_duration"], reverse=False)
+    for result in sortedList:
+        if result["sucessfull"]:
             t.add_row([
-                node,
-                block_count,
-                history_count,
-                ("%.2f" % ((vote_time + comment_time + account_time) / 3.0)),
-                blockchain_version
+                result["node"],
+                result["block_count"],
+                result["history_count"],
+                ("%.2f" % (result["access_time"]))
             ])
-        except NumRetriesReached:
-            print("NumRetriesReached")
-            continue
-        except Exception as e:
-            print("Error: " + str(e))
-            continue
+            working_nodes.append(result["node"])
     print(t)
+    print("\n")
+    print("Total benchmark time: %.2f s\n" % (timer() - benchmark_time))
+    if set_default_nodes:
+        stm = Steem(offline=True)
+        stm.set_default_nodes(working_nodes)
+    else:
+        print("beempy set nodes " + str(working_nodes))

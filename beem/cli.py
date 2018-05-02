@@ -48,6 +48,14 @@ try:
 except ImportError:
     KEYRING_AVAILABLE = False
 
+FUTURES_MODULE = None
+if not FUTURES_MODULE:
+    try:
+        from concurrent.futures import ThreadPoolExecutor, wait, as_completed
+        FUTURES_MODULE = "futures"
+    except ImportError:
+        FUTURES_MODULE = None
+
 
 availableConfigurationKeys = [
     "default_account",
@@ -104,6 +112,21 @@ def unlock_wallet(stm, password=None):
     else:
         print("Wallet Unlocked!")
         return True
+
+
+def node_answer_time(node):
+    try:
+        stm_local = Steem(node=node, num_retries=2, num_retries_call=2, timeout=10)
+        start = timer()
+        stm_local.get_config(use_stored_data=False)
+        stop = timer()
+        rpc_answer_time = stop - start
+    except KeyboardInterrupt:
+        rpc_answer_time = float("inf")
+        raise KeyboardInterrupt()
+    except:
+        rpc_answer_time = float("inf")
+    return rpc_answer_time
 
 
 @click.group(chain=True)
@@ -236,7 +259,10 @@ def nextnode(results):
 @click.option(
     '--remove', is_flag=True, default=False,
     help="Remove node with errors from list")
-def pingnode(raw, sort, remove):
+@click.option(
+    '--threading', is_flag=True, default=False,
+    help="Use a thread for each node")
+def pingnode(raw, sort, remove, threading):
     """ Returns the answer time in milliseconds
     """
     stm = shared_steem_instance()
@@ -248,19 +274,22 @@ def pingnode(raw, sort, remove):
         ping_times = []
         for node in nodes:
             ping_times.append(1000.)
+        if threading and FUTURES_MODULE:
+            pool = ThreadPoolExecutor(max_workers=len(nodes) + 1)
+            futures = []
         for i in range(len(nodes)):
             try:
-                stm_local = Steem(node=nodes[i], num_retries=2, num_retries_call=3, timeout=10)
-                start = timer()
-                stm_local.get_config(use_stored_data=False)
-                stop = timer()
-                rpc_answer_time = stop - start
-                ping_times[i] = rpc_answer_time
+                if not threading or not FUTURES_MODULE:
+                    ping_times[i] = node_answer_time(nodes[i])
+                else:
+                    futures.append(pool.submit(node_answer_time, nodes[i]))
+                if not threading or not FUTURES_MODULE:
+                    print("node %s results in %.2f" % (nodes[i], ping_times[i]))
             except KeyboardInterrupt:
-                break
-            except:
                 ping_times[i] = float("inf")
-            print("node %s results in %.2f" % (nodes[i], ping_times[i]))
+                break
+        if threading and FUTURES_MODULE:
+            ping_times = [r.result() for r in as_completed(futures)]
         sorted_arg = sorted(range(len(ping_times)), key=ping_times.__getitem__)
         sorted_nodes = []
         for i in sorted_arg:
@@ -274,15 +303,13 @@ def pingnode(raw, sort, remove):
         else:
             print(ping_times[sorted_arg])
     else:
-        start = timer()
-        stm.get_config(use_stored_data=False)
-        stop = timer()
-        rpc_answer_time = stop - start
+        node = stm.rpc.url
+        rpc_answer_time = node_answer_time(node)
         rpc_time_str = "%.2f" % (rpc_answer_time * 1000)
         if raw:
             print(rpc_time_str)
             return
-        t.add_row([stm.rpc.url, rpc_time_str])
+        t.add_row([node, rpc_time_str])
         print(t)
 
 

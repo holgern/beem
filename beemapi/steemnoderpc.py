@@ -66,17 +66,23 @@ class SteemNodeRPC(GrapheneRPC):
                     sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg), call_retry=True)
                     doRetry = True
                 except CallRetriesReached:
-                    self._retry_on_next_node(msg)
-                    cnt = 0
-                    doRetry = True
+                    if self.n_urls > 1:
+                        self._retry_on_next_node(msg)
+                        cnt = 0
+                        doRetry = True
+                    else:
+                        raise CallRetriesReached
             except exceptions.RPCError as e:
                 try:
                     doRetry = self._check_error_message(e, cnt)
                 except CallRetriesReached:
                     msg = exceptions.decodeRPCErrorMsg(e).strip()
-                    self._retry_on_next_node(msg)
-                    cnt = 0
-                    doRetry = True
+                    if self.n_urls > 1:
+                        self._retry_on_next_node(msg)
+                        cnt = 0
+                        doRetry = True
+                    else:
+                        raise CallRetriesReached
             except Exception as e:
                 raise e
             if doRetry:

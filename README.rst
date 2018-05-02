@@ -126,6 +126,16 @@ A command line tool is available. The help output shows the available commands:
 
 Changelog
 =========
+0.19.26
+-------
+* Several small bugs fixed
+* cache which stores blockchainobjects is now autocleaned
+* requests.session is now a shared instance
+* websocket will be created again for each Steem instance
+* A node benchmark which uses threads added to examples
+* Documentation improved
+* Optional threading added to beempy pingnode (use --threading with --sort)
+
 0.19.25
 -------
 * bug fix release

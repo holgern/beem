@@ -16,7 +16,7 @@ import re
 import time
 import warnings
 from .exceptions import (
-    UnauthorizedError, RPCConnection, RPCError, RPCErrorDoRetry, NumRetriesReached
+    UnauthorizedError, RPCConnection, RPCError, RPCErrorDoRetry, NumRetriesReached, CallRetriesReached
 )
 from .rpcutils import (
     is_network_appbase_ready, sleep_and_check_retries,
@@ -48,54 +48,35 @@ if not REQUEST_MODULE:
 log = logging.getLogger(__name__)
 
 
-def requests_retry_session(
-    retries=3,
-    backoff_factor=0.3,
-    status_forcelist=(500, 502, 504),
-    session=None,
-):
+class SessionInstance(object):
+    """Singelton for the Session Instance"""
+    instance = None
+
+
+def set_session_instance(instance):
+    """Set session instance"""
+    SessionInstance.instance = instance
+
+
+def shared_session_instance():
+    """Get session instance"""
     if REQUEST_MODULE is None:
         raise Exception()
-    session = session or requests.Session()
-    retry = Retry(total=retries,
-                  read=retries,
-                  connect=retries,
-                  backoff_factor=backoff_factor,
-                  status_forcelist=status_forcelist)
-    adapter = HTTPAdapter(max_retries=retry)
-    session.mount('http://', adapter)
-    session.mount('https://', adapter)
-    return session
+    if not SessionInstance.instance:
+        SessionInstance.instance = requests.Session()
+    return SessionInstance.instance
 
 
-class WebsocketInstance(object):
-    """Singelton for the Websocket Instance"""
-    instance_ws = None
-    instance_wss = None
-
-
-def shared_ws_instance(use_ssl=True):
+def create_ws_instance(use_ssl=True, enable_multithread=True):
     """Get websocket instance"""
     if WEBSOCKET_MODULE is None:
         raise Exception()
-    if use_ssl and not WebsocketInstance.instance_wss:
+    if use_ssl:
         ssl_defaults = ssl.get_default_verify_paths()
         sslopt_ca_certs = {'ca_certs': ssl_defaults.cafile}
-        WebsocketInstance.instance_wss = websocket.WebSocket(sslopt=sslopt_ca_certs, enable_multithread=True)
-    elif not use_ssl and not WebsocketInstance.instance_ws:
-        WebsocketInstance.instance_ws = websocket.WebSocket(enable_multithread=True)
-    if use_ssl:
-        return WebsocketInstance.instance_wss
+        return websocket.WebSocket(sslopt=sslopt_ca_certs, enable_multithread=enable_multithread)
     else:
-        return WebsocketInstance.instance_ws
-
-
-def set_ws_instance(ws_instance, use_ssl=True):
-    """Set websocket instance"""
-    if use_ssl:
-        WebsocketInstance.instance_wss = ws_instance
-    else:
-        WebsocketInstance.instance_ws = ws_instance
+        return websocket.WebSocket(enable_multithread=enable_multithread)
 
 
 class GrapheneRPC(object):
@@ -198,25 +179,23 @@ class GrapheneRPC(object):
             return
         while True:
             if next_url:
-                self.error_cnt_call = 0
                 self.url = next(self.urls)
+                self.error_cnt_call = 0
                 if self.url not in self.error_cnt:
                     self.error_cnt[self.url] = 0
                 log.debug("Trying to connect to node %s" % self.url)
                 if self.url[:3] == "wss":
-                    self.ws = shared_ws_instance(use_ssl=True)
+                    self.ws = create_ws_instance(use_ssl=True)
                     self.current_rpc = self.rpc_methods["ws"]
                 elif self.url[:2] == "ws":
-                    self.ws = shared_ws_instance(use_ssl=False)
+                    self.ws = create_ws_instance(use_ssl=False)
                     self.current_rpc = self.rpc_methods["ws"]
                 else:
                     self.ws = None
-                    self.session = requests_retry_session(retries=self.num_retries_call)
+                    self.session = shared_session_instance()
                     self.current_rpc = self.rpc_methods["jsonrpc"]
-                    self.session.auth = (self.user, self.password)
-                    self.session.headers.update({'User-Agent': 'beem v%s' % (beem_version),
-                                                 'content-type': 'application/json'})
-
+                    self.headers = {'User-Agent': 'beem v%s' % (beem_version),
+                                    'content-type': 'application/json'}
             try:
                 if self.ws:
                     self.ws.connect(self.url)
@@ -257,13 +236,13 @@ class GrapheneRPC(object):
         """Close Websocket"""
         if self.ws:
             self.ws.close()
-        if self.session:
-            self.session.close()
 
     def request_send(self, payload):
         response = self.session.post(self.url,
                                      data=payload,
-                                     timeout=self.timeout)
+                                     headers=self.headers,
+                                     timeout=self.timeout,
+                                     auth=(self.user, self.password))
         if response.status_code == 401:
             raise UnauthorizedError
         return response.text
@@ -346,23 +325,26 @@ class GrapheneRPC(object):
                 else:
                     reply = self.request_send(json.dumps(payload, ensure_ascii=False).encode('utf8'))
                 if not bool(reply):
-                    self.error_cnt[self.url] += 1
-                    sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, "Empty Reply", call_retry=True)
-                    self.rpcconnect()
+                    try:
+                        sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, "Empty Reply", call_retry=True)
+                    except CallRetriesReached:
+                        self.error_cnt[self.url] += 1
+                        sleep_and_check_retries(self.num_retries, self.error_cnt[self.url], self.url, "Empty Reply", sleep=False, call_retry=False)
+                        self.rpcconnect()
                 else:
                     break
             except KeyboardInterrupt:
                 raise
             except WebSocketConnectionClosedException:
-                self.error_cnt[self.url] += 1
+                # self.error_cnt[self.url] += 1
                 self.rpcconnect(next_url=False)
             except ConnectionError as e:
                 self.error_cnt[self.url] += 1
-                sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, str(e), call_retry=True)
+                sleep_and_check_retries(self.num_retries, self.error_cnt[self.url], self.url, str(e), sleep=False, call_retry=False)
+                self.rpcconnect()
             except Exception as e:
                 self.error_cnt[self.url] += 1
-                sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, str(e), call_retry=True)
-                # retry
+                sleep_and_check_retries(self.num_retries, self.error_cnt[self.url], self.url, str(e), sleep=False, call_retry=False)
                 self.rpcconnect()
 
         ret = {}
