@@ -12,10 +12,12 @@ environment:
     - PYTHON: "C:\\Python27-x64"
       PYTHON_ARCH: "64"
       MINICONDA: C:\Miniconda-x64
+      COMM_PY: "py27"
 
     - PYTHON: "C:\\Python36-x64"
       PYTHON_ARCH: "64"
       MINICONDA: C:\Miniconda36-x64
+      COMM_PY: "py36"
 
       
 install:
@@ -25,11 +27,11 @@ install:
     $env:COMM_HASH = $env:APPVEYOR_REPO_COMMIT.Substring(0,8)
     
     if ($env:APPVEYOR_PULL_REQUEST_NUMBER) {
-        $env:BUILD = "beempy-{0}-{1}_win64.7z" -f $env:COMM_TAG, $env:COMM_HASH
+        $env:BUILD = "beempy-{0}-{1}-{2}_win64.7z" -f $env:COMM_TAG, $env:COMM_HASH, $env:COMM_PY
         $env:AVVER = "{0}-{1}" -f $env:COMM_TAG.TrimStart("v"), $env:COMM_HASH
     }
     else {
-        $env:BUILD = "beempy-{0}-{1}-{2}_win64.7z" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH
+        $env:BUILD = "beempy-{0}-{1}-{2}-{3}_win64.7z" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH, $env:COMM_PY
         $env:AVVER = "{0}-{1}" -f $env:COMM_TAG.TrimStart("v"), $env:COMM_COUNT
     }
 
@@ -77,7 +79,7 @@ after_test:
 # package artifacts
 - cmd: copy /Y C:\OpenSSL-Win64\bin\libeay32.dll dist\beempy
 - cmd: copy /Y C:\OpenSSL-Win64\bin\ssleay32.dll dist\beempy
-- cmd: 7z a -­mm=Deflate -­mx=9 beempy.zip %APPVEYOR_BUILD_FOLDER%\dist\beempy
+- cmd: 7z a -­mx9 beempy.zip %APPVEYOR_BUILD_FOLDER%\dist\beempy
 - ps: 7z a -m0=LZMA2 -mx9 $env:BUILD .\dist\beempy
 
 - ps: | # generate sha256 hashes
