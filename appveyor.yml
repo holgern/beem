@@ -42,7 +42,7 @@ install:
     #- set "PATH=%PYTHON%;%PYTHON%\\Scripts;%PYTHON%\\Tools\\Scripts;%PATH%"
     set "PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
     #- set VCINSTALLDIR="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC"
-    call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat"
+    # call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat"
     set CL=-FI"%VCINSTALLDIR%\INCLUDE\stdint.h"
     conda config --set always_yes yes --set changeps1 no
     conda config --add channels conda-forge
