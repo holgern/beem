@@ -73,11 +73,8 @@ after_test:
   - 7z a -m0=LZMA2 -mx9 $env:BUILD %APPVEYOR_BUILD_FOLDER%\dist\beempy
   #- "%CMD_IN_ENV% python setup.py bdist_wininst"
   #- "%CMD_IN_ENV% python setup.py bdist_msi"
-
-  - ps: | # generate sha256 hashes
-    (get-filehash $env:BUILD -algorithm SHA256).Hash | out-file ("{0}.sha256" -f $env:BUILD) -encoding ascii
-    (get-filehash beempy.zip -algorithm SHA256).Hash | out-file "beempy.zip.sha256" -encoding ascii 
-
+  - (get-filehash $env:BUILD -algorithm SHA256).Hash | out-file ("{0}.sha256" -f $env:BUILD) -encoding ascii
+  - (get-filehash beempy.zip -algorithm SHA256).Hash | out-file "beempy.zip.sha256" -encoding ascii 
   - ps: "ls dist"
 
 artifacts:
