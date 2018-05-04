@@ -19,33 +19,40 @@ environment:
 
       
 install:
-  # If there is a newer build queued for the same PR, cancel this one.
-  # The AppVeyor 'rollout builds' option is supposed to serve the same
-  # purpose but it is problematic because it tends to cancel builds pushed
-  # directly to master instead of just PR builds (or the converse).
-  # credits: JuliaLang developers.
-  - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
-        https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
-        Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
-          throw "There are newer queued builds for this pull request, failing early." }
-  - ECHO "Filesystem root:"
-  - ps: "ls \"C:/\""
+- ps: | # set env vars for versioning
+    $env:COMM_TAG = $(git describe --tags $(git rev-list --tags --max-count=1))
+    $env:COMM_COUNT = $(git rev-list --count HEAD)
+    $env:COMM_HASH = $env:APPVEYOR_REPO_COMMIT.Substring(0,8)
+    
+    if ($env:APPVEYOR_PULL_REQUEST_NUMBER) {
+        $env:BUILD = "rpcs3-{0}-{1}_win64.7z" -f $env:COMM_TAG, $env:COMM_HASH
+        $env:AVVER = "{0}-{1}" -f $env:COMM_TAG.TrimStart("v"), $env:COMM_HASH
+    }
+    else {
+        $env:BUILD = "rpcs3-{0}-{1}-{2}_win64.7z" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH
+        $env:AVVER = "{0}-{1}" -f $env:COMM_TAG.TrimStart("v"), $env:COMM_COUNT
+    }
 
-  - ECHO "Installed SDKs:"
-  - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
-  #- set "PATH=%PYTHON%;%PYTHON%\\Scripts;%PYTHON%\\Tools\\Scripts;%PATH%"
-  - set "PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
-  #- set VCINSTALLDIR="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC"
-  - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat"
-  - set CL=-FI"%VCINSTALLDIR%\INCLUDE\stdint.h"
-  - conda config --set always_yes yes --set changeps1 no
-  - conda config --add channels conda-forge
-  - conda config --add channels wheeler-microfluidics
-  - conda update -q conda
-  - conda info -a
-  - conda install --yes conda-build setuptools pip pytest-pylint parameterized cryptography
-  - conda install --yes pycryptodomex scrypt pyyaml pytest pytest-mock coverage mock appdirs
-  - conda install --yes ecdsa requests future websocket-client pytz six Click events prettytable pyinstaller
+- ps: | # used for experimental build warnings for pr builds
+    $env:BRANCH = "{0}/{1}/#{2}" -f $env:APPVEYOR_REPO_NAME, `
+      $env:APPVEYOR_REPO_BRANCH, $env:APPVEYOR_PULL_REQUEST_NUMBER
+    $env:BRANCH = $env:BRANCH -replace "/#$"
+
+- ps: | # Installed SDKs:
+    "ls \"C:/Program Files/Microsoft SDKs/Windows\""
+    #- set "PATH=%PYTHON%;%PYTHON%\\Scripts;%PYTHON%\\Tools\\Scripts;%PATH%"
+    set "PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
+    #- set VCINSTALLDIR="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC"
+    call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat"
+    set CL=-FI"%VCINSTALLDIR%\INCLUDE\stdint.h"
+    conda config --set always_yes yes --set changeps1 no
+    conda config --add channels conda-forge
+    conda config --add channels wheeler-microfluidics
+    conda update -q conda
+    conda info -a
+    conda install --yes conda-build setuptools pip pytest-pylint parameterized cryptography
+    conda install --yes pycryptodomex scrypt pyyaml pytest pytest-mock coverage mock appdirs
+    conda install --yes ecdsa requests future websocket-client pytz six Click events prettytable pyinstaller
 
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
@@ -89,6 +96,6 @@ artifacts:
 - path: beempy.zip.sha256
   name: beempy_zip sha256 hash
 
-on_finish: 
-- ps: | # update appveyor build version, done last to prevent webhook breakage
-    update-appveyorbuild -version $env:AVVER
+# on_finish: 
+# - ps: | # update appveyor build version, done last to prevent webhook breakage
+#     update-appveyorbuild -version $env:AVVER
