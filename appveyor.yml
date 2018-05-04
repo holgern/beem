@@ -27,11 +27,11 @@ install:
     $env:COMM_HASH = $env:APPVEYOR_REPO_COMMIT.Substring(0,8)
     
     if ($env:APPVEYOR_PULL_REQUEST_NUMBER) {
-        $env:BUILD = "beempy-{0}-{1}-{2}_win64.7z" -f $env:COMM_TAG, $env:COMM_HASH, $env:COMM_PY
+        $env:BUILD = "beempy-{0}-{1}-{2}_win64.zip" -f $env:COMM_TAG, $env:COMM_HASH, $env:COMM_PY
         $env:AVVER = "{0}-{1}" -f $env:COMM_TAG.TrimStart("v"), $env:COMM_HASH
     }
     else {
-        $env:BUILD = "beempy-{0}-{1}-{2}-{3}_win64.7z" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH, $env:COMM_PY
+        $env:BUILD = "beempy-{0}-{1}-{2}-{3}_win64.zip" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH, $env:COMM_PY
         $env:AVVER = "{0}-{1}" -f $env:COMM_TAG.TrimStart("v"), $env:COMM_COUNT
     }
 
@@ -79,12 +79,14 @@ after_test:
 # package artifacts
 - cmd: copy /Y C:\OpenSSL-Win64\bin\libeay32.dll dist\beempy
 - cmd: copy /Y C:\OpenSSL-Win64\bin\ssleay32.dll dist\beempy
-- cmd: 7z a -­mx9 beempy.zip %APPVEYOR_BUILD_FOLDER%\dist\beempy
-- ps: 7z a -m0=LZMA2 -mx9 $env:BUILD .\dist\beempy
+# - cmd: 7z a -­mx9 beempy.zip %APPVEYOR_BUILD_FOLDER%\dist\beempy
+#- ps: 7z a -m0=LZMA2 -mx9 $env:BUILD .\dist\beempy
+- ps: 7z a $env:BUILD .\dist\beempy
 
 - ps: | # generate sha256 hashes
     (get-filehash $env:BUILD -algorithm SHA256).Hash | out-file ("{0}.sha256" -f $env:BUILD) -encoding ascii
-    (get-filehash beempy.zip -algorithm SHA256).Hash | out-file "beempy.zip.sha256" -encoding ascii 
+    
+#(get-filehash beempy.zip -algorithm SHA256).Hash | out-file "beempy.zip.sha256" -encoding ascii 
 
 artifacts:
   # Archive the generated packages in the ci.appveyor.com build report.
@@ -92,10 +94,10 @@ artifacts:
   name: beempy
 - path: $(BUILD).sha256
   name: beempy sha256 hash
-- path: beempy.zip
-  name: beempy_zip
-- path: beempy.zip.sha256
-  name: beempy_zip sha256 hash
+#- path: beempy.zip
+#  name: beempy_zip
+#- path: beempy.zip.sha256
+#  name: beempy_zip sha256 hash
 
 on_finish: 
 - ps: | # update appveyor build version, done last to prevent webhook breakage
