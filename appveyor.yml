@@ -56,39 +56,38 @@ install:
   # - "pip install --user --upgrade graphenelib"
 
 build_script:
-  # Build the compiled extension
-  - "python setup.py build"
+- ps: | # Build the compiled extension
+    python setup.py build
 
 test_script:
-  # Run the project tests
-  - "py.test tests/beembase"
-  - "py.test tests/beemgraphene"
+- ps: | # Run the project tests
+    py.test tests/beembase
+    py.test tests/beemgraphene
 
 after_test:
-  
-  - ps: | # If tests are successful, create binary packages for the project.
-      pyinstaller beempy-onedir.spec
+- ps: | # If tests are successful, create binary packages for the project.
+    pyinstaller beempy-onedir.spec
 
-  - ps: | # package artifacts
-      copy /Y C:\OpenSSL-Win64\bin\libeay32.dll dist\beempy
-      copy /Y C:\OpenSSL-Win64\bin\ssleay32.dll dist\beempy
-      7z a beempy.zip %APPVEYOR_BUILD_FOLDER%\dist\beempy
-      7z a -m0=LZMA2 -mx9 $env:BUILD %APPVEYOR_BUILD_FOLDER%\dist\beempy
+- ps: | # package artifacts
+    copy /Y C:\OpenSSL-Win64\bin\libeay32.dll dist\beempy
+    copy /Y C:\OpenSSL-Win64\bin\ssleay32.dll dist\beempy
+    7z a beempy.zip %APPVEYOR_BUILD_FOLDER%\dist\beempy
+    7z a -m0=LZMA2 -mx9 $env:BUILD %APPVEYOR_BUILD_FOLDER%\dist\beempy
 
-  - ps: | # generate sha256 hashes
-      (get-filehash $env:BUILD -algorithm SHA256).Hash | out-file ("{0}.sha256" -f $env:BUILD) -encoding ascii
-      (get-filehash beempy.zip -algorithm SHA256).Hash | out-file "beempy.zip.sha256" -encoding ascii 
+- ps: | # generate sha256 hashes
+    (get-filehash $env:BUILD -algorithm SHA256).Hash | out-file ("{0}.sha256" -f $env:BUILD) -encoding ascii
+    (get-filehash beempy.zip -algorithm SHA256).Hash | out-file "beempy.zip.sha256" -encoding ascii 
 
 artifacts:
   # Archive the generated packages in the ci.appveyor.com build report.
-  - path: $(BUILD)
-    name: beempy
-  - path: $(BUILD).sha256
-    name: beempy sha256 hash
-  - path: beempy.zip
-    name: beempy_zip
-  - path: beempy.zip.sha256
-    name: beempy_zip sha256 hash
+- path: $(BUILD)
+  name: beempy
+- path: $(BUILD).sha256
+  name: beempy sha256 hash
+- path: beempy.zip
+  name: beempy_zip
+- path: beempy.zip.sha256
+  name: beempy_zip sha256 hash
 
 on_finish: 
 - ps: | # update appveyor build version, done last to prevent webhook breakage
