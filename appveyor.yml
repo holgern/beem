@@ -77,7 +77,7 @@ after_test:
 # package artifacts
 - cmd: copy /Y C:\OpenSSL-Win64\bin\libeay32.dll dist\beempy
 - cmd: copy /Y C:\OpenSSL-Win64\bin\ssleay32.dll dist\beempy
-- cmd: 7z a beempy.zip %APPVEYOR_BUILD_FOLDER%\dist\beempy
+- cmd: 7z a -­mm=Deflate -­mx=9 beempy.zip %APPVEYOR_BUILD_FOLDER%\dist\beempy
 - ps: 7z a -m0=LZMA2 -mx9 $env:BUILD .\dist\beempy
 
 - ps: | # generate sha256 hashes
