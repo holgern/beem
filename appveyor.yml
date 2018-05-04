@@ -25,11 +25,11 @@ install:
     $env:COMM_HASH = $env:APPVEYOR_REPO_COMMIT.Substring(0,8)
     
     if ($env:APPVEYOR_PULL_REQUEST_NUMBER) {
-        $env:BUILD = "rpcs3-{0}-{1}_win64.7z" -f $env:COMM_TAG, $env:COMM_HASH
+        $env:BUILD = "beempy-{0}-{1}_win64.7z" -f $env:COMM_TAG, $env:COMM_HASH
         $env:AVVER = "{0}-{1}" -f $env:COMM_TAG.TrimStart("v"), $env:COMM_HASH
     }
     else {
-        $env:BUILD = "rpcs3-{0}-{1}-{2}_win64.7z" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH
+        $env:BUILD = "beempy-{0}-{1}-{2}_win64.7z" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH
         $env:AVVER = "{0}-{1}" -f $env:COMM_TAG.TrimStart("v"), $env:COMM_COUNT
     }
 
@@ -49,7 +49,7 @@ install:
 - cmd: conda update -q conda
 - cmd: conda info -a
 - cmd: conda install --yes conda-build setuptools pip pytest-pylint parameterized cryptography
-- cmd: conda install --yes pycryptodomex scrypt pyyaml pytest pytest-mock coverage mock appdirs
+- cmd: conda install --yes pycryptodomex scrypt pyyaml pytest pytest-mock coverage mock appdirs pylibscrypt
 - cmd: conda install --yes ecdsa requests future websocket-client pytz six Click events prettytable pyinstaller
 
 
@@ -63,6 +63,7 @@ install:
 build_script:
  # Build the compiled extension
 - cmd: python setup.py build
+- cmd: python setup.py install --user
 
 test_script:
 # Run the project tests
