@@ -66,9 +66,17 @@ test_script:
 after_test:
   # If tests are successful, create binary packages for the project.
   - pyinstaller beempy-onedir.spec
+  - copy /Y C:\OpenSSL-Win64\bin\libeay32.dll dist\beempy
+  - copy /Y C:\OpenSSL-Win64\bin\ssleay32.dll dist\beempy
   - 7z a dist\beempy.zip %APPVEYOR_BUILD_FOLDER%\dist\beempy
+  - 7z a -m0=LZMA2 -mx9 dist\beempy.7z %APPVEYOR_BUILD_FOLDER%\dist\beempy
   #- "%CMD_IN_ENV% python setup.py bdist_wininst"
   #- "%CMD_IN_ENV% python setup.py bdist_msi"
+
+  - ps: | # generate sha256 hashes
+    (get-filehash dist\beempy.7z -algorithm SHA256).Hash | out-file "dist\beempy.7z.sha256"-encoding ascii
+    (get-filehash dist\beempy.zip -algorithm SHA256).Hash | out-file "dist\beempy.zip.sha256" -encoding ascii 
+
   - ps: "ls dist"
 
 artifacts:
