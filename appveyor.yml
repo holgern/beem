@@ -39,7 +39,6 @@ install:
     $env:BRANCH = $env:BRANCH -replace "/#$"
 
 - ps: | # Installed SDKs:
-    "ls \"C:/Program Files/Microsoft SDKs/Windows\""
     #- set "PATH=%PYTHON%;%PYTHON%\\Scripts;%PYTHON%\\Tools\\Scripts;%PATH%"
     set "PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
     #- set VCINSTALLDIR="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC"
