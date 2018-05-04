@@ -44,7 +44,7 @@ install:
   - conda info -a
   - conda install --yes conda-build setuptools pip pytest-pylint parameterized cryptography
   - conda install --yes pycryptodomex scrypt pyyaml pytest pytest-mock coverage mock appdirs
-  - conda install --yes ecdsa requests future websocket-client pytz six Click events prettytable 
+  - conda install --yes ecdsa requests future websocket-client pytz six Click events prettytable pyinstaller
 
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
@@ -65,8 +65,8 @@ test_script:
 
 after_test:
   # If tests are successful, create binary packages for the project.
-  - "pip install wheel"
-  - "python setup.py bdist_wheel"
+  - pyinstaller beempy-onedir.spec
+  - 7z a beempy.zip %APPVEYOR_BUILD_FOLDER%\dist\beempy
   #- "%CMD_IN_ENV% python setup.py bdist_wininst"
   #- "%CMD_IN_ENV% python setup.py bdist_msi"
   - ps: "ls dist"
