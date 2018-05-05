@@ -24,4 +24,6 @@ then
     # Required for a newline between the outputs
     echo -e "\n"
     md5 -r "beempy $VERSION.dmg"
+    echo -e "\n"
+    shasum -a 256 "beempy $VERSION.dmg"
 fi
