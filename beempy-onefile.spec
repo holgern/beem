@@ -38,3 +38,11 @@ exe = EXE(pyz,
           console=True,
           icon='beempy.ico',
  )
+
+if platform.system() == 'Darwin':
+    info_plist = {'NSHighResolutionCapable': 'True', 'NSPrincipalClass': 'NSApplication'}
+    app = BUNDLE(exe,
+                 name='beempy.app',
+                 icon='beempy.ico',
+                 bundle_identifier=None
+                )
