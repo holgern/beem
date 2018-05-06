@@ -16,8 +16,7 @@ from .exceptions import (
     InsufficientAuthorityError,
     MissingKeyError,
     InvalidWifError,
-    WalletLocked,
-    KeyNotFound
+    WalletLocked
 )
 from beem.instance import shared_steem_instance
 import logging
@@ -163,7 +162,7 @@ class TransactionBuilder(dict):
                         r.append([wif, authority[1]])
                 except ValueError:
                     pass
-                except KeyNotFound:
+                except MissingKeyError:
                     pass
 
             if sum([x[1] for x in r]) < required_treshold:
@@ -294,6 +293,41 @@ class TransactionBuilder(dict):
         except Exception as e:
             raise e
 
+    def get_potential_signatures(self):
+        """ Returns public key from signature
+        """
+        if self.steem.rpc.get_use_appbase():
+            args = {'trx': self.json()}
+        else:
+            args = self.json()
+        ret = self.steem.rpc.get_potential_signatures(args, api="database")
+        if 'keys' in ret:
+            ret = ret["keys"]
+        return ret
+
+    def get_transaction_hex(self):
+        """ Returns a hex value of the transaction
+        """
+        if self.steem.rpc.get_use_appbase():
+            args = {'trx': self.json()}
+        else:
+            args = self.json()
+        ret = self.steem.rpc.get_transaction_hex(args, api="database")
+        if 'hex' in ret:
+            ret = ret["hex"]
+        return ret
+
+    def get_required_signatures(self, available_keys=list()):
+        """ Returns public key from signature
+        """
+        if self.steem.rpc.get_use_appbase():
+            args = {'trx': self.json(), 'available_keys': available_keys}
+            ret = self.steem.rpc.get_required_signatures(args, api="database")
+        else:
+            ret = self.steem.rpc.get_required_signatures(self.json(), available_keys, api="database")
+
+        return ret
+
     def broadcast(self, max_block_age=-1):
         """ Broadcast a transaction to the steem network
             Returns the signed transaction and clears itself
@@ -407,5 +441,5 @@ class TransactionBuilder(dict):
                 wif = self.steem.wallet.getPrivateKeyForPublicKey(pub)
                 if wif:
                     self.appendWif(wif)
-            except KeyNotFound:
+            except MissingKeyError:
                 wif = None

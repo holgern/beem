@@ -24,6 +24,18 @@ class RPCConnectionRequired(Exception):
     pass
 
 
+class InvalidMemoKeyException(Exception):
+    """ Memo key in message is invalid
+    """
+    pass
+
+
+class WrongMemoKey(Exception):
+    """ The memo provided is not equal the one on the blockchain
+    """
+    pass
+
+
 class OfflineHasNoRPCException(Exception):
     """ When in offline mode, we don't have RPC
     """
@@ -129,12 +141,6 @@ class ObjectNotInProposalBuffer(Exception):
 
 class InvalidMessageSignature(Exception):
     """ The message signature does not fit the message
-    """
-    pass
-
-
-class KeyNotFound(Exception):
-    """ Key not found
     """
     pass
 

@@ -97,8 +97,7 @@ class Steem(object):
 
             >>> from beem import Steem
             >>> steem = Steem()
-            >>> print(steem.get_blockchain_version())
-            0.19.2
+            >>> print(steem.get_blockchain_version())  # doctest: +SKIP
 
         This class also deals with edits, votes and reading content.
     """
@@ -197,13 +196,24 @@ class Steem(object):
         """Returns if rpc is connected"""
         return self.rpc is not None
 
+    def __repr__(self):
+        if self.offline:
+            return "<%s offline=True>" % (
+                self.__class__.__name__)
+        elif self.rpc and self.rpc.url:
+            return "<%s node=%s, nobroadcast=%s>" % (
+                self.__class__.__name__, str(self.rpc.url), str(self.nobroadcast))
+        else:
+            return "<%s, nobroadcast=%s>" % (
+                self.__class__.__name__, str(self.nobroadcast))
+
     def refresh_data(self, force_refresh=False, data_refresh_time_seconds=None):
-        """
-        Read and stores steem blockchain parameters
-        If the last data refresh is older than data_refresh_time_seconds, data will be refreshed
+        """ Read and stores steem blockchain parameters
+            If the last data refresh is older than data_refresh_time_seconds, data will be refreshed
 
             :param bool force_refresh: if True, data are forced to refreshed
             :param float data_refresh_time_seconds: set a new minimal refresh time in seconds
+
         """
         if self.offline:
             return
@@ -225,8 +235,10 @@ class Steem(object):
 
     def get_dynamic_global_properties(self, use_stored_data=True):
         """ This call returns the *dynamic global properties*
+
             :param bool use_stored_data: if True, stored data will be returned. If stored data are
-            empty or old, refresh_data() is used.
+                empty or old, refresh_data() is used.
+
         """
         if use_stored_data:
             self.refresh_data()
@@ -238,8 +250,10 @@ class Steem(object):
 
     def get_reserve_ratio(self, use_stored_data=True):
         """ This call returns the *dynamic global properties*
+
             :param bool use_stored_data: if True, stored data will be returned. If stored data are
-            empty or old, refresh_data() is used.
+                empty or old, refresh_data() is used.
+
         """
         if use_stored_data:
             self.refresh_data()
@@ -260,8 +274,10 @@ class Steem(object):
 
     def get_feed_history(self, use_stored_data=True):
         """ Returns the feed_history
+
             :param bool use_stored_data: if True, stored data will be returned. If stored data are
-            empty or old, refresh_data() is used.
+                empty or old, refresh_data() is used.
+
         """
         if use_stored_data:
             self.refresh_data()
@@ -273,8 +289,10 @@ class Steem(object):
 
     def get_reward_funds(self, use_stored_data=True):
         """ Get details for a reward fund.
+
             :param bool use_stored_data: if True, stored data will be returned. If stored data are
-            empty or old, refresh_data() is used.
+                empty or old, refresh_data() is used.
+
         """
         if use_stored_data:
             self.refresh_data()
@@ -471,9 +489,11 @@ class Steem(object):
 
     def sp_to_rshares(self, steem_power, voting_power=10000, vote_pct=10000):
         """ Obtain the r-shares from Steem power
+
             :param number steem_power: Steem Power
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting participation (100% = 10000)
+
         """
         # calculate our account voting shares (from vests)
         vesting_shares = int(self.sp_to_vests(steem_power) * 1e6)
@@ -481,9 +501,11 @@ class Steem(object):
 
     def vests_to_rshares(self, vests, voting_power=10000, vote_pct=10000):
         """ Obtain the r-shares from vests
+
             :param number vests: vesting shares
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting participation (100% = 10000)
+
         """
         used_power = self._calc_resulting_vote(voting_power=voting_power, vote_pct=vote_pct)
         # calculate vote rshares
@@ -503,6 +525,7 @@ class Steem(object):
             :param number steem_power: Steem Power
             :param number vests: vesting shares
             :param int voting_power: voting power (100% = 10000)
+
         """
         if steem_power is None and vests is None:
             raise ValueError("Either steem_power or vests has to be set!")
@@ -522,10 +545,13 @@ class Steem(object):
     def get_chain_properties(self, use_stored_data=True):
         """ Return witness elected chain properties
 
-            ::
-                {'account_creation_fee': '30.000 STEEM',
-                 'maximum_block_size': 65536,
-                 'sbd_interest_rate': 250}
+            Properties:::
+                {
+                    'account_creation_fee': '30.000 STEEM',
+                    'maximum_block_size': 65536,
+                    'sbd_interest_rate': 250
+                }
+
         """
         if use_stored_data:
             self.refresh_data()
@@ -718,6 +744,7 @@ class Steem(object):
         """ Broadcast a transaction to the Steem network
 
             :param tx tx: Signed transaction to broadcast
+
         """
         if tx:
             # If tx is provided, we broadcast the tx
@@ -738,8 +765,10 @@ class Steem(object):
             :func:`beem.wallet.create`.
 
             :param str pwd: Password to use for the new wallet
+
             :raises beem.exceptions.WalletExists: if there is already a
                 wallet created
+
         """
         return self.wallet.create(pwd)
 
@@ -1152,9 +1181,9 @@ class Steem(object):
             If left empty, it will be derived from title automatically.
         :param str reply_identifier: Identifier of the parent post/comment (only
             if this post is a reply/comment).
-        :param (str, dict) json_metadata: JSON meta object that can be attached to
+        :param str/dict json_metadata: JSON meta object that can be attached to
             the post.
-        :param (str, dict) comment_options: JSON options object that can be
+        :param dict comment_options: JSON options object that can be
             attached to the post.
 
         Example::
@@ -1177,11 +1206,11 @@ class Steem(object):
             `json_metadata`.
         :param str app: (Optional) Name of the app which are used for posting
             when not set, beem/<version> is used
-        :param (str, list) tags: (Optional) A list of tags (5 max) to go with the
+        :param str/list tags: (Optional) A list of tags (5 max) to go with the
             post. This will also override the tags specified in
             `json_metadata`. The first tag will be used as a 'category'. If
             provided as a string, it should be space separated.
-        :param (list of dicts) beneficiaries: (Optional) A list of beneficiaries
+        :param list beneficiaries: (Optional) A list of beneficiaries
             for posting reward distribution. This argument overrides
             beneficiaries as specified in `comment_options`.
 

@@ -91,6 +91,7 @@ class GrapheneRPC(object):
     :param int num_retries: Try x times to num_retries to a node on disconnect, -1 for indefinitely
     :param int num_retries_call: Repeat num_retries_call times a rpc call on node error (default is 5)
     :param int timeout: Timeout setting for https nodes (default is 60)
+    :param bool autoconnect: When set to false, connection is performed on the first rpc call (default is True)
 
     Available APIs:
 
@@ -140,6 +141,7 @@ class GrapheneRPC(object):
         self.user = user
         self.password = password
         self.ws = None
+        self.url = None
         self.session = None
         self.rpc_queue = []
         self.timeout = kwargs.get('timeout', 60)

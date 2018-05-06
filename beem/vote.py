@@ -272,6 +272,30 @@ class VotesObject(list):
         t = PrettyTable(table_header)
         t.align = "l"
 
+    def __contains__(self, item):
+        if isinstance(item, Account):
+            name = item["name"]
+            authorperm = ""
+        elif isinstance(item, Comment):
+            authorperm = item.authorperm
+            name = ""
+        else:
+            name = item
+            authorperm = item
+
+        return (
+            any([name == x["voter"] for x in self]) or
+            any([name == x.votee for x in self]) or
+            any([authorperm == x["authorperm"] for x in self])
+        )
+
+    def __str__(self):
+        return self.printAsTable(return_str=True)
+
+    def __repr__(self):
+        return "<%s %s>" % (
+            self.__class__.__name__, str(self.identifier))
+
 
 class ActiveVotes(VotesObject):
     """ Obtain a list of votes for a post
@@ -312,7 +336,7 @@ class ActiveVotes(VotesObject):
             authorperm = authorperm["authorperm"]
         if votes is None:
             return
-
+        self.identifier = authorperm
         super(ActiveVotes, self).__init__(
             [
                 Vote(x, authorperm=authorperm, lazy=True, steem_instance=self.steem)
@@ -334,6 +358,7 @@ class AccountVotes(VotesObject):
         stop = addTzInfo(stop)
         account = Account(account, steem_instance=self.steem)
         votes = account.get_account_votes()
+        self.identifier = account["name"]
         vote_list = []
         for x in votes:
             time = x.get("time", "")

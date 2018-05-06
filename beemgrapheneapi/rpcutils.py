@@ -38,7 +38,7 @@ def get_query(appbase, request_id, api_name, name, args):
                      "params": args[0],
                      "jsonrpc": "2.0",
                      "id": request_id}
-        elif len(args) > 0 and isinstance(args, list) and len(args[0]) > 0 and isinstance(args[0], list) and isinstance(args[0][0], dict):
+        elif len(args) > 0 and isinstance(args, list) and isinstance(args[0], list) and len(args[0]) > 0 and isinstance(args[0][0], dict):
             for a in args[0]:
                 query.append({"method": api_name + "." + name,
                               "params": a,

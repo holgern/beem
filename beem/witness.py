@@ -186,6 +186,25 @@ class WitnessesObject(list):
         else:
             print(t.get_string(**kwargs))
 
+    def __contains__(self, item):
+        from .account import Account
+        if isinstance(item, Account):
+            name = item["name"]
+        elif self.steem:
+            account = Account(item, steem_instance=self.steem)
+            name = account["name"]
+
+        return (
+            any([name == x["owner"] for x in self])
+        )
+
+    def __str__(self):
+        return self.printAsTable(return_str=True)
+
+    def __repr__(self):
+        return "<%s %s>" % (
+            self.__class__.__name__, str(self.identifier))
+
 
 class Witnesses(WitnessesObject):
     """ Obtain a list of **active** witnesses and the current schedule
@@ -202,7 +221,7 @@ class Witnesses(WitnessesObject):
             self.active_witnessess = self.steem.rpc.get_active_witnesses()
             self.schedule = self.steem.rpc.get_witness_schedule()
             self.witness_count = self.steem.rpc.get_witness_count()
-
+        self.identifier = ""
         super(Witnesses, self).__init__(
             [
                 Witness(x, lazy=True, steem_instance=self.steem)
@@ -221,7 +240,7 @@ class WitnessesVotedByAccount(WitnessesObject):
     def __init__(self, account, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.account = Account(account, full=True, steem_instance=self.steem)
-
+        self.identifier = self.account["name"]
         if self.steem.rpc.get_use_appbase():
             if "witnesses_voted_for" not in self.account:
                 return
@@ -254,6 +273,7 @@ class WitnessesRankedByVote(WitnessesObject):
         self.steem = steem_instance or shared_steem_instance()
         witnessList = []
         last_limit = limit
+        self.identifier = ""
         if self.steem.rpc.get_use_appbase() and not from_account:
             last_account = "0"
         else:
@@ -297,6 +317,7 @@ class ListWitnesses(WitnessesObject):
     """
     def __init__(self, from_account, limit, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        self.identifier = from_account
         if self.steem.rpc.get_use_appbase():
             witnessess = self.steem.rpc.list_witnesses({'start': from_account, 'limit': limit, 'order': 'by_name'}, api="database")['witnesses']
         else:

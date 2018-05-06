@@ -4,7 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
 import re
-from beemgrapheneapi.graphenerpc import RPCError, RPCErrorDoRetry
+from beemgrapheneapi.graphenerpc import RPCError, RPCErrorDoRetry, NumRetriesReached
 
 
 def decodeRPCErrorMsg(e):
@@ -50,10 +50,6 @@ class UnhandledRPCError(RPCError):
 
 
 class NoAccessApi(RPCError):
-    pass
-
-
-class NumRetriesReached(Exception):
     pass
 
 

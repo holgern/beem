@@ -232,14 +232,18 @@ class Account(BlockchainObject):
             remaining = 100 - bandwidth["used"] / bandwidth["allocated"] * 100
             used_kb = bandwidth["used"] / 1024
             allocated_mb = bandwidth["allocated"] / 1024 / 1024
+        utc = pytz.timezone('UTC')
+        last_vote_time_str = formatTimedelta(utc.localize(datetime.utcnow()) - self["last_vote_time"])
         if use_table:
             t = PrettyTable(["Key", "Value"])
             t.align = "l"
             t.add_row(["Name (rep)", self.name + " (%.2f)" % (self.rep)])
             t.add_row(["Voting Power", "%.2f %%, " % (self.get_voting_power())])
             t.add_row(["Vote Value", "%.2f $" % (self.get_voting_value_SBD())])
+            t.add_row(["Last vote", "%s ago" % last_vote_time_str])
             t.add_row(["Full in ", "%s" % (self.get_recharge_time_str())])
-            t.add_row(["Balance", "%.2f SP, %s, %s" % (self.get_steem_power(), str(self.balances["available"][0]), str(self.balances["available"][1]))])
+            t.add_row(["Steem Power", "%.2f STEEM" % (self.get_steem_power())])
+            t.add_row(["Balance", "%s, %s" % (str(self.balances["available"][0]), str(self.balances["available"][1]))])
             if bandwidth["allocated"] > 0:
                 t.add_row(["Remaining Bandwidth", "%.2f %%" % (remaining)])
                 t.add_row(["used/allocated Bandwidth", "(%.0f kb of %.0f mb)" % (used_kb, allocated_mb)])
@@ -314,12 +318,18 @@ class Account(BlockchainObject):
 
     def get_recharge_time_str(self, voting_power_goal=100):
         """ Returns the account recharge time
+
+            :param float voting_power_goal: voting power goal in percentage (default is 100)
+
         """
         remainingTime = self.get_recharge_timedelta(voting_power_goal=voting_power_goal)
         return formatTimedelta(remainingTime)
 
     def get_recharge_timedelta(self, voting_power_goal=100):
         """ Returns the account voting power recharge time as timedelta object
+
+            :param float voting_power_goal: voting power goal in percentage (default is 100)
+
         """
         missing_vp = voting_power_goal - self.get_voting_power()
         if missing_vp < 0:
@@ -329,74 +339,84 @@ class Account(BlockchainObject):
 
     def get_recharge_time(self, voting_power_goal=100):
         """ Returns the account voting power recharge time in minutes
+
+            :param float voting_power_goal: voting power goal in percentage (default is 100)
+
         """
         utc = pytz.timezone('UTC')
         return utc.localize(datetime.utcnow()) + self.get_recharge_timedelta(voting_power_goal)
 
-    def get_feed(self, entryId=0, limit=100, raw_data=False, account=None):
+    def get_feed(self, start_entry_id=0, limit=100, raw_data=False, account=None):
+        """ Returns the user feed
+
+            :param int start_entry_id: default is 0
+            :param int limit: default is 100
+            :param bool raw_data: default is False
+            :param beem.account.Account account: default is None
+        """
         if account is None:
             account = self["name"]
         if raw_data and self.steem.rpc.get_use_appbase():
             return [
-                c for c in self.steem.rpc.get_feed({'account': account, 'start_entry_id': entryId, 'limit': limit}, api='follow')["feed"]
+                c for c in self.steem.rpc.get_feed({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
             ]
         elif raw_data and not self.steem.rpc.get_use_appbase():
             return [
-                c for c in self.steem.rpc.get_feed(account, entryId, limit, api='follow')
+                c for c in self.steem.rpc.get_feed(account, start_entry_id, limit, api='follow')
             ]
         elif not raw_data and self.steem.rpc.get_use_appbase():
             from .comment import Comment
             return [
-                Comment(c['comment'], steem_instance=self.steem) for c in self.steem.rpc.get_feed({'account': account, 'start_entry_id': entryId, 'limit': limit}, api='follow')["feed"]
+                Comment(c['comment'], steem_instance=self.steem) for c in self.steem.rpc.get_feed({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
             ]
         else:
             from .comment import Comment
             return [
-                Comment(c['comment'], steem_instance=self.steem) for c in self.steem.rpc.get_feed(account, entryId, limit, api='follow')
+                Comment(c['comment'], steem_instance=self.steem) for c in self.steem.rpc.get_feed(account, start_entry_id, limit, api='follow')
             ]
 
-    def get_blog_entries(self, entryId=0, limit=100, raw_data=False, account=None):
+    def get_blog_entries(self, start_entry_id=0, limit=100, raw_data=False, account=None):
         if account is None:
             account = self["name"]
         if raw_data and self.steem.rpc.get_use_appbase():
             return [
-                c for c in self.steem.rpc.get_blog_entries({'account': account, 'start_entry_id': entryId, 'limit': limit}, api='follow')["blog"]
+                c for c in self.steem.rpc.get_blog_entries({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["blog"]
             ]
         elif raw_data and not self.steem.rpc.get_use_appbase():
             return [
-                c for c in self.steem.rpc.get_blog_entries(account, entryId, limit, api='follow')
+                c for c in self.steem.rpc.get_blog_entries(account, start_entry_id, limit, api='follow')
             ]
         elif not raw_data and self.steem.rpc.get_use_appbase():
             from .comment import Comment
             return [
-                Comment(c, steem_instance=self.steem) for c in self.steem.rpc.get_blog_entries({'account': account, 'start_entry_id': entryId, 'limit': limit}, api='follow')["blog"]
+                Comment(c, steem_instance=self.steem) for c in self.steem.rpc.get_blog_entries({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["blog"]
             ]
         else:
             from .comment import Comment
             return [
-                Comment(c, steem_instance=self.steem) for c in self.steem.rpc.get_blog_entries(account, entryId, limit, api='follow')
+                Comment(c, steem_instance=self.steem) for c in self.steem.rpc.get_blog_entries(account, start_entry_id, limit, api='follow')
             ]
 
-    def get_blog(self, entryId=0, limit=100, raw_data=False, account=None):
+    def get_blog(self, start_entry_id=0, limit=100, raw_data=False, account=None):
         if account is None:
             account = self["name"]
         if raw_data and self.steem.rpc.get_use_appbase():
             return [
-                c for c in self.steem.rpc.get_blog({'account': account, 'start_entry_id': entryId, 'limit': limit}, api='follow')["blog"]
+                c for c in self.steem.rpc.get_blog({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["blog"]
             ]
         elif raw_data and not self.steem.rpc.get_use_appbase():
             return [
-                c for c in self.steem.rpc.get_blog(account, entryId, limit, api='follow')
+                c for c in self.steem.rpc.get_blog(account, start_entry_id, limit, api='follow')
             ]
         elif not raw_data and self.steem.rpc.get_use_appbase():
             from .comment import Comment
             return [
-                Comment(c["comment"], steem_instance=self.steem) for c in self.steem.rpc.get_blog({'account': account, 'start_entry_id': entryId, 'limit': limit}, api='follow')["blog"]
+                Comment(c["comment"], steem_instance=self.steem) for c in self.steem.rpc.get_blog({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["blog"]
             ]
         else:
             from .comment import Comment
             return [
-                Comment(c["comment"], steem_instance=self.steem) for c in self.steem.rpc.get_blog(account, entryId, limit, api='follow')
+                Comment(c["comment"], steem_instance=self.steem) for c in self.steem.rpc.get_blog(account, start_entry_id, limit, api='follow')
             ]
 
     def get_blog_account(self, account=None):
@@ -790,30 +810,121 @@ class Account(BlockchainObject):
 
             :rtype: list
         """
-        if until is not None and isinstance(until, datetime):
-            limit = until
-            last_gen = self.history_reverse(limit=limit)
-            last_item = 0
-            for item in last_gen:
-                last_item = item[0]
-            return last_item
+        if until is not None:
+            return self.estimate_account_op(until, op_accuracy=1)
         else:
             try:
                 op_count = 0
-                # self.steem.rpc.set_next_node_on_empty_reply(True)
-                if self.steem.rpc.get_use_appbase():
-                    try:
-                        op_count = self.steem.rpc.get_account_history({'account': self["name"], 'start': -1, 'limit': 0}, api="account_history")['history']
-                    except ApiNotSupported:
-                        op_count = self.steem.rpc.get_account_history(self["name"], -1, 0)
-                else:
-                    op_count = self.steem.rpc.get_account_history(self["name"], -1, 0, api="database")
+                op_count = self._get_account_history(start=-1, limit=0)
                 if isinstance(op_count, list) and len(op_count) > 0 and len(op_count[0]) > 0:
                     return op_count[0][0]
                 else:
                     return 0
             except IndexError:
                 return 0
+
+    def _get_account_history(self, account=None, start=-1, limit=0):
+        if account is None:
+            account = self
+        account = Account(account, steem_instance=self.steem)
+        # self.steem.rpc.set_next_node_on_empty_reply(True)
+        if self.steem.rpc.get_use_appbase():
+            try:
+                ret = self.steem.rpc.get_account_history({'account': account["name"], 'start': start, 'limit': limit}, api="account_history")['history']
+            except ApiNotSupported:
+                ret = self.steem.rpc.get_account_history(account["name"], start, limit)
+        else:
+            ret = self.steem.rpc.get_account_history(account["name"], start, limit, api="database")
+        return ret
+
+    def estimate_account_op(self, start, op_accuracy=10, max_count=10, reverse=False):
+        """ Returns a estiamtion of account operation index for a given time or blockindex
+
+            :param int/datetime start: start time or start block index from which account
+                operation should be fetched
+            :param int op_accuracy: defines the estimation accuracy (default 10)
+
+            Example:::
+
+                import pytz
+                from beem.account import Account
+                from beem.blockchain import Blockchain
+                from datetime import datetime, timedelta
+                utc = pytz.timezone('UTC')
+                start_time = utc.localize(datetime.utcnow()) - timedelta(days=7)
+                acc = Account("gtg")
+                start_op = acc.estimate_account_op(start_time)
+
+                b = Blockchain()
+                start_block_num = b.get_estimated_block_num(start_time)
+                start_op2 = acc.estimate_account_op(start_block_num)
+        """
+        max_index = self.virtual_op_count()
+        created = self["created"]
+        if not isinstance(start, datetime):
+            b = Blockchain(steem_instance=self.steem)
+            current_block_num = b.get_current_block_num()
+            created_blocknum = b.get_estimated_block_num(created, accurate=True)
+            if start < created_blocknum and not reverse:
+                return 0
+            elif start < created_blocknum:
+                return max_index
+        else:
+            if start < created and not reverse:
+                return 0
+            elif start < created:
+                return max_index
+        if max_index < op_accuracy and not reverse:
+            return 0
+        elif max_index < op_accuracy:
+            return max_index
+        if isinstance(start, datetime):
+            utc = pytz.timezone('UTC')
+            now = utc.localize(datetime.utcnow())
+            account_lifespan_sec = (now - created).total_seconds()
+            start = addTzInfo(start)
+            estimated_op_num = int((start - created).total_seconds() / account_lifespan_sec * max_index)
+        else:
+            account_lifespan_block = (current_block_num - created_blocknum)
+            estimated_op_num = int((start - created_blocknum) / account_lifespan_block * max_index)
+        op_diff = op_accuracy + 1
+        cnt = 0
+        while op_diff > op_accuracy and cnt < max_count:
+            op_start = self._get_account_history(start=estimated_op_num)
+            if isinstance(op_start, list) and len(op_start) > 0 and len(op_start[0]) > 0:
+                trx = op_start[0][1]
+                estimated_op_num = op_start[0][0]
+            elif not reverse:
+                return 0
+            else:
+                return max_index
+            if isinstance(start, datetime):
+                diff_time = (now - formatTimeString(trx["timestamp"])).total_seconds()
+                op_diff = ((start - formatTimeString(trx["timestamp"])).total_seconds() / diff_time * (max_index - estimated_op_num))
+            else:
+                diff_block = (current_block_num - trx["block"])
+                op_diff = ((start - trx["block"]) / diff_block * (max_index - estimated_op_num))
+            if reverse:
+                estimated_op_num += math.ceil(op_diff)
+            else:
+                estimated_op_num += int(op_diff)
+            cnt += 1
+        if estimated_op_num < 0:
+            return 0
+        elif estimated_op_num > max_index:
+            return max_index
+        elif math.ceil(op_diff) == 0 and reverse:
+            return estimated_op_num
+        elif int(op_diff) == 0 and not reverse:
+            return estimated_op_num
+        elif estimated_op_num > op_accuracy and not reverse:
+            return estimated_op_num - op_accuracy
+        elif estimated_op_num + op_accuracy < max_index:
+            return estimated_op_num + op_accuracy
+        elif reverse:
+            return max_index
+        else:
+            return 0
 
     def get_curation_reward(self, days=7):
         """Returns the curation reward of the last `days` days
@@ -879,13 +990,7 @@ class Account(BlockchainObject):
         if order != -1 and order != 1:
             raise ValueError("order must be -1 or 1!")
         # self.steem.rpc.set_next_node_on_empty_reply(True)
-        if self.steem.rpc.get_use_appbase():
-            try:
-                txs = self.steem.rpc.get_account_history({'account': self["name"], 'start': index, 'limit': limit}, api="account_history")['history']
-            except ApiNotSupported:
-                txs = self.steem.rpc.get_account_history(self["name"], index, limit)
-        else:
-            txs = self.steem.rpc.get_account_history(self["name"], index, limit, api="database")
+        txs = self._get_account_history(start=index, limit=limit)
         start = addTzInfo(start)
         stop = addTzInfo(stop)
 
@@ -1031,12 +1136,14 @@ class Account(BlockchainObject):
         max_index = self.virtual_op_count()
         if not max_index:
             return
-        if start is not None and not use_block_num and not isinstance(start, datetime):
-            start_index = start
-        else:
-            start_index = 0
         start = addTzInfo(start)
         stop = addTzInfo(stop)
+        if start is not None and not use_block_num and not isinstance(start, datetime):
+            start_index = start
+        elif start is not None:
+            start_index = self.estimate_account_op(start, op_accuracy=10)
+        else:
+            start_index = 0
 
         first = start_index + _limit
         if first > max_index:
@@ -1175,6 +1282,8 @@ class Account(BlockchainObject):
             start += first
         elif start is not None and isinstance(start, int) and not use_block_num:
             first = start
+        elif start is not None:
+            first = self.estimate_account_op(start, op_accuracy=10, reverse=True)
         if stop is not None and isinstance(stop, int) and stop < 0 and not use_block_num:
             stop += first
         start = addTzInfo(start)

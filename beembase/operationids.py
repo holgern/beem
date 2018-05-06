@@ -51,6 +51,7 @@ ops = [
     'curation_reward',
     'comment_reward',
     'liquidity_reward',
+    'producer_reward',
     'interest',
     'fill_vesting_withdraw',
     'fill_order',

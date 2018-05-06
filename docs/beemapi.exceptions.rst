@@ -1,5 +1,5 @@
-beemapi\.exceptions module
-==========================
+beemapi\.exceptions
+===================
 
 .. automodule:: beemapi.exceptions
     :members:

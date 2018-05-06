@@ -100,13 +100,13 @@ class Price(dict):
             if "price" in price:
                 raise AssertionError("You cannot provide a 'price' this way")
             # Regular 'price' objects according to steem-core
-            base_id = price["base"]["asset_id"]
-            if price["base"]["asset_id"] == base_id:
-                self["base"] = Amount(price["base"], steem_instance=self.steem)
-                self["quote"] = Amount(price["quote"], steem_instance=self.steem)
-            else:
-                self["quote"] = Amount(price["base"], steem_instance=self.steem)
-                self["base"] = Amount(price["quote"], steem_instance=self.steem)
+            # base_id = price["base"]["asset_id"]
+            # if price["base"]["asset_id"] == base_id:
+            self["base"] = Amount(price["base"], steem_instance=self.steem)
+            self["quote"] = Amount(price["quote"], steem_instance=self.steem)
+            # else:
+            #    self["quote"] = Amount(price["base"], steem_instance=self.steem)
+            #    self["base"] = Amount(price["quote"], steem_instance=self.steem)
 
         elif (price is not None and isinstance(base, Asset) and isinstance(quote, Asset)):
             frac = Fraction(float(price)).limit_denominator(10 ** base["precision"])

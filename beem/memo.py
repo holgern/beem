@@ -10,7 +10,7 @@ import random
 from beembase import memo as BtsMemo
 from beemgraphenebase.account import PrivateKey, PublicKey
 from .account import Account
-from .exceptions import MissingKeyError, KeyNotFound
+from .exceptions import MissingKeyError
 
 
 class Memo(object):
@@ -237,14 +237,14 @@ class Memo(object):
                 memo_to["memo_key"]
             )
             pubkey = memo_from["memo_key"]
-        except KeyNotFound:
+        except MissingKeyError:
             try:
                 # if that failed, we assume that we have sent the memo
                 memo_wif = self.steem.wallet.getPrivateKeyForPublicKey(
                     memo_from["memo_key"]
                 )
                 pubkey = memo_to["memo_key"]
-            except KeyNotFound:
+            except MissingKeyError:
                 # if all fails, raise exception
                 raise MissingKeyError(
                     "Non of the required memo keys are installed!"

@@ -11,7 +11,7 @@ from beemgraphenebase.account import PrivateKey
 from beem.instance import shared_steem_instance
 from .account import Account
 from .exceptions import (
-    KeyNotFound,
+    MissingKeyError,
     InvalidWifError,
     WalletExists,
     WalletLocked,
@@ -332,7 +332,7 @@ class Wallet(object):
 
             encwif = self.keyStorage.getPrivateKeyForPublicKey(pub)
             if not encwif:
-                raise KeyNotFound("No private key for {} found".format(pub))
+                raise MissingKeyError("No private key for {} found".format(pub))
             return self.decrypt_wif(encwif)
 
     def removePrivateKeyFromPublicKey(self, pub):
@@ -380,10 +380,10 @@ class Wallet(object):
                         key = self.getPrivateKeyForPublicKey(authority[0])
                         if key:
                             return key
-                    except KeyNotFound:
+                    except MissingKeyError:
                         key = None
                 if key is None:
-                    raise KeyNotFound("No private key for {} found".format(name))
+                    raise MissingKeyError("No private key for {} found".format(name))
             return
 
     def getOwnerKeyForAccount(self, name):

@@ -35,6 +35,6 @@ class NumRetriesReached(Exception):
 
 
 class CallRetriesReached(Exception):
-    """CallRetriesReached Exception."""
+    """CallRetriesReached Exception. Only for internal use"""
 
     pass

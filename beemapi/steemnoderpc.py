@@ -15,19 +15,29 @@ log = logging.getLogger(__name__)
 
 
 class SteemNodeRPC(GrapheneRPC):
-    """This class allows to call API methods exposed by the witness node via
-       websockets / rpc-json.
+    """ This class allows to call API methods exposed by the witness node via
+        websockets / rpc-json.
 
-    :param str urls: Either a single Websocket/Http URL, or a list of URLs
-    :param str user: Username for Authentication
-    :param str password: Password for Authentication
-    :param int num_retries: Try x times to num_retries to a node on disconnect, -1 for indefinitely
-    :param int num_retries_call: Repeat num_retries_call times a rpc call on node error (default is 5)
-    :param int timeout: Timeout setting for https nodes (default is 60)
+        :param str urls: Either a single Websocket/Http URL, or a list of URLs
+        :param str user: Username for Authentication
+        :param str password: Password for Authentication
+        :param int num_retries: Try x times to num_retries to a node on disconnect, -1 for indefinitely
+        :param int num_retries_call: Repeat num_retries_call times a rpc call on node error (default is 5)
+        :param int timeout: Timeout setting for https nodes (default is 60)
 
     """
 
     def __init__(self, *args, **kwargs):
+        """ Init SteemNodeRPC
+
+            :param str urls: Either a single Websocket/Http URL, or a list of URLs
+            :param str user: Username for Authentication
+            :param str password: Password for Authentication
+            :param int num_retries: Try x times to num_retries to a node on disconnect, -1 for indefinitely
+            :param int num_retries_call: Repeat num_retries_call times a rpc call on node error (default is 5)
+            :param int timeout: Timeout setting for https nodes (default is 60)
+
+        """
         super(SteemNodeRPC, self).__init__(*args, **kwargs)
         self.next_node_on_empty_reply = False
 
@@ -45,16 +55,14 @@ class SteemNodeRPC(GrapheneRPC):
             :raises RPCError: if the server returns an error
         """
         doRetry = True
-        cnt = 0
-        while doRetry and cnt < self.num_retries_call:
+        maxRetryCountReached = False
+        while doRetry and not maxRetryCountReached:
             doRetry = False
             try:
                 # Forward call to GrapheneWebsocketRPC and catch+evaluate errors
-                self.error_cnt_call = cnt
                 reply = super(SteemNodeRPC, self).rpcexec(payload)
                 if self.next_node_on_empty_reply and not bool(reply) and self.n_urls > 1:
                     self._retry_on_next_node("Empty Reply")
-                    cnt = 0
                     doRetry = True
                     self.next_node_on_empty_reply = True
                 else:
@@ -63,39 +71,33 @@ class SteemNodeRPC(GrapheneRPC):
             except exceptions.RPCErrorDoRetry as e:
                 msg = exceptions.decodeRPCErrorMsg(e).strip()
                 try:
-                    sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg), call_retry=True)
+                    sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, str(msg), call_retry=True)
                     doRetry = True
                 except CallRetriesReached:
                     if self.n_urls > 1:
                         self._retry_on_next_node(msg)
-                        cnt = 0
                         doRetry = True
                     else:
                         raise CallRetriesReached
             except exceptions.RPCError as e:
                 try:
-                    doRetry = self._check_error_message(e, cnt)
+                    doRetry = self._check_error_message(e, self.error_cnt_call)
                 except CallRetriesReached:
                     msg = exceptions.decodeRPCErrorMsg(e).strip()
                     if self.n_urls > 1:
                         self._retry_on_next_node(msg)
-                        cnt = 0
                         doRetry = True
                     else:
                         raise CallRetriesReached
             except Exception as e:
                 raise e
-            if doRetry:
-                if self.error_cnt_call == 0:
-                    cnt += 1
-                else:
-                    cnt = self.error_cnt_call + 1
+            if self.error_cnt_call >= self.num_retries_call:
+                maxRetryCountReached = True
 
     def _retry_on_next_node(self, error_msg):
         self.error_cnt[self.url] += 1
         sleep_and_check_retries(self.num_retries, self.error_cnt[self.url], self.url, error_msg, sleep=False, call_retry=False)
         self.next()
-        self.error_cnt_call = 0
 
     def _check_error_message(self, e, cnt):
         """Check error message and decide what to do"""

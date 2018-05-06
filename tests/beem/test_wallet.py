@@ -124,19 +124,19 @@ class Testcases(unittest.TestCase):
         self.wallet.steem = stm
         self.wallet.unlock(pwd="TestingOneTwoThree")
         with self.assertRaises(
-            exceptions.KeyNotFound
+            exceptions.MissingKeyError
         ):
             self.wallet.getOwnerKeyForAccount("test")
         with self.assertRaises(
-            exceptions.KeyNotFound
+            exceptions.MissingKeyError
         ):
             self.wallet.getMemoKeyForAccount("test")
         with self.assertRaises(
-            exceptions.KeyNotFound
+            exceptions.MissingKeyError
         ):
             self.wallet.getActiveKeyForAccount("test")
         with self.assertRaises(
-            exceptions.KeyNotFound
+            exceptions.MissingKeyError
         ):
             self.wallet.getPostingKeyForAccount("test")
 
