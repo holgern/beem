@@ -197,7 +197,7 @@ def set(key, value):
     """
     stm = shared_steem_instance()
     if key == "default_account":
-        if stm.rpc:
+        if stm.rpc is not None:
             stm.rpc.rpcconnect()
         stm.set_default_account(value)
     elif key == "default_vote_weight":
@@ -229,7 +229,7 @@ def nextnode(results):
     """ Uses the next node in list
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     stm.move_current_node_to_front()
     node = stm.get_default_nodes()
@@ -277,7 +277,7 @@ def pingnode(raw, sort, remove, threading):
     """ Returns the answer time in milliseconds
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     nodes = stm.get_default_nodes()
     if not raw:
@@ -337,7 +337,7 @@ def currentnode(version, url):
     """ Sets the currently working node at the first place in the list
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     offline = stm.offline
     stm.move_current_node_to_front()
@@ -481,7 +481,7 @@ def addkey(unsafe_import_key):
         and a prompt for entering the private key are shown.
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not unlock_wallet(stm):
         return
@@ -504,7 +504,7 @@ def delkey(confirm, pub):
         which will be deleted from the wallet
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not unlock_wallet(stm):
         return
@@ -528,7 +528,7 @@ def listkeys():
 def listaccounts():
     """Show stored accounts"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     t = PrettyTable(["Name", "Type", "Available Key"])
     t.align = "l"
@@ -551,7 +551,7 @@ def upvote(post, vote_weight, account, weight):
         POST is @author/permlink
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not weight and vote_weight:
         weight = vote_weight
@@ -582,7 +582,7 @@ def downvote(post, vote_weight, account, weight):
         POST is @author/permlink
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not weight and vote_weight:
         weight = vote_weight
@@ -611,7 +611,7 @@ def downvote(post, vote_weight, account, weight):
 def transfer(to, amount, asset, memo, account):
     """Transfer SBD/STEEM"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
@@ -632,7 +632,7 @@ def transfer(to, amount, asset, memo, account):
 def powerup(amount, account, to):
     """Power up (vest STEEM as STEEM POWER)"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
@@ -657,7 +657,7 @@ def powerdown(amount, account):
         amount is in VESTS
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
@@ -682,7 +682,7 @@ def powerdown(amount, account):
 def powerdownroute(to, percentage, account, auto_vest):
     """Setup a powerdown route"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
@@ -700,7 +700,7 @@ def powerdownroute(to, percentage, account, auto_vest):
 def convert(amount, account):
     """Convert STEEMDollars to Steem (takes a week to settle)"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
@@ -742,7 +742,7 @@ def power(account):
     """ Shows vote power and bandwidth
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if len(account) == 0:
         if "default_account" in stm.config:
@@ -759,7 +759,7 @@ def balance(account):
     """ Shows balance
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if len(account) == 0:
         if "default_account" in stm.config:
@@ -802,7 +802,7 @@ def interest(account):
     """ Get information about interest payment
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         if "default_account" in stm.config:
@@ -832,7 +832,7 @@ def follower(account):
     """ Get information about followers
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         if "default_account" in stm.config:
@@ -850,7 +850,7 @@ def following(account):
     """ Get information about following
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         if "default_account" in stm.config:
@@ -868,7 +868,7 @@ def muter(account):
     """ Get information about muter
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         if "default_account" in stm.config:
@@ -886,7 +886,7 @@ def muting(account):
     """ Get information about muting
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         if "default_account" in stm.config:
@@ -904,7 +904,7 @@ def permissions(account):
     """ Show permissions of an account
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         if "default_account" in stm.config:
@@ -942,7 +942,7 @@ def allow(foreign_account, permission, account, weight, threshold):
             This derived key will then interact with your account.
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
@@ -970,7 +970,7 @@ def allow(foreign_account, permission, account, weight, threshold):
 def disallow(foreign_account, permission, account, threshold):
     """Remove allowance an account/key to interact with your account"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
@@ -996,7 +996,7 @@ def disallow(foreign_account, permission, account, threshold):
 def newaccount(accountname, account, fee):
     """Create a new account"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
@@ -1020,7 +1020,7 @@ def newaccount(accountname, account, fee):
 def setprofile(variable, value, account, pair):
     """Set a variable in an account\'s profile"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     keys = []
     values = []
@@ -1055,7 +1055,7 @@ def setprofile(variable, value, account, pair):
 def delprofile(variable, account):
     """Delete a variable in an account\'s profile"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
 
     if not account:
@@ -1080,7 +1080,7 @@ def importaccount(account, roles):
     """Import an account using a passphrase"""
     from beemgraphenebase.account import PasswordKey
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not unlock_wallet(stm):
         return
@@ -1138,7 +1138,7 @@ def importaccount(account, roles):
 def updatememokey(account, key):
     """Update an account\'s memo key"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
@@ -1164,7 +1164,7 @@ def updatememokey(account, key):
 def approvewitness(witness, account):
     """Approve a witnesses"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
@@ -1182,7 +1182,7 @@ def approvewitness(witness, account):
 def disapprovewitness(witness, account):
     """Disapprove a witnesses"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
@@ -1199,7 +1199,7 @@ def disapprovewitness(witness, account):
 def sign(file):
     """Sign a provided transaction with available and required keys"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if file and file != "-":
         if not os.path.isfile(file):
@@ -1219,7 +1219,7 @@ def sign(file):
 def broadcast(file):
     """broadcast a signed transaction"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if file and file != "-":
         if not os.path.isfile(file):
@@ -1239,7 +1239,7 @@ def ticker():
     """ Show ticker
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     t = PrettyTable(["Key", "Value"])
     t.align = "l"
@@ -1258,7 +1258,7 @@ def pricehistory(width, height, ascii):
     """ Show price history
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     feed_history = stm.get_feed_history()
     current_base = Amount(feed_history['current_median_history']["base"], steem_instance=stm)
@@ -1295,7 +1295,7 @@ def tradehistory(days, hours, limit, width, height, ascii):
     """ Show price history
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     m = Market(steem_instance=stm)
     utc = pytz.timezone('UTC')
@@ -1334,7 +1334,7 @@ def tradehistory(days, hours, limit, width, height, ascii):
 def orderbook(chart, limit, show_date, width, height, ascii):
     """Obtain orderbook of the internal market"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     market = Market(steem_instance=stm)
     orderbook = market.orderbook(limit=limit, raw_data=False)
@@ -1432,7 +1432,7 @@ def buy(amount, asset, price, account, orderid):
         Limit buy price denoted in (SBD per STEEM)
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
@@ -1475,7 +1475,7 @@ def sell(amount, asset, price, account, orderid):
         Limit sell price denoted in (SBD per STEEM)
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if asset == "SBD":
         market = Market(base=Asset("STEEM"), quote=Asset("SBD"), steem_instance=stm)
@@ -1511,7 +1511,7 @@ def sell(amount, asset, price, account, orderid):
 def cancel(orderid, account):
     """Cancel order in the internal market"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     market = Market(steem_instance=stm)
     if not account:
@@ -1529,7 +1529,7 @@ def cancel(orderid, account):
 def openorders(account):
     """Show open orders"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     market = Market(steem_instance=stm)
     if not account:
@@ -1552,7 +1552,7 @@ def openorders(account):
 def resteem(identifier, account):
     """Resteem an existing post"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
@@ -1572,7 +1572,7 @@ def resteem(identifier, account):
 def follow(follow, account, what):
     """Follow another account"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
@@ -1593,7 +1593,7 @@ def follow(follow, account, what):
 def mute(mute, account, what):
     """Mute another account"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
@@ -1613,7 +1613,7 @@ def mute(mute, account, what):
 def unfollow(unfollow, account):
     """Unfollow/Unmute another account"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
@@ -1635,7 +1635,7 @@ def unfollow(unfollow, account):
 def witnessupdate(witness, maximum_block_size, account_creation_fee, sbd_interest_rate, url, signing_key):
     """Change witness properties"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not witness:
         witness = stm.config["default_account"]
@@ -1665,7 +1665,7 @@ def witnessupdate(witness, maximum_block_size, account_creation_fee, sbd_interes
 def witnesscreate(witness, signing_key, maximum_block_size, account_creation_fee, sbd_interest_rate, url):
     """Create a witness"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not unlock_wallet(stm):
         return
@@ -1690,7 +1690,7 @@ def witnesses(account, limit):
     """ List witnesses
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if account:
         witnesses = WitnessesVotedByAccount(account, steem_instance=stm)
@@ -1707,7 +1707,7 @@ def votes(account, direction, days):
     """ List outgoing/incoming account votes
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
@@ -1732,7 +1732,7 @@ def curation(authorperm, payout):
     """ Lists curation rewords of all votes for authorperm
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     comment = Comment(authorperm, steem_instance=stm)
     if payout is not None and comment.is_pending():
@@ -1780,7 +1780,7 @@ def rewards(account, post, comment, curation):
     """ Lists outstanding rewards
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
@@ -1881,7 +1881,7 @@ def claimreward(account, reward_steem, reward_sbd, reward_vests):
         By default, this will claim ``all`` outstanding balances.
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
@@ -1905,7 +1905,7 @@ def claimreward(account, reward_steem, reward_sbd, reward_vests):
 def verify(blocknumber, trx, use_api):
     """Returns the public signing keys for a block"""
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     b = Blockchain(steem_instance=stm)
     i = 0
@@ -1976,7 +1976,7 @@ def info(objects):
         a post/comment and a public key
     """
     stm = shared_steem_instance()
-    if stm.rpc:
+    if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not objects:
         t = PrettyTable(["Key", "Value"])
