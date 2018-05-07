@@ -3,7 +3,7 @@
 import os
 import glob
 import platform
-
+from PyInstaller.utils.hooks import exec_statement
 
 block_cipher = None
 os_name = platform.system()
@@ -11,12 +11,11 @@ binaries = []
 
 data_files = []
 
-
 a = Analysis(['beem/cli.py'],
              pathex=['beem'],
              binaries=binaries,
              datas=data_files,
-             hiddenimports=['scrypt'],
+             hiddenimports=['scrypt', 'websocket'],
              hookspath=[],
              runtime_hooks=[],
              excludes=['matplotlib', 'scipy', 'pandas', 'numpy', 'PyQt5', 'tkinter'],

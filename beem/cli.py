@@ -2105,6 +2105,7 @@ def info(objects):
 
 if __name__ == "__main__":
     if getattr(sys, 'frozen', False):
+        os.environ['SSL_CERT_FILE'] = os.path.join(sys._MEIPASS, 'lib', 'cert.pem')
         cli(sys.argv[1:])
     else:
         cli()
