@@ -37,7 +37,7 @@ def profiling(name_list):
     startBlockNumber = current_num - 20
     endBlockNumber = current_num
     block_elem = None
-    for o in blockchain_object.ops(start=startBlockNumber, stop=endBlockNumber):
+    for o in blockchain_object.stream(start=startBlockNumber, stop=endBlockNumber):
         print("block %d" % (o["block_num"]))
         block_elem = o
     print(block_elem)

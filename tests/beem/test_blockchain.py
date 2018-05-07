@@ -150,20 +150,6 @@ class Testcases(unittest.TestCase):
         self.assertEqual(op_stat["transfer"], op_stat2["transfer"])
         self.assertEqual(op_stat["vote"], op_stat2["vote"])
 
-        ops_ops = []
-        for op in b.ops(start=self.start, stop=self.stop):
-            ops_ops.append(op)
-        self.assertTrue(len(ops_ops) > 0)
-        op_stat3 = {"transfer": 0, "vote": 0}
-
-        for op in ops_ops:
-            if op["op"][0] in opNames:
-                op_stat3[op["op"][0]] += 1
-            self.assertTrue(op["block_num"] >= self.start)
-            self.assertTrue(op["block_num"] <= self.stop)
-        self.assertEqual(op_stat["transfer"], op_stat3["transfer"])
-        self.assertEqual(op_stat["vote"], op_stat3["vote"])
-
         ops_blocks = []
         for op in b.blocks(start=self.start, stop=self.stop):
             ops_blocks.append(op)
@@ -184,3 +170,22 @@ class Testcases(unittest.TestCase):
             ops_blocks.append(op)
             break
         self.assertTrue(len(ops_blocks) == 1)
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_wait_for_and_get_block(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        else:
+            bts = self.appbase
+        b = Blockchain(steem_instance=bts)
+        start_num = b.get_current_block_num()
+        blocknum = start_num
+        last_fetched_block_num = None
+        for i in range(3):
+            block = b.wait_for_and_get_block(blocknum)
+            last_fetched_block_num = block.block_num
+            blocknum = last_fetched_block_num + 2
+        self.assertEqual(last_fetched_block_num, start_num + 4)

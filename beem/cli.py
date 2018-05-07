@@ -13,6 +13,7 @@ from beem.comment import Comment
 from beem.market import Market
 from beem.block import Block
 from beem.profile import Profile
+from beem.wallet import Wallet
 from beem.asset import Asset
 from beem.witness import Witness, WitnessesRankedByVote, WitnessesVotedByAccount
 from beem.blockchain import Blockchain
@@ -22,10 +23,12 @@ from beem import exceptions
 from beem.version import version as __version__
 from datetime import datetime, timedelta
 from beem.asciichart import AsciiChart
+from beem.transactionbuilder import TransactionBuilder
 import pytz
 from timeit import default_timer as timer
 from beembase import operations
 from beemgraphenebase.account import PrivateKey, PublicKey
+from beemgraphenebase.base58 import Base58
 import os
 import ast
 import json
@@ -168,7 +171,11 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, expires, verbose):
         nowallet=no_wallet,
         unsigned=unsigned,
         expiration=expires,
-        debug=debug
+        debug=debug,
+        num_retries=10,
+        num_retries_call=3,
+        timeout=10,
+        autoconnect=False
     )
     set_shared_steem_instance(stm)
 
@@ -190,6 +197,8 @@ def set(key, value):
     """
     stm = shared_steem_instance()
     if key == "default_account":
+        if stm.rpc:
+            stm.rpc.rpcconnect()
         stm.set_default_account(value)
     elif key == "default_vote_weight":
         stm.set_default_vote_weight(value)
@@ -220,6 +229,8 @@ def nextnode(results):
     """ Uses the next node in list
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     stm.move_current_node_to_front()
     node = stm.get_default_nodes()
     offline = stm.offline
@@ -266,6 +277,8 @@ def pingnode(raw, sort, remove, threading):
     """ Returns the answer time in milliseconds
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     nodes = stm.get_default_nodes()
     if not raw:
         t = PrettyTable(["Node", "Answer time [ms]"])
@@ -324,6 +337,8 @@ def currentnode(version, url):
     """ Sets the currently working node at the first place in the list
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     offline = stm.offline
     stm.move_current_node_to_front()
     node = stm.get_default_nodes()
@@ -466,6 +481,8 @@ def addkey(unsafe_import_key):
         and a prompt for entering the private key are shown.
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not unlock_wallet(stm):
         return
     if not unsafe_import_key:
@@ -487,6 +504,8 @@ def delkey(confirm, pub):
         which will be deleted from the wallet
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not unlock_wallet(stm):
         return
     stm.wallet.removePrivateKeyFromPublicKey(pub)
@@ -509,6 +528,8 @@ def listkeys():
 def listaccounts():
     """Show stored accounts"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     t = PrettyTable(["Name", "Type", "Available Key"])
     t.align = "l"
     for account in stm.wallet.getAccounts():
@@ -530,6 +551,8 @@ def upvote(post, vote_weight, account, weight):
         POST is @author/permlink
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not weight and vote_weight:
         weight = vote_weight
     elif not weight and not vote_weight:
@@ -559,6 +582,8 @@ def downvote(post, vote_weight, account, weight):
         POST is @author/permlink
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not weight and vote_weight:
         weight = vote_weight
     elif not weight and not vote_weight:
@@ -586,6 +611,8 @@ def downvote(post, vote_weight, account, weight):
 def transfer(to, amount, asset, memo, account):
     """Transfer SBD/STEEM"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
     if not bool(memo):
@@ -605,6 +632,8 @@ def transfer(to, amount, asset, memo, account):
 def powerup(amount, account, to):
     """Power up (vest STEEM as STEEM POWER)"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
@@ -628,6 +657,8 @@ def powerdown(amount, account):
         amount is in VESTS
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
@@ -651,6 +682,8 @@ def powerdown(amount, account):
 def powerdownroute(to, percentage, account, auto_vest):
     """Setup a powerdown route"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
@@ -667,6 +700,8 @@ def powerdownroute(to, percentage, account, auto_vest):
 def convert(amount, account):
     """Convert STEEMDollars to Steem (takes a week to settle)"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
@@ -707,6 +742,8 @@ def power(account):
     """ Shows vote power and bandwidth
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if len(account) == 0:
         if "default_account" in stm.config:
             account = [stm.config["default_account"]]
@@ -722,6 +759,8 @@ def balance(account):
     """ Shows balance
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if len(account) == 0:
         if "default_account" in stm.config:
             account = [stm.config["default_account"]]
@@ -763,6 +802,8 @@ def interest(account):
     """ Get information about interest payment
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         if "default_account" in stm.config:
             account = [stm.config["default_account"]]
@@ -791,6 +832,8 @@ def follower(account):
     """ Get information about followers
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         if "default_account" in stm.config:
             account = [stm.config["default_account"]]
@@ -807,6 +850,8 @@ def following(account):
     """ Get information about following
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         if "default_account" in stm.config:
             account = [stm.config["default_account"]]
@@ -823,6 +868,8 @@ def muter(account):
     """ Get information about muter
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         if "default_account" in stm.config:
             account = [stm.config["default_account"]]
@@ -839,6 +886,8 @@ def muting(account):
     """ Get information about muting
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         if "default_account" in stm.config:
             account = [stm.config["default_account"]]
@@ -855,6 +904,8 @@ def permissions(account):
     """ Show permissions of an account
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         if "default_account" in stm.config:
             account = stm.config["default_account"]
@@ -891,6 +942,8 @@ def allow(foreign_account, permission, account, weight, threshold):
             This derived key will then interact with your account.
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
@@ -917,6 +970,8 @@ def allow(foreign_account, permission, account, weight, threshold):
 def disallow(foreign_account, permission, account, threshold):
     """Remove allowance an account/key to interact with your account"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
@@ -928,7 +983,7 @@ def disallow(foreign_account, permission, account, threshold):
     if not foreign_account:
         from beemgraphenebase.account import PasswordKey
         pwd = click.prompt("Password for Key Derivation", confirmation_prompt=True)
-        foreign_account = format(PasswordKey(account, pwd, permission).get_public(), stm.prefix)
+        foreign_account = [format(PasswordKey(account, pwd, permission).get_public(), stm.prefix)]
     tx = acc.disallow(foreign_account, permission=permission, threshold=threshold)
     tx = json.dumps(tx, indent=4)
     print(tx)
@@ -941,6 +996,8 @@ def disallow(foreign_account, permission, account, threshold):
 def newaccount(accountname, account, fee):
     """Create a new account"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
@@ -963,6 +1020,8 @@ def newaccount(accountname, account, fee):
 def setprofile(variable, value, account, pair):
     """Set a variable in an account\'s profile"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     keys = []
     values = []
     if pair:
@@ -996,6 +1055,8 @@ def setprofile(variable, value, account, pair):
 def delprofile(variable, account):
     """Delete a variable in an account\'s profile"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
 
     if not account:
         account = stm.config["default_account"]
@@ -1019,6 +1080,8 @@ def importaccount(account, roles):
     """Import an account using a passphrase"""
     from beemgraphenebase.account import PasswordKey
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not unlock_wallet(stm):
         return
     account = Account(account, steem_instance=stm)
@@ -1075,6 +1138,8 @@ def importaccount(account, roles):
 def updatememokey(account, key):
     """Update an account\'s memo key"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
@@ -1099,6 +1164,8 @@ def updatememokey(account, key):
 def approvewitness(witness, account):
     """Approve a witnesses"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
@@ -1115,6 +1182,8 @@ def approvewitness(witness, account):
 def disapprovewitness(witness, account):
     """Disapprove a witnesses"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
@@ -1130,6 +1199,8 @@ def disapprovewitness(witness, account):
 def sign(file):
     """Sign a provided transaction with available and required keys"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if file and file != "-":
         if not os.path.isfile(file):
             raise Exception("File %s does not exist!" % file)
@@ -1148,6 +1219,8 @@ def sign(file):
 def broadcast(file):
     """broadcast a signed transaction"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if file and file != "-":
         if not os.path.isfile(file):
             raise Exception("File %s does not exist!" % file)
@@ -1166,6 +1239,8 @@ def ticker():
     """ Show ticker
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     t = PrettyTable(["Key", "Value"])
     t.align = "l"
     market = Market(steem_instance=stm)
@@ -1176,12 +1251,15 @@ def ticker():
 
 
 @cli.command()
-@click.option('--width', help='Plot width (default 75)', default=75)
-@click.option('--height', help='Plot height (default 15)', default=15)
-def pricehistory(width, height):
+@click.option('--width', '-w', help='Plot width (default 75)', default=75)
+@click.option('--height', '-h', help='Plot height (default 15)', default=15)
+@click.option('--ascii', help='Use only ascii symbols', is_flag=True, default=False)
+def pricehistory(width, height, ascii):
     """ Show price history
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     feed_history = stm.get_feed_history()
     current_base = Amount(feed_history['current_median_history']["base"], steem_instance=stm)
     current_quote = Amount(feed_history['current_median_history']["quote"], steem_instance=stm)
@@ -1191,7 +1269,11 @@ def pricehistory(width, height):
         base = Amount(h["base"])
         quote = Amount(h["quote"])
         price.append(base.amount / quote.amount)
-    chart = AsciiChart(height=height, width=width, offset=4, placeholder='{:6.2f} $')
+    if ascii:
+        charset = u'ascii'
+    else:
+        charset = u'utf8'
+    chart = AsciiChart(height=height, width=width, offset=4, placeholder='{:6.2f} $', charset=charset)
     print("\n            Price history for STEEM (median price %4.2f $)\n" % (float(current_base) / float(current_quote)))
 
     chart.adapt_on_series(price)
@@ -1203,15 +1285,18 @@ def pricehistory(width, height):
 
 
 @cli.command()
-@click.option('--days', help='Limit the days of shown trade history (default 7)', default=7)
+@click.option('--days', '-d', help='Limit the days of shown trade history (default 7)', default=7)
 @click.option('--hours', help='Limit the intervall history intervall (default 2 hours)', default=2.0)
-@click.option('--limit', help='Limit number of trades which is fetched at each intervall point (default 100)', default=100)
-@click.option('--width', help='Plot width (default 75)', default=75)
-@click.option('--height', help='Plot height (default 15)', default=15)
-def tradehistory(days, hours, limit, width, height):
+@click.option('--limit', '-l', help='Limit number of trades which is fetched at each intervall point (default 100)', default=100)
+@click.option('--width', '-w', help='Plot width (default 75)', default=75)
+@click.option('--height', '-h', help='Plot height (default 15)', default=15)
+@click.option('--ascii', help='Use only ascii symbols', is_flag=True, default=False)
+def tradehistory(days, hours, limit, width, height, ascii):
     """ Show price history
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     m = Market(steem_instance=stm)
     utc = pytz.timezone('UTC')
     stop = utc.localize(datetime.utcnow())
@@ -1226,7 +1311,11 @@ def tradehistory(days, hours, limit, width, height):
             base += float(order.as_base("SBD")["base"])
             quote += float(order.as_base("SBD")["quote"])
         price.append(base / quote)
-    chart = AsciiChart(height=height, width=width, offset=3, placeholder='{:6.2f} ')
+    if ascii:
+        charset = u'ascii'
+    else:
+        charset = u'utf8'
+    chart = AsciiChart(height=height, width=width, offset=3, placeholder='{:6.2f} ', charset=charset)
     print("\n     Trade history %s - %s \n\nSTEEM/SBD" % (formatTimeString(start), formatTimeString(stop)))
     chart.adapt_on_series(price)
     chart.new_chart()
@@ -1237,13 +1326,16 @@ def tradehistory(days, hours, limit, width, height):
 
 @cli.command()
 @click.option('--chart', help='Enable charting', is_flag=True)
-@click.option('--limit', help='Limit number of returned open orders (default 25)', default=25)
+@click.option('--limit', '-l', help='Limit number of returned open orders (default 25)', default=25)
 @click.option('--show-date', help='Show dates', is_flag=True, default=False)
-@click.option('--width', help='Plot width (default 75)', default=75)
-@click.option('--height', help='Plot height (default 15)', default=15)
-def orderbook(chart, limit, show_date, width, height):
+@click.option('--width', '-w', help='Plot width (default 75)', default=75)
+@click.option('--height', '-h', help='Plot height (default 15)', default=15)
+@click.option('--ascii', help='Use only ascii symbols', is_flag=True, default=False)
+def orderbook(chart, limit, show_date, width, height, ascii):
     """Obtain orderbook of the internal market"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     market = Market(steem_instance=stm)
     orderbook = market.orderbook(limit=limit, raw_data=False)
     if not show_date:
@@ -1283,7 +1375,11 @@ def orderbook(chart, limit, show_date, width, height):
         if n < len(bids_date):
             n = len(bids_date)
     if chart:
-        chart = AsciiChart(height=height, width=width, offset=4, placeholder=' {:10.2f} $')
+        if ascii:
+            charset = u'ascii'
+        else:
+            charset = u'utf8'
+        chart = AsciiChart(height=height, width=width, offset=4, placeholder=' {:10.2f} $', charset=charset)
         print("\n            Orderbook \n")
         chart.adapt_on_series(sumsum_asks[::-1] + sumsum_bids)
         chart.new_chart()
@@ -1336,6 +1432,8 @@ def buy(amount, asset, price, account, orderid):
         Limit buy price denoted in (SBD per STEEM)
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
     if asset == "SBD":
@@ -1377,6 +1475,8 @@ def sell(amount, asset, price, account, orderid):
         Limit sell price denoted in (SBD per STEEM)
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if asset == "SBD":
         market = Market(base=Asset("STEEM"), quote=Asset("SBD"), steem_instance=stm)
     else:
@@ -1411,6 +1511,8 @@ def sell(amount, asset, price, account, orderid):
 def cancel(orderid, account):
     """Cancel order in the internal market"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     market = Market(steem_instance=stm)
     if not account:
         account = stm.config["default_account"]
@@ -1427,6 +1529,8 @@ def cancel(orderid, account):
 def openorders(account):
     """Show open orders"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     market = Market(steem_instance=stm)
     if not account:
         account = stm.config["default_account"]
@@ -1448,6 +1552,8 @@ def openorders(account):
 def resteem(identifier, account):
     """Resteem an existing post"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
@@ -1466,6 +1572,8 @@ def resteem(identifier, account):
 def follow(follow, account, what):
     """Follow another account"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
     if isinstance(what, str):
@@ -1485,6 +1593,8 @@ def follow(follow, account, what):
 def mute(mute, account, what):
     """Mute another account"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
     if isinstance(what, str):
@@ -1503,6 +1613,8 @@ def mute(mute, account, what):
 def unfollow(unfollow, account):
     """Unfollow/Unmute another account"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
@@ -1523,6 +1635,8 @@ def unfollow(unfollow, account):
 def witnessupdate(witness, maximum_block_size, account_creation_fee, sbd_interest_rate, url, signing_key):
     """Change witness properties"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not witness:
         witness = stm.config["default_account"]
     if not unlock_wallet(stm):
@@ -1551,6 +1665,8 @@ def witnessupdate(witness, maximum_block_size, account_creation_fee, sbd_interes
 def witnesscreate(witness, signing_key, maximum_block_size, account_creation_fee, sbd_interest_rate, url):
     """Create a witness"""
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not unlock_wallet(stm):
         return
     props = {
@@ -1574,6 +1690,8 @@ def witnesses(account, limit):
     """ List witnesses
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if account:
         witnesses = WitnessesVotedByAccount(account, steem_instance=stm)
     else:
@@ -1589,6 +1707,8 @@ def votes(account, direction, days):
     """ List outgoing/incoming account votes
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
     utc = pytz.timezone('UTC')
@@ -1606,6 +1726,151 @@ def votes(account, direction, days):
 
 
 @cli.command()
+@click.argument('authorperm', nargs=1, required=True)
+@click.option('--payout', '-p', default=None, help="Show the curation for a potential payout in SBD as float")
+def curation(authorperm, payout):
+    """ Lists curation rewords of all votes for authorperm
+    """
+    stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
+    comment = Comment(authorperm, steem_instance=stm)
+    if payout is not None and comment.is_pending():
+        payout = float(payout)
+    elif payout is not None:
+        payout = None
+    t = PrettyTable(["Voter", "Voting time", "Vote", "Early vote loss", "Curation", "Performance"])
+    t.align = "l"
+    curation_rewards_SBD = comment.get_curation_rewards(pending_payout_SBD=True, pending_payout_value=payout)
+    curation_rewards_SP = comment.get_curation_rewards(pending_payout_SBD=False, pending_payout_value=payout)
+    rows = []
+    for vote in comment["active_votes"]:
+        vote_SBD = stm.rshares_to_sbd(int(vote["rshares"]))
+        curation_SBD = curation_rewards_SBD["active_votes"][vote["voter"]]
+        curation_SP = curation_rewards_SP["active_votes"][vote["voter"]]
+        if vote_SBD > 0:
+            penalty = ((100 - comment.get_curation_penalty(vote_time=vote["time"])) / 100 * vote_SBD)
+            performance = (float(curation_SBD) / vote_SBD * 100)
+        else:
+            performance = 0
+            penalty = 0
+        rows.append([vote["voter"],
+                     ((formatTimeString(vote["time"]) - comment["created"]).total_seconds() / 60),
+                     vote_SBD,
+                     penalty,
+                     float(curation_SP),
+                     performance])
+    sortedList = sorted(rows, key=lambda row: (row[1]), reverse=False)
+    for row in sortedList:
+        t.add_row([row[0],
+                   "%.1f min" % row[1],
+                   "%.3f SBD" % float(row[2]),
+                   "%.3f SBD" % float(row[3]),
+                   "%.3f SP" % (row[4]),
+                   "%.1f %%" % (row[5])])
+    print(t)
+
+
+@cli.command()
+@click.argument('account', nargs=1, required=False)
+@click.option('--post', '-p', help='Show pending post payout', is_flag=True, default=False)
+@click.option('--comment', '-c', help='Show pending comments payout', is_flag=True, default=False)
+@click.option('--curation', '-v', help='Shows  pending curation', is_flag=True, default=False)
+def rewards(account, post, comment, curation):
+    """ Lists outstanding rewards
+    """
+    stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
+    if not account:
+        account = stm.config["default_account"]
+    if not comment and not curation:
+        post = True
+
+    utc = pytz.timezone('UTC')
+    limit_time = utc.localize(datetime.utcnow()) - timedelta(days=7)
+    sum_reward = [0, 0, 0, 0]
+    account = Account(account, steem_instance=stm)
+    median_price = Price(stm.get_current_median_history(), steem_instance=stm)
+    m = Market(steem_instance=stm)
+    latest = m.ticker()["latest"]
+    t = PrettyTable(["Description", "Cashout", "SBD", "SP", "Liquid USD", "Invested USD"])
+    t.align = "l"
+    rows = []
+    c_list = {}
+    start_op = account.estimate_virtual_op_num(limit_time)
+    length = (account.virtual_op_count() - start_op) / 1000
+    with click.progressbar(map(Comment, account.history(start=start_op, use_block_num=False, only_ops=["comment"])), length=length) as comment_hist:
+        for v in comment_hist:
+            v.refresh()
+            author_reward = v.get_author_rewards()
+            if float(author_reward["total_payout_SBD"]) < 0.001:
+                continue
+            if v.permlink in c_list:
+                continue
+            if not v.is_pending():
+                continue
+            if not post and not v.is_comment():
+                continue
+            if not comment and v.is_comment():
+                continue
+            c_list[v.permlink] = 1
+            payout_SBD = author_reward["payout_SBD"]
+            sum_reward[0] += float(payout_SBD)
+            payout_SP = author_reward["payout_SP"]
+            sum_reward[1] += float(payout_SP)
+            liquid_USD = float(author_reward["payout_SBD"]) / float(latest) * float(median_price)
+            sum_reward[2] += liquid_USD
+            invested_USD = float(author_reward["payout_SP"]) * float(median_price)
+            sum_reward[3] += invested_USD
+            if v.is_comment():
+                title = v.parent_permlink
+            else:
+                title = v.permlink
+            rows.append([title,
+                         ((v["created"] - limit_time).total_seconds() / 60 / 60 / 24),
+                         (payout_SBD),
+                         (payout_SP),
+                         (liquid_USD),
+                         (invested_USD)])
+    if curation:
+        votes = AccountVotes(account, start=limit_time, steem_instance=stm)
+        for vote in votes:
+            c = Comment(vote["authorperm"])
+            rewards = c.get_curation_rewards()
+            if not rewards["pending_rewards"]:
+                continue
+            payout_SP = rewards["active_votes"][account["name"]]
+            liquid_USD = 0
+            invested_USD = float(payout_SP) * float(median_price)
+            sum_reward[1] += float(payout_SP)
+            sum_reward[3] += invested_USD
+            rows.append([c.permlink,
+                         ((c["created"] - limit_time).total_seconds() / 60 / 60 / 24),
+                         0.000,
+                         payout_SP,
+                         (liquid_USD),
+                         (invested_USD)])
+    sortedList = sorted(rows, key=lambda row: (row[1]), reverse=True)
+    for row in sortedList:
+        t.add_row([row[0][:30],
+                   "%.1f days" % row[1],
+                   "%.3f" % float(row[2]),
+                   "%.3f" % float(row[3]),
+                   "%.2f $" % (row[4]),
+                   "%.2f $" % (row[5])])
+
+    t.add_row(["", "", "", "", "", ""])
+    t.add_row(["Sum",
+               "-",
+               "%.2f SBD" % (sum_reward[0]),
+               "%.2f SP" % (sum_reward[1]),
+               "%.2f $" % (sum_reward[2]),
+               "%.2f $" % (sum_reward[3])])
+    print(t)
+
+
+@cli.command()
 @click.argument('account', nargs=1, required=False)
 @click.option('--reward_steem', help='Amount of STEEM you would like to claim', default="0 STEEM")
 @click.option('--reward_sbd', help='Amount of SBD you would like to claim', default="0 SBD")
@@ -1616,6 +1881,8 @@ def claimreward(account, reward_steem, reward_sbd, reward_vests):
         By default, this will claim ``all`` outstanding balances.
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
     acc = Account(account, steem_instance=stm)
@@ -1632,6 +1899,75 @@ def claimreward(account, reward_steem, reward_sbd, reward_vests):
 
 
 @cli.command()
+@click.argument('blocknumber', nargs=1, required=False)
+@click.option('--trx', '-t', help='Show only one transaction number', default=None)
+@click.option('--use-api', '-u', help='Uses the get_potential_signatures api call', is_flag=True, default=False)
+def verify(blocknumber, trx, use_api):
+    """Returns the public signing keys for a block"""
+    stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
+    b = Blockchain(steem_instance=stm)
+    i = 0
+    if not blocknumber:
+        blocknumber = b.get_current_block_num()
+    try:
+        int(blocknumber)
+        block = Block(blocknumber, steem_instance=stm)
+        if trx is not None:
+            i = int(trx)
+            trxs = [block.transactions[int(trx)]]
+        else:
+            trxs = block.transactions
+    except Exception:
+        trxs = [b.get_transaction(blocknumber)]
+        blocknumber = trxs[0]["block_num"]
+    wallet = Wallet(steem_instance=stm)
+    t = PrettyTable(["trx", "Signer key", "Account"])
+    t.align = "l"
+    if not use_api:
+        from beembase.signedtransactions import Signed_Transaction
+    for trx in trxs:
+        if not use_api:
+            # trx is now identical to the output of get_transaction
+            # This is just for testing porpuse
+            if True:
+                signed_tx = Signed_Transaction(trx.copy())
+            else:
+                tx = b.get_transaction(trx["transaction_id"])
+                signed_tx = Signed_Transaction(tx)
+            public_keys = []
+            for key in signed_tx.verify(chain=stm.chain_params, recover_parameter=True):
+                public_keys.append(format(Base58(key, prefix=stm.prefix), stm.prefix))
+        else:
+            tx = TransactionBuilder(tx=trx, steem_instance=stm)
+            public_keys = tx.get_potential_signatures()
+        accounts = []
+        empty_public_keys = []
+        for key in public_keys:
+            account = wallet.getAccountFromPublicKey(key)
+            if account is None:
+                empty_public_keys.append(key)
+            else:
+                accounts.append(account)
+        new_public_keys = []
+        for key in public_keys:
+            if key not in empty_public_keys or use_api:
+                new_public_keys.append(key)
+        if isinstance(new_public_keys, list) and len(new_public_keys) == 1:
+            new_public_keys = new_public_keys[0]
+        else:
+            new_public_keys = json.dumps(new_public_keys, indent=4)
+        if isinstance(accounts, list) and len(accounts) == 1:
+            accounts = accounts[0]
+        else:
+            accounts = json.dumps(accounts, indent=4)
+        t.add_row(["%d" % i, new_public_keys, accounts])
+        i += 1
+    print(t)
+
+
+@cli.command()
 @click.argument('objects', nargs=-1)
 def info(objects):
     """ Show basic blockchain info
@@ -1640,6 +1976,8 @@ def info(objects):
         a post/comment and a public key
     """
     stm = shared_steem_instance()
+    if stm.rpc:
+        stm.rpc.rpcconnect()
     if not objects:
         t = PrettyTable(["Key", "Value"])
         t.align = "l"
@@ -1647,8 +1985,8 @@ def info(objects):
         median_price = stm.get_current_median_history()
         steem_per_mvest = stm.get_steem_per_mvest()
         chain_props = stm.get_chain_properties()
-        price = (Amount(median_price["base"]).amount / Amount(
-            median_price["quote"]).amount)
+        price = (Amount(median_price["base"], steem_instance=stm).amount / Amount(
+            median_price["quote"], steem_instance=stm).amount)
         for key in info:
             t.add_row([key, info[key]])
         t.add_row(["steem per mvest", steem_per_mvest])
@@ -1662,11 +2000,11 @@ def info(objects):
             if re.match("^[0-9-]*:[0-9-]", obj):
                 obj, tran_nr = obj.split(":")
             if int(obj) < 1:
-                b = Blockchain()
+                b = Blockchain(steem_instance=stm)
                 block_number = b.get_current_block_num() + int(obj) - 1
             else:
                 block_number = obj
-            block = Block(block_number)
+            block = Block(block_number, steem_instance=stm)
             if block:
                 t = PrettyTable(["Key", "Value"])
                 t.align = "l"
@@ -1680,7 +2018,7 @@ def info(objects):
                         else:
                             tran_nr = int(tran_nr)
                         if len(value) > tran_nr - 1 and tran_nr > -1:
-                            t_value = json.dumps(value[tran_nr - 1], indent=4)
+                            t_value = json.dumps(value[tran_nr], indent=4)
                             t.add_row(["transaction %d/%d" % (tran_nr, len(value)), t_value])
                     elif key == "transaction_ids" and not bool(tran_nr):
                         t.add_row(["Nr. of transaction_ids", len(value)])
@@ -1690,7 +2028,7 @@ def info(objects):
                         else:
                             tran_nr = int(tran_nr)
                         if len(value) > tran_nr - 1 and tran_nr > -1:
-                            t.add_row(["transaction_id %d/%d" % (int(tran_nr), len(value)), value[tran_nr - 1]])
+                            t.add_row(["transaction_id %d/%d" % (int(tran_nr), len(value)), value[tran_nr]])
                     else:
                         t.add_row([key, value])
                 print(t)
@@ -1718,7 +2056,7 @@ def info(objects):
 
             # witness available?
             try:
-                witness = Witness(obj)
+                witness = Witness(obj, steem_instance=stm)
                 witness_json = witness.json()
                 t = PrettyTable(["Key", "Value"])
                 t.align = "l"
@@ -1742,13 +2080,16 @@ def info(objects):
                 print("Public Key not known" % obj)
         # Post identifier
         elif re.match(".*@.{3,16}/.*$", obj):
-            post = Comment(obj)
+            post = Comment(obj, steem_instance=stm)
             post_json = post.json()
             if post_json:
                 t = PrettyTable(["Key", "Value"])
                 t.align = "l"
                 for key in sorted(post_json):
-                    value = post_json[key]
+                    if key in ["body", "active_votes"]:
+                        value = "not shown"
+                    else:
+                        value = post_json[key]
                     if (key in ["json_metadata"]):
                         value = json.loads(value)
                         value = json.dumps(value, indent=4)
@@ -1763,4 +2104,7 @@ def info(objects):
 
 
 if __name__ == "__main__":
-    cli()
+    if getattr(sys, 'frozen', False):
+        cli(sys.argv[1:])
+    else:
+        cli()

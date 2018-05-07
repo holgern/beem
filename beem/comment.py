@@ -4,18 +4,21 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
+import json
+import re
+import logging
+import pytz
+import math
+from datetime import datetime
 from .instance import shared_steem_instance
 from .account import Account
 from .amount import Amount
+from .price import Price
 from .utils import resolve_authorperm, construct_authorperm, derive_permlink, remove_from_dict, make_patch, formatTimeString
 from .blockchainobject import BlockchainObject
 from .exceptions import ContentDoesNotExistsException, VotingInvalidOnArchivedPost
 from beembase import operations
 from beemgraphenebase.py23 import py23_bytes, bytes_types, integer_types, string_types, text_type
-import json
-import re
-import logging
-from datetime import datetime
 log = logging.getLogger(__name__)
 
 
@@ -222,7 +225,233 @@ class Comment(BlockchainObject):
         """
         return self['depth'] > 0
 
+    @property
+    def reward(self):
+        """ Return the estimated total SBD reward.
+        """
+        a_zero = Amount("0 SBD", steem_instance=self.steem)
+        return self.get("total_payout_value", a_zero) + self.get("pending_payout_value", a_zero)
+
+    def is_pending(self):
+        """ Return if the payout is pending (the post/comment
+            is younger than 7 days)
+        """
+        return not float(self["total_payout_value"]) >= Amount("0.001 SBD", steem_instance=self.steem)
+
+    def time_elapsed(self):
+        """Return a timedelta on how old the post is.
+        """
+        utc = pytz.timezone('UTC')
+        return utc.localize(datetime.utcnow()) - self['created']
+
+    def curation_penalty_compensation_SBD(self):
+        """ Returns The required post payout amount after 30 minutes
+            which will compentsate the curation penalty, if voting earlier than 30 minutes
+        """
+        self.refresh()
+        return self.reward * 900. / ((self.time_elapsed()).total_seconds() / 60) ** 2
+
+    def estimate_curation_SBD(self, vote_value_SBD, estimated_value_SBD=None):
+        """ Estimates curation reward
+
+            :param float vote_value_SBD: The vote value in SBD for which the curation
+                should be calculated
+            :param float estimated_value_SBD: When set, this value is used for calculate
+                the curation. When not set, the current post value is used.
+        """
+        self.refresh()
+        if estimated_value_SBD is None:
+            estimated_value_SBD = float(self.reward)
+        t = self.get_curation_penalty() / 100.
+        k = vote_value_SBD / (vote_value_SBD + float(self.reward))
+        K = (1 - math.sqrt(1 - k)) / 4 / k
+        return K * vote_value_SBD * t * math.sqrt(estimated_value_SBD)
+
+    def get_curation_penalty(self, vote_time=None):
+        """ If post is less than 30 minutes old, it will incur a curation
+            reward penalty.
+
+            :param datetime vote_time: A vote time can be given and the curation
+                penalty is calculated regarding the given time (default is None)
+                When set to None, the current date is used.
+
+        """
+        if vote_time is None:
+            elapsed_seconds = self.time_elapsed().total_seconds()
+        elif isinstance(vote_time, str):
+            elapsed_seconds = (formatTimeString(vote_time) - self["created"]).total_seconds()
+        elif isinstance(vote_time, datetime):
+            elapsed_seconds = (vote_time - self["created"]).total_seconds()
+        else:
+            raise ValueError("vote_time must be a string or a datetime")
+        reward = (elapsed_seconds / 1800) * 100
+        if reward > 100:
+            reward = 100
+        return reward
+
+    def get_vote_with_curation(self, voter=None, raw_data=False, pending_payout_value=None):
+        """ Returns vote for voter. Returns None, if the voter cannot be found in `active_votes`.
+
+            :param str voter: Voter for which the vote should be returned
+            :param bool raw_data: If True, the raw data are returned
+            :param float/str pending_payout_SBD: When not None this value instead of the current
+                value is used for calculating the rewards
+        """
+        specific_vote = None
+        if voter is None:
+            voter = Account(self["author"], steem_instance=self.steem)
+        else:
+            voter = Account(voter, steem_instance=self.steem)
+        for vote in self["active_votes"]:
+            if voter["name"] == vote["voter"]:
+                specific_vote = vote
+        if specific_vote is not None and raw_data:
+            return specific_vote
+        elif specific_vote is not None:
+            curation_reward = self.get_curation_rewards(pending_payout_SBD=True, pending_payout_value=pending_payout_value)
+            specific_vote["curation_reward"] = curation_reward["active_votes"][voter["name"]]
+            specific_vote["ROI"] = float(curation_reward["active_votes"][voter["name"]]) / float(voter.get_voting_value_SBD(voting_weight=specific_vote["percent"] / 100)) * 100
+            return specific_vote
+        else:
+            return None
+
+    def get_beneficiaries_pct(self):
+        """ Returns the sum of all post beneficiaries in percentage
+        """
+        beneficiaries = self["beneficiaries"]
+        weight = 0
+        for b in beneficiaries:
+            weight += b["weight"]
+        return weight / 100.
+
+    def get_rewards(self):
+        """ Returns the total_payout, author_payout and the curator payout in SBD.
+            When the payout is still pending, the estimated payout is given out.
+
+            Example:::
+
+                {
+                    'total_payout': 9.956 SBD,
+                    'author_payout': 7.166 SBD,
+                    'curator_payout': 2.790 SBD
+                }
+
+        """
+        if self.is_pending():
+            total_payout = self["pending_payout_value"]
+            author_payout = self.get_author_rewards()["author_payout"]
+            curator_payout = total_payout - author_payout
+        else:
+            total_payout = self["total_payout_value"]
+            curator_payout = self["curator_payout_value"]
+            author_payout = total_payout - curator_payout
+        return {"total_payout": total_payout, "author_payout": author_payout, "curator_payout": curator_payout}
+
+    def get_author_rewards(self):
+        """ Returns the author rewards.
+
+            Example:::
+
+                {
+                    'pending_rewards': True,
+                    'payout_SP': 0.912 STEEM,
+                    'payout_SBD': 3.583 SBD,
+                    'total_payout_SBD': 7.166 SBD
+                }
+
+        """
+        if not self.is_pending():
+            total_payout = self["total_payout_value"]
+            curator_payout = self["curator_payout_value"]
+            author_payout = total_payout - curator_payout
+            return {'pending_rewards': False, "payout_SP": Amount("0 SBD", steem_instance=self.steem), "payout_SBD": Amount("0 SBD", steem_instance=self.steem), "total_payout_SBD": author_payout}
+
+        median_price = Price(self.steem.get_current_median_history(), steem_instance=self.steem)
+        beneficiaries_pct = self.get_beneficiaries_pct()
+        curation_tokens = self.reward * 0.25
+        author_tokens = self.reward - curation_tokens
+        curation_rewards = self.get_curation_rewards()
+        author_tokens += median_price * curation_rewards['unclaimed_rewards']
+
+        benefactor_tokens = author_tokens * beneficiaries_pct / 100.
+        author_tokens -= benefactor_tokens
+
+        sbd_steem = author_tokens * self["percent_steem_dollars"] / 20000.
+        vesting_steem = median_price.as_base("STEEM") * (author_tokens - sbd_steem)
+
+        return {'pending_rewards': True, "payout_SP": vesting_steem, "payout_SBD": sbd_steem, "total_payout_SBD": author_tokens}
+
+    def get_curation_rewards(self, pending_payout_SBD=False, pending_payout_value=None):
+        """ Returns the curation rewards.
+
+            :param bool pending_payout_SBD: If True, the rewards are returned in SBD and not in STEEM (default is False)
+            :param float/str pending_payout_value: When not None this value instead of the current
+                value is used for calculating the rewards
+
+            `pending_rewards` is True when
+            the post is younger than 7 days. `unclaimed_rewards` is the
+            amount of curation_rewards that goes to the author (self-vote or votes within
+            the first 30 minutes). `active_votes` contains all voter with their curation reward.
+
+            Example:::
+
+                {
+                    'pending_rewards': True, 'unclaimed_rewards': 0.245 STEEM,
+                    'active_votes': {
+                        'leprechaun': 0.006 STEEM, 'timcliff': 0.186 STEEM,
+                        'st3llar': 0.000 STEEM, 'crokkon': 0.015 STEEM, 'feedyourminnows': 0.003 STEEM,
+                        'isnochys': 0.003 STEEM, 'loshcat': 0.001 STEEM, 'greenorange': 0.000 STEEM,
+                        'qustodian': 0.123 STEEM, 'jpphotography': 0.002 STEEM, 'thinkingmind': 0.001 STEEM,
+                        'oups': 0.006 STEEM, 'mattockfs': 0.001 STEEM, 'holger80': 0.003 STEEM, 'michaelizer': 0.004 STEEM,
+                        'flugschwein': 0.010 STEEM, 'ulisessabeque': 0.000 STEEM, 'hakancelik': 0.002 STEEM, 'sbi2': 0.008 STEEM,
+                        'zcool': 0.000 STEEM, 'steemhq': 0.002 STEEM, 'rowdiya': 0.000 STEEM, 'qurator-tier-1-2': 0.012 STEEM
+                    }
+                }
+
+        """
+        median_price = Price(self.steem.get_current_median_history(), steem_instance=self.steem)
+        pending_rewards = False
+        total_vote_weight = self["total_vote_weight"]
+        if not self["allow_curation_rewards"]:
+            max_rewards = Amount("0 STEEM", steem_instance=self.steem)
+            unclaimed_rewards = max_rewards.copy()
+        elif not self.is_pending():
+            max_rewards = self["curator_payout_value"]
+            unclaimed_rewards = self["total_payout_value"] * 0.25 - max_rewards
+            total_vote_weight = 0
+            for vote in self["active_votes"]:
+                total_vote_weight += vote["weight"]
+        else:
+            if pending_payout_value is None:
+                pending_payout_value = self["pending_payout_value"]
+            elif isinstance(pending_payout_value, (float, int)):
+                pending_payout_value = Amount(pending_payout_value, "SBD", steem_instance=self.steem)
+            elif isinstance(pending_payout_value, str):
+                pending_payout_value = Amount(pending_payout_value, steem_instance=self.steem)
+            if pending_payout_SBD:
+                max_rewards = (pending_payout_value * 0.25)
+            else:
+                max_rewards = median_price.as_base("STEEM") * (pending_payout_value * 0.25)
+            unclaimed_rewards = max_rewards.copy()
+            pending_rewards = True
+
+        active_votes = {}
+        for vote in self["active_votes"]:
+            if total_vote_weight > 0:
+                claim = max_rewards * vote["weight"] / total_vote_weight
+            else:
+                claim = 0
+            if claim > 0 and pending_rewards:
+                unclaimed_rewards -= claim
+            if claim > 0:
+                active_votes[vote["voter"]] = claim
+            else:
+                active_votes[vote["voter"]] = 0
+
+        return {'pending_rewards': pending_rewards, 'unclaimed_rewards': unclaimed_rewards, "active_votes": active_votes}
+
     def get_reblogged_by(self, identifier=None):
+        """Shows in which blogs this post appears"""
         if not identifier:
             post_author = self["author"]
             post_permlink = self["permlink"]
@@ -234,6 +463,7 @@ class Comment(BlockchainObject):
             return self.steem.rpc.get_reblogged_by(post_author, post_permlink, api="follow")
 
     def get_votes(self):
+        """Returns all votes as ActiveVotes object"""
         from .vote import ActiveVotes
         return ActiveVotes(self, steem_instance=self.steem)
 

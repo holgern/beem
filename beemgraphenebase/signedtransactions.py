@@ -170,7 +170,7 @@ class Signed_Transaction(GrapheneObject):
                         phex = hexlify(p).decode('ascii')
                         pubKeysFound.append(phex)
                     except Exception:
-                        continue
+                        p = None
             else:
                 phex = hexlify(p).decode('ascii')
                 pubKeysFound.append(phex)

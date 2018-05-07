@@ -52,7 +52,31 @@ class Testcases(unittest.TestCase):
         self.assertTrue(isinstance(block.time(), datetime))
         self.assertTrue(isinstance(block, dict))
 
-        self.assertTrue(len(block.ops()))
+        self.assertTrue(len(block.operations))
+        self.assertTrue(isinstance(block.ops_statistics(), dict))
+
+        block2 = Block(self.test_block_id + 1, steem_instance=bts)
+        self.assertTrue(block2.time() > block.time())
+        with self.assertRaises(
+            exceptions.BlockDoesNotExistsException
+        ):
+            Block(0, steem_instance=bts)
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_block_only_ops(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        else:
+            bts = self.appbase
+        block = Block(self.test_block_id, only_ops=True, steem_instance=bts)
+        self.assertEqual(block.identifier, self.test_block_id)
+        self.assertTrue(isinstance(block.time(), datetime))
+        self.assertTrue(isinstance(block, dict))
+
+        self.assertTrue(len(block.operations))
         self.assertTrue(isinstance(block.ops_statistics(), dict))
 
         block2 = Block(self.test_block_id + 1, steem_instance=bts)

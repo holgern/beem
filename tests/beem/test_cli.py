@@ -404,6 +404,27 @@ class Testcases(unittest.TestCase):
         runner.invoke(cli, ['-o', 'set', 'nodes', 'wss://testnet.steem.vc'])
         self.assertEqual(result.exit_code, 0)
 
+    def test_rewards(self):
+        runner = CliRunner()
+        runner.invoke(cli, ['-o', 'set', 'nodes', ''])
+        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', 'test'])
+        runner.invoke(cli, ['-o', 'set', 'nodes', 'wss://testnet.steem.vc'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_curation(self):
+        runner = CliRunner()
+        runner.invoke(cli, ['-o', 'set', 'nodes', ''])
+        result = runner.invoke(cli, ['curation', "@gtg/witness-gtg-log"])
+        runner.invoke(cli, ['-o', 'set', 'nodes', 'wss://testnet.steem.vc'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_verify(self):
+        runner = CliRunner()
+        runner.invoke(cli, ['-o', 'set', 'nodes', ''])
+        result = runner.invoke(cli, ['verify', '--trx', '0'])
+        runner.invoke(cli, ['-o', 'set', 'nodes', 'wss://testnet.steem.vc'])
+        self.assertEqual(result.exit_code, 0)
+
     def test_tradehistory(self):
         runner = CliRunner()
         runner.invoke(cli, ['-o', 'set', 'nodes', ''])

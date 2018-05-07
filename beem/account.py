@@ -811,7 +811,7 @@ class Account(BlockchainObject):
             :rtype: list
         """
         if until is not None:
-            return self.estimate_account_op(until, op_accuracy=1)
+            return self.estimate_virtual_op_num(until, accuracy=1)
         else:
             try:
                 op_count = 0
@@ -837,12 +837,14 @@ class Account(BlockchainObject):
             ret = self.steem.rpc.get_account_history(account["name"], start, limit, api="database")
         return ret
 
-    def estimate_account_op(self, start, op_accuracy=10, max_count=10, reverse=False):
-        """ Returns a estiamtion of account operation index for a given time or blockindex
+    def estimate_virtual_op_num(self, blocktime, accuracy=10, max_count=-1, reverse=False):
+        """ Returns an estimation of an virtual operation index for a given time or blockindex
 
-            :param int/datetime start: start time or start block index from which account
+            :param int/datetime blocktime: start time or start block index from which account
                 operation should be fetched
-            :param int op_accuracy: defines the estimation accuracy (default 10)
+            :param int accuracy: defines the estimation accuracy (default 10)
+            :param int max_count: sets the maximum number of iterations. -1 disables this (default -1)
+            :param bool revers: Set to true when used in history_reverse (default is False)
 
             Example:::
 
@@ -853,43 +855,43 @@ class Account(BlockchainObject):
                 utc = pytz.timezone('UTC')
                 start_time = utc.localize(datetime.utcnow()) - timedelta(days=7)
                 acc = Account("gtg")
-                start_op = acc.estimate_account_op(start_time)
+                start_op = acc.estimate_virtual_op_num(start_time)
 
                 b = Blockchain()
                 start_block_num = b.get_estimated_block_num(start_time)
-                start_op2 = acc.estimate_account_op(start_block_num)
+                start_op2 = acc.estimate_virtual_op_num(start_block_num)
         """
         max_index = self.virtual_op_count()
         created = self["created"]
-        if not isinstance(start, datetime):
+        if not isinstance(blocktime, datetime):
             b = Blockchain(steem_instance=self.steem)
             current_block_num = b.get_current_block_num()
             created_blocknum = b.get_estimated_block_num(created, accurate=True)
-            if start < created_blocknum and not reverse:
+            if blocktime < created_blocknum and not reverse:
                 return 0
-            elif start < created_blocknum:
+            elif blocktime < created_blocknum:
                 return max_index
         else:
-            if start < created and not reverse:
+            if blocktime < created and not reverse:
                 return 0
-            elif start < created:
+            elif blocktime < created:
                 return max_index
-        if max_index < op_accuracy and not reverse:
+        if max_index < accuracy and not reverse:
             return 0
-        elif max_index < op_accuracy:
+        elif max_index < accuracy:
             return max_index
-        if isinstance(start, datetime):
+        if isinstance(blocktime, datetime):
             utc = pytz.timezone('UTC')
             now = utc.localize(datetime.utcnow())
             account_lifespan_sec = (now - created).total_seconds()
-            start = addTzInfo(start)
-            estimated_op_num = int((start - created).total_seconds() / account_lifespan_sec * max_index)
+            blocktime = addTzInfo(blocktime)
+            estimated_op_num = int((blocktime - created).total_seconds() / account_lifespan_sec * max_index)
         else:
             account_lifespan_block = (current_block_num - created_blocknum)
-            estimated_op_num = int((start - created_blocknum) / account_lifespan_block * max_index)
-        op_diff = op_accuracy + 1
+            estimated_op_num = int((blocktime - created_blocknum) / account_lifespan_block * max_index)
+        op_diff = accuracy + 1
         cnt = 0
-        while op_diff > op_accuracy and cnt < max_count:
+        while op_diff > accuracy and (max_count < 0 or cnt < max_count):
             op_start = self._get_account_history(start=estimated_op_num)
             if isinstance(op_start, list) and len(op_start) > 0 and len(op_start[0]) > 0:
                 trx = op_start[0][1]
@@ -898,12 +900,12 @@ class Account(BlockchainObject):
                 return 0
             else:
                 return max_index
-            if isinstance(start, datetime):
+            if isinstance(blocktime, datetime):
                 diff_time = (now - formatTimeString(trx["timestamp"])).total_seconds()
-                op_diff = ((start - formatTimeString(trx["timestamp"])).total_seconds() / diff_time * (max_index - estimated_op_num))
+                op_diff = ((blocktime - formatTimeString(trx["timestamp"])).total_seconds() / diff_time * (max_index - estimated_op_num))
             else:
                 diff_block = (current_block_num - trx["block"])
-                op_diff = ((start - trx["block"]) / diff_block * (max_index - estimated_op_num))
+                op_diff = ((blocktime - trx["block"]) / diff_block * (max_index - estimated_op_num))
             if reverse:
                 estimated_op_num += math.ceil(op_diff)
             else:
@@ -917,10 +919,10 @@ class Account(BlockchainObject):
             return estimated_op_num
         elif int(op_diff) == 0 and not reverse:
             return estimated_op_num
-        elif estimated_op_num > op_accuracy and not reverse:
-            return estimated_op_num - op_accuracy
-        elif estimated_op_num + op_accuracy < max_index:
-            return estimated_op_num + op_accuracy
+        elif estimated_op_num > accuracy and not reverse:
+            return estimated_op_num - accuracy
+        elif estimated_op_num + accuracy < max_index:
+            return estimated_op_num + accuracy
         elif reverse:
             return max_index
         else:
@@ -1141,7 +1143,7 @@ class Account(BlockchainObject):
         if start is not None and not use_block_num and not isinstance(start, datetime):
             start_index = start
         elif start is not None:
-            start_index = self.estimate_account_op(start, op_accuracy=10)
+            start_index = self.estimate_virtual_op_num(start, accuracy=10)
         else:
             start_index = 0
 
@@ -1283,7 +1285,7 @@ class Account(BlockchainObject):
         elif start is not None and isinstance(start, int) and not use_block_num:
             first = start
         elif start is not None:
-            first = self.estimate_account_op(start, op_accuracy=10, reverse=True)
+            first = self.estimate_virtual_op_num(start, accuracy=10, reverse=True)
         if stop is not None and isinstance(stop, int) and stop < 0 and not use_block_num:
             stop += first
         start = addTzInfo(start)

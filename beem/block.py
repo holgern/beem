@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from .exceptions import BlockDoesNotExistsException
 from .utils import parse_time
 from .blockchainobject import BlockchainObject
+from beemapi.exceptions import ApiNotSupported
 
 
 class Block(BlockchainObject):
@@ -15,6 +16,8 @@ class Block(BlockchainObject):
         :param beem.steem.Steem steem_instance: Steem
             instance
         :param bool lazy: Use lazy loading
+        :param bool only_ops: Includes only operations, when set to True (default: False)
+        :param bool only_virtual_ops: Includes only virtual operations (default: False)
 
         Instances of this class are dictionaries that come with additional
         methods (see below) that allow dealing with a block and it's
@@ -34,6 +37,34 @@ class Block(BlockchainObject):
                   refreshed with ``Account.refresh()``.
 
     """
+    def __init__(
+        self,
+        block,
+        only_ops=False,
+        only_virtual_ops=False,
+        full=True,
+        lazy=False,
+        steem_instance=None
+    ):
+        """ Initilize a block
+
+            :param int block: block number
+            :param beem.steem.Steem steem_instance: Steem
+                instance
+            :param bool lazy: Use lazy loading
+            :param bool only_ops: Includes only operations, when set to True (default: False)
+            :param bool only_virtual_ops: Includes only virtual operations (default: False)
+
+        """
+        self.full = full
+        self.only_ops = only_ops
+        self.only_virtual_ops = only_virtual_ops
+        super(Block, self).__init__(
+            block,
+            lazy=lazy,
+            full=full,
+            steem_instance=steem_instance
+        )
 
     def refresh(self):
         """ Even though blocks never change, you freshly obtain its contents
@@ -41,12 +72,24 @@ class Block(BlockchainObject):
         """
         if not isinstance(self.identifier, int):
             self.identifier = int(self.identifier)
-        if self.steem.rpc.get_use_appbase():
-            block = self.steem.rpc.get_block({"block_num": self.identifier}, api="block")
-            if block and "block" in block:
-                block = block["block"]
+        if self.only_ops:
+            if self.steem.rpc.get_use_appbase():
+                try:
+                    ops = self.steem.rpc.get_ops_in_block({"block_num": self.identifier, 'only_virtual': self.only_virtual_ops}, api="account_history")["ops"]
+                except ApiNotSupported:
+                    ops = self.steem.rpc.get_ops_in_block(self.identifier, self.only_virtual_ops)
+            else:
+                ops = self.steem.rpc.get_ops_in_block(self.identifier, self.only_virtual_ops)
+            block = {'block': ops[0]["block"],
+                     'timestamp': ops[0]["timestamp"],
+                     'operations': ops}
         else:
-            block = self.steem.rpc.get_block(self.identifier)
+            if self.steem.rpc.get_use_appbase():
+                block = self.steem.rpc.get_block({"block_num": self.identifier}, api="block")
+                if block and "block" in block:
+                    block = block["block"]
+            else:
+                block = self.steem.rpc.get_block(self.identifier)
         if not block:
             raise BlockDoesNotExistsException(str(self.identifier))
         super(Block, self).__init__(block, steem_instance=self.steem)
@@ -60,8 +103,25 @@ class Block(BlockchainObject):
         """Return a datatime instance for the timestamp of this block"""
         return parse_time(self['timestamp'])
 
-    def ops(self):
-        """Returns all block operations"""
+    @property
+    def transactions(self):
+        """ Returns all transactions as list"""
+        if self.only_ops:
+            return None
+        trxs = self["transactions"]
+        for i in range(len(trxs)):
+            trx = trxs[i]
+            trx['transaction_id'] = self['transaction_ids'][i]
+            trx['block_num'] = self.block_num
+            trx['transaction_num'] = i
+            trxs[i] = trx
+        return trxs
+
+    @property
+    def operations(self):
+        """Returns all block operations as list"""
+        if self.only_ops:
+            return self["operations"]
         ops = []
         trxs = self["transactions"]
         for tx in trxs:
@@ -80,6 +140,10 @@ class Block(BlockchainObject):
                 ops_stat[key] = 0
         else:
             ops_stat = add_to_ops_stat.copy()
+        if self.only_ops:
+            for op in self["operations"]:
+                ops_stat[op["op"][0]] += 1
+            return ops_stat
         trxs = self["transactions"]
         for tx in trxs:
             for op in tx["operations"]:
