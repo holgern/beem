@@ -142,7 +142,8 @@ class Signed_Transaction(GrapheneObject):
         # restore signatures
         self.data["signatures"] = sigs
 
-    def verify(self, pubkeys=[], chain=None):
+    def verify(self, pubkeys=[], chain=None, recover_parameter=False):
+        """Returned pubkeys have to be checked if they are existing"""
         if not chain:
             raise
         chain_params = self.getChainParams(chain)
@@ -151,12 +152,28 @@ class Signed_Transaction(GrapheneObject):
         pubKeysFound = []
 
         for signature in signatures:
-            p = verify_message(
-                self.message,
-                py23_bytes(signature)
-            )
-            phex = hexlify(p).decode('ascii')
-            pubKeysFound.append(phex)
+            if recover_parameter:
+                p = verify_message(
+                    self.message,
+                    py23_bytes(signature)
+                )
+            else:
+                p = None
+            if p is None:
+                for i in range(4):
+                    try:
+                        p = verify_message(
+                            self.message,
+                            py23_bytes(signature),
+                            recover_parameter=i
+                        )
+                        phex = hexlify(p).decode('ascii')
+                        pubKeysFound.append(phex)
+                    except Exception:
+                        continue
+            else:
+                phex = hexlify(p).decode('ascii')
+                pubKeysFound.append(phex)
 
         for pubkey in pubkeys:
             if not isinstance(pubkey, PublicKey):

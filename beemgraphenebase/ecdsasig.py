@@ -253,7 +253,7 @@ def sign_message(message, wif, hashfn=hashlib.sha256):
     return sigstr
 
 
-def verify_message(message, signature, hashfn=hashlib.sha256):
+def verify_message(message, signature, hashfn=hashlib.sha256, recover_parameter=None):
     if not isinstance(message, bytes_types):
         message = py23_bytes(message, "utf-8")
     if not isinstance(signature, bytes_types):
@@ -264,14 +264,18 @@ def verify_message(message, signature, hashfn=hashlib.sha256):
         raise AssertionError()
     digest = hashfn(message).digest()
     sig = signature[1:]
-    recoverParameter = bytearray(signature)[0] - 4 - 27  # recover parameter only
+    if recover_parameter is None:
+        recover_parameter = bytearray(signature)[0] - 4 - 27  # recover parameter only
+    if recover_parameter < 0:
+        log.info("Could not recover parameter")
+        return None
 
     if SECP256K1_MODULE == "secp256k1":
         ALL_FLAGS = secp256k1.lib.SECP256K1_CONTEXT_VERIFY | secp256k1.lib.SECP256K1_CONTEXT_SIGN
         # Placeholder
         pub = secp256k1.PublicKey(flags=ALL_FLAGS)
         # Recover raw signature
-        sig = pub.ecdsa_recoverable_deserialize(sig, recoverParameter)
+        sig = pub.ecdsa_recoverable_deserialize(sig, recover_parameter)
         # Recover PublicKey
         verifyPub = secp256k1.PublicKey(pub.ecdsa_recover(message, sig))
         # Convert recoverable sig to normal sig
@@ -280,14 +284,14 @@ def verify_message(message, signature, hashfn=hashlib.sha256):
         verifyPub.ecdsa_verify(message, normalSig)
         phex = verifyPub.serialize(compressed=True)
     elif SECP256K1_MODULE == "cryptography":
-        p = recover_public_key(digest, sig, recoverParameter, message)
+        p = recover_public_key(digest, sig, recover_parameter, message)
         order = ecdsa.SECP256k1.order
         r, s = ecdsa.util.sigdecode_string(sig, order)
         sigder = encode_dss_signature(r, s)
         p.verify(sigder, message, ec.ECDSA(hashes.SHA256()))
         phex = compressedPubkey(p)
     else:
-        p = recover_public_key(digest, sig, recoverParameter)
+        p = recover_public_key(digest, sig, recover_parameter)
         # Will throw an exception of not valid
         p.verify_digest(
             sig,

@@ -265,9 +265,12 @@ class PointInTime(object):
     def __bytes__(self):
         """Returns bytes representation."""
         if sys.version > '3':
-            return struct.pack("<I", timegm(time.strptime((self.data + "UTC"), timeformat)))
+            unixtime = timegm(time.strptime((self.data + "UTC"), timeformat))
         else:
-            return struct.pack("<I", timegm(time.strptime((self.data + "UTC"), timeformat.encode("utf-8"))))
+            unixtime = timegm(time.strptime((self.data + "UTC"), timeformat.encode("utf-8")))
+        if unixtime < 0:
+            return struct.pack("<i", unixtime)
+        return struct.pack("<I", unixtime)
 
     def __str__(self):
         """Returns data as string."""

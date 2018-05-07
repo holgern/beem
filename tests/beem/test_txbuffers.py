@@ -8,8 +8,11 @@ from parameterized import parameterized
 from beem import Steem
 from beem.instance import set_shared_steem_instance
 from beem.transactionbuilder import TransactionBuilder
+from beembase.signedtransactions import Signed_Transaction
 from beembase.operations import Transfer
 from beem.account import Account
+from beem.block import Block
+from beemgraphenebase.base58 import Base58
 from beem.amount import Amount
 from beem.exceptions import (
     InsufficientAuthorityError,
@@ -192,3 +195,12 @@ class Testcases(unittest.TestCase):
             exceptions.MissingRequiredActiveAuthority
         ):
             tx.broadcast()
+
+    def test_verify_transaction(self):
+        stm = self.stm
+        block = Block(22005665, steem_instance=stm)
+        trx = block.transactions[28]
+        signed_tx = Signed_Transaction(trx)
+        key = signed_tx.verify(chain=stm.chain_params, recover_parameter=False)
+        public_key = format(Base58(key[0]), stm.prefix)
+        self.assertEqual(public_key, "STM4tzr1wjmuov9ftXR6QNv7qDWsbShMBPQpuwatZsfSc5pKjRDfq")

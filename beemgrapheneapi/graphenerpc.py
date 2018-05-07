@@ -318,6 +318,8 @@ class GrapheneRPC(object):
         :raises RPCError: if the server returns an error
         """
         log.debug(json.dumps(payload))
+        if self.url is None:
+            self.rpcconnect()
         reply = {}
         while True:
             self.error_cnt_call += 1
