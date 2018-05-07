@@ -126,6 +126,19 @@ A command line tool is available. The help output shows the available commands:
 
 Changelog
 =========
+0.19.27
+-------
+* Block have only_ops and only_virtual_ops as parameter
+* transactions and operations property added to Block
+* entryId changed to start_entry_id in get_feed, get_blog_entries and get_blog
+* estimate_virtual_op_num() added to Account, can be used to fastly get account op numbers from dates or blocknumbers
+* history and history_reverse uses estimate_virtual_op_num()
+* blockchain.ops() is obsolete
+* only_ops and only_virtual_ops added to blockchain.get_current_block(), blockchain.blocks() and blockchain.stream()
+* reward, curation, verify added to cli
+* new curation functions added to Commit
+* Signed_Transaction.verify() fixed, by trying all recover_parameter from 0 to 3
+
 0.19.26
 -------
 * Several small bugs fixed
