@@ -16,10 +16,7 @@ The library name is derived from a beam maschine, similar to the analogy between
 .. image:: https://anaconda.org/conda-forge/beem/badges/version.svg   
     :target: https://anaconda.org/conda-forge/beem
 
-.. image:: https://pyup.io/repos/github/holgern/beem/shield.svg
-     :target: https://pyup.io/repos/github/holgern/beem/
-     :alt: Updates
-  
+ 
 .. image:: https://anaconda.org/conda-forge/beem/badges/downloads.svg   
     :target: https://anaconda.org/conda-forge/beem
 
@@ -41,6 +38,10 @@ Current build status
 
 .. image:: https://api.codacy.com/project/badge/Grade/e5476faf97df4c658697b8e7a7efebd7    
     :target: https://www.codacy.com/app/holgern/beem?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=holgern/beem&amp;utm_campaign=Badge_Grade
+
+.. image:: https://pyup.io/repos/github/holgern/beem/shield.svg
+     :target: https://pyup.io/repos/github/holgern/beem/
+     :alt: Updates
 
 .. image:: https://api.codeclimate.com/v1/badges/e7bdb5b4aa7ab160a780/test_coverage
    :target: https://codeclimate.com/github/holgern/beem/test_coverage
@@ -140,8 +141,10 @@ Changelog
 * blockchain.ops() is obsolete
 * only_ops and only_virtual_ops added to blockchain.get_current_block(), blockchain.blocks() and blockchain.stream()
 * reward, curation, verify added to cli
-* new curation functions added to Commit
+* new curation functions added to the Comment class
 * Signed_Transaction.verify() fixed, by trying all recover_parameter from 0 to 3
+* get_potential_signatures, get_transaction_hex and get_required_signatures added to Transactionbuilder
+* KeyNotFound is replaced by MissingKeyError and KeyNotFound is removed
 
 0.19.26
 -------

@@ -23,6 +23,8 @@ class Block(BlockchainObject):
         methods (see below) that allow dealing with a block and it's
         corresponding functions.
 
+        When only_virtual_ops is set to True, only_ops is always set to True.
+
         Additionally to the block data, the block number is stored as self["id"] or self.identifier.
 
         .. code-block:: python
@@ -72,7 +74,7 @@ class Block(BlockchainObject):
         """
         if not isinstance(self.identifier, int):
             self.identifier = int(self.identifier)
-        if self.only_ops:
+        if self.only_ops or self.only_virtual_ops:
             if self.steem.rpc.get_use_appbase():
                 try:
                     ops = self.steem.rpc.get_ops_in_block({"block_num": self.identifier, 'only_virtual': self.only_virtual_ops}, api="account_history")["ops"]
@@ -106,7 +108,7 @@ class Block(BlockchainObject):
     @property
     def transactions(self):
         """ Returns all transactions as list"""
-        if self.only_ops:
+        if self.only_ops or self.only_virtual_ops:
             return None
         trxs = self["transactions"]
         for i in range(len(trxs)):
@@ -120,7 +122,7 @@ class Block(BlockchainObject):
     @property
     def operations(self):
         """Returns all block operations as list"""
-        if self.only_ops:
+        if self.only_ops or self.only_virtual_ops:
             return self["operations"]
         ops = []
         trxs = self["transactions"]
@@ -140,7 +142,7 @@ class Block(BlockchainObject):
                 ops_stat[key] = 0
         else:
             ops_stat = add_to_ops_stat.copy()
-        if self.only_ops:
+        if self.only_ops or self.only_virtual_ops:
             for op in self["operations"]:
                 ops_stat[op["op"][0]] += 1
             return ops_stat
