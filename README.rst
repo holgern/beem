@@ -15,6 +15,10 @@ The library name is derived from a beam maschine, similar to the analogy between
 
 .. image:: https://anaconda.org/conda-forge/beem/badges/version.svg   
     :target: https://anaconda.org/conda-forge/beem
+
+.. image:: https://pyup.io/repos/github/holgern/beem/shield.svg
+     :target: https://pyup.io/repos/github/holgern/beem/
+     :alt: Updates
   
 .. image:: https://anaconda.org/conda-forge/beem/badges/downloads.svg   
     :target: https://anaconda.org/conda-forge/beem
