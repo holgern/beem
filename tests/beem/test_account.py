@@ -452,21 +452,18 @@ class Testcases(unittest.TestCase):
             if k not in "json_metadata" and k != 'reputation' and k != 'active_votes':
                 self.assertEqual(content[k], json_content[k])
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_estimate_virtual_op_num(self, node_param):
-        if node_param == "non_appbase":
-            stm = self.bts
-        else:
-            stm = self.appbase
+    def test_estimate_virtual_op_num(self):
+        stm = self.bts
         account = Account("gtg", steem_instance=stm)
         block_num = 21248120
         block = Block(block_num, steem_instance=stm)
         op_num1 = account.estimate_virtual_op_num(block.time(), stop_diff=1, max_count=100)
         op_num2 = account.estimate_virtual_op_num(block_num, stop_diff=1, max_count=100)
-        self.assertEqual(op_num1, op_num2)
+        op_num3 = account.estimate_virtual_op_num(block_num, stop_diff=100, max_count=100)
+        op_num4 = account.estimate_virtual_op_num(block_num, stop_diff=0.00001, max_count=100)
+        self.assertTrue(abs(op_num1 - op_num2) < 2)
+        self.assertTrue(abs(op_num1 - op_num4) < 2)
+        self.assertTrue(abs(op_num1 - op_num3) < 200)
         block_diff = 0
         block_diff1 = 0
         block_diff2 = 0
@@ -482,7 +479,11 @@ class Testcases(unittest.TestCase):
 
         op_num1 = account.estimate_virtual_op_num(block.time(), stop_diff=1, max_count=100, reverse=True)
         op_num2 = account.estimate_virtual_op_num(block_num, stop_diff=1, max_count=100, reverse=True)
-        self.assertEqual(op_num1, op_num2)
+        op_num3 = account.estimate_virtual_op_num(block_num, stop_diff=100, max_count=100, reverse=True)
+        op_num4 = account.estimate_virtual_op_num(block_num, stop_diff=0.00001, max_count=100, reverse=True)
+        self.assertTrue(abs(op_num1 - op_num2) < 2)
+        self.assertTrue(abs(op_num1 - op_num4) < 2)
+        self.assertTrue(abs(op_num1 - op_num3) < 200)
         block_diff = 0
         block_diff1 = 0
         block_diff2 = 0
@@ -495,3 +496,18 @@ class Testcases(unittest.TestCase):
         self.assertTrue(block_diff < 0)
         self.assertTrue(block_diff1 >= 0)
         self.assertTrue(block_diff > block_diff2)
+
+    def test_estimate_virtual_op_num2(self):
+        account = self.account
+        h_all_raw = []
+        for h in account.history(raw_output=False):
+            h_all_raw.append(h)
+        last_block = h_all_raw[0]["block"]
+        i = 1
+        for op in h_all_raw[1:]:
+            new_block = op["block"]
+            block_num = last_block + int((new_block - last_block) / 2)
+            op_num = account.estimate_virtual_op_num(block_num, stop_diff=0.001, max_count=100)
+            self.assertTrue(op_num < i)
+            i += 1
+            last_block = new_block
