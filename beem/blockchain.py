@@ -14,7 +14,7 @@ import math
 from datetime import datetime, timedelta
 from .utils import formatTimeString
 from .block import Block
-from .exceptions import BatchedCallsNotSupported, BlockDoesNotExistsException
+from .exceptions import BatchedCallsNotSupported, BlockDoesNotExistsException, BlockWaitTimeExceeded
 from .blockchainobject import BlockchainObject
 from beemgraphenebase.py23 import py23_bytes
 from beem.instance import shared_steem_instance
@@ -36,8 +36,8 @@ class Blockchain(object):
         :param beem.steem.Steem steem_instance: Steem instance
         :param str mode: (default) Irreversible block (``irreversible``) or
             actual head block (``head``)
-        :param int max_block_wait_repetition: (default) 3 maximum wait time for next block
-            is max_block_wait_repetition * block_interval
+        :param int max_block_wait_repetition: maximum wait repetition for next block
+            where each repetition is block_interval long (default is 3)
 
         This class let's you deal with blockchain related data and methods.
         Read blockchain related data:
@@ -322,8 +322,8 @@ class Blockchain(object):
             then we wait, but a maxmimum of blocks_waiting_for * max_block_wait_repetition time before failure.
 
             :param int block_number: desired block number
-            :param int blocks_waiting_for: (default) difference between block_number and current head
-                how many blocks we are willing to wait, positive int
+            :param int blocks_waiting_for: difference between block_number and current head and defines
+                how many blocks we are willing to wait, positive int (default: None)
             :param bool only_ops: Returns blocks with operations only, when set to True (default: False)
             :param bool only_virtual_ops: Includes only virtual operations (default: False)
 
@@ -338,7 +338,7 @@ class Blockchain(object):
                 repetition += 1
                 time.sleep(self.block_interval)
                 if repetition > blocks_waiting_for * self.max_block_wait_repetition:
-                    raise Exception("Wait time for new block exceeded, aborting")
+                    raise BlockWaitTimeExceeded("Already waited %d s" % (blocks_waiting_for * self.max_block_wait_repetition * self.block_interval))
         # block has to be returned properly
         try:
             block = Block(block_number, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
@@ -349,7 +349,7 @@ class Blockchain(object):
             repetition += 1
             time.sleep(self.block_interval)
             if repetition > blocks_waiting_for * self.max_block_wait_repetition:
-                raise Exception("Wait time for new block exceeded, aborting")
+                raise BlockWaitTimeExceeded("Already waited %d s" % (blocks_waiting_for * self.max_block_wait_repetition * self.block_interval))
             try:
                 block = Block(block_number, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
             except BlockDoesNotExistsException:

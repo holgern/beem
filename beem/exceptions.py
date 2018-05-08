@@ -155,3 +155,9 @@ class BatchedCallsNotSupported(Exception):
     """ Batch calls do not work
     """
     pass
+
+
+class BlockWaitTimeExceeded(Exception):
+    """ Wait time for new block exceeded
+    """
+    pass

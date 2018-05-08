@@ -13,11 +13,9 @@ from beem import Steem
 from beem.blockchain import Blockchain
 from beem.block import Block
 from beem.instance import set_shared_steem_instance
+from beem.utils import get_node_list
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
-         "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
-         "wss://steemd.minnowsupportproject.org"]
 nodes_appbase = ["https://api.steem.house", "https://api.steemit.com"]
 
 
@@ -25,7 +23,7 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.bts = Steem(
-            node=nodes,
+            node=get_node_list(appbase=False),
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10
@@ -180,7 +178,7 @@ class Testcases(unittest.TestCase):
             bts = self.bts
         else:
             bts = self.appbase
-        b = Blockchain(steem_instance=bts)
+        b = Blockchain(steem_instance=bts, max_block_wait_repetition=6)
         start_num = b.get_current_block_num()
         blocknum = start_num
         last_fetched_block_num = None
