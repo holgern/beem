@@ -244,6 +244,26 @@ Lets calculate the curation reward from the last 7 days:
     curation_rewards_SP = acc.steem.vests_to_sp(reward_vests.amount)
     print("Rewards are %.3f SP" % curation_rewards_SP)
 
+Lets display all Posts from an account:
+
+.. code-block:: python
+
+    from beem.account import Account
+    from beem.comment import Comment
+    from beem.exceptions import ContentDoesNotExistsException
+    account = Account("holger80")
+    c_list = {}
+    for c in map(Comment, account.history(only_ops=["comment"])):
+        if c.permlink in c_list:
+          continue
+        try:
+             c.refresh()
+        except ContentDoesNotExistsException:
+             continue
+        c_list[c.permlink] = 1
+        if not c.is_comment():
+            print("%s " % c.title)
+
 Transactionbuilder
 ------------------
 Sign transactions with beem without using the wallet and build the transaction by hand.

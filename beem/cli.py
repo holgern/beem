@@ -1772,102 +1772,188 @@ def curation(authorperm, payout):
 
 
 @cli.command()
-@click.argument('account', nargs=1, required=False)
+@click.argument('accounts', nargs=-1, required=False)
+@click.option('--only-sum', '-s', help='Show only the sum', is_flag=True, default=False)
 @click.option('--post', '-p', help='Show pending post payout', is_flag=True, default=False)
 @click.option('--comment', '-c', help='Show pending comments payout', is_flag=True, default=False)
 @click.option('--curation', '-v', help='Shows  pending curation', is_flag=True, default=False)
-def rewards(account, post, comment, curation):
+@click.option('--length', '-l', help='Limits the permlink character length', default=None)
+@click.option('--author', '-a', help='Show the author for each entry', is_flag=True, default=False)
+@click.option('--permlink', '-e', help='Show the permlink for each entry', is_flag=True, default=False)
+@click.option('--title', '-t', help='Show the title for each entry', is_flag=True, default=False)
+def rewards(accounts, only_sum, post, comment, curation, length, author, permlink, title):
     """ Lists outstanding rewards
     """
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    if not account:
-        account = stm.config["default_account"]
-    if not comment and not curation:
+    if not accounts:
+        accounts = [stm.config["default_account"]]
+    if not comment and not curation and not post:
         post = True
+        permlink = True
 
     utc = pytz.timezone('UTC')
     limit_time = utc.localize(datetime.utcnow()) - timedelta(days=7)
-    sum_reward = [0, 0, 0, 0]
-    account = Account(account, steem_instance=stm)
-    median_price = Price(stm.get_current_median_history(), steem_instance=stm)
-    m = Market(steem_instance=stm)
-    latest = m.ticker()["latest"]
-    t = PrettyTable(["Description", "Cashout", "SBD", "SP", "Liquid USD", "Invested USD"])
-    t.align = "l"
-    rows = []
-    c_list = {}
-    start_op = account.estimate_virtual_op_num(limit_time)
-    length = (account.virtual_op_count() - start_op) / 1000
-    with click.progressbar(map(Comment, account.history(start=start_op, use_block_num=False, only_ops=["comment"])), length=length) as comment_hist:
-        for v in comment_hist:
-            v.refresh()
-            author_reward = v.get_author_rewards()
-            if float(author_reward["total_payout_SBD"]) < 0.001:
-                continue
-            if v.permlink in c_list:
-                continue
-            if not v.is_pending():
-                continue
-            if not post and not v.is_comment():
-                continue
-            if not comment and v.is_comment():
-                continue
-            c_list[v.permlink] = 1
-            payout_SBD = author_reward["payout_SBD"]
-            sum_reward[0] += float(payout_SBD)
-            payout_SP = author_reward["payout_SP"]
-            sum_reward[1] += float(payout_SP)
-            liquid_USD = float(author_reward["payout_SBD"]) / float(latest) * float(median_price)
-            sum_reward[2] += liquid_USD
-            invested_USD = float(author_reward["payout_SP"]) * float(median_price)
-            sum_reward[3] += invested_USD
-            if v.is_comment():
-                title = v.parent_permlink
+    for account in accounts:
+        sum_reward = [0, 0, 0, 0]
+        account = Account(account, steem_instance=stm)
+        median_price = Price(stm.get_current_median_history(), steem_instance=stm)
+        m = Market(steem_instance=stm)
+        latest = m.ticker()["latest"]
+        if author and permlink:
+            t = PrettyTable(["Author", "Permlink", "Cashout", "SBD", "SP", "Liquid USD", "Invested USD"])
+        elif author and not permlink:
+            t = PrettyTable(["Author", "Cashout", "SBD", "SP", "Liquid USD", "Invested USD"])
+        elif not author and permlink:
+            t = PrettyTable(["Permlink", "Cashout", "SBD", "SP", "Liquid USD", "Invested USD"])
+        else:
+            t = PrettyTable(["Cashout", "SBD", "SP", "Liquid USD", "Invested USD"])
+        t.align = "l"
+        rows = []
+        c_list = {}
+        start_op = account.estimate_virtual_op_num(limit_time)
+        progress_length = (account.virtual_op_count() - start_op) / 1000
+        with click.progressbar(map(Comment, account.history(start=start_op, use_block_num=False, only_ops=["comment"])), length=progress_length) as comment_hist:
+            for v in comment_hist:
+                v.refresh()
+                author_reward = v.get_author_rewards()
+                if float(author_reward["total_payout_SBD"]) < 0.001:
+                    continue
+                if v.permlink in c_list:
+                    continue
+                if not v.is_pending():
+                    continue
+                if not post and not v.is_comment():
+                    continue
+                if not comment and v.is_comment():
+                    continue
+                c_list[v.permlink] = 1
+                payout_SBD = author_reward["payout_SBD"]
+                sum_reward[0] += float(payout_SBD)
+                payout_SP = author_reward["payout_SP"]
+                sum_reward[1] += float(payout_SP)
+                liquid_USD = float(author_reward["payout_SBD"]) / float(latest) * float(median_price)
+                sum_reward[2] += liquid_USD
+                invested_USD = float(author_reward["payout_SP"]) * float(median_price)
+                sum_reward[3] += invested_USD
+                if v.is_comment():
+                    permlink_row = v.parent_permlink
+                else:
+                    if title:
+                        permlink_row = v.title
+                    else:
+                        permlink_row = v.permlink
+                rows.append(['@' + v["author"],
+                             permlink_row,
+                             ((v["created"] - limit_time).total_seconds() / 60 / 60 / 24),
+                             (payout_SBD),
+                             (payout_SP),
+                             (liquid_USD),
+                             (invested_USD)])
+        if curation:
+            votes = AccountVotes(account, start=limit_time, steem_instance=stm)
+            for vote in votes:
+                c = Comment(vote["authorperm"])
+                rewards = c.get_curation_rewards()
+                if not rewards["pending_rewards"]:
+                    continue
+                payout_SP = rewards["active_votes"][account["name"]]
+                liquid_USD = 0
+                invested_USD = float(payout_SP) * float(median_price)
+                sum_reward[1] += float(payout_SP)
+                sum_reward[3] += invested_USD
+                if title:
+                    permlink_row = c.title
+                else:
+                    permlink_row = c.permlink
+                rows.append(['@' + c["author"],
+                             permlink_row,
+                             ((c["created"] - limit_time).total_seconds() / 60 / 60 / 24),
+                             0.000,
+                             payout_SP,
+                             (liquid_USD),
+                             (invested_USD)])
+        sortedList = sorted(rows, key=lambda row: (row[2]), reverse=True)
+        if only_sum:
+            sortedList = []
+        for row in sortedList:
+            if length:
+                permlink_row = row[1][:int(length)]
             else:
-                title = v.permlink
-            rows.append([title,
-                         ((v["created"] - limit_time).total_seconds() / 60 / 60 / 24),
-                         (payout_SBD),
-                         (payout_SP),
-                         (liquid_USD),
-                         (invested_USD)])
-    if curation:
-        votes = AccountVotes(account, start=limit_time, steem_instance=stm)
-        for vote in votes:
-            c = Comment(vote["authorperm"])
-            rewards = c.get_curation_rewards()
-            if not rewards["pending_rewards"]:
-                continue
-            payout_SP = rewards["active_votes"][account["name"]]
-            liquid_USD = 0
-            invested_USD = float(payout_SP) * float(median_price)
-            sum_reward[1] += float(payout_SP)
-            sum_reward[3] += invested_USD
-            rows.append([c.permlink,
-                         ((c["created"] - limit_time).total_seconds() / 60 / 60 / 24),
-                         0.000,
-                         payout_SP,
-                         (liquid_USD),
-                         (invested_USD)])
-    sortedList = sorted(rows, key=lambda row: (row[1]), reverse=True)
-    for row in sortedList:
-        t.add_row([row[0][:30],
-                   "%.1f days" % row[1],
-                   "%.3f" % float(row[2]),
-                   "%.3f" % float(row[3]),
-                   "%.2f $" % (row[4]),
-                   "%.2f $" % (row[5])])
+                permlink_row = row[1]
+            if author and permlink:
+                t.add_row([row[0],
+                           permlink_row,
+                           "%.1f days" % row[2],
+                           "%.3f" % float(row[3]),
+                           "%.3f" % float(row[4]),
+                           "%.2f $" % (row[5]),
+                           "%.2f $" % (row[6])])
+            elif author and not permlink:
+                t.add_row([row[0],
+                           "%.1f days" % row[2],
+                           "%.3f" % float(row[3]),
+                           "%.3f" % float(row[4]),
+                           "%.2f $" % (row[5]),
+                           "%.2f $" % (row[6])])
+            elif not author and permlink:
+                t.add_row([permlink_row,
+                           "%.1f days" % row[2],
+                           "%.3f" % float(row[3]),
+                           "%.3f" % float(row[4]),
+                           "%.2f $" % (row[5]),
+                           "%.2f $" % (row[6])])
+            else:
+                t.add_row(["%.1f days" % row[2],
+                           "%.3f" % float(row[3]),
+                           "%.3f" % float(row[4]),
+                           "%.2f $" % (row[5]),
+                           "%.2f $" % (row[6])])
 
-    t.add_row(["", "", "", "", "", ""])
-    t.add_row(["Sum",
-               "-",
-               "%.2f SBD" % (sum_reward[0]),
-               "%.2f SP" % (sum_reward[1]),
-               "%.2f $" % (sum_reward[2]),
-               "%.2f $" % (sum_reward[3])])
-    print(t)
+        if author and permlink:
+            if not only_sum:
+                t.add_row(["", "", "", "", "", "", ""])
+            t.add_row(["Sum",
+                       "-",
+                       "-",
+                       "%.2f SBD" % (sum_reward[0]),
+                       "%.2f SP" % (sum_reward[1]),
+                       "%.2f $" % (sum_reward[2]),
+                       "%.2f $" % (sum_reward[3])])
+        elif not author and not permlink:
+            t.add_row(["", "", "", "", ""])
+            t.add_row(["Sum",
+                       "%.2f SBD" % (sum_reward[0]),
+                       "%.2f SP" % (sum_reward[1]),
+                       "%.2f $" % (sum_reward[2]),
+                       "%.2f $" % (sum_reward[3])])
+        else:
+            t.add_row(["", "", "", "", "", ""])
+            t.add_row(["Sum",
+                       "-",
+                       "%.2f SBD" % (sum_reward[0]),
+                       "%.2f SP" % (sum_reward[1]),
+                       "%.2f $" % (sum_reward[2]),
+                       "%.2f $" % (sum_reward[3])])
+        message = "\nShowing pending "
+        if post:
+            if comment + curation == 0:
+                message += "post "
+            elif comment + curation == 1:
+                message += "post and "
+            else:
+                message += "post, "
+        if comment:
+            if curation == 0:
+                message += "comment "
+            else:
+                message += "comment and "
+        if curation:
+            message += "curation "
+        message += "rewards for @%s" % account.name
+        print(message)
+        print(t)
 
 
 @cli.command()

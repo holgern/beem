@@ -131,6 +131,15 @@ A command line tool is available. The help output shows the available commands:
 
 Changelog
 =========
+0.19.28
+-------
+* Improve rewards command in beempy
+* estimate_virtual_op_num improved and small bug fixed
+* SBD value in Comment always converted to Amount
+* accuracy renamed to stop_diff
+* Doku of estimate_virtual_op_num improved
+* Unit test for estimate_virtual_op_num added
+
 0.19.27
 -------
 * Block have only_ops and only_virtual_ops as parameter

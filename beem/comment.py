@@ -230,13 +230,18 @@ class Comment(BlockchainObject):
         """ Return the estimated total SBD reward.
         """
         a_zero = Amount("0 SBD", steem_instance=self.steem)
-        return self.get("total_payout_value", a_zero) + self.get("pending_payout_value", a_zero)
+        total = Amount(self.get("total_payout_value", a_zero), steem_instance=self.steem)
+        pending = Amount(self.get("pending_payout_value", a_zero), steem_instance=self.steem)
+        return total + pending
 
     def is_pending(self):
         """ Return if the payout is pending (the post/comment
             is younger than 7 days)
         """
-        return not float(self["total_payout_value"]) >= Amount("0.001 SBD", steem_instance=self.steem)
+        a_zero = Amount("0 SBD", steem_instance=self.steem)
+        total = Amount(self.get("total_payout_value", a_zero), steem_instance=self.steem)
+        post_age_days = self.time_elapsed().total_seconds() / 60 / 60 / 24
+        return post_age_days < 7.0 and float(total) == 0
 
     def time_elapsed(self):
         """Return a timedelta on how old the post is.
@@ -338,12 +343,12 @@ class Comment(BlockchainObject):
 
         """
         if self.is_pending():
-            total_payout = self["pending_payout_value"]
+            total_payout = Amount(self["pending_payout_value"], steem_instance=self.steem)
             author_payout = self.get_author_rewards()["author_payout"]
             curator_payout = total_payout - author_payout
         else:
-            total_payout = self["total_payout_value"]
-            curator_payout = self["curator_payout_value"]
+            total_payout = Amount(self["total_payout_value"], steem_instance=self.steem)
+            curator_payout = Amount(self["curator_payout_value"], steem_instance=self.steem)
             author_payout = total_payout - curator_payout
         return {"total_payout": total_payout, "author_payout": author_payout, "curator_payout": curator_payout}
 
@@ -361,8 +366,8 @@ class Comment(BlockchainObject):
 
         """
         if not self.is_pending():
-            total_payout = self["total_payout_value"]
-            curator_payout = self["curator_payout_value"]
+            total_payout = Amount(self["total_payout_value"], steem_instance=self.steem)
+            curator_payout = Amount(self["curator_payout_value"], steem_instance=self.steem)
             author_payout = total_payout - curator_payout
             return {'pending_rewards': False, "payout_SP": Amount("0 SBD", steem_instance=self.steem), "payout_SBD": Amount("0 SBD", steem_instance=self.steem), "total_payout_SBD": author_payout}
 
@@ -416,14 +421,14 @@ class Comment(BlockchainObject):
             max_rewards = Amount("0 STEEM", steem_instance=self.steem)
             unclaimed_rewards = max_rewards.copy()
         elif not self.is_pending():
-            max_rewards = self["curator_payout_value"]
-            unclaimed_rewards = self["total_payout_value"] * 0.25 - max_rewards
+            max_rewards = Amount(self["curator_payout_value"], steem_instance=self.steem)
+            unclaimed_rewards = Amount(self["total_payout_value"], steem_instance=self.steem) * 0.25 - max_rewards
             total_vote_weight = 0
             for vote in self["active_votes"]:
                 total_vote_weight += vote["weight"]
         else:
             if pending_payout_value is None:
-                pending_payout_value = self["pending_payout_value"]
+                pending_payout_value = Amount(self["pending_payout_value"], steem_instance=self.steem)
             elif isinstance(pending_payout_value, (float, int)):
                 pending_payout_value = Amount(pending_payout_value, "SBD", steem_instance=self.steem)
             elif isinstance(pending_payout_value, str):

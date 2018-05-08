@@ -342,10 +342,25 @@ class Testcases(unittest.TestCase):
         result = runner.invoke(cli, ['unfollow', 'beem1'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
+    def test_mute_unmute(self):
+        runner = CliRunner()
+        runner.invoke(cli, ['-o', 'set', 'nodes', 'wss://testnet.steem.vc'])
+        result = runner.invoke(cli, ['mute', 'beem1'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['unfollow', 'beem1'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+
     def test_witnesscreate(self):
         runner = CliRunner()
         runner.invoke(cli, ['-o', 'set', 'nodes', 'wss://testnet.steem.vc'])
         result = runner.invoke(cli, ['-d', 'witnesscreate', 'beem', pub_key], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+
+    def test_witnessupdate(self):
+        runner = CliRunner()
+        runner.invoke(cli, ['-o', 'set', 'nodes', ''])
+        result = runner.invoke(cli, ['-o', 'nextnode'])
+        runner.invoke(cli, ['-o', 'witnessupdate', 'gtg', '--maximum_block_size', 65000, '--account_creation_fee', 0.1, '--sbd_interest_rate', 0, '--url', 'https://google.de', '--signing_key', wif])
         self.assertEqual(result.exit_code, 0)
 
     def test_profile(self):
@@ -407,9 +422,19 @@ class Testcases(unittest.TestCase):
     def test_rewards(self):
         runner = CliRunner()
         runner.invoke(cli, ['-o', 'set', 'nodes', ''])
-        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', 'test'])
-        runner.invoke(cli, ['-o', 'set', 'nodes', 'wss://testnet.steem.vc'])
+        result = runner.invoke(cli, ['rewards', 'test'])
         self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', 'test'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', '--permlink', 'test'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', '--author', 'test'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', '--author', '--title', 'test'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', '--author', '--permlink', '--length', '30', 'test'])
+        self.assertEqual(result.exit_code, 0)
+        runner.invoke(cli, ['-o', 'set', 'nodes', 'wss://testnet.steem.vc'])
 
     def test_curation(self):
         runner = CliRunner()

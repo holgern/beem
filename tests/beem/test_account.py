@@ -10,6 +10,7 @@ from parameterized import parameterized
 from pprint import pprint
 from beem import Steem, exceptions
 from beem.account import Account
+from beem.block import Block
 from beem.amount import Amount
 from beem.asset import Asset
 from beem.utils import formatTimeString, get_node_list
@@ -450,3 +451,47 @@ class Testcases(unittest.TestCase):
         for k in keys:
             if k not in "json_metadata" and k != 'reputation' and k != 'active_votes':
                 self.assertEqual(content[k], json_content[k])
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_estimate_virtual_op_num(self, node_param):
+        if node_param == "non_appbase":
+            stm = self.bts
+        else:
+            stm = self.appbase
+        account = Account("gtg", steem_instance=stm)
+        block_num = 21248120
+        block = Block(block_num, steem_instance=stm)
+        op_num1 = account.estimate_virtual_op_num(block.time(), stop_diff=1, max_count=100)
+        op_num2 = account.estimate_virtual_op_num(block_num, stop_diff=1, max_count=100)
+        self.assertEqual(op_num1, op_num2)
+        block_diff = 0
+        block_diff1 = 0
+        block_diff2 = 0
+        for h in account.get_account_history(op_num1, 0):
+            block_diff = (block_num - h["block"])
+        for h in account.get_account_history(op_num1 - 1, 0):
+            block_diff1 = (block_num - h["block"])
+        for h in account.get_account_history(op_num1 + 1, 0):
+            block_diff2 = (block_num - h["block"])
+        self.assertTrue(block_diff > 0)
+        self.assertTrue(block_diff2 <= 0)
+        self.assertTrue(block_diff < block_diff1)
+
+        op_num1 = account.estimate_virtual_op_num(block.time(), stop_diff=1, max_count=100, reverse=True)
+        op_num2 = account.estimate_virtual_op_num(block_num, stop_diff=1, max_count=100, reverse=True)
+        self.assertEqual(op_num1, op_num2)
+        block_diff = 0
+        block_diff1 = 0
+        block_diff2 = 0
+        for h in account.get_account_history(op_num1, 0):
+            block_diff = (block_num - h["block"])
+        for h in account.get_account_history(op_num1 - 1, 0):
+            block_diff1 = (block_num - h["block"])
+        for h in account.get_account_history(op_num1 + 1, 0):
+            block_diff2 = (block_num - h["block"])
+        self.assertTrue(block_diff < 0)
+        self.assertTrue(block_diff1 >= 0)
+        self.assertTrue(block_diff > block_diff2)

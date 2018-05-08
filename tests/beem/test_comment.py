@@ -70,6 +70,8 @@ class Testcases(unittest.TestCase):
             self.assertIn(key, list(c.json_metadata.keys()))
         self.assertTrue(c.is_main_post())
         self.assertFalse(c.is_comment())
+        self.assertFalse(c.is_pending())
+        self.assertTrue((c.time_elapsed().total_seconds() / 60 / 60 / 24) > 7.0)
         self.assertTrue(isinstance(c.get_reblogged_by(), list))
         self.assertTrue(len(c.get_reblogged_by()) > 0)
         self.assertTrue(isinstance(c.get_votes(), list))
