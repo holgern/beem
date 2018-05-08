@@ -4,17 +4,27 @@ import os
 import glob
 import platform
 from PyInstaller.utils.hooks import exec_statement
+import websocket
+from os.path import join, dirname, basename
 
 block_cipher = None
 os_name = platform.system()
 binaries = []
 
-data_files = []
+websocket_lib_path = dirname(websocket.__file__)
+websocket_cacert_file_path = join(websocket_lib_path, 'cacert.pem')
+analysis_data = [
+    # For websocket library to find "cacert.pem" file, it must be in websocket
+    # directory inside of distribution directory.
+    # This line can be removed once PyInstaller adds hook-websocket.py
+    (websocket_cacert_file_path, join('.', basename(websocket_lib_path)))
+]
+
 
 a = Analysis(['beem/cli.py'],
              pathex=['beem'],
              binaries=binaries,
-             datas=data_files,
+             datas=analysis_data,
              hiddenimports=['scrypt', 'websocket'],
              hookspath=[],
              runtime_hooks=[],
