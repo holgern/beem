@@ -37,6 +37,7 @@ matrix:
       python: 3.6
       env:
         - TOXENV=py36short
+        - BUILD_LINUX=yes
     - os: osx
       osx_image: xcode9.3
       language: objective-c
@@ -65,6 +66,7 @@ script:
 
 after_success:
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then bash util/package-osx.sh; fi
+ - if [[ "$BUILD_LINUX" == "yes" ]]; then bash util/package-linux.sh; fi
  - coveralls
   # - codecov 
   # - python-codacy-coverage -r coverage.xml
