@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-if [ -z "$CI_BUILD_TAG" ]
-then
-    python setup.py patch_version --platform=osx
-fi
 VERSION=$(python -c 'import beem; print(beem.__version__)')
 
 rm -rf dist build locale

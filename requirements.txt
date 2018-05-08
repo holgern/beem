@@ -1,5 +1,5 @@
 future
-ecdsa
+ecdsa>=0.13
 requests
 websocket-client
 pytz

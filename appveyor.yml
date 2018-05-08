@@ -28,10 +28,12 @@ install:
     
     if ($env:APPVEYOR_PULL_REQUEST_NUMBER) {
         $env:BUILD = "beempy-{0}-{1}-{2}_win64.zip" -f $env:COMM_TAG, $env:COMM_HASH, $env:COMM_PY
+        $env:BUILD2 = "beempy-onefile-{0}-{1}-{2}_win64.zip" -f $env:COMM_TAG, $env:COMM_HASH, $env:COMM_PY
         $env:AVVER = "{0}-{1}" -f $env:COMM_TAG.TrimStart("v"), $env:COMM_HASH
     }
     else {
         $env:BUILD = "beempy-{0}-{1}-{2}-{3}_win64.zip" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH, $env:COMM_PY
+        $env:BUILD2 = "beempy-onefile-{0}-{1}-{2}-{3}_win64.zip" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH, $env:COMM_PY
         $env:AVVER = "{0}-{1}" -f $env:COMM_TAG.TrimStart("v"), $env:COMM_COUNT
     }
 
@@ -52,7 +54,7 @@ install:
 - cmd: conda info -a
 - cmd: conda install --yes conda-build setuptools pip pytest-pylint parameterized cryptography
 - cmd: conda install --yes pycryptodomex scrypt pyyaml pytest pytest-mock coverage mock appdirs pylibscrypt
-- cmd: conda install --yes ecdsa requests future websocket-client pytz six Click events prettytable pyinstaller
+- cmd: conda install --yes ecdsa requests future websockets websocket-client pytz six Click events prettytable pyinstaller
 
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
@@ -75,6 +77,7 @@ test_script:
 after_test:
  # If tests are successful, create binary packages for the project.
 - cmd: pyinstaller beempy-onedir.spec
+- cmd: pyinstaller beempy-onefile.spec
 
 # package artifacts
 - cmd: copy /Y C:\OpenSSL-Win64\bin\libeay32.dll dist\beempy
@@ -82,10 +85,13 @@ after_test:
 # - cmd: 7z a -­mx9 beempy.zip %APPVEYOR_BUILD_FOLDER%\dist\beempy
 #- ps: 7z a -m0=LZMA2 -mx9 $env:BUILD .\dist\beempy
 - ps: 7z a $env:BUILD .\dist\beempy
+- ps: 7z a $env:BUILD2 .\dist\beempy.exe
 
 - ps: | # generate sha256 hashes
     (get-filehash $env:BUILD -algorithm SHA256).Hash | out-file ("{0}.sha256" -f $env:BUILD) -encoding ascii
     type ("{0}.sha256" -f $env:BUILD)
+    (get-filehash $env:BUILD2 -algorithm SHA256).Hash | out-file ("{0}.sha256" -f $env:BUILD2) -encoding ascii
+    type ("{0}.sha256" -f $env:BUILD2)
     
 #(get-filehash beempy.zip -algorithm SHA256).Hash | out-file "beempy.zip.sha256" -encoding ascii 
 
@@ -95,6 +101,10 @@ artifacts:
   name: beempy
 - path: $(BUILD).sha256
   name: beempy sha256 hash
+- path: $(BUILD2)
+  name: beempy onefile
+- path: $(BUILD2).sha256
+  name: beempy onefile sha256 hash
 #- path: beempy.zip
 #  name: beempy_zip
 #- path: beempy.zip.sha256
