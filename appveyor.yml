@@ -55,7 +55,7 @@ install:
 - cmd: conda install --yes conda-build setuptools pip pytest-pylint parameterized cryptography
 - cmd: conda install --yes pycryptodomex scrypt pyyaml pytest pytest-mock coverage mock appdirs pylibscrypt
 - cmd: conda install --yes ecdsa requests future websocket-client pytz six Click events prettytable pyinstaller
-- cmd: pip install websockets
+- cmd: pip install websockets==3.4
 
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
