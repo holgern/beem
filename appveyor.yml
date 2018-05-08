@@ -9,15 +9,9 @@ environment:
     WITH_COMPILER: "cmd /E:ON /V:ON /C .\\appveyor\\run_with_compiler.cmd"
 
   matrix:
-    - PYTHON: "C:\\Python27-x64"
-      PYTHON_ARCH: "64"
-      MINICONDA: C:\Miniconda-x64
-      COMM_PY: "py27"
-
     - PYTHON: "C:\\Python36-x64"
       PYTHON_ARCH: "64"
       MINICONDA: C:\Miniconda36-x64
-      COMM_PY: "py36"
 
       
 install:
@@ -27,13 +21,13 @@ install:
     $env:COMM_HASH = $env:APPVEYOR_REPO_COMMIT.Substring(0,8)
     
     if ($env:APPVEYOR_PULL_REQUEST_NUMBER) {
-        $env:BUILD = "beempy-{0}-{1}-{2}_win64.zip" -f $env:COMM_TAG, $env:COMM_HASH, $env:COMM_PY
-        $env:BUILD2 = "beempy-onefile-{0}-{1}-{2}_win64.zip" -f $env:COMM_TAG, $env:COMM_HASH, $env:COMM_PY
+        $env:BUILD = "beempy-{0}-{1}_win64.zip" -f $env:COMM_TAG, $env:COMM_HASH
+        $env:BUILD2 = "beempy-onefile-{0}-{1}_win64.zip" -f $env:COMM_TAG, $env:COMM_HASH
         $env:AVVER = "{0}-{1}" -f $env:COMM_TAG.TrimStart("v"), $env:COMM_HASH
     }
     else {
-        $env:BUILD = "beempy-{0}-{1}-{2}-{3}_win64.zip" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH, $env:COMM_PY
-        $env:BUILD2 = "beempy-onefile-{0}-{1}-{2}-{3}_win64.zip" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH, $env:COMM_PY
+        $env:BUILD = "beempy-{0}-{1}-{2}_win64.zip" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH
+        $env:BUILD2 = "beempy-onefile-{0}-{1}-{2}_win64.zip" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH
         $env:AVVER = "{0}-{1}" -f $env:COMM_TAG.TrimStart("v"), $env:COMM_COUNT
     }
 
@@ -52,10 +46,9 @@ install:
 - cmd: conda config --add channels wheeler-microfluidics
 - cmd: conda update -q conda
 - cmd: conda info -a
-- cmd: conda install --yes conda-build setuptools pip pytest-pylint parameterized cryptography
+- cmd: conda install --yes conda-build setuptools pip pytest-pylint parameterized cryptography websockets
 - cmd: conda install --yes pycryptodomex scrypt pyyaml pytest pytest-mock coverage mock appdirs pylibscrypt
 - cmd: conda install --yes ecdsa requests future websocket-client pytz six Click events prettytable pyinstaller
-- cmd: pip install websockets==3.4
 
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
