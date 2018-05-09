@@ -391,10 +391,12 @@ class Blockchain(object):
             ops_stat = block.ops_statistics(add_to_ops_stat=ops_stat)
         return ops_stat
 
-    def stream(self, opNames=[], *args, **kwargs):
+    def stream(self, opNames=[], raw_ops=False, *args, **kwargs):
         """ Yield specific operations (e.g. comments) only
 
             :param array opNames: List of operations to filter for
+            :param bool raw_ops: When set to True, it returns the unmodified operations as the
+                deprecated ops() function
             :param int start: Start at this block
             :param int stop: Stop at this block
             :param int max_batch_size: only for appbase nodes. When not None, batch calls of are used.
@@ -413,6 +415,37 @@ class Blockchain(object):
                       class:`beem.blockchain.Blockchain` with
                       ``mode="head"``, otherwise, the call will wait until
                       confirmed in an irreversible block.
+
+            output when `raw_ops=False` is set:
+            .. code-block:: js
+
+                {
+                    'type': 'transfer',
+                    'from': 'johngreenfield',
+                    'to': 'thundercurator',
+                    'amount': '0.080 SBD',
+                    'memo': 'https://steemit.com/lofi/@johngreenfield/lofi-joji-yeah-right',
+                    '_id': '6d4c5f2d4d8ef1918acaee4a8dce34f9da384786',
+                    'timestamp': datetime.datetime(2018, 5, 9, 11, 23, 6, tzinfo=<UTC>),
+                    'block_num': 22277588, 'trx_id': 'cf11b2ac8493c71063ec121b2e8517ab1e0e6bea'
+                }
+
+            output when `raw_ops=True` is set:
+            .. code-block:: js
+
+                {
+                    'block_num': 22277588,
+                    'op':
+                        [
+                            'transfer',
+                                {
+                                    'from': 'johngreenfield', 'to': 'thundercurator',
+                                    'amount': '0.080 SBD',
+                                    'memo': 'https://steemit.com/lofi/@johngreenfield/lofi-joji-yeah-right'
+                                }
+                        ],
+                        'timestamp': datetime.datetime(2018, 5, 9, 11, 23, 6, tzinfo=<UTC>)
+                }
 
         """
         for block in self.blocks(**kwargs):
@@ -435,8 +468,10 @@ class Blockchain(object):
                         _id = self.hash_op(event["op"])
                         timestamp = formatTimeString(event.get("timestamp"))
                     if not opNames or op_type in opNames:
-                        if kwargs.get('raw_output'):
-                            yield event
+                        if raw_ops:
+                            yield {"block_num": block_num,
+                                   "op": [op_type, op],
+                                   "timestamp": timestamp}
                         else:
                             updated_op = {"type": op_type}
                             updated_op.update(op.copy())

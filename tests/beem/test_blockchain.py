@@ -138,6 +138,25 @@ class Testcases(unittest.TestCase):
         for op in b.stream(opNames=opNames, start=self.start, stop=self.stop):
             ops_stream.append(op)
         self.assertTrue(len(ops_stream) > 0)
+
+        ops_raw_stream = []
+        opNames = ["transfer", "vote"]
+        for op in b.stream(opNames=opNames, raw_ops=True, start=self.start, stop=self.stop):
+            ops_raw_stream.append(op)
+        self.assertTrue(len(ops_raw_stream) > 0)
+
+        only_ops_stream = []
+        opNames = ["transfer", "vote"]
+        for op in b.stream(opNames=opNames, start=self.start, stop=self.stop, only_ops=True):
+            only_ops_stream.append(op)
+        self.assertTrue(len(only_ops_stream) > 0)
+
+        only_ops_raw_stream = []
+        opNames = ["transfer", "vote"]
+        for op in b.stream(opNames=opNames, raw_ops=True, start=self.start, stop=self.stop, only_ops=True):
+            only_ops_raw_stream.append(op)
+        self.assertTrue(len(only_ops_raw_stream) > 0)
+
         op_stat = b.ops_statistics(start=self.start, stop=self.stop)
         op_stat2 = {"transfer": 0, "vote": 0}
         for op in ops_stream:
@@ -147,6 +166,33 @@ class Testcases(unittest.TestCase):
             self.assertTrue(op["block_num"] <= self.stop)
         self.assertEqual(op_stat["transfer"], op_stat2["transfer"])
         self.assertEqual(op_stat["vote"], op_stat2["vote"])
+
+        op_stat3 = {"transfer": 0, "vote": 0}
+        for op in ops_raw_stream:
+            self.assertIn(op["op"][0], opNames)
+            op_stat3[op["op"][0]] += 1
+            self.assertTrue(op["block_num"] >= self.start)
+            self.assertTrue(op["block_num"] <= self.stop)
+        self.assertEqual(op_stat["transfer"], op_stat3["transfer"])
+        self.assertEqual(op_stat["vote"], op_stat3["vote"])
+
+        op_stat5 = {"transfer": 0, "vote": 0}
+        for op in only_ops_stream:
+            self.assertIn(op["type"], opNames)
+            op_stat5[op["type"]] += 1
+            self.assertTrue(op["block_num"] >= self.start)
+            self.assertTrue(op["block_num"] <= self.stop)
+        self.assertEqual(op_stat["transfer"], op_stat5["transfer"])
+        self.assertEqual(op_stat["vote"], op_stat5["vote"])
+
+        op_stat6 = {"transfer": 0, "vote": 0}
+        for op in only_ops_raw_stream:
+            self.assertIn(op["op"][0], opNames)
+            op_stat6[op["op"][0]] += 1
+            self.assertTrue(op["block_num"] >= self.start)
+            self.assertTrue(op["block_num"] <= self.stop)
+        self.assertEqual(op_stat["transfer"], op_stat6["transfer"])
+        self.assertEqual(op_stat["vote"], op_stat6["vote"])
 
         ops_blocks = []
         for op in b.blocks(start=self.start, stop=self.stop):

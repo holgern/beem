@@ -109,7 +109,7 @@ class Block(BlockchainObject):
     def transactions(self):
         """ Returns all transactions as list"""
         if self.only_ops or self.only_virtual_ops:
-            return None
+            return list()
         trxs = self["transactions"]
         for i in range(len(trxs)):
             trx = trxs[i]
