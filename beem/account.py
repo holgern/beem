@@ -867,6 +867,7 @@ class Account(BlockchainObject):
 
             .. testcode::
 
+                acc = Account("gtg")
                 block_num = 21248120
                 start = t.time()
                 op_num = acc.estimate_virtual_op_num(block_num, stop_diff=1, max_count=10)
