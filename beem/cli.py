@@ -1286,7 +1286,7 @@ def pricehistory(width, height, ascii):
 
 
 @cli.command()
-@click.option('--days', '-d', help='Limit the days of shown trade history (default 7)', default=7)
+@click.option('--days', '-d', help='Limit the days of shown trade history (default 7)', default=7.)
 @click.option('--hours', help='Limit the intervall history intervall (default 2 hours)', default=2.0)
 @click.option('--limit', '-l', help='Limit number of trades which is fetched at each intervall point (default 100)', default=100)
 @click.option('--width', '-w', help='Plot width (default 75)', default=75)
@@ -1703,7 +1703,7 @@ def witnesses(account, limit):
 @cli.command()
 @click.argument('account', nargs=1, required=False)
 @click.option('--direction', default="in", help="in or out (default: in)")
-@click.option('--days', default=2, help="Limit shown vote history by this amount of days (default: 2)")
+@click.option('--days', '-d', default=2., help="Limit shown vote history by this amount of days (default: 2)")
 def votes(account, direction, days):
     """ List outgoing/incoming account votes
     """
@@ -1745,6 +1745,7 @@ def curation(authorperm, payout):
     curation_rewards_SBD = comment.get_curation_rewards(pending_payout_SBD=True, pending_payout_value=payout)
     curation_rewards_SP = comment.get_curation_rewards(pending_payout_SBD=False, pending_payout_value=payout)
     rows = []
+    sum_curation = [0, 0, 0, 0]
     for vote in comment["active_votes"]:
         vote_SBD = stm.rshares_to_sbd(int(vote["rshares"]))
         curation_SBD = curation_rewards_SBD["active_votes"][vote["voter"]]
@@ -1755,6 +1756,10 @@ def curation(authorperm, payout):
         else:
             performance = 0
             penalty = 0
+        sum_curation[0] += vote_SBD
+        sum_curation[1] += penalty
+        sum_curation[2] += float(curation_SP)
+        sum_curation[3] += float(curation_SBD)
         rows.append([vote["voter"],
                      ((formatTimeString(vote["time"]) - comment["created"]).total_seconds() / 60),
                      vote_SBD,
@@ -1769,6 +1774,13 @@ def curation(authorperm, payout):
                    "%.3f SBD" % float(row[3]),
                    "%.3f SP" % (row[4]),
                    "%.1f %%" % (row[5])])
+    t.add_row(["", "", "", "", "", ""])
+    t.add_row(["Sum",
+               "-",
+               "%.3f SBD" % (sum_curation[0]),
+               "%.3f SBD" % (sum_curation[1]),
+               "%.3f SP" % (sum_curation[2]),
+               "%.2f %%" % (sum_curation[3] / sum_curation[0] * 100)])
     print(t)
 
 
@@ -1782,7 +1794,7 @@ def curation(authorperm, payout):
 @click.option('--author', '-a', help='Show the author for each entry', is_flag=True, default=False)
 @click.option('--permlink', '-e', help='Show the permlink for each entry', is_flag=True, default=False)
 @click.option('--title', '-t', help='Show the title for each entry', is_flag=True, default=False)
-@click.option('--days', '-d', default=7, help="Limit shown rewards by this amount of days (default: 7)")
+@click.option('--days', '-d', default=7., help="Limit shown rewards by this amount of days (default: 7)")
 def rewards(accounts, only_sum, post, comment, curation, length, author, permlink, title, days):
     """ Lists received rewards
     """
@@ -1975,7 +1987,7 @@ def rewards(accounts, only_sum, post, comment, curation, length, author, permlin
 @click.option('--author', '-a', help='Show the author for each entry', is_flag=True, default=False)
 @click.option('--permlink', '-e', help='Show the permlink for each entry', is_flag=True, default=False)
 @click.option('--title', '-t', help='Show the title for each entry', is_flag=True, default=False)
-@click.option('--days', '-d', default=7, help="Limit shown rewards by this amount of days (default: 7), max is 7 days.")
+@click.option('--days', '-d', default=7., help="Limit shown rewards by this amount of days (default: 7), max is 7 days.")
 def pending(accounts, only_sum, post, comment, curation, length, author, permlink, title, days):
     """ Lists pending rewards
     """
@@ -2063,6 +2075,9 @@ def pending(accounts, only_sum, post, comment, curation, length, author, permlin
                 rewards = c.get_curation_rewards()
                 if not rewards["pending_rewards"]:
                     continue
+                days_to_payout = ((c["created"] - limit_time).total_seconds() / 60 / 60 / 24)
+                if days_to_payout < 0:
+                    continue
                 payout_SP = rewards["active_votes"][account["name"]]
                 liquid_USD = 0
                 invested_USD = float(payout_SP) * float(median_price)
@@ -2074,7 +2089,7 @@ def pending(accounts, only_sum, post, comment, curation, length, author, permlin
                     permlink_row = c.permlink
                 rows.append([c["author"],
                              permlink_row,
-                             ((c["created"] - limit_time).total_seconds() / 60 / 60 / 24),
+                             days_to_payout,
                              0.000,
                              payout_SP,
                              (liquid_USD),
