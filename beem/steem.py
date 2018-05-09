@@ -441,11 +441,24 @@ class Steem(object):
         )
 
     def vests_to_sp(self, vests, timestamp=None):
+        """ Converts vests to SP
+
+            :param beem.amount.Amount vests/float vests: Vests to convert
+            :param int timestamp: (Optional) Can be used to calculate
+                convertion in the past
+
+        """
         if isinstance(vests, Amount):
             vests = vests.amount
         return vests / 1e6 * self.get_steem_per_mvest(timestamp)
 
     def sp_to_vests(self, sp, timestamp=None):
+        """ Converts SP to vests
+
+            :param float sp: Steem power to convert
+            :param datetime timestamp: (Optional) Can be used to calculate
+                convertion in the past
+        """
         return sp * 1e6 / self.get_steem_per_mvest(timestamp)
 
     def sp_to_sbd(self, sp, voting_power=10000, vote_pct=10000):

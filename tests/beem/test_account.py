@@ -6,6 +6,8 @@ from builtins import str
 from builtins import super
 import unittest
 import mock
+import pytz
+from datetime import datetime, timedelta
 from parameterized import parameterized
 from pprint import pprint
 from beem import Steem, exceptions
@@ -493,3 +495,17 @@ class Testcases(unittest.TestCase):
             self.assertTrue(op_num < i)
             i += 1
             last_block = new_block
+
+    def test_history_votes(self):
+        stm = self.bts
+        account = Account("gtg", steem_instance=stm)
+        utc = pytz.timezone('UTC')
+        limit_time = utc.localize(datetime.utcnow()) - timedelta(days=2)
+        votes_list = []
+        for v in account.history(start=limit_time, only_ops=["vote"]):
+            votes_list.append(v)
+        start_num = votes_list[0]["block"]
+        votes_list2 = []
+        for v in account.history(start=start_num, only_ops=["vote"]):
+            votes_list2.append(v)
+        self.assertEqual(len(votes_list), len(votes_list2))

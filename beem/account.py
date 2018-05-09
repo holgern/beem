@@ -846,12 +846,16 @@ class Account(BlockchainObject):
                 new estimation at which the estimation stops. Must not be zero. (default is 1)
             :param int max_count: sets the maximum number of iterations. -1 disables this (default 100)
 
-            Example:::
+            .. testsetup::
 
                 import pytz
                 from beem.account import Account
                 from beem.blockchain import Blockchain
                 from datetime import datetime, timedelta
+                from timeit import time as t
+
+            .. testcode::
+
                 utc = pytz.timezone('UTC')
                 start_time = utc.localize(datetime.utcnow()) - timedelta(days=7)
                 acc = Account("gtg")
@@ -860,6 +864,18 @@ class Account(BlockchainObject):
                 b = Blockchain()
                 start_block_num = b.get_estimated_block_num(start_time)
                 start_op2 = acc.estimate_virtual_op_num(start_block_num)
+
+            .. testcode::
+
+                block_num = 21248120
+                start = t.time()
+                op_num = acc.estimate_virtual_op_num(block_num, stop_diff=1, max_count=10)
+                stop = t.time()
+                print(stop - start)
+                for h in acc.get_account_history(op_num, 0):
+                    block_est = h["block"]
+                print(block_est - block_num)
+
         """
         max_index = self.virtual_op_count()
         created = self["created"]
@@ -1091,16 +1107,13 @@ class Account(BlockchainObject):
                 beembase.operationids.ops.
                 Example: ['transfer', 'vote']
 
-            .. testsetup:: *
+            .. testsetup::
 
                 from beem.account import Account
                 from datetime import datetime
-                acc = Account("gtg")
 
             .. testcode::
 
-                from beem.account import Account
-                from datetime import datetime
                 acc = Account("gtg")
                 max_op_count = acc.virtual_op_count()
                 # Returns the 100 latest operations
@@ -1156,13 +1169,13 @@ class Account(BlockchainObject):
             est_diff = 0
             if isinstance(start, datetime):
                 for h in self.get_account_history(op_est, 0):
-                    block_date = h["timestamp"]
+                    block_date = formatTimeString(h["timestamp"])
                 while(op_est > est_diff + batch_size and block_date > start):
                     est_diff += batch_size
                     if op_est - est_diff < 0:
                         est_diff = op_est
                     for h in self.get_account_history(op_est - est_diff, 0):
-                        block_date = h["timestamp"]
+                        block_date = formatTimeString(h["timestamp"])
             elif not isinstance(start, datetime):
                 for h in self.get_account_history(op_est, 0):
                     block_num = h["block"]
@@ -1258,12 +1271,9 @@ class Account(BlockchainObject):
 
                 from beem.account import Account
                 from datetime import datetime
-                acc = Account("gtg")
 
             .. testcode::
 
-                from beem.account import Account
-                from datetime import datetime
                 acc = Account("gtg")
                 max_op_count = acc.virtual_op_count()
                 # Returns the 100 latest operations
@@ -1292,6 +1302,7 @@ class Account(BlockchainObject):
 
             .. testcode::
 
+                acc = Account("test")
                 start_time = datetime(2018, 4, 1, 0, 0, 0)
                 stop_time = datetime(2018, 3, 1, 0, 0, 0)
                 # Returns the account operation from 1.4.2018 back to 1.3.2018

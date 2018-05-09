@@ -419,6 +419,23 @@ class Testcases(unittest.TestCase):
         runner.invoke(cli, ['-o', 'set', 'nodes', 'wss://testnet.steem.vc'])
         self.assertEqual(result.exit_code, 0)
 
+    def test_pending(self):
+        runner = CliRunner()
+        runner.invoke(cli, ['-o', 'set', 'nodes', ''])
+        result = runner.invoke(cli, ['pending', 'test'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['pending', '--post', '--comment', '--curation', 'test'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['pending', '--post', '--comment', '--curation', '--permlink', 'test'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['pending', '--post', '--comment', '--curation', '--author', 'test'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['pending', '--post', '--comment', '--curation', '--author', '--title', 'test'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['pending', '--post', '--comment', '--curation', '--author', '--permlink', '--length', '30', 'test'])
+        self.assertEqual(result.exit_code, 0)
+        runner.invoke(cli, ['-o', 'set', 'nodes', 'wss://testnet.steem.vc'])
+
     def test_rewards(self):
         runner = CliRunner()
         runner.invoke(cli, ['-o', 'set', 'nodes', ''])

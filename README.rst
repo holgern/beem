@@ -129,6 +129,11 @@ A command line tool is available. The help output shows the available commands:
 
     beempy --help
 
+Stand alone version of CLI tool beempy
+--------------------------------------
+With the help of pyinstaller, a stand alone version of beempy was created for Windows, OSX and linux.
+Each version has just to be unpacked and can be used in any terminal.
+
 Changelog
 =========
 0.19.28
@@ -139,6 +144,8 @@ Changelog
 * accuracy renamed to stop_diff
 * Doku of estimate_virtual_op_num improved
 * Unit test for estimate_virtual_op_num added
+* beempy rewards command renamed to pending
+* new beempy command: rewards shows now the received rewards
 
 0.19.27
 -------
