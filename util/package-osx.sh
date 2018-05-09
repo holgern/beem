@@ -13,9 +13,9 @@ pip install pyinstaller
 pyinstaller beempy-onedir.spec
 
 cd dist
-ditto -rsrc --arch x86_64 'beempy.app' 'beempy.tmp'
-rm -r 'beempy.app'
-mv 'beempy.tmp' 'beempy.app'
+#ditto -rsrc --arch x86_64 'beempy.app' 'beempy.tmp'
+#rm -r 'beempy.app'
+#mv 'beempy.tmp' 'beempy.app'
 hdiutil create -volname "beempy $VERSION" -srcfolder 'beempy.app' -ov -format UDBZ "$BUILD"
 if [ -n "$UPLOAD_OSX" ]
 then
