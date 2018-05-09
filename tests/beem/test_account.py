@@ -477,26 +477,6 @@ class Testcases(unittest.TestCase):
         self.assertTrue(block_diff2 <= 0)
         self.assertTrue(block_diff < block_diff1)
 
-        op_num1 = account.estimate_virtual_op_num(block.time(), stop_diff=1, max_count=100, reverse=True)
-        op_num2 = account.estimate_virtual_op_num(block_num, stop_diff=1, max_count=100, reverse=True)
-        op_num3 = account.estimate_virtual_op_num(block_num, stop_diff=100, max_count=100, reverse=True)
-        op_num4 = account.estimate_virtual_op_num(block_num, stop_diff=0.00001, max_count=100, reverse=True)
-        self.assertTrue(abs(op_num1 - op_num2) < 2)
-        self.assertTrue(abs(op_num1 - op_num4) < 2)
-        self.assertTrue(abs(op_num1 - op_num3) < 200)
-        block_diff = 0
-        block_diff1 = 0
-        block_diff2 = 0
-        for h in account.get_account_history(op_num1, 0):
-            block_diff = (block_num - h["block"])
-        for h in account.get_account_history(op_num1 - 1, 0):
-            block_diff1 = (block_num - h["block"])
-        for h in account.get_account_history(op_num1 + 1, 0):
-            block_diff2 = (block_num - h["block"])
-        self.assertTrue(block_diff < 0)
-        self.assertTrue(block_diff1 >= 0)
-        self.assertTrue(block_diff > block_diff2)
-
     def test_estimate_virtual_op_num2(self):
         account = self.account
         h_all_raw = []
@@ -507,7 +487,9 @@ class Testcases(unittest.TestCase):
         for op in h_all_raw[1:]:
             new_block = op["block"]
             block_num = last_block + int((new_block - last_block) / 2)
-            op_num = account.estimate_virtual_op_num(block_num, stop_diff=0.001, max_count=100)
+            op_num = account.estimate_virtual_op_num(block_num, stop_diff=0.1, max_count=100)
+            if op_num > 0:
+                op_num -= 1
             self.assertTrue(op_num < i)
             i += 1
             last_block = new_block

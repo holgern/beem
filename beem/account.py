@@ -837,7 +837,7 @@ class Account(BlockchainObject):
             ret = self.steem.rpc.get_account_history(account["name"], start, limit, api="database")
         return ret
 
-    def estimate_virtual_op_num(self, blocktime, stop_diff=0.01, max_count=100, reverse=False):
+    def estimate_virtual_op_num(self, blocktime, stop_diff=1, max_count=100):
         """ Returns an estimation of an virtual operation index for a given time or blockindex
 
             :param int/datetime blocktime: start time or start block index from which account
@@ -845,9 +845,6 @@ class Account(BlockchainObject):
             :param int stop_diff: Sets the difference between last estimation and
                 new estimation at which the estimation stops. Must not be zero. (default is 1)
             :param int max_count: sets the maximum number of iterations. -1 disables this (default 100)
-            :param bool revers: Set to true when used in history_reverse (default is False)
-                When set to False, the optimum is found from the left side (earlier blocks).
-                When reverse set to True, the optimum is found from the right side (newer blocks).
 
             Example:::
 
@@ -877,18 +874,14 @@ class Account(BlockchainObject):
             blocktime = addTzInfo(blocktime)
             if blocktime < created:
                 return 0
-        if max_index < stop_diff and not reverse:
+        if max_index < stop_diff:
             return 0
-        elif max_index < stop_diff:
-            return max_index
 
         op_last = self._get_account_history(start=-1)
         if isinstance(op_last, list) and len(op_last) > 0 and len(op_last[0]) > 0:
             last_trx = op_last[0][1]
-        elif not reverse:
-            return 0
         else:
-            return max_index
+            return 0
 
         if isinstance(blocktime, datetime):
             account_lifespan_sec = (formatTimeString(last_trx["timestamp"]) - created).total_seconds()
@@ -918,10 +911,9 @@ class Account(BlockchainObject):
             if isinstance(op_start, list) and len(op_start) > 0 and len(op_start[0]) > 0:
                 trx = op_start[0][1]
                 estimated_op_num = op_start[0][0]
-            elif not reverse:
-                return 0
             else:
-                return max_index
+                return 0
+
             if op_start_last is not None:
                 diff_op = (op_start_last[0][0] - estimated_op_num)
                 if isinstance(blocktime, datetime) and diff_op != 0:
@@ -942,20 +934,8 @@ class Account(BlockchainObject):
             return 0
         elif estimated_op_num > max_index:
             return max_index
-        elif not reverse:
-            ret = estimated_op_num - math.ceil(abs(stop_diff))
-            if ret < 0:
-                ret = 0
-            if ret > max_index:
-                ret = max_index
-            return ret
         else:
-            ret = estimated_op_num + math.ceil(abs(stop_diff))
-            if ret > max_index:
-                ret = max_index
-            if ret < 0:
-                ret = 0
-            return ret
+            return estimated_op_num
 
     def get_curation_reward(self, days=7):
         """Returns the curation reward of the last `days` days
@@ -1171,8 +1151,28 @@ class Account(BlockchainObject):
         stop = addTzInfo(stop)
         if start is not None and not use_block_num and not isinstance(start, datetime):
             start_index = start
-        elif start is not None:
-            start_index = self.estimate_virtual_op_num(start, stop_diff=1)
+        elif start is not None and max_index > batch_size:
+            op_est = self.estimate_virtual_op_num(start, stop_diff=1)
+            est_diff = 0
+            if isinstance(start, datetime):
+                for h in self.get_account_history(op_est, 0):
+                    block_date = h["timestamp"]
+                while(op_est > est_diff + batch_size and block_date > start):
+                    est_diff += batch_size
+                    if op_est - est_diff < 0:
+                        est_diff = op_est
+                    for h in self.get_account_history(op_est - est_diff, 0):
+                        block_date = h["timestamp"]
+            elif not isinstance(start, datetime):
+                for h in self.get_account_history(op_est, 0):
+                    block_num = h["block"]
+                while(op_est > est_diff + batch_size and block_num > start):
+                    est_diff += batch_size
+                    if op_est - est_diff < 0:
+                        est_diff = op_est
+                    for h in self.get_account_history(op_est - est_diff, 0):
+                        block_num = h["block"]
+            start_index = op_est - est_diff
         else:
             start_index = 0
 
@@ -1313,8 +1313,28 @@ class Account(BlockchainObject):
             start += first
         elif start is not None and isinstance(start, int) and not use_block_num:
             first = start
-        elif start is not None:
-            first = self.estimate_virtual_op_num(start, stop_diff=1, reverse=True)
+        elif start is not None and first > batch_size:
+            op_est = self.estimate_virtual_op_num(start, stop_diff=1)
+            est_diff = 0
+            if isinstance(start, datetime):
+                for h in self.get_account_history(op_est, 0):
+                    block_date = h["timestamp"]
+                while(op_est + est_diff + batch_size < first and block_date < start):
+                    est_diff += batch_size
+                    if op_est + est_diff > first:
+                        est_diff = first - op_est
+                    for h in self.get_account_history(op_est + est_diff, 0):
+                        block_date = h["timestamp"]
+            else:
+                for h in self.get_account_history(op_est, 0):
+                    block_num = h["block"]
+                while(op_est + est_diff + batch_size < first and block_num < start):
+                    est_diff += batch_size
+                    if op_est + est_diff > first:
+                        est_diff = first - op_est
+                    for h in self.get_account_history(op_est + est_diff, 0):
+                        block_num = h["block"]
+            first = op_est + est_diff
         if stop is not None and isinstance(stop, int) and stop < 0 and not use_block_num:
             stop += first
         start = addTzInfo(start)
