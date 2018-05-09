@@ -340,20 +340,18 @@ class Blockchain(object):
                 if repetition > blocks_waiting_for * self.max_block_wait_repetition:
                     raise BlockWaitTimeExceeded("Already waited %d s" % (blocks_waiting_for * self.max_block_wait_repetition * self.block_interval))
         # block has to be returned properly
-        try:
-            block = Block(block_number, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
-        except BlockDoesNotExistsException:
-            block = None
         repetition = 0
+        block = None
         while not block:
-            repetition += 1
-            time.sleep(self.block_interval)
-            if repetition > blocks_waiting_for * self.max_block_wait_repetition:
-                raise BlockWaitTimeExceeded("Already waited %d s" % (blocks_waiting_for * self.max_block_wait_repetition * self.block_interval))
             try:
                 block = Block(block_number, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
             except BlockDoesNotExistsException:
                 block = None
+                if repetition > blocks_waiting_for * self.max_block_wait_repetition:
+                    raise BlockWaitTimeExceeded("Already waited %d s" % (blocks_waiting_for * self.max_block_wait_repetition * self.block_interval))
+                repetition += 1
+                time.sleep(self.block_interval)
+
         return block
 
     def ops(self, start=None, stop=None, only_virtual_ops=False, **kwargs):
