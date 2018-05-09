@@ -2002,7 +2002,7 @@ def pending(accounts, only_sum, post, comment, curation, length, author, permlin
         latest = m.ticker()["latest"]
         if author and permlink:
             t = PrettyTable(["Author", "Permlink", "Cashout", "SBD", "SP", "Liquid USD", "Invested USD"])
-        if author and title:
+        elif author and title:
             t = PrettyTable(["Author", "Title", "Cashout", "SBD", "SP", "Liquid USD", "Invested USD"])
         elif author:
             t = PrettyTable(["Author", "Cashout", "SBD", "SP", "Liquid USD", "Invested USD"])
