@@ -1702,9 +1702,11 @@ def witnesses(account, limit):
 
 @cli.command()
 @click.argument('account', nargs=1, required=False)
-@click.option('--direction', default="in", help="in or out (default: in)")
+@click.option('--direction', default=None, help="in or out")
+@click.option('--outgoing', '-o', help='Show outgoing votes', is_flag=True, default=False)
+@click.option('--incoming', '-i', help='Show incoming votes', is_flag=True, default=False)
 @click.option('--days', '-d', default=2., help="Limit shown vote history by this amount of days (default: 2)")
-def votes(account, direction, days):
+def votes(account, direction, outgoing, incoming, days):
     """ List outgoing/incoming account votes
     """
     stm = shared_steem_instance()
@@ -1712,12 +1714,14 @@ def votes(account, direction, days):
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
+    if direction is None and not incoming and not outgoing:
+        direction = "in"
     utc = pytz.timezone('UTC')
     limit_time = utc.localize(datetime.utcnow()) - timedelta(days=days)
-    if direction == "out":
+    if direction == "out" or outgoing:
         votes = AccountVotes(account, steem_instance=stm)
         votes.printAsTable(start=limit_time)
-    else:
+    if direction == "in" or incoming:
         account = Account(account, steem_instance=stm)
         votes_list = []
         for v in account.history(start=limit_time, only_ops=["vote"]):

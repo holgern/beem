@@ -132,7 +132,9 @@ A command line tool is available. The help output shows the available commands:
 Stand alone version of CLI tool beempy
 --------------------------------------
 With the help of pyinstaller, a stand alone version of beempy was created for Windows, OSX and linux.
-Each version has just to be unpacked and can be used in any terminal.
+Each version has just to be unpacked and can be used in any terminal. The packed directories
+can be found under release. Each release has a hash sum, which is created directly in the build-server
+before transmitting the packed file. Please check the hash-sum after downloading.
 
 Changelog
 =========

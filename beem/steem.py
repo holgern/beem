@@ -378,6 +378,7 @@ class Steem(object):
             None,
             base=Amount(median_price['base'], steem_instance=self),
             quote=Amount(median_price['quote'], steem_instance=self),
+            steem_instance=self
         )
         return a.as_base("SBD")
 
