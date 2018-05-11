@@ -1236,7 +1236,8 @@ def broadcast(file):
 
 
 @cli.command()
-def ticker():
+@click.option('--sbd-to-steem', '-i', help='Show ticker in SBD/STEEM', is_flag=True, default=False)
+def ticker(sbd_to_steem):
     """ Show ticker
     """
     stm = shared_steem_instance()
@@ -1247,7 +1248,14 @@ def ticker():
     market = Market(steem_instance=stm)
     ticker = market.ticker()
     for key in ticker:
-        t.add_row([key, str(ticker[key])])
+        if key in ["highest_bid", "latest", "lowest_ask"] and sbd_to_steem:
+            t.add_row([key, str(ticker[key].as_base("SBD"))])
+        elif key in "percent_change" and sbd_to_steem:
+            t.add_row([key, "%.2f %%" % -ticker[key]])
+        elif key in "percent_change":
+            t.add_row([key, "%.2f %%" % ticker[key]])
+        else:
+            t.add_row([key, str(ticker[key])])
     print(t)
 
 
@@ -1288,11 +1296,12 @@ def pricehistory(width, height, ascii):
 @cli.command()
 @click.option('--days', '-d', help='Limit the days of shown trade history (default 7)', default=7.)
 @click.option('--hours', help='Limit the intervall history intervall (default 2 hours)', default=2.0)
+@click.option('--sbd-to-steem', '-i', help='Show ticker in SBD/STEEM', is_flag=True, default=False)
 @click.option('--limit', '-l', help='Limit number of trades which is fetched at each intervall point (default 100)', default=100)
 @click.option('--width', '-w', help='Plot width (default 75)', default=75)
 @click.option('--height', '-h', help='Plot height (default 15)', default=15)
 @click.option('--ascii', help='Use only ascii symbols', is_flag=True, default=False)
-def tradehistory(days, hours, limit, width, height, ascii):
+def tradehistory(days, hours, sbd_to_steem, limit, width, height, ascii):
     """ Show price history
     """
     stm = shared_steem_instance()
@@ -1305,19 +1314,26 @@ def tradehistory(days, hours, limit, width, height, ascii):
     intervall = timedelta(hours=hours)
     trades = m.trade_history(start=start, stop=stop, limit=limit, intervall=intervall)
     price = []
+    if sbd_to_steem:
+        base_str = "STEEM"
+    else:
+        base_str = "SBD"
     for trade in trades:
         base = 0
         quote = 0
         for order in trade:
-            base += float(order.as_base("SBD")["base"])
-            quote += float(order.as_base("SBD")["quote"])
+            base += float(order.as_base(base_str)["base"])
+            quote += float(order.as_base(base_str)["quote"])
         price.append(base / quote)
     if ascii:
         charset = u'ascii'
     else:
         charset = u'utf8'
     chart = AsciiChart(height=height, width=width, offset=3, placeholder='{:6.2f} ', charset=charset)
-    print("\n     Trade history %s - %s \n\nSTEEM/SBD" % (formatTimeString(start), formatTimeString(stop)))
+    if sbd_to_steem:
+        print("\n     Trade history %s - %s \n\nSBD/STEEM" % (formatTimeString(start), formatTimeString(stop)))
+    else:
+        print("\n     Trade history %s - %s \n\nSTEEM/SBD" % (formatTimeString(start), formatTimeString(stop)))
     chart.adapt_on_series(price)
     chart.new_chart()
     chart.add_axis()
@@ -1732,8 +1748,10 @@ def votes(account, direction, outgoing, incoming, days):
 
 @cli.command()
 @click.argument('authorperm', nargs=1, required=True)
+@click.option('--account', '-a', help='Show only curation for this account')
+@click.option('--limit', '-l', help='Show only the first minutes')
 @click.option('--payout', '-p', default=None, help="Show the curation for a potential payout in SBD as float")
-def curation(authorperm, payout):
+def curation(authorperm, account, limit, payout):
     """ Lists curation rewords of all votes for authorperm
     """
     stm = shared_steem_instance()
@@ -1750,6 +1768,8 @@ def curation(authorperm, payout):
     curation_rewards_SP = comment.get_curation_rewards(pending_payout_SBD=False, pending_payout_value=payout)
     rows = []
     sum_curation = [0, 0, 0, 0]
+    max_curation = [0, 0, 0, 0, 0, 0]
+    max_vote = [0, 0, 0, 0, 0, 0]
     for vote in comment["active_votes"]:
         vote_SBD = stm.rshares_to_sbd(int(vote["rshares"]))
         curation_SBD = curation_rewards_SBD["active_votes"][vote["voter"]]
@@ -1760,31 +1780,59 @@ def curation(authorperm, payout):
         else:
             performance = 0
             penalty = 0
+        vote_befor_min = ((formatTimeString(vote["time"]) - comment["created"]).total_seconds() / 60)
+
         sum_curation[0] += vote_SBD
         sum_curation[1] += penalty
         sum_curation[2] += float(curation_SP)
         sum_curation[3] += float(curation_SBD)
-        rows.append([vote["voter"],
-                     ((formatTimeString(vote["time"]) - comment["created"]).total_seconds() / 60),
-                     vote_SBD,
-                     penalty,
-                     float(curation_SP),
-                     performance])
+        row = [vote["voter"],
+               vote_befor_min,
+               vote_SBD,
+               penalty,
+               float(curation_SP),
+               performance]
+        if row[-1] > max_curation[-1]:
+            max_curation = row
+        if row[2] > max_vote[2]:
+            max_vote = row
+        rows.append(row)
     sortedList = sorted(rows, key=lambda row: (row[1]), reverse=False)
     for row in sortedList:
-        t.add_row([row[0],
-                   "%.1f min" % row[1],
-                   "%.3f SBD" % float(row[2]),
-                   "%.3f SBD" % float(row[3]),
-                   "%.3f SP" % (row[4]),
-                   "%.1f %%" % (row[5])])
+        if limit is not None and row[1] > float(limit):
+            continue
+        if account is None or account == row[0]:
+            t.add_row([row[0],
+                       "%.1f min" % row[1],
+                       "%.3f SBD" % float(row[2]),
+                       "%.3f SBD" % float(row[3]),
+                       "%.3f SP" % (row[4]),
+                       "%.1f %%" % (row[5])])
     t.add_row(["", "", "", "", "", ""])
+    if sum_curation[0] > 0:
+        curation_sum_percentage = sum_curation[3] / sum_curation[0] * 100
+    else:
+        curation_sum_percentage = 0
+
+    t.add_row(["High. vote",
+               "%.1f min" % max_vote[1],
+               "%.3f SBD" % float(max_vote[2]),
+               "%.3f SBD" % float(max_vote[3]),
+               "%.3f SP" % (max_vote[4]),
+               "%.1f %%" % (max_vote[5])])
+    t.add_row(["High. Cur.",
+               "%.1f min" % max_curation[1],
+               "%.3f SBD" % float(max_curation[2]),
+               "%.3f SBD" % float(max_curation[3]),
+               "%.3f SP" % (max_curation[4]),
+               "%.1f %%" % (max_curation[5])])
     t.add_row(["Sum",
                "-",
                "%.3f SBD" % (sum_curation[0]),
                "%.3f SBD" % (sum_curation[1]),
                "%.3f SP" % (sum_curation[2]),
-               "%.2f %%" % (sum_curation[3] / sum_curation[0] * 100)])
+               "%.2f %%" % curation_sum_percentage])
+    print("%s" % authorperm)
     print(t)
 
 
@@ -1823,15 +1871,15 @@ def rewards(accounts, only_sum, post, comment, curation, length, author, permlin
         m = Market(steem_instance=stm)
         latest = m.ticker()["latest"]
         if author and permlink:
-            t = PrettyTable(["Author", "Permlink", "Received", "SBD", "SP + STEEM", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Author", "Permlink", "Payout", "SBD", "SP + STEEM", "Liquid USD", "Invested USD"])
         elif author and title:
-                t = PrettyTable(["Author", "Title", "Received", "SBD", "SP + STEEM", "Liquid USD", "Invested USD"])
+                t = PrettyTable(["Author", "Title", "Payout", "SBD", "SP + STEEM", "Liquid USD", "Invested USD"])
         elif author:
-            t = PrettyTable(["Author", "Received", "SBD", "SP + STEEM", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Author", "Payout", "SBD", "SP + STEEM", "Liquid USD", "Invested USD"])
         elif not author and permlink:
-            t = PrettyTable(["Permlink", "Received", "SBD", "SP + STEEM", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Permlink", "Payout", "SBD", "SP + STEEM", "Liquid USD", "Invested USD"])
         elif not author and title:
-            t = PrettyTable(["Title", "Received", "SBD", "SP + STEEM", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Title", "Payout", "SBD", "SP + STEEM", "Liquid USD", "Invested USD"])
         else:
             t = PrettyTable(["Received", "SBD", "SP + STEEM", "Liquid USD", "Invested USD"])
         t.align = "l"
@@ -1849,7 +1897,10 @@ def rewards(accounts, only_sum, post, comment, curation, length, author, permlin
                     continue
                 if v["type"] == "author_reward":
                     c = Comment(v, steem_instance=stm)
-                    c.refresh()
+                    try:
+                        c.refresh()
+                    except exceptions.ContentDoesNotExistsException:
+                        continue
                     if not post and not c.is_comment():
                         continue
                     if not comment and c.is_comment():
@@ -2037,19 +2088,24 @@ def pending(accounts, only_sum, post, comment, curation, length, author, permlin
         progress_length = (account.virtual_op_count() - start_op) / 1000
         with click.progressbar(map(Comment, account.history(start=start_op, use_block_num=False, only_ops=["comment"])), length=progress_length) as comment_hist:
             for v in comment_hist:
-                v.refresh()
+                try:
+                    v.refresh()
+                except exceptions.ContentDoesNotExistsException:
+                    continue
                 author_reward = v.get_author_rewards()
                 if float(author_reward["total_payout_SBD"]) < 0.001:
                     continue
                 if v.permlink in c_list:
                     continue
+                c_list[v.permlink] = 1
                 if not v.is_pending():
                     continue
                 if not post and not v.is_comment():
                     continue
                 if not comment and v.is_comment():
                     continue
-                c_list[v.permlink] = 1
+                if v["author"] != account["name"]:
+                    continue
                 payout_SBD = author_reward["payout_SBD"]
                 sum_reward[0] += float(payout_SBD)
                 payout_SP = author_reward["payout_SP"]
@@ -2059,7 +2115,7 @@ def pending(accounts, only_sum, post, comment, curation, length, author, permlin
                 invested_USD = float(author_reward["payout_SP"]) * float(median_price)
                 sum_reward[3] += invested_USD
                 if v.is_comment():
-                    permlink_row = v.parent_permlink
+                    permlink_row = v.permlink
                 else:
                     if title:
                         permlink_row = v.title

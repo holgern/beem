@@ -439,6 +439,20 @@ class Limit_order_create(GrapheneObject):
             ]))
 
 
+class Change_recovery_account(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        super(Change_recovery_account, self).__init__(
+            OrderedDict([
+                ('account_to_recover', String(kwargs["account_to_recover"])),
+                ('new_recovery_account', String(kwargs["new_recovery_account"])),
+                ('extensions', Array([])),
+            ]))
+
+
 class Transfer_from_savings(GrapheneObject):
     def __init__(self, *args, **kwargs):
         if check_for_class(self, args):
