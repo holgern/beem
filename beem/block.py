@@ -151,7 +151,7 @@ class Block(BlockchainObject):
             for op in tx["operations"]:
                 if isinstance(op, dict) and 'type' in op:
                     op_type = op["type"]
-                    if len(op_type) > 10 and op_type[len(op_type)-10:] == "_operation":
+                    if len(op_type) > 10 and op_type[len(op_type) - 10:] == "_operation":
                         op_type = op_type[:-10]
                     ops_stat[op_type] += 1
                 else:

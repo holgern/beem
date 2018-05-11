@@ -13,7 +13,7 @@ from beem.instance import set_shared_steem_instance
 from beem.utils import get_node_list
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-nodes_appbase = [ "https://api.steemitstage.com", "https://api.steem.house", "https://api.steemit.com"]
+nodes_appbase = ["https://api.steemitstage.com", "https://api.steem.house", "https://api.steemit.com"]
 
 
 class Testcases(unittest.TestCase):

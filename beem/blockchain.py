@@ -461,13 +461,13 @@ class Blockchain(object):
                         timestamp = formatTimeString(block.get("timestamp"))
                     elif isinstance(event, dict) and "type" in event and "value" in event:
                         op_type = event["type"]
-                        if len(op_type) > 10 and op_type[len(op_type)-10:] == "_operation":
-                            op_type = op_type[:-10]                        
+                        if len(op_type) > 10 and op_type[len(op_type) - 10:] == "_operation":
+                            op_type = op_type[:-10]
                         op = event["value"]
                         trx_id = event.get("trx_id")
                         block_num = event.get("block")
                         _id = self.hash_op(event)
-                        timestamp = formatTimeString(event.get("timestamp"))                        
+                        timestamp = formatTimeString(event.get("timestamp"))
                     else:
                         op_type, op = event["op"]
                         trx_id = event.get("trx_id")
@@ -521,8 +521,8 @@ class Blockchain(object):
         """ This method generates a hash of blockchain operation. """
         if isinstance(event, dict) and "type" in event and "value" in event:
             op_type = event["type"]
-            if len(op_type) > 10 and op_type[len(op_type)-10:] == "_operation":
-                op_type = op_type[:-10]            
+            if len(op_type) > 10 and op_type[len(op_type) - 10:] == "_operation":
+                op_type = op_type[:-10]
             op = event["value"]
             event = [op_type, op]
         data = json.dumps(event, sort_keys=True)
