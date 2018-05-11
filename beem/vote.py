@@ -120,6 +120,18 @@ class Vote(BlockchainObject):
         return self["voter"]
 
     @property
+    def authorperm(self):
+        if "authorperm" in self:
+            return self["authorperm"]
+        elif "authorpermvoter" in self:
+            [author, permlink, voter] = resolve_authorpermvoter(self["authorpermvoter"])
+            return construct_authorperm(author, permlink)
+        elif "author" in self and "permlink" in self:
+            return construct_authorperm(self["author"], self["permlink"])
+        else:
+            return ""
+
+    @property
     def votee(self):
         votee = ''
         authorperm = self.get("authorperm", "")
@@ -284,9 +296,9 @@ class VotesObject(list):
             authorperm = item
 
         return (
-            any([name == x["voter"] for x in self]) or
+            any([name == x.voter for x in self]) or
             any([name == x.votee for x in self]) or
-            any([authorperm == x["authorperm"] for x in self])
+            any([authorperm == x.authorperm for x in self])
         )
 
     def __str__(self):

@@ -267,35 +267,53 @@ Lets display all Posts from an account:
 Transactionbuilder
 ------------------
 Sign transactions with beem without using the wallet and build the transaction by hand.
-Example without using the wallet:
+Example with one operation with and without the wallet:
 
 .. code-block:: python
 
     from beem import Steem
     from beem.transactionbuilder import TransactionBuilder
+    from beembase import operations
     stm = Steem()
+    # Uncomment the following when using a wallet:
+    # stm.wallet.unlock("secret_password")
     tx = TransactionBuilder(steem_instance=stm)
-    tx.appendOps(Transfer(**{"from": 'user_a',
-                             "to": 'user_b',
-                             "amount": '1.000 SBD',
-                             "memo": 'test 2'}))
+    op = operations.Transfer(**{"from": 'user_a',
+                                "to": 'user_b',
+                                "amount": '1.000 SBD',
+                                "memo": 'test 2'}))
+    tx.appendOps(op)
+    # Comment appendWif out and uncomment appendSigner when using a stored key from the wallet
     tx.appendWif('5.....') # `user_a`
+    # tx.appendSigner('user_a', 'active')
     tx.sign()
     tx.broadcast()
 
-Example with using the wallet:
+Example with signing and broadcasting two operations:
 
 .. code-block:: python
 
-    from beem.transactionbuilder import TransactionBuilder
     from beem import Steem
+    from beem.transactionbuilder import TransactionBuilder
+    from beembase import operations
     stm = Steem()
-    stm.wallet.unlock("secret_password")
+    # Uncomment the following when using a wallet:
+    # stm.wallet.unlock("secret_password")
     tx = TransactionBuilder(steem_instance=stm)
-    tx.appendOps(Transfer(**{"from": 'user_a',
-                             "to": 'user_b',
-                             "amount": '1.000 SBD',
-                             "memo": 'test 2'}))
-    tx.appendSigner('user_a', 'active')
+    ops = []
+    op = operations.Transfer(**{"from": 'user_a',
+                                "to": 'user_b',
+                                "amount": '1.000 SBD',
+                                "memo": 'test 2'}))
+    ops.append(op)
+    op = operations.Vote(**{"voter": v,
+                            "author": author,
+                            "permlink": permlink,
+                            "weight": int(percent * 100)})
+    ops.append(op)
+    tx.appendOps(ops)
+    # Comment appendWif out and uncomment appendSigner when using a stored key from the wallet
+    tx.appendWif('5.....') # `user_a`
+    # tx.appendSigner('user_a', 'active')
     tx.sign()
     tx.broadcast()
