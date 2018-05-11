@@ -92,6 +92,8 @@ class GrapheneRPC(object):
     :param int num_retries_call: Repeat num_retries_call times a rpc call on node error (default is 5)
     :param int timeout: Timeout setting for https nodes (default is 60)
     :param bool autoconnect: When set to false, connection is performed on the first rpc call (default is True)
+    :param bool use_condenser: Use the old condenser_api rpc protocol on nodes with version
+        0.19.4 or higher. The settings has no effect on nodes with version of 0.19.3 or lower.
 
     Available APIs:
 
@@ -146,7 +148,7 @@ class GrapheneRPC(object):
         self.rpc_queue = []
         self.timeout = kwargs.get('timeout', 60)
         self.num_retries = kwargs.get("num_retries", -1)
-        self.use_condenser = kwargs.get("use_condenser", False)
+        self.use_condenser = kwargs.get("use_condenser", True)
         self.error_cnt = {}
         self.num_retries_call = kwargs.get("num_retries_call", 5)
         self.error_cnt_call = 0

@@ -16,7 +16,7 @@ from beem.instance import set_shared_steem_instance
 from beem.utils import get_node_list
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-nodes_appbase = ["https://api.steem.house", "https://api.steemit.com"]
+nodes_appbase = ["https://api.steemitstage.com", "https://api.steem.house", "https://api.steemit.com"]
 
 
 class Testcases(unittest.TestCase):
@@ -233,3 +233,12 @@ class Testcases(unittest.TestCase):
             last_fetched_block_num = block.block_num
             blocknum = last_fetched_block_num + 2
         self.assertEqual(last_fetched_block_num, start_num + 4)
+
+    def test_hash_op(self):
+        bts = self.bts
+        b = Blockchain(steem_instance=bts)
+        op1 = {'type': 'vote_operation', 'value': {'voter': 'ubg', 'author': 'yesslife', 'permlink': 'steemit-sandwich-contest-week-25-2da-entry', 'weight': 100}}
+        op2 = ['vote', {'voter': 'ubg', 'author': 'yesslife', 'permlink': 'steemit-sandwich-contest-week-25-2da-entry', 'weight': 100}]
+        hash1 = b.hash_op(op1)
+        hash2 = b.hash_op(op2)
+        self.assertEqual(hash1, hash2)

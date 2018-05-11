@@ -267,8 +267,9 @@ def get_node_list(appbase=False, testing=False):
             node_list = ["https://api.steemitdev.com", "https://api.steemitstage.com"] + node_list
         return node_list
     else:
-        return ["wss://steemd.privex.io", "wss://steemd.pevo.science", "wss://rpc.buildteam.io", "wss://rpc.steemliberator.com", "wss://gtg.steem.house:8090",
-                "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://steemd.steemgigs.org", "wss://steemd.minnowsupportproject.org", "https://rpc.buildteam.io",
+        return ["wss://steemd.privex.io", "wss://rpc.buildteam.io", "https://steemd.privex.io", "https://rpc.buildteam.io", "wss://steemd.pevo.science",
+                "wss://rpc.steemliberator.com", "wss://gtg.steem.house:8090",
+                "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://steemd.steemgigs.org", "wss://steemd.minnowsupportproject.org",
                 "https://steemd.minnowsupportproject.org", "https://steemd.pevo.science", "https://rpc.steemviz.com", "https://seed.bitcoiner.me",
-                "https://rpc.steemliberator.com", "https://steemd.privex.io", "https://gtg.steem.house:8090",
+                "https://rpc.steemliberator.com", "https://gtg.steem.house:8090",
                 "https://rpc.curiesteem.com", "https://steemd.steemgigs.org"]

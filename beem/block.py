@@ -149,7 +149,13 @@ class Block(BlockchainObject):
         trxs = self["transactions"]
         for tx in trxs:
             for op in tx["operations"]:
-                ops_stat[op[0]] += 1
+                if isinstance(op, dict) and 'type' in op:
+                    op_type = op["type"]
+                    if len(op_type) > 10 and op_type[len(op_type)-10:] == "_operation":
+                        op_type = op_type[:-10]
+                    ops_stat[op_type] += 1
+                else:
+                    ops_stat[op[0]] += 1
         return ops_stat
 
 
