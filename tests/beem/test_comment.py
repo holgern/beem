@@ -138,10 +138,13 @@ class Testcases(unittest.TestCase):
     def test_export(self, node_param):
         if node_param == "non_appbase":
             bts = self.bts
-            content = bts.rpc.get_content(self.author, self.permlink)
         else:
             bts = self.appbase
+
+        if bts.rpc.get_use_appbase():
             content = bts.rpc.get_discussion({'author': self.author, 'permlink': self.permlink}, api="tags")
+        else:
+            content = bts.rpc.get_content(self.author, self.permlink)
 
         c = Comment(self.authorperm, steem_instance=bts)
         keys = list(content.keys())

@@ -148,7 +148,7 @@ class GrapheneRPC(object):
         self.rpc_queue = []
         self.timeout = kwargs.get('timeout', 60)
         self.num_retries = kwargs.get("num_retries", -1)
-        self.use_condenser = kwargs.get("use_condenser", True)
+        self.use_condenser = kwargs.get("use_condenser", False)
         self.error_cnt = {}
         self.num_retries_call = kwargs.get("num_retries_call", 5)
         self.error_cnt_call = 0
@@ -275,7 +275,9 @@ class GrapheneRPC(object):
             if v["chain_id"] == chain_id and v["min_version"] <= network_version:
                 if highest_version_chain is None:
                     highest_version_chain = v
-                elif v["min_version"] > highest_version_chain["min_version"]:
+                elif v["min_version"] == '0.0.0' and self.use_condenser:
+                    highest_version_chain = v
+                elif v["min_version"] > highest_version_chain["min_version"] and not self.use_condenser:
                     highest_version_chain = v
         if highest_version_chain is None:
             raise("Connecting to unknown network!")

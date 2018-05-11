@@ -464,10 +464,10 @@ class Blockchain(object):
                         if len(op_type) > 10 and op_type[len(op_type) - 10:] == "_operation":
                             op_type = op_type[:-10]
                         op = event["value"]
-                        trx_id = event.get("trx_id")
-                        block_num = event.get("block")
+                        trx_id = block["transaction_ids"][trx_nr]
+                        block_num = block.get("id")
                         _id = self.hash_op(event)
-                        timestamp = formatTimeString(event.get("timestamp"))
+                        timestamp = formatTimeString(block.get("timestamp"))
                     else:
                         op_type, op = event["op"]
                         trx_id = event.get("trx_id")

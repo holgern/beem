@@ -482,7 +482,7 @@ class Comment(BlockchainObject):
         """
         if self.get('net_rshares', None) is None:
             raise VotingInvalidOnArchivedPost
-        return self.vote(weight, voter=voter)
+        return self.vote(weight, account=voter)
 
     def downvote(self, weight=-100, voter=None):
         """ Downvote the post
@@ -494,7 +494,7 @@ class Comment(BlockchainObject):
         """
         if self.get('net_rshares', None) is None:
             raise VotingInvalidOnArchivedPost
-        return self.vote(weight, voter=voter)
+        return self.vote(weight, account=voter)
 
     def vote(self, weight, account=None, identifier=None, **kwargs):
         """ Vote for a post

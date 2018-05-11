@@ -22,9 +22,10 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.bts = Steem(
-            node=get_node_list(appbase=True, testing=False),
+            node=get_node_list(appbase=True, testing=True),
             nobroadcast=True,
             num_retries=10,
+            use_condenser=False,
             keys={"active": wif},
         )
         # from getpass import getpass
@@ -55,7 +56,13 @@ class Testcases(unittest.TestCase):
         for block in ops_blocks:
             for tran in block["transactions"]:
                 for op in tran['operations']:
-                    if op[0] in opNames:
+                    if isinstance(op, dict) and "type" in op and "value" in op:
+                        op_type = op["type"]
+                        if len(op_type) > 10 and op_type[len(op_type) - 10:] == "_operation":
+                            op_type = op_type[:-10]
+                        if op_type in opNames:
+                            op_stat4[op_type] += 1
+                    elif op[0] in opNames:
                         op_stat4[op[0]] += 1
             self.assertTrue(block.identifier >= self.start)
             self.assertTrue(block.identifier <= self.stop)

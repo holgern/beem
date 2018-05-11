@@ -23,6 +23,7 @@ class Testcases(unittest.TestCase):
         cls.appbase = Steem(
             node=get_node_list(appbase=True),
             nobroadcast=True,
+            use_condenser=False,
             num_retries=10
         )
         set_shared_steem_instance(cls.bts)
