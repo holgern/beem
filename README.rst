@@ -138,6 +138,15 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.29
+-------
+* Several bug fixes
+* CLI improved
+* wait_for_and_get_block refactoring (Thanks to crokkon)
+* Bug fix for blockchain.stream(), raw_ops added
+* Fix and improve estimate_virtual_op_num
+* Support for New Appbase Operations format
+
 0.19.28
 -------
 * Improve rewards command in beempy
