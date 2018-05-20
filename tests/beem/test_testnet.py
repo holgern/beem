@@ -36,7 +36,8 @@ class Testcases(unittest.TestCase):
         cls.bts = Steem(
             node=["wss://testnet.steem.vc"],
             nobroadcast=True,
-            num_retries=10
+            num_retries=10,
+            expiration=120,
         )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
@@ -244,7 +245,8 @@ class Testcases(unittest.TestCase):
         steem = Steem(
             node=["wss://testnet.steem.vc"],
             num_retries=10,
-            keys=[self.active_private_key_of_elf]
+            keys=[self.active_private_key_of_elf],
+            expiration=120,
         )
 
         tx = TransactionBuilder(steem_instance=steem)
@@ -265,7 +267,8 @@ class Testcases(unittest.TestCase):
         steem = Steem(
             node=["wss://testnet.steem.vc"],
             num_retries=10,
-            keys=[self.active_private_key_of_steemfiles]
+            keys=[self.active_private_key_of_steemfiles],
+            expiration=120,
         )
         new_tx = TransactionBuilder(tx=tx_json, steem_instance=steem)
         new_tx.appendMissingSignatures()

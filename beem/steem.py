@@ -48,7 +48,7 @@ class Steem(object):
         :param bool offline: Boolean to prevent connecting to network (defaults
             to ``False``) *(optional)*
         :param int expiration: Delay in seconds until transactions are supposed
-            to expire *(optional)*
+            to expire *(optional)* (default is 30)
         :param str blocking: Wait for broadcasted transactions to be included
             in a block and return full transaction (can be "head" or
             "irreversible")
@@ -124,7 +124,7 @@ class Steem(object):
             :param bool offline: Boolean to prevent connecting to network (defaults
                 to ``False``) *(optional)*
             :param int expiration: Delay in seconds until transactions are supposed
-                to expire *(optional)*
+                to expire *(optional)* (default is 30)
             :param str blocking: Wait for broadcasted transactions to be included
                 in a block and return full transaction (can be "head" or
                 "irreversible")
