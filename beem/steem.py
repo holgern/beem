@@ -51,7 +51,7 @@ class Steem(object):
             to expire *(optional)*
         :param str blocking: Wait for broadcasted transactions to be included
             in a block and return full transaction (can be "head" or
-            "irrversible")
+            "irreversible")
         :param bool bundle: Do not broadcast transactions right away, but allow
             to bundle operations. It is not possible to send out more than one
             vote operation and more than one comment operation in a single broadcast *(optional)*
@@ -127,7 +127,7 @@ class Steem(object):
                 to expire *(optional)*
             :param str blocking: Wait for broadcasted transactions to be included
                 in a block and return full transaction (can be "head" or
-                "irrversible")
+                "irreversible")
             :param bool bundle: Do not broadcast transactions right away, but allow
                 to bundle operations *(optional)*
             :param bool use_condenser: Use the old condenser_api rpc protocol on nodes with version
@@ -531,7 +531,7 @@ class Steem(object):
             for a given Steem Power or vesting shares and voting_power
             Give either steem_power or vests, not both.
             When the output is greater than 10000, the given rshares
-            are to high
+            are too high
 
             Returns the voting participation (100% = 10000)
 
