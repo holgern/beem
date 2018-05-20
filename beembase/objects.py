@@ -37,13 +37,13 @@ class Amount(object):
     def __init__(self, d):
         if isinstance(d, string_types):
             self.amount, self.asset = d.strip().split(" ")
-            self.amount = float(self.amount)
-
             if self.asset in asset_precision:
                 self.precision = asset_precision[self.asset]
             else:
                 raise Exception("Asset unknown")
-            self.str_repr = '{:.{}f} {}'.format(self.amount, self.precision, self.asset)
+            self.amount = int(float(self.amount) * 10 ** self.precision)
+
+            self.str_repr = '{:.{}f} {}'.format((float(self.amount) / 10 ** self.precision), self.precision, self.asset)
         elif isinstance(d, list):
             self.amount = d[0]
             self.asset = d[2]
@@ -54,13 +54,13 @@ class Amount(object):
             self.amount = d.amount
             self.asset = d.symbol
             self.precision = d.asset["precision"]
+            self.amount = int(float(self.amount) * 10 ** self.precision)
             self.str_repr = json.dumps((d.json()))
 
     def __bytes__(self):
         # padding
         asset = self.asset + "\x00" * (7 - len(self.asset))
-        amount = round(float(self.amount) * 10**self.precision)
-        return (struct.pack("<q", amount) + struct.pack("<b", self.precision) +
+        return (struct.pack("<q", int(self.amount)) + struct.pack("<b", self.precision) +
                 py23_bytes(asset, "ascii"))
 
     def __str__(self):

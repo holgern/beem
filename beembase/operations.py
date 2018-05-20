@@ -119,6 +119,44 @@ class Account_witness_vote(GrapheneObject):
         ]))
 
 
+class Account_witness_proxy(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        super(Account_witness_proxy, self).__init__(OrderedDict([
+            ('account', String(kwargs["account"])),
+            ('proxy', String(kwargs["proxy"])),
+        ]))
+
+
+class Custom(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        super(Custom, self).__init__(OrderedDict([
+            ('required_auths',
+                Array([String(o) for o in kwargs["required_auths"]])),
+            ('id', Uint16(int(kwargs["id"]))),
+            ('data', String(kwargs["data"])),
+        ]))
+
+
+class Custom_binary(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        super(Custom_binary, self).__init__(OrderedDict([
+            ('id', Uint16(int(kwargs["id"]))),
+            ('data', String(kwargs["data"])),
+        ]))
+
+
 class Op_wrapper(GrapheneObject):
     def __init__(self, *args, **kwargs):
         if check_for_class(self, args):
@@ -404,7 +442,20 @@ class Limit_order_cancel(GrapheneObject):
         super(Limit_order_cancel, self).__init__(
             OrderedDict([
                 ('owner', String(kwargs["owner"])),
-                ('orderid', Uint32(int(kwargs["orderid"]))),
+                ('orderid', Uint32(kwargs["orderid"])),
+            ]))
+
+
+class Prove_authority(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        super(Prove_authority, self).__init__(
+            OrderedDict([
+                ('challenged', String(kwargs["challenged"])),
+                ('require_owner', Bool(kwargs["require_owner"])),
             ]))
 
 
@@ -431,10 +482,27 @@ class Limit_order_create(GrapheneObject):
         super(Limit_order_create, self).__init__(
             OrderedDict([
                 ('owner', String(kwargs["owner"])),
-                ('orderid', Uint32(int(kwargs["orderid"]))),
+                ('orderid', Uint32(kwargs["orderid"])),
                 ('amount_to_sell', Amount(kwargs["amount_to_sell"])),
                 ('min_to_receive', Amount(kwargs["min_to_receive"])),
                 ('fill_or_kill', Bool(kwargs["fill_or_kill"])),
+                ('expiration', PointInTime(kwargs["expiration"])),
+            ]))
+
+
+class Limit_order_create2(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        super(Limit_order_create2, self).__init__(
+            OrderedDict([
+                ('owner', String(kwargs["owner"])),
+                ('orderid', Uint32(kwargs["orderid"])),
+                ('amount_to_sell', Amount(kwargs["amount_to_sell"])),
+                ('fill_or_kill', Bool(kwargs["fill_or_kill"])),
+                ('exchange_rate', ExchangeRate(kwargs["exchange_rate"])),
                 ('expiration', PointInTime(kwargs["expiration"])),
             ]))
 
@@ -465,7 +533,7 @@ class Transfer_from_savings(GrapheneObject):
         super(Transfer_from_savings, self).__init__(
             OrderedDict([
                 ('from', String(kwargs["from"])),
-                ('request_id', Uint32(int(kwargs["request_id"]))),
+                ('request_id', Uint32(kwargs["request_id"])),
                 ('to', String(kwargs["to"])),
                 ('amount', Amount(kwargs["amount"])),
                 ('memo', String(kwargs["memo"])),
@@ -481,7 +549,7 @@ class Cancel_transfer_from_savings(GrapheneObject):
         super(Cancel_transfer_from_savings, self).__init__(
             OrderedDict([
                 ('from', String(kwargs["from"])),
-                ('request_id', Uint32(int(kwargs["request_id"]))),
+                ('request_id', Uint32(kwargs["request_id"])),
             ]))
 
 
@@ -514,4 +582,128 @@ class Transfer_to_savings(GrapheneObject):
                 ('to', String(kwargs["to"])),
                 ('amount', Amount(kwargs["amount"])),
                 ('memo', String(kwargs["memo"])),
+            ]))
+
+
+class Request_account_recovery(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        prefix = kwargs.get("prefix", default_prefix)
+        new_owner = Permission(kwargs["new_owner_authority"], prefix=prefix)
+        super(Request_account_recovery, self).__init__(
+            OrderedDict([
+                ('recovery_account', String(kwargs["recovery_account"])),
+                ('account_to_recover', String(kwargs["account_to_recover"])),
+                ('new_owner_authority', new_owner),
+                ('extensions', Array([])),
+            ]))
+
+
+class Recover_account(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        prefix = kwargs.get("prefix", default_prefix)
+        new_owner = Permission(kwargs["new_owner_authority"], prefix=prefix)
+        recent_owner = Permission(kwargs["recent_owner_authority"], prefix=prefix)
+        super(Recover_account, self).__init__(
+            OrderedDict([
+                ('account_to_recover', String(kwargs["account_to_recover"])),
+                ('new_owner_authority', new_owner),
+                ('recent_owner_authority', recent_owner),
+                ('extensions', Array([])),
+            ]))
+
+
+class Escrow_transfer(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        meta = ""
+        if "json_meta" in kwargs and kwargs["json_meta"]:
+            if (isinstance(kwargs["json_meta"], dict) or isinstance(kwargs["json_meta"], list)):
+                meta = json.dumps(kwargs["json_meta"])
+            else:
+                meta = kwargs["json_meta"]
+        super(Escrow_transfer, self).__init__(
+            OrderedDict([
+                ('from', String(kwargs["from"])),
+                ('to', String(kwargs["to"])),
+                ('agent', String(kwargs["agent"])),
+                ('escrow_id', Uint32(kwargs["escrow_id"])),
+                ('sbd_amount', Amount(kwargs["sbd_amount"])),
+                ('steem_amount', Amount(kwargs["steem_amount"])),
+                ('fee', Amount(kwargs["fee"])),
+                ('ratification_deadline', PointInTime(kwargs["ratification_deadline"])),
+                ('escrow_expiration', PointInTime(kwargs["escrow_expiration"])),
+                ('json_meta', String(meta)),
+            ]))
+
+
+class Escrow_dispute(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        super(Escrow_dispute, self).__init__(
+            OrderedDict([
+                ('from', String(kwargs["from"])),
+                ('to', String(kwargs["to"])),
+                ('who', String(kwargs["who"])),
+                ('escrow_id', Uint32(kwargs["escrow_id"])),
+            ]))
+
+
+class Escrow_release(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        super(Escrow_release, self).__init__(
+            OrderedDict([
+                ('from', String(kwargs["from"])),
+                ('to', String(kwargs["to"])),
+                ('who', String(kwargs["who"])),
+                ('escrow_id', Uint32(kwargs["escrow_id"])),
+                ('sbd_amount', Amount(kwargs["sbd_amount"])),
+                ('steem_amount', Amount(kwargs["steem_amount"])),
+            ]))
+
+
+class Escrow_approve(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        super(Escrow_approve, self).__init__(
+            OrderedDict([
+                ('from', String(kwargs["from"])),
+                ('to', String(kwargs["to"])),
+                ('agent', String(kwargs["agent"])),
+                ('who', String(kwargs["who"])),
+                ('escrow_id', Uint32(kwargs["escrow_id"])),
+                ('approve', Bool(kwargs["approve"])),
+            ]))
+
+
+class Decline_voting_rights(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        super(Decline_voting_rights, self).__init__(
+            OrderedDict([
+                ('account', String(kwargs["account"])),
+                ('decline', Bool(kwargs["decline"])),
             ]))

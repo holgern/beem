@@ -295,6 +295,29 @@ class Testcases(unittest.TestCase):
                    "f088273e4fafda89eb7de8")
         self.doit()
 
+    def test_order_create2(self):
+        self.op = operations.Limit_order_create2(
+            **{
+                "owner": "alice",
+                "orderid": 492991,
+                "amount_to_sell": ["1", 3, "@@000000013"],
+                "exchange_rate": {
+                    "base": ["1", 3, "@@000000013"],
+                    "quote": ["10", 3, "@@000000021"]
+                },
+                "fill_or_kill": False,
+                "expiration": "2017-05-12T23:11:13",
+                "prefix": default_prefix,
+            })
+
+        self.cm = ('f68585abf4dce7c80457011505616c696365bf85070001000000000000'
+                   '0003404030303030303030313300010000000000000003404030303030'
+                   '30303031330a0000000000000003404030303030303030323111411659'
+                   '0001205533a7f4eb0be6e5d1db4a67d7bfa693b7b81aa0aba01726b609'
+                   '01364785388440a8c5baf2a94c99465447af7a615ec9898d269560fa3a'
+                   'e56ed8f73e12411acf')
+        self.doit()
+
     def test_account_update(self):
         self.op = operations.Account_update(
             **{
@@ -635,7 +658,7 @@ class Testcases(unittest.TestCase):
             "account": "xeroc",
             "witness": "chainsquad",
             "approve": True,
-            "prefix": default_prefix
+            "prefix": default_prefix,
         })
 
         self.cm = (u"f68585abf4dce7c80457010c057865726f630a636"
@@ -643,6 +666,49 @@ class Testcases(unittest.TestCase):
                    "4c1624a3c4d3cf4daba700b8690f494e6add7ad9b"
                    "ac735ce7775d823aa66c160878cb3348e6857c531"
                    "114d229be0202dc0857f8f03a00369")
+        self.doit()
+
+    def test_witness_proxy(self):
+        self.op = operations.Account_witness_proxy(**{
+            "account": "alice",
+            "proxy": "bob",
+            "prefix": default_prefix,
+        })
+
+        self.cm = ('f68585abf4dce7c80457010d05616c69636503626f6'
+                   '20001202b1c0a06e514fd39d52138b08fe7e6736592'
+                   '5891b0ed0839686ed900adf33aa9281e95ee1e50184'
+                   'a3b41b7acab0456c83243ebdccfd17e10e7ab94e09fb'
+                   '96309')
+        self.doit()
+
+    def test_custom(self):
+        self.op = operations.Custom(
+            **{
+                "required_auths": ["bytemaster"],
+                "id": 777,
+                "data": '0a627974656d617374657207737465656d697402a3d1389'
+                        '7d82114466ad87a74b73a53292d8331d1bd1d3082da6bfbc'
+                        'ff19ed097029db013797711c88cccca3692407f9ff9b9ce72'
+                        '21aaa2d797f1692be2215d0a5f6d2a8cab6832050078bc5729'
+                        '201e3ea24ea9f7873e6dbdc65a6bd9899053b9acda876dc69f1'
+                        '1a13df9ca8b26b6',
+                "prefix": default_prefix,
+            })
+
+        self.cm = ('f68585abf4dce7c80457010f010a627974656d6173746572090384023'
+                   '061363237393734363536643631373337343635373230373733373436'
+                   '353635366436393734303261336431333839376438323131343436366'
+                   '164383761373462373361353332393264383333316431626431643330'
+                   '383264613662666263666631396564303937303239646230313337393'
+                   '737313163383863636363613336393234303766396666396239636537'
+                   '323231616161326437393766313639326265323231356430613566366'
+                   '432613863616236383332303530303738626335373239323031653365'
+                   '613234656139663738373365366462646336356136626439383939303'
+                   '533623961636461383736646336396631316131336466396361386232'
+                   '3662360001203f60bbd0d7595c1e5cf7a6314a14117a94898121b28f1'
+                   '5992820e0fae14188ac0d352b7d96aba83ea808329afedddc1e3d7c43'
+                   '85d23fb9331a68795ba9e7ed08')
         self.doit()
 
     def test_custom_json(self):
@@ -708,26 +774,263 @@ class Testcases(unittest.TestCase):
                    "0907b2e2213940f34f2c")
         self.doit()
 
+    def test_change_recovery_account(self):
+        self.op = operations.Change_recovery_account(
+            **{
+                "account_to_recover": "barrie",
+                "extensions": [],
+                "new_recovery_account": "boombastic",
+                "prefix": default_prefix,
+            })
 
-"""
-    def test_call_update(self):
-        self.op = operations.Call_order_update(**{
-            'fee': {'amount': 100,
-                    'asset_id': '1.3.0'},
-            'delta_debt': {'amount': 10000,
-                           'asset_id': '1.3.22'},
-            'delta_collateral': {'amount': 100000000,
-                                 'asset_id': '1.3.0'},
-            'funding_account': '1.2.29',
-            'extensions': []
-        })
-        self.cm = ("f68585abf4dce7c8045701036400000000000000001d00e1f"
-                   "50500000000001027000000000000160000011f2627efb5c5"
-                   "144440e06ff567f1a09928d699ac6f5122653cd7173362a1a"
-                   "e20205952c874ed14ccec050be1c86c1a300811763ef3b481"
-                   "e562e0933c09b40e31fb")
+        self.cm = ('f68585abf4dce7c80457011a066261727269650a626f6f6d6261'
+                   '737469630000011f5513c021e89be2c4d8a725dc9b89334ffcde'
+                   '6a9535487f4b6d42f93de1722c251fd9d4ec414335dc41ea081a'
+                   'a7a4d27b179b1a07d3415f7e0a6190852b86ecde')
         self.doit()
 
+    def test_request_account_recovery(self):
+        self.op = operations.Request_account_recovery(
+            **{
+                "recovery_account": "steem",
+                "account_to_recover": "alice",
+                "new_owner_authority": {
+                    "weight_threshold": 1,
+                    "account_auths": [],
+                    "key_auths": [
+                        [
+                            "STM6LYxj96zdypHYqgDdD6Nyh2NxerN3P1Mp3ddNm7gci63nfrSuZ",
+                            1
+                        ]
+                    ]
+                },
+                "extensions": [],
+                "prefix": default_prefix,
+            })
+
+        self.cm = ('f68585abf4dce7c80457011805737465656d05616c69636501000000000102'
+                   'bedf9f3cf1655dc635d2b7fd43e1d0ab6eafbc443f6fd013de0cb2e8a11fbc'
+                   '8901000000011f7a23a45fe0d5824201cf4fad0bcc5c3564156c0d4217df10'
+                   'acd544786e3f407d38b149afc41387090ef95b719bc5264954011ddf21e861'
+                   'be37f29998286e55e5')
+        self.doit()
+
+    def test_recover_account(self):
+        self.op = operations.Recover_account(
+            **{
+                "account_to_recover": "alice",
+                "new_owner_authority": {
+                    "weight_threshold": 1,
+                    "account_auths": [],
+                    "key_auths": [
+                        [
+                            "STM7j3nhkhHTpXqLEvdx2yEGhQeeorTcxSV6WDL2DZGxwUxYGrHvh",
+                            1
+                        ]
+                    ]
+                },
+                "recent_owner_authority": {
+                    "weight_threshold": 1,
+                    "account_auths": [],
+                    "key_auths": [
+                        [
+                            "STM78Xth94gNxp8nmByFV2vNAhg9bsSdviJ6fQXUTFikySLK3uTxC",
+                            1
+                        ]
+                    ]
+                },
+                "extensions": [],
+                "prefix": default_prefix,
+            })
+        self.cm = ('f68585abf4dce7c80457011905616c6963650100000000010375a6dfff76'
+                   '49647cc074d86386862087a154088d952da64af9dac429559a8d0c010001'
+                   '0000000001032747c05d4aa44704a196493e1fa0c26137abfca64991a9b9'
+                   'faeb9204ee9897ef01000000011f31e1794992a1573c3d2909cd10405d0f'
+                   'ea3c5dd77aac04391af76bd51becee7360775fa79f23e898ceebaae74e8c'
+                   'a079ba7a6bef2c359bb349033dff9a0ccc26')
+
+        self.doit()
+
+    def test_escrow_transfer(self):
+        self.op = operations.Escrow_transfer(
+            **{
+                "from": "alice",
+                "to": "bob",
+                "sbd_amount": ["1000", 3, "@@000000013"],
+                "steem_amount": ["0", 3, "@@000000021"],
+                "escrow_id": 23456789,
+                "agent": "charlie",
+                "fee": ["100", 3, "@@000000013"],
+                "json_meta": "{}",
+                "ratification_deadline": "2017-02-26T11:22:39",
+                "escrow_expiration": "2017-02-28T11:22:39",
+                "prefix": default_prefix,
+            })
+
+        self.cm = ('f68585abf4dce7c80457011b05616c69636503626f6207636861726c69'
+                   '6515ec6501e80300000000000003404030303030303030313300000000'
+                   '0000000003404030303030303030323164000000000000000340403030'
+                   '303030303031337fbab2587f5db558027b7d0001203010ea007a004440'
+                   '5789923653541fafb0e72c9f5f14cff24307d9fc68d3e3914bd0eca8d7'
+                   'ab62a9c639a49594dd35dc06d361ac1e4aea5f9536fc3c9315a5db')
+        self.doit()
+
+    def test_escrow_dispute(self):
+        self.op = operations.Escrow_dispute(
+            **{
+                "from": "alice",
+                "to": "bob",
+                "who": "alice",
+                "escrow_id": 72526562,
+                "prefix": default_prefix,
+            })
+
+        self.cm = ('f68585abf4dce7c80457011c05616c69636503626f6205616c696365e2'
+                   'aa520400012009742d35b45cbd9b9612429dda6873ac1d8bab66066e66'
+                   '01858cde0adf55cfb445d6a8be7a400a594e0d4e603af932a6b610087a'
+                   '30129b8682631ca9d6571714')
+        self.doit()
+
+    def test_escrow_release(self):
+        self.op = operations.Escrow_release(
+            **{
+                "from": "alice",
+                "to": "bob",
+                "who": "charlie",
+                "escrow_id": 72526562,
+                "sbd_amount": ["5000", 3, "@@000000013"],
+                "steem_amount": ["0", 3, "@@000000021"],
+                "prefix": default_prefix,
+            })
+
+        self.cm = ('f68585abf4dce7c80457011d05616c69636503626f6207636861726c69'
+                   '65e2aa5204881300000000000003404030303030303030313300000000'
+                   '000000000340403030303030303032310001201bcc5cb0f6bc1083dd24'
+                   'ddcd7415d69a57d54b065c9e6c96ebc04a68ed709758438b226ee19cca'
+                   '39b6df49406f029f61d59a29f9cd14bc081a551fd19df199f1')
+        self.doit()
+
+    def test_escrow_approve(self):
+        self.op = operations.Escrow_approve(
+            **{
+                "from": "alice",
+                "to": "bob",
+                "agent": "charlie",
+                "who": "charlie",
+                "escrow_id": 59102208,
+                "approve": True,
+                "prefix": default_prefix,
+            })
+
+        self.cm = ('f68585abf4dce7c80457011f05616c69636503626f6207636861726c69'
+                   '6507636861726c696500d485030100012054baed32863a307ed68c3af8'
+                   '6f42608ef35c24c3a82c12d9baaa854345f4812a048fdc819ec7e01b0f'
+                   '28f6eb8357de1cb8127df29b255fa78fa1bdd267e7d5fc')
+        self.doit()
+
+    def test_decline_voting_rights(self):
+        self.op = operations.Decline_voting_rights(
+            **{
+                "account": "judy",
+                "decline": True,
+                "prefix": default_prefix,
+            })
+
+        self.cm = ('f68585abf4dce7c804570124046a7564790100011f5bedbccb7042c5ab'
+                   '8d6debf579bca485a4cc8f95c64515d1885339c416a64d9f26fac5f01c'
+                   'c3f248297cb3af921103777638bb727f5ef9bd3c3f66953167ee42')
+        self.doit()
+
+    def test_claim_reward_balance(self):
+        self.op = operations.Claim_reward_balance(
+            **{
+                "account": "alice",
+                "reward_steem": ["17", 3, "@@000000021"],
+                "reward_sbd": ["11", 3, "@@000000013"],
+                "reward_vests": ["185025103", 6, "@@000000037"],
+                "prefix": default_prefix,
+            })
+
+        self.cm = ('f68585abf4dce7c80457012705616c6963651100000000000000034040'
+                   '3030303030303032310b00000000000000034040303030303030303133'
+                   '4f42070b000000000640403030303030303033370001205caa9ba8b92b'
+                   '814f3d1ecfb581d8d98f898b4c174200ee9bc5c9fb9c98b0e6672fbb67'
+                   'cccc2fe64df386285270b9a1f67b2d1a69883a11ce9197b52f0c227649')
+        self.doit()
+
+    def test_delegate_vesting_shares(self):
+        self.op = operations.Delegate_vesting_shares(
+            **{
+                "delegator": "alice",
+                "delegatee": "bob",
+                "vesting_shares": ["94599167138276", 6, "@@000000037"],
+                "prefix": default_prefix,
+            })
+
+        self.cm = ('f68585abf4dce7c80457012805616c69636503626f62e4d9c095095600'
+                   '0006404030303030303030333700011f4573eaedaff15f6398cdb12a44'
+                   '252ef484b163e5e426b6c777005484d3c6c2aa137b9d4a1265d7360192'
+                   'be339d281c7725f0087ae39bd9acd0f2aa3a7fd96369')
+        self.doit()
+
+    def test_account_create_with_delegation(self):
+        self.op = operations.Account_create_with_delegation(
+            **{
+                "fee": ["3000", 3, "@@000000021"],
+                "delegation": ["0", 6, "@@000000037"],
+                "creator": "steemit",
+                "new_account_name": "alice",
+                "owner": {
+                    "weight_threshold": 1,
+                    "account_auths": [],
+                    "key_auths": [
+                        [
+                            "STM5Tki3ecCdCCHCjhhwvQvXuKryL2s34Ma6CXsRzntSUTYVYxCQ9",
+                            1
+                        ]
+                    ]
+                },
+                "active": {
+                    "weight_threshold": 1,
+                    "account_auths": [],
+                    "key_auths": [
+                        [
+                            "STM6LUoAA8gCL9tHRz7v9xcwR4ZWD3KDRHP5t1U7UAZHdfanLxyBE",
+                            1
+                        ]
+                    ]
+                },
+                "posting": {
+                    "weight_threshold": 1,
+                    "account_auths": [],
+                    "key_auths": [
+                        [
+                            "STM8anmpHdfVE4AmwsDpcSXpRsydHysEbv6vGJkRQy1d1CC83zeTA",
+                            1
+                        ]
+                    ]
+                },
+                "memo_key": "STM67RYDyEkP1Ja1jFehJ45BFGA9oHHUnRnYbxKJEtMhVQiHW3S3k",
+                "json_metadata": "{}",
+                "extensions": [],
+                "prefix": default_prefix,
+            })
+
+        self.cm = ('f68585abf4dce7c804570129b80b000000000000034040303030303030'
+                   '303231000000000000000006404030303030303030333707737465656d'
+                   '697405616c696365010000000001024b881ad188574738041f9ad6621f'
+                   '5fd784d51ce19e8379285d800aff65ef72db010001000000000102beb5'
+                   'e1610bde9c7c7f91d181356653981a60de0c5753f88bc31b29e6853866'
+                   'c2010001000000000103e6985b4e8884a4a225030a8521c688a1c7c4ef'
+                   '2fcfc0398e1a7024b0544e6c7b010002a1109a3fdce014bb6a720432f7'
+                   '4e38731b420cbd2ac6137de140904b142da2d4027b7d0000011f7fa92a'
+                   '03a864d9bef607e31c4bdf9611e3500acf3d2be60f464f9ecd6d407117'
+                   '76e0971c759b0b7ce84539716f74e17dad1634aff527151a2ee030675f'
+                   'a866eb')
+        self.doit()
+
+
+"""
     def test_limit_order_create(self):
         self.op = operations.Limit_order_create(**{
             "fee": {"amount": 100,
@@ -749,34 +1052,6 @@ class Testcases(unittest.TestCase):
                    "ae8d9b04af76cc0a7de8b6e30b71167db7fe8e2197ef9d858df18"
                    "77043493bc24ffdaaffe592357831c978fd8a296b913979f106de"
                    "be940d60d77b50")
-        self.doit()
-
-    def test_limit_order_cancel(self):
-        self.op = operations.Limit_order_cancel(**{
-            "fee": {"amount": 0,
-                    "asset_id": "SBD"
-                    },
-            "fee_paying_account": "1.2.104",
-            "order": "1.7.51840",
-            "extensions": []
-        })
-        self.cm = ("f68585abf4dce7c8045701020000000000000000006880950300000"
-                   "11f3fb754814f3910c1a8845486b86057d2b4588ae559b4c3810828"
-                   "c0d4cbec0e5b23517937cd7e0cc5ee8999d0777af7fe56d3c4b2e58"
-                   "7421bfb7400d4efdae97a")
-        self.doit()
-
-    def test_proposal_update(self):
-        self.op = operations.Proposal_update(**{
-            'fee_paying_account': "1.2.1",
-            'proposal': "1.10.90",
-            'active_approvals_to_add': ["1.2.5"],
-            "fee": objects.Asset(amount=12512, asset_id="SBD"),
-        })
-        self.cm = ("f68585abf4dce7c804570117e03000000000000000015a01050000000"
-                   "000000001203255378db6dc19443e74421c954ad7fdcf23f4ea45fe4f"
-                   "e5a1b078a0f94fb529594819c9799d68efa5cfb5b271a9333a2f516ca"
-                   "4fb5093226275f48a42d9e8cf")
         self.doit()
 
     def test_transfer(self):
@@ -822,463 +1097,6 @@ class Testcases(unittest.TestCase):
                    "8e641948")
         self.doit()
 
-    def test_pricefeed(self):
-        feed = objects.PriceFeed(**{
-            "settlement_price": objects.Price(
-                base=objects.Asset(amount=214211, asset_id="SBD"),
-                quote=objects.Asset(amount=1241, asset_id="STEEM"),
-            ),
-            "core_exchange_rate": objects.Price(
-                base=objects.Asset(amount=1241, asset_id="SBD"),
-                quote=objects.Asset(amount=6231, asset_id="STEEM"),
-            ),
-            "maximum_short_squeeze_ratio": 1100,
-            "maintenance_collateral_ratio": 1750,
-        })
-
-        self.op = operations.Asset_publish_feed(
-            fee=objects.Asset(amount=100, asset_id="1.3.0"),
-            publisher="1.2.0",
-            asset_id="1.3.3",
-            feed=feed
-        )
-        self.cm = ("f68585abf4dce7c8045701136400000000000000000003c344030"
-                   "00000000000d9040000000000000ed6064c04d904000000000000"
-                   "0057180000000000000e0000012009e13f9066fedc3c8c1eb2ac3"
-                   "3b15dc67ecebf708890d0f8ab62ec8283d1636002315a189f1f5a"
-                   "a8497b41b8e6bb7c4dc66044510fae25d8f6aebb02c7cdef10")
-        self.doit()
-
-    def test_fee_pool(self):
-        self.op = operations.Asset_fund_fee_pool(**{
-            "fee": {"amount": 10001,
-                    "asset_id": "1.3.0"
-                    },
-            "from_account": "1.2.282",
-            "asset_id": "1.3.32",
-            "amount": 15557238,
-            "extensions": []
-        })
-        self.cm = ("f68585abf4dce7c8045701101127000000000000009a02207662"
-                   "ed00000000000000011f39f7dc7745076c9c7e612d40c68ee92d"
-                   "3f4b2696b1838037ce2a35ac259883ba6c6c49d91ad05a7e78d8"
-                   "0bb83482c273dbbc911587487bf468b85fb4f537da3d")
-        self.doit()
-
-    def test_override_transfer(self):
-        self.op = operations.Override_transfer(**{
-            "fee": {"amount": 0,
-                    "asset_id": "1.3.0"},
-            "issuer": "1.2.29",
-            "from": "1.2.104",
-            "to": "1.2.29",
-            "amount": {"amount": 100000,
-                       "asset_id": "1.3.105"},
-            "extensions": []
-        })
-        self.cm = ("f68585abf4dce7c8045701260000000000000000001d681da086"
-                   "01000000000069000000012030cc81722c3e67442d2f59deba18"
-                   "8f6079c8ba2d8318a642e6a70a125655515f20e2bd3adb2ea886"
-                   "cdbc7f6590c7f8c80818d9176d9085c176c736686ab6c9fd")
-        self.doit()
-
-    def test_create_account(self):
-        self.op = operations.Account_create(**{
-            "fee": {"amount": 1467634,
-                    "asset_id": "1.3.0"
-                    },
-            "registrar": "1.2.33",
-            "referrer": "1.2.27",
-            "referrer_percent": 3,
-            "name": "foobar-f124",
-            "owner": {"weight_threshold": 1,
-                      "account_auths": [],
-                      'key_auths': [['BTS6pbVDAjRFiw6fkiKYCrkz7PFeL7XNAfefrsREwg8MKpJ9VYV9x',
-                                    1], [
-                                    'BTS6zLNtyFVToBsBZDsgMhgjpwysYVbsQD6YhP3kRkQhANUB4w7Qp',
-                                    1]],
-                      "address_auths": []
-                      },
-            "active": {"weight_threshold": 1,
-                       "account_auths": [],
-                       'key_auths': [['BTS6pbVDAjRFiw6fkiKYCrkz7PFeL7XNAfefrsREwg8MKpJ9VYV9x',
-                                      1], [
-                                     'BTS6zLNtyFVToBsBZDsgMhgjpwysYVbsQD6YhP3kRkQhANUB4w7Qp',
-                                     1], [
-                                     'BTS8CemMDjdUWSV5wKotEimhK6c4dY7p2PdzC2qM1HpAP8aLtZfE7',
-                                     1
-                                     ]],
-                       "address_auths": []
-                       },
-            "options": {"memo_key": "BTS5TPTziKkLexhVKsQKtSpo4bAv5RnB8oXcG4sMHEwCcTf3r7dqE",
-                        "voting_account": "1.2.5",
-                        "num_witness": 0,
-                        "num_committee": 0,
-                        "votes": [],
-                        "extensions": []
-                        },
-            "extensions": {
-                "buyback_options": {
-                    "asset_to_buy": "1.3.127",
-                    "asset_to_buy_issuer": "1.2.31",
-                    "markets": ["1.3.20"]},
-                "null_ext": {},
-                "owner_special_authority":
-                    [1, {"asset": "1.3.127",
-                         "num_top_holders": 10}]
-            },
-            "prefix": "BTS"
-        })
-        self.cm = ("f68585abf4dce7c804570105f26416000000000000211b03000b666f"
-                   "6f6261722d6631323401000000000202fe8cc11cc8251de6977636b5"
-                   "5c1ab8a9d12b0b26154ac78e56e7c4257d8bcf6901000314aa202c91"
-                   "58990b3ec51a1aa49b2ab5d300c97b391df3beb34bb74f3c62699e01"
-                   "000001000000000303b453f46013fdbccb90b09ba169c388c34d8445"
-                   "4a3b9fbec68d5a7819a734fca0010002fe8cc11cc8251de6977636b5"
-                   "5c1ab8a9d12b0b26154ac78e56e7c4257d8bcf6901000314aa202c91"
-                   "58990b3ec51a1aa49b2ab5d300c97b391df3beb34bb74f3c62699e01"
-                   "0000024ab336b4b14ba6d881675d1c782912783c43dbbe31693aa710"
-                   "ac1896bd7c3d6105000000000000030001017f0a037f1f0114000120"
-                   "508168b9615d48bd11846b3b9bcf000d1424a7915fb1cfa7f61150b5"
-                   "435c060b3147c056a1f889633c43d1b88cb463e8083fa2b62a585af9"
-                   "e1b7a7c23d83ae78")
-        self.doit()
-
-    def test_update_account(self):
-        self.op = operations.Account_update(**{
-            "fee": {"amount": 1467634,
-                    "asset_id": "1.3.0"
-                    },
-            "account": "1.2.15",
-            "owner": {"weight_threshold": 1,
-                      "account_auths": [["1.2.96086", 1]],
-                      'key_auths': [['BTS6pbVDAjRFiw6fkiKYCrkz7PFeL7XNAfefrsREwg8MKpJ9VYV9x',
-                                    1]],
-                      "address_auths": []
-                      },
-            "active": {"weight_threshold": 1,
-                       "account_auths": [["1.2.96086", 1]],
-                       'key_auths': [['BTS8CemMDjdUWSV5wKotEimhK6c4dY7p2PdzC2qM1HpAP8aLtZfE7',
-                                     1]],
-                       "address_auths": []
-                       },
-            "new_options": {"memo_key": "BTS5TPTziKkLexhVKsQKtSpo4bAv5RnB8oXcG4sMHEwCcTf3r7dqE",
-                            "voting_account": "1.2.5",
-                            "num_witness": 0,
-                            "num_committee": 0,
-                            "votes": [],
-                            "extensions": []
-                            },
-            "extensions": {},
-            "prefix": "BTS"
-        })
-        self.cm = ("f68585abf4dce7c804570106f264160000000000000"
-                   "f010100000001d6ee0501000102fe8cc11cc8251de6"
-                   "977636b55c1ab8a9d12b0b26154ac78e56e7c4257d8"
-                   "bcf69010000010100000001d6ee0501000103b453f4"
-                   "6013fdbccb90b09ba169c388c34d84454a3b9fbec68"
-                   "d5a7819a734fca001000001024ab336b4b14ba6d881"
-                   "675d1c782912783c43dbbe31693aa710ac1896bd7c3"
-                   "d61050000000000000000011f78b989df5ab29697a3"
-                   "311f8d7fa8599c548a93809e173ab550b7d8c5051fa"
-                   "432699d8e24ea82399990c43528ddaf2b3cd8cd2500"
-                   "1c91f8094d66ae2620effc25")
-        self.doit()
-
-    def test_create_proposal(self):
-        self.op = operations.Proposal_create(**{
-            "fee": {"amount": 0,
-                    "asset_id": "1.3.0"
-                    },
-            "fee_paying_account": "1.2.0",
-            "expiration_time": "1970-01-01T00:00:00",
-            "proposed_ops": [{
-                "op": [
-                    0, {"fee": {"amount": 0,
-                                "asset_id": "1.3.0"
-                                },
-                        "from": "1.2.0",
-                        "to": "1.2.0",
-                        "amount": {"amount": 0,
-                                   "asset_id": "1.3.0"
-                                   },
-                        "extensions": []}]}],
-            "extensions": []
-        })
-        self.cm = ("f68585abf4dce7c80457011600000000000000000000000000"
-                   "00010000000000000000000000000000000000000000000000"
-                   "00000001204baf7f11a7ff12337fc097ac6e82e7b68f82f02c"
-                   "c7e24231637c88a91ae5716674acec8a1a305073165c65e520"
-                   "a64769f5f62c0301ce21ab4f7c67a6801b4266")
-        self.doit()
-
-    def test_whitelist(self):
-        self.op = operations.Account_whitelist(**{
-            "fee": {"amount": 0,
-                    "asset_id": "1.3.0"},
-            "authorizing_account": "1.2.0",
-            "account_to_list": "1.2.1",
-            "new_listing": 0x1,
-            "extensions": []
-        })
-        self.cm = ("f68585abf4dce7c8045701070000000000000000000001010"
-                   "000011f14eef2978e40b369273907072dddf4b4043d9f3a08"
-                   "da125311c4e6b54b3e7c2a3606594fab7cf6ce381544eceda"
-                   "9945c8c9fccebd587cfa2d2f6a146b1639f8c")
-        self.doit()
-
-    def test_vesting_withdraw(self):
-        self.op = operations.Vesting_balance_withdraw(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
-            "vesting_balance": "1.13.0",
-            "owner": "1.2.0",
-            "amount": {"amount": 0, "asset_id": "1.3.0"},
-            "prefix": "TEST"
-        })
-        self.cm = ("f68585abf4dce7c80457012100000000000000000000"
-                   "0000000000000000000000011f07ae9b0d1cb494e248"
-                   "6b99cccdf78ef8b785522af8f2233de364d4455c0626"
-                   "935d2d32414a2f7a6b9cdf3451730062965adeec8aa2"
-                   "03fca97f608411dce84309")
-        self.doit()
-
-    def test_upgrade_account(self):
-        self.op = operations.Account_upgrade(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
-            "account_to_upgrade": "1.2.0",
-            "upgrade_to_lifetime_member": True,
-            "prefix": prefix,
-        })
-        self.cm = ("f68585abf4dce7c804570108000000000000000000000100000"
-                   "11f4e42562ada1d3fed8f8eb51dd58117e3a4024959c46955a0"
-                   "0d2a7e7e8b40ae7204f4617913aaaf028248d43e8c3463b8776"
-                   "0ca569007dba99a2c49de75bd69b3")
-        self.doit()
-
-    def test_witness_update(self):
-        self.op = operations.Witness_update(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
-            "prefix": "TEST",
-            "witness": "1.6.63",
-            "witness_account": "1.2.212",
-            "new_url": "https://example.com",
-            "new_signing_key": "BTS5vfCLKyXYb44znYjbrJXCyvvx3SuifhmvemnQsdbf61EtoR36z"
-        })
-        self.cm = ("f68585abf4dce7c8045701150000000000000000003fd401011"
-                   "368747470733a2f2f6578616d706c652e636f6d0102889f66e3"
-                   "584423e86b615e3b07593ebec4b1ac0e08ad4a3748f0726dae7"
-                   "c874f0001205628a49ef823ab54f4b4c56304f5ac57bdc3768c"
-                   "62ac630a92de9858f5d90fad01c43bdc406293edad734d53dca"
-                   "a1c96546a50e3ec96d07cf1224ed329177af5")
-        self.doit()
-
-    def test_feed_producer_update(self):
-        self.op = operations.Asset_update_feed_producers(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
-            "issuer": "1.2.214",
-            "asset_to_update": "1.3.132",
-            "new_feed_producers": ["1.2.214", "1.2.341", "1.2.2414"],
-            "extensions": []
-        })
-        self.cm = ("f68585abf4dce7c80457010d000000000000000000d60184010"
-                   "3d601d502ee120000011f34dc3aafe350f3f8608cc3d0db3b64"
-                   "a8f40b60d3528c9fa9e88fc3185fc27f4922ef5612f657205ad"
-                   "6fc6fed68ec78c4776e1fd125278ab03c8477b37e4c569a")
-        self.doit()
-
-    def test_asset_reserve(self):
-        self.op = operations.Asset_reserve(**{
-            "fee": {"amount": 0, "asset_id": "1.3.0"},
-            "payer": "1.2.0",
-            "amount_to_reserve": {"amount": 1234567890, "asset_id": "1.3.0"},
-            "extensions": []
-        })
-        self.cm = ("f68585abf4dce7c80457010f00000000000000000000d202964"
-                   "900000000000000011f75065cb1155bfcaabaf55d3357d69679"
-                   "c7c1fe589b6dc0919fe1dde1a305009c360823a40c28907299a"
-                   "40c241db9cad86e27369d0e5a76b5832d585505ff177d")
-        self.doit()
-
-    def test_bid_collateral(self):
-        self.op = operations.Bid_collateral(**{
-            'fee': {'amount': 100,
-                    'asset_id': '1.3.0'},
-            'additional_collateral': {
-                'amount': 10000,
-                'asset_id': '1.3.22'},
-            'debt_covered': {
-                'amount': 100000000,
-                'asset_id': '1.3.0'},
-            'bidder': '1.2.29',
-            'extensions': []
-        })
-        self.cm = ("f68585abf4dce7c80457012d6400000000000000001d1027000"
-                   "0000000001600e1f50500000000000000012043b82194bce84d"
-                   "80b6e03eecf1dc24366fc54ca3d4733b3eb3815ca22e4b38b71"
-                   "dff62b3d8f151b15a06eb4ae40fce964044297f8632b4817de6"
-                   "2e94750ce2c5")
-        self.doit()
-
-    def test_asset_create(self):
-        self.op = operations.Asset_create(**{
-            "fee": {
-                "amount": 0,
-                "asset_id": "1.3.0"
-            },
-            "issuer": "1.2.0",
-            "symbol": "THING",
-            "precision": 0,
-            "common_options": {
-                "max_supply": "1000000000000000",
-                "market_fee_percent": 0,
-                "max_market_fee": "1000000000000000",
-                "issuer_permissions": 79,
-                "flags": 0,
-                "core_exchange_rate": {
-                    "base": {
-                        "amount": 0,
-                        "asset_id": "1.3.0"
-                    },
-                    "quote": {
-                        "amount": 0,
-                        "asset_id": "1.3.0"
-                    }
-                },
-                "whitelist_authorities": ["1.2.0"],
-                "blacklist_authorities": ["1.2.1"],
-                "whitelist_markets": ["1.3.0"],
-                "blacklist_markets": ["1.3.1"],
-                "description": "Foobar think",
-                "extensions": []
-            },
-            "bitasset_opts": {
-                "feed_lifetime_sec": 86400,
-                "minimum_feeds": 7,
-                "force_settlement_delay_sec": 86400,
-                "force_settlement_offset_percent": 100,
-                "maximum_force_settlement_volume": 50,
-                "short_backing_asset": "1.3.0",
-                "extensions": []
-            },
-            "is_prediction_market": False,
-            "extensions": []
-        })
-        self.cm = ("f68585abf4dce7c80457010a000000000000000000000554484"
-                   "94e47000080c6a47e8d030000000080c6a47e8d03004f000000"
-                   "000000000000000000000000000000000000010001010100010"
-                   "10c466f6f626172207468696e6b000180510100078051010064"
-                   "0032000000000000011f1b8ac491bb327921d9346d543e530d8"
-                   "8acb68bade58296a7a27b0a74a28eaca762260dbb905a6415f6"
-                   "225a8028a810de6290badc29d16fea0ffd88bc8c0cbec4")
-        self.doit()
-
-    def test_asset_update(self):
-        self.op = operations.Asset_update(**{
-            "fee": {
-                "amount": 0,
-                "asset_id": "1.3.0"
-            },
-            "issuer": "1.2.0",
-            "asset_to_update": "1.3.0",
-            "new_options": {
-                "max_supply": "1000000000000000",
-                "market_fee_percent": 0,
-                "max_market_fee": "1000000000000000",
-                "issuer_permissions": 79,
-                "flags": 0,
-                "core_exchange_rate": {
-                    "base": {
-                        "amount": 0,
-                        "asset_id": "1.3.0"
-                    },
-                    "quote": {
-                        "amount": 0,
-                        "asset_id": "1.3.0"
-                    }
-                },
-                "whitelist_authorities": [],
-                "blacklist_authorities": [],
-                "whitelist_markets": [],
-                "blacklist_markets": [],
-                "description": "",
-                "extensions": []
-            },
-            "extensions": []
-        })
-        self.cm = ("f68585abf4dce7c80457010b000000000000000000000000008"
-                   "0c6a47e8d030000000080c6a47e8d03004f0000000000000000"
-                   "000000000000000000000000000000000000000000011f51477"
-                   "1af6ac47a12a387979b6452afcd3f50514277efd7938f5227a7"
-                   "fe7287db529d251e2b7c31d4a2d8ed59035b78b64f95e6011d9"
-                   "58ab9504008a56c83cbb6")
-        self.doit()
-
-    def test_asset_update_bitasset(self):
-        self.op = operations.Asset_update_bitasset(**{
-            "fee": {
-                "amount": 0,
-                "asset_id": "1.3.0"
-            },
-            "issuer": "1.2.0",
-            "asset_to_update": "1.3.0",
-            "new_options": {
-                "feed_lifetime_sec": 86400,
-                "minimum_feeds": 1,
-                "force_settlement_delay_sec": 86400,
-                "force_settlement_offset_percent": 0,
-                "maximum_force_settlement_volume": 2000,
-                "short_backing_asset": "1.3.0",
-                "extensions": []
-            },
-            "extensions": []
-        })
-        self.cm = ("f68585abf4dce7c80457010c000000000000000000000080510"
-                   "10001805101000000d0070000000001205e7fed2110783b4fe9"
-                   "ec1f1a71ad0325fce04fd11d03a534baac5cf18c52c91e6fdae"
-                   "b76cff9d480a96500cbfde214cadd436e8f66aa61ad3f14973e"
-                   "42406eca")
-        self.doit()
-
-    def test_asset_issue(self):
-        message = "abcdefgABCDEFG0123456789"
-        nonce = "5862723643998573708"
-        pub = format(account.PrivateKey(wif).pubkey, prefix)
-        encrypted_memo = memo.encode_memo(
-            account.PrivateKey(wif),
-            account.PublicKey(pub, prefix=prefix),
-            nonce,
-            message
-        )
-        self.op = operations.Asset_issue(**{
-            "fee": {
-                "amount": 0,
-                "asset_id": "1.3.0"
-            },
-            "issuer": "1.2.0",
-            "asset_to_issue": {
-                "amount": 0,
-                "asset_id": "1.3.0"
-            },
-            "memo": {
-                "from": pub,
-                "to": pub,
-                "nonce": nonce,
-                "message": encrypted_memo,
-            },
-            "issue_to_account": "1.2.0",
-            "extensions": [],
-            "prefix": prefix
-        })
-        self.cm = ("f68585abf4dce7c80457010e000000000000000000000000000"
-                   "00000000000000102c0ded2bc1f1305fb0faac5e6c03ee3a192"
-                   "4234985427b6167ca569d13df435cf02c0ded2bc1f1305fb0fa"
-                   "ac5e6c03ee3a1924234985427b6167ca569d13df435cf8c94d1"
-                   "9817945c5120fa5b6e83079a878e499e2e52a76a7739e9de409"
-                   "86a8e3bd8a68ce316cee50b210000012055139900ea2ae7db9d"
-                   "4ef0d5d4015d2d993d0590ad32662bda94daba74a5e13411aef"
-                   "4de6f847e9e4300e5c8c36aa8e5f9032d25fd8ca01abd58c7e9"
-                   "528677e4")
-        self.doit()
 
     def self.cmConstructedTX(self):
         self.maxDiff = None
