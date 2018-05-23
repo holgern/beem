@@ -31,7 +31,7 @@ class Vote(BlockchainObject):
         .. code-block:: python
 
            >>> from beem.vote import Vote
-           >>> v = Vote("@gtg/ffdhu-gtg-witness-log|gandalf")
+           >>> v = Vote("@gtg/steem-pressure-4-need-for-speed|gandalf")
 
     """
     type_id = 11

@@ -467,7 +467,6 @@ class Testcases(unittest.TestCase):
         self.assertTrue(abs(op_num1 - op_num2) < 2)
         self.assertTrue(abs(op_num1 - op_num4) < 2)
         self.assertTrue(abs(op_num1 - op_num3) < 200)
-        block_diff = 0
         block_diff1 = 0
         block_diff2 = 0
         for h in account.get_account_history(op_num4 - 1, 0):
