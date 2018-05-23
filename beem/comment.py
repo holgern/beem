@@ -19,6 +19,7 @@ from .blockchainobject import BlockchainObject
 from .exceptions import ContentDoesNotExistsException, VotingInvalidOnArchivedPost
 from beembase import operations
 from beemgraphenebase.py23 import py23_bytes, bytes_types, integer_types, string_types, text_type
+from beem.constants import STEEM_REVERSE_AUCTION_WINDOW_SECONDS, STEEM_100_PERCENT, STEEM_1_PERCENT
 log = logging.getLogger(__name__)
 
 
@@ -291,7 +292,7 @@ class Comment(BlockchainObject):
             elapsed_seconds = (vote_time - self["created"]).total_seconds()
         else:
             raise ValueError("vote_time must be a string or a datetime")
-        reward = (elapsed_seconds / 1800)
+        reward = (elapsed_seconds / STEEM_REVERSE_AUCTION_WINDOW_SECONDS)
         if reward > 1:
             reward = 1.0
         return 1.0 - reward
@@ -537,16 +538,6 @@ class Comment(BlockchainObject):
         else:
             [post_author, post_permlink] = resolve_authorperm(identifier)
 
-        steem_conf = self.steem.get_config()
-        if 'STEEMIT_100_PERCENT' in steem_conf:
-            STEEM_100_PERCENT = steem_conf['STEEMIT_100_PERCENT']
-            STEEM_1_PERCENT = steem_conf['STEEMIT_1_PERCENT']
-        elif 'STEEM_100_PERCENT' in steem_conf:
-            STEEM_100_PERCENT = steem_conf['STEEM_100_PERCENT']
-            STEEM_1_PERCENT = steem_conf['STEEM_1_PERCENT']
-        else:
-            STEEM_100_PERCENT = 10000
-            STEEM_1_PERCENT = (STEEM_100_PERCENT / 100)
         vote_weight = int(weight * STEEM_1_PERCENT)
         if vote_weight > STEEM_100_PERCENT:
             vote_weight = STEEM_100_PERCENT

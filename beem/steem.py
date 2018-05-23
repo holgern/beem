@@ -28,6 +28,7 @@ from .exceptions import (
 from .wallet import Wallet
 from .transactionbuilder import TransactionBuilder
 from .utils import formatTime, resolve_authorperm, derive_permlink, remove_from_dict
+from beem.constants import STEEM_VOTE_REGENERATION_SECONDS
 
 log = logging.getLogger(__name__)
 
@@ -491,7 +492,7 @@ class Steem(object):
         # get props
         global_properties = self.get_dynamic_global_properties()
         vote_power_reserve_rate = global_properties['vote_power_reserve_rate']
-        max_vote_denom = vote_power_reserve_rate * (5 * 60 * 60 * 24)
+        max_vote_denom = vote_power_reserve_rate * STEEM_VOTE_REGENERATION_SECONDS
         return max_vote_denom
 
     def _calc_resulting_vote(self, voting_power=10000, vote_pct=10000):

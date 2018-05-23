@@ -21,6 +21,7 @@ from beem.amount import Amount
 from beembase import operations
 from beemgraphenebase.account import PrivateKey, PublicKey
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
+from beem.constants import STEEM_VOTE_REGENERATION_SECONDS
 log = logging.getLogger(__name__)
 
 
@@ -285,7 +286,7 @@ class Account(BlockchainObject):
         if with_regeneration:
             utc = pytz.timezone('UTC')
             diff_in_seconds = (utc.localize(datetime.utcnow()) - (self["last_vote_time"])).total_seconds()
-            regenerated_vp = diff_in_seconds * 10000 / 86400 / 5 / 100
+            regenerated_vp = diff_in_seconds * 10000 / STEEM_VOTE_REGENERATION_SECONDS / 100
         else:
             regenerated_vp = 0
         total_vp = (self["voting_power"] / 100 + regenerated_vp)
@@ -334,7 +335,7 @@ class Account(BlockchainObject):
         missing_vp = voting_power_goal - self.get_voting_power()
         if missing_vp < 0:
             return 0
-        recharge_seconds = missing_vp * 100 * 5 * 86400 / 10000
+        recharge_seconds = missing_vp * 100 * STEEM_VOTE_REGENERATION_SECONDS / 10000
         return timedelta(seconds=recharge_seconds)
 
     def get_recharge_time(self, voting_power_goal=100):

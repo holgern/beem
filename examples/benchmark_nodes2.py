@@ -16,7 +16,7 @@ from beem.steem import Steem
 from beem.utils import parse_time, formatTimedelta, get_node_list, construct_authorperm, resolve_authorperm, resolve_authorpermvoter, construct_authorpermvoter
 from beem.comment import Comment
 from beem.vote import Vote
-from beemgrapheneapi.rpcutils import NumRetriesReached
+from beemapi.exceptions import NumRetriesReached
 FUTURES_MODULE = None
 if not FUTURES_MODULE:
     try:
@@ -33,6 +33,7 @@ def benchmark_node(node, how_many_minutes=10, how_many_seconds=30):
     block_count = 0
     history_count = 0
     access_time = 0
+    follow_time = 0
     blockchain_version = u'0.0.0'
     sucessfull = False
     error_msg = None
@@ -92,7 +93,11 @@ def benchmark_node(node, how_many_minutes=10, how_many_seconds=30):
         Account(author, steem_instance=stm)
         stop = timer()
         account_time = stop - start
-        access_time = (vote_time + comment_time + account_time) / 3.0
+        start = timer()
+        account.get_followers()
+        stop = timer()
+        follow_time = stop - start
+        access_time = (vote_time + comment_time + account_time + follow_time) / 4.0
         sucessfull = True
     except NumRetriesReached:
         error_msg = 'NumRetriesReached'
@@ -103,7 +108,7 @@ def benchmark_node(node, how_many_minutes=10, how_many_seconds=30):
         error_msg = str(e)
     return {'sucessfull': sucessfull, 'node': node, 'error': error_msg,
             'total_duration': timer() - start_total, 'block_count': block_count,
-            'history_count': history_count, 'access_time': access_time,
+            'history_count': history_count, 'access_time': access_time, 'follow_time': follow_time,
             'version': blockchain_version}
 
 
