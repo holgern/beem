@@ -35,7 +35,7 @@ class Testcases(unittest.TestCase):
         set_shared_steem_instance(cls.bts)
         cls.bts.set_default_account("test")
 
-        cls.authorpermvoter = u"@gtg//steem-pressure-4-need-for-speed|gandalf"
+        cls.authorpermvoter = u"@gtg/steem-pressure-4-need-for-speed|gandalf"
         [author, permlink, voter] = resolve_authorpermvoter(cls.authorpermvoter)
         cls.author = author
         cls.permlink = permlink

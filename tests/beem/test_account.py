@@ -470,15 +470,12 @@ class Testcases(unittest.TestCase):
         block_diff = 0
         block_diff1 = 0
         block_diff2 = 0
-        for h in account.get_account_history(op_num4, 0):
-            block_diff = (block_num - h["block"])
         for h in account.get_account_history(op_num4 - 1, 0):
             block_diff1 = (block_num - h["block"])
         for h in account.get_account_history(op_num4 + 1, 0):
             block_diff2 = (block_num - h["block"])
-        self.assertTrue(block_diff > 0)
+        self.assertTrue(block_diff1 > 0)
         self.assertTrue(block_diff2 <= 0)
-        self.assertTrue(block_diff < block_diff1)
 
     def test_estimate_virtual_op_num2(self):
         account = self.account
