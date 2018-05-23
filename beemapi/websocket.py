@@ -13,7 +13,7 @@ import logging
 import websocket
 from itertools import cycle
 from threading import Thread
-from beemgrapheneapi.rpcutils import (
+from beemapi.rpcutils import (
     is_network_appbase_ready, sleep_and_check_retries,
     get_api_name, get_query, UnauthorizedError,
     RPCConnection, RPCError, NumRetriesReached

@@ -4,7 +4,6 @@ source =
     beem/
     beembase/
     beemapi/
-    beemgrapheneapi/
     beemgraphenebase/
 omit = 
      */.eggs/*

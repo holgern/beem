@@ -15,7 +15,7 @@ from beem.amount import Amount
 from beemgraphenebase.account import PasswordKey, PrivateKey, PublicKey
 from beem.steem import Steem
 from beem.utils import parse_time, formatTimedelta
-from beemgrapheneapi.rpcutils import NumRetriesReached
+from beemapi.exceptions import NumRetriesReached
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 

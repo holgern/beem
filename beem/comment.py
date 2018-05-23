@@ -537,13 +537,21 @@ class Comment(BlockchainObject):
         else:
             [post_author, post_permlink] = resolve_authorperm(identifier)
 
-        STEEMIT_100_PERCENT = 10000
-        STEEMIT_1_PERCENT = (STEEMIT_100_PERCENT / 100)
-        vote_weight = int(weight * STEEMIT_1_PERCENT)
-        if vote_weight > STEEMIT_100_PERCENT:
-            vote_weight = STEEMIT_100_PERCENT
-        if vote_weight < -STEEMIT_100_PERCENT:
-            vote_weight = -STEEMIT_100_PERCENT
+        steem_conf = self.steem.get_config()
+        if 'STEEMIT_100_PERCENT' in steem_conf:
+            STEEM_100_PERCENT = steem_conf['STEEMIT_100_PERCENT']
+            STEEM_1_PERCENT = steem_conf['STEEMIT_1_PERCENT']
+        elif 'STEEM_100_PERCENT' in steem_conf:
+            STEEM_100_PERCENT = steem_conf['STEEM_100_PERCENT']
+            STEEM_1_PERCENT = steem_conf['STEEM_1_PERCENT']
+        else:
+            STEEM_100_PERCENT = 10000
+            STEEM_1_PERCENT = (STEEM_100_PERCENT / 100)
+        vote_weight = int(weight * STEEM_1_PERCENT)
+        if vote_weight > STEEM_100_PERCENT:
+            vote_weight = STEEM_100_PERCENT
+        if vote_weight < -STEEM_100_PERCENT:
+            vote_weight = -STEEM_100_PERCENT
 
         op = operations.Vote(
             **{

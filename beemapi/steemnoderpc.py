@@ -5,9 +5,8 @@ from __future__ import unicode_literals
 from builtins import bytes, int, str
 import re
 import sys
-from beemgrapheneapi.graphenerpc import GrapheneRPC
-from beemgrapheneapi.rpcutils import sleep_and_check_retries
-from beemgrapheneapi.exceptions import CallRetriesReached
+from .graphenerpc import GrapheneRPC
+from .rpcutils import sleep_and_check_retries
 from beemgraphenebase.chains import known_chains
 from . import exceptions
 import logging
@@ -75,22 +74,22 @@ class SteemNodeRPC(GrapheneRPC):
                 try:
                     sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, str(msg), call_retry=True)
                     doRetry = True
-                except CallRetriesReached:
+                except exceptions.CallRetriesReached:
                     if self.n_urls > 1:
                         self._retry_on_next_node(msg)
                         doRetry = True
                     else:
-                        raise CallRetriesReached
+                        raise exceptions.CallRetriesReached
             except exceptions.RPCError as e:
                 try:
                     doRetry = self._check_error_message(e, self.error_cnt_call)
-                except CallRetriesReached:
+                except exceptions.CallRetriesReached:
                     msg = exceptions.decodeRPCErrorMsg(e).strip()
                     if self.n_urls > 1:
                         self._retry_on_next_node(msg)
                         doRetry = True
                     else:
-                        raise CallRetriesReached
+                        raise exceptions.CallRetriesReached
             except Exception as e:
                 raise e
             if self.error_cnt_call >= self.num_retries_call:

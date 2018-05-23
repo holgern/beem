@@ -60,7 +60,6 @@ if __name__ == '__main__':
     write_version_py('beem/version.py')
     write_version_py('beembase/version.py')
     write_version_py('beemapi/version.py')
-    write_version_py('beemgrapheneapi/version.py')
     write_version_py('beemgraphenebase/version.py')
 
     setup(

@@ -13,7 +13,7 @@ from beem.account import Account
 from beem.block import Block
 from beem.steem import Steem
 from beem.utils import parse_time, formatTimedelta, get_node_list
-from beemgrapheneapi.rpcutils import NumRetriesReached
+from beemapi.exceptions import NumRetriesReached
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 

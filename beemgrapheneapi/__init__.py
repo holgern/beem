@@ -1,4 +1,4 @@
 """beemgrapheneapi."""
-from .version import version as __version__
-__all__ = ['graphenerpc',
-           'rpcutils']
+import sys
+sys.modules[__name__] = __import__('beemapi')
+print("beemgrapheneapi is deprecated, use beemapi instead!")

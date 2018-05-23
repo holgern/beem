@@ -4,7 +4,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
 import re
-from beemgrapheneapi.graphenerpc import RPCError, RPCErrorDoRetry, NumRetriesReached
 
 
 def decodeRPCErrorMsg(e):
@@ -23,6 +22,42 @@ def decodeRPCErrorMsg(e):
         return found.group(2).strip()
     else:
         return str(e)
+
+
+class UnauthorizedError(Exception):
+    """UnauthorizedError Exception."""
+
+    pass
+
+
+class RPCConnection(Exception):
+    """RPCConnection Exception."""
+
+    pass
+
+
+class RPCError(Exception):
+    """RPCError Exception."""
+
+    pass
+
+
+class RPCErrorDoRetry(Exception):
+    """RPCErrorDoRetry Exception."""
+
+    pass
+
+
+class NumRetriesReached(Exception):
+    """NumRetriesReached Exception."""
+
+    pass
+
+
+class CallRetriesReached(Exception):
+    """CallRetriesReached Exception. Only for internal use"""
+
+    pass
 
 
 class MissingRequiredActiveAuthority(RPCError):

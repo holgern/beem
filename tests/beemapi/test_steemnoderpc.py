@@ -15,7 +15,7 @@ from beem import Steem
 from beemapi.steemnoderpc import SteemNodeRPC
 from beemapi.websocket import SteemWebsocket
 from beemapi import exceptions
-from beemgrapheneapi.exceptions import NumRetriesReached, CallRetriesReached
+from beemapi.exceptions import NumRetriesReached, CallRetriesReached
 from beem.instance import set_shared_steem_instance
 # Py3 compatibility
 import sys
