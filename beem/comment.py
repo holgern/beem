@@ -267,7 +267,7 @@ class Comment(BlockchainObject):
         self.refresh()
         if estimated_value_SBD is None:
             estimated_value_SBD = float(self.reward)
-        t = self.get_curation_penalty() / 100.
+        t = 1.0 - self.get_curation_penalty()
         k = vote_value_SBD / (vote_value_SBD + float(self.reward))
         K = (1 - math.sqrt(1 - k)) / 4 / k
         return K * vote_value_SBD * t * math.sqrt(estimated_value_SBD)
@@ -279,6 +279,8 @@ class Comment(BlockchainObject):
             :param datetime vote_time: A vote time can be given and the curation
                 penalty is calculated regarding the given time (default is None)
                 When set to None, the current date is used.
+            :returns: Float number between 0 and 1 (0.0 -> no penalty, 1.0 -> 100 % curation penalty)
+            :rtype: float
 
         """
         if vote_time is None:
@@ -289,10 +291,10 @@ class Comment(BlockchainObject):
             elapsed_seconds = (vote_time - self["created"]).total_seconds()
         else:
             raise ValueError("vote_time must be a string or a datetime")
-        reward = (elapsed_seconds / 1800) * 100
-        if reward > 100:
-            reward = 100
-        return reward
+        reward = (elapsed_seconds / 1800)
+        if reward > 1:
+            reward = 1.0
+        return 1.0 - reward
 
     def get_vote_with_curation(self, voter=None, raw_data=False, pending_payout_value=None):
         """ Returns vote for voter. Returns None, if the voter cannot be found in `active_votes`.
@@ -344,7 +346,7 @@ class Comment(BlockchainObject):
         """
         if self.is_pending():
             total_payout = Amount(self["pending_payout_value"], steem_instance=self.steem)
-            author_payout = self.get_author_rewards()["author_payout"]
+            author_payout = self.get_author_rewards()["total_payout_SBD"]
             curator_payout = total_payout - author_payout
         else:
             total_payout = Amount(self["total_payout_value"], steem_instance=self.steem)
@@ -466,6 +468,21 @@ class Comment(BlockchainObject):
             return self.steem.rpc.get_reblogged_by({'author': post_author, 'permlink': post_permlink}, api="follow")['accounts']
         else:
             return self.steem.rpc.get_reblogged_by(post_author, post_permlink, api="follow")
+
+    def get_replies(self, raw_data=False, identifier=None):
+        """Returns all content replies"""
+        if not identifier:
+            post_author = self["author"]
+            post_permlink = self["permlink"]
+        else:
+            [post_author, post_permlink] = resolve_authorperm(identifier)
+        if self.steem.rpc.get_use_appbase():
+            content_replies = self.steem.rpc.get_content_replies({'author': post_author, 'permlink': post_permlink}, api="tags")['discussions']
+        else:
+            content_replies = self.steem.rpc.get_content_replies(post_author, post_permlink, api="tags")
+        if raw_data:
+            return content_replies
+        return [Comment(c, steem_instance=self.steem) for c in content_replies]
 
     def get_votes(self):
         """Returns all votes as ActiveVotes object"""
