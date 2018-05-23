@@ -105,7 +105,7 @@ class GrapheneRPC(object):
 
         .. code-block:: python
 
-            from beemgrapheneapi.graphenerpc import GrapheneRPC
+            from beemapi.graphenerpc import GrapheneRPC
             ws = GrapheneRPC("wss://steemd.pevo.science","","")
             print(ws.get_account_count())
 

@@ -6,7 +6,7 @@ from beem.account import Account
 from beem.blockchain import Blockchain
 from beem.instance import set_shared_steem_instance, clear_cache
 from beem.storage import configStorage as config
-from beemgrapheneapi.graphenerpc import GrapheneRPC
+from beemapi.graphenerpc import GrapheneRPC
 import logging
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

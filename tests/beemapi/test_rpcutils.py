@@ -5,7 +5,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import pytest
 import unittest
-from beemgrapheneapi.rpcutils import (
+from beemapi.rpcutils import (
     is_network_appbase_ready, sleep_and_check_retries,
     get_api_name, get_query, UnauthorizedError,
     RPCConnection, RPCError, NumRetriesReached

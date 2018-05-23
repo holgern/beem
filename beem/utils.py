@@ -273,3 +273,7 @@ def get_node_list(appbase=False, testing=False):
                 "https://steemd.minnowsupportproject.org", "https://steemd.pevo.science", "https://rpc.steemviz.com", "https://seed.bitcoiner.me",
                 "https://rpc.steemliberator.com", "https://gtg.steem.house:8090",
                 "https://rpc.curiesteem.com", "https://steemd.steemgigs.org"]
+
+
+def get_test_node_list():
+    return ["wss://testnet.steem.vc", "ws://testnet.steem.vc", "https://testnet.steem.vc", "http://testnet.steem.vc"]

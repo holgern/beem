@@ -39,6 +39,7 @@ beemapi Modules
    beemapi.steemnoderpc
    beemapi.exceptions
    beemapi.websocket
+   beemapi.graphenenerpc
 
 beembase Modules
 -------------------
@@ -52,13 +53,6 @@ beembase Modules
    beembase.operations
    beembase.signedtransactions
    beembase.transactions
-
-beemgrapheneapi Modules
---------------------------
-
-.. toctree::
-
-   beemgrapheneapi.graphenenerpc
 
 
 beemgraphenebase Modules

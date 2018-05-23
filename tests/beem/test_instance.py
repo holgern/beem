@@ -25,7 +25,7 @@ from beem.transactionbuilder import TransactionBuilder
 from beembase.operations import Transfer
 from beemgraphenebase.account import PasswordKey, PrivateKey, PublicKey
 from beem.utils import parse_time, formatTimedelta
-from beemgrapheneapi.rpcutils import NumRetriesReached
+from beemapi.rpcutils import NumRetriesReached
 
 # Py3 compatibility
 import sys

@@ -19,7 +19,7 @@ from beem.block import Block
 from beem.transactionbuilder import TransactionBuilder
 from beembase.operations import Transfer
 from beemgraphenebase.account import PasswordKey, PrivateKey, PublicKey
-from beem.utils import parse_time, formatTimedelta
+from beem.utils import parse_time, formatTimedelta, get_test_node_list
 from beemapi.rpcutils import NumRetriesReached
 
 # Py3 compatibility
@@ -34,7 +34,7 @@ class Testcases(unittest.TestCase):
         stm = shared_steem_instance()
         stm.config.refreshBackup()
         cls.bts = Steem(
-            node=["wss://testnet.steem.vc"],
+            node=get_test_node_list(),
             nobroadcast=True,
             num_retries=10,
             expiration=120,
@@ -243,7 +243,7 @@ class Testcases(unittest.TestCase):
         # funds but sign the transaction with elf's key and then serialize the transaction
         # and deserialize the transaction.  After that, sign with steemfiles's key.
         steem = Steem(
-            node=["wss://testnet.steem.vc"],
+            node=get_test_node_list(),
             num_retries=10,
             keys=[self.active_private_key_of_elf],
             expiration=120,
@@ -265,7 +265,7 @@ class Testcases(unittest.TestCase):
         del tx
 
         steem = Steem(
-            node=["wss://testnet.steem.vc"],
+            node=get_test_node_list(),
             num_retries=10,
             keys=[self.active_private_key_of_steemfiles],
             expiration=120,
@@ -342,7 +342,7 @@ class Testcases(unittest.TestCase):
             "beem")
 
     def test_connect(self):
-        self.bts.connect(node=["wss://testnet.steem.vc"])
+        self.bts.connect(node=get_test_node_list())
         bts = self.bts
         self.assertEqual(bts.prefix, "STX")
 

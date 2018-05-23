@@ -3,7 +3,7 @@ from beem import Steem
 from beem.account import Account
 from beem.instance import set_shared_steem_instance, SharedInstance
 from beem.blockchainobject import BlockchainObject
-from beem.utils import get_node_list
+from beem.utils import get_node_list, get_test_node_list
 
 import logging
 log = logging.getLogger()
@@ -13,7 +13,7 @@ class Testcases(unittest.TestCase):
 
     def test_stm1stm2(self):
         b1 = Steem(
-            node=["wss://testnet.steem.vc"],
+            node=get_test_node_list(),
             nobroadcast=True,
             num_retries=10
         )
@@ -28,7 +28,7 @@ class Testcases(unittest.TestCase):
 
     def test_default_connection(self):
         b1 = Steem(
-            node=["wss://testnet.steem.vc"],
+            node=get_test_node_list(),
             nobroadcast=True,
         )
         set_shared_steem_instance(b1)
