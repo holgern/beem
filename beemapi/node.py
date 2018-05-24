@@ -59,8 +59,9 @@ class Nodes(list):
             next_node_count += 1
             if next_node_count > self.working_nodes_count + 1:
                 raise StopIteration
-
         return self.url
+
+    next = __next__  # Python 2
 
     def __repr__(self):
         nodes_list = []
