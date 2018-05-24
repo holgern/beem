@@ -14,10 +14,11 @@ import websocket
 from itertools import cycle
 from threading import Thread
 from beemapi.rpcutils import (
-    is_network_appbase_ready, sleep_and_check_retries,
+    is_network_appbase_ready,
     get_api_name, get_query, UnauthorizedError,
     RPCConnection, RPCError, NumRetriesReached
 )
+from beemapi.node import Nodes
 from events import Events
 
 log = logging.getLogger(__name__)
@@ -75,12 +76,7 @@ class SteemWebsocket(Events):
         self.keep_alive = keep_alive
         self.run_event = threading.Event()
         self.only_block_id = only_block_id
-        if isinstance(urls, cycle):
-            self.urls = urls
-        elif isinstance(urls, list):
-            self.urls = cycle(urls)
-        else:
-            self.urls = cycle([urls])
+        self.nodes = Nodes(urls, num_retries, 5)
 
         # Instanciate Events
         Events.__init__(self)
@@ -232,10 +228,8 @@ class SteemWebsocket(Events):
             It will execute callbacks as defined and try to stay
             connected with the provided APIs
         """
-        cnt = 0
         while not self.run_event.is_set():
-            cnt += 1
-            self.url = next(self.urls)
+            self.url = next(self.nodes)
             log.debug("Trying to connect to node %s" % self.url)
             try:
                 # websocket.enableTrace(True)
@@ -248,9 +242,11 @@ class SteemWebsocket(Events):
                 )
                 self.ws.run_forever()
             except websocket.WebSocketException as exc:
-                sleep_and_check_retries(self.num_retries, cnt, self.url)
+                self.nodes.increase_error_cnt()
+                self.nodes.sleep_and_check_retries()
             except websocket.WebSocketTimeoutException as exc:
-                sleep_and_check_retries(self.num_retries, cnt, self.url)
+                self.nodes.increase_error_cnt()
+                self.nodes.sleep_and_check_retries()
             except KeyboardInterrupt:
                 self.ws.keep_running = False
                 raise

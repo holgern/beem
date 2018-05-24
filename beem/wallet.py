@@ -386,6 +386,42 @@ class Wallet(object):
                     raise MissingKeyError("No private key for {} found".format(name))
             return
 
+    def getKeysForAccount(self, name, key_type):
+        """ Obtain a List of `key_type` Private Keys for an account from the wallet database
+        """
+        if key_type not in ["owner", "active", "posting", "memo"]:
+            raise AssertionError("Wrong key type")
+        if key_type in Wallet.keyMap:
+            return Wallet.keyMap.get(key_type)
+        else:
+            if self.rpc.get_use_appbase():
+                account = self.rpc.find_accounts({'accounts': [name]}, api="database")['accounts']
+            else:
+                account = self.rpc.get_account(name)
+            if not account:
+                return
+            if len(account) == 0:
+                return
+            if key_type == "memo":
+                key = self.getPrivateKeyForPublicKey(
+                    account[0]["memo_key"])
+                if key:
+                    return [key]
+            else:
+                keys = []
+                key = None
+                for authority in account[0][key_type]["key_auths"]:
+                    try:
+                        key = self.getPrivateKeyForPublicKey(authority[0])
+                        if key:
+                            keys.append(key)
+                    except MissingKeyError:
+                        key = None
+                if key is None:
+                    raise MissingKeyError("No private key for {} found".format(name))
+                return keys
+            return
+
     def getOwnerKeyForAccount(self, name):
         """ Obtain owner Private Key for an account from the wallet database
         """
@@ -405,6 +441,21 @@ class Wallet(object):
         """ Obtain owner Posting Key for an account from the wallet database
         """
         return self.getKeyForAccount(name, "posting")
+
+    def getOwnerKeysForAccount(self, name):
+        """ Obtain list of all owner Private Keys for an account from the wallet database
+        """
+        return self.getKeysForAccount(name, "owner")
+
+    def getActiveKeysForAccount(self, name):
+        """ Obtain list of all owner Active Keys for an account from the wallet database
+        """
+        return self.getKeysForAccount(name, "active")
+
+    def getPostingKeysForAccount(self, name):
+        """ Obtain list of all owner Posting Keys for an account from the wallet database
+        """
+        return self.getKeysForAccount(name, "posting")
 
     def getAccountFromPrivateKey(self, wif):
         """ Obtain account name from private key

@@ -16,12 +16,13 @@ import re
 import time
 import warnings
 from .exceptions import (
-    UnauthorizedError, RPCConnection, RPCError, RPCErrorDoRetry, NumRetriesReached, CallRetriesReached
+    UnauthorizedError, RPCConnection, RPCError, RPCErrorDoRetry, NumRetriesReached, CallRetriesReached, WorkingNodeMissing
 )
 from .rpcutils import (
-    is_network_appbase_ready, sleep_and_check_retries,
+    is_network_appbase_ready,
     get_api_name, get_query
 )
+from .node import Nodes
 from beemgraphenebase.version import version as beem_version
 from beemgraphenebase.chains import known_chains
 
@@ -123,37 +124,38 @@ class GrapheneRPC(object):
         self.rpc_methods = {'offline': -1, 'ws': 0, 'jsonrpc': 1, 'wsappbase': 2, 'appbase': 3}
         self.current_rpc = self.rpc_methods["ws"]
         self._request_id = 0
-        if isinstance(urls, str):
-            url_list = re.split(r",|;", urls)
-            self.n_urls = len(url_list)
-            self.urls = cycle(url_list)
-            if self.urls is None:
-                self.n_urls = 1
-                self.urls = cycle([urls])
-        elif isinstance(urls, (list, tuple, set)):
-            self.n_urls = len(urls)
-            self.urls = cycle(urls)
-        elif urls is not None:
-            self.n_urls = 1
-            self.urls = cycle([urls])
-        else:
-            self.n_urls = 0
-            self.urls = None
+        self.timeout = kwargs.get('timeout', 60)
+        num_retries = kwargs.get("num_retries", -1)
+        num_retries_call = kwargs.get("num_retries_call", 5)
+        self.use_condenser = kwargs.get("use_condenser", False)
+        self.nodes = Nodes(urls, num_retries, num_retries_call)
+        if self.nodes.working_nodes_count == 0:
             self.current_rpc = self.rpc_methods["offline"]
+
         self.user = user
         self.password = password
         self.ws = None
         self.url = None
         self.session = None
         self.rpc_queue = []
-        self.timeout = kwargs.get('timeout', 60)
-        self.num_retries = kwargs.get("num_retries", -1)
-        self.use_condenser = kwargs.get("use_condenser", False)
-        self.error_cnt = {}
-        self.num_retries_call = kwargs.get("num_retries_call", 5)
-        self.error_cnt_call = 0
         if kwargs.get("autoconnect", True):
             self.rpcconnect()
+
+    @property
+    def num_retries(self):
+        return self.nodes.num_retries
+
+    @property
+    def num_retries_call(self):
+        return self.nodes.num_retries_call
+
+    @property
+    def error_cnt_call(self):
+        return self.nodes.error_cnt_call
+
+    @property
+    def error_cnt(self):
+        return self.nodes.error_cnt
 
     def get_request_id(self):
         """Get request id."""
@@ -179,14 +181,12 @@ class GrapheneRPC(object):
 
     def rpcconnect(self, next_url=True):
         """Connect to next url in a loop."""
-        if self.urls is None:
+        if self.nodes.working_nodes_count == 0:
             return
         while True:
             if next_url:
-                self.url = next(self.urls)
-                self.error_cnt_call = 0
-                if self.url not in self.error_cnt:
-                    self.error_cnt[self.url] = 0
+                self.url = next(self.nodes)
+                self.nodes.reset_error_cnt_call()
                 log.debug("Trying to connect to node %s" % self.url)
                 if self.url[:3] == "wss":
                     self.ws = create_ws_instance(use_ssl=True)
@@ -226,9 +226,9 @@ class GrapheneRPC(object):
             except KeyboardInterrupt:
                 raise
             except Exception as e:
-                self.error_cnt[self.url] += 1
-                do_sleep = not next_url or (next_url and self.n_urls == 1)
-                sleep_and_check_retries(self.num_retries, self.error_cnt[self.url], self.url, str(e), sleep=do_sleep)
+                self.nodes.increase_error_cnt()
+                do_sleep = not next_url or (next_url and self.nodes.working_nodes_count == 1)
+                self.nodes.sleep_and_check_retries(str(e), sleep=do_sleep)
                 next_url = True
 
     def rpclogin(self, user, password):
@@ -322,11 +322,13 @@ class GrapheneRPC(object):
         :raises RPCError: if the server returns an error
         """
         log.debug(json.dumps(payload))
+        if self.nodes.working_nodes_count == 0:
+            raise WorkingNodeMissing
         if self.url is None:
             self.rpcconnect()
         reply = {}
         while True:
-            self.error_cnt_call += 1
+            self.nodes.increase_error_cnt_call()
             try:
                 if self.current_rpc == 0 or self.current_rpc == 2:
                     reply = self.ws_send(json.dumps(payload, ensure_ascii=False).encode('utf8'))
@@ -334,10 +336,10 @@ class GrapheneRPC(object):
                     reply = self.request_send(json.dumps(payload, ensure_ascii=False).encode('utf8'))
                 if not bool(reply):
                     try:
-                        sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, "Empty Reply", call_retry=True)
+                        self.nodes.sleep_and_check_retries("Empty Reply", call_retry=True)
                     except CallRetriesReached:
-                        self.error_cnt[self.url] += 1
-                        sleep_and_check_retries(self.num_retries, self.error_cnt[self.url], self.url, "Empty Reply", sleep=False, call_retry=False)
+                        self.nodes.increase_error_cnt()
+                        self.nodes.sleep_and_check_retries("Empty Reply", sleep=False, call_retry=False)
                         self.rpcconnect()
                 else:
                     break
@@ -347,12 +349,12 @@ class GrapheneRPC(object):
                 # self.error_cnt[self.url] += 1
                 self.rpcconnect(next_url=False)
             except ConnectionError as e:
-                self.error_cnt[self.url] += 1
-                sleep_and_check_retries(self.num_retries, self.error_cnt[self.url], self.url, str(e), sleep=False, call_retry=False)
+                self.nodes.increase_error_cnt()
+                self.nodes.sleep_and_check_retries(str(e), sleep=False, call_retry=False)
                 self.rpcconnect()
             except Exception as e:
-                self.error_cnt[self.url] += 1
-                sleep_and_check_retries(self.num_retries, self.error_cnt[self.url], self.url, str(e), sleep=False, call_retry=False)
+                self.nodes.increase_error_cnt()
+                self.nodes.sleep_and_check_retries(str(e), sleep=False, call_retry=False)
                 self.rpcconnect()
 
         ret = {}
@@ -381,15 +383,15 @@ class GrapheneRPC(object):
                         ret_list.append(r["result"])
                     else:
                         ret_list.append(r)
-                self.error_cnt_call = 0
+                self.nodes.reset_error_cnt_call()
                 return ret_list
             elif isinstance(ret, dict) and "result" in ret:
-                self.error_cnt_call = 0
+                self.nodes.reset_error_cnt_call()
                 return ret["result"]
             elif isinstance(ret, int):
                 raise RPCError("Client returned invalid format. Expected JSON! Output: %s" % (str(ret)))
             else:
-                self.error_cnt_call = 0
+                self.nodes.reset_error_cnt_call()
                 return ret
         return ret
 
@@ -404,16 +406,19 @@ class GrapheneRPC(object):
                 api_name = "condenser_api"
 
             # let's be able to define the num_retries per query
-            self.num_retries_call = kwargs.get("num_retries_call", self.num_retries_call)
+            stored_num_retries_call = self.nodes.num_retries_call
+            self.nodes.num_retries_call = kwargs.get("num_retries_call", stored_num_retries_call)
             add_to_queue = kwargs.get("add_to_queue", False)
             query = get_query(self.is_appbase_ready() and not self.use_condenser, self.get_request_id(), api_name, name, args)
             if add_to_queue:
                 self.rpc_queue.append(query)
+                self.nodes.num_retries_call = stored_num_retries_call
                 return None
             elif len(self.rpc_queue) > 0:
                 self.rpc_queue.append(query)
                 query = self.rpc_queue
                 self.rpc_queue = []
             r = self.rpcexec(query)
+            self.nodes.num_retries_call = stored_num_retries_call
             return r
         return method

@@ -94,3 +94,7 @@ class InvalidEndpointUrl(Exception):
 
 class UnnecessarySignatureDetected(Exception):
     pass
+
+
+class WorkingNodeMissing(Exception):
+    pass

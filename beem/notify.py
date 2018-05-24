@@ -61,7 +61,7 @@ class Notify(Events):
 
         # Open the websocket
         self.websocket = SteemWebsocket(
-            urls=self.steem.rpc.urls,
+            urls=self.steem.rpc.nodes,
             user=self.steem.rpc.user,
             password=self.steem.rpc.password,
             only_block_id=only_block_id,

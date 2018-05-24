@@ -29,10 +29,10 @@ class Testcases(unittest.TestCase):
         stm = Steem(node=get_node_list(appbase=False))
 
         self.ws = SteemWebsocket(
-            urls=stm.rpc.urls,
+            urls=stm.rpc.nodes,
             num_retries=10
         )
 
     def test_connect(self):
         ws = self.ws
-        self.assertTrue(len(next(ws.urls)) > 0)
+        self.assertTrue(len(next(ws.nodes)) > 0)

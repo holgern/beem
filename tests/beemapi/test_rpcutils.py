@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import pytest
 import unittest
 from beemapi.rpcutils import (
-    is_network_appbase_ready, sleep_and_check_retries,
+    is_network_appbase_ready,
     get_api_name, get_query, UnauthorizedError,
     RPCConnection, RPCError, NumRetriesReached
 )
@@ -81,11 +81,3 @@ class Testcases(unittest.TestCase):
         self.assertEqual(query["id"], 1)
         self.assertTrue(isinstance(query["params"], list))
         self.assertEqual(query["params"], ["test_api", "test", ["b"]])
-
-    def test_sleep_and_check_retries(self):
-        sleep_and_check_retries(-1, 0, "test", "error")
-        sleep_and_check_retries(-1, -1, "test")
-        with self.assertRaises(
-            NumRetriesReached
-        ):
-            sleep_and_check_retries(1, 2, "test")

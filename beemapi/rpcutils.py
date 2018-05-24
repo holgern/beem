@@ -9,6 +9,7 @@ import logging
 from .exceptions import (
     UnauthorizedError, RPCConnection, RPCError, NumRetriesReached, CallRetriesReached
 )
+from .node import Nodes
 
 log = logging.getLogger(__name__)
 
@@ -81,30 +82,3 @@ def get_api_name(appbase, *args, **kwargs):
         else:
             api_name = "condenser_api"
     return api_name
-
-
-def sleep_and_check_retries(num_retries, cnt, url, errorMsg=None, sleep=True, call_retry=False, showMsg=True):
-    """Sleep and check if num_retries is reached"""
-    if errorMsg:
-        log.warning("Error: {}".format(errorMsg))
-    if (num_retries >= 0 and cnt > num_retries):
-        if not call_retry:
-            raise NumRetriesReached()
-        else:
-            raise CallRetriesReached()
-    if showMsg:
-        if call_retry:
-            log.warning("Retry RPC Call on node: %s (%d/%d) \n" % (url, cnt, num_retries))
-        else:
-            log.warning("Lost connection or internal error on node: %s (%d/%d) \n" % (url, cnt, num_retries))
-    if not sleep:
-        return
-    if cnt < 1:
-        sleeptime = 0
-    elif cnt < 10:
-        sleeptime = (cnt - 1) * 1.5 + 0.5
-    else:
-        sleeptime = 10
-    if sleeptime:
-        log.warning("Retrying in %d seconds\n" % sleeptime)
-        time.sleep(sleeptime)

@@ -6,7 +6,6 @@ from builtins import bytes, int, str
 import re
 import sys
 from .graphenerpc import GrapheneRPC
-from .rpcutils import sleep_and_check_retries
 from beemgraphenebase.chains import known_chains
 from . import exceptions
 import logging
@@ -72,7 +71,7 @@ class SteemNodeRPC(GrapheneRPC):
             except exceptions.RPCErrorDoRetry as e:
                 msg = exceptions.decodeRPCErrorMsg(e).strip()
                 try:
-                    sleep_and_check_retries(self.num_retries_call, self.error_cnt_call, self.url, str(msg), call_retry=True)
+                    self.nodes.sleep_and_check_retries(str(msg), call_retry=True)
                     doRetry = True
                 except exceptions.CallRetriesReached:
                     if self.n_urls > 1:
@@ -92,12 +91,11 @@ class SteemNodeRPC(GrapheneRPC):
                         raise exceptions.CallRetriesReached
             except Exception as e:
                 raise e
-            if self.error_cnt_call >= self.num_retries_call:
-                maxRetryCountReached = True
+            maxRetryCountReached = self.nodes.num_retries_call_reached
 
     def _retry_on_next_node(self, error_msg):
-        self.error_cnt[self.url] += 1
-        sleep_and_check_retries(self.num_retries, self.error_cnt[self.url], self.url, error_msg, sleep=False, call_retry=False)
+        self.nodes.increase_error_cnt()
+        self.nodes.sleep_and_check_retries(error_msg, sleep=False, call_retry=False)
         self.next()
 
     def _check_error_message(self, e, cnt):
@@ -122,16 +120,16 @@ class SteemNodeRPC(GrapheneRPC):
         elif re.search("WinError", msg):
             raise exceptions.RPCError(msg)
         elif re.search("Unable to acquire database lock", msg):
-            sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg), call_retry=True)
+            self.nodes.sleep_and_check_retries(str(msg), call_retry=True)
             doRetry = True
         elif re.search("Internal Error", msg) or re.search("Unknown exception", msg):
-            sleep_and_check_retries(self.num_retries_call, cnt, self.url, str(msg), call_retry=True)
+            self.nodes.sleep_and_check_retries(str(msg), call_retry=True)
             doRetry = True
         elif re.search("!check_max_block_age", str(e)):
             if self.n_urls == 1:
                 raise exceptions.UnhandledRPCError(msg)
-            self.error_cnt[self.url] += 1
-            sleep_and_check_retries(self.num_retries, self.error_cnt[self.url], self.url, str(msg), sleep=False)
+            self.nodes.increase_error_cnt()
+            self.nodes.sleep_and_check_retries(str(msg), sleep=False)
             self.next()
             doRetry = True
         elif re.search("out_of_rangeEEEE: unknown key", msg) or re.search("unknown key:unknown key", msg):
