@@ -8,20 +8,21 @@ from parameterized import parameterized
 from beem import Steem
 from beem.amount import Amount
 from beem.asset import Asset
-from beem.utils import get_node_list
+from beem.nodelist import NodeList
 from beem.instance import set_shared_steem_instance, SharedInstance
 
 
 class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        nodelist = NodeList()
         cls.bts = Steem(
-            node=get_node_list(appbase=False),
+            node=nodelist.get_nodes(appbase=False),
             nobroadcast=True,
             num_retries=10
         )
         cls.appbase = Steem(
-            node=get_node_list(appbase=True),
+            node=nodelist.get_nodes(normal=False, appbase=True),
             nobroadcast=True,
             use_condenser=False,
             num_retries=10

@@ -8,14 +8,15 @@ from beem.amount import Amount
 from beem.price import Price, Order, FilledOrder
 from beem.asset import Asset
 import unittest
-from beem.utils import get_node_list
+from beem.nodelist import NodeList
 
 
 class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        nodelist = NodeList()
         steem = Steem(
-            node=get_node_list(appbase=False),
+            node=nodelist.get_nodes(appbase=False),
             nobroadcast=True,
             num_retries=10
         )

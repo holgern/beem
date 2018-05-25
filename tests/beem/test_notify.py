@@ -14,7 +14,7 @@ from beem import Steem
 from beemapi.websocket import SteemWebsocket
 from beem.notify import Notify
 from beem.instance import set_shared_steem_instance
-from beem.utils import get_node_list
+from beem.nodelist import NodeList
 # Py3 compatibility
 import sys
 
@@ -38,9 +38,9 @@ class Testcases(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        nodelist = NodeList()
         self.bts = Steem(
-            node=get_node_list(appbase=False),
+            node=nodelist.get_nodes(),
             nobroadcast=True,
             num_retries=10
         )

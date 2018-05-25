@@ -10,7 +10,8 @@ from beem import Steem, exceptions
 from beem.comment import Comment, RecentReplies, RecentByPath
 from beem.vote import Vote
 from beem.instance import set_shared_steem_instance
-from beem.utils import get_node_list, resolve_authorperm
+from beem.utils import resolve_authorperm
+from beem.nodelist import NodeList
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
@@ -18,15 +19,16 @@ wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        nodelist = NodeList()
         cls.bts = Steem(
-            node=get_node_list(appbase=True),
+            node=nodelist.get_nodes(appbase=False),
             use_condenser=True,
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10
         )
         cls.appbase = Steem(
-            node=get_node_list(appbase=True),
+            node=nodelist.get_nodes(normal=False, appbase=True),
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10

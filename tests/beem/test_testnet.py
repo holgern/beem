@@ -19,8 +19,9 @@ from beem.block import Block
 from beem.transactionbuilder import TransactionBuilder
 from beembase.operations import Transfer
 from beemgraphenebase.account import PasswordKey, PrivateKey, PublicKey
-from beem.utils import parse_time, formatTimedelta, get_test_node_list
+from beem.utils import parse_time, formatTimedelta
 from beemapi.rpcutils import NumRetriesReached
+from beem.nodelist import NodeList
 
 # Py3 compatibility
 import sys
@@ -31,10 +32,11 @@ core_unit = "STX"
 class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        nodelist = NodeList()
         stm = shared_steem_instance()
         stm.config.refreshBackup()
         cls.bts = Steem(
-            node=get_test_node_list(),
+            node=nodelist.get_testnet(),
             nobroadcast=True,
             num_retries=10,
             expiration=120,
@@ -239,11 +241,12 @@ class Testcases(unittest.TestCase):
         steem.wallet.addPrivateKey(self.active_private_key_of_elf)
 
     def test_transfer_2of2_wif(self):
+        nodelist = NodeList()
         # Send a 2 of 2 transaction from elf which needs steemfiles's cosign to send
         # funds but sign the transaction with elf's key and then serialize the transaction
         # and deserialize the transaction.  After that, sign with steemfiles's key.
         steem = Steem(
-            node=get_test_node_list(),
+            node=nodelist.get_testnet(),
             num_retries=10,
             keys=[self.active_private_key_of_elf],
             expiration=120,
@@ -265,7 +268,7 @@ class Testcases(unittest.TestCase):
         del tx
 
         steem = Steem(
-            node=get_test_node_list(),
+            node=nodelist.get_testnet(),
             num_retries=10,
             keys=[self.active_private_key_of_steemfiles],
             expiration=120,
@@ -342,7 +345,8 @@ class Testcases(unittest.TestCase):
             "beem")
 
     def test_connect(self):
-        self.bts.connect(node=get_test_node_list())
+        nodelist = NodeList()
+        self.bts.connect(node=nodelist.get_testnet())
         bts = self.bts
         self.assertEqual(bts.prefix, "STX")
 

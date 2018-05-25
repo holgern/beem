@@ -20,5 +20,6 @@ __all__ = [
     "comment",
     "discussions",
     "witness",
-    "profile"
+    "profile",
+    "nodelist"
 ]

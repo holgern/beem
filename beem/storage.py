@@ -18,7 +18,7 @@ from binascii import hexlify
 import random
 import hashlib
 from .exceptions import WrongMasterPasswordException, NoWriteAccess
-from .utils import get_node_list
+from .nodelist import NodeList
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
@@ -273,7 +273,8 @@ class Configuration(DataDir):
     __tablename__ = "config"
 
     #: Default configuration
-    nodes = get_node_list(appbase=False) + get_node_list(appbase=True)
+    nodelist = NodeList()
+    nodes = nodelist.get_nodes(normal=True, appbase=True, dev=False, testnet=False)
     config_defaults = {
         "node": nodes,
         "password_storage": "environment",

@@ -133,12 +133,6 @@ class VestingBalanceDoesNotExistsException(Exception):
     pass
 
 
-class ObjectNotInProposalBuffer(Exception):
-    """ Object was not found in proposal
-    """
-    pass
-
-
 class InvalidMessageSignature(Exception):
     """ The message signature does not fit the message
     """

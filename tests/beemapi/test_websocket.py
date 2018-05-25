@@ -13,7 +13,7 @@ from pprint import pprint
 from beem import Steem
 from beemapi.websocket import SteemWebsocket
 from beem.instance import set_shared_steem_instance
-from beem.utils import get_node_list
+from beem.nodelist import NodeList
 # Py3 compatibility
 import sys
 
@@ -25,8 +25,8 @@ class Testcases(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        stm = Steem(node=get_node_list(appbase=False))
+        nodelist = NodeList()
+        stm = Steem(node=nodelist.get_nodes(appbase=False))
 
         self.ws = SteemWebsocket(
             urls=stm.rpc.nodes,

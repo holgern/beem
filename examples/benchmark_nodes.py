@@ -12,7 +12,8 @@ from beem.blockchain import Blockchain
 from beem.account import Account
 from beem.block import Block
 from beem.steem import Steem
-from beem.utils import parse_time, formatTimedelta, get_node_list
+from beem.utils import parse_time, formatTimedelta
+from beem.nodelist import NodeList
 from beemapi.exceptions import NumRetriesReached
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -24,7 +25,8 @@ if __name__ == "__main__":
     max_batch_size = None
     threading = False
     thread_num = 16
-    nodes = get_node_list(appbase=False) + get_node_list(appbase=True)
+    nodelist = NodeList()
+    nodes = nodelist.get_nodes(normal=True, appbase=True, dev=True)
     t = PrettyTable(["node", "10 blockchain minutes", "10000 virtual account op", "version"])
     t.align = "l"
     for node in nodes:

@@ -8,15 +8,15 @@ from beem import Steem, exceptions
 from beem.instance import set_shared_steem_instance
 from beem.account import Account
 from beem.witness import Witness
-from beem.utils import get_node_list
+from beem.nodelist import NodeList
 
 
 class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-
+        nodelist = NodeList()
         cls.bts = Steem(
-            node=get_node_list(appbase=False),
+            node=nodelist.get_nodes(appbase=False),
             nobroadcast=True,
             num_retries=10
         )

@@ -10,7 +10,6 @@ import math
 from datetime import datetime, tzinfo, timedelta
 import pytz
 import difflib
-from .exceptions import ObjectNotInProposalBuffer
 
 timeFormat = '%Y-%m-%dT%H:%M:%S'
 # https://github.com/matiasb/python-unidiff/blob/master/unidiff/constants.py#L37
@@ -257,23 +256,3 @@ def make_patch(a, b, n=3):
 
 def findall_patch_hunks(body=None):
     return RE_HUNK_HEADER.findall(body)
-
-
-def get_node_list(appbase=False, testing=False):
-    """Returns node list"""
-    if appbase:
-        node_list = ["https://api.steemit.com", "wss://appbasetest.timcliff.com", "https://api.steem.house"]
-        if testing:
-            node_list = ["https://api.steemitdev.com", "https://api.steemitstage.com"] + node_list
-        return node_list
-    else:
-        return ["wss://steemd.privex.io", "wss://rpc.buildteam.io", "https://steemd.privex.io", "https://rpc.buildteam.io", "wss://steemd.pevo.science",
-                "wss://rpc.steemliberator.com", "wss://gtg.steem.house:8090",
-                "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://steemd.steemgigs.org", "wss://steemd.minnowsupportproject.org",
-                "https://steemd.minnowsupportproject.org", "https://steemd.pevo.science", "https://rpc.steemviz.com", "https://seed.bitcoiner.me",
-                "https://rpc.steemliberator.com", "https://gtg.steem.house:8090",
-                "https://rpc.curiesteem.com", "https://steemd.steemgigs.org"]
-
-
-def get_test_node_list():
-    return ["wss://testnet.steem.vc", "ws://testnet.steem.vc", "https://testnet.steem.vc", "http://testnet.steem.vc"]

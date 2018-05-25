@@ -4,4 +4,7 @@ __all__ = [
     "steemnoderpc",
     "exceptions",
     "websocket",
+    "rpcutils",
+    "graphenerpc",
+    "node",
 ]

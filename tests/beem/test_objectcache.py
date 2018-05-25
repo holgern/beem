@@ -10,7 +10,7 @@ from beem import Steem, exceptions
 from beem.instance import set_shared_steem_instance
 from beem.blockchainobject import ObjectCache
 from beem.account import Account
-from beem.utils import get_node_list
+from beem.nodelist import NodeList
 
 
 class Testcases(unittest.TestCase):

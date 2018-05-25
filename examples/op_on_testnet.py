@@ -16,6 +16,7 @@ from beemgraphenebase.account import PasswordKey, PrivateKey, PublicKey
 from beem.steem import Steem
 from beem.utils import parse_time, formatTimedelta
 from beemapi.exceptions import NumRetriesReached
+from beem.nodelist import NodeList
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
@@ -24,7 +25,8 @@ username = "beem"
 useWallet = False
 
 if __name__ == "__main__":
-    stm = Steem(node=["wss://testnet.steem.vc"])
+    nodelist = NodeList()
+    stm = Steem(node=nodelist.get_nodes(normal=False, appbase=False, testnet=True))
     prefix = stm.prefix
     # curl --data "username=username&password=secretPassword" https://testnet.steem.vc/create
     stm.wallet.wipe(True)
@@ -49,9 +51,10 @@ if __name__ == "__main__":
         stm.wallet.addPrivateKey(memo_privkey)
         stm.wallet.addPrivateKey(posting_privkey)
     else:
-        stm = Steem(node=["wss://testnet.steem.vc"], wif={'active': str(active_privkey),
-                                                          'posting': str(posting_privkey),
-                                                          'memo': str(memo_privkey)})
+        stm = Steem(node=nodelist.get_nodes(normal=False, appbase=False, testnet=True),
+                    wif={'active': str(active_privkey),
+                         'posting': str(posting_privkey),
+                         'memo': str(memo_privkey)})
     account = Account(username, steem_instance=stm)
     account.disallow("beem1", permission='posting')
     account.allow('beem1', weight=1, permission='posting', account=None)

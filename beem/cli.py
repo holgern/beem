@@ -175,7 +175,7 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, expires, verbose):
         debug=debug,
         num_retries=10,
         num_retries_call=3,
-        timeout=10,
+        timeout=15,
         autoconnect=False
     )
     set_shared_steem_instance(stm)

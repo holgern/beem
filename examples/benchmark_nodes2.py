@@ -13,8 +13,9 @@ from beem.blockchain import Blockchain
 from beem.account import Account
 from beem.block import Block
 from beem.steem import Steem
-from beem.utils import parse_time, formatTimedelta, get_node_list, construct_authorperm, resolve_authorperm, resolve_authorpermvoter, construct_authorpermvoter
+from beem.utils import parse_time, formatTimedelta, construct_authorperm, resolve_authorperm, resolve_authorpermvoter, construct_authorpermvoter, formatTimeString
 from beem.comment import Comment
+from beem.nodelist import NodeList
 from beem.vote import Vote
 from beemapi.exceptions import NumRetriesReached
 FUTURES_MODULE = None
@@ -35,19 +36,22 @@ def benchmark_node(node, how_many_minutes=10, how_many_seconds=30):
     access_time = 0
     follow_time = 0
     blockchain_version = u'0.0.0'
-    sucessfull = False
+    sucessfull = True
     error_msg = None
     start_total = timer()
     max_batch_size = None
     threading = False
     thread_num = 16
+
+    authorpermvoter = u"@gtg/steem-pressure-4-need-for-speed|gandalf"
+    [author, permlink, voter] = resolve_authorpermvoter(authorpermvoter)
+    authorperm = construct_authorperm(author, permlink)
+    last_block_id = 19273700
     try:
-        stm = Steem(node=node, num_retries=2, num_retries_call=3, timeout=10)
+        stm = Steem(node=node, num_retries=3, num_retries_call=3, timeout=30)
         blockchain = Blockchain(steem_instance=stm)
-        account = Account("gtg", steem_instance=stm)
         blockchain_version = stm.get_blockchain_version()
 
-        last_block_id = 19273700
         last_block = Block(last_block_id, steem_instance=stm)
 
         stopTime = last_block.time() + timedelta(seconds=how_many_minutes * 60)
@@ -75,12 +79,45 @@ def benchmark_node(node, how_many_minutes=10, how_many_seconds=30):
                 break
             if timer() - start > how_many_seconds or quit_thread:
                 break
+    except NumRetriesReached:
+        error_msg = 'NumRetriesReached'
+        block_count = -1
+    except KeyboardInterrupt:
+        error_msg = 'KeyboardInterrupt'
+        # quit = True
+    except Exception as e:
+        error_msg = str(e)
+        block_count = -1
+
+    try:
+        stm = Steem(node=node, num_retries=3, num_retries_call=3, timeout=30)
+        account = Account("gtg", steem_instance=stm)
+        blockchain_version = stm.get_blockchain_version()
 
         start = timer()
         for acc_op in account.history_reverse(batch_size=100):
             history_count += 1
             if timer() - start > how_many_seconds or quit_thread:
                 break
+    except NumRetriesReached:
+        error_msg = 'NumRetriesReached'
+        history_count = -1
+        sucessfull = False
+    except KeyboardInterrupt:
+        error_msg = 'KeyboardInterrupt'
+        history_count = -1
+        sucessfull = False
+        # quit = True
+    except Exception as e:
+        error_msg = str(e)
+        history_count = -1
+        sucessfull = False
+
+    try:
+        stm = Steem(node=node, num_retries=3, num_retries_call=3, timeout=30)
+        account = Account("gtg", steem_instance=stm)
+        blockchain_version = stm.get_blockchain_version()
+
         start = timer()
         Vote(authorpermvoter, steem_instance=stm)
         stop = timer()
@@ -98,14 +135,15 @@ def benchmark_node(node, how_many_minutes=10, how_many_seconds=30):
         stop = timer()
         follow_time = stop - start
         access_time = (vote_time + comment_time + account_time + follow_time) / 4.0
-        sucessfull = True
     except NumRetriesReached:
         error_msg = 'NumRetriesReached'
+        access_time = -1
     except KeyboardInterrupt:
         error_msg = 'KeyboardInterrupt'
         # quit = True
     except Exception as e:
         error_msg = str(e)
+        access_time = -1
     return {'sucessfull': sucessfull, 'node': node, 'error': error_msg,
             'total_duration': timer() - start_total, 'block_count': block_count,
             'history_count': history_count, 'access_time': access_time, 'follow_time': follow_time,
@@ -116,17 +154,16 @@ if __name__ == "__main__":
     how_many_seconds = 30
     how_many_minutes = 10
     threading = True
-    set_default_nodes = True
+    set_default_nodes = False
     quit_thread = False
     benchmark_time = timer()
 
-    authorpermvoter = u"@gtg/ffdhu-gtg-witness-log|gandalf"
-    [author, permlink, voter] = resolve_authorpermvoter(authorpermvoter)
-    authorperm = construct_authorperm(author, permlink)
-
-    nodes = get_node_list(appbase=False) + get_node_list(appbase=True)
+    nodelist = NodeList()
+    nodes = nodelist.get_nodes(normal=True, appbase=True, dev=True)
     t = PrettyTable(["node", "N blocks", "N acc hist", "dur. call in s"])
     t.align = "l"
+    t2 = PrettyTable(["node", "version"])
+    t2.align = "l"
     working_nodes = []
     results = []
     if threading and FUTURES_MODULE:
@@ -144,8 +181,12 @@ if __name__ == "__main__":
             print("Current node:", node)
             result = benchmark_node(node, how_many_minutes, how_many_seconds)
             results.append(result)
+    for result in results:
+        t2.add_row([result["node"], result["version"]])
+    print(t2)
+    print("\n")
 
-    sortedList = sorted(results, key=lambda self: self["total_duration"], reverse=False)
+    sortedList = sorted(results, key=lambda self: self["history_count"], reverse=True)
     for result in sortedList:
         if result["sucessfull"]:
             t.add_row([

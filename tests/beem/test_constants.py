@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from parameterized import parameterized
 from pprint import pprint
 from beem import Steem, exceptions, constants
-from beem.utils import get_node_list
+from beem.nodelist import NodeList
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
@@ -20,9 +20,9 @@ class Testcases(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-
+        nodelist = NodeList()
         cls.bts = Steem(
-            node=get_node_list(appbase=False),
+            node=nodelist.get_nodes(appbase=False),
             nobroadcast=True,
             bundle=False,
             # Overwrite wallet to use this list of wifs only
@@ -30,7 +30,7 @@ class Testcases(unittest.TestCase):
             num_retries=10
         )
         cls.appbase = Steem(
-            node=get_node_list(appbase=True, testing=True),
+            node=nodelist.get_nodes(appbase=True, dev=True),
             nobroadcast=True,
             bundle=False,
             # Overwrite wallet to use this list of wifs only

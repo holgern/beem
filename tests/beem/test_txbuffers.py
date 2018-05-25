@@ -22,8 +22,8 @@ from beem.exceptions import (
 )
 from beemapi import exceptions
 from beem.wallet import Wallet
-from beem.utils import get_node_list, formatTimeFromNow
-
+from beem.utils import formatTimeFromNow
+from beem.nodelist import NodeList
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
 
@@ -31,14 +31,15 @@ class Testcases(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        nodelist = NodeList()
         cls.stm = Steem(
-            node=get_node_list(appbase=False),
+            node=nodelist.get_nodes(appbase=False),
             keys={"active": wif, "owner": wif, "memo": wif},
             nobroadcast=True,
             num_retries=10
         )
         cls.appbase = Steem(
-            node=get_node_list(appbase=True),
+            node=nodelist.get_nodes(normal=False, appbase=True),
             nobroadcast=True,
             keys={"active": wif, "owner": wif, "memo": wif},
             num_retries=10
@@ -165,7 +166,8 @@ class Testcases(unittest.TestCase):
         self.assertTrue(len(tx["signatures"]) > 0)
 
     def test_Transfer_broadcast(self):
-        stm = Steem(node=get_node_list(appbase=False),
+        nodelist = NodeList()
+        stm = Steem(node=nodelist.get_nodes(appbase=False),
                     keys=[wif],
                     num_retries=10)
         tx = TransactionBuilder(expiration=10, steem_instance=stm)
@@ -181,7 +183,8 @@ class Testcases(unittest.TestCase):
             tx.broadcast()
 
     def test_Transfer_broadcast_appbase(self):
-        stm = Steem(node=get_node_list(appbase=True),
+        nodelist = NodeList()
+        stm = Steem(node=nodelist.get_nodes(normal=False, appbase=True),
                     keys=[wif],
                     num_retries=10)
         tx = TransactionBuilder(expiration=10, steem_instance=stm)

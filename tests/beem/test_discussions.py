@@ -14,9 +14,9 @@ from beem.discussions import (
     Discussions_by_children, Discussions_by_hot, Discussions_by_feed, Discussions_by_blog,
     Discussions_by_comments, Discussions_by_promoted
 )
-from beem.utils import get_node_list
 from datetime import datetime
 from beem.instance import set_shared_steem_instance
+from beem.nodelist import NodeList
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
@@ -24,15 +24,16 @@ wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        nodelist = NodeList()
         cls.bts = Steem(
-            node=get_node_list(appbase=True),
+            node=nodelist.get_nodes(appbase=False),
             use_condenser=True,
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10
         )
         cls.appbase = Steem(
-            node=get_node_list(appbase=True),
+            node=nodelist.get_nodes(normal=False, appbase=True),
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10

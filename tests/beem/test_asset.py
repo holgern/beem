@@ -10,19 +10,20 @@ from beem import Steem
 from beem.asset import Asset
 from beem.instance import set_shared_steem_instance
 from beem.exceptions import AssetDoesNotExistsException
-from beem.utils import get_node_list
+from beem.nodelist import NodeList
 
 
 class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        nodelist = NodeList()
         cls.bts = Steem(
-            node=get_node_list(appbase=False),
+            node=nodelist.get_nodes(appbase=False),
             nobroadcast=True,
             num_retries=10
         )
         cls.appbase = Steem(
-            node=get_node_list(appbase=True),
+            node=nodelist.get_nodes(normal=False, appbase=True),
             nobroadcast=True,
             num_retries=10
         )

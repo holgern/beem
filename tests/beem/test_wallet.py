@@ -13,7 +13,7 @@ from beem.amount import Amount
 from beem.asset import Asset
 from beem.wallet import Wallet
 from beem.instance import set_shared_steem_instance, shared_steem_instance
-from beem.utils import get_node_list
+from beem.nodelist import NodeList
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
@@ -23,9 +23,10 @@ class Testcases(unittest.TestCase):
     def setUpClass(cls):
         stm = shared_steem_instance()
         stm.config.refreshBackup()
+        nodelist = NodeList()
 
         cls.stm = Steem(
-            node=get_node_list(appbase=False),
+            node=nodelist.get_nodes(appbase=False),
             nobroadcast=True,
             # We want to bundle many operations into a single transaction
             bundle=True,
@@ -33,7 +34,7 @@ class Testcases(unittest.TestCase):
             # Overwrite wallet to use this list of wifs only
         )
         cls.appbase = Steem(
-            node=get_node_list(appbase=True),
+            node=nodelist.get_nodes(normal=False, appbase=True),
             nobroadcast=True,
             bundle=True,
             num_retries=10
