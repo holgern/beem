@@ -138,6 +138,25 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.30
+-------
+* get_replies() for comments added
+* Account_witness_proxy added
+* Custom added
+* Custom_binary added
+* Prove_authority added
+* Limit_order_create2 added
+* Request_account_recovery added
+* Recover_account added
+* Escrow_transfer added
+* Escrow_dispute added
+* Escrow_release added
+* Escrow_approve added
+* Decline_voting_rights added
+* Export option for votes and curation command under beempy added
+* getOwnerKeysForAccount, getActiveKeysForAccount, getPostingKeysForAccount added
+* Node Class and Nodelist added
+
 0.19.29
 -------
 * Several bug fixes
