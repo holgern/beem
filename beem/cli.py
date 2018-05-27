@@ -1760,7 +1760,11 @@ def votes(account, direction, outgoing, incoming, days, export):
 @cli.command()
 @click.argument('authorperm', nargs=1, required=False)
 @click.option('--account', '-a', help='Show only curation for this account')
-@click.option('--limit', '-l', help='Show only the first minutes')
+@click.option('--limit', '-m', help='Show only the first minutes')
+@click.option('--min-vote', '-v', help='Show only votes higher than the given value')
+@click.option('--max-vote', '-w', help='Show only votes lower than the given value')
+@click.option('--min-performance', '-x', help='Show only votes with performance higher than the given value')
+@click.option('--max-performance', '-y', help='Show only votes with perfromance lower than the given value')
 @click.option('--payout', default=None, help="Show the curation for a potential payout in SBD as float")
 @click.option('--export', '-e', default=None, help="Export results to HTML-file")
 @click.option('--short', '-s', is_flag=True, default=False, help="Show only Curation without sum")
@@ -1768,7 +1772,7 @@ def votes(account, direction, outgoing, incoming, days, export):
 @click.option('--permlink', '-p', help='Show the permlink for each entry', is_flag=True, default=False)
 @click.option('--title', '-t', help='Show the title for each entry', is_flag=True, default=False)
 @click.option('--days', '-d', default=7., help="Limit shown rewards by this amount of days (default: 7), max is 7 days.")
-def curation(authorperm, account, limit, payout, export, short, length, permlink, title, days):
+def curation(authorperm, account, limit, min_vote, max_vote, min_performance, max_performance, payout, export, short, length, permlink, title, days):
     """ Lists curation rewards of all votes for authorperm
 
         When authorperm is empty or "all", the curation rewards
@@ -1838,13 +1842,13 @@ def curation(authorperm, account, limit, payout, export, short, length, permlink
         rows = []
         sum_curation = [0, 0, 0, 0]
         max_curation = [0, 0, 0, 0, 0, 0]
-        max_vote = [0, 0, 0, 0, 0, 0]
+        highest_vote = [0, 0, 0, 0, 0, 0]
         for vote in comment["active_votes"]:
             vote_SBD = stm.rshares_to_sbd(int(vote["rshares"]))
             curation_SBD = curation_rewards_SBD["active_votes"][vote["voter"]]
             curation_SP = curation_rewards_SP["active_votes"][vote["voter"]]
             if vote_SBD > 0:
-                penalty = ((100 - comment.get_curation_penalty(vote_time=vote["time"])) / 100 * vote_SBD)
+                penalty = ((comment.get_curation_penalty(vote_time=vote["time"])) * vote_SBD)
                 performance = (float(curation_SBD) / vote_SBD * 100)
             else:
                 performance = 0
@@ -1862,8 +1866,8 @@ def curation(authorperm, account, limit, payout, export, short, length, permlink
                    performance]
             if row[-1] > max_curation[-1]:
                 max_curation = row
-            if row[2] > max_vote[2]:
-                max_vote = row
+            if row[2] > highest_vote[2]:
+                highest_vote = row
             rows.append(row)
         sortedList = sorted(rows, key=lambda row: (row[1]), reverse=False)
         new_row = []
@@ -1888,15 +1892,25 @@ def curation(authorperm, account, limit, payout, export, short, length, permlink
         if not all_posts:
             voter = [""]
             voter2 = [""]
-
+        found_voter = False
         for row in sortedList:
             if limit is not None and row[1] > float(limit):
+                continue
+            if min_vote is not None and float(row[2]) < float(min_vote):
+                continue
+            if max_vote is not None and float(row[2]) > float(max_vote):
+                continue
+            if min_performance is not None and float(row[5]) < float(min_performance):
+                continue
+            if max_performance is not None and float(row[5]) > float(max_performance):
                 continue
             if show_all_voter or account == row[0]:
                 if not all_posts:
                     voter = [row[0]]
                 if all_posts:
                     new_row[0] = "%d. %s" % (index, comment.author)
+                if not found_voter:
+                    found_voter = True
                 t.add_row(new_row + voter + ["%.1f min" % row[1],
                                              "%.3f SBD" % float(row[2]),
                                              "%.3f SBD" % float(row[3]),
@@ -1904,7 +1918,7 @@ def curation(authorperm, account, limit, payout, export, short, length, permlink
                                              "%.1f %%" % (row[5])])
                 if len(authorperm_list) == 1:
                     new_row = new_row2
-        if not short:
+        if not short and found_voter:
             t.add_row(new_row2 + voter2 + ["", "", "", "", ""])
             if sum_curation[0] > 0:
                 curation_sum_percentage = sum_curation[3] / sum_curation[0] * 100
@@ -1913,11 +1927,11 @@ def curation(authorperm, account, limit, payout, export, short, length, permlink
             sum_line = new_row2 + voter2
             sum_line[-1] = "High. vote"
 
-            t.add_row(sum_line + ["%.1f min" % max_vote[1],
-                                  "%.3f SBD" % float(max_vote[2]),
-                                  "%.3f SBD" % float(max_vote[3]),
-                                  "%.3f SP" % (max_vote[4]),
-                                  "%.1f %%" % (max_vote[5])])
+            t.add_row(sum_line + ["%.1f min" % highest_vote[1],
+                                  "%.3f SBD" % float(highest_vote[2]),
+                                  "%.3f SBD" % float(highest_vote[3]),
+                                  "%.3f SP" % (highest_vote[4]),
+                                  "%.1f %%" % (highest_vote[5])])
             sum_line[-1] = "High. Cur."
             t.add_row(sum_line + ["%.1f min" % max_curation[1],
                                   "%.3f SBD" % float(max_curation[2]),
