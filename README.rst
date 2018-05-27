@@ -138,6 +138,10 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.32
+-------
+* bug fix and improvements for beempy curation
+
 0.19.31
 -------
 * datetime.date is also supported
