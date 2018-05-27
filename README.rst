@@ -138,6 +138,14 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.31
+-------
+* datetime.date is also supported
+* beempy curation improved
+* owner key is used, when provided and when no other permission is given
+* active key is used, when provided and when no posting key is given (post, vote, ...)
+* MissingKeyError is raised when a wrong key is set by Steem(keys=[])
+
 0.19.30
 -------
 * get_replies() for comments added
