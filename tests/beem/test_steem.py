@@ -11,7 +11,7 @@ from parameterized import parameterized
 import random
 import json
 from pprint import pprint
-from beem import Steem
+from beem import Steem, exceptions
 from beem.amount import Amount
 from beem.memo import Memo
 from beem.version import version as beem_version
@@ -35,12 +35,14 @@ class Testcases(unittest.TestCase):
         cls.bts = Steem(
             node=nodelist.get_nodes(appbase=False),
             nobroadcast=True,
+            unsigned=True,
             data_refresh_time_seconds=900,
             keys={"active": wif, "owner": wif, "memo": wif},
             num_retries=10)
         cls.appbase = Steem(
             node=nodelist.get_nodes(normal=False, appbase=True),
             nobroadcast=True,
+            unsigned=True,
             data_refresh_time_seconds=900,
             keys={"active": wif, "owner": wif, "memo": wif},
             num_retries=10)
@@ -59,6 +61,7 @@ class Testcases(unittest.TestCase):
         elif node_param == "appbase":
             bts = self.appbase
             acc = self.account_appbase
+        acc.steem.txbuffer.clear()
         tx = acc.transfer(
             "test", 1.33, "SBD", memo="Foobar", account="test1")
         self.assertEqual(
@@ -78,46 +81,19 @@ class Testcases(unittest.TestCase):
         ("non_appbase"),
         ("appbase"),
     ])
-    def test_transfer_memo(self, node_param):
-        if node_param == "non_appbase":
-            bts = self.bts
-            acc = self.account
-        elif node_param == "appbase":
-            bts = self.appbase
-            acc = self.account_appbase
-        tx = acc.transfer(
-            "test", 1.33, "SBD", memo="#Foobar", account="test1")
-        self.assertEqual(
-            tx["operations"][0][0],
-            "transfer"
-        )
-        op = tx["operations"][0][1]
-        self.assertIn("memo", op)
-        self.assertIn("#", op["memo"])
-        m = Memo(from_account=op["from"], to_account=op["to"], steem_instance=bts)
-        memo = m.decrypt(op["memo"])
-        self.assertEqual(memo, "Foobar")
-
-        self.assertEqual(op["from"], "test1")
-        self.assertEqual(op["to"], "test")
-        amount = Amount(op["amount"], steem_instance=bts)
-        self.assertEqual(float(amount), 1.33)
-
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
     def test_create_account(self, node_param):
         nodelist = NodeList()
         if node_param == "non_appbase":
             bts = Steem(node=nodelist.get_nodes(appbase=False),
                         nobroadcast=True,
+                        unsigned=True,
                         data_refresh_time_seconds=900,
                         keys={"active": wif, "owner": wif, "memo": wif},
                         num_retries=10)
         elif node_param == "appbase":
             bts = Steem(node=nodelist.get_nodes(normal=False, appbase=True),
                         nobroadcast=True,
+                        unsigned=True,
                         data_refresh_time_seconds=900,
                         keys={"active": wif, "owner": wif, "memo": wif},
                         num_retries=10)
@@ -127,6 +103,7 @@ class Testcases(unittest.TestCase):
         key3 = PrivateKey()
         key4 = PrivateKey()
         key5 = PrivateKey()
+        bts.txbuffer.clear()
         tx = bts.create_account(
             name,
             creator="test",   # 1.2.7
@@ -190,17 +167,20 @@ class Testcases(unittest.TestCase):
         if node_param == "non_appbase":
             bts = Steem(node=nodelist.get_nodes(appbase=False),
                         nobroadcast=True,
+                        unsigned=True,
                         data_refresh_time_seconds=900,
                         keys={"active": wif, "owner": wif, "memo": wif},
                         num_retries=10)
         elif node_param == "appbase":
             bts = Steem(node=nodelist.get_nodes(normal=False, appbase=True),
                         nobroadcast=True,
+                        unsigned=True,
                         data_refresh_time_seconds=900,
                         keys={"active": wif, "owner": wif, "memo": wif},
                         num_retries=10)
         name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
         key5 = PrivateKey()
+        bts.txbuffer.clear()
         tx = bts.create_account(
             name,
             creator="test",   # 1.2.7
@@ -251,12 +231,14 @@ class Testcases(unittest.TestCase):
         if node_param == "non_appbase":
             bts = Steem(node=nodelist.get_nodes(appbase=False),
                         nobroadcast=True,
+                        unsigned=True,
                         data_refresh_time_seconds=900,
                         keys={"active": wif, "owner": wif, "memo": wif},
                         num_retries=10)
         elif node_param == "appbase":
             bts = Steem(node=nodelist.get_nodes(normal=False, appbase=True),
                         nobroadcast=True,
+                        unsigned=True,
                         data_refresh_time_seconds=900,
                         keys={"active": wif, "owner": wif, "memo": wif},
                         num_retries=10)
@@ -266,6 +248,7 @@ class Testcases(unittest.TestCase):
         key3 = PrivateKey()
         key4 = PrivateKey()
         key5 = PrivateKey()
+        bts.txbuffer.clear()
         tx = bts.create_account(
             name,
             creator="test",   # 1.2.7
@@ -458,6 +441,7 @@ class Testcases(unittest.TestCase):
             acc = self.account
         elif node_param == "appbase":
             acc = self.account_appbase
+        acc.steem.txbuffer.clear()
         tx = acc.update_memo_key("STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -477,6 +461,7 @@ class Testcases(unittest.TestCase):
             w = self.account
         elif node_param == "appbase":
             w = self.account_appbase
+        w.steem.txbuffer.clear()
         tx = w.approvewitness("test1")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -489,6 +474,7 @@ class Testcases(unittest.TestCase):
 
     def test_post(self):
         bts = self.bts
+        bts.txbuffer.clear()
         tx = bts.post("title", "body", author="test", permlink=None, reply_identifier=None,
                       json_metadata=None, comment_options=None, community="test", tags=["a", "b", "c", "d", "e"],
                       beneficiaries=[{'account': 'test1'}], self_vote=True)
@@ -508,6 +494,7 @@ class Testcases(unittest.TestCase):
 
     def test_comment_option(self):
         bts = self.bts
+        bts.txbuffer.clear()
         tx = bts.comment_options({}, "@gtg/witness-gtg-log", account="test")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -600,11 +587,17 @@ class Testcases(unittest.TestCase):
 
     def test_sign(self):
         bts = self.bts
-        tx = bts.sign()
-        self.assertTrue(tx is not None)
+        with self.assertRaises(
+            exceptions.MissingKeyError
+        ):
+            bts.sign()
 
     def test_broadcast(self):
         bts = self.bts
-        tx = bts.sign()
-        tx = bts.broadcast(tx=tx)
-        self.assertTrue(tx is None)
+        bts.txbuffer.clear()
+        tx = bts.comment_options({}, "@gtg/witness-gtg-log", account="test")
+        # tx = bts.sign()
+        with self.assertRaises(
+            exceptions.MissingKeyError
+        ):
+            bts.broadcast(tx=tx)

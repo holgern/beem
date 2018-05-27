@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from builtins import bytes, int, str
 import pytz
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date, time
 import math
 import random
 import logging
@@ -148,7 +148,7 @@ class Account(BlockchainObject):
         for p in parse_times:
             if p in output:
                 date = output.get(p, datetime(1970, 1, 1, 0, 0))
-                if isinstance(date, datetime):
+                if isinstance(date, (datetime, date, time)):
                     output[p] = formatTimeString(date)
                 else:
                     output[p] = date
@@ -883,7 +883,7 @@ class Account(BlockchainObject):
         created = self["created"]
         if stop_diff <= 0:
             raise ValueError("stop_diff <= 0 is not allowed and would lead to an endless lopp...")
-        if not isinstance(blocktime, datetime):
+        if not isinstance(blocktime, (datetime, date, time)):
             b = Blockchain(steem_instance=self.steem)
             created_blocknum = b.get_estimated_block_num(created, accurate=True)
             if blocktime < created_blocknum:
@@ -901,7 +901,7 @@ class Account(BlockchainObject):
         else:
             return 0
 
-        if isinstance(blocktime, datetime):
+        if isinstance(blocktime, (datetime, date, time)):
             account_lifespan_sec = (formatTimeString(last_trx["timestamp"]) - created).total_seconds()
             if (formatTimeString(last_trx["timestamp"]) - blocktime).total_seconds() < 0:
                 return max_index
@@ -934,11 +934,11 @@ class Account(BlockchainObject):
 
             if op_start_last is not None:
                 diff_op = (op_start_last[0][0] - estimated_op_num)
-                if isinstance(blocktime, datetime) and diff_op != 0:
+                if isinstance(blocktime, (datetime, date, time)) and diff_op != 0:
                     factor = (formatTimeString(op_start_last[0][1]["timestamp"]) - formatTimeString(trx["timestamp"])).total_seconds() / diff_op
-                elif not isinstance(blocktime, datetime) and diff_op != 0:
+                elif not isinstance(blocktime, (datetime, date, time)) and diff_op != 0:
                     factor = (op_start_last[0][1]["block"] - trx["block"]) / diff_op
-            if isinstance(blocktime, datetime):
+            if isinstance(blocktime, (datetime, date, time)):
                 op_diff = (blocktime - formatTimeString(trx["timestamp"])).total_seconds() / factor
             else:
                 op_diff = (blocktime - trx["block"]) / factor
@@ -1029,7 +1029,7 @@ class Account(BlockchainObject):
             txs_list = txs
         for item in txs_list:
             item_index, event = item
-            if start and isinstance(start, datetime):
+            if start and isinstance(start, (datetime, date, time)):
                 timediff = start - formatTimeString(event["timestamp"])
                 if timediff.total_seconds() * float(order) > 0:
                     continue
@@ -1041,7 +1041,7 @@ class Account(BlockchainObject):
                 continue
             elif start and not use_block_num and order == -1 and item_index > start:
                 continue
-            if stop and isinstance(stop, datetime):
+            if stop and isinstance(stop, (datetime, date, time)):
                 timediff = stop - formatTimeString(event["timestamp"])
                 if timediff.total_seconds() * float(order) < 0:
                     return
@@ -1164,12 +1164,12 @@ class Account(BlockchainObject):
             return
         start = addTzInfo(start)
         stop = addTzInfo(stop)
-        if start is not None and not use_block_num and not isinstance(start, datetime):
+        if start is not None and not use_block_num and not isinstance(start, (datetime, date, time)):
             start_index = start
         elif start is not None and max_index > batch_size:
             op_est = self.estimate_virtual_op_num(start, stop_diff=1)
             est_diff = 0
-            if isinstance(start, datetime):
+            if isinstance(start, (datetime, date, time)):
                 for h in self.get_account_history(op_est, 0):
                     block_date = formatTimeString(h["timestamp"])
                 while(op_est > est_diff + batch_size and block_date > start):
@@ -1178,7 +1178,7 @@ class Account(BlockchainObject):
                         est_diff = op_est
                     for h in self.get_account_history(op_est - est_diff, 0):
                         block_date = formatTimeString(h["timestamp"])
-            elif not isinstance(start, datetime):
+            elif not isinstance(start, (datetime, date, time)):
                 for h in self.get_account_history(op_est, 0):
                     block_num = h["block"]
                 while(op_est > est_diff + batch_size and block_num > start):
@@ -1209,7 +1209,7 @@ class Account(BlockchainObject):
                     op_type = item['type']
                     timestamp = item["timestamp"]
                     block_num = item["block"]
-                if start and isinstance(start, datetime):
+                if start and isinstance(start, (datetime, date, time)):
                     timediff = start - formatTimeString(timestamp)
                     if timediff.total_seconds() > 0:
                         continue
@@ -1217,7 +1217,7 @@ class Account(BlockchainObject):
                     continue
                 elif start and not use_block_num and item_index < start:
                     continue
-                if stop and isinstance(stop, datetime):
+                if stop and isinstance(stop, (datetime, date, time)):
                     timediff = stop - formatTimeString(timestamp)
                     if timediff.total_seconds() < 0:
                         first = max_index + _limit
@@ -1329,7 +1329,7 @@ class Account(BlockchainObject):
         elif start is not None and first > batch_size:
             op_est = self.estimate_virtual_op_num(start, stop_diff=1)
             est_diff = 0
-            if isinstance(start, datetime):
+            if isinstance(start, (datetime, date, time)):
                 for h in self.get_account_history(op_est, 0):
                     block_date = h["timestamp"]
                 while(op_est + est_diff + batch_size < first and block_date < start):
@@ -1368,7 +1368,7 @@ class Account(BlockchainObject):
                     op_type = item['type']
                     timestamp = item["timestamp"]
                     block_num = item["block"]
-                if start and isinstance(start, datetime):
+                if start and isinstance(start, (datetime, date, time)):
                     timediff = start - formatTimeString(timestamp)
                     if timediff.total_seconds() < 0:
                         continue
@@ -1376,7 +1376,7 @@ class Account(BlockchainObject):
                     continue
                 elif start and not use_block_num and item_index > start:
                     continue
-                if stop and isinstance(stop, datetime):
+                if stop and isinstance(stop, (datetime, date, time)):
                     timediff = stop - formatTimeString(timestamp)
                     if timediff.total_seconds() > 0:
                         first = 0

@@ -31,6 +31,7 @@ class Testcases(unittest.TestCase):
             node=nodelist.get_nodes(normal=True, appbase=False),
             nobroadcast=True,
             bundle=False,
+            unsigned=True,
             # Overwrite wallet to use this list of wifs only
             keys={"active": wif},
             num_retries=10
@@ -39,6 +40,7 @@ class Testcases(unittest.TestCase):
             node=nodelist.get_nodes(normal=False, appbase=True, dev=True),
             nobroadcast=True,
             bundle=False,
+            unsigned=True,
             # Overwrite wallet to use this list of wifs only
             keys={"active": wif},
             num_retries=10
@@ -340,8 +342,18 @@ class Testcases(unittest.TestCase):
         self.assertEqual(count['follower_count'], len(followers))
         self.assertEqual(count['following_count'], len(following))
 
+    def test_MissingKeyError(self):
+        w = self.account
+        w.steem.txbuffer.clear()
+        tx = w.convert("1 SBD")
+        with self.assertRaises(
+            exceptions.MissingKeyError
+        ):
+            tx.sign()
+
     def test_withdraw_vesting(self):
         w = self.account
+        w.steem.txbuffer.clear()
         tx = w.withdraw_vesting("100 VESTS")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -354,6 +366,7 @@ class Testcases(unittest.TestCase):
 
     def test_delegate_vesting_shares(self):
         w = self.account
+        w.steem.txbuffer.clear()
         tx = w.delegate_vesting_shares("test1", "100 VESTS")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -366,6 +379,7 @@ class Testcases(unittest.TestCase):
 
     def test_claim_reward_balance(self):
         w = self.account
+        w.steem.txbuffer.clear()
         tx = w.claim_reward_balance()
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -378,6 +392,7 @@ class Testcases(unittest.TestCase):
 
     def test_cancel_transfer_from_savings(self):
         w = self.account
+        w.steem.txbuffer.clear()
         tx = w.cancel_transfer_from_savings(0)
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -390,6 +405,7 @@ class Testcases(unittest.TestCase):
 
     def test_transfer_from_savings(self):
         w = self.account
+        w.steem.txbuffer.clear()
         tx = w.transfer_from_savings(1, "STEEM", "")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -402,6 +418,7 @@ class Testcases(unittest.TestCase):
 
     def test_transfer_to_savings(self):
         w = self.account
+        w.steem.txbuffer.clear()
         tx = w.transfer_to_savings(1, "STEEM", "")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -414,6 +431,7 @@ class Testcases(unittest.TestCase):
 
     def test_convert(self):
         w = self.account
+        w.steem.txbuffer.clear()
         tx = w.convert("1 SBD")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -426,6 +444,7 @@ class Testcases(unittest.TestCase):
 
     def test_transfer_to_vesting(self):
         w = self.account
+        w.steem.txbuffer.clear()
         tx = w.transfer_to_vesting("1 STEEM")
         self.assertEqual(
             (tx["operations"][0][0]),

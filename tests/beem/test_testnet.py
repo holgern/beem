@@ -10,12 +10,20 @@ import unittest
 import random
 from pprint import pprint
 from beem import Steem
+from beem.exceptions import (
+    InsufficientAuthorityError,
+    MissingKeyError,
+    InvalidWifError,
+    WalletLocked
+)
+from beemapi import exceptions
 from beem.amount import Amount
 from beem.witness import Witness
 from beem.account import Account
 from beem.instance import set_shared_steem_instance, shared_steem_instance
 from beem.blockchain import Blockchain
 from beem.block import Block
+from beem.memo import Memo
 from beem.transactionbuilder import TransactionBuilder
 from beembase.operations import Transfer
 from beemgraphenebase.account import PasswordKey, PrivateKey, PublicKey
@@ -115,6 +123,30 @@ class Testcases(unittest.TestCase):
         self.assertEqual(len(tx['signatures']), 1)
         op = tx["operations"][0][1]
         self.assertIn("memo", op)
+        self.assertEqual(op["from"], "beem")
+        self.assertEqual(op["to"], "test1")
+        amount = Amount(op["amount"], steem_instance=bts)
+        self.assertEqual(float(amount), 1.33)
+        bts.nobroadcast = True
+
+    def test_transfer_memo(self):
+        bts = self.bts
+        bts.nobroadcast = False
+        bts.wallet.unlock("123")
+        acc = Account("beem", steem_instance=bts)
+        tx = acc.transfer(
+            "test1", 1.33, "SBD", memo="#Foobar")
+        self.assertEqual(
+            tx["operations"][0][0],
+            "transfer"
+        )
+        op = tx["operations"][0][1]
+        self.assertIn("memo", op)
+        self.assertIn("#", op["memo"])
+        m = Memo(from_account=op["from"], to_account=op["to"], steem_instance=bts)
+        memo = m.decrypt(op["memo"])
+        self.assertEqual(memo, "Foobar")
+
         self.assertEqual(op["from"], "beem")
         self.assertEqual(op["to"], "test1")
         amount = Amount(op["amount"], steem_instance=bts)
@@ -472,3 +504,107 @@ class Testcases(unittest.TestCase):
         self.assertIn(
             "test1",
             op["witness"])
+
+    def test_appendWif(self):
+        nodelist = NodeList()
+        stm = Steem(node=nodelist.get_testnet(),
+                    nobroadcast=True,
+                    expiration=120,
+                    num_retries=10)
+        tx = TransactionBuilder(steem_instance=stm)
+        tx.appendOps(Transfer(**{"from": "beem",
+                                 "to": "test1",
+                                 "amount": Amount("1 STEEM", steem_instance=stm),
+                                 "memo": ""}))
+        with self.assertRaises(
+            MissingKeyError
+        ):
+            tx.sign()
+        with self.assertRaises(
+            InvalidWifError
+        ):
+            tx.appendWif("abcdefg")
+        tx.appendWif(self.active_key)
+        tx.sign()
+        self.assertTrue(len(tx["signatures"]) > 0)
+
+    def test_appendSigner(self):
+        nodelist = NodeList()
+        stm = Steem(node=nodelist.get_testnet(),
+                    keys=[self.active_key],
+                    nobroadcast=True,
+                    expiration=120,
+                    num_retries=10)
+        tx = TransactionBuilder(steem_instance=stm)
+        tx.appendOps(Transfer(**{"from": "beem",
+                                 "to": "test1",
+                                 "amount": Amount("1 STEEM", steem_instance=stm),
+                                 "memo": ""}))
+        account = Account("beem", steem_instance=stm)
+        with self.assertRaises(
+            AssertionError
+        ):
+            tx.appendSigner(account, "abcdefg")
+        tx.appendSigner(account, "active")
+        self.assertTrue(len(tx.wifs) > 0)
+        tx.sign()
+        self.assertTrue(len(tx["signatures"]) > 0)
+
+    def test_verifyAuthorityException(self):
+        nodelist = NodeList()
+        stm = Steem(node=nodelist.get_testnet(),
+                    keys=[self.posting_key],
+                    nobroadcast=True,
+                    expiration=120,
+                    num_retries=10)
+        tx = TransactionBuilder(steem_instance=stm)
+        tx.appendOps(Transfer(**{"from": "beem",
+                                 "to": "test1",
+                                 "amount": Amount("1 STEEM", steem_instance=stm),
+                                 "memo": ""}))
+        account = Account("test", steem_instance=stm)
+        tx.appendSigner(account, "active")
+        tx.appendWif(self.posting_key)
+        self.assertTrue(len(tx.wifs) > 0)
+        tx.sign()
+        with self.assertRaises(
+            exceptions.MissingRequiredActiveAuthority
+        ):
+            tx.verify_authority()
+        self.assertTrue(len(tx["signatures"]) > 0)
+
+    def test_Transfer_broadcast(self):
+        nodelist = NodeList()
+        stm = Steem(node=nodelist.get_testnet(),
+                    keys=[self.active_key],
+                    nobroadcast=True,
+                    expiration=120,
+                    num_retries=10)
+
+        tx = TransactionBuilder(expiration=10, steem_instance=stm)
+        tx.appendOps(Transfer(**{"from": "beem",
+                                 "to": "test1",
+                                 "amount": Amount("1 STEEM", steem_instance=stm),
+                                 "memo": ""}))
+        tx.appendSigner("beem", "active")
+        tx.sign()
+        tx.broadcast()
+
+    def test_TransactionConstructor(self):
+        stm = self.bts
+        opTransfer = Transfer(**{"from": "beem",
+                                 "to": "test1",
+                                 "amount": Amount("1 STEEM", steem_instance=stm),
+                                 "memo": ""})
+        tx1 = TransactionBuilder(steem_instance=stm)
+        tx1.appendOps(opTransfer)
+        tx = TransactionBuilder(tx1, steem_instance=stm)
+        self.assertFalse(tx.is_empty())
+        self.assertTrue(len(tx.list_operations()) == 1)
+        self.assertTrue(repr(tx) is not None)
+        self.assertTrue(str(tx) is not None)
+        account = Account("beem", steem_instance=stm)
+        tx.appendSigner(account, "active")
+        self.assertTrue(len(tx.wifs) > 0)
+        tx.sign()
+        self.assertTrue(len(tx["signatures"]) > 0)

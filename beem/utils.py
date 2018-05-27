@@ -5,9 +5,9 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import next
 import re
-import time
+import time as timenow
 import math
-from datetime import datetime, tzinfo, timedelta
+from datetime import datetime, tzinfo, timedelta, date, time
 import pytz
 import difflib
 
@@ -24,14 +24,14 @@ def formatTime(t):
     """
     if isinstance(t, float):
         return datetime.utcfromtimestamp(t).strftime("%Y%m%dt%H%M%S%Z")
-    if isinstance(t, datetime):
+    if isinstance(t, (datetime, date, time)):
         return t.strftime("%Y%m%dt%H%M%S%Z")
 
 
 def formatTimeString(t):
     """ Properly Format Time for permlinks
     """
-    if isinstance(t, datetime):
+    if isinstance(t, (datetime, date, time)):
         return t.strftime(timeFormat)
     utc = pytz.timezone('UTC')
     return utc.localize(datetime.strptime(t, timeFormat))
@@ -39,7 +39,7 @@ def formatTimeString(t):
 
 def addTzInfo(t, timezone='UTC'):
     """Returns a datetime object with tzinfo added"""
-    if t and isinstance(t, datetime) and t.tzinfo is None:
+    if t and isinstance(t, (datetime, date, time)) and t.tzinfo is None:
         utc = pytz.timezone(timezone)
         t = utc.localize(t)
     return t
@@ -55,7 +55,7 @@ def formatTimeFromNow(secs=0):
 
     """
     return datetime.utcfromtimestamp(
-        time.time() + int(secs)).strftime(timeFormat)
+        timenow.time() + int(secs)).strftime(timeFormat)
 
 
 def formatTimedelta(td):
@@ -104,11 +104,11 @@ def derive_permlink(title, parent_permlink=None, parent_author=None):
         permlink += parent_author.replace("@", "")
         permlink += "-"
         permlink += parent_permlink
-        permlink += "-" + formatTime(time.time()) + "z"
+        permlink += "-" + formatTime(timenow.time()) + "z"
     elif parent_permlink:
         permlink += "re-"
         permlink += parent_permlink
-        permlink += "-" + formatTime(time.time()) + "z"
+        permlink += "-" + formatTime(timenow.time()) + "z"
     else:
         permlink += title
 

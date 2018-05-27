@@ -1761,33 +1761,73 @@ def votes(account, direction, outgoing, incoming, days, export):
 @click.argument('authorperm', nargs=1, required=False)
 @click.option('--account', '-a', help='Show only curation for this account')
 @click.option('--limit', '-l', help='Show only the first minutes')
-@click.option('--payout', '-p', default=None, help="Show the curation for a potential payout in SBD as float")
+@click.option('--payout', default=None, help="Show the curation for a potential payout in SBD as float")
 @click.option('--export', '-e', default=None, help="Export results to HTML-file")
-def curation(authorperm, account, limit, payout, export):
+@click.option('--short', '-s', is_flag=True, default=False, help="Show only Curation without sum")
+@click.option('--length', '-l', help='Limits the permlink character length', default=None)
+@click.option('--permlink', '-p', help='Show the permlink for each entry', is_flag=True, default=False)
+@click.option('--title', '-t', help='Show the title for each entry', is_flag=True, default=False)
+@click.option('--days', '-d', default=7., help="Limit shown rewards by this amount of days (default: 7), max is 7 days.")
+def curation(authorperm, account, limit, payout, export, short, length, permlink, title, days):
     """ Lists curation rewards of all votes for authorperm
 
-        When authorperm is empty or "all", curation rewards
-        for all account votes is shown.
+        When authorperm is empty or "all", the curation rewards
+        for all account votes are shown.
+
+        authorperm can also be a number. e.g. 5 is equivalent to
+        the fifth account vote in the given time duration (default is 7 days)
+
     """
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    if authorperm == 'all' or authorperm is None:
+    if authorperm is None:
+        authorperm = 'all'
+    if account is None and authorperm is not 'all':
+        show_all_voter = True
+    else:
+        show_all_voter = False
+    if authorperm == 'all' or authorperm.isdigit():
         if not account:
             account = stm.config["default_account"]
         utc = pytz.timezone('UTC')
-        limit_time = utc.localize(datetime.utcnow()) - timedelta(days=7)
+        limit_time = utc.localize(datetime.utcnow()) - timedelta(days=days)
         votes = AccountVotes(account, start=limit_time, steem_instance=stm)
         authorperm_list = [Comment(vote.authorperm, steem_instance=stm) for vote in votes]
+        if authorperm.isdigit():
+            if len(authorperm_list) < int(authorperm):
+                raise ValueError("Authorperm id must be lower than %d" % (len(authorperm_list) + 1))
+            authorperm_list = [authorperm_list[int(authorperm) - 1]["authorperm"]]
+            all_posts = False
+        else:
+            all_posts = True
     else:
         authorperm_list = [authorperm]
-    if export:
+        all_posts = False
+    if (all_posts) and permlink:
+        t = PrettyTable(["Author", "permlink", "Voting time", "Vote", "Early vote loss", "Curation", "Performance"])
+        t.align = "l"
+    elif (all_posts) and title:
+        t = PrettyTable(["Author", "permlink", "Voting time", "Vote", "Early vote loss", "Curation", "Performance"])
+        t.align = "l"
+    elif all_posts:
+        t = PrettyTable(["Author", "Voting time", "Vote", "Early vote loss", "Curation", "Performance"])
+        t.align = "l"
+    elif (export) and permlink:
         t = PrettyTable(["Author", "permlink", "Voter", "Voting time", "Vote", "Early vote loss", "Curation", "Performance"])
+        t.align = "l"
+    elif (export) and title:
+        t = PrettyTable(["Author", "permlink", "Voter", "Voting time", "Vote", "Early vote loss", "Curation", "Performance"])
+        t.align = "l"
+    elif export:
+        t = PrettyTable(["Author", "Voter", "Voting time", "Vote", "Early vote loss", "Curation", "Performance"])
         t.align = "l"
     else:
         t = PrettyTable(["Voter", "Voting time", "Vote", "Early vote loss", "Curation", "Performance"])
         t.align = "l"
+    index = 0
     for authorperm in authorperm_list:
+        index += 1
         comment = Comment(authorperm, steem_instance=stm)
         if payout is not None and comment.is_pending():
             payout = float(payout)
@@ -1828,56 +1868,79 @@ def curation(authorperm, account, limit, payout, export):
         sortedList = sorted(rows, key=lambda row: (row[1]), reverse=False)
         new_row = []
         new_row2 = []
-        if export:
-            new_row = [comment.author, comment.permlink]
+        voter = []
+        voter2 = []
+        if (all_posts or export) and permlink:
+            if length:
+                new_row = [comment.author, comment.permlink[:int(length)]]
+            else:
+                new_row = [comment.author, comment.permlink]
             new_row2 = ["", ""]
+        elif (all_posts or export) and title:
+            if length:
+                new_row = [comment.author, comment.title[:int(length)]]
+            else:
+                new_row = [comment.author, comment.title]
+            new_row2 = ["", ""]
+        elif (all_posts or export):
+            new_row = [comment.author]
+            new_row2 = [""]
+        if not all_posts:
+            voter = [""]
+            voter2 = [""]
+
         for row in sortedList:
             if limit is not None and row[1] > float(limit):
                 continue
-            if account is None or account == row[0]:
-                t.add_row(new_row + [row[0],
-                                     "%.1f min" % row[1],
-                                     "%.3f SBD" % float(row[2]),
-                                     "%.3f SBD" % float(row[3]),
-                                     "%.3f SP" % (row[4]),
-                                     "%.1f %%" % (row[5])])
+            if show_all_voter or account == row[0]:
+                if not all_posts:
+                    voter = [row[0]]
+                if all_posts:
+                    new_row[0] = "%d. %s" % (index, comment.author)
+                t.add_row(new_row + voter + ["%.1f min" % row[1],
+                                             "%.3f SBD" % float(row[2]),
+                                             "%.3f SBD" % float(row[3]),
+                                             "%.3f SP" % (row[4]),
+                                             "%.1f %%" % (row[5])])
                 if len(authorperm_list) == 1:
                     new_row = new_row2
-        if export:
-            t.add_row(["", "", "", "", "", "", "", ""])
-        else:
-            t.add_row(["", "", "", "", "", ""])
-        if sum_curation[0] > 0:
-            curation_sum_percentage = sum_curation[3] / sum_curation[0] * 100
-        else:
-            curation_sum_percentage = 0
+        if not short:
+            t.add_row(new_row2 + voter2 + ["", "", "", "", ""])
+            if sum_curation[0] > 0:
+                curation_sum_percentage = sum_curation[3] / sum_curation[0] * 100
+            else:
+                curation_sum_percentage = 0
+            sum_line = new_row2 + voter2
+            sum_line[-1] = "High. vote"
 
-        t.add_row(new_row2 + ["High. vote",
-                              "%.1f min" % max_vote[1],
-                              "%.3f SBD" % float(max_vote[2]),
-                              "%.3f SBD" % float(max_vote[3]),
-                              "%.3f SP" % (max_vote[4]),
-                              "%.1f %%" % (max_vote[5])])
-        t.add_row(new_row2 + ["High. Cur.",
-                              "%.1f min" % max_curation[1],
-                              "%.3f SBD" % float(max_curation[2]),
-                              "%.3f SBD" % float(max_curation[3]),
-                              "%.3f SP" % (max_curation[4]),
-                              "%.1f %%" % (max_curation[5])])
-        t.add_row(new_row2 + ["Sum",
-                              "-",
-                              "%.3f SBD" % (sum_curation[0]),
-                              "%.3f SBD" % (sum_curation[1]),
-                              "%.3f SP" % (sum_curation[2]),
-                              "%.2f %%" % curation_sum_percentage])
-        if export:
-            t.add_row(["", "", "-", "-", "-", "-", "-", "-"])
-        else:
-            print("%s" % authorperm)
+            t.add_row(sum_line + ["%.1f min" % max_vote[1],
+                                  "%.3f SBD" % float(max_vote[2]),
+                                  "%.3f SBD" % float(max_vote[3]),
+                                  "%.3f SP" % (max_vote[4]),
+                                  "%.1f %%" % (max_vote[5])])
+            sum_line[-1] = "High. Cur."
+            t.add_row(sum_line + ["%.1f min" % max_curation[1],
+                                  "%.3f SBD" % float(max_curation[2]),
+                                  "%.3f SBD" % float(max_curation[3]),
+                                  "%.3f SP" % (max_curation[4]),
+                                  "%.1f %%" % (max_curation[5])])
+            sum_line[-1] = "Sum"
+            t.add_row(sum_line + ["-",
+                                  "%.3f SBD" % (sum_curation[0]),
+                                  "%.3f SBD" % (sum_curation[1]),
+                                  "%.3f SP" % (sum_curation[2]),
+                                  "%.2f %%" % curation_sum_percentage])
+            if all_posts or export:
+                t.add_row(new_row2 + voter2 + ["-", "-", "-", "-", "-"])
+        if not (all_posts or export):
+            print("curation for %s" % (authorperm))
             print(t)
     if export:
         with open(export, 'w') as w:
             w.write(str(t.get_html_string()))
+    elif all_posts:
+        print("curation for @%s" % account)
+        print(t)
 
 
 @cli.command()

@@ -317,11 +317,13 @@ class Wallet(object):
         if(Wallet.keys):
             if pub in Wallet.keys:
                 return Wallet.keys[pub]
-            elif len(Wallet.keys) == 1:
+            else:
+                raise MissingKeyError("No private key for {} found".format(pub))
+            # elif len(Wallet.keys) == 1:
                 # If there is only one key in my overwrite-storage, then
                 # use that one! Whether it will has sufficient
                 # authorization is left to ensure by the developer
-                return list(self.keys.values())[0]
+                # return list(self.keys.values())[0]
         else:
             # Test if wallet exists
             if not self.created():

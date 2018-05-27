@@ -9,7 +9,7 @@ import re
 import logging
 import pytz
 import math
-from datetime import datetime
+from datetime import datetime, date, time
 from .instance import shared_steem_instance
 from .account import Account
 from .amount import Amount
@@ -159,7 +159,7 @@ class Comment(BlockchainObject):
         for p in parse_times:
             if p in output:
                 date = output.get(p, datetime(1970, 1, 1, 0, 0))
-                if isinstance(date, datetime):
+                if isinstance(date, (datetime, date)):
                     output[p] = formatTimeString(date)
                 else:
                     output[p] = date
@@ -288,7 +288,7 @@ class Comment(BlockchainObject):
             elapsed_seconds = self.time_elapsed().total_seconds()
         elif isinstance(vote_time, str):
             elapsed_seconds = (formatTimeString(vote_time) - self["created"]).total_seconds()
-        elif isinstance(vote_time, datetime):
+        elif isinstance(vote_time, (datetime, date)):
             elapsed_seconds = (vote_time - self["created"]).total_seconds()
         else:
             raise ValueError("vote_time must be a string or a datetime")
@@ -471,7 +471,10 @@ class Comment(BlockchainObject):
             return self.steem.rpc.get_reblogged_by(post_author, post_permlink, api="follow")
 
     def get_replies(self, raw_data=False, identifier=None):
-        """Returns all content replies"""
+        """ Returns all content replies
+
+            :param bool raw_data: When set to False, the replies will be returned as Comment class objects
+        """
         if not identifier:
             post_author = self["author"]
             post_permlink = self["permlink"]

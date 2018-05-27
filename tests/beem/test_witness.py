@@ -21,12 +21,14 @@ class Testcases(unittest.TestCase):
         cls.bts = Steem(
             node=nodelist.get_nodes(appbase=False),
             nobroadcast=True,
+            unsigned=True,
             keys={"active": wif},
             num_retries=10
         )
         cls.appbase = Steem(
             node=nodelist.get_nodes(normal=False, appbase=True),
             nobroadcast=True,
+            unsigned=True,
             keys={"active": wif},
             num_retries=10
         )
@@ -44,6 +46,7 @@ class Testcases(unittest.TestCase):
             bts = self.bts
         else:
             bts = self.appbase
+        bts.txbuffer.clear()
         w = Witness("gtg", steem_instance=bts)
         tx = w.feed_publish("4 SBD", "1 STEEM")
         self.assertEqual(
@@ -64,6 +67,7 @@ class Testcases(unittest.TestCase):
             bts = self.bts
         else:
             bts = self.appbase
+        bts.txbuffer.clear()
         w = Witness("gtg", steem_instance=bts)
         props = {"account_creation_fee": "0.1 STEEM",
                  "maximum_block_size": 32000,

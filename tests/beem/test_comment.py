@@ -24,12 +24,14 @@ class Testcases(unittest.TestCase):
             node=nodelist.get_nodes(appbase=False),
             use_condenser=True,
             nobroadcast=True,
+            unsigned=True,
             keys={"active": wif},
             num_retries=10
         )
         cls.appbase = Steem(
             node=nodelist.get_nodes(normal=False, appbase=True),
             nobroadcast=True,
+            unsigned=True,
             keys={"active": wif},
             num_retries=10
         )
@@ -110,6 +112,7 @@ class Testcases(unittest.TestCase):
         else:
             bts = self.appbase
         c = Comment(self.authorperm, steem_instance=bts)
+        bts.txbuffer.clear()
         tx = c.vote(100, account="test")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -119,16 +122,19 @@ class Testcases(unittest.TestCase):
         self.assertIn(
             "test",
             op["voter"])
-
+        c.steem.txbuffer.clear()
         tx = c.upvote(weight=150, voter="test")
         op = tx["operations"][0][1]
         self.assertEqual(op["weight"], 10000)
+        c.steem.txbuffer.clear()
         tx = c.upvote(weight=99.9, voter="test")
         op = tx["operations"][0][1]
         self.assertEqual(op["weight"], 9990)
+        c.steem.txbuffer.clear()
         tx = c.downvote(weight=-150, voter="test")
         op = tx["operations"][0][1]
         self.assertEqual(op["weight"], -10000)
+        c.steem.txbuffer.clear()
         tx = c.downvote(weight=-99.9, voter="test")
         op = tx["operations"][0][1]
         self.assertEqual(op["weight"], -9990)
@@ -158,6 +164,7 @@ class Testcases(unittest.TestCase):
 
     def test_resteem(self):
         bts = self.bts
+        bts.txbuffer.clear()
         c = Comment(self.authorperm, steem_instance=bts)
         tx = c.resteem(account="test")
         self.assertEqual(
@@ -167,6 +174,7 @@ class Testcases(unittest.TestCase):
 
     def test_reply(self):
         bts = self.bts
+        bts.txbuffer.clear()
         c = Comment(self.authorperm, steem_instance=bts)
         tx = c.reply(body="Good post!", author="test")
         self.assertEqual(
@@ -180,6 +188,7 @@ class Testcases(unittest.TestCase):
 
     def test_delete(self):
         bts = self.bts
+        bts.txbuffer.clear()
         c = Comment(self.authorperm, steem_instance=bts)
         tx = c.delete(account="test")
         self.assertEqual(
@@ -193,6 +202,7 @@ class Testcases(unittest.TestCase):
 
     def test_edit(self):
         bts = self.bts
+        bts.txbuffer.clear()
         c = Comment(self.authorperm, steem_instance=bts)
         c.edit(c.body, replace=False)
         body = c.body + "test"
@@ -208,6 +218,7 @@ class Testcases(unittest.TestCase):
 
     def test_edit_replace(self):
         bts = self.bts
+        bts.txbuffer.clear()
         c = Comment(self.authorperm, steem_instance=bts)
         body = c.body + "test"
         tx = c.edit(body, meta=c["json_metadata"], replace=True)

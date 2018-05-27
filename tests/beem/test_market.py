@@ -25,12 +25,14 @@ class Testcases(unittest.TestCase):
         cls.bts = Steem(
             node=nodelist.get_nodes(appbase=False),
             nobroadcast=True,
+            unsigned=True,
             keys={"active": wif},
             num_retries=10
         )
         cls.appbase = Steem(
             node=nodelist.get_nodes(normal=False, appbase=True),
             nobroadcast=True,
+            unsigned=True,
             keys={"active": wif},
             num_retries=10
         )
@@ -175,6 +177,7 @@ class Testcases(unittest.TestCase):
         else:
             bts = self.appbase
         m = Market(u'STEEM:SBD', steem_instance=bts)
+        bts.txbuffer.clear()
         tx = m.buy(5, 0.1, account="test")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -207,6 +210,7 @@ class Testcases(unittest.TestCase):
             bts = self.bts
         else:
             bts = self.appbase
+        bts.txbuffer.clear()
         m = Market(u'STEEM:SBD', steem_instance=bts)
         tx = m.sell(5, 0.1, account="test")
         self.assertEqual(
@@ -240,6 +244,7 @@ class Testcases(unittest.TestCase):
             bts = self.bts
         else:
             bts = self.appbase
+        bts.txbuffer.clear()
         m = Market(u'STEEM:SBD', steem_instance=bts)
         tx = m.cancel(5, account="test")
         self.assertEqual(

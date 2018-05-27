@@ -30,7 +30,8 @@ class TransactionBuilder(dict):
         To build your own transactions and sign them
 
         :param dict tx: transaction (Optional). If not set, the new transaction is created.
-        :param str expiration: expiration date
+        :param int expiration: Delay in seconds until transactions are supposed
+            to expire *(optional)* (default is 30)
         :param Steem steem_instance: If not set, shared_steem_instance() is used
 
         .. testcode::
@@ -51,8 +52,8 @@ class TransactionBuilder(dict):
     def __init__(
         self,
         tx={},
-        expiration=None,
-        steem_instance=None
+        steem_instance=None,
+        **kwargs
     ):
         self.steem = steem_instance or shared_steem_instance()
         self.clear()
@@ -63,7 +64,7 @@ class TransactionBuilder(dict):
             self._require_reconstruction = False
         else:
             self._require_reconstruction = True
-        self.set_expiration(expiration)
+        self.set_expiration(kwargs.get("expiration", 30))
 
     def set_expiration(self, p):
         """Set expiration date"""
@@ -187,8 +188,10 @@ class TransactionBuilder(dict):
                     raise AssertionError("Could not access permission")
                 required_treshold = account[permission]["weight_threshold"]
                 keys = fetchkeys(account, permission)
-                # if permission != "owner":
-                #    keys.extend(fetchkeys(account, "owner"))
+                # If keys are empty, try again with owner key
+                if not keys and permission != "owner":
+                    _keys = fetchkeys(account, "owner")
+                    keys.extend(_keys)
                 for x in keys:
                     self.wifs.add(x[0])
 
@@ -360,7 +363,7 @@ class TransactionBuilder(dict):
             if self.steem.blocking:
                 ret = self.steem.rpc.broadcast_transaction_synchronous(
                     args, api="network_broadcast")
-                ret.update(**ret["trx"])
+                ret.update(**ret.get("trx"))
             else:
                 self.steem.rpc.broadcast_transaction(
                     args, api="network_broadcast")
