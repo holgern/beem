@@ -191,7 +191,7 @@ class TransactionBuilder(dict):
                 # If keys are empty, try again with active key
                 if not keys and permission == "posting":
                     _keys = fetchkeys(account, "active")
-                    keys.extend(_keys)                
+                    keys.extend(_keys)
                 # If keys are empty, try again with owner key
                 if not keys and permission != "owner":
                     _keys = fetchkeys(account, "owner")

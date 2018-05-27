@@ -608,3 +608,23 @@ class Testcases(unittest.TestCase):
         self.assertTrue(len(tx.wifs) > 0)
         tx.sign()
         self.assertTrue(len(tx["signatures"]) > 0)
+
+    def test_follow_active_key(self):
+        nodelist = NodeList()
+        stm = Steem(node=nodelist.get_testnet(),
+                    keys=[self.active_key],
+                    nobroadcast=True,
+                    expiration=120,
+                    num_retries=10)
+        account = Account("beem", steem_instance=stm)
+        account.follow("beem1")
+
+    def test_follow_posting_key(self):
+        nodelist = NodeList()
+        stm = Steem(node=nodelist.get_testnet(),
+                    keys=[self.posting_key],
+                    nobroadcast=True,
+                    expiration=120,
+                    num_retries=10)
+        account = Account("beem", steem_instance=stm)
+        account.follow("beem1")
