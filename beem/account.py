@@ -1331,13 +1331,13 @@ class Account(BlockchainObject):
             est_diff = 0
             if isinstance(start, (datetime, date, time)):
                 for h in self.get_account_history(op_est, 0):
-                    block_date = h["timestamp"]
+                    block_date = formatTimeString(h["timestamp"])
                 while(op_est + est_diff + batch_size < first and block_date < start):
                     est_diff += batch_size
                     if op_est + est_diff > first:
                         est_diff = first - op_est
                     for h in self.get_account_history(op_est + est_diff, 0):
-                        block_date = h["timestamp"]
+                        block_date = formatTimeString(h["timestamp"])
             else:
                 for h in self.get_account_history(op_est, 0):
                     block_num = h["block"]
