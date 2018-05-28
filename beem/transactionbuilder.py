@@ -8,6 +8,7 @@ from future.utils import python_2_unicode_compatible
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from .account import Account
 from .utils import formatTimeFromNow
+from .steemconnect import SteemConnect
 from beembase.objects import Operation
 from beemgraphenebase.account import PrivateKey, PublicKey
 from beembase.signedtransactions import Signed_Transaction
@@ -150,6 +151,9 @@ class TransactionBuilder(dict):
 
         if self.steem.wallet.locked():
             raise WalletLocked()
+        if self.steem.steemconnect is not None:
+            self.steem.steemconnect.set_username(account["name"])
+            return
 
         def fetchkeys(account, perm, level=0):
             if level > 2:
@@ -260,10 +264,10 @@ class TransactionBuilder(dict):
         """
         if not self._is_constructed() or (self._is_constructed() and reconstruct_tx):
             self.constructTx()
-
         if "operations" not in self or not self["operations"]:
             return
-
+        if self.steem.steemconnect is not None:
+            return
         # We need to set the default prefix, otherwise pubkeys are
         # presented wrongly!
         if self.steem.rpc is not None:
@@ -364,7 +368,9 @@ class TransactionBuilder(dict):
             return ret
         # Broadcast
         try:
-            if self.steem.blocking:
+            if self.steem.steemconnect is not None:
+                ret = self.steem.steemconnect.broadcast(self["operations"])
+            elif self.steem.blocking:
                 ret = self.steem.rpc.broadcast_transaction_synchronous(
                     args, api="network_broadcast")
                 ret.update(**ret.get("trx"))

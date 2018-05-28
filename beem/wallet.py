@@ -6,10 +6,12 @@ from builtins import str, bytes
 from builtins import object
 import logging
 import os
+import hashlib
 from beemgraphenebase import bip38
 from beemgraphenebase.account import PrivateKey
 from beem.instance import shared_steem_instance
 from .account import Account
+from .aes import AESCipher
 from .exceptions import (
     MissingKeyError,
     InvalidWifError,
@@ -21,6 +23,7 @@ from .exceptions import (
     AccountDoesNotExistsException,
 )
 from beemapi.exceptions import NoAccessApi
+from beemgraphenebase.py23 import py23_bytes
 from .storage import configStorage as config
 try:
     import keyring
@@ -95,16 +98,17 @@ class Wallet(object):
                   import format (wif) (starting with a ``5``).
 
     """
-    keys = []
     masterpassword = None
 
     # Keys from database
     configStorage = None
     MasterPassword = None
     keyStorage = None
+    tokenStorage = None
 
     # Manually provided keys
     keys = {}  # struct with pubkey as key and wif as value
+    token = {}
     keyMap = {}  # type:wif pairs to force certain keys
 
     def __init__(self, steem_instance=None, *args, **kwargs):
@@ -124,6 +128,18 @@ class Wallet(object):
                                   MasterPassword)
             self.MasterPassword = MasterPassword
             self.keyStorage = keyStorage
+
+        if "token" in kwargs:
+            self.setToken(kwargs["token"])
+        else:
+            """ If no keys are provided manually we load the SQLite
+                keyStorage
+            """
+            from .storage import tokenStorage
+            if MasterPassword is None:
+                from .storage import MasterPassword
+                self.MasterPassword = MasterPassword
+            self.tokenStorage = tokenStorage
 
     @property
     def prefix(self):
@@ -156,6 +172,18 @@ class Wallet(object):
         for wif in loadkeys:
             pub = self._get_pub_from_wif(wif)
             Wallet.keys[pub] = str(wif)
+
+    def setToken(self, loadtoken):
+        """ This method is strictly only for in memory token that are
+            passed to Wallet/Steem with the ``token`` argument
+        """
+        log.debug(
+            "Force setting of private token. Not using the wallet database!")
+        self.clear_local_token()
+        if isinstance(loadtoken, dict):
+            Wallet.token = loadtoken
+        else:
+            raise ValueError("token must be a dict variable!")
 
     def unlock(self, pwd=None):
         """ Unlock the wallet database
@@ -253,16 +281,22 @@ class Wallet(object):
         else:
             from .storage import (
                 keyStorage,
+                tokenStorage,
                 MasterPassword
             )
             MasterPassword.wipe(sure)
             keyStorage.wipe(sure)
+            tokenStorage.wipe(sure)
             self.clear_local_keys()
 
     def clear_local_keys(self):
         """Clear all manually provided keys"""
         Wallet.keys = {}
         Wallet.keyMap = {}
+
+    def clear_local_token(self):
+        """Clear all manually provided token"""
+        Wallet.token = {}
 
     def encrypt_wif(self, wif):
         """ Encrypt a wif key
@@ -285,6 +319,35 @@ class Wallet(object):
             raise AssertionError()
         return format(bip38.decrypt(encwif, self.masterpassword), "wif")
 
+    def deriveChecksum(self, s):
+        """ Derive the checksum
+        """
+        checksum = hashlib.sha256(py23_bytes(s, "ascii")).hexdigest()
+        return checksum[:4]
+
+    def encrypt_token(self, token):
+        """ Encrypt a token key
+        """
+        if self.locked():
+            raise AssertionError()
+        aes = AESCipher(self.masterpassword)
+        return "{}${}".format(self.deriveChecksum(token), aes.encrypt(token))
+
+    def decrypt_token(self, enctoken):
+        """ decrypt a wif key
+        """
+        if self.locked():
+            raise AssertionError()
+        aes = AESCipher(self.masterpassword)
+        checksum, encrypted_token = enctoken.split("$")
+        try:
+            decrypted_token = aes.decrypt(encrypted_token)
+        except:
+            raise WrongMasterPasswordException
+        if checksum != self.deriveChecksum(decrypted_token):
+            raise WrongMasterPasswordException
+        return decrypted_token
+
     def _get_pub_from_wif(self, wif):
         """ Get the pubkey as string, from the wif key as string
         """
@@ -297,6 +360,44 @@ class Wallet(object):
         except:
             raise InvalidWifError(
                 "Invalid Private Key Format. Please use WIF!")
+
+    def addToken(self, name, token):
+        if self.tokenStorage:
+            if not self.created():
+                raise NoWalletException
+            self.tokenStorage.add(name, self.encrypt_token(token))
+
+    def getTokenForAccountName(self, name):
+        """ Obtain the private token for a given public name
+
+            :param str name: Public name
+        """
+        if(Wallet.token):
+            if name in Wallet.token:
+                return Wallet.token[name]
+            else:
+                raise MissingKeyError("No private token for {} found".format(name))
+        else:
+            # Test if wallet exists
+            if not self.created():
+                raise NoWalletException
+
+            if not self.unlocked():
+                raise WalletLocked
+
+            enctoken = self.tokenStorage.getTokenForPublicName(name)
+            if not enctoken:
+                raise MissingKeyError("No private token for {} found".format(name))
+            return self.decrypt_token(enctoken)
+
+    def removeTokenFromPublicName(self, name):
+        """ Remove a token from the wallet database
+        """
+        if self.tokenStorage:
+            # Test if wallet exists
+            if not self.created():
+                raise NoWalletException
+            self.tokenStorage.delete(name)
 
     def addPrivateKey(self, wif):
         """Add a private key to the wallet database"""
@@ -546,3 +647,11 @@ class Wallet(object):
             return self.keyStorage.getPublicKeys()
         else:
             return list(Wallet.keys.keys())
+
+    def getPublicNames(self):
+        """ Return all installed public token
+        """
+        if self.tokenStorage:
+            return self.tokenStorage.getPublicNames()
+        else:
+            return list(Wallet.token.keys())

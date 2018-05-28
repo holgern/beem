@@ -26,6 +26,7 @@ from .exceptions import (
     AccountDoesNotExistsException
 )
 from .wallet import Wallet
+from .steemconnect import SteemConnect
 from .transactionbuilder import TransactionBuilder
 from .utils import formatTime, resolve_authorperm, derive_permlink, remove_from_dict
 from beem.constants import STEEM_VOTE_REGENERATION_SECONDS
@@ -147,6 +148,9 @@ class Steem(object):
         self.unsigned = bool(kwargs.get("unsigned", False))
         self.expiration = int(kwargs.get("expiration", 30))
         self.bundle = bool(kwargs.get("bundle", False))
+        self.steemconnect = kwargs.get("steemconnect", None)
+        if self.steemconnect is not None and not isinstance(self.steemconnect, SteemConnect):
+            raise ValueError("steemconnect musst be SteemConnect object")
         self.blocking = kwargs.get("blocking", False)
 
         # Store config for access through other Classes

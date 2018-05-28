@@ -266,6 +266,129 @@ class Key(DataDir):
             connection.commit()
 
 
+class Token(DataDir):
+    """ This is the token storage that stores the public username and the
+        (possibly encrypted) token in the `token` table in the
+        SQLite3 database.
+    """
+    __tablename__ = 'token'
+
+    def __init__(self):
+        super(Token, self).__init__()
+
+    def exists_table(self):
+        """ Check if the database table exists
+        """
+        query = ("SELECT name FROM sqlite_master "
+                 "WHERE type='table' AND name=?", (self.__tablename__, ))
+        try:
+            connection = sqlite3.connect(self.sqlDataBaseFile)
+            cursor = connection.cursor()
+            cursor.execute(*query)
+            return True if cursor.fetchone() else False
+        except sqlite3.OperationalError:
+            self.sqlDataBaseFile = ":memory:"
+            log.warning("Could not read(database: %s)" % (self.sqlDataBaseFile))
+            return True
+
+    def create_table(self):
+        """ Create the new table in the SQLite database
+        """
+        query = ("CREATE TABLE {0} ("
+                 "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                 "name STRING(256),"
+                 "token STRING(256))".format(self.__tablename__))
+        connection = sqlite3.connect(self.sqlDataBaseFile)
+        cursor = connection.cursor()
+        cursor.execute(query)
+        connection.commit()
+
+    def getPublicNames(self):
+        """ Returns the public names stored in the database
+        """
+        query = ("SELECT name from {0} ".format(self.__tablename__))
+        connection = sqlite3.connect(self.sqlDataBaseFile)
+        cursor = connection.cursor()
+        try:
+            cursor.execute(query)
+            results = cursor.fetchall()
+            return [x[0] for x in results]
+        except sqlite3.OperationalError:
+            return []
+
+    def getTokenForPublicName(self, name):
+        """ Returns the (possibly encrypted) private token that
+            corresponds to a public name
+
+           :param str pub: Public name
+
+           The encryption scheme is BIP38
+        """
+        query = ("SELECT token from {0} WHERE name=?".format(self.__tablename__), (name,))
+        connection = sqlite3.connect(self.sqlDataBaseFile)
+        cursor = connection.cursor()
+        cursor.execute(*query)
+        token = cursor.fetchone()
+        if token:
+            return token[0]
+        else:
+            return None
+
+    def updateToken(self, name, token):
+        """ Change the token to a name
+
+           :param str name: Public name
+           :param str token: Private token
+        """
+        query = ("UPDATE {0} SET token=? WHERE name=?".format(self.__tablename__), (token, name))
+        connection = sqlite3.connect(self.sqlDataBaseFile)
+        cursor = connection.cursor()
+        cursor.execute(*query)
+        connection.commit()
+
+    def add(self, name, token):
+        """ Add a new public/private token pair (correspondence has to be
+            checked elsewhere!)
+
+           :param str name: Public name
+           :param str token: Private token
+        """
+        if self.getTokenForPublicName(name):
+            raise ValueError("Key already in storage")
+        query = ("INSERT INTO {0} (name, token) VALUES (?, ?)".format(self.__tablename__), (name, token))
+        connection = sqlite3.connect(self.sqlDataBaseFile)
+        cursor = connection.cursor()
+        cursor.execute(*query)
+        connection.commit()
+
+    def delete(self, name):
+        """ Delete the key identified as `name`
+
+           :param str name: Public name
+        """
+        query = ("DELETE FROM {0} WHERE name=?".format(self.__tablename__), (name,))
+        connection = sqlite3.connect(self.sqlDataBaseFile)
+        cursor = connection.cursor()
+        cursor.execute(*query)
+        connection.commit()
+
+    def wipe(self, sure=False):
+        """Purge the entire wallet. No keys will survive this!"""
+        if not sure:
+            log.error(
+                "You need to confirm that you are sure "
+                "and understand the implications of "
+                "wiping your wallet!"
+            )
+            return
+        else:
+            query = ("DELETE FROM {0} ".format(self.__tablename__))
+            connection = sqlite3.connect(self.sqlDataBaseFile)
+            cursor = connection.cursor()
+            cursor.execute(query)
+            connection.commit()
+
+
 class Configuration(DataDir):
     """ This is the configuration storage that stores key/value
         pairs in the `config` table of the SQLite3 database.
@@ -280,7 +403,11 @@ class Configuration(DataDir):
         "password_storage": "environment",
         "rpcpassword": "",
         "rpcuser": "",
-        "order-expiration": 7 * 24 * 60 * 60}
+        "order-expiration": 7 * 24 * 60 * 60,
+        "client_id": "",
+        "sc2_scope": "login",
+        "sc2_api_url": "https://v2.steemconnect.com/api/",
+        "oauth_base_url": "https://v2.steemconnect.com/oauth2/"}
 
     def __init__(self):
         super(Configuration, self).__init__()
@@ -531,6 +658,7 @@ class MasterPassword(object):
 
 # Create keyStorage
 keyStorage = Key()
+tokenStorage = Token()
 configStorage = Configuration()
 
 # Create Tables if database is brand new
@@ -541,3 +669,8 @@ newKeyStorage = False
 if not keyStorage.exists_table():
     newKeyStorage = True
     keyStorage.create_table()
+
+newTokenStorage = False
+if not tokenStorage.exists_table():
+    newTokenStorage = True
+    tokenStorage.create_table()

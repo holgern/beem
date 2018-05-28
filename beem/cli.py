@@ -65,7 +65,8 @@ availableConfigurationKeys = [
     "default_account",
     "default_vote_weight",
     "nodes",
-    "password_storage"
+    "password_storage",
+    "client_id",
 ]
 
 
@@ -220,6 +221,8 @@ def set(key, value):
                 print("")
         if value == "environment":
             print("The wallet password can be stored in the UNLOCK invironment variable to skip password prompt!")
+    elif key == "client_id":
+        stm.config["client_id"] = value
     else:
         print("wrong key")
 
