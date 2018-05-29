@@ -8,7 +8,8 @@ import json
 try:
     from urllib.parse import urlparse, urlencode, urljoin
 except ImportError:
-    from urlparse import urlparse, urlencode, urljoin
+    from urlparse import urlencode, urljoin
+    from urllib import urlencode
 import requests
 from .storage import configStorage as config
 from beem.instance import shared_steem_instance
@@ -48,7 +49,6 @@ class SteemConnect(object):
         .. testoutput::
 
             from beem import Steem
-            from beem.steemconnect import SteemConnect
             from beem.account import Account
             from pprint import pprint
             steem = Steem(use_sc2=True, hot_sign=True)
