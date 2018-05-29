@@ -12,6 +12,8 @@ beem Modules
    beem.amount
    beem.asset
    beem.steem
+   beem.nodelist
+   beem.steemconnect
    beem.block
    beem.blockchain
    beem.blockchainobject
@@ -39,6 +41,7 @@ beemapi Modules
    beemapi.steemnoderpc
    beemapi.exceptions
    beemapi.websocket
+   beemapi.node
    beemapi.graphenenerpc
 
 beembase Modules

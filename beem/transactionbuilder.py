@@ -368,7 +368,7 @@ class TransactionBuilder(dict):
         # Broadcast
         try:
             if self.steem.use_sc2:
-                ret = self.steem.steemconnect.boadcast(self["operations"])
+                ret = self.steem.steemconnect.broadcast(self["operations"])
             elif self.steem.blocking:
                 ret = self.steem.rpc.broadcast_transaction_synchronous(
                     args, api="network_broadcast")

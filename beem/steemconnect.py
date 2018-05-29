@@ -76,10 +76,11 @@ class SteemConnect(object):
         self.steem = steem_instance or shared_steem_instance()
         self.access_token = None
         self.get_refresh_token = kwargs.get("get_refresh_token", False)
-        self.hot_sign = kwargs.get("hot_sign", False)
-        self.hot_sign_redirect_uri = kwargs.get("hot_sign_redirect_uri", None)
+        self.hot_sign_redirect_uri = kwargs.get("hot_sign_redirect_uri", config["hot_sign_redirect_uri"])
+        if self.hot_sign_redirect_uri == "":
+            self.hot_sign_redirect_uri = None
         self.client_id = kwargs.get("client_id", config["sc2_client_id"])
-        self.scope = kwargs.get("scope", config["sc2_scope"])
+        self.scope = kwargs.get("scope", "login")
         self.oauth_base_url = kwargs.get("oauth_base_url", config["oauth_base_url"])
         self.sc2_api_url = kwargs.get("sc2_api_url", config["sc2_api_url"])
 
@@ -87,13 +88,18 @@ class SteemConnect(object):
     def headers(self):
         return {'Authorization': self.access_token}
 
-    def get_login_url(self, redirect_uri):
+    def get_login_url(self, redirect_uri, **kwargs):
+        """ Returns a login url for receiving token from steemconnect
+        """
+        client_id = kwargs.get("client_id", self.client_id)
+        scope = kwargs.get("scope", self.scope)
+        get_refresh_token = kwargs.get("get_refresh_token", self.get_refresh_token)
         params = {
-            "client_id": self.client_id,
+            "client_id": client_id,
             "redirect_uri": redirect_uri,
-            "scope": self.scope,
+            "scope": scope,
         }
-        if self.get_refresh_token:
+        if get_refresh_token:
             params.update({
                 "response_type": "code",
             })
@@ -118,6 +124,15 @@ class SteemConnect(object):
         return r.json()
 
     def me(self, username=None):
+        """ Calls the me function from steemconnect
+
+        .. code-block:: python
+            from beem.steemconnect import SteemConnect
+            sc2 = SteemConnect()
+            sc2.steem.wallet.unlock("supersecret-passphrase")
+            sc2.me(username="test")
+
+        """
         if username:
             self.set_username(username)
         url = urljoin(self.sc2_api_url, "me/")
@@ -129,11 +144,11 @@ class SteemConnect(object):
         """
         self.access_token = access_token
 
-    def set_username(self, username, permission):
+    def set_username(self, username, permission="posting"):
         """ Set a username for the next broadcast() or me operation()
             The necessary token is fetched from the wallet
         """
-        if self.hot_sign or permission != "posting":
+        if permission != "posting":
             self.access_token = None
             return
         self.access_token = self.steem.wallet.getTokenForAccountName(username)
@@ -245,10 +260,12 @@ class SteemConnect(object):
             raise ValueError("Invalid Request.")
 
         base_url = self.sc2_api_url.replace("/api", "")
+        if redirect_uri == "":
+            redirect_uri = None
 
-        if not redirect_uri and self.hot_sign_redirect_uri:
+        if redirect_uri is None and self.hot_sign_redirect_uri is not None:
             redirect_uri = self.hot_sign_redirect_uri
-        if redirect_uri:
+        if redirect_uri is not None:
             params.update({"redirect_uri": redirect_uri})
 
         params = urlencode(params)
@@ -256,7 +273,3 @@ class SteemConnect(object):
         url += "?" + params
 
         return url
-
-
-# https://steemconnect.com/authorize/@steemauto/?redirect_uri=https://steemauto.com/dash.php
-# https://steemconnect.com/oauth2/authorize?client_id=steem.app&redirect_uri=https://steemauto.com/callback.php&scope=login

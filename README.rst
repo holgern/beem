@@ -138,6 +138,19 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.33
+-------
+* Several bug fixes (including issue #13 and #16)
+* steemconnect v2 integration added
+* token storage added to wallet
+* add setToken, clear_local_token, encrypt_token, decrypt_token,
+  addToken, getTokenForAccountName, removeTokenFromPublicName, getPublicNames added to the wallet class
+* url_from_tx add to steemconnect for creating a URL from any operation
+* login demo add added
+* add -l option to beempy for creating URL from any operation
+* add -s option to beempy for broadcasting via steemconnect
+* addtoken, deltoken and listtoken added to beempy
+
 0.19.32
 -------
 * bug fix and improvements for beempy curation

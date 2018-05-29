@@ -26,6 +26,7 @@ from beem.market import Market
 from beem.block import Block
 from beem.profile import Profile
 from beem.wallet import Wallet
+from beem.steemconnect import SteemConnect
 from beem.asset import Asset
 from beem.witness import Witness, WitnessesRankedByVote, WitnessesVotedByAccount
 from beem.blockchain import Blockchain
@@ -92,6 +93,8 @@ def prompt_flag_callback(ctx, param, value):
 
 
 def unlock_wallet(stm, password=None):
+    if stm.unsigned and stm.nobroadcast:
+        return True
     password_storage = stm.config["password_storage"]
     if not password and KEYRING_AVAILABLE and password_storage == "keyring":
         password = keyring.get_password("beem", "wallet")
@@ -146,12 +149,16 @@ def node_answer_time(node):
 @click.option(
     '--unsigned', '-x', is_flag=True, default=False, help="Nothing will be signed")
 @click.option(
+    '--create-link', '-l', is_flag=True, default=False, help="Creates steemconnect links from all broadcast operations")
+@click.option(
+    '--steemconnect', '-s', is_flag=True, default=False, help="Uses a steemconnect token to broadcast (only broadcast operation with posting permission)")
+@click.option(
     '--expires', '-e', default=30,
     help='Delay in seconds until transactions are supposed to expire(defaults to 60)')
 @click.option(
     '--verbose', '-v', default=3, help='Verbosity')
 @click.version_option(version=__version__)
-def cli(node, offline, no_broadcast, no_wallet, unsigned, expires, verbose):
+def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steemconnect, expires, verbose):
 
     # Logging
     log = logging.getLogger(__name__)
@@ -164,7 +171,12 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, expires, verbose):
     ch.setLevel(getattr(logging, verbosity.upper()))
     ch.setFormatter(formatter)
     log.addHandler(ch)
-
+    if create_link:
+        sc2 = SteemConnect()
+        no_broadcast = True
+        unsigned = True
+    else:
+        sc2 = None
     debug = verbose > 0
     stm = Steem(
         node=node,
@@ -172,7 +184,9 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, expires, verbose):
         offline=offline,
         nowallet=no_wallet,
         unsigned=unsigned,
+        use_sc2=steemconnect,
         expiration=expires,
+        steemconnect=sc2,
         debug=debug,
         num_retries=10,
         num_retries_call=3,
@@ -223,6 +237,12 @@ def set(key, value):
             print("The wallet password can be stored in the UNLOCK invironment variable to skip password prompt!")
     elif key == "client_id":
         stm.config["client_id"] = value
+    elif key == "hot_sign_redirect_uri":
+        stm.config["hot_sign_redirect_uri"] = value
+    elif key == "sc2_api_url":
+        stm.config["sc2_api_url"] = value
+    elif key == "oauth_base_url":
+        stm.config["oauth_base_url"] = value
     else:
         print("wrong key")
 
@@ -517,6 +537,48 @@ def delkey(confirm, pub):
 
 
 @cli.command()
+@click.argument('name')
+@click.option('--unsafe-import-token',
+              help='Private key to import to wallet (unsafe, unless shell history is deleted afterwards)')
+def addtoken(name, unsafe_import_token):
+    """ Add key to wallet
+
+        When no [OPTION] is given, a password prompt for unlocking the wallet
+        and a prompt for entering the private key are shown.
+    """
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not unlock_wallet(stm):
+        return
+    if not unsafe_import_token:
+        unsafe_import_token = click.prompt("Enter private token", confirmation_prompt=False, hide_input=True)
+    stm.wallet.addToken(name, unsafe_import_token)
+    set_shared_steem_instance(stm)
+
+
+@cli.command()
+@click.option('--confirm',
+              prompt='Are your sure? This is IRREVERSIBLE! If you dont have a backup you may lose access to your account!',
+              hide_input=False, callback=prompt_flag_callback, is_flag=True,
+              confirmation_prompt=False, help='Please confirm!')
+@click.argument('name')
+def deltoken(confirm, name):
+    """ Delete name from the wallet
+
+        name is the public name from the private token
+        which will be deleted from the wallet
+    """
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not unlock_wallet(stm):
+        return
+    stm.wallet.removeTokenFromPublicName(name)
+    set_shared_steem_instance(stm)
+
+
+@cli.command()
 def listkeys():
     """ Show stored keys
     """
@@ -525,6 +587,25 @@ def listkeys():
     t.align = "l"
     for key in stm.wallet.getPublicKeys():
         t.add_row([key])
+    print(t)
+
+
+@cli.command()
+def listtoken():
+    """ Show stored token
+    """
+    stm = shared_steem_instance()
+    t = PrettyTable(["name", "scope", "status"])
+    t.align = "l"
+    if not unlock_wallet(stm):
+        return
+    sc2 = SteemConnect(steem_instance=stm)
+    for name in stm.wallet.getPublicNames():
+        ret = sc2.me(username=name)
+        if "error" in ret:
+            t.add_row([name, "-", ret["error"]])
+        else:
+            t.add_row([name, ret["scope"], "ok"])
     print(t)
 
 
@@ -568,6 +649,8 @@ def upvote(post, vote_weight, account, weight):
     try:
         post = Comment(post, steem_instance=stm)
         tx = post.upvote(weight, voter=account)
+        if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+            tx = stm.steemconnect.url_from_tx(tx)
     except exceptions.VotingInvalidOnArchivedPost:
         print("Post/Comment is older than 7 days! Did not upvote.")
         tx = {}
@@ -599,6 +682,8 @@ def downvote(post, vote_weight, account, weight):
     try:
         post = Comment(post, steem_instance=stm)
         tx = post.downvote(weight, voter=account)
+        if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+            tx = stm.steemconnect.url_from_tx(tx)
     except exceptions.VotingInvalidOnArchivedPost:
         print("Post/Comment is older than 7 days! Did not downvote.")
         tx = {}
@@ -625,6 +710,8 @@ def transfer(to, amount, asset, memo, account):
         return
     acc = Account(account, steem_instance=stm)
     tx = acc.transfer(to, amount, asset, memo)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -648,6 +735,8 @@ def powerup(amount, account, to):
     except:
         amount = str(amount)
     tx = acc.transfer_to_vesting(amount, to=to)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -673,6 +762,8 @@ def powerdown(amount, account):
     except:
         amount = str(amount)
     tx = acc.withdraw_vesting(amount)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -694,6 +785,8 @@ def powerdownroute(to, percentage, account, auto_vest):
         return
     acc = Account(account, steem_instance=stm)
     tx = acc.set_withdraw_vesting_route(to, percentage, auto_vest=auto_vest)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -716,6 +809,8 @@ def convert(amount, account):
     except:
         amount = str(amount)
     tx = acc.convert(amount)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -961,6 +1056,8 @@ def allow(foreign_account, permission, account, weight, threshold):
         pwd = click.prompt("Password for Key Derivation", confirmation_prompt=True, hide_input=True)
         foreign_account = format(PasswordKey(account, pwd, permission).get_public(), stm.prefix)
     tx = acc.allow(foreign_account, weight=weight, permission=permission, threshold=threshold)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -989,6 +1086,8 @@ def disallow(foreign_account, permission, account, threshold):
         pwd = click.prompt("Password for Key Derivation", confirmation_prompt=True)
         foreign_account = [format(PasswordKey(account, pwd, permission).get_public(), stm.prefix)]
     tx = acc.disallow(foreign_account, permission=permission, threshold=threshold)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1012,6 +1111,8 @@ def newaccount(accountname, account, fee):
         print("You cannot chose an empty password")
         return
     tx = stm.create_account(accountname, creator=acc, password=password, delegation_fee_steem=fee)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1049,6 +1150,8 @@ def setprofile(variable, value, account, pair):
                                    if acc["json_metadata"] else {})
     acc["json_metadata"].update(profile)
     tx = acc.update_account_profile(acc["json_metadata"])
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1073,6 +1176,8 @@ def delprofile(variable, account):
         acc["json_metadata"].remove(var)
 
     tx = acc.update_account_profile(acc["json_metadata"])
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1158,6 +1263,8 @@ def updatememokey(account, key):
         if not stm.nobroadcast:
             stm.wallet.addPrivateKey(memo_privkey)
     tx = acc.update_memo_key(key)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1176,6 +1283,8 @@ def approvewitness(witness, account):
         return
     acc = Account(account, steem_instance=stm)
     tx = acc.approvewitness(witness, approve=True)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1194,6 +1303,8 @@ def disapprovewitness(witness, account):
         return
     acc = Account(account, steem_instance=stm)
     tx = acc.disapprovewitness(witness)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1479,6 +1590,8 @@ def buy(amount, asset, price, account, orderid):
     a = Amount(float(amount), asset, steem_instance=stm)
     acc = Account(account, steem_instance=stm)
     tx = market.buy(p, a, account=acc, orderid=orderid)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1521,6 +1634,8 @@ def sell(amount, asset, price, account, orderid):
     a = Amount(float(amount), asset, steem_instance=stm)
     acc = Account(account, steem_instance=stm)
     tx = market.sell(p, a, account=acc, orderid=orderid)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1540,6 +1655,8 @@ def cancel(orderid, account):
         return
     acc = Account(account, steem_instance=stm)
     tx = market.cancel(orderid, account=acc)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1581,6 +1698,8 @@ def resteem(identifier, account):
     acc = Account(account, steem_instance=stm)
     post = Comment(identifier, steem_instance=stm)
     tx = post.resteem(account=acc)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1602,6 +1721,8 @@ def follow(follow, account, what):
         return
     acc = Account(account, steem_instance=stm)
     tx = acc.follow(follow, what=what)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1623,6 +1744,8 @@ def mute(mute, account, what):
         return
     acc = Account(account, steem_instance=stm)
     tx = acc.follow(mute, what=what)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1641,6 +1764,8 @@ def unfollow(unfollow, account):
         return
     acc = Account(account, steem_instance=stm)
     tx = acc.unfollow(unfollow)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1671,6 +1796,8 @@ def witnessupdate(witness, maximum_block_size, account_creation_fee, sbd_interes
     if sbd_interest_rate:
         props["sbd_interest_rate"] = int(sbd_interest_rate * 100)
     tx = witness.update(signing_key or witness["signing_key"], url or witness["url"], props)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1699,6 +1826,8 @@ def witnesscreate(witness, signing_key, maximum_block_size, account_creation_fee
     }
 
     tx = stm.witness_update(signing_key, url, props, account=witness)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -2384,6 +2513,8 @@ def claimreward(account, reward_steem, reward_sbd, reward_vests):
         return
 
     tx = acc.claim_reward_balance(reward_steem, reward_sbd, reward_vests)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
