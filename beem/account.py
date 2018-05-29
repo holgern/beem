@@ -1549,6 +1549,18 @@ class Account(BlockchainObject):
                 messaging
             :param str account: (optional) the source account for the transfer
                 if not ``default_account``
+
+
+            transfer example:
+            .. code-block:: python
+
+                from beem.account import Account
+                from beem import Steem
+                active_wif = "5xxxx"
+                stm = Steem(keys=[active_wif])
+                acc = Account("test", steem_instance=stm)
+                acc.transfer("test1", 1, "STEEM", "test")
+
         """
 
         if not account:

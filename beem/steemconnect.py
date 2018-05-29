@@ -5,7 +5,10 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
 import json
-import urllib.parse
+try:
+    from urllib.parse import urlparse, urlencode, urljoin
+except ImportError:
+    from urlparse import urlparse, urlencode, urljoin
 import requests
 from .storage import configStorage as config
 from beem.instance import shared_steem_instance
@@ -27,8 +30,34 @@ class SteemConnect(object):
             sc2 = SteemConnect(client_id="beem.app")
             steem = Steem(steemconnect=sc2)
             steem.wallet.unlock("supersecret-passphrase")
-            post = Comment("author/permlink", steem_instance=stm)
+            post = Comment("author/permlink", steem_instance=steem)
             post.upvote(voter="test")  # replace "test" with your account
+
+        hot_sign example:
+        .. code-block:: python
+
+            from beem import Steem
+            from beem.steemconnect import SteemConnect
+            from beem.comment import Comment
+            sc2 = SteemConnect(client_id="beem.app", hot_sign=True)
+            steem = Steem(steemconnect=sc2)
+            post = Comment("author/permlink", steem_instance=steem)
+            post.upvote(voter="test")  # replace "test" with your account
+
+        transfer example:
+        .. testoutput::
+
+            from beem import Steem
+            from beem.steemconnect import SteemConnect
+            from beem.account import Account
+            from pprint import pprint
+            steem = Steem(use_sc2=True, hot_sign=True)
+            acc = Account("test", steem_instance=steem)
+            pprint(acc.transfer("test1", 1, "STEEM", "test"))
+
+        .. testcode::
+
+            'https://v2.steemconnect.com/sign/transfer?from=test&to=test1&amount=1.000+STEEM&memo=test'
 
     """
 
@@ -36,6 +65,8 @@ class SteemConnect(object):
         self.steem = steem_instance or shared_steem_instance()
         self.access_token = None
         self.get_refresh_token = kwargs.get("get_refresh_token", False)
+        self.hot_sign = kwargs.get("hot_sign", False)
+        self.hot_sign_redirect_uri = kwargs.get("hot_sign_redirect_uri", None)
         self.client_id = kwargs.get("client_id", config["sc2_client_id"])
         self.scope = kwargs.get("scope", config["sc2_scope"])
         self.oauth_base_url = kwargs.get("oauth_base_url", config["oauth_base_url"])
@@ -56,9 +87,9 @@ class SteemConnect(object):
                 "response_type": "code",
             })
 
-        return urllib.parse.urljoin(
+        return urljoin(
             self.oauth_base_url,
-            "authorize?" + urllib.parse.urlencode(params, safe=","))
+            "authorize?" + urlencode(params, safe=","))
 
     def get_access_token(self, code):
         post_data = {
@@ -69,7 +100,7 @@ class SteemConnect(object):
         }
 
         r = requests.post(
-            urllib.parse.urljoin(self.sc2_api_url, "oauth2/token/"),
+            urljoin(self.sc2_api_url, "oauth2/token/"),
             data=post_data
         )
 
@@ -78,7 +109,7 @@ class SteemConnect(object):
     def me(self, username=None):
         if username:
             self.set_username(username)
-        url = urllib.parse.urljoin(self.sc2_api_url, "me/")
+        url = urljoin(self.sc2_api_url, "me/")
         r = requests.post(url, headers=self.headers)
         return r.json()
 
@@ -87,11 +118,26 @@ class SteemConnect(object):
         """
         self.access_token = access_token
 
-    def set_username(self, username):
+    def set_username(self, username, permission):
         """ Set a username for the next broadcast() or me operation()
             The necessary token is fetched from the wallet
         """
+        if self.hot_sign or permission != "posting":
+            self.access_token = None
+            return
         self.access_token = self.steem.wallet.getTokenForAccountName(username)
+
+    def boadcast_or_hot_sign(self, operations, username=None):
+        if self.hot_sign or self.access_token is None:
+            urls = []
+            for op in operations:
+                urls.append(self.create_hot_sign_url(op[0], op[1]))
+            if len(urls) == 1:
+                return urls[0]
+            else:
+                return urls
+        else:
+            return self.broadcast(operations, username=None)
 
     def broadcast(self, operations, username=None):
         """ Broadcast a operations
@@ -112,7 +158,7 @@ class SteemConnect(object):
                 ]
 
         """
-        url = urllib.parse.urljoin(self.sc2_api_url, "broadcast/")
+        url = urljoin(self.sc2_api_url, "broadcast/")
         data = {
             "operations": operations,
         }
@@ -140,7 +186,7 @@ class SteemConnect(object):
         }
 
         r = requests.post(
-            urllib.parse.urljoin(self.sc2_api_url, "oauth2/token/"),
+            urljoin(self.sc2_api_url, "oauth2/token/"),
             data=post_data,
         )
 
@@ -152,7 +198,7 @@ class SteemConnect(object):
         }
 
         r = requests.post(
-            urllib.parse.urljoin(self.sc2_api_url, "oauth2/token/revoke"),
+            urljoin(self.sc2_api_url, "oauth2/token/revoke"),
             data=post_data
         )
 
@@ -163,12 +209,12 @@ class SteemConnect(object):
             "user_metadata": metadata,
         }
         r = requests.put(
-            urllib.parse.urljoin(self.sc2_api_url, "me/"),
+            urljoin(self.sc2_api_url, "me/"),
             data=put_data, headers=self.headers)
 
         return r.json()
 
-    def hot_sign(self, operation, params, redirect_uri=None):
+    def create_hot_sign_url(self, operation, params, redirect_uri=None):
         """ Creates a link for broadcasting a operation
 
             :param str operation: operation name (e.g.: vote)
@@ -180,11 +226,17 @@ class SteemConnect(object):
 
         base_url = self.sc2_api_url.replace("/api", "")
 
+        if not redirect_uri and self.hot_sign_redirect_uri:
+            redirect_uri = self.hot_sign_redirect_uri
         if redirect_uri:
             params.update({"redirect_uri": redirect_uri})
 
-        params = urllib.parse.urlencode(params)
-        url = urllib.parse.urljoin(base_url, "sign/%s" % operation)
+        params = urlencode(params)
+        url = urljoin(base_url, "sign/%s" % operation)
         url += "?" + params
 
         return url
+
+
+# https://steemconnect.com/authorize/@steemauto/?redirect_uri=https://steemauto.com/dash.php
+# https://steemconnect.com/oauth2/authorize?client_id=steem.app&redirect_uri=https://steemauto.com/callback.php&scope=login

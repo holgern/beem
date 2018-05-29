@@ -63,6 +63,9 @@ class Steem(object):
             NumRetriesReached is raised. Disabled for -1. (default is -1)
         :param int num_retries_call: Repeat num_retries_call times a rpc call on node error (default is 5)
         :param int timeout: Timeout setting for https nodes (default is 60)
+        :param bool use_sc2: When True, a steemconnect object is created. Can be used for
+            broadcast posting op or creating hot_links (default is False)
+        :param SteemConnect steemconnect: A SteemConnect object can be set manually, set use_sc2 to True
 
         Three wallet operation modes are possible:
 
@@ -138,6 +141,10 @@ class Steem(object):
                 NumRetriesReached is raised. Disabled for -1. (default is -1)
             :param int num_retries_call: Repeat num_retries_call times a rpc call on node error (default is 5)
                 :param int timeout: Timeout setting for https nodes (default is 60)
+            :param bool use_sc2: When True, a steemconnect object is created. Can be used for broadcast
+                posting op or creating hot_links  (default is False)
+            :param SteemConnect steemconnect: A SteemConnect object can be set manually, set use_sc2 to True
+
         """
 
         self.rpc = None
@@ -149,8 +156,7 @@ class Steem(object):
         self.expiration = int(kwargs.get("expiration", 30))
         self.bundle = bool(kwargs.get("bundle", False))
         self.steemconnect = kwargs.get("steemconnect", None)
-        if self.steemconnect is not None and not isinstance(self.steemconnect, SteemConnect):
-            raise ValueError("steemconnect musst be SteemConnect object")
+        self.use_sc2 = bool(kwargs.get("use_sc2", False))
         self.blocking = kwargs.get("blocking", False)
 
         # Store config for access through other Classes
@@ -173,6 +179,14 @@ class Steem(object):
         self.clear()
 
         self.wallet = Wallet(steem_instance=self, **kwargs)
+
+        # set steemconnect
+        if self.steemconnect is not None and not isinstance(self.steemconnect, SteemConnect):
+            raise ValueError("steemconnect musst be SteemConnect object")
+        if self.steemconnect is None and self.use_sc2:
+            self.steemconnect = SteemConnect(steem_instance=self, **kwargs)
+        elif self.steemconnect is not None and not self.use_sc2:
+            self.use_sc2 = True
 
     # -------------------------------------------------------------------------
     # Basic Calls

@@ -117,7 +117,7 @@ class Wallet(object):
         # Compatibility after name change from wif->keys
         if "wif" in kwargs and "keys" not in kwargs:
             kwargs["keys"] = kwargs["wif"]
-
+        master_password_set = False
         if "keys" in kwargs:
             self.setKeys(kwargs["keys"])
         else:
@@ -127,6 +127,7 @@ class Wallet(object):
             from .storage import (keyStorage,
                                   MasterPassword)
             self.MasterPassword = MasterPassword
+            master_password_set = True
             self.keyStorage = keyStorage
 
         if "token" in kwargs:
@@ -136,7 +137,7 @@ class Wallet(object):
                 keyStorage
             """
             from .storage import tokenStorage
-            if MasterPassword is None:
+            if not master_password_set:
                 from .storage import MasterPassword
                 self.MasterPassword = MasterPassword
             self.tokenStorage = tokenStorage

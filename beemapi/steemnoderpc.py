@@ -61,7 +61,7 @@ class SteemNodeRPC(GrapheneRPC):
             try:
                 # Forward call to GrapheneWebsocketRPC and catch+evaluate errors
                 reply = super(SteemNodeRPC, self).rpcexec(payload)
-                if self.next_node_on_empty_reply and not bool(reply) and self.n_urls > 1:
+                if self.next_node_on_empty_reply and not bool(reply) and self.nodes.working_nodes_count > 1:
                     self._retry_on_next_node("Empty Reply")
                     doRetry = True
                     self.next_node_on_empty_reply = True
@@ -74,7 +74,7 @@ class SteemNodeRPC(GrapheneRPC):
                     self.nodes.sleep_and_check_retries(str(msg), call_retry=True)
                     doRetry = True
                 except exceptions.CallRetriesReached:
-                    if self.n_urls > 1:
+                    if self.nodes.working_nodes_count > 1:
                         self._retry_on_next_node(msg)
                         doRetry = True
                     else:
@@ -84,7 +84,7 @@ class SteemNodeRPC(GrapheneRPC):
                     doRetry = self._check_error_message(e, self.error_cnt_call)
                 except exceptions.CallRetriesReached:
                     msg = exceptions.decodeRPCErrorMsg(e).strip()
-                    if self.n_urls > 1:
+                    if self.nodes.working_nodes_count > 1:
                         self._retry_on_next_node(msg)
                         doRetry = True
                     else:
@@ -126,7 +126,7 @@ class SteemNodeRPC(GrapheneRPC):
             self.nodes.sleep_and_check_retries(str(msg), call_retry=True)
             doRetry = True
         elif re.search("!check_max_block_age", str(e)):
-            if self.n_urls == 1:
+            if self.nodes.working_nodes_count == 1:
                 raise exceptions.UnhandledRPCError(msg)
             self.nodes.increase_error_cnt()
             self.nodes.sleep_and_check_retries(str(msg), sleep=False)

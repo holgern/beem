@@ -10,6 +10,15 @@ import math
 
 
 class NodeList(list):
+    """ Returns a node list
+
+        .. code-block:: python
+
+            from beem.nodelist import NodeList
+            n = NodeList()
+            nodes_urls = n.get_nodes()
+
+    """
     def __init__(self):
         nodes = [
             {
@@ -59,7 +68,7 @@ class NodeList(list):
                 "version": "0.19.3",
                 "type": "normal",
                 "owner": "ausbitbank",
-                "score": 175
+                "score": 125
             },
             {
                 "url": "https://rpc.steemviz.com",
@@ -171,14 +180,14 @@ class NodeList(list):
                 "version": "0.19.3",
                 "type": "normal",
                 "owner": "followbtcnews",
-                "score": 10
+                "score": 120
             },
             {
                 "url": "https://steemd.minnowsupportproject.org",
                 "version": "0.19.3",
                 "type": "normal",
                 "owner": "followbtcnews",
-                "score": 10
+                "score": 90
             },
             {
                 "url": "https://rpc.curiesteem.com",

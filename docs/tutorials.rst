@@ -45,7 +45,7 @@ one comment operation from each sender.
   # Upvote post with 25%
   c.upvote(25, voter=account)
 
-  pprint(testnet.broadcast())
+  pprint(stm.broadcast())
 
 
 Use nobroadcast for testing

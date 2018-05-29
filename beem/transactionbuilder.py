@@ -149,11 +149,15 @@ class TransactionBuilder(dict):
 
         required_treshold = account[permission]["weight_threshold"]
 
-        if self.steem.wallet.locked():
-            raise WalletLocked()
-        if self.steem.steemconnect is not None:
-            self.steem.steemconnect.set_username(account["name"])
+        if self.steem.use_sc2:
+            if not self.steem.steemconnect.hot_sign and permission == "posting":
+                if self.steem.wallet.locked():
+                    raise WalletLocked()
+            self.steem.steemconnect.set_username(account["name"], permission)
             return
+        else:
+            if self.steem.wallet.locked():
+                raise WalletLocked()
 
         def fetchkeys(account, perm, level=0):
             if level > 2:
@@ -266,7 +270,7 @@ class TransactionBuilder(dict):
             self.constructTx()
         if "operations" not in self or not self["operations"]:
             return
-        if self.steem.steemconnect is not None:
+        if self.steem.use_sc2:
             return
         # We need to set the default prefix, otherwise pubkeys are
         # presented wrongly!
@@ -368,8 +372,8 @@ class TransactionBuilder(dict):
             return ret
         # Broadcast
         try:
-            if self.steem.steemconnect is not None:
-                ret = self.steem.steemconnect.broadcast(self["operations"])
+            if self.steem.use_sc2:
+                ret = self.steem.steemconnect.boadcast_or_hot_sign(self["operations"])
             elif self.steem.blocking:
                 ret = self.steem.rpc.broadcast_transaction_synchronous(
                     args, api="network_broadcast")
