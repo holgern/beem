@@ -559,7 +559,7 @@ def addtoken(name, unsafe_import_token):
 
 @cli.command()
 @click.option('--confirm',
-              prompt='Are your sure? This is IRREVERSIBLE! If you dont have a backup you may lose access to your account!',
+              prompt='Are your sure?',
               hide_input=False, callback=prompt_flag_callback, is_flag=True,
               confirmation_prompt=False, help='Please confirm!')
 @click.argument('name')

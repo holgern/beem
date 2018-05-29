@@ -13,6 +13,7 @@ except ImportError:
 import requests
 from .storage import configStorage as config
 from beem.instance import shared_steem_instance
+from beem.amount import Amount
 
 
 class SteemConnect(object):
@@ -242,7 +243,17 @@ class SteemConnect(object):
         urls = []
         operations = tx["operations"]
         for op in operations:
-            urls.append(self.create_hot_sign_url(op[0], op[1], redirect_uri=redirect_uri))
+            operation = op[0]
+            params = op[1]
+            for key in params:
+                value = params[key]
+                if isinstance(value, list) and len(value) == 3:
+                    try:
+                        amount = Amount(value, steem_instance=self.steem)
+                        params[key] = str(amount)
+                    except:
+                        amount = None
+            urls.append(self.create_hot_sign_url(operation, params, redirect_uri=redirect_uri))
         if len(urls) == 1:
             return urls[0]
         else:

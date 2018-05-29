@@ -377,7 +377,7 @@ class TransactionBuilder(dict):
                 self.steem.rpc.broadcast_transaction(
                     args, api="network_broadcast")
         except Exception as e:
-            log.error("Could Not broadcasting anything!")
+            # log.error("Could Not broadcasting anything!")
             self.clear()
             raise e
 
