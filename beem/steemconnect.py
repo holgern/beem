@@ -8,7 +8,7 @@ import json
 try:
     from urllib.parse import urlparse, urlencode, urljoin
 except ImportError:
-    from urlparse import urlencode, urljoin
+    from urlparse import urlparse, urljoin
     from urllib import urlencode
 import requests
 from .storage import configStorage as config
@@ -16,7 +16,7 @@ from beem.instance import shared_steem_instance
 
 
 class SteemConnect(object):
-    """ SteemConnect v2
+    """ SteemConnect
 
         :param str scope: comma seperate string with scopes
             login,offline,vote,comment,delete_comment,comment_options,custom_json,claim_reward_balance
@@ -34,26 +34,37 @@ class SteemConnect(object):
             post = Comment("author/permlink", steem_instance=steem)
             post.upvote(voter="test")  # replace "test" with your account
 
-        hot_sign example:
-        .. code-block:: python
-
-            from beem import Steem
-            from beem.steemconnect import SteemConnect
-            from beem.comment import Comment
-            sc2 = SteemConnect(client_id="beem.app", hot_sign=True)
-            steem = Steem(steemconnect=sc2)
-            post = Comment("author/permlink", steem_instance=steem)
-            post.upvote(voter="test")  # replace "test" with your account
-
-        transfer example:
+        Examples for creating steemconnect v2 urls for broadcasting in browser:
         .. testoutput::
 
             from beem import Steem
             from beem.account import Account
+            from beem.steemconnect import SteemConnect
             from pprint import pprint
-            steem = Steem(use_sc2=True, hot_sign=True)
+            steem = Steem(nobroadcast=True, unsigned=True)
+            sc2 = SteemConnect(steem_instance=steem)
             acc = Account("test", steem_instance=steem)
-            pprint(acc.transfer("test1", 1, "STEEM", "test"))
+            pprint(sc2.url_from_tx(acc.transfer("test1", 1, "STEEM", "test")))
+
+        .. testcode::
+
+            'https://v2.steemconnect.com/sign/transfer?from=test&to=test1&amount=1.000+STEEM&memo=test'
+
+        .. testoutput::
+
+            from beem import Steem
+            from beem.transactionbuilder import TransactionBuilder
+            from beembase import operations
+            from beem.steemconnect import SteemConnect
+            from pprint import pprint
+            stm = Steem()
+            tx = TransactionBuilder(steem_instance=stm)
+            op = operations.Transfer(**{"from": 'test',
+                                        "to": 'test1',
+                                        "amount": '1.000 STEEM',
+                                        "memo": 'test'})
+            tx.appendOps(op)
+            pprint(sc2.url_from_tx(tx)
 
         .. testcode::
 
@@ -127,18 +138,6 @@ class SteemConnect(object):
             return
         self.access_token = self.steem.wallet.getTokenForAccountName(username)
 
-    def boadcast_or_hot_sign(self, operations, username=None):
-        if self.hot_sign or self.access_token is None:
-            urls = []
-            for op in operations:
-                urls.append(self.create_hot_sign_url(op[0], op[1]))
-            if len(urls) == 1:
-                return urls[0]
-            else:
-                return urls
-        else:
-            return self.broadcast(operations, username=None)
-
     def broadcast(self, operations, username=None):
         """ Broadcast a operations
 
@@ -149,9 +148,9 @@ class SteemConnect(object):
                 [
                     [
                         'vote', {
-                                    'voter': 'holger.random',
-                                    'author': 'holger80',
-                                    'permlink': 'does-the-steem-blockchain-comply-with-the-gdpr-and-european-privacy-laws',
+                                    'voter': 'gandalf',
+                                    'author': 'gtg',
+                                    'permlink': 'steem-pressure-4-need-for-speed',
                                     'weight': 10000
                                 }
                     ]
@@ -214,11 +213,32 @@ class SteemConnect(object):
 
         return r.json()
 
+    def url_from_tx(self, tx, redirect_uri=None):
+        """ Creates a link for broadcasting a operation
+
+            :param dict tx: inlcudes the operation, which should be broadcast
+            :param dict params: operation dict params
+            :param str redirect_uri: Redirects to this uri, when set
+        """
+        if not isinstance(tx, dict):
+            tx = tx.json()
+        if "operations" not in tx or not tx["operations"]:
+            return ''
+        urls = []
+        operations = tx["operations"]
+        for op in operations:
+            urls.append(self.create_hot_sign_url(op[0], op[1], redirect_uri=redirect_uri))
+        if len(urls) == 1:
+            return urls[0]
+        else:
+            return urls
+
     def create_hot_sign_url(self, operation, params, redirect_uri=None):
         """ Creates a link for broadcasting a operation
 
             :param str operation: operation name (e.g.: vote)
             :param dict params: operation dict params
+            :param str redirect_uri: Redirects to this uri, when set
         """
 
         if not isinstance(operation, str) or not isinstance(params, dict):

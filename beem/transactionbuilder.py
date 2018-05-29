@@ -148,16 +148,11 @@ class TransactionBuilder(dict):
             raise AssertionError("Could not access permission")
 
         required_treshold = account[permission]["weight_threshold"]
-
+        if self.steem.wallet.locked():
+            raise WalletLocked()
         if self.steem.use_sc2:
-            if not self.steem.steemconnect.hot_sign and permission == "posting":
-                if self.steem.wallet.locked():
-                    raise WalletLocked()
             self.steem.steemconnect.set_username(account["name"], permission)
             return
-        else:
-            if self.steem.wallet.locked():
-                raise WalletLocked()
 
         def fetchkeys(account, perm, level=0):
             if level > 2:
@@ -373,7 +368,7 @@ class TransactionBuilder(dict):
         # Broadcast
         try:
             if self.steem.use_sc2:
-                ret = self.steem.steemconnect.boadcast_or_hot_sign(self["operations"])
+                ret = self.steem.steemconnect.boadcast(self["operations"])
             elif self.steem.blocking:
                 ret = self.steem.rpc.broadcast_transaction_synchronous(
                     args, api="network_broadcast")
