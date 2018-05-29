@@ -160,6 +160,21 @@ class BlockchainObject(dict):
         if dict.__contains__(self, self.id_item):
             BlockchainObject._cache[self.get(self.id_item)] = self
 
+    def clear_cache_from_expired_items(self):
+        BlockchainObject._cache.clear_expired_items()
+
+    def set_cache_expiration(self, expiration):
+        BlockchainObject._cache.default_expiration = expiration
+
+    def set_cache_auto_clean(self, auto_clean):
+        BlockchainObject._cache.auto_clean = auto_clean
+
+    def get_cache_expiration(self):
+        return BlockchainObject._cache.default_expiration
+
+    def get_cache_auto_clean(self):
+        return BlockchainObject._cache.auto_clean
+
     def iscached(self, id):
         return id in BlockchainObject._cache
 

@@ -15,7 +15,6 @@ from datetime import datetime, timedelta
 from .utils import formatTimeString
 from .block import Block
 from .exceptions import BatchedCallsNotSupported, BlockDoesNotExistsException, BlockWaitTimeExceeded
-from .blockchainobject import BlockchainObject
 from beemgraphenebase.py23 import py23_bytes
 from beem.instance import shared_steem_instance
 from .amount import Amount
@@ -216,7 +215,8 @@ class Blockchain(object):
 
         """
         # Let's find out how often blocks are generated!
-        current_block_num = self.get_current_block_num()
+        current_block = self.get_current_block()
+        current_block_num = current_block.block_num
         if not start:
             start = current_block_num
         head_block_reached = False
@@ -231,6 +231,9 @@ class Blockchain(object):
                 head_block = current_block_num
             if threading and FUTURES_MODULE and not head_block_reached:
                 pool = ThreadPoolExecutor(max_workers=thread_num + 1)
+                # disable autoclean
+                auto_clean = current_block.get_cache_auto_clean()
+                current_block.set_cache_auto_clean(False)
                 latest_block = 0
                 for blocknum in range(start, head_block + 1, thread_num):
                     futures = []
@@ -248,10 +251,12 @@ class Blockchain(object):
                     blocks = sorted(results, key=itemgetter('id'))
                     for b in blocks:
                         yield b
+                    current_block.clear_cache_from_expired_items()
                 if latest_block < head_block:
                     for blocknum in range(latest_block, head_block + 1):
                         block = Block(blocknum, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
                         yield block
+                current_block.set_cache_auto_clean(auto_clean)
             elif max_batch_size is not None and (head_block - start) >= max_batch_size and not head_block_reached:
                 latest_block = start - 1
                 batches = max_batch_size
