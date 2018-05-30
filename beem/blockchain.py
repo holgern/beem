@@ -154,6 +154,8 @@ class Blockchain(object):
         else:
             time_diff = last_block.time() - date
             block_number = math.floor(last_block.identifier - time_diff.total_seconds() / self.block_interval)
+        if block_number < 1:
+            block_number = 1
 
         if accurate:
             if block_number > last_block.identifier:
@@ -168,6 +170,8 @@ class Blockchain(object):
                 elif delta == 0 and block_time_diff.total_seconds() > 0:
                     delta = 1
                 block_number += delta
+                if block_number < 1:
+                    break             
                 if block_number > last_block.identifier:
                     break
 
