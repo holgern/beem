@@ -4,7 +4,7 @@ wheel
 future==0.16.0
 ecdsa==0.13
 requests==2.18.4
-websocket-client==0.47.0
+websocket-client==0.48.0
 pytz==2018.4
 pycryptodomex==3.6.1
 scrypt==0.8.6
