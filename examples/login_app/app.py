@@ -1,12 +1,14 @@
 from flask import Flask, request
 from beem.steemconnect import SteemConnect
+import getpass
 
 app = Flask(__name__)
 
 
 c = SteemConnect(client_id="beem.app", scope="login,vote,custom_json", get_refresh_token=False)
 # replace test with our wallet password
-c.steem.wallet.unlock("test")
+wallet_password = getpass.getpass('Wallet-Password:')
+c.steem.wallet.unlock(wallet_password)
 
 
 @app.route('/')

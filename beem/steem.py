@@ -29,7 +29,7 @@ from .wallet import Wallet
 from .steemconnect import SteemConnect
 from .transactionbuilder import TransactionBuilder
 from .utils import formatTime, resolve_authorperm, derive_permlink, remove_from_dict
-from beem.constants import STEEM_VOTE_REGENERATION_SECONDS
+from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_100_PERCENT, STEEM_1_PERCENT
 
 log = logging.getLogger(__name__)
 
@@ -389,10 +389,10 @@ class Steem(object):
         except:
             return None
 
-    def get_median_price(self):
+    def get_median_price(self, use_stored_data=True):
         """ Returns the current median history price as Price
         """
-        median_price = self.get_current_median_history()
+        median_price = self.get_current_median_history(use_stored_data=use_stored_data)
         a = Price(
             None,
             base=Amount(median_price['base'], steem_instance=self),
@@ -401,46 +401,43 @@ class Steem(object):
         )
         return a.as_base("SBD")
 
-    def get_block_interval(self):
+    def get_block_interval(self, use_stored_data=True):
         """Returns the block intervall in seconds"""
-        props = self.get_config()
-        if props and "STEEMIT_BLOCK_INTERVAL" in props:
-            block_interval = props["STEEMIT_BLOCK_INTERVAL"]
-        elif props and "STEEM_BLOCK_INTERVAL" in props:
+        props = self.get_config(use_stored_data=use_stored_data, replace_steemit_by_steem=True)
+        if props and "STEEM_BLOCK_INTERVAL" in props:
             block_interval = props["STEEM_BLOCK_INTERVAL"]
         else:
             block_interval = 3
         return block_interval
 
-    def get_blockchain_version(self):
+    def get_blockchain_version(self, use_stored_data=True):
         """Returns the blockchain version"""
-        props = self.get_config()
-        if props and "STEEMIT_BLOCKCHAIN_VERSION" in props:
-            blockchain_version = props["STEEMIT_BLOCKCHAIN_VERSION"]
-        elif props and "STEEM_BLOCKCHAIN_VERSION" in props:
+        props = self.get_config(use_stored_data=use_stored_data, replace_steemit_by_steem=True)
+        if props and "STEEM_BLOCKCHAIN_VERSION" in props:
             blockchain_version = props["STEEM_BLOCKCHAIN_VERSION"]
         else:
             blockchain_version = '0.0.0'
         return blockchain_version
 
-    def rshares_to_sbd(self, rshares):
+    def rshares_to_sbd(self, rshares, use_stored_data=True):
         """ Calculates the SBD amount of a vote
         """
-        payout = float(rshares) * self.get_sbd_per_rshares()
+        payout = float(rshares) * self.get_sbd_per_rshares(use_stored_data=use_stored_data)
         return payout
 
-    def get_sbd_per_rshares(self):
+    def get_sbd_per_rshares(self, use_stored_data=True):
         """ Returns the current rshares to SBD ratio
         """
-        reward_fund = self.get_reward_funds()
+        reward_fund = self.get_reward_funds(use_stored_data=use_stored_data)
         reward_balance = Amount(reward_fund["reward_balance"], steem_instance=self).amount
         recent_claims = float(reward_fund["recent_claims"])
 
         fund_per_share = reward_balance / (recent_claims)
-        SBD_price = (self.get_median_price() * Amount("1 STEEM", steem_instance=self)).amount
+        median_price = self.get_median_price(use_stored_data=use_stored_data)
+        SBD_price = (median_price * Amount("1 STEEM", steem_instance=self)).amount
         return fund_per_share * SBD_price
 
-    def get_steem_per_mvest(self, time_stamp=None):
+    def get_steem_per_mvest(self, time_stamp=None, use_stored_data=True):
         """ Returns the current mvest to steem ratio
         """
         if time_stamp is not None:
@@ -453,14 +450,14 @@ class Steem(object):
                 return a * time_stamp + b
             else:
                 return a2 * time_stamp + b2
-        global_properties = self.get_dynamic_global_properties()
+        global_properties = self.get_dynamic_global_properties(use_stored_data=use_stored_data)
 
         return (
             Amount(global_properties['total_vesting_fund_steem'], steem_instance=self).amount /
             (Amount(global_properties['total_vesting_shares'], steem_instance=self).amount / 1e6)
         )
 
-    def vests_to_sp(self, vests, timestamp=None):
+    def vests_to_sp(self, vests, timestamp=None, use_stored_data=True):
         """ Converts vests to SP
 
             :param beem.amount.Amount vests/float vests: Vests to convert
@@ -470,57 +467,58 @@ class Steem(object):
         """
         if isinstance(vests, Amount):
             vests = vests.amount
-        return vests / 1e6 * self.get_steem_per_mvest(timestamp)
+        return vests / 1e6 * self.get_steem_per_mvest(timestamp, use_stored_data=use_stored_data)
 
-    def sp_to_vests(self, sp, timestamp=None):
+    def sp_to_vests(self, sp, timestamp=None, use_stored_data=True):
         """ Converts SP to vests
 
             :param float sp: Steem power to convert
             :param datetime timestamp: (Optional) Can be used to calculate
                 convertion in the past
         """
-        return sp * 1e6 / self.get_steem_per_mvest(timestamp)
+        return sp * 1e6 / self.get_steem_per_mvest(timestamp, use_stored_data=use_stored_data)
 
-    def sp_to_sbd(self, sp, voting_power=10000, vote_pct=10000):
+    def sp_to_sbd(self, sp, voting_power=10000, vote_pct=10000, use_stored_data=True):
         """ Obtain the resulting sbd amount from Steem power
             :param number steem_power: Steem Power
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting participation (100% = 10000)
         """
-        vesting_shares = int(self.sp_to_vests(sp))
+        vesting_shares = int(self.sp_to_vests(sp, use_stored_data=use_stored_data))
         return self.vests_to_sbd(vesting_shares, voting_power=voting_power, vote_pct=vote_pct)
 
-    def vests_to_sbd(self, vests, voting_power=10000, vote_pct=10000):
+    def vests_to_sbd(self, vests, voting_power=10000, vote_pct=10000, use_stored_data=True):
         """ Obtain the resulting sbd voting amount from vests
             :param number vests: vesting shares
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting participation (100% = 10000)
         """
-        reward_fund = self.get_reward_funds()
+        reward_fund = self.get_reward_funds(use_stored_data=use_stored_data)
         reward_balance = Amount(reward_fund["reward_balance"], steem_instance=self).amount
         recent_claims = float(reward_fund["recent_claims"])
         reward_share = reward_balance / recent_claims
 
         resulting_vote = self._calc_resulting_vote(voting_power=voting_power, vote_pct=vote_pct)
-        SBD_price = (self.get_median_price() * Amount("1 STEEM", steem_instance=self)).amount
+        median_price = self.get_median_price(use_stored_data=use_stored_data)
+        SBD_price = (median_price * Amount("1 STEEM", steem_instance=self)).amount
         VoteValue = (vests * resulting_vote * 100) * reward_share * SBD_price
         return VoteValue
 
-    def _max_vote_denom(self):
+    def _max_vote_denom(self, use_stored_data=True):
         # get props
-        global_properties = self.get_dynamic_global_properties()
+        global_properties = self.get_dynamic_global_properties(use_stored_data=use_stored_data)
         vote_power_reserve_rate = global_properties['vote_power_reserve_rate']
         max_vote_denom = vote_power_reserve_rate * STEEM_VOTE_REGENERATION_SECONDS
         return max_vote_denom
 
-    def _calc_resulting_vote(self, voting_power=10000, vote_pct=10000):
+    def _calc_resulting_vote(self, voting_power=10000, vote_pct=10000, use_stored_data=True):
         # determine voting power used
         used_power = int((voting_power * vote_pct) / 10000 * (60 * 60 * 24))
-        max_vote_denom = self._max_vote_denom()
+        max_vote_denom = self._max_vote_denom(use_stored_data=use_stored_data)
         used_power = int((used_power + max_vote_denom - 1) / max_vote_denom)
         return used_power
 
-    def sp_to_rshares(self, steem_power, voting_power=10000, vote_pct=10000):
+    def sp_to_rshares(self, steem_power, voting_power=10000, vote_pct=10000, use_stored_data=True):
         """ Obtain the r-shares from Steem power
 
             :param number steem_power: Steem Power
@@ -529,10 +527,10 @@ class Steem(object):
 
         """
         # calculate our account voting shares (from vests)
-        vesting_shares = int(self.sp_to_vests(steem_power) * 1e6)
-        return self.vests_to_rshares(vesting_shares, voting_power=voting_power, vote_pct=vote_pct)
+        vesting_shares = int(self.sp_to_vests(steem_power, use_stored_data=use_stored_data) * 1e6)
+        return self.vests_to_rshares(vesting_shares, voting_power=voting_power, vote_pct=vote_pct, use_stored_data=use_stored_data)
 
-    def vests_to_rshares(self, vests, voting_power=10000, vote_pct=10000):
+    def vests_to_rshares(self, vests, voting_power=10000, vote_pct=10000, use_stored_data=True):
         """ Obtain the r-shares from vests
 
             :param number vests: vesting shares
@@ -540,12 +538,12 @@ class Steem(object):
             :param int vote_pct: voting participation (100% = 10000)
 
         """
-        used_power = self._calc_resulting_vote(voting_power=voting_power, vote_pct=vote_pct)
+        used_power = self._calc_resulting_vote(voting_power=voting_power, vote_pct=vote_pct, use_stored_data=use_stored_data)
         # calculate vote rshares
         rshares = int((vests * used_power) / 10000)
         return rshares
 
-    def rshares_to_vote_pct(self, rshares, steem_power=None, vests=None, voting_power=10000):
+    def rshares_to_vote_pct(self, rshares, steem_power=None, vests=None, voting_power=10000, use_stored_data=True):
         """ Obtain the voting percentage for a desired rshares value
             for a given Steem Power or vesting shares and voting_power
             Give either steem_power or vests, not both.
@@ -565,9 +563,9 @@ class Steem(object):
         if steem_power is not None and vests is not None:
             raise ValueError("Either steem_power or vests has to be set. Not both!")
         if steem_power is not None:
-            vests = int(self.sp_to_vests(steem_power) * 1e6)
+            vests = int(self.sp_to_vests(steem_power, use_stored_data=use_stored_data) * 1e6)
 
-        max_vote_denom = self._max_vote_denom()
+        max_vote_denom = self._max_vote_denom(use_stored_data=use_stored_data)
 
         used_power = int(math.ceil(rshares * 10000 / vests))
         used_power = used_power * max_vote_denom
@@ -605,8 +603,12 @@ class Steem(object):
         self.rpc.set_next_node_on_empty_reply(True)
         return self.rpc.get_witness_schedule(api="database")
 
-    def get_config(self, use_stored_data=True):
+    def get_config(self, use_stored_data=True, replace_steemit_by_steem=False):
         """ Returns internal chain configuration.
+
+            :param bool use_stored_data: If True, the chached value is returned
+            :param bool replace_steemit_by_steem: If True, it replaces all
+                STEEMIT keys by STEEM (only useful on non appbase nodes)
         """
         if use_stored_data:
             self.refresh_data()
@@ -614,7 +616,14 @@ class Steem(object):
         if self.rpc is None:
             return None
         self.rpc.set_next_node_on_empty_reply(True)
-        return self.rpc.get_config(api="database")
+        config = self.rpc.get_config(api="database")
+        if replace_steemit_by_steem:
+            config_steem = {}
+            for key in config:
+                config_steem[key.replace('STEEMIT', 'STEEM')] = config[key]
+            return config_steem
+        else:
+            return config
 
     @property
     def chain_params(self):
@@ -1096,7 +1105,7 @@ class Steem(object):
             op = operations.Account_create(**op)
         return self.finalizeOp(op, creator, "active", **kwargs)
 
-    def witness_update(self, signing_key, url, props, account=None):
+    def witness_update(self, signing_key, url, props, account=None, **kwargs):
         """ Creates/updates a witness
 
             :param pubkey signing_key: Signing key
@@ -1134,7 +1143,7 @@ class Steem(object):
                 "fee": "0.000 STEEM",
                 "prefix": self.prefix,
             })
-        return self.finalizeOp(op, account, "active")
+        return self.finalizeOp(op, account, "active", **kwargs)
 
     def _test_weights_treshold(self, authority):
         """ This method raises an error if the threshold of an authority cannot
@@ -1157,7 +1166,8 @@ class Steem(object):
                     id,
                     json_data,
                     required_auths=[],
-                    required_posting_auths=[]):
+                    required_posting_auths=[],
+                    **kwargs):
         """ Create a custom json operation
 
             :param str id: identifier for the custom json (max length 32 bytes)
@@ -1183,7 +1193,7 @@ class Steem(object):
                 "id": id,
                 "prefix": self.prefix,
             })
-        return self.finalizeOp(op, account, "posting")
+        return self.finalizeOp(op, account, "posting", **kwargs)
 
     def post(self,
              title,
@@ -1197,7 +1207,8 @@ class Steem(object):
              app=None,
              tags=None,
              beneficiaries=None,
-             self_vote=False):
+             self_vote=False,
+             **kwargs):
         """ Create a new post.
         If this post is intended as a reply/comment, `reply_identifier` needs
         to be set with the identifier of the parent post/comment (eg.
@@ -1316,7 +1327,7 @@ class Steem(object):
             **{
                 "parent_author": parent_author,
                 "parent_permlink": parent_permlink,
-                "author": author,
+                "author": account["name"],
                 "permlink": permlink,
                 "title": title,
                 "body": body,
@@ -1357,7 +1368,7 @@ class Steem(object):
             comment_op = operations.Comment_options(
                 **{
                     "author":
-                    author,
+                    account["name"],
                     "permlink":
                     permlink,
                     "max_accepted_payout":
@@ -1378,16 +1389,16 @@ class Steem(object):
         if self_vote:
             vote_op = operations.Vote(
                 **{
-                    'voter': author,
-                    'author': author,
+                    'voter': account["name"],
+                    'author': account["name"],
                     'permlink': permlink,
                     'weight': 10000,
                 })
             ops.append(vote_op)
 
-        return self.finalizeOp(ops, account, "posting")
+        return self.finalizeOp(ops, account, "posting", **kwargs)
 
-    def comment_options(self, options, identifier, account=None):
+    def comment_options(self, options, identifier, account=None, **kwargs):
         """ Set the comment options
 
             :param str identifier: Post identifier
@@ -1414,8 +1425,6 @@ class Steem(object):
         account = Account(account, steem_instance=self)
         author, permlink = resolve_authorperm(identifier)
         default_max_payout = "1000000.000 SBD"
-        STEEMIT_100_PERCENT = 10000
-        STEEMIT_1_PERCENT = (STEEMIT_100_PERCENT / 100)
         op = operations.Comment_options(
             **{
                 "author":
@@ -1425,10 +1434,10 @@ class Steem(object):
                 "max_accepted_payout":
                 options.get("max_accepted_payout", default_max_payout),
                 "percent_steem_dollars":
-                options.get("percent_steem_dollars", 100) * STEEMIT_1_PERCENT,
+                options.get("percent_steem_dollars", 100) * STEEM_1_PERCENT,
                 "allow_votes":
                 options.get("allow_votes", True),
                 "allow_curation_rewards":
                 options.get("allow_curation_rewards", True),
             })
-        return self.finalizeOp(op, account, "posting")
+        return self.finalizeOp(op, account, "posting", **kwargs)

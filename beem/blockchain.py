@@ -171,7 +171,7 @@ class Blockchain(object):
                     delta = 1
                 block_number += delta
                 if block_number < 1:
-                    break             
+                    break
                 if block_number > last_block.identifier:
                     break
 

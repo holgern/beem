@@ -1445,11 +1445,50 @@ class Account(BlockchainObject):
         return self.steem.custom_json(
             "follow", json_body, required_posting_auths=[account])
 
-    def update_account_profile(self, profile, account=None):
-        """ Update an account's meta data (json_meta)
+    def update_account_profile(self, profile, account=None, **kwargs):
+        """ Update an account's profile in json_metadata
 
-            :param dict json: The meta data to use (i.e. use Profile() from
-                account.py)
+            :param dict profile: The new profile to use
+            :param str account: (optional) the account to allow access
+                to (defaults to ``default_account``)
+
+            Sample profile structure:
+
+            .. code-block:: js
+
+                {
+                    'name': 'Holger',
+                    'about': 'beem Developer',
+                    'location': 'Germany',
+                    'profile_image': 'https://c1.staticflickr.com/5/4715/38733717165_7070227c89_n.jpg',
+                    'cover_image': 'https://farm1.staticflickr.com/894/26382750057_69f5c8e568.jpg',
+                    'website': 'https://github.com/holgern/beem'
+                }
+
+            .. code-block:: python
+
+                from beem.account import Account
+                acc = Account("test")
+                profile = acc.profile
+                profile["about"] = "test account"
+                acc.update_account_profile(profile)
+
+        """
+        if not account:
+            account = self
+        if not account:
+            raise ValueError("You need to provide an account")
+        if not isinstance(profile, dict):
+            raise ValueError("Profile must be a dict type!")
+        account = Account(account, steem_instance=self.steem)
+        metadata = json.loads(self['json_metadata'])
+        metadata["profile"] = profile
+        return self.update_account_metadata(metadata)
+
+    def update_account_metadata(self, metadata, account=None, **kwargs):
+        """ Update an account's profile in json_metadata
+
+            :param dict metadata: The new metadata to use
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
 
@@ -1458,15 +1497,19 @@ class Account(BlockchainObject):
             account = self
         if not account:
             raise ValueError("You need to provide an account")
+        if isinstance(metadata, dict):
+            metadata = json.dumps(metadata)
+        elif not isinstance(metadata, str):
+            raise ValueError("Profile must be a dict or string!")
         account = Account(account, steem_instance=self.steem)
         op = operations.Account_update(
             **{
                 "account": account["name"],
                 "memo_key": account["memo_key"],
-                "json_metadata": profile,
+                "json_metadata": metadata,
                 "prefix": self.steem.prefix,
             })
-        return self.steem.finalizeOp(op, account, "active")
+        return self.steem.finalizeOp(op, account, "active", **kwargs)
 
     # -------------------------------------------------------------------------
     #  Approval and Disapproval of witnesses
