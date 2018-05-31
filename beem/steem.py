@@ -627,11 +627,13 @@ class Steem(object):
 
     @property
     def chain_params(self):
-        if self.offline:
+        if self.offline or self.rpc is None:
             from beemgraphenebase.chains import known_chains
             return known_chains["STEEM"]
-        else:
+        elif self.rpc.chain_params is not None:
             return self.rpc.chain_params
+        else:
+            return self.rpc.get_network()
 
     @property
     def prefix(self):
@@ -790,7 +792,7 @@ class Steem(object):
         """
         if tx:
             # If tx is provided, we broadcast the tx
-            return TransactionBuilder(tx).broadcast()
+            return TransactionBuilder(tx, steem_instance=self).broadcast()
         else:
             return self.txbuffer.broadcast()
 

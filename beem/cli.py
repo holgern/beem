@@ -1149,7 +1149,7 @@ def setprofile(variable, value, account, pair):
     acc["json_metadata"] = Profile(acc["json_metadata"]
                                    if acc["json_metadata"] else {})
     acc["json_metadata"].update(profile)
-    tx = acc.update_account_profile(acc["json_metadata"])
+    tx = acc.update_account_metadata(acc["json_metadata"])
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
@@ -1389,8 +1389,8 @@ def pricehistory(width, height, ascii):
     price_history = feed_history["price_history"]
     price = []
     for h in price_history:
-        base = Amount(h["base"])
-        quote = Amount(h["quote"])
+        base = Amount(h["base"], steem_instance=stm)
+        quote = Amount(h["quote"], steem_instance=stm)
         price.append(base.amount / quote.amount)
     if ascii:
         charset = u'ascii'
@@ -2384,7 +2384,7 @@ def pending(accounts, only_sum, post, comment, curation, length, author, permlin
         if curation:
             votes = AccountVotes(account, start=limit_time, steem_instance=stm)
             for vote in votes:
-                c = Comment(vote["authorperm"])
+                c = Comment(vote["authorperm"], steem_instance=stm)
                 rewards = c.get_curation_rewards()
                 if not rewards["pending_rewards"]:
                     continue

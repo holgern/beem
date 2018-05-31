@@ -223,7 +223,7 @@ class Amount(dict):
             if not other["asset"] == self["asset"]:
                 raise AssertionError()
             from .price import Price
-            return Price(self, other)
+            return Price(self, other, steem_instance=self.steem)
         else:
             a["amount"] //= other
         return a
@@ -234,7 +234,7 @@ class Amount(dict):
             if not other["asset"] == self["asset"]:
                 raise AssertionError()
             from .price import Price
-            return Price(self, other)
+            return Price(self, other, steem_instance=self.steem)
         else:
             a["amount"] /= other
         return a

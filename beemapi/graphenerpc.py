@@ -137,6 +137,7 @@ class GrapheneRPC(object):
         self.ws = None
         self.url = None
         self.session = None
+        self.chain_params = None
         self.rpc_queue = []
         if kwargs.get("autoconnect", True):
             self.rpcconnect()
