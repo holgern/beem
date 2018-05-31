@@ -1146,10 +1146,10 @@ def setprofile(variable, value, account, pair):
         return
     acc = Account(account, steem_instance=stm)
 
-    acc["json_metadata"] = Profile(acc["json_metadata"]
+    json_metadata = Profile(acc["json_metadata"]
                                    if acc["json_metadata"] else {})
-    acc["json_metadata"].update(profile)
-    tx = acc.update_account_metadata(acc["json_metadata"])
+    json_metadata.update(profile)
+    tx = acc.update_account_profile(json_metadata)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
@@ -1170,12 +1170,12 @@ def delprofile(variable, account):
     if not unlock_wallet(stm):
         return
     acc = Account(account, steem_instance=stm)
-    acc["json_metadata"] = Profile(acc["json_metadata"])
+    json_metadata = Profile(acc["json_metadata"])
 
     for var in variable:
-        acc["json_metadata"].remove(var)
+        json_metadata.remove(var)
 
-    tx = acc.update_account_profile(acc["json_metadata"])
+    tx = acc.update_account_profile(json_metadata)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
