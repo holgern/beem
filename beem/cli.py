@@ -1146,8 +1146,7 @@ def setprofile(variable, value, account, pair):
         return
     acc = Account(account, steem_instance=stm)
 
-    json_metadata = Profile(acc["json_metadata"]
-                                   if acc["json_metadata"] else {})
+    json_metadata = Profile(acc["json_metadata"] if acc["json_metadata"] else {})
     json_metadata.update(profile)
     tx = acc.update_account_profile(json_metadata)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
