@@ -1339,53 +1339,10 @@ class Steem(object):
 
         # if comment_options are used, add a new op to the transaction
         if comment_options or beneficiaries:
-            options = remove_from_dict(comment_options or {}, [
-                'max_accepted_payout', 'percent_steem_dollars', 'allow_votes',
-                'allow_curation_rewards', 'extensions'
-            ], keep_keys=True)
-            # override beneficiaries extension
-            if beneficiaries:
-                # validate schema
-                # or just simply vo.Schema([{'account': str, 'weight': int}])
-
-                for b in beneficiaries:
-                    if 'account' not in b:
-                        raise ValueError(
-                            "beneficiaries need an account field!"
-                        )
-                    if 'weight' not in b:
-                        b['weight'] = 10000
-                    if len(b['account']) > 16:
-                        raise ValueError(
-                            "beneficiaries error, account name length >16!"
-                        )
-                    if b['weight'] < 1 or b['weight'] > 10000:
-                        raise ValueError(
-                            "beneficiaries error, 1<=weight<=10000!"
-                        )
-
-                options['beneficiaries'] = beneficiaries
-
-            default_max_payout = "1000000.000 SBD"
-            comment_op = operations.Comment_options(
-                **{
-                    "author":
-                    account["name"],
-                    "permlink":
-                    permlink,
-                    "max_accepted_payout":
-                    options.get("max_accepted_payout", default_max_payout),
-                    "percent_steem_dollars":
-                    int(options.get("percent_steem_dollars", 10000)),
-                    "allow_votes":
-                    options.get("allow_votes", True),
-                    "allow_curation_rewards":
-                    options.get("allow_curation_rewards", True),
-                    "extensions":
-                    options.get("extensions", []),
-                    "beneficiaries":
-                    options.get("beneficiaries"),
-                })
+            comment_op = self._build_comment_options_op(account['name'],
+                                                        permlink,
+                                                        comment_options,
+                                                        beneficiaries)
             ops.append(comment_op)
 
         if self_vote:
@@ -1400,7 +1357,8 @@ class Steem(object):
 
         return self.finalizeOp(ops, account, "posting", **kwargs)
 
-    def comment_options(self, options, identifier, account=None, **kwargs):
+    def comment_options(self, options, identifier, beneficiaries=[],
+                        account=None, **kwargs):
         """ Set the comment options
 
             :param str identifier: Post identifier
@@ -1426,8 +1384,41 @@ class Steem(object):
             raise ValueError("You need to provide an account")
         account = Account(account, steem_instance=self)
         author, permlink = resolve_authorperm(identifier)
+        op = self._build_comment_options_op(author, permlink, options,
+                                            beneficiaries)
+        return self.finalizeOp(op, account, "posting", **kwargs)
+
+    def _build_comment_options_op(self, author, permlink, options,
+                                  beneficiaries):
+        options = remove_from_dict(options or {}, [
+            'max_accepted_payout', 'percent_steem_dollars',
+            'allow_votes', 'allow_curation_rewards', 'extensions'
+        ], keep_keys=True)
+        # override beneficiaries extension
+        if beneficiaries:
+            # validate schema
+            # or just simply vo.Schema([{'account': str, 'weight': int}])
+
+            for b in beneficiaries:
+                if 'account' not in b:
+                    raise ValueError(
+                        "beneficiaries need an account field!"
+                    )
+                if 'weight' not in b:
+                    b['weight'] = 10000
+                if len(b['account']) > 16:
+                    raise ValueError(
+                        "beneficiaries error, account name length >16!"
+                    )
+                if b['weight'] < 1 or b['weight'] > 10000:
+                    raise ValueError(
+                        "beneficiaries error, 1<=weight<=10000!"
+                    )
+
+            options['beneficiaries'] = beneficiaries
+
         default_max_payout = "1000000.000 SBD"
-        op = operations.Comment_options(
+        comment_op = operations.Comment_options(
             **{
                 "author":
                 author,
@@ -1436,10 +1427,14 @@ class Steem(object):
                 "max_accepted_payout":
                 options.get("max_accepted_payout", default_max_payout),
                 "percent_steem_dollars":
-                options.get("percent_steem_dollars", 100) * STEEM_1_PERCENT,
+                int(options.get("percent_steem_dollars", STEEM_100_PERCENT)),
                 "allow_votes":
                 options.get("allow_votes", True),
                 "allow_curation_rewards":
                 options.get("allow_curation_rewards", True),
+                "extensions":
+                options.get("extensions", []),
+                "beneficiaries":
+                options.get("beneficiaries", []),
             })
-        return self.finalizeOp(op, account, "posting", **kwargs)
+        return comment_op
