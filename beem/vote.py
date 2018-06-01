@@ -328,13 +328,12 @@ class ActiveVotes(VotesObject):
                                                          'permlink': authorperm["permlink"]},
                                                         api="tags")['votes']
             else:
-                self.steem.rpc.set_next_node_on_empty_reply(True)
                 votes = self.steem.rpc.get_active_votes(authorperm["author"], authorperm["permlink"])
             authorperm = authorperm["authorperm"]
         elif isinstance(authorperm, string_types):
             [author, permlink] = resolve_authorperm(authorperm)
-            self.steem.rpc.set_next_node_on_empty_reply(True)
             if self.steem.rpc.get_use_appbase():
+                self.steem.rpc.set_next_node_on_empty_reply(True)
                 votes = self.steem.rpc.get_active_votes({'author': author,
                                                          'permlink': permlink},
                                                         api="tags")['votes']

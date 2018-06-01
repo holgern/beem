@@ -97,20 +97,20 @@ class Testcases(unittest.TestCase):
             stm = self.appbase
         self.wallet.steem = stm
         self.wallet.unlock(pwd="TestingOneTwoThree")
-        acc = Account("steemit")
+        acc = Account("gtg")
         pub = acc["owner"]["key_auths"][0][0]
         acc_by_pub = self.wallet.getAccount(pub)
-        self.assertEqual("steemit", acc_by_pub["name"])
+        self.assertEqual("gtg", acc_by_pub["name"])
         gen = self.wallet.getAccountsFromPublicKey(pub)
         acc_by_pub_list = []
         for a in gen:
             acc_by_pub_list.append(a)
-        self.assertEqual("steemit", acc_by_pub_list[0])
+        self.assertEqual("gtg", acc_by_pub_list[0])
         gen = self.wallet.getAllAccounts(pub)
         acc_by_pub_list = []
         for a in gen:
             acc_by_pub_list.append(a)
-        self.assertEqual("steemit", acc_by_pub_list[0]["name"])
+        self.assertEqual("gtg", acc_by_pub_list[0]["name"])
         self.assertEqual(pub, acc_by_pub_list[0]["pubkey"])
 
     @parameterized.expand([
@@ -140,6 +140,30 @@ class Testcases(unittest.TestCase):
             exceptions.MissingKeyError
         ):
             self.wallet.getPostingKeyForAccount("test")
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_pub_lookup_keys(self, node_param):
+        if node_param == "non_appbase":
+            stm = self.stm
+        else:
+            stm = self.appbase
+        self.wallet.steem = stm
+        self.wallet.unlock(pwd="TestingOneTwoThree")
+        with self.assertRaises(
+            exceptions.MissingKeyError
+        ):
+            self.wallet.getOwnerKeysForAccount("test")
+        with self.assertRaises(
+            exceptions.MissingKeyError
+        ):
+            self.wallet.getActiveKeysForAccount("test")
+        with self.assertRaises(
+            exceptions.MissingKeyError
+        ):
+            self.wallet.getPostingKeysForAccount("test")
 
     def test_encrypt(self):
         stm = self.stm

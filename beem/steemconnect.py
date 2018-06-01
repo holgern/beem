@@ -12,8 +12,10 @@ except ImportError:
     from urllib import urlencode
 import requests
 from .storage import configStorage as config
+from six import PY2
 from beem.instance import shared_steem_instance
 from beem.amount import Amount
+from collections import OrderedDict
 
 
 class SteemConnect(object):
@@ -104,10 +106,14 @@ class SteemConnect(object):
             params.update({
                 "response_type": "code",
             })
-
-        return urljoin(
-            self.oauth_base_url,
-            "authorize?" + urlencode(params, safe=","))
+        if PY2:
+            return urljoin(
+                self.oauth_base_url,
+                "authorize?" + urlencode(params).replace("+", "%20"))
+        else:
+            return urljoin(
+                self.oauth_base_url,
+                "authorize?" + urlencode(params, safe=","))
 
     def get_access_token(self, code):
         post_data = {
@@ -244,7 +250,7 @@ class SteemConnect(object):
         operations = tx["operations"]
         for op in operations:
             operation = op[0]
-            params = op[1]
+            params = OrderedDict(op[1])
             for key in params:
                 value = params[key]
                 if isinstance(value, list) and len(value) == 3:
