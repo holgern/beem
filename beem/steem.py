@@ -1399,6 +1399,7 @@ class Steem(object):
             # validate schema
             # or just simply vo.Schema([{'account': str, 'weight': int}])
 
+            weight_sum = 0
             for b in beneficiaries:
                 if 'account' not in b:
                     raise ValueError(
@@ -1415,6 +1416,13 @@ class Steem(object):
                         "beneficiaries error, 1<=weight<=%s!" % \
                         (STEEM_100_PERCENT)
                     )
+                weight_sum += b['weight']
+
+            if weight_sum > STEEM_100_PERCENT:
+                raise ValueError(
+                    "beneficiaries exceed total weight limit %s" % \
+                    STEEM_100_PERCENT
+                )
 
             options['beneficiaries'] = beneficiaries
 
