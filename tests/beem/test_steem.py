@@ -510,6 +510,10 @@ class Testcases(unittest.TestCase):
         self.assertEqual(True, op["allow_curation_rewards"])
         self.assertEqual("witness-gtg-log", op["permlink"])
 
+    def test_online(self):
+        bts = self.bts
+        self.assertFalse(bts.get_blockchain_version() == '0.0.0')
+
     def test_offline(self):
         nodelist = NodeList()
         bts = Steem(node=nodelist.get_nodes(appbase=False),

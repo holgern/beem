@@ -137,7 +137,6 @@ class GrapheneRPC(object):
         self.ws = None
         self.url = None
         self.session = None
-        self.chain_params = None
         self.rpc_queue = []
         if kwargs.get("autoconnect", True):
             self.rpcconnect()
@@ -222,7 +221,6 @@ class GrapheneRPC(object):
                         self.current_rpc = self.rpc_methods["wsappbase"]
                     else:
                         self.current_rpc = self.rpc_methods["appbase"]
-                self.chain_params = self.get_network(props)
                 break
             except KeyboardInterrupt:
                 raise

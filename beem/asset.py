@@ -43,7 +43,7 @@ class Asset(BlockchainObject):
     def refresh(self):
         """ Refresh the data from the API server
         """
-        self.chain_params = self.steem.chain_params
+        self.chain_params = self.steem.get_network()
         self["asset"] = ""
         found_asset = False
         for asset in self.chain_params["chain_assets"]:

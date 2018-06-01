@@ -383,7 +383,8 @@ class Steem(object):
             return self.data['network']
 
         if self.rpc is None:
-            return None
+            from beemgraphenebase.chains import known_chains
+            return known_chains["STEEM"]            
         try:
             return self.rpc.get_network()
         except:
@@ -406,8 +407,6 @@ class Steem(object):
         props = self.get_config(use_stored_data=use_stored_data, replace_steemit_by_steem=True)
         if props and "STEEM_BLOCK_INTERVAL" in props:
             block_interval = props["STEEM_BLOCK_INTERVAL"]
-        elif props and "STEEMIT_BLOCK_INTERVAL" in props:
-            block_interval = props["STEEMIT_BLOCK_INTERVAL"]
         else:
             block_interval = 3
         return block_interval
@@ -417,8 +416,6 @@ class Steem(object):
         props = self.get_config(use_stored_data=use_stored_data, replace_steemit_by_steem=True)
         if props and "STEEM_BLOCKCHAIN_VERSION" in props:
             blockchain_version = props["STEEM_BLOCKCHAIN_VERSION"]
-        elif props and "STEEMIT_BLOCKCHAIN_VERSION" in props:
-            blockchain_version = props["STEEMIT_BLOCKCHAIN_VERSION"]
         else:
             blockchain_version = '0.0.0'
         return blockchain_version
@@ -634,10 +631,8 @@ class Steem(object):
         if self.offline or self.rpc is None:
             from beemgraphenebase.chains import known_chains
             return known_chains["STEEM"]
-        elif self.rpc.chain_params is not None:
-            return self.rpc.chain_params
         else:
-            return self.rpc.get_network()
+            return self.get_network()
 
     @property
     def prefix(self):
