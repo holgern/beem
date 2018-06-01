@@ -44,6 +44,9 @@ class Asset(BlockchainObject):
         """ Refresh the data from the API server
         """
         self.chain_params = self.steem.get_network()
+        if self.chain_params is None:
+            from beemgraphenebase.chains import known_chains
+            self.chain_params = known_chains["STEEM"]
         self["asset"] = ""
         found_asset = False
         for asset in self.chain_params["chain_assets"]:
