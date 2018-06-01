@@ -1033,25 +1033,25 @@ class Account(BlockchainObject):
                 timediff = start - formatTimeString(event["timestamp"])
                 if timediff.total_seconds() * float(order) > 0:
                     continue
-            elif start and use_block_num and order == 1 and event['block'] < start:
+            elif start is not None and use_block_num and order == 1 and event['block'] < start:
                 continue
-            elif start and use_block_num and order == -1 and event['block'] > start:
+            elif start is not None and use_block_num and order == -1 and event['block'] > start:
                 continue
-            elif start and not use_block_num and order == 1 and item_index < start:
+            elif start is not None and not use_block_num and order == 1 and item_index < start:
                 continue
-            elif start and not use_block_num and order == -1 and item_index > start:
+            elif start is not None and not use_block_num and order == -1 and item_index > start:
                 continue
-            if stop and isinstance(stop, (datetime, date, time)):
+            if stop is not None and isinstance(stop, (datetime, date, time)):
                 timediff = stop - formatTimeString(event["timestamp"])
                 if timediff.total_seconds() * float(order) < 0:
                     return
-            elif stop and use_block_num and order == 1 and event['block'] > stop:
+            elif stop is not None and use_block_num and order == 1 and event['block'] > stop:
                 return
-            elif stop and use_block_num and order == -1 and event['block'] < stop:
+            elif stop is not None and use_block_num and order == -1 and event['block'] < stop:
                 return
-            elif stop and not use_block_num and order == 1 and item_index > stop:
+            elif stop is not None and not use_block_num and order == 1 and item_index > stop:
                 return
-            elif stop and not use_block_num and order == -1 and item_index < stop:
+            elif stop is not None and not use_block_num and order == -1 and item_index < stop:
                 return
             op_type, op = event['op']
             block_props = remove_from_dict(event, keys=['op'], keep_keys=False)
@@ -1209,22 +1209,22 @@ class Account(BlockchainObject):
                     op_type = item['type']
                     timestamp = item["timestamp"]
                     block_num = item["block"]
-                if start and isinstance(start, (datetime, date, time)):
+                if start is not None and isinstance(start, (datetime, date, time)):
                     timediff = start - formatTimeString(timestamp)
                     if timediff.total_seconds() > 0:
                         continue
-                elif start and use_block_num and block_num < start:
+                elif start is not None and use_block_num and block_num < start:
                     continue
-                elif start and not use_block_num and item_index < start:
+                elif start is not None and not use_block_num and item_index < start:
                     continue
-                if stop and isinstance(stop, (datetime, date, time)):
+                if stop is not None and isinstance(stop, (datetime, date, time)):
                     timediff = stop - formatTimeString(timestamp)
                     if timediff.total_seconds() < 0:
                         first = max_index + _limit
                         return
-                elif stop and use_block_num and block_num > stop:
+                elif stop is not None and use_block_num and block_num > stop:
                     return
-                elif stop and not use_block_num and item_index > stop:
+                elif stop is not None and not use_block_num and item_index > stop:
                     return
                 if exclude_ops and op_type in exclude_ops:
                     continue
@@ -1236,7 +1236,7 @@ class Account(BlockchainObject):
                 last_round = True
             else:
                 first += (_limit + 1)
-                if stop and not use_block_num and isinstance(stop, int) and first >= stop + _limit:
+                if stop is not None and not use_block_num and isinstance(stop, int) and first >= stop + _limit:
                     break
                 elif first > max_index or last_round:
                     break
@@ -1368,23 +1368,23 @@ class Account(BlockchainObject):
                     op_type = item['type']
                     timestamp = item["timestamp"]
                     block_num = item["block"]
-                if start and isinstance(start, (datetime, date, time)):
+                if start is not None and isinstance(start, (datetime, date, time)):
                     timediff = start - formatTimeString(timestamp)
                     if timediff.total_seconds() < 0:
                         continue
-                elif start and use_block_num and block_num > start:
+                elif start is not None and use_block_num and block_num > start:
                     continue
-                elif start and not use_block_num and item_index > start:
+                elif start is not None and not use_block_num and item_index > start:
                     continue
-                if stop and isinstance(stop, (datetime, date, time)):
+                if stop is not None and isinstance(stop, (datetime, date, time)):
                     timediff = stop - formatTimeString(timestamp)
                     if timediff.total_seconds() > 0:
                         first = 0
                         return
-                elif stop and use_block_num and block_num < stop:
+                elif stop is not None and use_block_num and block_num < stop:
                     first = 0
                     return
-                elif stop and not use_block_num and item_index < stop:
+                elif stop is not None and not use_block_num and item_index < stop:
                     first = 0
                     return
                 if exclude_ops and op_type in exclude_ops:
