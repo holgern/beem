@@ -138,6 +138,13 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.34
+-------
+* Several bug fixes (including issue #17)
+* missing steem_instance fixed
+* update_account_profile fixed
+* update_account_metadata added
+
 0.19.33
 -------
 * Several bug fixes (including issue #13 and #16)
