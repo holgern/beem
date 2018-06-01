@@ -10,6 +10,7 @@ import unittest
 from parameterized import parameterized
 import random
 import json
+from six import PY2
 from pprint import pprint
 from beem import Steem, exceptions
 from beem.amount import Amount
@@ -64,7 +65,10 @@ class Testcases(unittest.TestCase):
             "test1", 1.000, "STEEM", memo="test")
         sc2 = SteemConnect(steem_instance=bts)
         url = sc2.url_from_tx(tx)
-        self.assertEqual(url, 'https://v2.steemconnect.com/sign/transfer?from=test&to=test1&amount=1.000+STEEM&memo=test')
+        if PY2:
+            self.assertEqual(url, 'https://v2.steemconnect.com/sign/transfer?from=test&memo=test&to=test1&amount=1.000+STEEM')
+        else:
+            self.assertEqual(url, 'https://v2.steemconnect.com/sign/transfer?from=test&to=test1&amount=1.000+STEEM&memo=test')
 
     @parameterized.expand([
         ("non_appbase"),
@@ -77,4 +81,7 @@ class Testcases(unittest.TestCase):
             bts = self.appbase
         sc2 = SteemConnect(steem_instance=bts)
         url = sc2.get_login_url("localhost", scope="login,vote")
-        self.assertEqual(url, 'https://v2.steemconnect.com/oauth2/authorize?client_id=None&redirect_uri=localhost&scope=login,vote')
+        if PY2:
+            self.assertEqual(url, 'https://v2.steemconnect.com/oauth2/authorize?client_id=None&scope=login,vote&redirect_uri=localhost')
+        else:
+            self.assertEqual(url, 'https://v2.steemconnect.com/oauth2/authorize?client_id=None&redirect_uri=localhost&scope=login,vote')

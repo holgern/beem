@@ -15,7 +15,6 @@ from .storage import configStorage as config
 from six import PY2
 from beem.instance import shared_steem_instance
 from beem.amount import Amount
-from collections import OrderedDict
 
 
 class SteemConnect(object):
@@ -109,7 +108,7 @@ class SteemConnect(object):
         if PY2:
             return urljoin(
                 self.oauth_base_url,
-                "authorize?" + urlencode(params).replace("+", "%20"))
+                "authorize?" + urlencode(params).replace('%2C', ','))
         else:
             return urljoin(
                 self.oauth_base_url,
@@ -250,7 +249,7 @@ class SteemConnect(object):
         operations = tx["operations"]
         for op in operations:
             operation = op[0]
-            params = OrderedDict(op[1])
+            params = op[1]
             for key in params:
                 value = params[key]
                 if isinstance(value, list) and len(value) == 3:
