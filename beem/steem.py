@@ -406,6 +406,8 @@ class Steem(object):
         props = self.get_config(use_stored_data=use_stored_data, replace_steemit_by_steem=True)
         if props and "STEEM_BLOCK_INTERVAL" in props:
             block_interval = props["STEEM_BLOCK_INTERVAL"]
+        elif props and "STEEMIT_BLOCK_INTERVAL" in props:
+            block_interval = props["STEEMIT_BLOCK_INTERVAL"]
         else:
             block_interval = 3
         return block_interval
@@ -415,6 +417,8 @@ class Steem(object):
         props = self.get_config(use_stored_data=use_stored_data, replace_steemit_by_steem=True)
         if props and "STEEM_BLOCKCHAIN_VERSION" in props:
             blockchain_version = props["STEEM_BLOCKCHAIN_VERSION"]
+        elif props and "STEEMIT_BLOCKCHAIN_VERSION" in props:
+            blockchain_version = props["STEEMIT_BLOCKCHAIN_VERSION"]
         else:
             blockchain_version = '0.0.0'
         return blockchain_version
@@ -612,18 +616,18 @@ class Steem(object):
         """
         if use_stored_data:
             self.refresh_data()
-            return self.data['config']
-        if self.rpc is None:
-            return None
-        self.rpc.set_next_node_on_empty_reply(True)
-        config = self.rpc.get_config(api="database")
-        if replace_steemit_by_steem:
-            config_steem = {}
-            for key in config:
-                config_steem[key.replace('STEEMIT', 'STEEM')] = config[key]
-            return config_steem
-        else:
-            return config
+            config = self.data['config']
+            if self.rpc is None:
+                return None
+            self.rpc.set_next_node_on_empty_reply(True)
+            config = self.rpc.get_config(api="database")
+            if replace_steemit_by_steem:
+                new_config = {}
+                for key in config:
+                    new_config[key.replace('STEEMIT', 'STEEM')] = config[key]
+                return new_config
+            else:
+                return config
 
     @property
     def chain_params(self):
