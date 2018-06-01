@@ -479,7 +479,7 @@ class Steem(object):
         """
         return sp * 1e6 / self.get_steem_per_mvest(timestamp, use_stored_data=use_stored_data)
 
-    def sp_to_sbd(self, sp, voting_power=10000, vote_pct=10000, use_stored_data=True):
+    def sp_to_sbd(self, sp, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, use_stored_data=True):
         """ Obtain the resulting sbd amount from Steem power
             :param number steem_power: Steem Power
             :param int voting_power: voting power (100% = 10000)
@@ -488,7 +488,7 @@ class Steem(object):
         vesting_shares = int(self.sp_to_vests(sp, use_stored_data=use_stored_data))
         return self.vests_to_sbd(vesting_shares, voting_power=voting_power, vote_pct=vote_pct)
 
-    def vests_to_sbd(self, vests, voting_power=10000, vote_pct=10000, use_stored_data=True):
+    def vests_to_sbd(self, vests, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, use_stored_data=True):
         """ Obtain the resulting sbd voting amount from vests
             :param number vests: vesting shares
             :param int voting_power: voting power (100% = 10000)
@@ -512,14 +512,14 @@ class Steem(object):
         max_vote_denom = vote_power_reserve_rate * STEEM_VOTE_REGENERATION_SECONDS
         return max_vote_denom
 
-    def _calc_resulting_vote(self, voting_power=10000, vote_pct=10000, use_stored_data=True):
+    def _calc_resulting_vote(self, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, use_stored_data=True):
         # determine voting power used
-        used_power = int((voting_power * vote_pct) / 10000 * (60 * 60 * 24))
+        used_power = int((voting_power * vote_pct) / STEEM_100_PERCENT * (60 * 60 * 24))
         max_vote_denom = self._max_vote_denom(use_stored_data=use_stored_data)
         used_power = int((used_power + max_vote_denom - 1) / max_vote_denom)
         return used_power
 
-    def sp_to_rshares(self, steem_power, voting_power=10000, vote_pct=10000, use_stored_data=True):
+    def sp_to_rshares(self, steem_power, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, use_stored_data=True):
         """ Obtain the r-shares from Steem power
 
             :param number steem_power: Steem Power
@@ -531,7 +531,7 @@ class Steem(object):
         vesting_shares = int(self.sp_to_vests(steem_power, use_stored_data=use_stored_data) * 1e6)
         return self.vests_to_rshares(vesting_shares, voting_power=voting_power, vote_pct=vote_pct, use_stored_data=use_stored_data)
 
-    def vests_to_rshares(self, vests, voting_power=10000, vote_pct=10000, use_stored_data=True):
+    def vests_to_rshares(self, vests, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, use_stored_data=True):
         """ Obtain the r-shares from vests
 
             :param number vests: vesting shares
@@ -541,10 +541,10 @@ class Steem(object):
         """
         used_power = self._calc_resulting_vote(voting_power=voting_power, vote_pct=vote_pct, use_stored_data=use_stored_data)
         # calculate vote rshares
-        rshares = int((vests * used_power) / 10000)
+        rshares = int((vests * used_power) / STEEM_100_PERCENT)
         return rshares
 
-    def rshares_to_vote_pct(self, rshares, steem_power=None, vests=None, voting_power=10000, use_stored_data=True):
+    def rshares_to_vote_pct(self, rshares, steem_power=None, vests=None, voting_power=STEEM_100_PERCENT, use_stored_data=True):
         """ Obtain the voting percentage for a desired rshares value
             for a given Steem Power or vesting shares and voting_power
             Give either steem_power or vests, not both.
@@ -568,10 +568,10 @@ class Steem(object):
 
         max_vote_denom = self._max_vote_denom(use_stored_data=use_stored_data)
 
-        used_power = int(math.ceil(rshares * 10000 / vests))
+        used_power = int(math.ceil(rshares * STEEM_100_PERCENT / vests))
         used_power = used_power * max_vote_denom
 
-        vote_pct = int(used_power * 10000 / (60 * 60 * 24) / voting_power)
+        vote_pct = int(used_power * STEEM_100_PERCENT / (60 * 60 * 24) / voting_power)
         return vote_pct
 
     def get_chain_properties(self, use_stored_data=True):
@@ -1351,7 +1351,7 @@ class Steem(object):
                     'voter': account["name"],
                     'author': account["name"],
                     'permlink': permlink,
-                    'weight': 10000,
+                    'weight': STEEM_100_PERCENT,
                 })
             ops.append(vote_op)
 
@@ -1405,14 +1405,15 @@ class Steem(object):
                         "beneficiaries need an account field!"
                     )
                 if 'weight' not in b:
-                    b['weight'] = 10000
+                    b['weight'] = STEEM_100_PERCENT
                 if len(b['account']) > 16:
                     raise ValueError(
                         "beneficiaries error, account name length >16!"
                     )
-                if b['weight'] < 1 or b['weight'] > 10000:
+                if b['weight'] < 1 or b['weight'] > STEEM_100_PERCENT:
                     raise ValueError(
-                        "beneficiaries error, 1<=weight<=10000!"
+                        "beneficiaries error, 1<=weight<=%s!" % \
+                        (STEEM_100_PERCENT)
                     )
 
             options['beneficiaries'] = beneficiaries
