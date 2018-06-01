@@ -388,7 +388,8 @@ class Steem(object):
         try:
             return self.rpc.get_network()
         except:
-            return None
+            from beemgraphenebase.chains import known_chains
+            return known_chains["STEEM"]
 
     def get_median_price(self, use_stored_data=True):
         """ Returns the current median history price as Price

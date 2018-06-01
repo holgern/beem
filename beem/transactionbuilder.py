@@ -271,7 +271,7 @@ class TransactionBuilder(dict):
         # presented wrongly!
         if self.steem.rpc is not None:
             operations.default_prefix = (
-                self.steem.rpc.chain_params["prefix"])
+                self.steem.chain_params["prefix"])
         elif "blockchain" in self:
             operations.default_prefix = self["blockchain"]["prefix"]
 
@@ -283,7 +283,7 @@ class TransactionBuilder(dict):
         if not any(self.wifs):
             raise MissingKeyError
 
-        signedtx.sign(self.wifs, chain=self.steem.rpc.chain_params)
+        signedtx.sign(self.wifs, chain=self.steem.chain_params)
         self["signatures"].extend(signedtx.json().get("signatures"))
         return signedtx
 
@@ -410,7 +410,7 @@ class TransactionBuilder(dict):
         """
         if not self._is_constructed() or (self._is_constructed() and reconstruct_tx):
             self.constructTx()
-        self["blockchain"] = self.steem.rpc.chain_params
+        self["blockchain"] = self.steem.chain_params
 
         if isinstance(account, PublicKey):
             self["missing_signatures"] = [
