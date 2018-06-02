@@ -619,7 +619,7 @@ class Steem(object):
                 return None
             self.rpc.set_next_node_on_empty_reply(True)
             config = self.rpc.get_config(api="database")
-        if replace_steemit_by_steem:
+        if config is not None and replace_steemit_by_steem:
             new_config = {}
             for key in config:
                 new_config[key.replace('STEEMIT', 'STEEM')] = config[key]
