@@ -615,17 +615,18 @@ class Steem(object):
         if use_stored_data:
             self.refresh_data()
             config = self.data['config']
+        else:
             if self.rpc is None:
                 return None
             self.rpc.set_next_node_on_empty_reply(True)
             config = self.rpc.get_config(api="database")
-            if replace_steemit_by_steem:
-                new_config = {}
-                for key in config:
-                    new_config[key.replace('STEEMIT', 'STEEM')] = config[key]
-                return new_config
-            else:
-                return config
+        if replace_steemit_by_steem:
+            new_config = {}
+            for key in config:
+                new_config[key.replace('STEEMIT', 'STEEM')] = config[key]
+            return new_config
+        else:
+            return config
 
     @property
     def chain_params(self):
