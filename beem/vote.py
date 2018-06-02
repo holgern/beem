@@ -88,8 +88,8 @@ class Vote(BlockchainObject):
         if self.steem.offline:
             return
         [author, permlink, voter] = resolve_authorpermvoter(self.identifier)
-        self.steem.rpc.set_next_node_on_empty_reply(True)
         try:
+            self.steem.rpc.set_next_node_on_empty_reply(True)
             if self.steem.rpc.get_use_appbase():
                 votes = self.steem.rpc.get_active_votes({'author': author, 'permlink': permlink}, api="tags")['votes']
             else:

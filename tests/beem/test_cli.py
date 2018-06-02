@@ -61,14 +61,14 @@ class Testcases(unittest.TestCase):
     def test_balance(self):
         runner = CliRunner()
         nodelist = NodeList()
-        runner.invoke(cli, ['-o', 'set', 'nodes', str(nodelist.get_testnet())])
+        runner.invoke(cli, ['set', 'nodes', str(nodelist.get_testnet())])
         result = runner.invoke(cli, ['balance', 'beem', 'beem1'])
         self.assertEqual(result.exit_code, 0)
 
     def test_interest(self):
         runner = CliRunner()
         nodelist = NodeList()
-        runner.invoke(cli, ['-o', 'set', 'nodes', str(nodelist.get_testnet())])
+        runner.invoke(cli, ['set', 'nodes', str(nodelist.get_testnet())])
         result = runner.invoke(cli, ['interest', 'beem', 'beem1'])
         self.assertEqual(result.exit_code, 0)
 
@@ -262,10 +262,11 @@ class Testcases(unittest.TestCase):
     def test_votes(self):
         runner = CliRunner()
         nodelist = NodeList()
-        runner.invoke(cli, ['-o', 'set', 'nodes', str(nodelist.get_testnet())])
-        result = runner.invoke(cli, ['votes', '--direction', 'out'])
+        runner.invoke(cli, ['-o', 'set', 'nodes', ''])
+        result = runner.invoke(cli, ['votes', '--direction', 'out', 'test'])
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['votes', '--direction', 'in'])
+        result = runner.invoke(cli, ['votes', '--direction', 'in', 'test'])
+        runner.invoke(cli, ['-o', 'set', 'nodes', str(nodelist.get_testnet())])
         self.assertEqual(result.exit_code, 0)
 
     def test_approvewitness(self):
