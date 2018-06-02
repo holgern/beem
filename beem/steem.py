@@ -383,8 +383,7 @@ class Steem(object):
             return self.data['network']
 
         if self.rpc is None:
-            from beemgraphenebase.chains import known_chains
-            return known_chains["STEEM"]
+            return None
         try:
             return self.rpc.get_network()
         except:
