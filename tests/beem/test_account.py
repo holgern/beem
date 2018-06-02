@@ -509,7 +509,7 @@ class Testcases(unittest.TestCase):
             op_num = account.estimate_virtual_op_num(block_num, stop_diff=0.1, max_count=100)
             if op_num > 0:
                 op_num -= 1
-            self.assertTrue(op_num < i)
+            self.assertTrue(op_num <= i)
             i += 1
             last_block = new_block
 

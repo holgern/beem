@@ -992,8 +992,12 @@ class Account(BlockchainObject):
                 op_diff = (blocktime - formatTimeString(trx["timestamp"])).total_seconds() / factor
             else:
                 op_diff = (blocktime - trx["block"]) / factor
-            if op_diff > 0:
+            if op_diff > max_index / 10.:
+                estimated_op_num += math.ceil(max_index / 10.)
+            elif op_diff > 0:
                 estimated_op_num += math.ceil(op_diff)
+            elif op_diff < (-max_index / 10.):
+                estimated_op_num += math.floor((-max_index / 10.))
             else:
                 estimated_op_num += math.floor(op_diff)
             cnt += 1
