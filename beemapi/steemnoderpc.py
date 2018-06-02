@@ -78,6 +78,7 @@ class SteemNodeRPC(GrapheneRPC):
                         self._retry_on_next_node(msg)
                         doRetry = True
                     else:
+                        self.next_node_on_empty_reply = False
                         raise exceptions.CallRetriesReached
             except exceptions.RPCError as e:
                 try:
@@ -88,10 +89,13 @@ class SteemNodeRPC(GrapheneRPC):
                         self._retry_on_next_node(msg)
                         doRetry = True
                     else:
+                        self.next_node_on_empty_reply = False
                         raise exceptions.CallRetriesReached
             except Exception as e:
+                self.next_node_on_empty_reply = False
                 raise e
             maxRetryCountReached = self.nodes.num_retries_call_reached
+        self.next_node_on_empty_reply = False
 
     def _retry_on_next_node(self, error_msg):
         self.nodes.increase_error_cnt()

@@ -465,6 +465,9 @@ class Comment(BlockchainObject):
             post_permlink = self["permlink"]
         else:
             [post_author, post_permlink] = resolve_authorperm(identifier)
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.get_reblogged_by({'author': post_author, 'permlink': post_permlink}, api="follow")['accounts']
         else:
@@ -480,6 +483,9 @@ class Comment(BlockchainObject):
             post_permlink = self["permlink"]
         else:
             [post_author, post_permlink] = resolve_authorperm(identifier)
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             content_replies = self.steem.rpc.get_content_replies({'author': post_author, 'permlink': post_permlink}, api="tags")['discussions']
         else:
@@ -678,6 +684,8 @@ class RecentReplies(list):
     """
     def __init__(self, author, skip_own=True, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        if self.steem.offline:
+            return None
         self.steem.rpc.set_next_node_on_empty_reply(True)
         state = self.steem.rpc.get_state("/@%s/recent-replies" % author)
         replies = state["accounts"][author].get("recent_replies", [])
@@ -698,6 +706,8 @@ class RecentByPath(list):
     """
     def __init__(self, path="promoted", category=None, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        if self.steem.offline:
+            return None
         self.steem.rpc.set_next_node_on_empty_reply(True)
         state = self.steem.rpc.get_state("/" + path)
         replies = state["discussion_idx"][''].get(path, [])

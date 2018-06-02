@@ -458,6 +458,9 @@ class Market(dict):
 
         r = []
         # orders = account["limit_orders"]
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             orders = self.steem.rpc.find_limit_orders({'account': account["name"]}, api="database")['orders']
         else:

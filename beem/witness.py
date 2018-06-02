@@ -55,6 +55,7 @@ class Witness(BlockchainObject):
             return
         if self.steem.offline:
             return
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             witness = self.steem.rpc.find_witnesses({'owners': [self.identifier]}, api="database")['witnesses']
             if len(witness) > 0:
@@ -214,6 +215,7 @@ class Witnesses(WitnessesObject):
     """
     def __init__(self, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             self.active_witnessess = self.steem.rpc.get_active_witnesses(api="database")['witnesses']
             self.schedule = self.steem.rpc.get_witness_schedule(api="database")
@@ -241,6 +243,7 @@ class WitnessesVotedByAccount(WitnessesObject):
         self.steem = steem_instance or shared_steem_instance()
         self.account = Account(account, full=True, steem_instance=self.steem)
         self.identifier = self.account["name"]
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             if "witnesses_voted_for" not in self.account:
                 return
@@ -274,6 +277,7 @@ class WitnessesRankedByVote(WitnessesObject):
         witnessList = []
         last_limit = limit
         self.identifier = ""
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase() and not from_account:
             last_account = "0"
         else:
@@ -318,6 +322,7 @@ class ListWitnesses(WitnessesObject):
     def __init__(self, from_account, limit, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.identifier = from_account
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             witnessess = self.steem.rpc.list_witnesses({'start': from_account, 'limit': limit, 'order': 'by_name'}, api="database")['witnesses']
         else:

@@ -291,6 +291,7 @@ class TransactionBuilder(dict):
         """ Verify the authority of the signed transaction
         """
         try:
+            self.steem.rpc.set_next_node_on_empty_reply(False)
             if self.steem.rpc.get_use_appbase():
                 args = {'trx': self.json()}
             else:
@@ -306,6 +307,9 @@ class TransactionBuilder(dict):
     def get_potential_signatures(self):
         """ Returns public key from signature
         """
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             args = {'trx': self.json()}
         else:
@@ -318,6 +322,9 @@ class TransactionBuilder(dict):
     def get_transaction_hex(self):
         """ Returns a hex value of the transaction
         """
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             args = {'trx': self.json()}
         else:
@@ -330,6 +337,9 @@ class TransactionBuilder(dict):
     def get_required_signatures(self, available_keys=list()):
         """ Returns public key from signature
         """
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             args = {'trx': self.json(), 'available_keys': available_keys}
             ret = self.steem.rpc.get_required_signatures(args, api="database")

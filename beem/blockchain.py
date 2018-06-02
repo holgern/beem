@@ -106,6 +106,9 @@ class Blockchain(object):
 
             :param str transaction_id: transaction_id
         """
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             ret = self.steem.rpc.get_transaction({'id': transaction_id}, api="database")
         else:
@@ -262,6 +265,9 @@ class Blockchain(object):
                         yield block
                 current_block.set_cache_auto_clean(auto_clean)
             elif max_batch_size is not None and (head_block - start) >= max_batch_size and not head_block_reached:
+                if self.steem.offline:
+                    return None
+                self.steem.rpc.set_next_node_on_empty_reply(False)
                 latest_block = start - 1
                 batches = max_batch_size
                 for blocknumblock in range(start, head_block + 1, batches):
@@ -546,6 +552,9 @@ class Blockchain(object):
         """
         lastname = start
         cnt = 1
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         while True:
             if self.steem.rpc.get_use_appbase():
                 ret = self.steem.rpc.list_accounts({'start': lastname, 'limit': steps, 'order': 'by_name'}, api="database")["accounts"]

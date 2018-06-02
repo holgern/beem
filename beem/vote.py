@@ -318,7 +318,9 @@ class ActiveVotes(VotesObject):
     def __init__(self, authorperm, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         votes = None
-
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if isinstance(authorperm, Comment):
             if 'active_votes' in authorperm and len(authorperm["active_votes"]) > 0:
                 votes = authorperm["active_votes"]

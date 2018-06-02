@@ -90,6 +90,7 @@ class Account(BlockchainObject):
         """
         if self.steem.offline:
             return
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
                 account = self.steem.rpc.find_accounts({'accounts': [self.identifier]}, api="database")
         else:
@@ -189,6 +190,9 @@ class Account(BlockchainObject):
             5
 
         """
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             account = self.steem.rpc.list_accounts({'start': self.name, 'limit': limit}, api="database")
             if account:
@@ -272,6 +276,9 @@ class Account(BlockchainObject):
     def get_reputation(self):
         """ Returns the account reputation
         """
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             rep = self.steem.rpc.get_account_reputations({'account_lower_bound': self["name"], 'limit': 1}, api="follow")['reputations']
             if len(rep) > 0:
@@ -357,6 +364,9 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if raw_data and self.steem.rpc.get_use_appbase():
             return [
                 c for c in self.steem.rpc.get_feed({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
@@ -379,6 +389,9 @@ class Account(BlockchainObject):
     def get_blog_entries(self, start_entry_id=0, limit=100, raw_data=False, account=None):
         if account is None:
             account = self["name"]
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if raw_data and self.steem.rpc.get_use_appbase():
             return [
                 c for c in self.steem.rpc.get_blog_entries({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["blog"]
@@ -401,6 +414,9 @@ class Account(BlockchainObject):
     def get_blog(self, start_entry_id=0, limit=100, raw_data=False, account=None):
         if account is None:
             account = self["name"]
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if raw_data and self.steem.rpc.get_use_appbase():
             return [
                 c for c in self.steem.rpc.get_blog({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["blog"]
@@ -423,6 +439,9 @@ class Account(BlockchainObject):
     def get_blog_account(self, account=None):
         if account is None:
             account = self["name"]
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.get_blog_authors({'blog_account': account}, api='follow')['blog_authors']
         else:
@@ -432,6 +451,9 @@ class Account(BlockchainObject):
         """ get_follow_count """
         if account is None:
             account = self["name"]
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.get_follow_count({'account': account}, api='follow')
         else:
@@ -476,6 +498,9 @@ class Account(BlockchainObject):
     def _get_followers(self, direction="follower", last_user="", what="blog", limit=100):
         """ Help function, used in get_followers and get_following
         """
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             query = {'account': self.name, 'start': last_user, 'type': what, 'limit': limit}
             if direction == "follower":
@@ -657,6 +682,9 @@ class Account(BlockchainObject):
         """ get_account_bandwidth """
         if account is None:
             account = self["name"]
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             # return self.steem.rpc.get_account_bandwidth({'account': account, 'type': 'post'}, api="witness")
             return self.steem.rpc.get_account_bandwidth(account, bandwidth_type)
@@ -687,7 +715,8 @@ class Account(BlockchainObject):
         total_vesting_shares = Amount(global_properties["total_vesting_shares"], steem_instance=self.steem).amount
         allocated_bandwidth = (max_virtual_bandwidth * (vesting_shares + received_vesting_shares) / total_vesting_shares)
         allocated_bandwidth = round(allocated_bandwidth / 1000000)
-        if self.steem.rpc.get_use_appbase():
+
+        if not self.steem.offline and self.steem.rpc.get_use_appbase():
             account_bandwidth = self.get_account_bandwidth(bandwidth_type=1, account=account)
             if account_bandwidth is None:
                 return {"used": 0,
@@ -720,6 +749,9 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.find_owner_histories({'owner': account}, api="database")['owner_auths']
         else:
@@ -733,6 +765,9 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.find_sbd_conversion_requests({'account': account}, api="database")['requests']
         else:
@@ -746,6 +781,9 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.find_withdraw_vesting_routes({'account': account, 'order': 'by_withdraw_route'}, api="database")['routes']
         else:
@@ -759,6 +797,9 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.find_account_recovery_requests({'account': account}, api="database")['requests']
         else:
@@ -768,6 +809,9 @@ class Account(BlockchainObject):
         """ verify_account_authority """
         if account is None:
             account = self["name"]
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.verify_account_authority({'account': account, 'signers': keys}, api="database")
         else:
@@ -779,6 +823,9 @@ class Account(BlockchainObject):
             account = self
         else:
             account = Account(account, steem_instance=self.steem)
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.get_account_votes(account["name"])
         else:
@@ -828,6 +875,9 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         account = Account(account, steem_instance=self.steem)
+        if self.steem.offline:
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
         # self.steem.rpc.set_next_node_on_empty_reply(True)
         if self.steem.rpc.get_use_appbase():
             try:
@@ -2177,7 +2227,9 @@ class Accounts(AccountsObject):
             return
         accounts = []
         name_cnt = 0
+
         while name_cnt < len(name_list):
+            self.steem.rpc.set_next_node_on_empty_reply(False)
             if self.steem.rpc.get_use_appbase():
                 accounts += self.steem.rpc.find_accounts({'accounts': name_list[name_cnt:batch_limit + name_cnt]}, api="database")["accounts"]
             else:
