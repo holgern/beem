@@ -82,7 +82,7 @@ class NodeList(list):
                 "version": "0.19.3",
                 "type": "normal",
                 "owner": "privex",
-                "score": 90
+                "score": 150
             },
             {
                 "url": "https://steemd.privex.io",
@@ -201,7 +201,7 @@ class NodeList(list):
                 "version": "0.19.2",
                 "type": "testnet",
                 "owner": "almost-digital",
-                "score": 1
+                "score": 20
             },
             {
                 "url": "ws://testnet.steem.vc",
@@ -215,7 +215,7 @@ class NodeList(list):
                 "version": "0.19.2",
                 "type": "testnet",
                 "owner": "almost-digital",
-                "score": 1
+                "score": 10
             },
             {
                 "url": "http://testnet.steem.vc",
