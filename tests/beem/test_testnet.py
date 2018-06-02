@@ -281,7 +281,7 @@ class Testcases(unittest.TestCase):
             node=nodelist.get_testnet(),
             num_retries=10,
             keys=[self.active_private_key_of_elf],
-            expiration=120,
+            expiration=360,
         )
 
         tx = TransactionBuilder(steem_instance=steem)
@@ -303,7 +303,7 @@ class Testcases(unittest.TestCase):
             node=nodelist.get_testnet(),
             num_retries=10,
             keys=[self.active_private_key_of_steemfiles],
-            expiration=120,
+            expiration=360,
         )
         new_tx = TransactionBuilder(tx=tx_json, steem_instance=steem)
         new_tx.appendMissingSignatures()

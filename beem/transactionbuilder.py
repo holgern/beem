@@ -65,7 +65,7 @@ class TransactionBuilder(dict):
             self._require_reconstruction = False
         else:
             self._require_reconstruction = True
-        self.set_expiration(kwargs.get("expiration", 30))
+        self.set_expiration(kwargs.get("expiration", self.steem.expiration))
 
     def set_expiration(self, p):
         """Set expiration date"""
@@ -377,6 +377,7 @@ class TransactionBuilder(dict):
             return ret
         # Broadcast
         try:
+            self.steem.rpc.set_next_node_on_empty_reply(False)
             if self.steem.use_sc2:
                 ret = self.steem.steemconnect.broadcast(self["operations"])
             elif self.steem.blocking:
