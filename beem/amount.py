@@ -166,7 +166,7 @@ class Amount(dict):
         return self["asset"]
 
     def json(self):
-        if not self.steem.offline and self.steem.rpc.get_use_appbase():
+        if self.steem.is_connected() and self.steem.rpc.get_use_appbase():
             if self.new_appbase_format:
                 return {'amount': str(int(self)), 'nai': self["asset"]["asset"], 'precision': self["asset"]["precision"]}
             else:

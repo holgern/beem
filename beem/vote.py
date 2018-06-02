@@ -85,7 +85,7 @@ class Vote(BlockchainObject):
     def refresh(self):
         if self.identifier is None:
             return
-        if self.steem.offline:
+        if not self.steem.is_connected():
             return
         [author, permlink, voter] = resolve_authorpermvoter(self.identifier)
         try:
@@ -318,7 +318,7 @@ class ActiveVotes(VotesObject):
     def __init__(self, authorperm, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         votes = None
-        if self.steem.offline:
+        if not self.steem.is_connected():
             return None
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if isinstance(authorperm, Comment):

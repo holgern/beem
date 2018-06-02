@@ -138,6 +138,12 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.35
+-------
+* Several bug fixes (including issue #18)
+* fix get_config and get_blockchain_version
+* fix get_network
+
 0.19.34
 -------
 * Several bug fixes (including issue #17)

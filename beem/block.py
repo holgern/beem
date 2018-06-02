@@ -74,7 +74,7 @@ class Block(BlockchainObject):
         """
         if not isinstance(self.identifier, int):
             self.identifier = int(self.identifier)
-        if self.steem.offline:
+        if not self.steem.is_connected():
             return None
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.only_ops or self.only_virtual_ops:
@@ -167,7 +167,7 @@ class BlockHeader(BlockchainObject):
         """ Even though blocks never change, you freshly obtain its contents
             from an API with this method
         """
-        if self.steem.offline:
+        if not self.steem.is_connected():
             return None
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():

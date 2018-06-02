@@ -106,7 +106,7 @@ class Blockchain(object):
 
             :param str transaction_id: transaction_id
         """
-        if self.steem.offline:
+        if not self.steem.is_connected():
             return None
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
@@ -265,7 +265,7 @@ class Blockchain(object):
                         yield block
                 current_block.set_cache_auto_clean(auto_clean)
             elif max_batch_size is not None and (head_block - start) >= max_batch_size and not head_block_reached:
-                if self.steem.offline:
+                if not self.steem.is_connected():
                     return None
                 self.steem.rpc.set_next_node_on_empty_reply(False)
                 latest_block = start - 1
@@ -552,7 +552,7 @@ class Blockchain(object):
         """
         lastname = start
         cnt = 1
-        if self.steem.offline:
+        if not self.steem.is_connected():
             return None
         self.steem.rpc.set_next_node_on_empty_reply(False)
         while True:

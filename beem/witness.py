@@ -53,7 +53,7 @@ class Witness(BlockchainObject):
     def refresh(self):
         if not self.identifier:
             return
-        if self.steem.offline:
+        if not self.steem.is_connected():
             return
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():

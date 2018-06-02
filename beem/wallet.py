@@ -565,7 +565,7 @@ class Wallet(object):
     def getAccountsFromPublicKey(self, pub):
         """ Obtain all accounts associated with a public key
         """
-        if self.steem.offline:
+        if not self.steem.is_connected():
             return None
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():

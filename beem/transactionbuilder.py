@@ -307,7 +307,7 @@ class TransactionBuilder(dict):
     def get_potential_signatures(self):
         """ Returns public key from signature
         """
-        if self.steem.offline:
+        if not self.steem.is_connected():
             return None
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
@@ -322,7 +322,7 @@ class TransactionBuilder(dict):
     def get_transaction_hex(self):
         """ Returns a hex value of the transaction
         """
-        if self.steem.offline:
+        if not self.steem.is_connected():
             return None
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
@@ -337,7 +337,7 @@ class TransactionBuilder(dict):
     def get_required_signatures(self, available_keys=list()):
         """ Returns public key from signature
         """
-        if self.steem.offline:
+        if not self.steem.is_connected():
             return None
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
@@ -366,7 +366,7 @@ class TransactionBuilder(dict):
         if "operations" not in self or not self["operations"]:
             return
         ret = self.json()
-        if not self.steem.offline and self.steem.rpc.get_use_appbase():
+        if self.steem.is_connected() and self.steem.rpc.get_use_appbase():
             args = {'trx': self.json(), 'max_block_age': max_block_age}
         else:
             args = self.json()
