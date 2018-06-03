@@ -324,6 +324,16 @@ class Account(BlockchainObject):
         VoteValue = self.steem.sp_to_sbd(sp, voting_power=voting_power * 100, vote_pct=voting_weight * 100)
         return VoteValue
 
+    def get_creator(self):
+        """ Returns the account creator or `None` if the account was mined
+        """
+        if self['mined']:
+            return None
+        ops = list(self.get_account_history(0, 0))
+        if not ops or 'creator' not in ops[0]:
+            return None
+        return ops[0]['creator']
+
     def get_recharge_time_str(self, voting_power_goal=100):
         """ Returns the account recharge time
 
