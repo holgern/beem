@@ -17,7 +17,8 @@ from .exceptions import (
     InsufficientAuthorityError,
     MissingKeyError,
     InvalidWifError,
-    WalletLocked
+    WalletLocked,
+    OfflineHasNoRPCException
 )
 from beem.instance import shared_steem_instance
 import logging
@@ -135,6 +136,8 @@ class TransactionBuilder(dict):
             and permission is supposed to sign the transaction
             It is possible to add more than one signer.
         """
+        if not self.steem.is_connected():
+            return
         if permission not in ["active", "owner", "posting"]:
             raise AssertionError("Invalid permission")
         account = Account(account, steem_instance=self.steem)
@@ -308,7 +311,7 @@ class TransactionBuilder(dict):
         """ Returns public key from signature
         """
         if not self.steem.is_connected():
-            return None
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             args = {'trx': self.json()}
@@ -323,7 +326,7 @@ class TransactionBuilder(dict):
         """ Returns a hex value of the transaction
         """
         if not self.steem.is_connected():
-            return None
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             args = {'trx': self.json()}
@@ -338,7 +341,7 @@ class TransactionBuilder(dict):
         """ Returns public key from signature
         """
         if not self.steem.is_connected():
-            return None
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             args = {'trx': self.json(), 'available_keys': available_keys}

@@ -714,6 +714,6 @@ class RecentByPath(list):
         comments = []
         for reply in replies:
             post = state["content"][reply]
-            if category is None or (category is not None and post["category"] != category):
+            if category is None or (category is not None and post["category"] == category):
                 comments.append(Comment(post, lazy=True, steem_instance=self.steem))
         super(RecentByPath, self).__init__(comments)

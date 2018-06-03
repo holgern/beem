@@ -477,7 +477,7 @@ class Testcases(unittest.TestCase):
         bts.txbuffer.clear()
         tx = bts.post("title", "body", author="test", permlink=None, reply_identifier=None,
                       json_metadata=None, comment_options=None, community="test", tags=["a", "b", "c", "d", "e"],
-                      beneficiaries=[{'account': 'test1'}], self_vote=True)
+                      beneficiaries=[{'account': 'test1', 'weight': 5000}, {'account': 'test2', 'weight': 5000}], self_vote=True)
         self.assertEqual(
             (tx["operations"][0][0]),
             "comment"
@@ -491,6 +491,12 @@ class Testcases(unittest.TestCase):
         json_metadata = json.loads(op["json_metadata"])
         self.assertEqual(json_metadata["tags"], ["a", "b", "c", "d", "e"])
         self.assertEqual(json_metadata["app"], "beem/%s" % (beem_version))
+        self.assertEqual(
+            (tx["operations"][1][0]),
+            "comment_options"
+        )
+        op = tx["operations"][1][1]
+        self.assertEqual(len(op['extensions'][0][1]['beneficiaries']), 2)
 
     def test_comment_option(self):
         bts = self.bts

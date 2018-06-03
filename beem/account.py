@@ -440,7 +440,7 @@ class Account(BlockchainObject):
         if account is None:
             account = self["name"]
         if not self.steem.is_connected():
-            return None
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.get_blog_authors({'blog_account': account}, api='follow')['blog_authors']
@@ -452,7 +452,7 @@ class Account(BlockchainObject):
         if account is None:
             account = self["name"]
         if not self.steem.is_connected():
-            return None
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.get_follow_count({'account': account}, api='follow')
@@ -499,7 +499,7 @@ class Account(BlockchainObject):
         """ Help function, used in get_followers and get_following
         """
         if not self.steem.is_connected():
-            return None
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             query = {'account': self.name, 'start': last_user, 'type': what, 'limit': limit}
@@ -683,7 +683,7 @@ class Account(BlockchainObject):
         if account is None:
             account = self["name"]
         if not self.steem.is_connected():
-            return None
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             # return self.steem.rpc.get_account_bandwidth({'account': account, 'type': 'post'}, api="witness")
@@ -750,7 +750,7 @@ class Account(BlockchainObject):
         if account is None:
             account = self["name"]
         if not self.steem.is_connected():
-            return None
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.find_owner_histories({'owner': account}, api="database")['owner_auths']
@@ -766,7 +766,7 @@ class Account(BlockchainObject):
         if account is None:
             account = self["name"]
         if not self.steem.is_connected():
-            return None
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.find_sbd_conversion_requests({'account': account}, api="database")['requests']
@@ -782,7 +782,7 @@ class Account(BlockchainObject):
         if account is None:
             account = self["name"]
         if not self.steem.is_connected():
-            return None
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.find_withdraw_vesting_routes({'account': account, 'order': 'by_withdraw_route'}, api="database")['routes']
@@ -798,7 +798,7 @@ class Account(BlockchainObject):
         if account is None:
             account = self["name"]
         if not self.steem.is_connected():
-            return None
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.find_account_recovery_requests({'account': account}, api="database")['requests']
@@ -810,7 +810,7 @@ class Account(BlockchainObject):
         if account is None:
             account = self["name"]
         if not self.steem.is_connected():
-            return None
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.verify_account_authority({'account': account, 'signers': keys}, api="database")
@@ -824,7 +824,7 @@ class Account(BlockchainObject):
         else:
             account = Account(account, steem_instance=self.steem)
         if not self.steem.is_connected():
-            return None
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             return self.steem.rpc.get_account_votes(account["name"])
@@ -876,7 +876,7 @@ class Account(BlockchainObject):
             account = self
         account = Account(account, steem_instance=self.steem)
         if not self.steem.is_connected():
-            return None
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         # self.steem.rpc.set_next_node_on_empty_reply(True)
         if self.steem.rpc.get_use_appbase():

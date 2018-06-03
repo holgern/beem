@@ -14,7 +14,7 @@ import math
 from datetime import datetime, timedelta
 from .utils import formatTimeString
 from .block import Block
-from .exceptions import BatchedCallsNotSupported, BlockDoesNotExistsException, BlockWaitTimeExceeded
+from .exceptions import BatchedCallsNotSupported, BlockDoesNotExistsException, BlockWaitTimeExceeded, OfflineHasNoRPCException
 from beemgraphenebase.py23 import py23_bytes
 from beem.instance import shared_steem_instance
 from .amount import Amount
@@ -107,7 +107,7 @@ class Blockchain(object):
             :param str transaction_id: transaction_id
         """
         if not self.steem.is_connected():
-            return None
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             ret = self.steem.rpc.get_transaction({'id': transaction_id}, api="database")
@@ -266,7 +266,7 @@ class Blockchain(object):
                 current_block.set_cache_auto_clean(auto_clean)
             elif max_batch_size is not None and (head_block - start) >= max_batch_size and not head_block_reached:
                 if not self.steem.is_connected():
-                    return None
+                    raise OfflineHasNoRPCException("No RPC available in offline mode!")
                 self.steem.rpc.set_next_node_on_empty_reply(False)
                 latest_block = start - 1
                 batches = max_batch_size
@@ -553,7 +553,7 @@ class Blockchain(object):
         lastname = start
         cnt = 1
         if not self.steem.is_connected():
-            return None
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         while True:
             if self.steem.rpc.get_use_appbase():
