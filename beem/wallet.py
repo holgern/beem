@@ -566,7 +566,7 @@ class Wallet(object):
         """ Obtain all accounts associated with a public key
         """
         if not self.steem.is_connected():
-            return None
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             names = self.steem.rpc.get_key_references({'keys': [pub]}, api="account_by_key")["accounts"]
