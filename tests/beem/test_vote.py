@@ -8,6 +8,7 @@ from parameterized import parameterized
 from pprint import pprint
 from beem import Steem, exceptions
 from beem.comment import Comment
+from beem.account import Account
 from beem.vote import Vote, ActiveVotes, AccountVotes
 from beem.instance import set_shared_steem_instance
 from beem.utils import construct_authorperm, resolve_authorperm, resolve_authorpermvoter, construct_authorpermvoter
@@ -37,7 +38,11 @@ class Testcases(unittest.TestCase):
         set_shared_steem_instance(cls.bts)
         cls.bts.set_default_account("test")
 
-        cls.authorpermvoter = u"@gtg/steem-pressure-4-need-for-speed|gandalf"
+        acc = Account("holger80", steem_instance=cls.bts)
+        votes = acc.get_account_votes()
+        last_vote = votes[0]
+
+        cls.authorpermvoter = '@' + last_vote['authorperm'] + '|' + acc["name"]
         [author, permlink, voter] = resolve_authorpermvoter(cls.authorpermvoter)
         cls.author = author
         cls.permlink = permlink
