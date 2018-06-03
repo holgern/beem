@@ -240,6 +240,6 @@ class Testcases(unittest.TestCase):
 
     def test_recent_by_path(self):
         bts = self.bts
-        r = RecentByPath(category="hot", steem_instance=bts)
+        r = RecentByPath(path="hot", steem_instance=bts)
         self.assertTrue(len(r) > 0)
         self.assertTrue(r[0] is not None)
