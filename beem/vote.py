@@ -14,7 +14,7 @@ from beemgraphenebase.py23 import integer_types, string_types, text_type
 from .instance import shared_steem_instance
 from .account import Account
 from .exceptions import VoteDoesNotExistsException
-from .utils import resolve_authorperm, resolve_authorpermvoter, construct_authorpermvoter, construct_authorperm, formatTimeString, addTzInfo
+from .utils import resolve_authorperm, resolve_authorpermvoter, construct_authorpermvoter, construct_authorperm, formatTimeString, addTzInfo, reputation_to_score
 from .blockchainobject import BlockchainObject
 from .comment import Comment
 from beemapi.exceptions import UnkownKey
@@ -164,14 +164,7 @@ class Vote(BlockchainObject):
 
     @property
     def rep(self):
-        rep = int(self.reputation)
-        if rep == 0:
-            return 25.
-        score = max([math.log10(abs(rep)) - 9, 0])
-        if rep < 0:
-            score *= -1
-        score = (score * 9.) + 25.
-        return score
+        return reputation_to_score(self.reputation)
 
     @property
     def time(self):
@@ -187,18 +180,12 @@ class VotesObject(list):
 
         if sort_key == 'sbd':
             sortedList = sorted(self, key=lambda self: self.rshares, reverse=reverse)
-        elif sort_key == 'voter':
-            sortedList = sorted(self, key=lambda self: self[sort_key], reverse=reverse)
         elif sort_key == 'time':
             sortedList = sorted(self, key=lambda self: (utc.localize(datetime.utcnow()) - formatTimeString(self.time)).total_seconds(), reverse=reverse)
-        elif sort_key == 'rshares':
-            sortedList = sorted(self, key=lambda self: self[sort_key], reverse=reverse)
-        elif sort_key == 'percent':
-            sortedList = sorted(self, key=lambda self: self[sort_key], reverse=reverse)
-        elif sort_key == 'weight':
-            sortedList = sorted(self, key=lambda self: self[sort_key], reverse=reverse)
         elif sort_key == 'votee':
             sortedList = sorted(self, key=lambda self: self.votee, reverse=reverse)
+        elif sort_key in ['voter', 'rshares', 'percent', 'weight']:
+            sortedList = sorted(self, key=lambda self: self[sort_key], reverse=reverse)
         else:
             sortedList = self
         return sortedList
