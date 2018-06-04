@@ -1413,14 +1413,14 @@ class Steem(object):
                     )
                 if b['weight'] < 1 or b['weight'] > STEEM_100_PERCENT:
                     raise ValueError(
-                        "beneficiaries error, 1<=weight<=%s!" % \
+                        "beneficiaries error, 1<=weight<=%s!" %
                         (STEEM_100_PERCENT)
                     )
                 weight_sum += b['weight']
 
             if weight_sum > STEEM_100_PERCENT:
                 raise ValueError(
-                    "beneficiaries exceed total weight limit %s" % \
+                    "beneficiaries exceed total weight limit %s" %
                     STEEM_100_PERCENT
                 )
 

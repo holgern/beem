@@ -21,7 +21,7 @@ from beem.amount import Amount
 from beembase import operations
 from beemgraphenebase.account import PrivateKey, PublicKey
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
-from beem.constants import STEEM_VOTE_REGENERATION_SECONDS
+from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_1_PERCENT, STEEM_100_PERCENT
 log = logging.getLogger(__name__)
 
 
@@ -237,8 +237,7 @@ class Account(BlockchainObject):
             remaining = 100 - bandwidth["used"] / bandwidth["allocated"] * 100
             used_kb = bandwidth["used"] / 1024
             allocated_mb = bandwidth["allocated"] / 1024 / 1024
-        utc = pytz.timezone('UTC')
-        last_vote_time_str = formatTimedelta(utc.localize(datetime.utcnow()) - self["last_vote_time"])
+        last_vote_time_str = formatTimedelta(addTzInfo(datetime.utcnow()) - self["last_vote_time"])
         if use_table:
             t = PrettyTable(["Key", "Value"])
             t.align = "l"
@@ -291,9 +290,8 @@ class Account(BlockchainObject):
         """ Returns the account voting power
         """
         if with_regeneration:
-            utc = pytz.timezone('UTC')
-            diff_in_seconds = (utc.localize(datetime.utcnow()) - (self["last_vote_time"])).total_seconds()
-            regenerated_vp = diff_in_seconds * 10000 / STEEM_VOTE_REGENERATION_SECONDS / 100
+            diff_in_seconds = (addTzInfo(datetime.utcnow()) - (self["last_vote_time"])).total_seconds()
+            regenerated_vp = diff_in_seconds * STEEM_100_PERCENT / STEEM_VOTE_REGENERATION_SECONDS / 100
         else:
             regenerated_vp = 0
         total_vp = (self["voting_power"] / 100 + regenerated_vp)
@@ -352,7 +350,7 @@ class Account(BlockchainObject):
         missing_vp = voting_power_goal - self.get_voting_power()
         if missing_vp < 0:
             return 0
-        recharge_seconds = missing_vp * 100 * STEEM_VOTE_REGENERATION_SECONDS / 10000
+        recharge_seconds = missing_vp * 100 * STEEM_VOTE_REGENERATION_SECONDS / STEEM_100_PERCENT
         return timedelta(seconds=recharge_seconds)
 
     def get_recharge_time(self, voting_power_goal=100):
@@ -361,8 +359,7 @@ class Account(BlockchainObject):
             :param float voting_power_goal: voting power goal in percentage (default is 100)
 
         """
-        utc = pytz.timezone('UTC')
-        return utc.localize(datetime.utcnow()) + self.get_recharge_timedelta(voting_power_goal)
+        return addTzInfo(datetime.utcnow()) + self.get_recharge_timedelta(voting_power_goal)
 
     def get_feed(self, start_entry_id=0, limit=100, raw_data=False, account=None):
         """ Returns the user feed
@@ -665,12 +662,11 @@ class Account(BlockchainObject):
             "sbd_interest_rate"] / 100  # percent
         interest_amount = (interest_rate / 100) * int(
             int(self["sbd_seconds"]) / (60 * 60 * 24 * 356)) * 10**-3
-        utc = pytz.timezone('UTC')
         return {
             "interest": interest_amount,
             "last_payment": last_payment,
             "next_payment": next_payment,
-            "next_payment_duration": next_payment - utc.localize(datetime.utcnow()),
+            "next_payment_duration": next_payment - addTzInfo(datetime.utcnow()),
             "interest_rate": interest_rate,
         }
 
@@ -738,8 +734,7 @@ class Account(BlockchainObject):
             average_bandwidth = float(self["average_bandwidth"])
         total_seconds = 604800
 
-        utc = pytz.timezone('UTC')
-        seconds_since_last_update = utc.localize(datetime.utcnow()) - last_bandwidth_update
+        seconds_since_last_update = addTzInfo(datetime.utcnow()) - last_bandwidth_update
         seconds_since_last_update = seconds_since_last_update.total_seconds()
         used_bandwidth = 0
         if seconds_since_last_update < total_seconds:
@@ -1024,8 +1019,7 @@ class Account(BlockchainObject):
 
             :param int days: limit number of days to be included int the return value
         """
-        utc = pytz.timezone('UTC')
-        stop = utc.localize(datetime.utcnow()) - timedelta(days=days)
+        stop = addTzInfo(datetime.utcnow()) - timedelta(days=days)
         reward_vests = Amount("0 VESTS", steem_instance=self.steem)
         for reward in self.history_reverse(stop=stop, use_block_num=False, only_ops=["curation_reward"]):
             reward_vests += Amount(reward['reward'], steem_instance=self.steem)
@@ -2007,13 +2001,11 @@ class Account(BlockchainObject):
             account = self
         if not account:
             raise ValueError("You need to provide an account")
-        STEEMIT_100_PERCENT = 10000
-        STEEMIT_1_PERCENT = (STEEMIT_100_PERCENT / 100)
         op = operations.Set_withdraw_vesting_route(
             **{
                 "from_account": account["name"],
                 "to_account": to,
-                "percent": int(percentage * STEEMIT_1_PERCENT),
+                "percent": int(percentage * STEEM_1_PERCENT),
                 "auto_vest": auto_vest
             })
 
@@ -2197,13 +2189,12 @@ class AccountsObject(list):
             rep.append(f.rep)
             own_mvest.append(f.balances["available"][2].amount / 1e6)
             eff_sp.append(f.get_steem_power())
-            utc = pytz.timezone('UTC')
-            last_vote = utc.localize(datetime.utcnow()) - (f["last_vote_time"])
+            last_vote = addTzInfo(datetime.utcnow()) - (f["last_vote_time"])
             if last_vote.days >= 365:
                 no_vote += 1
             else:
                 last_vote_h.append(last_vote.total_seconds() / 60 / 60)
-            last_post = utc.localize(datetime.utcnow()) - (f["last_root_post"])
+            last_post = addTzInfo(datetime.utcnow()) - (f["last_root_post"])
             if last_post.days >= 365:
                 no_post += 1
             else:
