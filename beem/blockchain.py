@@ -122,6 +122,8 @@ class Blockchain(object):
                       when instanciating from this class.
         """
         props = self.steem.get_dynamic_global_properties(False)
+        if props is None:
+            raise ValueError("Could not receive dynamic_global_properties!")
         return int(props.get(self.mode))
 
     def get_current_block(self, only_ops=False, only_virtual_ops=False):
