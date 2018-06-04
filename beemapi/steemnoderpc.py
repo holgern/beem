@@ -146,34 +146,16 @@ class SteemNodeRPC(GrapheneRPC):
 
     def _check_api_name(self, msg):
         error_start = "Could not find API "
-        if re.search(error_start + "account_history_api", msg):
-            return True
-        elif re.search(error_start + "tags_api", msg):
-            return True
-        elif re.search(error_start + "database_api", msg):
-            return True
-        elif re.search(error_start + "market_history_api", msg):
-            return True
-        elif re.search(error_start + "block_api", msg):
-            return True
-        elif re.search(error_start + "account_by_key_api", msg):
-            return True
-        elif re.search(error_start + "chain_api", msg):
-            return True
-        elif re.search(error_start + "follow_api", msg):
-            return True
-        elif re.search(error_start + "condenser_api", msg):
-            return True
-        elif re.search(error_start + "debug_node_api", msg):
-            return True
-        elif re.search(error_start + "witness_api", msg):
-            return True
-        elif re.search(error_start + "test_api", msg):
-            return True
-        elif re.search(error_start + "network_broadcast_api", msg):
-            return True
-        else:
-            return False
+        known_apis = ['account_history_api', 'tags_api',
+                      'database_api', 'market_history_api',
+                      'block_api', 'account_by_key_api', 'chain_api',
+                      'follow_api', 'condenser_api', 'debug_node_api',
+                      'witness_api', 'test_api',
+                      'network_broadcast_api']
+        for api in known_apis:
+            if re.search(error_start + api, msg):
+                return True
+        return False
 
     def get_account(self, name, **kwargs):
         """ Get full account details from account name

@@ -173,7 +173,7 @@ class GrapheneRPC(object):
 
     def is_appbase_ready(self):
         """Check if node is appbase ready"""
-        return self.current_rpc >= 2
+        return self.current_rpc in [self.rpc_methods['wsappbase'], self.rpc_methods['appbase']]
 
     def get_use_appbase(self):
         """Returns True if appbase ready and appbase calls are set"""
@@ -212,7 +212,11 @@ class GrapheneRPC(object):
                         props = self.get_config()
                 except Exception as e:
                     if re.search("Bad Cast:Invalid cast from type", str(e)):
-                        self.current_rpc += 2
+                        # retry with appbase
+                        if self.current_rpc == self.rpc_methods['ws']:
+                            self.current_rpc = self.rpc_methods['wsappbase']
+                        else:
+                            self.current_rpc = self.rpc_methods['appbase']
                         props = self.get_config(api="database")
                 if props is None:
                     raise RPCError("Could not recieve answer for get_config")
@@ -232,7 +236,7 @@ class GrapheneRPC(object):
 
     def rpclogin(self, user, password):
         """Login into Websocket"""
-        if self.ws and self.current_rpc == 0 and user and password:
+        if self.ws and self.current_rpc == self.rpc_methods['ws'] and user and password:
             self.login(user, password, api="login_api")
 
     def rpcclose(self):
@@ -329,7 +333,8 @@ class GrapheneRPC(object):
         while True:
             self.nodes.increase_error_cnt_call()
             try:
-                if self.current_rpc == 0 or self.current_rpc == 2:
+                if self.current_rpc == self.rpc_methods['ws'] or \
+                   self.current_rpc == self.rpc_methods['wsappbase']:
                     reply = self.ws_send(json.dumps(payload, ensure_ascii=False).encode('utf8'))
                 else:
                     reply = self.request_send(json.dumps(payload, ensure_ascii=False).encode('utf8'))
