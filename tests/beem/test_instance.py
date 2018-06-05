@@ -21,7 +21,7 @@ from beem.market import Market
 from beem.price import Price
 from beem.comment import Comment
 from beem.vote import Vote
-from beemapi.exceptions import NumRetriesReached
+from beemapi.exceptions import RPCConnection
 from beem.wallet import Wallet
 from beem.transactionbuilder import TransactionBuilder
 from beembase.operations import Transfer
@@ -64,23 +64,22 @@ class Testcases(unittest.TestCase):
     ])
     def test_account(self, node_param):
         if node_param == "instance":
-            stm = Steem(node="abc", autoconnect=False, num_retries=1)
             set_shared_steem_instance(self.bts)
             acc = Account("test")
             self.assertIn(acc.steem.rpc.url, self.urls)
             self.assertIn(acc["balance"].steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
-                Account("test", steem_instance=stm)
+                Account("test", steem_instance=Steem(node="https://abc.d", autoconnect=False, num_retries=1))
         else:
-            set_shared_steem_instance(Steem(node="abc", autoconnect=False, num_retries=1))
+            set_shared_steem_instance(Steem(node="https://abc.d", autoconnect=False, num_retries=1))
             stm = self.bts
             acc = Account("test", steem_instance=stm)
             self.assertIn(acc.steem.rpc.url, self.urls)
             self.assertIn(acc["balance"].steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
                 Account("test")
 
@@ -90,21 +89,21 @@ class Testcases(unittest.TestCase):
     ])
     def test_amount(self, node_param):
         if node_param == "instance":
-            stm = Steem(node="abc", autoconnect=False, num_retries=1)
+            stm = Steem(node="https://abc.d", autoconnect=False, num_retries=1)
             set_shared_steem_instance(self.bts)
             o = Amount("1 SBD")
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
                 Amount("1 SBD", steem_instance=stm)
         else:
-            set_shared_steem_instance(Steem(node="abc", autoconnect=False, num_retries=1))
+            set_shared_steem_instance(Steem(node="https://abc.d", autoconnect=False, num_retries=1))
             stm = self.bts
             o = Amount("1 SBD", steem_instance=stm)
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
                 Amount("1 SBD")
 
@@ -114,21 +113,20 @@ class Testcases(unittest.TestCase):
     ])
     def test_block(self, node_param):
         if node_param == "instance":
-            stm = Steem(node="abc", autoconnect=False, num_retries=1)
             set_shared_steem_instance(self.bts)
             o = Block(1)
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
-                Block(1, steem_instance=stm)
+                Block(1, steem_instance=Steem(node="https://abc.d", autoconnect=False, num_retries=1))
         else:
-            set_shared_steem_instance(Steem(node="abc", autoconnect=False, num_retries=1))
+            set_shared_steem_instance(Steem(node="https://abc.d", autoconnect=False, num_retries=1))
             stm = self.bts
             o = Block(1, steem_instance=stm)
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
                 Block(1)
 
@@ -138,21 +136,20 @@ class Testcases(unittest.TestCase):
     ])
     def test_blockchain(self, node_param):
         if node_param == "instance":
-            stm = Steem(node="abc", autoconnect=False, num_retries=1)
             set_shared_steem_instance(self.bts)
             o = Blockchain()
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
-                Blockchain(steem_instance=stm)
+                Blockchain(steem_instance=Steem(node="https://abc.d", autoconnect=False, num_retries=1))
         else:
-            set_shared_steem_instance(Steem(node="abc", autoconnect=False, num_retries=1))
+            set_shared_steem_instance(Steem(node="https://abc.d", autoconnect=False, num_retries=1))
             stm = self.bts
             o = Blockchain(steem_instance=stm)
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
                 Blockchain()
 
@@ -162,21 +159,20 @@ class Testcases(unittest.TestCase):
     ])
     def test_comment(self, node_param):
         if node_param == "instance":
-            stm = Steem(node="abc", autoconnect=False, num_retries=1)
             set_shared_steem_instance(self.bts)
             o = Comment("@gtg/witness-gtg-log")
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
-                Comment("@gtg/witness-gtg-log", steem_instance=stm)
+                Comment("@gtg/witness-gtg-log", steem_instance=Steem(node="https://abc.d", autoconnect=False, num_retries=1))
         else:
-            set_shared_steem_instance(Steem(node="abc", autoconnect=False, num_retries=1))
+            set_shared_steem_instance(Steem(node="https://abc.d", autoconnect=False, num_retries=1))
             stm = self.bts
             o = Comment("@gtg/witness-gtg-log", steem_instance=stm)
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
                 Comment("@gtg/witness-gtg-log")
 
@@ -186,21 +182,20 @@ class Testcases(unittest.TestCase):
     ])
     def test_market(self, node_param):
         if node_param == "instance":
-            stm = Steem(node="abc", autoconnect=False, num_retries=1)
             set_shared_steem_instance(self.bts)
             o = Market()
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
-                Market(steem_instance=stm)
+                Market(steem_instance=Steem(node="https://abc.d", autoconnect=False, num_retries=1))
         else:
-            set_shared_steem_instance(Steem(node="abc", autoconnect=False, num_retries=1))
+            set_shared_steem_instance(Steem(node="https://abc.d", autoconnect=False, num_retries=1))
             stm = self.bts
             o = Market(steem_instance=stm)
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
                 Market()
 
@@ -210,21 +205,20 @@ class Testcases(unittest.TestCase):
     ])
     def test_price(self, node_param):
         if node_param == "instance":
-            stm = Steem(node="abc", autoconnect=False, num_retries=1)
             set_shared_steem_instance(self.bts)
             o = Price(10.0, "STEEM/SBD")
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
-                Price(10.0, "STEEM/SBD", steem_instance=stm)
+                Price(10.0, "STEEM/SBD", steem_instance=Steem(node="https://abc.d", autoconnect=False, num_retries=1))
         else:
-            set_shared_steem_instance(Steem(node="abc", autoconnect=False, num_retries=1))
+            set_shared_steem_instance(Steem(node="https://abc.d", autoconnect=False, num_retries=1))
             stm = self.bts
             o = Price(10.0, "STEEM/SBD", steem_instance=stm)
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
                 Price(10.0, "STEEM/SBD")
 
@@ -234,21 +228,20 @@ class Testcases(unittest.TestCase):
     ])
     def test_vote(self, node_param):
         if node_param == "instance":
-            stm = Steem(node="abc", autoconnect=False, num_retries=1)
             set_shared_steem_instance(self.bts)
             o = Vote("@gtg/ffdhu-gtg-witness-log|gandalf")
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
-                Vote("@gtg/ffdhu-gtg-witness-log|gandalf", steem_instance=stm)
+                Vote("@gtg/ffdhu-gtg-witness-log|gandalf", steem_instance=Steem(node="https://abc.d", autoconnect=False, num_retries=1))
         else:
-            set_shared_steem_instance(Steem(node="abc", autoconnect=False, num_retries=1))
+            set_shared_steem_instance(Steem(node="https://abc.d", autoconnect=False, num_retries=1))
             stm = self.bts
             o = Vote("@gtg/ffdhu-gtg-witness-log|gandalf", steem_instance=stm)
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
                 Vote("@gtg/ffdhu-gtg-witness-log|gandalf")
 
@@ -258,22 +251,21 @@ class Testcases(unittest.TestCase):
     ])
     def test_wallet(self, node_param):
         if node_param == "instance":
-            stm = Steem(node="abc", autoconnect=False, num_retries=1)
             set_shared_steem_instance(self.bts)
             o = Wallet()
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
-                o = Wallet(steem_instance=stm)
+                o = Wallet(steem_instance=Steem(node="https://abc.d", autoconnect=False, num_retries=1))
                 o.steem.get_config()
         else:
-            set_shared_steem_instance(Steem(node="abc", autoconnect=False, num_retries=1))
+            set_shared_steem_instance(Steem(node="https://abc.d", autoconnect=False, num_retries=1))
             stm = self.bts
             o = Wallet(steem_instance=stm)
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
                 o = Wallet()
                 o.steem.get_config()
@@ -284,21 +276,20 @@ class Testcases(unittest.TestCase):
     ])
     def test_witness(self, node_param):
         if node_param == "instance":
-            stm = Steem(node="abc", autoconnect=False, num_retries=1)
             set_shared_steem_instance(self.bts)
             o = Witness("gtg")
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
-                Witness("gtg", steem_instance=stm)
+                Witness("gtg", steem_instance=Steem(node="https://abc.d", autoconnect=False, num_retries=1))
         else:
-            set_shared_steem_instance(Steem(node="abc", autoconnect=False, num_retries=1))
+            set_shared_steem_instance(Steem(node="https://abc.d", autoconnect=False, num_retries=1))
             stm = self.bts
             o = Witness("gtg", steem_instance=stm)
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
                 Witness("gtg")
 
@@ -308,22 +299,21 @@ class Testcases(unittest.TestCase):
     ])
     def test_transactionbuilder(self, node_param):
         if node_param == "instance":
-            stm = Steem(node="abc", autoconnect=False, num_retries=1)
             set_shared_steem_instance(self.bts)
             o = TransactionBuilder()
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
-                o = TransactionBuilder(steem_instance=stm)
+                o = TransactionBuilder(steem_instance=Steem(node="https://abc.d", autoconnect=False, num_retries=1))
                 o.steem.get_config()
         else:
-            set_shared_steem_instance(Steem(node="abc", autoconnect=False, num_retries=1))
+            set_shared_steem_instance(Steem(node="https://abc.d", autoconnect=False, num_retries=1))
             stm = self.bts
             o = TransactionBuilder(steem_instance=stm)
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
                 o = TransactionBuilder()
                 o.steem.get_config()
@@ -334,23 +324,23 @@ class Testcases(unittest.TestCase):
     ])
     def test_steem(self, node_param):
         if node_param == "instance":
-            stm = Steem(node="abc", autoconnect=False, num_retries=1)
             set_shared_steem_instance(self.bts)
             o = Steem(node=self.urls)
             o.get_config()
             self.assertIn(o.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
+                stm = Steem(node="https://abc.d", autoconnect=False, num_retries=1)
                 stm.get_config()
         else:
-            set_shared_steem_instance(Steem(node="abc", autoconnect=False, num_retries=1))
+            set_shared_steem_instance(Steem(node="https://abc.d", autoconnect=False, num_retries=1))
             stm = self.bts
             o = stm
             o.get_config()
             self.assertIn(o.rpc.url, self.urls)
             with self.assertRaises(
-                NumRetriesReached
+                RPCConnection
             ):
                 stm = shared_steem_instance()
                 stm.get_config()

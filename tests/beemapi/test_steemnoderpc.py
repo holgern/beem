@@ -96,14 +96,20 @@ class Testcases(unittest.TestCase):
         self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
 
     def test_connect_test_str_list(self):
-        str_list = "wss://steemd.pevo.science;wss://gtg.steem.house:8090;wss://rpc.steemliberator.com;wss://rpc.buildteam.io"
+        str_list = ""
+        for node in self.nodes:
+            str_list += node + ";"
+        str_list = str_list[:-1]
         rpc = SteemNodeRPC(urls=str_list)
         self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
         rpc.next()
         self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
 
     def test_connect_test_str_list2(self):
-        str_list = "wss://steemd.pevo.science, wss://gtg.steem.house:8090, wss://rpc.steemliberator.com, wss://rpc.buildteam.io"
+        str_list = ""
+        for node in self.nodes:
+            str_list += node + ","
+        str_list = str_list[:-1]
         rpc = SteemNodeRPC(urls=str_list)
         self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
         rpc.next()
