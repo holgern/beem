@@ -164,7 +164,7 @@ class Vote(BlockchainObject):
 
     @property
     def rep(self):
-        return reputation_to_score(self.reputation)
+        return reputation_to_score(int(self.reputation))
 
     @property
     def time(self):

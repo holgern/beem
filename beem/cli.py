@@ -1844,9 +1844,50 @@ def witnessupdate(witness, maximum_block_size, account_creation_fee, sbd_interes
 
 @cli.command()
 @click.argument('witness', nargs=1)
+def witnessdisable(witness):
+    """Disable a witness"""
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not witness:
+        witness = stm.config["default_account"]
+    if not unlock_wallet(stm):
+        return
+    witness = Witness(witness, steem_instance=stm)
+    props = witness["props"]
+    tx = witness.update('STM1111111111111111111111111111111114T1Anm', witness["url"], props)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.argument('witness', nargs=1)
+@click.argument('signing_key', nargs=1)
+def witnessenable(witness, signing_key):
+    """Enable a witness"""
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not witness:
+        witness = stm.config["default_account"]
+    if not unlock_wallet(stm):
+        return
+    witness = Witness(witness, steem_instance=stm)
+    props = witness["props"]
+    tx = witness.update(signing_key, witness["url"], props)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.argument('witness', nargs=1)
 @click.argument('signing_key', nargs=1)
 @click.option('--maximum_block_size', help='Max block size', default="65536")
-@click.option('--account_creation_fee', help='Account creation fee', default=30)
+@click.option('--account_creation_fee', help='Account creation fee', default=0.1)
 @click.option('--sbd_interest_rate', help='SBD interest rate in percent', default=0.0)
 @click.option('--url', help='Witness URL', default="")
 def witnesscreate(witness, signing_key, maximum_block_size, account_creation_fee, sbd_interest_rate, url):
@@ -1865,11 +1906,54 @@ def witnesscreate(witness, signing_key, maximum_block_size, account_creation_fee
             int(sbd_interest_rate * 100)
     }
 
-    tx = stm.witness_update(signing_key, url, props, account=witness)
+    tx = stm.witness_update(signing_key, url, props, account=witness["owner"])
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
+
+
+@cli.command()
+@click.argument('witness', nargs=1)
+@click.argument('base', nargs=1, required=False)
+@click.option('--quote', help='Steem quote', default="1 STEEM")
+def witnessfeed(witness, base, quote):
+    """Publish price feed for a witness"""
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not unlock_wallet(stm):
+        return
+    quote = Amount(quote, steem_instance=stm)
+    if base is None:
+        price = stm.get_median_price()
+        base = float(price) * float(quote)
+    witness = Witness(witness, steem_instance=stm)
+    tx = witness.feed_publish(base, quote=quote)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.argument('witness', nargs=1)
+def witness(witness):
+    """ List witness information
+    """
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    witness = Witness(witness, steem_instance=stm)
+    witness_json = witness.json()
+    t = PrettyTable(["Key", "Value"])
+    t.align = "l"
+    for key in sorted(witness_json):
+        value = witness_json[key]
+        if key in ["props", "sbd_exchange_rate"]:
+            value = json.dumps(value, indent=4)
+        t.add_row([key, value])
+    print(t)
 
 
 @cli.command()
