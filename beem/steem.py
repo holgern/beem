@@ -1110,7 +1110,7 @@ class Steem(object):
     def witness_update(self, signing_key, url, props, account=None, **kwargs):
         """ Creates/updates a witness
 
-            :param pubkey signing_key: Signing key
+            :param pubkey signing_key: Public signing key
             :param str url: URL
             :param dict props: Properties
             :param str account: (optional) witness account name

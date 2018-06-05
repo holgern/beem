@@ -9,6 +9,7 @@ from pprint import pprint
 from beem import Steem, exceptions
 from beem.comment import Comment, RecentReplies, RecentByPath
 from beem.vote import Vote
+from beem.account import Account
 from beem.instance import set_shared_steem_instance
 from beem.utils import resolve_authorperm
 from beem.nodelist import NodeList
@@ -36,12 +37,14 @@ class Testcases(unittest.TestCase):
             keys={"active": wif},
             num_retries=10
         )
-        cls.authorperm = "@gtg/ffdhu-gtg-witness-log"
+        acc = Account("holger80", steem_instance=cls.bts)
+        comment = acc.get_blog(limit=1)[0]
+        cls.authorperm = comment.authorperm
         [author, permlink] = resolve_authorperm(cls.authorperm)
         cls.author = author
         cls.permlink = permlink
-        cls.category = 'witness-category'
-        cls.title = 'gtg witness log'
+        cls.category = comment.category
+        cls.title = comment.title
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
         # set_shared_steem_instance(cls.bts)
@@ -71,12 +74,13 @@ class Testcases(unittest.TestCase):
         self.assertEqual(c.parent_permlink, self.category)
         self.assertEqual(c.title, self.title)
         self.assertTrue(len(c.body) > 0)
-        for key in ['tags', 'users', 'image', 'links', 'app', 'format']:
-            self.assertIn(key, list(c.json_metadata.keys()))
+        self.assertTrue(isinstance(c.json_metadata, dict))
         self.assertTrue(c.is_main_post())
         self.assertFalse(c.is_comment())
-        self.assertFalse(c.is_pending())
-        self.assertTrue((c.time_elapsed().total_seconds() / 60 / 60 / 24) > 7.0)
+        if c.is_pending():
+            self.assertFalse((c.time_elapsed().total_seconds() / 60 / 60 / 24) > 7.0)
+        else:
+            self.assertTrue((c.time_elapsed().total_seconds() / 60 / 60 / 24) > 7.0)
         self.assertTrue(isinstance(c.get_reblogged_by(), list))
         self.assertTrue(len(c.get_reblogged_by()) > 0)
         self.assertTrue(isinstance(c.get_votes(), list))

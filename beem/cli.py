@@ -1885,12 +1885,12 @@ def witnessenable(witness, signing_key):
 
 @cli.command()
 @click.argument('witness', nargs=1)
-@click.argument('signing_key', nargs=1)
+@click.argument('pub_signing_key', nargs=1)
 @click.option('--maximum_block_size', help='Max block size', default=65536)
 @click.option('--account_creation_fee', help='Account creation fee', default=0.1)
 @click.option('--sbd_interest_rate', help='SBD interest rate in percent', default=0.0)
 @click.option('--url', help='Witness URL', default="")
-def witnesscreate(witness, signing_key, maximum_block_size, account_creation_fee, sbd_interest_rate, url):
+def witnesscreate(witness, pub_signing_key, maximum_block_size, account_creation_fee, sbd_interest_rate, url):
     """Create a witness"""
     stm = shared_steem_instance()
     if stm.rpc is not None:
@@ -1906,7 +1906,7 @@ def witnesscreate(witness, signing_key, maximum_block_size, account_creation_fee
             int(sbd_interest_rate * 100)
     }
 
-    tx = stm.witness_update(signing_key, url, props, account=witness)
+    tx = stm.witness_update(pub_signing_key, url, props, account=witness)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
