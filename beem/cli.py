@@ -1899,7 +1899,7 @@ def witnesscreate(witness, signing_key, maximum_block_size, account_creation_fee
         return
     props = {
         "account_creation_fee":
-            str(Amount("%f STEEM" % account_creation_fee)),
+            Amount("%f STEEM" % account_creation_fee, steem_instance=stm),
         "maximum_block_size":
             int(maximum_block_size),
         "sbd_interest_rate":

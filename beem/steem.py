@@ -1142,7 +1142,7 @@ class Steem(object):
                 "url": url,
                 "block_signing_key": signing_key,
                 "props": props,
-                "fee": "0.000 STEEM",
+                "fee": Amount("0.000 STEEM", steem_instance=self),
                 "prefix": self.prefix,
             })
         return self.finalizeOp(op, account, "active", **kwargs)
