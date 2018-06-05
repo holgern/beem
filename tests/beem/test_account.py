@@ -527,4 +527,4 @@ class Testcases(unittest.TestCase):
         votes_list2 = []
         for v in account.history(start=start_num, only_ops=["vote"]):
             votes_list2.append(v)
-        self.assertEqual(len(votes_list), len(votes_list2))
+        self.assertTrue(abs(len(votes_list) - len(votes_list2)) < 2)

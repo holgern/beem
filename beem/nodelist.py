@@ -257,7 +257,7 @@ class NodeList(list):
                     sum_rank = 0
                     for rank in ranks:
                         sum_rank += rank
-                    new_node["score"] = ((3 * max_score) - sum_rank) / len(ranks) * 10
+                    new_node["score"] = ((len(ranks) * max_score) - sum_rank) / len(ranks) * 10
             for node_failing in failing_nodes:
                 if node["url"] == node_failing:
                     new_node["score"] = -1
