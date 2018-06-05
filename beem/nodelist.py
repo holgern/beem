@@ -7,6 +7,11 @@ from builtins import next
 import re
 import time
 import math
+import json
+from beem.instance import shared_steem_instance
+from beem.account import Account
+import logging
+log = logging.getLogger(__name__)
 
 
 class NodeList(list):
@@ -226,7 +231,40 @@ class NodeList(list):
             }]
         super(NodeList, self).__init__(nodes)
 
-    def get_nodes(self, normal=True, appbase=True, dev=False, testnet=False):
+    def update_nodes(self, steem_instance=None):
+        """ Reads metadata from fullnodeupdate"""
+        steem = steem_instance or shared_steem_instance()
+        account = Account("fullnodeupdate", steem_instance=steem)
+        metadata = json.loads(account["json_metadata"])
+        report = metadata["report"]
+        failing_nodes = metadata["failing_nodes"]
+        parameter = metadata["parameter"]
+        benchmarks = parameter["benchmarks"]
+        max_score = len(report) + 1
+        new_nodes = []
+        for node in self:
+            new_node = node.copy()
+            for report_node in report:
+                if node["url"] == report_node["node"]:
+                    new_node["version"] = report_node["version"]
+                    ranks = []
+                    for benchmark in benchmarks:
+                        result = report_node[benchmark]
+                        rank = result["rank"]
+                        if not result["ok"]:
+                            rank = max_score + 1
+                        ranks.append(rank)
+                    sum_rank = 0
+                    for rank in ranks:
+                        sum_rank += rank
+                    new_node["score"] = ((3 * max_score) - sum_rank) / len(ranks) * 10
+            for node_failing in failing_nodes:
+                if node["url"] == node_failing:
+                    new_node["score"] = -1
+            new_nodes.append(new_node)
+        super(NodeList, self).__init__(new_nodes)
+
+    def get_nodes(self, normal=True, appbase=True, dev=False, testnet=False, wss=True, https=True):
         """ Returns nodes as list
 
             :param bool normal: when True, nodes with version 0.19.2 or 0.19.3 are included
@@ -246,8 +284,13 @@ class NodeList(list):
         if testnet:
             node_type_list.append("testnet")
         for node in self:
-            if node["type"] in node_type_list:
+            if node["type"] in node_type_list and node["score"] >= 0:
+                if not https and node["url"][:5] == 'https':
+                    continue
+                if not wss and node["url"][:3] == 'wss':
+                    continue
                 node_list.append(node)
+
         return [node["url"] for node in sorted(node_list, key=lambda self: self['score'], reverse=True)]
 
     def get_testnet(self):

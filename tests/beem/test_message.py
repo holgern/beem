@@ -5,20 +5,20 @@ from beem import Steem
 from beem.message import Message
 from beem.account import Account
 from beem.instance import set_shared_steem_instance
+from beem.nodelist import NodeList
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 core_unit = "STM"
-nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
-         "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
-         "wss://steemd.minnowsupportproject.org"]
 
 
 class Testcases(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        nodelist = NodeList()
+        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
         cls.bts = Steem(
-            node=nodes,
+            node=nodelist.get_nodes(),
             nobroadcast=True,
             keys=[wif],
             num_retries=10

@@ -38,13 +38,14 @@ core_unit = "STM"
 class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        nodelist = NodeList()
-        stm = Steem(node=nodelist.get_nodes())
+        cls.nodelist = NodeList()
+        cls.nodelist.update_nodes(steem_instance=Steem(node=cls.nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
+        stm = Steem(node=cls.nodelist.get_nodes())
         stm.config.refreshBackup()
         stm.set_default_nodes(["xyz"])
         del stm
 
-        cls.urls = nodelist.get_nodes()
+        cls.urls = cls.nodelist.get_nodes()
         cls.bts = Steem(
             node=cls.urls,
             nobroadcast=True,
@@ -54,8 +55,7 @@ class Testcases(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        nodelist = NodeList()
-        stm = Steem(node=nodelist.get_nodes())
+        stm = Steem(node=cls.nodelist.get_nodes())
         stm.config.recover_with_latest_backup()
 
     @parameterized.expand([

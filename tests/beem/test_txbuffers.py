@@ -32,6 +32,7 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         nodelist = NodeList()
+        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
         cls.stm = Steem(
             node=nodelist.get_nodes(appbase=False),
             keys={"active": wif, "owner": wif, "memo": wif},

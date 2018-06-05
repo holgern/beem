@@ -27,6 +27,7 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         nodelist = NodeList()
+        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
         cls.bts = Steem(
             node=nodelist.get_nodes(normal=True, appbase=False),
             nobroadcast=True,
@@ -277,11 +278,12 @@ class Testcases(unittest.TestCase):
     ])
     def test_history_block_num(self, node_param):
         if node_param == "non_appbase":
-            account = self.account
+            stm = self.bts
             zero_element = 0
         else:
-            account = self.account_appbase
+            stm = self.appbase
             zero_element = 0  # bug in steem
+        account = Account("fullnodeupdate", steem_instance=stm)
         h_all_raw = []
         for h in account.history_reverse(raw_output=True):
             h_all_raw.append(h)

@@ -21,6 +21,7 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         nodelist = NodeList()
+        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
         cls.bts = Steem(
             node=nodelist.get_nodes(appbase=False),
             nobroadcast=True,
@@ -40,7 +41,7 @@ class Testcases(unittest.TestCase):
 
         acc = Account("holger80", steem_instance=cls.bts)
         votes = acc.get_account_votes()
-        last_vote = votes[0]
+        last_vote = votes[-1]
 
         cls.authorpermvoter = '@' + last_vote['authorperm'] + '|' + acc["name"]
         [author, permlink, voter] = resolve_authorpermvoter(cls.authorpermvoter)

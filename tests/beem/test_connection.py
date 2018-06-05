@@ -13,6 +13,7 @@ class Testcases(unittest.TestCase):
 
     def test_stm1stm2(self):
         nodelist = NodeList()
+        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
         b1 = Steem(
             node=nodelist.get_testnet(),
             nobroadcast=True,
@@ -29,6 +30,7 @@ class Testcases(unittest.TestCase):
 
     def test_default_connection(self):
         nodelist = NodeList()
+        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
         b1 = Steem(
             node=nodelist.get_testnet(),
             nobroadcast=True,

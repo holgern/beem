@@ -31,16 +31,17 @@ class Testcases(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        nodelist = NodeList()
+        cls.nodelist = NodeList()
+        cls.nodelist.update_nodes(steem_instance=Steem(node=cls.nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
         cls.bts = Steem(
-            node=nodelist.get_nodes(appbase=False),
+            node=cls.nodelist.get_nodes(appbase=False),
             nobroadcast=True,
             unsigned=True,
             data_refresh_time_seconds=900,
             keys={"active": wif, "owner": wif, "memo": wif},
             num_retries=10)
         cls.appbase = Steem(
-            node=nodelist.get_nodes(normal=False, appbase=True),
+            node=cls.nodelist.get_nodes(normal=False, appbase=True),
             nobroadcast=True,
             unsigned=True,
             data_refresh_time_seconds=900,
@@ -82,16 +83,15 @@ class Testcases(unittest.TestCase):
         ("appbase"),
     ])
     def test_create_account(self, node_param):
-        nodelist = NodeList()
         if node_param == "non_appbase":
-            bts = Steem(node=nodelist.get_nodes(appbase=False),
+            bts = Steem(node=self.nodelist.get_nodes(appbase=False),
                         nobroadcast=True,
                         unsigned=True,
                         data_refresh_time_seconds=900,
                         keys={"active": wif, "owner": wif, "memo": wif},
                         num_retries=10)
         elif node_param == "appbase":
-            bts = Steem(node=nodelist.get_nodes(normal=False, appbase=True),
+            bts = Steem(node=self.nodelist.get_nodes(normal=False, appbase=True),
                         nobroadcast=True,
                         unsigned=True,
                         data_refresh_time_seconds=900,
@@ -163,16 +163,15 @@ class Testcases(unittest.TestCase):
         ("appbase"),
     ])
     def test_create_account_password(self, node_param):
-        nodelist = NodeList()
         if node_param == "non_appbase":
-            bts = Steem(node=nodelist.get_nodes(appbase=False),
+            bts = Steem(node=self.nodelist.get_nodes(appbase=False),
                         nobroadcast=True,
                         unsigned=True,
                         data_refresh_time_seconds=900,
                         keys={"active": wif, "owner": wif, "memo": wif},
                         num_retries=10)
         elif node_param == "appbase":
-            bts = Steem(node=nodelist.get_nodes(normal=False, appbase=True),
+            bts = Steem(node=self.nodelist.get_nodes(normal=False, appbase=True),
                         nobroadcast=True,
                         unsigned=True,
                         data_refresh_time_seconds=900,
@@ -227,16 +226,15 @@ class Testcases(unittest.TestCase):
         ("appbase"),
     ])
     def test_create_account_with_delegation(self, node_param):
-        nodelist = NodeList()
         if node_param == "non_appbase":
-            bts = Steem(node=nodelist.get_nodes(appbase=False),
+            bts = Steem(node=self.nodelist.get_nodes(appbase=False),
                         nobroadcast=True,
                         unsigned=True,
                         data_refresh_time_seconds=900,
                         keys={"active": wif, "owner": wif, "memo": wif},
                         num_retries=10)
         elif node_param == "appbase":
-            bts = Steem(node=nodelist.get_nodes(normal=False, appbase=True),
+            bts = Steem(node=self.nodelist.get_nodes(normal=False, appbase=True),
                         nobroadcast=True,
                         unsigned=True,
                         data_refresh_time_seconds=900,
@@ -521,8 +519,7 @@ class Testcases(unittest.TestCase):
         self.assertFalse(bts.get_blockchain_version() == '0.0.0')
 
     def test_offline(self):
-        nodelist = NodeList()
-        bts = Steem(node=nodelist.get_nodes(appbase=False),
+        bts = Steem(node=self.nodelist.get_nodes(appbase=False),
                     offline=True,
                     data_refresh_time_seconds=900,
                     keys={"active": wif, "owner": wif, "memo": wif})
@@ -551,15 +548,14 @@ class Testcases(unittest.TestCase):
         ("appbase"),
     ])
     def test_properties(self, node_param):
-        nodelist = NodeList()
         if node_param == "non_appbase":
-            bts = Steem(node=nodelist.get_nodes(appbase=False),
+            bts = Steem(node=self.nodelist.get_nodes(appbase=False),
                         nobroadcast=True,
                         data_refresh_time_seconds=900,
                         keys={"active": wif, "owner": wif, "memo": wif},
                         num_retries=10)
         elif node_param == "appbase":
-            bts = Steem(node=nodelist.get_nodes(normal=False, appbase=True),
+            bts = Steem(node=self.nodelist.get_nodes(normal=False, appbase=True),
                         nobroadcast=True,
                         data_refresh_time_seconds=900,
                         keys={"active": wif, "owner": wif, "memo": wif},

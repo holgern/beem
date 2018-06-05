@@ -40,6 +40,7 @@ from timeit import default_timer as timer
 from beembase import operations
 from beemgraphenebase.account import PrivateKey, PublicKey
 from beemgraphenebase.base58 import Base58
+from beem.nodelist import NodeList
 
 
 click.disable_unicode_literals_warning = True
@@ -386,6 +387,46 @@ def currentnode(version, url):
     else:
         t.add_row(["Version", "steempy is in offline mode..."])
     print(t)
+
+
+@cli.command()
+@click.option(
+    '--show', '-s', is_flag=True, default=False,
+    help="Prints the updated nodes")
+@click.option(
+    '--test', '-t', is_flag=True, default=False,
+    help="Do change the node list, only print the newest nodes setup.")
+@click.option(
+    '--only-https', '-h', is_flag=True, default=False,
+    help="Use only https nodes.")
+@click.option(
+    '--only-wss', '-w', is_flag=True, default=False,
+    help="Use only websocket nodes.")
+@click.option(
+    '--only-appbase', '-a', is_flag=True, default=False,
+    help="Use only appbase nodes")
+@click.option(
+    '--only-non-appbase', '-n', is_flag=True, default=False,
+    help="Use only non-appbase nodes")
+def updatenodes(show, test, only_https, only_wss, only_appbase, only_non_appbase):
+    """ Update the nodelist from @fullnodeupdate
+    """
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    t = PrettyTable(["node", "Version", "score"])
+    t.align = "l"
+    nodelist = NodeList()
+    nodelist.update_nodes(steem_instance=stm)
+    nodes = nodelist.get_nodes(normal=not only_appbase, appbase=not only_non_appbase, wss=not only_https, https=not only_wss)
+    if show or test:
+        sorted_nodes = sorted(nodelist, key=lambda node: node["score"], reverse=True)
+        for node in sorted_nodes:
+            score = float("{0:.1f}".format(node["score"]))
+            t.add_row([node["url"], node["version"], score])
+        print(t)
+    if not test:
+        stm.set_default_nodes(nodes)
 
 
 @cli.command()

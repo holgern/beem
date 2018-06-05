@@ -328,7 +328,7 @@ class GrapheneRPC(object):
         if self.nodes.working_nodes_count == 0:
             raise WorkingNodeMissing
         if self.url is None:
-            self.rpcconnect()
+            raise RPCConnection("RPC is not connected!")
         reply = {}
         while True:
             self.nodes.increase_error_cnt_call()

@@ -17,40 +17,37 @@ from beemapi.websocket import SteemWebsocket
 from beemapi import exceptions
 from beemapi.exceptions import NumRetriesReached, CallRetriesReached
 from beem.instance import set_shared_steem_instance
+from beem.nodelist import NodeList
 # Py3 compatibility
 import sys
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 core_unit = "STM"
-nodes = ["wss://steemd.pevo.science", "wss://gtg.steem.house:8090", "wss://rpc.steemliberator.com", "wss://rpc.buildteam.io",
-         "wss://rpc.steemviz.com", "wss://seed.bitcoiner.me", "wss://node.steem.ws", "wss://steemd.steemgigs.org", "wss://steemd.steemit.com",
-         "wss://steemd.minnowsupportproject.org"]
-nodes_https = ['https://api.steemit.com', 'https://steemd.privex.io', 'https://steemd.pevo.science', 'https://rpc.steemliberator.com',
-               'https://rpc.buildteam.io', 'https://steemd.minnowsupportproject.org', 'https://gtg.steem.house:8090', 'https://seed.bitcoiner.me']
-nodes_appbase = ["https://api.steemit.com", "wss://appbasetest.timcliff.com"]
-test_list = ["wss://steemd.doesnot.exists", "wss://api.steemit.com", "wss://steemd.pevo.science", "wss://gtg.steem.house:8090",
-             "https://api.steemit.com", "wss://appbasetest.timcliff.com", 'https://steemd.privex.io',
-             'https://steemd.pevo.science', 'https://rpc.steemliberator.com',
-             'https://rpc.buildteam.io', 'https://steemd.minnowsupportproject.org', 'https://gtg.steem.house:8090', 'https://seed.bitcoiner.me']
 
 
 class Testcases(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        nodelist = NodeList()
+        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
+        cls.nodes = nodelist.get_nodes(https=False, appbase=False)
+        cls.nodes_https = nodelist.get_nodes(wss=False, appbase=False)
+        cls.nodes_appbase = nodelist.get_nodes(normal=False)
+        cls.test_list = nodelist.get_nodes()
         cls.bts = Steem(
-            node=nodes,
+            node=cls.nodes,
             nobroadcast=True,
             keys={"active": wif, "owner": wif, "memo": wif},
             num_retries=10
         )
         cls.appbase = Steem(
-            node=nodes_appbase,
+            node=cls.nodes_appbase,
             nobroadcast=True,
             keys={"active": wif, "owner": wif, "memo": wif},
             num_retries=10
         )
-        cls.rpc = SteemNodeRPC(urls=test_list)
+        cls.rpc = SteemNodeRPC(urls=cls.test_list)
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(cls.bts)
@@ -87,30 +84,30 @@ class Testcases(unittest.TestCase):
 
     def test_connect_test_node(self):
         rpc = self.rpc
-        self.assertIn(rpc.url, nodes + nodes_appbase + nodes_https)
+        self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
         rpc.rpcclose()
         rpc.rpcconnect()
-        self.assertIn(rpc.url, nodes + nodes_appbase + nodes_https)
+        self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
 
     def test_connect_test_node2(self):
         rpc = self.rpc
-        self.assertIn(rpc.url, nodes + nodes_appbase + nodes_https)
+        self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
         rpc.next()
-        self.assertIn(rpc.url, nodes + nodes_appbase + nodes_https)
+        self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
 
     def test_connect_test_str_list(self):
         str_list = "wss://steemd.pevo.science;wss://gtg.steem.house:8090;wss://rpc.steemliberator.com;wss://rpc.buildteam.io"
         rpc = SteemNodeRPC(urls=str_list)
-        self.assertIn(rpc.url, nodes + nodes_appbase + nodes_https)
+        self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
         rpc.next()
-        self.assertIn(rpc.url, nodes + nodes_appbase + nodes_https)
+        self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
 
     def test_connect_test_str_list2(self):
         str_list = "wss://steemd.pevo.science, wss://gtg.steem.house:8090, wss://rpc.steemliberator.com, wss://rpc.buildteam.io"
         rpc = SteemNodeRPC(urls=str_list)
-        self.assertIn(rpc.url, nodes + nodes_appbase + nodes_https)
+        self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
         rpc.next()
-        self.assertIn(rpc.url, nodes + nodes_appbase + nodes_https)
+        self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
 
     def test_server_error(self):
         rpc = self.rpc
@@ -189,7 +186,7 @@ class Testcases(unittest.TestCase):
             SteemNodeRPC(urls=nodes, num_retries=0, num_retries_call=0, timeout=1)
 
     def test_error_handling(self):
-        rpc = SteemNodeRPC(urls=nodes, num_retries=2, num_retries_call=3)
+        rpc = SteemNodeRPC(urls=self.nodes, num_retries=2, num_retries_call=3)
         with self.assertRaises(
             exceptions.NoMethodWithName
         ):
@@ -200,7 +197,7 @@ class Testcases(unittest.TestCase):
             rpc.get_accounts("test")
 
     def test_error_handling_appbase(self):
-        rpc = SteemNodeRPC(urls=nodes_appbase, num_retries=2, num_retries_call=3)
+        rpc = SteemNodeRPC(urls=self.nodes_appbase, num_retries=2, num_retries_call=3)
         with self.assertRaises(
             exceptions.NoMethodWithName
         ):

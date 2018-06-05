@@ -54,6 +54,8 @@ class SteemNodeRPC(GrapheneRPC):
             :raises ValueError: if the server does not respond in proper JSON format
             :raises RPCError: if the server returns an error
         """
+        if self.url is None:
+            raise exceptions.RPCConnection("RPC is not connected!")
         doRetry = True
         maxRetryCountReached = False
         while doRetry and not maxRetryCountReached:
