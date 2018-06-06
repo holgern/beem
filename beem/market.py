@@ -36,7 +36,7 @@ class Market(dict):
         :rtype: dictionary with overloaded methods
 
         Instances of this class are dictionaries that come with additional
-        methods (see below) that allow dealing with a market and it's
+        methods (see below) that allow dealing with a market and its
         corresponding functions.
 
         This class tries to identify **two** assets as provided in the
@@ -457,6 +457,8 @@ class Market(dict):
         """ Returns open Orders
 
             :param steem.account.Account account: Account name or instance of Account to show orders for in this market
+            :param bool raw_data: (optional) returns raw data if set True,
+                or a list of Order() instances if False (defaults to False)
         """
         if not account:
             if "default_account" in self.steem.config:
