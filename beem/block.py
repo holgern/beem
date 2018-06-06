@@ -20,12 +20,12 @@ class Block(BlockchainObject):
         :param bool only_virtual_ops: Includes only virtual operations (default: False)
 
         Instances of this class are dictionaries that come with additional
-        methods (see below) that allow dealing with a block and it's
+        methods (see below) that allow dealing with a block and its
         corresponding functions.
 
         When only_virtual_ops is set to True, only_ops is always set to True.
 
-        Additionally to the block data, the block number is stored as self["id"] or self.identifier.
+        In addition to the block data, the block number is stored as self["id"] or self.identifier.
 
         .. code-block:: python
 
@@ -137,7 +137,7 @@ class Block(BlockchainObject):
         return ops
 
     def ops_statistics(self, add_to_ops_stat=None):
-        """Retuns a statistic with the occurance of the different operation types"""
+        """Returns a statistic with the occurance of the different operation types"""
         if add_to_ops_stat is None:
             import beembase.operationids
             ops_stat = beembase.operationids.operations.copy()
@@ -190,5 +190,5 @@ class BlockHeader(BlockchainObject):
 
     @property
     def block_num(self):
-        """Retuns the block number"""
+        """Returns the block number"""
         return self.identifier
