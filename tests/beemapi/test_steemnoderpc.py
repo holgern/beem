@@ -30,7 +30,7 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
+        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=3))
         cls.nodes = nodelist.get_nodes(https=False, appbase=False)
         cls.nodes_https = nodelist.get_nodes(wss=False, appbase=False)
         cls.nodes_appbase = nodelist.get_nodes(normal=False)
@@ -215,4 +215,4 @@ class Testcases(unittest.TestCase):
         with self.assertRaises(
             exceptions.UnhandledRPCError
         ):
-            rpc.get_block({"block_num": 0}, api="block")
+            rpc.get_block("abcde", api="block")
