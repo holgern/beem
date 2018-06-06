@@ -104,7 +104,7 @@ class Testcases(unittest.TestCase):
         h_list = []
         for h in account.history(stop=10, use_block_num=False, batch_size=10, raw_output=True):
             h_list.append(h)
-        self.assertEqual(h_list[0][0], zero_element)
+        zero_element = h_list[0][0]
         self.assertEqual(h_list[-1][0], 10)
         self.assertEqual(h_list[0][1]['block'], h_all_raw[-1][1]['block'])
         self.assertEqual(h_list[-1][1]['block'], h_all_raw[-11 + zero_element][1]['block'])

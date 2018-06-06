@@ -349,8 +349,9 @@ class GrapheneRPC(object):
                     break
             except KeyboardInterrupt:
                 raise
-            except WebSocketConnectionClosedException:
-                # self.error_cnt[self.url] += 1
+            except WebSocketConnectionClosedException as e:
+                # self.nodes.increase_error_cnt()
+                self.nodes.sleep_and_check_retries(str(e), sleep=True, call_retry=True)
                 self.rpcconnect(next_url=False)
             except ConnectionError as e:
                 self.nodes.increase_error_cnt()
