@@ -138,6 +138,20 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.36
+-------
+* Several bug fixes
+* Account features + some fixes and refactorings by crokkon
+* blockchain.awaitTxConfirmation() fix timeout by crokkon
+* beempy updatenodes added, this command can be used to update the nodes list
+* NodeList.update_nodes() added, this command reads the metadata from fullnodeupdate, which contain newest nodes information
+* add option wss and https for NodeList.get_nodes
+* updatenodes is used in all tests
+* add witnessenable, witnessdisable, witnessfeed and witness
+* time_diff_est and block_diff_est added to witness for next block producing estimation
+* btc_usd_ticker, steem_btc_ticker, steem_usd_implied and _weighted_average added to Market
+* beempy witnesses uses the proxy name when set
+
 0.19.35
 -------
 * Several bug fixes (including issue #18 and #20)

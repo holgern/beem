@@ -256,3 +256,9 @@ class Testcases(unittest.TestCase):
         self.assertIn(
             "test",
             op["owner"])
+
+    def test_steem_usb_impied(self):
+        bts = self.bts
+        m = Market(u'STEEM:SBD', steem_instance=bts)
+        steem_usd = m.steem_usd_implied()
+        self.assertGreater(steem_usd, 0)

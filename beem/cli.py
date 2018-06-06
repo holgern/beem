@@ -1915,20 +1915,47 @@ def witnesscreate(witness, pub_signing_key, maximum_block_size, account_creation
 
 @cli.command()
 @click.argument('witness', nargs=1)
-@click.argument('base', nargs=1, required=False)
-@click.option('--quote', help='Steem quote', default="1 STEEM")
-def witnessfeed(witness, base, quote):
+@click.option('--base', '-b', help='Set base manually, when not set the base is automatically calculated.')
+@click.option('--quote', '-q', help='Steem quote manually, when not set the base is automatically calculated.')
+@click.option('--support-peg', help='Supports peg adjusting the quote, is overwritten by --set-quote!', is_flag=True, default=False)
+def witnessfeed(witness, base, quote, support_peg):
     """Publish price feed for a witness"""
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not unlock_wallet(stm):
         return
-    quote = Amount(quote, steem_instance=stm)
-    if base is None:
-        price = stm.get_median_price()
-        base = float(price) * float(quote)
     witness = Witness(witness, steem_instance=stm)
+    market = Market(steem_instance=stm)
+    old_base = witness["sbd_exchange_rate"]["base"]
+    old_quote = witness["sbd_exchange_rate"]["quote"]
+    last_published_price = Price(witness["sbd_exchange_rate"], steem_instance=stm)
+    steem_usd = None
+    print("Old price %.3f (base: %s, quote %s)" % (float(last_published_price), old_base, old_quote))
+    if quote is None and not support_peg:
+        quote = Amount("1 STEEM", steem_instance=stm)
+    elif quote is None:
+        latest_price = market.ticker()['latest']
+        if steem_usd is None:
+            steem_usd = market.steem_usd_implied()
+        sbd_usd = float(latest_price.as_base("SBD")) * steem_usd
+        quote = Amount(1. / sbd_usd, "STEEM", steem_instance=stm)
+    else:
+        if str(quote[-5:]).upper() == "STEEM":
+            quote = Amount(quote, steem_instance=stm)
+        else:
+            quote = Amount(quote, "STEEM", steem_instance=stm)
+    if base is None:
+        if steem_usd is None:
+            steem_usd = market.steem_usd_implied()
+        base = Amount(steem_usd, "SBD", steem_instance=stm)
+    else:
+        if str(quote[-3:]).upper() == "SBD":
+            base = Amount(base, steem_instance=stm)
+        else:
+            base = Amount(base, "SBD", steem_instance=stm)
+    new_price = Price(base=base, quote=quote, steem_instance=stm)
+    print("New price %.3f (base: %s, quote %s)" % (float(new_price), base, quote))
     tx = witness.feed_publish(base, quote=quote)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
@@ -1946,6 +1973,22 @@ def witness(witness):
         stm.rpc.rpcconnect()
     witness = Witness(witness, steem_instance=stm)
     witness_json = witness.json()
+    witness_schedule = stm.get_witness_schedule()
+    config = stm.get_config()
+    lap_length = int(config["VIRTUAL_SCHEDULE_LAP_LENGTH2"])
+    rank = 0
+    active_rank = 0
+    found = False
+    witnesses = WitnessesRankedByVote(limit=250, steem_instance=stm)
+    vote_sum = witnesses.get_votes_sum()
+    for w in witnesses:
+        rank += 1
+        if w.is_active:
+            active_rank += 1
+        if w["owner"] == witness["owner"]:
+            found = True
+            break
+    virtual_time_to_block_num = int(witness_schedule["num_scheduled_witnesses"]) / (lap_length / (vote_sum + 1))
     t = PrettyTable(["Key", "Value"])
     t.align = "l"
     for key in sorted(witness_json):
@@ -1953,6 +1996,28 @@ def witness(witness):
         if key in ["props", "sbd_exchange_rate"]:
             value = json.dumps(value, indent=4)
         t.add_row([key, value])
+    if found:
+        t.add_row(["rank", rank])
+        t.add_row(["active_rank", active_rank])
+    virtual_diff = int(witness_json["virtual_scheduled_time"]) - int(witness_schedule['current_virtual_time'])
+    block_diff_est = virtual_diff * virtual_time_to_block_num
+    if active_rank > 20:
+        t.add_row(["virtual_time_diff", virtual_diff])
+        t.add_row(["block_diff_est", int(block_diff_est)])
+        next_block_s = int(block_diff_est) * 3
+        next_block_min = next_block_s / 60
+        next_block_h = next_block_min / 60
+        next_block_d = next_block_h / 24
+        time_diff_est = ""
+        if next_block_d > 1:
+            time_diff_est = "%.2f days" % next_block_d
+        elif next_block_h > 1:
+            time_diff_est = "%.2f hours" % next_block_h
+        elif next_block_min > 1:
+            time_diff_est = "%.2f minutes" % next_block_min
+        else:
+            time_diff_est = "%.2f seconds" % next_block_s
+        t.add_row(["time_diff_est", time_diff_est])
     print(t)
 
 
@@ -1966,7 +2031,12 @@ def witnesses(account, limit):
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if account:
-        witnesses = WitnessesVotedByAccount(account, steem_instance=stm)
+        account = Account(account, steem_instance=stm)
+        account_name = account["name"]
+        if account["proxy"] != "":
+            account_name = account["proxy"]
+            print("Proxy: @%s" % account_name)
+        witnesses = WitnessesVotedByAccount(account_name, steem_instance=stm)
     else:
         witnesses = WitnessesRankedByVote(limit=limit, steem_instance=stm)
     witnesses.printAsTable()

@@ -187,6 +187,12 @@ class WitnessesObject(list):
         else:
             print(t.get_string(**kwargs))
 
+    def get_votes_sum(self):
+        vote_sum = 0
+        for witness in self:
+            vote_sum += int(witness['votes'])
+        return vote_sum
+
     def __contains__(self, item):
         from .account import Account
         if isinstance(item, Account):
@@ -242,13 +248,14 @@ class WitnessesVotedByAccount(WitnessesObject):
     def __init__(self, account, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.account = Account(account, full=True, steem_instance=self.steem)
-        self.identifier = self.account["name"]
+        account_name = self.account["name"]
+        self.identifier = account_name
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             if "witnesses_voted_for" not in self.account:
                 return
             limit = self.account["witnesses_voted_for"]
-            witnessess_dict = self.steem.rpc.list_witness_votes({'start': [self.account["name"]], 'limit': limit, 'order': 'by_account_witness'}, api="database")['votes']
+            witnessess_dict = self.steem.rpc.list_witness_votes({'start': [account_name], 'limit': limit, 'order': 'by_account_witness'}, api="database")['votes']
             witnessess = []
             for w in witnessess_dict:
                 witnessess.append(w["witness"])

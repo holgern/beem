@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from builtins import str
 import random
 import pytz
+from contextlib import suppress
 from datetime import datetime, timedelta
 from beem.instance import shared_steem_instance
 from .utils import (
@@ -15,6 +16,13 @@ from .amount import Amount
 from .price import Price, Order, FilledOrder
 from .account import Account
 from beembase import operations
+REQUEST_MODULE = None
+if not REQUEST_MODULE:
+    try:
+        import requests
+        REQUEST_MODULE = "requests"
+    except ImportError:
+        REQUEST_MODULE = None
 
 
 class Market(dict):
@@ -683,3 +691,114 @@ class Market(dict):
                     "orderid": order,
                     "prefix": self.steem.prefix}))
         return self.steem.finalizeOp(op, account["name"], "active", **kwargs)
+
+    @staticmethod
+    def _weighted_average(values, weights):
+        """ Calculates a weighted average
+        """
+        if not (len(values) == len(weights) and len(weights) > 0):
+            raise AssertionError("Length of both array must be the same and greater than zero!")
+        return sum(x * y for x, y in zip(values, weights)) / sum(weights)
+
+    @staticmethod
+    def btc_usd_ticker(verbose=False):
+        """ Returns the BTC/USD price from bitfinex, gdax, kraken, okcoin and bitstamp. The mean price is
+            weighted by the exchange volume.
+        """
+        prices = {}
+        urls = [
+            "https://api.bitfinex.com/v1/pubticker/BTCUSD",
+            "https://api.gdax.com/products/BTC-USD/ticker",
+            "https://api.kraken.com/0/public/Ticker?pair=XBTUSD",
+            "https://www.okcoin.com/api/v1/ticker.do?symbol=btc_usd",
+            "https://www.bitstamp.net/api/v2/ticker/btcusd/",
+        ]
+        responses = list(requests.get(u, timeout=30) for u in urls)
+
+        for r in [x for x in responses
+                  if hasattr(x, "status_code") and x.status_code == 200 and x.json()]:
+            if "bitfinex" in r.url:
+                with suppress(KeyError):
+                    data = r.json()
+                    prices['bitfinex'] = {
+                        'price': float(data['last_price']),
+                        'volume': float(data['volume'])}
+            elif "gdax" in r.url:
+                with suppress(KeyError):
+                    data = r.json()
+                    prices['gdax'] = {
+                        'price': float(data['price']),
+                        'volume': float(data['volume'])}
+            elif "kraken" in r.url:
+                with suppress(KeyError):
+                    data = r.json()['result']['XXBTZUSD']['p']
+                    prices['kraken'] = {
+                        'price': float(data[0]),
+                        'volume': float(data[1])}
+            elif "okcoin" in r.url:
+                with suppress(KeyError):
+                    data = r.json()["ticker"]
+                    prices['okcoin'] = {
+                        'price': float(data['last']),
+                        'volume': float(data['vol'])}
+            elif "bitstamp" in r.url:
+                with suppress(KeyError):
+                    data = r.json()
+                    prices['bitstamp'] = {
+                        'price': float(data['last']),
+                        'volume': float(data['volume'])}
+
+        if verbose:
+            print(prices)
+
+        if len(prices) == 0:
+            raise RuntimeError("Obtaining BTC/USD prices has failed from all sources.")
+
+        # vwap
+        return Market._weighted_average(
+            [x['price'] for x in prices.values()],
+            [x['volume'] for x in prices.values()])
+
+    @staticmethod
+    def steem_btc_ticker():
+        """ Returns the STEEM/BTC price from poloniex, bittrex and binance. The mean price is
+            weighted by the exchange volume.
+        """
+        prices = {}
+        urls = [
+            "https://poloniex.com/public?command=returnTicker",
+            "https://bittrex.com/api/v1.1/public/getmarketsummary?market=BTC-STEEM",
+            "https://api.binance.com/api/v1/ticker/24hr",
+        ]
+        responses = list(requests.get(u, timeout=30) for u in urls)
+
+        for r in [x for x in responses
+                  if hasattr(x, "status_code") and x.status_code == 200 and x.json()]:
+            if "poloniex" in r.url:
+                with suppress(KeyError):
+                    data = r.json()["BTC_STEEM"]
+                    prices['poloniex'] = {
+                        'price': float(data['last']),
+                        'volume': float(data['baseVolume'])}
+            elif "bittrex" in r.url:
+                with suppress(KeyError):
+                    data = r.json()["result"][0]
+                    price = (data['Bid'] + data['Ask']) / 2
+                    prices['bittrex'] = {'price': price, 'volume': data['BaseVolume']}
+            elif "binance" in r.url:
+                with suppress(KeyError):
+                    data = [x for x in r.json() if x['symbol'] == 'STEEMBTC'][0]
+                    prices['binance'] = {
+                        'price': float(data['lastPrice']),
+                        'volume': float(data['quoteVolume'])}
+
+        if len(prices) == 0:
+            raise RuntimeError("Obtaining STEEM/BTC prices has failed from all sources.")
+
+        return Market._weighted_average(
+            [x['price'] for x in prices.values()],
+            [x['volume'] for x in prices.values()])
+
+    def steem_usd_implied(self):
+        """Returns the current STEEM/USD market price"""
+        return self.steem_btc_ticker() * self.btc_usd_ticker()
