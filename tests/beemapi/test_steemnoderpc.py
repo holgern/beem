@@ -212,7 +212,4 @@ class Testcases(unittest.TestCase):
             exceptions.NoApiWithName
         ):
             rpc.get_block({"block_num": 1}, api="wrong_api")
-        with self.assertRaises(
-            exceptions.UnhandledRPCError
-        ):
-            rpc.get_block("abcde", api="block")
+

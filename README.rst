@@ -151,6 +151,8 @@ Changelog
 * time_diff_est and block_diff_est added to witness for next block producing estimation
 * btc_usd_ticker, steem_btc_ticker, steem_usd_implied and _weighted_average added to Market
 * beempy witnesses uses the proxy name when set
+* beempy keygen added, for creating a witness signing key
+* beempy parsewif improved
 
 0.19.35
 -------
