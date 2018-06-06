@@ -215,4 +215,4 @@ class Testcases(unittest.TestCase):
         with self.assertRaises(
             exceptions.UnhandledRPCError
         ):
-            rpc.get_config("test")
+            rpc.get_block({"block_num": 0}, api="block")

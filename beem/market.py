@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from builtins import str
 import random
 import pytz
-from contextlib import suppress
+import logging
 from datetime import datetime, timedelta
 from beem.instance import shared_steem_instance
 from .utils import (
@@ -23,6 +23,7 @@ if not REQUEST_MODULE:
         REQUEST_MODULE = "requests"
     except ImportError:
         REQUEST_MODULE = None
+log = logging.getLogger(__name__)
 
 
 class Market(dict):
@@ -717,36 +718,34 @@ class Market(dict):
 
         for r in [x for x in responses
                   if hasattr(x, "status_code") and x.status_code == 200 and x.json()]:
-            if "bitfinex" in r.url:
-                with suppress(KeyError):
+            try:
+                if "bitfinex" in r.url:
                     data = r.json()
                     prices['bitfinex'] = {
                         'price': float(data['last_price']),
                         'volume': float(data['volume'])}
-            elif "gdax" in r.url:
-                with suppress(KeyError):
+                elif "gdax" in r.url:
                     data = r.json()
                     prices['gdax'] = {
                         'price': float(data['price']),
                         'volume': float(data['volume'])}
-            elif "kraken" in r.url:
-                with suppress(KeyError):
+                elif "kraken" in r.url:
                     data = r.json()['result']['XXBTZUSD']['p']
                     prices['kraken'] = {
                         'price': float(data[0]),
                         'volume': float(data[1])}
-            elif "okcoin" in r.url:
-                with suppress(KeyError):
+                elif "okcoin" in r.url:
                     data = r.json()["ticker"]
                     prices['okcoin'] = {
                         'price': float(data['last']),
                         'volume': float(data['vol'])}
-            elif "bitstamp" in r.url:
-                with suppress(KeyError):
+                elif "bitstamp" in r.url:
                     data = r.json()
                     prices['bitstamp'] = {
                         'price': float(data['last']),
                         'volume': float(data['volume'])}
+            except KeyError as e:
+                log.info(str(e))
 
         if verbose:
             print(prices)
@@ -774,23 +773,23 @@ class Market(dict):
 
         for r in [x for x in responses
                   if hasattr(x, "status_code") and x.status_code == 200 and x.json()]:
-            if "poloniex" in r.url:
-                with suppress(KeyError):
+            try:
+                if "poloniex" in r.url:
                     data = r.json()["BTC_STEEM"]
                     prices['poloniex'] = {
                         'price': float(data['last']),
                         'volume': float(data['baseVolume'])}
-            elif "bittrex" in r.url:
-                with suppress(KeyError):
+                elif "bittrex" in r.url:
                     data = r.json()["result"][0]
                     price = (data['Bid'] + data['Ask']) / 2
                     prices['bittrex'] = {'price': price, 'volume': data['BaseVolume']}
-            elif "binance" in r.url:
-                with suppress(KeyError):
+                elif "binance" in r.url:
                     data = [x for x in r.json() if x['symbol'] == 'STEEMBTC'][0]
                     prices['binance'] = {
                         'price': float(data['lastPrice']),
                         'volume': float(data['quoteVolume'])}
+            except KeyError as e:
+                log.info(str(e))
 
         if len(prices) == 0:
             raise RuntimeError("Obtaining STEEM/BTC prices has failed from all sources.")

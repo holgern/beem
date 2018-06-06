@@ -2035,8 +2035,11 @@ def witnesses(account, limit):
         account_name = account["name"]
         if account["proxy"] != "":
             account_name = account["proxy"]
-            print("Proxy: @%s" % account_name)
+            account_type = "Proxy"
+        else:
+            account_type = "Account"
         witnesses = WitnessesVotedByAccount(account_name, steem_instance=stm)
+        print("%s: @%s (%d of 30)" % (account_type, account_name, len(witnesses)))
     else:
         witnesses = WitnessesRankedByVote(limit=limit, steem_instance=stm)
     witnesses.printAsTable()

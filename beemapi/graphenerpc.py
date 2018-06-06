@@ -355,7 +355,7 @@ class GrapheneRPC(object):
                     self.nodes.sleep_and_check_retries(str(e), sleep=False, call_retry=False)
                     self.rpcconnect()
                 else:
-                    self.nodes.sleep_and_check_retries(str(e), sleep=True, call_retry=True)
+                    # self.nodes.sleep_and_check_retries(str(e), sleep=True, call_retry=True)
                     self.rpcconnect(next_url=False)
             except ConnectionError as e:
                 self.nodes.increase_error_cnt()
