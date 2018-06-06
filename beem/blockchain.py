@@ -521,7 +521,7 @@ class Blockchain(object):
                       transaction contented and thus identifies a transaction
                       uniquely.
         """
-        counter = 10
+        counter = 0
         for block in self.blocks():
             counter += 1
             for tx in block["transactions"]:
@@ -531,7 +531,7 @@ class Blockchain(object):
                     return tx
             if counter > limit:
                 raise Exception(
-                    "The operation has not been added after 10 blocks!")
+                    "The operation has not been added after %d blocks!" % (limit))
 
     @staticmethod
     def hash_op(event):
