@@ -38,7 +38,7 @@ from beem.asciichart import AsciiChart
 from beem.transactionbuilder import TransactionBuilder
 from timeit import default_timer as timer
 from beembase import operations
-from beemgraphenebase.account import PrivateKey, PublicKey
+from beemgraphenebase.account import PrivateKey, PublicKey, BrainKey
 from beemgraphenebase.base58 import Base58
 from beem.nodelist import NodeList
 
@@ -518,10 +518,17 @@ def parsewif(unsafe_import_key):
     """ Parse a WIF private key without importing
     """
     stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
     if unsafe_import_key:
         for key in unsafe_import_key:
             try:
-                print(PrivateKey(key, prefix=stm.prefix).pubkey)
+                pubkey = PrivateKey(key, prefix=stm.prefix).pubkey
+                print(pubkey)
+                account = stm.wallet.getAccountFromPublicKey(str(pubkey))
+                account = Account(account, steem_instance=stm)
+                key_type = stm.wallet.getKeyType(account, str(pubkey))
+                print("Account: %s - %s" % (account["name"], key_type))
             except Exception as e:
                 print(str(e))
     else:
@@ -530,7 +537,12 @@ def parsewif(unsafe_import_key):
             if not wifkey or wifkey == "quit" or wifkey == "exit":
                 break
             try:
-                print(PrivateKey(wifkey, prefix=stm.prefix).pubkey)
+                pubkey = PrivateKey(wifkey, prefix=stm.prefix).pubkey
+                print(pubkey)
+                account = stm.wallet.getAccountFromPublicKey(str(pubkey))
+                account = Account(account, steem_instance=stm)
+                key_type = stm.wallet.getKeyType(account, str(pubkey))
+                print("Account: %s - %s" % (account["name"], key_type))
             except Exception as e:
                 print(str(e))
                 continue
@@ -575,6 +587,26 @@ def delkey(confirm, pub):
         return
     stm.wallet.removePrivateKeyFromPublicKey(pub)
     set_shared_steem_instance(stm)
+
+
+@cli.command()
+@click.option('--import-brain-key', help='Imports a brain key and derives a private and public key', is_flag=True, default=False)
+@click.option('--sequence', help='Sequence number, influences the derived private key. (default is 0)', default=0)
+def keygen(import_brain_key, sequence):
+    """ Creates a new random brain key and prints its derived private key and public key.
+        The generated key is not stored.
+    """
+    if import_brain_key:
+        brain_key = click.prompt("Enter brain key", confirmation_prompt=False, hide_input=True)
+    else:
+        brain_key = None
+    bk = BrainKey(brainkey=brain_key, sequence=sequence)
+    t = PrettyTable(["Key", "Value"])
+    t.align = "l"
+    t.add_row(["Brain Key", bk.get_brainkey()])
+    t.add_row(["Private Key", str(bk.get_private())])
+    t.add_row(["Public Key", format(bk.get_public(), "STM")])
+    print(t)
 
 
 @cli.command()
@@ -1854,6 +1886,9 @@ def witnessdisable(witness):
     if not unlock_wallet(stm):
         return
     witness = Witness(witness, steem_instance=stm)
+    if not witness.is_active:
+        print("Cannot disable a disabled witness!")
+        return
     props = witness["props"]
     tx = witness.update('STM1111111111111111111111111111111114T1Anm', witness["url"], props)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
@@ -2890,12 +2925,14 @@ def info(objects):
         elif re.match("^" + stm.prefix + ".{48,55}$", obj):
             account = stm.wallet.getAccountFromPublicKey(obj)
             if account:
-                t = PrettyTable(["Account"])
+                account = Account(account, steem_instance=stm)
+                key_type = stm.wallet.getKeyType(account, obj)
+                t = PrettyTable(["Account", "Key_type"])
                 t.align = "l"
-                t.add_row([account])
+                t.add_row([account["name"], key_type])
                 print(t)
             else:
-                print("Public Key not known" % obj)
+                print("Public Key %s not known" % obj)
         # Post identifier
         elif re.match(".*@.{3,16}/.*$", obj):
             post = Comment(obj, steem_instance=stm)
