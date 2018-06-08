@@ -422,8 +422,9 @@ def updatenodes(show, test, only_https, only_wss, only_appbase, only_non_appbase
     if show or test:
         sorted_nodes = sorted(nodelist, key=lambda node: node["score"], reverse=True)
         for node in sorted_nodes:
-            score = float("{0:.1f}".format(node["score"]))
-            t.add_row([node["url"], node["version"], score])
+            if node["url"] in nodes:
+                score = float("{0:.1f}".format(node["score"]))
+                t.add_row([node["url"], node["version"], score])
         print(t)
     if not test:
         stm.set_default_nodes(nodes)
@@ -2010,7 +2011,10 @@ def witness(witness):
     witness_json = witness.json()
     witness_schedule = stm.get_witness_schedule()
     config = stm.get_config()
-    lap_length = int(config["VIRTUAL_SCHEDULE_LAP_LENGTH2"])
+    if "VIRTUAL_SCHEDULE_LAP_LENGTH2" in config:
+        lap_length = int(config["VIRTUAL_SCHEDULE_LAP_LENGTH2"])
+    else:
+        lap_length = int(config["STEEM_VIRTUAL_SCHEDULE_LAP_LENGTH2"])
     rank = 0
     active_rank = 0
     found = False
