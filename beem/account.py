@@ -210,7 +210,11 @@ class Account(BlockchainObject):
     def profile(self):
         """ Returns the account profile
         """
-        return json.loads(self["json_metadata"])["profile"]
+        metadata = json.loads(self["json_metadata"])
+        if "profile" in metadata:
+            return json.loads(self["json_metadata"])["profile"]
+        else:
+            return {}
 
     @property
     def rep(self):
