@@ -38,6 +38,19 @@ class Operation(object):
             except Exception:
                 raise NotImplementedError("Unimplemented Operation %s" % self.name)
             self.op = klass(op[1])
+            self.appbase = False
+        elif isinstance(op, dict):
+            name = op["type"][:-10]
+            self.opId = self.operations().get(name, None)
+            if self.opId is None:
+                raise ValueError("Unknown operation")
+            self.name = name[0].upper() + name[1:]  # klassname
+            try:
+                klass = self._getklass(self.name)
+            except Exception:
+                raise NotImplementedError("Unimplemented Operation %s" % self.name)
+            self.op = klass(op["value"])
+            self.appbase = True
         else:
             self.op = op
             self.name = type(self.op).__name__.lower()  # also store name

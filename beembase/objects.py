@@ -70,6 +70,7 @@ class Amount(object):
 @python_2_unicode_compatible
 class Operation(GPHOperation):
     def __init__(self, *args, **kwargs):
+        self.appbase = kwargs.pop("appbase", False)
         super(Operation, self).__init__(*args, **kwargs)
 
     def _getklass(self, name):
@@ -96,7 +97,10 @@ class Operation(GPHOperation):
         return py23_bytes(Id(self.opId)) + py23_bytes(self.op)
 
     def __str__(self):
-        return json.dumps([self.name.lower(), self.op.toJson()])
+        if self.appbase:
+            return json.dumps({'type': self.name.lower() + '_operation', 'value': self.op.toJson()})
+        else:
+            return json.dumps([self.name.lower(), self.op.toJson()])
 
 
 class Memo(GrapheneObject):

@@ -140,6 +140,8 @@ class SteemNodeRPC(GrapheneRPC):
             doRetry = True
         elif re.search("out_of_rangeEEEE: unknown key", msg) or re.search("unknown key:unknown key", msg):
             raise exceptions.UnkownKey(msg)
+        elif re.search("Assert Exception:v.is_object(): Input data have to treated as object", msg):
+            raise exceptions.UnhandledRPCError("Use Operation(op, appbase=True) to prevent error: " + msg)
         elif msg:
             raise exceptions.UnhandledRPCError(msg)
         else:

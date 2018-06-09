@@ -26,7 +26,7 @@ def is_network_appbase_ready(props):
 
 def get_query(appbase, request_id, api_name, name, args):
     query = []
-    if not appbase:
+    if not appbase or api_name == "condenser_api":
         query = {"method": "call",
                  "params": [api_name, name, list(args)],
                  "jsonrpc": "2.0",

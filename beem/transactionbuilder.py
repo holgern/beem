@@ -78,7 +78,12 @@ class TransactionBuilder(dict):
 
     def list_operations(self):
         """List all ops"""
-        return [Operation(o) for o in self.ops]
+        if self.steem.is_connected() and self.steem.rpc.get_use_appbase():
+            # appbase disabled by now
+            appbase = False
+        else:
+            appbase = False
+        return [Operation(o, appbase=appbase) for o in self.ops]
 
     def _is_signed(self):
         """Check if signatures exists"""
@@ -230,12 +235,17 @@ class TransactionBuilder(dict):
 
         """
         ops = list()
+        if self.steem.is_connected() and self.steem.rpc.get_use_appbase():
+            # appbase disabled by now
+            # broadcasting does not work at the moment
+            appbase = False
+        else:
+            appbase = False
         for op in self.ops:
             # otherwise, we simply wrap ops into Operations
-            ops.extend([Operation(op)])
+            ops.extend([Operation(op, appbase=appbase)])
 
         # We no wrap everything into an actual transaction
-        # ops = transactions.addRequiredFees(self.steem.rpc, ops)
         expiration = formatTimeFromNow(
             self.expiration or self.steem.expiration
         )
@@ -370,9 +380,13 @@ class TransactionBuilder(dict):
             return
         ret = self.json()
         if self.steem.is_connected() and self.steem.rpc.get_use_appbase():
-            args = {'trx': self.json(), 'max_block_age': max_block_age}
+            # Returns an internal Error at the moment
+            # args = {'trx': self.json(), 'max_block_age': max_block_age}
+            args = self.json()
+            broadcast_api = "condenser"
         else:
             args = self.json()
+            broadcast_api = "network_broadcast"
 
         if self.steem.nobroadcast:
             log.warning("Not broadcasting anything!")
@@ -385,11 +399,11 @@ class TransactionBuilder(dict):
                 ret = self.steem.steemconnect.broadcast(self["operations"])
             elif self.steem.blocking:
                 ret = self.steem.rpc.broadcast_transaction_synchronous(
-                    args, api="network_broadcast")
+                    args, api=broadcast_api)
                 ret.update(**ret.get("trx"))
             else:
                 self.steem.rpc.broadcast_transaction(
-                    args, api="network_broadcast")
+                    args, api=broadcast_api)
         except Exception as e:
             # log.error("Could Not broadcasting anything!")
             self.clear()
