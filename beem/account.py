@@ -210,6 +210,8 @@ class Account(BlockchainObject):
     def profile(self):
         """ Returns the account profile
         """
+        if self["json_metadata"] == '':
+            return {}
         metadata = json.loads(self["json_metadata"])
         if "profile" in metadata:
             return json.loads(self["json_metadata"])["profile"]
@@ -1543,7 +1545,10 @@ class Account(BlockchainObject):
         if not isinstance(profile, dict):
             raise ValueError("Profile must be a dict type!")
         account = Account(account, steem_instance=self.steem)
-        metadata = json.loads(self['json_metadata'])
+        if self['json_metadata'] == '':
+            metadata = {}
+        else:
+            metadata = json.loads(self['json_metadata'])
         metadata["profile"] = profile
         return self.update_account_metadata(metadata)
 
