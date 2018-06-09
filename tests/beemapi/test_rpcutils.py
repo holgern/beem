@@ -68,11 +68,13 @@ class Testcases(unittest.TestCase):
         self.assertTrue(isinstance(query["params"], list))
         self.assertEqual(query["params"], ["test_api", "test", ["b"]])
 
-        query = get_query(True, 1, "condenser_api", "test", args="")
-        self.assertEqual(query["method"], 'condenser_api.test')
+        args = ("b",)
+        query = get_query(True, 1, "condenser_api", "test", args=args)
+        self.assertEqual(query["method"], 'call')
         self.assertEqual(query["jsonrpc"], '2.0')
         self.assertEqual(query["id"], 1)
         self.assertTrue(isinstance(query["params"], list))
+        self.assertEqual(query["params"], ["condenser_api", "test", ["b"]])
 
         args = ("b",)
         query = get_query(False, 1, "test_api", "test", args=args)

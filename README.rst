@@ -138,6 +138,14 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.37
+-------
+* Bug fixes
+* Fix handling of empty json_metadata
+* Prepare broadcasting in new appbase format
+* Condenser API handling improved
+* Condenser API forced for Broadcast operation on appbase-nodes
+
 0.19.36
 -------
 * Several bug fixes

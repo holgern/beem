@@ -285,7 +285,10 @@ class WitnessesRankedByVote(WitnessesObject):
         last_limit = limit
         self.identifier = ""
         self.steem.rpc.set_next_node_on_empty_reply(False)
-        last_account = from_account
+        if self.steem.rpc.get_use_appbase() and from_account == "":
+            last_account = None
+        else:
+            last_account = from_account
         if limit > 100:
             while last_limit > 100:
                 tmpList = WitnessesRankedByVote(last_account, 100)

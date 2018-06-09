@@ -40,7 +40,10 @@ class Operation(object):
             self.op = klass(op[1])
             self.appbase = False
         elif isinstance(op, dict):
-            name = op["type"][:-10]
+            if len(op["type"]) > 10 and op["type"][-9:] == "operation":
+                name = op["type"][:-10]
+            else:
+                name = op["type"]
             self.opId = self.operations().get(name, None)
             if self.opId is None:
                 raise ValueError("Unknown operation")
