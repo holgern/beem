@@ -53,6 +53,24 @@ You may find help in the  `beem-discord-channel`_. The discord channel can also 
 
 A complete library documentation is available at  `beem.readthedocs.io`_.
 
+Advantages over the official steem-python library
+=================================================
+
+* High unit test coverage
+* Support for websocket nodes
+* Native support for new Appbase calls
+* Node error handling and automatic node switching
+* Usage of pycryptodomex instead of the outdated pycrypto
+* Complete documentation of beempy and all classes including all functions
+* steemconnect integration
+* Works on read-only systems
+* Own BlockchainObject class with cache
+* Contains all broadcast operations
+* Estimation of virtual account operation index from date or block number
+* the command line tool beempy uses click and has more commands
+* SteemNodeRPC can be used to excecute even not implemented RPC-Calls
+* More complete implemention
+
 Installation
 ============
 The minimal working python version is 2.7.x. or 3.4.x

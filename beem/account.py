@@ -195,7 +195,7 @@ class Account(BlockchainObject):
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             account = self.steem.rpc.list_accounts({'start': self.name, 'limit': limit}, api="database")
-            if account:
+            if bool(account):
                 return account["accounts"]
         else:
             return self.steem.rpc.lookup_accounts(self.name, limit)
@@ -1492,7 +1492,7 @@ class Account(BlockchainObject):
                 to (defaults to ``default_account``)
 
         """
-        if not account:
+        if account is None:
             account = self["name"]
         if not account:
             raise ValueError("You need to provide an account")
@@ -1538,13 +1538,14 @@ class Account(BlockchainObject):
                 acc.update_account_profile(profile)
 
         """
-        if not account:
+        if account is None:
             account = self
-        if not account:
-            raise ValueError("You need to provide an account")
+        else:
+            account = Account(account, steem_instance=self.steem)
+
         if not isinstance(profile, dict):
             raise ValueError("Profile must be a dict type!")
-        account = Account(account, steem_instance=self.steem)
+
         if self['json_metadata'] == '':
             metadata = {}
         else:
@@ -1560,15 +1561,14 @@ class Account(BlockchainObject):
                 to (defaults to ``default_account``)
 
         """
-        if not account:
+        if account is None:
             account = self
-        if not account:
-            raise ValueError("You need to provide an account")
+        else:
+            account = Account(account, steem_instance=self.steem)
         if isinstance(metadata, dict):
             metadata = json.dumps(metadata)
         elif not isinstance(metadata, str):
             raise ValueError("Profile must be a dict or string!")
-        account = Account(account, steem_instance=self.steem)
         op = operations.Account_update(
             **{
                 "account": account["name"],
@@ -1589,11 +1589,10 @@ class Account(BlockchainObject):
                 to (defaults to ``default_account``)
 
         """
-        if not account:
-            account = self["name"]
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self.steem)
+        if account is None:
+            account = self
+        else:
+            account = Account(account, steem_instance=self.steem)
 
         # if not isinstance(witnesses, (list, set, tuple)):
         #     witnesses = {witnesses}
@@ -1629,14 +1628,13 @@ class Account(BlockchainObject):
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
         """
-        if not account:
+        if account is None:
             account = self
-        if not account:
-            raise ValueError("You need to provide an account")
+        else:
+            account = Account(account, steem_instance=self.steem)
 
         PublicKey(key, prefix=self.steem.prefix)
 
-        account = Account(account, steem_instance=self.steem)
         account["memo_key"] = key
         op = operations.Account_update(**{
             "account": account["name"],
@@ -1673,12 +1671,10 @@ class Account(BlockchainObject):
 
         """
 
-        if not account:
+        if account is None:
             account = self
-        if not account:
-            raise ValueError("You need to provide an account")
-
-        account = Account(account, steem_instance=self.steem)
+        else:
+            account = Account(account, steem_instance=self.steem)
         amount = Amount(amount, asset, steem_instance=self.steem)
         to = Account(to, steem_instance=self.steem)
         if memo and memo[0] == "#":
@@ -1707,13 +1703,14 @@ class Account(BlockchainObject):
             :param str account: (optional) the source account for the transfer
                 if not ``default_account``
         """
-        if not account:
+        if account is None:
             account = self
-        if not account:
-            raise ValueError("You need to provide an account")
-        if not to:
+        else:
+            account = Account(account, steem_instance=self.steem)
+        if to is None:
             to = self  # powerup on the same account
-        account = Account(account, steem_instance=self.steem)
+        else:
+            to = Account(to, steem_instance=self.steem)
         if isinstance(amount, (string_types, Amount)):
             amount = Amount(amount, steem_instance=self.steem)
         else:
@@ -1740,11 +1737,10 @@ class Account(BlockchainObject):
                 conversion`
 
         """
-        if not account:
+        if account is None:
             account = self
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self.steem)
+        else:
+            account = Account(account, steem_instance=self.steem)
         if isinstance(amount, (string_types, Amount)):
             amount = Amount(amount, steem_instance=self.steem)
         else:
@@ -1765,7 +1761,7 @@ class Account(BlockchainObject):
 
         return self.steem.finalizeOp(op, account, "active")
 
-    def transfer_to_savings(self, amount, asset, memo, to=None, account=None):
+    def transfer_to_savings(self, amount, asset, memo, to=None, account=None, **kwargs):
         """ Transfer SBD or STEEM into a 'savings' account.
 
             :param float amount: STEEM or SBD amount
@@ -1780,14 +1776,16 @@ class Account(BlockchainObject):
         if asset not in ['STEEM', 'SBD']:
             raise AssertionError()
 
-        if not account:
+        if account is None:
             account = self
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self.steem)
+        else:
+            account = Account(account, steem_instance=self.steem)
+
         amount = Amount(amount, asset, steem_instance=self.steem)
-        if not to:
+        if to is None:
             to = account  # move to savings on same account
+        else:
+            to = Account(to, steem_instance=self.steem)
 
         op = operations.Transfer_to_savings(
             **{
@@ -1797,7 +1795,7 @@ class Account(BlockchainObject):
                 "memo": memo,
                 "prefix": self.steem.prefix,
             })
-        return self.steem.finalizeOp(op, account, "active")
+        return self.steem.finalizeOp(op, account, "active", **kwargs)
 
     def transfer_from_savings(self,
                               amount,
@@ -1805,7 +1803,7 @@ class Account(BlockchainObject):
                               memo,
                               request_id=None,
                               to=None,
-                              account=None):
+                              account=None, **kwargs):
         """ Withdraw SBD or STEEM from 'savings' account.
 
             :param float amount: STEEM or SBD amount
@@ -1822,13 +1820,14 @@ class Account(BlockchainObject):
         if asset not in ['STEEM', 'SBD']:
             raise AssertionError()
 
-        if not account:
+        if account is None:
             account = self
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self.steem)
-        if not to:
+        else:
+            account = Account(account, steem_instance=self.steem)
+        if to is None:
             to = account  # move to savings on same account
+        else:
+            to = Account(to, steem_instance=self.steem)
         amount = Amount(amount, asset, steem_instance=self.steem)
         if request_id:
             request_id = int(request_id)
@@ -1844,9 +1843,9 @@ class Account(BlockchainObject):
                 "memo": memo,
                 "prefix": self.steem.prefix,
             })
-        return self.steem.finalizeOp(op, account, "active")
+        return self.steem.finalizeOp(op, account, "active", **kwargs)
 
-    def cancel_transfer_from_savings(self, request_id, account=None):
+    def cancel_transfer_from_savings(self, request_id, account=None, **kwargs):
         """ Cancel a withdrawal from 'savings' account.
 
             :param str request_id: Identifier for tracking or cancelling
@@ -1855,23 +1854,22 @@ class Account(BlockchainObject):
                 if not ``default_account``
 
         """
-        if not account:
+        if account is None:
             account = self
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self.steem)
+        else:
+            account = Account(account, steem_instance=self.steem)
         op = operations.Cancel_transfer_from_savings(**{
             "from": account["name"],
             "request_id": request_id,
             "prefix": self.steem.prefix,
         })
-        return self.steem.finalizeOp(op, account, "active")
+        return self.steem.finalizeOp(op, account, "active", **kwargs)
 
     def claim_reward_balance(self,
                              reward_steem='0 STEEM',
                              reward_sbd='0 SBD',
                              reward_vests='0 VESTS',
-                             account=None):
+                             account=None, **kwargs):
         """ Claim reward balances.
         By default, this will claim ``all`` outstanding balances. To bypass
         this behaviour, set desired claim amount by setting any of
@@ -1884,7 +1882,7 @@ class Account(BlockchainObject):
             ``default_account`` is used.
 
         """
-        if not account:
+        if account is None:
             account = self
         else:
             account = Account(account, steem_instance=self.steem)
@@ -1926,10 +1924,10 @@ class Account(BlockchainObject):
                 "reward_vests": reward_vests,
                 "prefix": self.steem.prefix,
             })
-        return self.steem.finalizeOp(op, account, "posting")
+        return self.steem.finalizeOp(op, account, "posting", **kwargs)
 
     def delegate_vesting_shares(self, to_account, vesting_shares,
-                                account=None):
+                                account=None, **kwargs):
         """ Delegate SP to another account.
 
         :param str to_account: Account we are delegating shares to
@@ -1939,11 +1937,13 @@ class Account(BlockchainObject):
         :param str account: The source account (delegator). If not specified,
             ``default_account`` is used.
         """
-        if not account:
-            account = self["name"]
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self.steem)
+        if account is None:
+            account = self
+        else:
+            account = Account(account, steem_instance=self.steem)
+        to_account = Account(to_account, steem_instance=self.steem)
+        if to_account is None:
+            raise ValueError("You need to provide a to_account")
         if isinstance(vesting_shares, (string_types, Amount)):
             vesting_shares = Amount(vesting_shares, steem_instance=self.steem)
         else:
@@ -1952,14 +1952,14 @@ class Account(BlockchainObject):
             raise AssertionError()
         op = operations.Delegate_vesting_shares(
             **{
-                "delegator": account,
-                "delegatee": to_account,
+                "delegator": account["name"],
+                "delegatee": to_account["name"],
                 "vesting_shares": vesting_shares,
                 "prefix": self.steem.prefix,
             })
-        return self.steem.finalizeOp(op, account, "active")
+        return self.steem.finalizeOp(op, account, "active", **kwargs)
 
-    def withdraw_vesting(self, amount, account=None):
+    def withdraw_vesting(self, amount, account=None, **kwargs):
         """ Withdraw VESTS from the vesting account.
 
             :param float amount: number of VESTS to withdraw over a period of
@@ -1968,11 +1968,10 @@ class Account(BlockchainObject):
                 if not ``default_account``
 
     """
-        if not account:
+        if account is None:
             account = self
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self.steem)
+        else:
+            account = Account(account, steem_instance=self.steem)
         if isinstance(amount, (string_types, Amount)):
             amount = Amount(amount, steem_instance=self.steem)
         else:
@@ -1986,13 +1985,13 @@ class Account(BlockchainObject):
                 "prefix": self.steem.prefix,
             })
 
-        return self.steem.finalizeOp(op, account, "active")
+        return self.steem.finalizeOp(op, account, "active", **kwargs)
 
     def set_withdraw_vesting_route(self,
                                    to,
                                    percentage=100,
                                    account=None,
-                                   auto_vest=False):
+                                   auto_vest=False, **kwargs):
         """ Set up a vesting withdraw route. When vesting shares are
             withdrawn, they will be routed to these accounts based on the
             specified weights.
@@ -2006,10 +2005,10 @@ class Account(BlockchainObject):
                 receive them as STEEM. (defaults to ``False``)
 
         """
-        if not account:
+        if account is None:
             account = self
-        if not account:
-            raise ValueError("You need to provide an account")
+        else:
+            account = Account(account, steem_instance=self.steem)
         op = operations.Set_withdraw_vesting_route(
             **{
                 "from_account": account["name"],
@@ -2018,7 +2017,7 @@ class Account(BlockchainObject):
                 "auto_vest": auto_vest
             })
 
-        return self.steem.finalizeOp(op, account, "active")
+        return self.steem.finalizeOp(op, account, "active", **kwargs)
 
     def allow(
         self, foreign, weight=None, permission="posting",
@@ -2040,10 +2039,10 @@ class Account(BlockchainObject):
                 by signatures to be able to interact
         """
         from copy import deepcopy
-        if not account:
+        if account is None:
             account = self
-        if not account:
-            raise ValueError("You need to provide an account")
+        else:
+            account = Account(account, steem_instance=self.steem)
 
         if permission not in ["owner", "posting", "active"]:
             raise ValueError(
@@ -2112,16 +2111,15 @@ class Account(BlockchainObject):
             :param int threshold: The threshold that needs to be reached
                 by signatures to be able to interact
         """
-        if not account:
+        if account is None:
             account = self
-        if not account:
-            raise ValueError("You need to provide an account")
+        else:
+            account = Account(account, steem_instance=self.steem)
 
         if permission not in ["owner", "active", "posting"]:
             raise ValueError(
                 "Permission needs to be either 'owner', 'posting', or 'active"
             )
-        account = Account(account, steem_instance=self.steem)
         authority = account[permission]
 
         try:
