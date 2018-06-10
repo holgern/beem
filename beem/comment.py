@@ -589,9 +589,11 @@ class Comment(BlockchainObject):
             original_post["parent_author"], original_post["parent_permlink"])
 
         new_meta = {}
-        if meta:
-            if original_post["json_metadata"]:
-                new_meta = original_post["json_metadata"].update(meta)
+        if meta is not None:
+            if bool(original_post["json_metadata"]):
+                new_meta = original_post["json_metadata"]
+                for key in meta:
+                    new_meta[key] = meta[key]
             else:
                 new_meta = meta
 

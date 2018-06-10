@@ -796,10 +796,10 @@ class Steem(object):
         else:
             return self.txbuffer.broadcast()
 
-    def info(self):
+    def info(self, use_stored_data=True):
         """ Returns the global properties
         """
-        return self.get_dynamic_global_properties()
+        return self.get_dynamic_global_properties(use_stored_data=use_stored_data)
 
     # -------------------------------------------------------------------------
     # Wallet stuff

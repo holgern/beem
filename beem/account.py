@@ -210,11 +210,9 @@ class Account(BlockchainObject):
     def profile(self):
         """ Returns the account profile
         """
-        if self["json_metadata"] == '':
-            return {}
-        metadata = json.loads(self["json_metadata"])
+        metadata = self.json_metadata
         if "profile" in metadata:
-            return json.loads(self["json_metadata"])["profile"]
+            return metadata["profile"]
         else:
             return {}
 
@@ -231,6 +229,12 @@ class Account(BlockchainObject):
     @property
     def vp(self):
         return self.get_voting_power()
+
+    @property
+    def json_metadata(self):
+        if self["json_metadata"] == '':
+            return {}
+        return json.loads(self["json_metadata"])
 
     def print_info(self, force_refresh=False, return_str=False, use_table=False, **kwargs):
         """ Prints import information about the account

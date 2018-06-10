@@ -12,7 +12,7 @@ import hashlib
 import json
 import math
 from datetime import datetime, timedelta
-from .utils import formatTimeString
+from .utils import formatTimeString, addTzInfo
 from .block import Block
 from .exceptions import BatchedCallsNotSupported, BlockDoesNotExistsException, BlockWaitTimeExceeded, OfflineHasNoRPCException
 from beemgraphenebase.py23 import py23_bytes
@@ -151,6 +151,7 @@ class Blockchain(object):
                       when instanciating from this class.
         """
         last_block = self.get_current_block()
+        date = addTzInfo(date)
         if estimateForwards:
             block_offset = 10
             first_block = Block(block_offset, steem_instance=self.steem)
