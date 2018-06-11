@@ -760,16 +760,20 @@ class Market(dict):
 
     @staticmethod
     def steem_btc_ticker():
-        """ Returns the STEEM/BTC price from poloniex, bittrex and binance. The mean price is
+        """ Returns the STEEM/BTC price from bittrex, binance, huobi and upbit. The mean price is
             weighted by the exchange volume.
         """
         prices = {}
         urls = [
-            "https://poloniex.com/public?command=returnTicker",
+            # "https://poloniex.com/public?command=returnTicker",
             "https://bittrex.com/api/v1.1/public/getmarketsummary?market=BTC-STEEM",
             "https://api.binance.com/api/v1/ticker/24hr",
+            "https://api.huobi.pro/market/history/kline?period=1day&size=1&symbol=steembtc",
+            "https://crix-api.upbit.com/v1/crix/trades/ticks?code=CRIX.UPBIT.BTC-STEEM&count=1",
         ]
-        responses = list(requests.get(u, timeout=30) for u in urls)
+        headers = {'Content-type': 'application/x-www-form-urlencoded',
+                   'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36'}
+        responses = list(requests.get(u, headers=headers, timeout=30) for u in urls)
 
         for r in [x for x in responses
                   if hasattr(x, "status_code") and x.status_code == 200 and x.json()]:
@@ -788,6 +792,16 @@ class Market(dict):
                     prices['binance'] = {
                         'price': float(data['lastPrice']),
                         'volume': float(data['quoteVolume'])}
+                elif "huobi" in r.url:
+                    data = r.json()["data"][-1]
+                    prices['huobi'] = {
+                        'price': float(data['close']),
+                        'volume': float(data['vol'])}
+                elif "upbit" in r.url:
+                    data = r.json()[-1]
+                    prices['upbit'] = {
+                        'price': float(data['tradePrice']),
+                        'volume': float(data['tradeVolume'])}
             except KeyError as e:
                 log.info(str(e))
 
