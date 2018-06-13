@@ -258,6 +258,11 @@ class SteemConnect(object):
                         params[key] = str(amount)
                     except:
                         amount = None
+                elif isinstance(value, bool):
+                    if value:
+                        params[key] = 1
+                    else:
+                        params[key] = 0
             urls.append(self.create_hot_sign_url(operation, params, redirect_uri=redirect_uri))
         if len(urls) == 1:
             return urls[0]

@@ -156,6 +156,17 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.38
+-------
+* Bug fixes
+* Bool variables for SteemConnect link creation fixed
+* Account handling in beem.account is improved 
+* json_metadata property added to beem.account
+* missing addTzInfo added to beem.blockchain
+* json_metadata update for comment edit improved
+* use_stored_data option added to steem.info()
+* poloniex removed and huobi and ubpit added to steem_btc_ticker()
+
 0.19.37
 -------
 * Bug fixes
