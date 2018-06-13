@@ -7,16 +7,19 @@ from builtins import next
 from builtins import str
 from builtins import object
 from itertools import cycle
+import threading
+import sys
 import json
+import signal
 import logging
 import ssl
-import sys
-import threading
 import re
 import time
 import warnings
+import six
+from contextlib import contextmanager
 from .exceptions import (
-    UnauthorizedError, RPCConnection, RPCError, RPCErrorDoRetry, NumRetriesReached, CallRetriesReached, WorkingNodeMissing
+    UnauthorizedError, RPCConnection, RPCError, RPCErrorDoRetry, NumRetriesReached, CallRetriesReached, WorkingNodeMissing, TimeoutException
 )
 from .rpcutils import (
     is_network_appbase_ready,
@@ -25,7 +28,10 @@ from .rpcutils import (
 from .node import Nodes
 from beemgraphenebase.version import version as beem_version
 from beemgraphenebase.chains import known_chains
-
+if sys.version_info[0] < 3:
+    from thread import interrupt_main
+else:
+    from _thread import interrupt_main
 WEBSOCKET_MODULE = None
 if not WEBSOCKET_MODULE:
     try:
@@ -44,7 +50,6 @@ if not REQUEST_MODULE:
         REQUEST_MODULE = "requests"
     except ImportError:
         REQUEST_MODULE = None
-
 
 log = logging.getLogger(__name__)
 
@@ -78,6 +83,22 @@ def create_ws_instance(use_ssl=True, enable_multithread=True):
         return websocket.WebSocket(sslopt=sslopt_ca_certs, enable_multithread=enable_multithread)
     else:
         return websocket.WebSocket(enable_multithread=enable_multithread)
+
+
+@contextmanager
+def time_limit(seconds, msg=''):
+    timer = threading.Timer(seconds, lambda: interrupt_main())
+    timer.start()
+    try:
+        yield
+    except KeyboardInterrupt:
+        raise TimeoutException("Timed out for operation {}".format(msg))
+    finally:
+        # if the action ends in specified time, timer is canceled
+        try:
+            timer.cancel()
+        except:
+            raise TimeoutException("Timed out for operation {}".format(msg))
 
 
 class GrapheneRPC(object):
@@ -166,7 +187,7 @@ class GrapheneRPC(object):
         """Switches to the next node url"""
         if self.ws:
             try:
-                self.ws.close()
+                self.rpcclose()
             except Exception as e:
                 log.warning(str(e))
         self.rpcconnect()
@@ -202,8 +223,12 @@ class GrapheneRPC(object):
                                     'content-type': 'application/json'}
             try:
                 if self.ws:
-                    self.ws.connect(self.url)
-                    self.rpclogin(self.user, self.password)
+                    try:
+                        with time_limit(self.timeout, 'ws.connect()'):
+                            self.ws.connect(self.url)
+                            self.rpclogin(self.user, self.password)
+                    except TimeoutException:
+                        raise RPCError("Timeout")
                 try:
                     props = None
                     if not self.use_condenser:
@@ -241,8 +266,13 @@ class GrapheneRPC(object):
 
     def rpcclose(self):
         """Close Websocket"""
-        if self.ws:
-            self.ws.close()
+        if self.ws is None:
+            return
+        try:
+            with time_limit(self.timeout, 'ws.close()'):
+                self.ws.close()
+        except TimeoutException:
+            raise RPCError("Timeout")
 
     def request_send(self, payload):
         response = self.session.post(self.url,
@@ -255,9 +285,15 @@ class GrapheneRPC(object):
         return response.text
 
     def ws_send(self, payload):
-        self.ws.send(payload)
-        reply = self.ws.recv()
-        return reply
+        if self.ws is None:
+            raise RPCConnection("No websocket available!")
+        try:
+            with time_limit(self.timeout, 'ws.recv()'):
+                self.ws.send(payload)
+                reply = self.ws.recv()
+                return reply
+        except TimeoutException:
+            raise RPCError("Timeout")
 
     def get_network(self, props=None):
         """ Identify the connected network. This call returns a

@@ -42,6 +42,7 @@ class Steem(object):
         :param str rpcpassword: RPC password *(optional)*
         :param bool nobroadcast: Do **not** broadcast a transaction!
             *(optional)*
+        :param bool unsigned: Do **not** sign a transaction! *(optional)*
         :param bool debug: Enable Debugging *(optional)*
         :param array,dict,string keys: Predefine the wif keys to shortcut the
             wallet database *(optional)*
@@ -121,6 +122,7 @@ class Steem(object):
             :param str rpcpassword: RPC password *(optional)*
             :param bool nobroadcast: Do **not** broadcast a transaction!
                 *(optional)*
+            :param bool unsigned: Do **not** sign a transaction! *(optional)*
             :param bool debug: Enable Debugging *(optional)*
             :param array,dict,string keys: Predefine the wif keys to shortcut the
                 wallet database *(optional)*

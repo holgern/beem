@@ -98,3 +98,7 @@ class UnnecessarySignatureDetected(Exception):
 
 class WorkingNodeMissing(Exception):
     pass
+
+
+class TimeoutException(Exception):
+    pass

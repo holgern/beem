@@ -28,6 +28,18 @@ class Comment(BlockchainObject):
 
         :param str authorperm: perm link to post/comment
         :param steem steem_instance: Steem() instance to use when accesing a RPC
+
+
+        .. code-block:: python
+
+           >>> from beem.comment import Comment
+           >>> from beem.account import Account
+           >>> acc = Account("gtg")
+           >>> authorperm = acc.get_blog(limit=1)[0]["authorperm"]
+           >>> c = Comment(authorperm)
+           >>> postdate = c["created"]
+           >>> postdate_str = c.json()["created"]
+
     """
     type_id = 8
 
