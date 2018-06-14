@@ -52,6 +52,7 @@ class Comment(BlockchainObject):
         steem_instance=None
     ):
         self.full = full
+        self.lazy = lazy
         if isinstance(authorperm, string_types) and authorperm != "":
             [author, permlink] = resolve_authorperm(authorperm)
             self["id"] = 0
@@ -68,12 +69,15 @@ class Comment(BlockchainObject):
         )
         if "author" in self and "permlink" in self:
             self.identifier = construct_authorperm(self["author"], self["permlink"])
+        self._parse_json_data()
+
+    def _parse_json_data(self):
         parse_times = [
             "active", "cashout_time", "created", "last_payout", "last_update",
             "max_cashout_time"
         ]
         for p in parse_times:
-            if p in self and isinstance(self.get(p), str):
+            if p in self and isinstance(self.get(p), string_types):
                 self[p] = formatTimeString(self.get(p, "1970-01-01T00:00:00"))
         # Parse Amounts
         sbd_amounts = [
@@ -97,6 +101,13 @@ class Comment(BlockchainObject):
                 self["tags"] = self['json_metadata']["tags"]
             if 'community' in self['json_metadata']:
                 self['community'] = self['json_metadata']['community']
+
+        parse_int = [
+            "author_reputation",
+        ]
+        for p in parse_int:
+            if p in self and isinstance(self.get(p), string_types):
+                self[p] = int(self.get(p, "0"))
 
     def _metadata_to_dict(self):
         """turn json_metadata into python dict"""
@@ -122,38 +133,10 @@ class Comment(BlockchainObject):
             content = self.steem.rpc.get_content(author, permlink)
         if not content or not content['author'] or not content['permlink']:
             raise ContentDoesNotExistsException(self.identifier)
-        super(Comment, self).__init__(content, id_item="authorperm", steem_instance=self.steem)
+        super(Comment, self).__init__(content, id_item="authorperm", lazy=self.lazy, full=self.full, steem_instance=self.steem)
         self["authorperm"] = construct_authorperm(self["author"], self["permlink"])
         self.identifier = self["authorperm"]
-        parse_times = [
-            "active", "cashout_time", "created", "last_payout", "last_update",
-            "max_cashout_time"
-        ]
-        for p in parse_times:
-            if p in self and isinstance(self.get(p), string_types):
-                self[p] = formatTimeString(self.get(p, "1970-01-01T00:00:00"))
-        # Parse Amounts
-        sbd_amounts = [
-            "total_payout_value",
-            "max_accepted_payout",
-            "pending_payout_value",
-            "curator_payout_value",
-            "total_pending_payout_value",
-            "promoted",
-        ]
-        for p in sbd_amounts:
-            if p in self and isinstance(self.get(p), string_types):
-                self[p] = Amount(self.get(p, "0.000 SBD"), steem_instance=self.steem)
-        # turn json_metadata into python dict
-        self._metadata_to_dict()
-        self["tags"] = []
-        self['community'] = ''
-        if isinstance(self['json_metadata'], dict):
-            if "tags" in self['json_metadata']:
-                self["tags"] = self['json_metadata']["tags"]
-            if 'community' in self['json_metadata']:
-                if p in self:
-                    self['community'] = self['json_metadata']['community']
+        self._parse_json_data()
 
     def json(self):
         output = self.copy()
@@ -187,6 +170,12 @@ class Comment(BlockchainObject):
         for p in sbd_amounts:
             if p in output and isinstance(output[p], Amount):
                 output[p] = output[p].json()
+        parse_int = [
+            "author_reputation",
+        ]
+        for p in parse_int:
+            if p in output and isinstance(output[p], int):
+                output[p] = str(output[p])
         return json.loads(str(json.dumps(output)))
 
     @property
@@ -507,10 +496,12 @@ class Comment(BlockchainObject):
             return content_replies
         return [Comment(c, steem_instance=self.steem) for c in content_replies]
 
-    def get_votes(self):
+    def get_votes(self, raw_data=False):
         """Returns all votes as ActiveVotes object"""
+        if raw_data:
+            return self["active_votes"]
         from .vote import ActiveVotes
-        return ActiveVotes(self, steem_instance=self.steem)
+        return ActiveVotes(self, lazy=False, steem_instance=self.steem)
 
     def upvote(self, weight=+100, voter=None):
         """ Upvote the post
@@ -703,7 +694,7 @@ class RecentReplies(list):
             Default: True
         :param steem steem_instance: Steem() instance to use when accesing a RPC
     """
-    def __init__(self, author, skip_own=True, steem_instance=None):
+    def __init__(self, author, skip_own=True, lazy=False, full=True, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         if not self.steem.is_connected():
             return None
@@ -715,7 +706,7 @@ class RecentReplies(list):
             post = state["content"][reply]
             if skip_own and post["author"] == author:
                 continue
-            comments.append(Comment(post, lazy=True, steem_instance=self.steem))
+            comments.append(Comment(post, lazy=lazy, full=full, steem_instance=self.steem))
         super(RecentReplies, self).__init__(comments)
 
 
@@ -725,7 +716,7 @@ class RecentByPath(list):
         :param str account: Account name
         :param steem steem_instance: Steem() instance to use when accesing a RPC
     """
-    def __init__(self, path="promoted", category=None, steem_instance=None):
+    def __init__(self, path="promoted", category=None, lazy=False, full=True, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         if not self.steem.is_connected():
             return None
@@ -736,5 +727,5 @@ class RecentByPath(list):
         for reply in replies:
             post = state["content"][reply]
             if category is None or (category is not None and post["category"] == category):
-                comments.append(Comment(post, lazy=True, steem_instance=self.steem))
+                comments.append(Comment(post, lazy=lazy, full=full, steem_instance=self.steem))
         super(RecentByPath, self).__init__(comments)

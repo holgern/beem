@@ -45,6 +45,7 @@ class Vote(BlockchainObject):
         steem_instance=None
     ):
         self.full = full
+        self.lazy = lazy
         if isinstance(voter, string_types) and authorperm is not None:
             [author, permlink] = resolve_authorperm(authorperm)
             self["voter"] = voter
@@ -81,6 +82,7 @@ class Vote(BlockchainObject):
             full=full,
             steem_instance=steem_instance
         )
+        self._parse_json_data()
 
     def refresh(self):
         if self.identifier is None:
@@ -103,9 +105,25 @@ class Vote(BlockchainObject):
                 vote = x
         if not vote:
             raise VoteDoesNotExistsException(self.identifier)
-        super(Vote, self).__init__(vote, id_item="authorpermvoter", steem_instance=self.steem)
+        super(Vote, self).__init__(vote, id_item="authorpermvoter", lazy=self.lazy, full=self.full, steem_instance=self.steem)
 
         self.identifier = construct_authorpermvoter(author, permlink, voter)
+        self._parse_json_data()
+
+    def _parse_json_data(self):
+        parse_int = [
+            "rshares", "reputation",
+        ]
+        for p in parse_int:
+            if p in self and isinstance(self.get(p), string_types):
+                self[p] = int(self.get(p, "0"))
+
+        if "time" in self and isinstance(self.get("time"), string_types) and self.get("time") != '':
+            self["time"] = formatTimeString(self.get("time", "1970-01-01T00:00:00"))
+        elif "timestamp" in self and isinstance(self.get("timestamp"), string_types) and self.get("timestamp") != '':
+            self["time"] = formatTimeString(self.get("timestamp", "1970-01-01T00:00:00"))
+        else:
+            self["time"] = formatTimeString("1970-01-01T00:00:00")
 
     def json(self):
         output = self.copy()
@@ -113,6 +131,22 @@ class Vote(BlockchainObject):
             output.pop("author")
         if "permlink" in output:
             output.pop("permlink")
+        parse_times = [
+            "time"
+        ]
+        for p in parse_times:
+            if p in output:
+                date = output.get(p, datetime(1970, 1, 1, 0, 0))
+                if isinstance(date, (datetime, date)):
+                    output[p] = formatTimeString(date)
+                else:
+                    output[p] = date
+        parse_int = [
+            "rshares", "reputation",
+        ]
+        for p in parse_int:
+            if p in output and isinstance(output[p], int):
+                output[p] = str(output[p])
         return json.loads(str(json.dumps(output)))
 
     @property
@@ -168,10 +202,7 @@ class Vote(BlockchainObject):
 
     @property
     def time(self):
-        t = self.get("time", '')
-        if t == '':
-            t = self.get("timestamp", '')
-        return t
+        return self["time"]
 
 
 class VotesObject(list):
@@ -181,7 +212,7 @@ class VotesObject(list):
         if sort_key == 'sbd':
             sortedList = sorted(self, key=lambda self: self.rshares, reverse=reverse)
         elif sort_key == 'time':
-            sortedList = sorted(self, key=lambda self: (utc.localize(datetime.utcnow()) - formatTimeString(self.time)).total_seconds(), reverse=reverse)
+            sortedList = sorted(self, key=lambda self: (utc.localize(datetime.utcnow()) - self.time).total_seconds(), reverse=reverse)
         elif sort_key == 'votee':
             sortedList = sorted(self, key=lambda self: self.votee, reverse=reverse)
         elif sort_key in ['voter', 'rshares', 'percent', 'weight']:
@@ -200,15 +231,16 @@ class VotesObject(list):
         for vote in self.get_sorted_list(sort_key=sort_key, reverse=reverse):
             if not allow_refresh:
                 vote.cached = True
-            time = vote.time
-            if time != '':
-                d_time = formatTimeString(time)
+
+            d_time = vote.time
+            if d_time != formatTimeString("1970-01-01T00:00:00"):
                 td = utc.localize(datetime.utcnow()) - d_time
                 timestr = str(td.days) + " days " + str(td.seconds // 3600) + ":" + str((td.seconds // 60) % 60)
             else:
                 start = None
                 stop = None
-                timestr = ""
+                timestr = ''
+
             percent = vote.get('percent', '')
             if percent == '':
                 start_percent = None
@@ -234,10 +266,8 @@ class VotesObject(list):
         start = addTzInfo(start)
         stop = addTzInfo(stop)
         for vote in self.get_sorted_list(sort_key=sort_key, reverse=reverse):
-            time = vote.time
-            if time != '':
-                d_time = formatTimeString(time)
-            else:
+            d_time = vote.time
+            if d_time != formatTimeString("1970-01-01T00:00:00"):
                 start = None
                 stop = None
             percent = vote.get('percent', '')
@@ -257,7 +287,7 @@ class VotesObject(list):
                 elif var == "time":
                     v = d_time
                 elif var == "rshares":
-                    v = vote.get("rshares", "")
+                    v = vote.get("rshares", 0)
                 elif var == "percent":
                     v = percent
                 elif var == "weight":
@@ -302,7 +332,7 @@ class ActiveVotes(VotesObject):
         :param str authorperm: authorperm link
         :param steem steem_instance: Steem() instance to use when accesing a RPC
     """
-    def __init__(self, authorperm, steem_instance=None):
+    def __init__(self, authorperm, lazy=False, full=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         votes = None
         if not self.steem.is_connected():
@@ -339,7 +369,7 @@ class ActiveVotes(VotesObject):
         self.identifier = authorperm
         super(ActiveVotes, self).__init__(
             [
-                Vote(x, authorperm=authorperm, lazy=True, steem_instance=self.steem)
+                Vote(x, authorperm=authorperm, lazy=lazy, full=full, steem_instance=self.steem)
                 for x in votes
             ]
         )
@@ -352,7 +382,7 @@ class AccountVotes(VotesObject):
         :param str account: Account name
         :param steem steem_instance: Steem() instance to use when accesing a RPC
     """
-    def __init__(self, account, start=None, stop=None, steem_instance=None):
+    def __init__(self, account, start=None, stop=None, lazy=False, full=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         start = addTzInfo(start)
         stop = addTzInfo(stop)
@@ -362,11 +392,13 @@ class AccountVotes(VotesObject):
         vote_list = []
         for x in votes:
             time = x.get("time", "")
-            if time != "":
+            if time != "" and isinstance(time, string_types):
                 d_time = formatTimeString(time)
+            elif isinstance(time, datetime):
+                d_time = time
             else:
                 d_time = addTzInfo(datetime(1970, 1, 1, 0, 0, 0))
             if (start is None or d_time >= start) and (stop is None or d_time <= stop):
-                vote_list.append(Vote(x, authorperm=account["name"], steem_instance=self.steem))
+                vote_list.append(Vote(x, authorperm=account["name"], lazy=lazy, full=full, steem_instance=self.steem))
 
         super(AccountVotes, self).__init__(vote_list)

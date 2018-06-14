@@ -17,7 +17,6 @@ import re
 import time
 import warnings
 import six
-from contextlib import contextmanager
 from .exceptions import (
     UnauthorizedError, RPCConnection, RPCError, RPCErrorDoRetry, NumRetriesReached, CallRetriesReached, WorkingNodeMissing, TimeoutException
 )
@@ -36,7 +35,7 @@ WEBSOCKET_MODULE = None
 if not WEBSOCKET_MODULE:
     try:
         import websocket
-        from websocket._exceptions import WebSocketConnectionClosedException
+        from websocket._exceptions import WebSocketConnectionClosedException, WebSocketTimeoutException
         WEBSOCKET_MODULE = "websocket"
     except ImportError:
         WEBSOCKET_MODULE = None
@@ -83,22 +82,6 @@ def create_ws_instance(use_ssl=True, enable_multithread=True):
         return websocket.WebSocket(sslopt=sslopt_ca_certs, enable_multithread=enable_multithread)
     else:
         return websocket.WebSocket(enable_multithread=enable_multithread)
-
-
-@contextmanager
-def time_limit(seconds, msg=''):
-    timer = threading.Timer(seconds, lambda: interrupt_main())
-    timer.start()
-    try:
-        yield
-    except KeyboardInterrupt:
-        raise TimeoutException("Timed out for operation {}".format(msg))
-    finally:
-        # if the action ends in specified time, timer is canceled
-        try:
-            timer.cancel()
-        except:
-            raise TimeoutException("Timed out for operation {}".format(msg))
 
 
 class GrapheneRPC(object):
@@ -211,9 +194,11 @@ class GrapheneRPC(object):
                 log.debug("Trying to connect to node %s" % self.url)
                 if self.url[:3] == "wss":
                     self.ws = create_ws_instance(use_ssl=True)
+                    self.ws.settimeout(self.timeout)
                     self.current_rpc = self.rpc_methods["ws"]
                 elif self.url[:2] == "ws":
                     self.ws = create_ws_instance(use_ssl=False)
+                    self.ws.settimeout(self.timeout)
                     self.current_rpc = self.rpc_methods["ws"]
                 else:
                     self.ws = None
@@ -223,12 +208,8 @@ class GrapheneRPC(object):
                                     'content-type': 'application/json'}
             try:
                 if self.ws:
-                    try:
-                        with time_limit(self.timeout, 'ws.connect()'):
-                            self.ws.connect(self.url)
-                            self.rpclogin(self.user, self.password)
-                    except TimeoutException:
-                        raise RPCError("Timeout")
+                    self.ws.connect(self.url)
+                    self.rpclogin(self.user, self.password)
                 try:
                     props = None
                     if not self.use_condenser:
@@ -268,11 +249,7 @@ class GrapheneRPC(object):
         """Close Websocket"""
         if self.ws is None:
             return
-        try:
-            with time_limit(self.timeout, 'ws.close()'):
-                self.ws.close()
-        except TimeoutException:
-            raise RPCError("Timeout")
+        self.ws.close()
 
     def request_send(self, payload):
         response = self.session.post(self.url,
@@ -287,13 +264,9 @@ class GrapheneRPC(object):
     def ws_send(self, payload):
         if self.ws is None:
             raise RPCConnection("No websocket available!")
-        try:
-            with time_limit(self.timeout, 'ws.recv()'):
-                self.ws.send(payload)
-                reply = self.ws.recv()
-                return reply
-        except TimeoutException:
-            raise RPCError("Timeout")
+        self.ws.send(payload)
+        reply = self.ws.recv()
+        return reply
 
     def get_network(self, props=None):
         """ Identify the connected network. This call returns a
@@ -394,6 +367,10 @@ class GrapheneRPC(object):
                     # self.nodes.sleep_and_check_retries(str(e), sleep=True, call_retry=True)
                     self.rpcconnect(next_url=False)
             except ConnectionError as e:
+                self.nodes.increase_error_cnt()
+                self.nodes.sleep_and_check_retries(str(e), sleep=False, call_retry=False)
+                self.rpcconnect()
+            except WebSocketTimeoutException as e:
                 self.nodes.increase_error_cnt()
                 self.nodes.sleep_and_check_retries(str(e), sleep=False, call_retry=False)
                 self.rpcconnect()

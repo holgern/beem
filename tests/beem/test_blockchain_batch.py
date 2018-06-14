@@ -49,6 +49,8 @@ class Testcases(unittest.TestCase):
         opNames = ["transfer", "vote"]
         for op in b.stream(opNames=opNames, start=self.start, stop=self.stop, max_batch_size=self.max_batch_size, threading=False):
             ops_stream.append(op)
+        self.assertTrue(ops_stream[0]["block_num"] >= self.start)
+        self.assertTrue(ops_stream[-1]["block_num"] <= self.stop)
         op_stat = b.ops_statistics(start=self.start, stop=self.stop)
         self.assertEqual(op_stat["vote"] + op_stat["transfer"], len(ops_stream))
         ops_blocks = []

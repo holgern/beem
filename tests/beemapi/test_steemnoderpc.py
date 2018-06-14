@@ -14,7 +14,6 @@ import itertools
 from pprint import pprint
 from beem import Steem
 from beemapi.steemnoderpc import SteemNodeRPC
-from beemapi.graphenerpc import time_limit
 from beemapi.websocket import SteemWebsocket
 from beemapi import exceptions
 from beemapi.exceptions import NumRetriesReached, CallRetriesReached
@@ -214,12 +213,3 @@ class Testcases(unittest.TestCase):
             exceptions.NoApiWithName
         ):
             rpc.get_block({"block_num": 1}, api="wrong_api")
-
-    def test_time_limit(self):
-        with time_limit(5, 'sleep'):
-            time.sleep(1)
-        with self.assertRaises(
-            exceptions.TimeoutException
-        ):
-            with time_limit(1, 'sleep'):
-                time.sleep(3)

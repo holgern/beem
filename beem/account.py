@@ -77,6 +77,7 @@ class Account(BlockchainObject):
                etc.
         """
         self.full = full
+        self.lazy = lazy
         super(Account, self).__init__(
             account,
             lazy=lazy,
@@ -84,6 +85,7 @@ class Account(BlockchainObject):
             id_item="name",
             steem_instance=steem_instance
         )
+        self._parse_json_data()
 
     def refresh(self):
         """ Refresh/Obtain an account's data from the API server
@@ -109,8 +111,10 @@ class Account(BlockchainObject):
         self.identifier = account["name"]
         # self.steem.refresh_data()
 
-        super(Account, self).__init__(account, id_item="name", steem_instance=self.steem)
+        super(Account, self).__init__(account, id_item="name", lazy=self.lazy, full=self.full, steem_instance=self.steem)
+        self._parse_json_data()
 
+    def _parse_json_data(self):
         parse_times = [
             "last_owner_update", "last_account_update", "created", "last_owner_proved", "last_active_proved",
             "last_account_recovery", "last_vote_time", "sbd_seconds_last_update", "sbd_last_interest_payment",
@@ -2244,7 +2248,7 @@ class Accounts(AccountsObject):
         :param steem steem_instance: Steem() instance to use when
             accessing a RPC
     """
-    def __init__(self, name_list, batch_limit=100, steem_instance=None):
+    def __init__(self, name_list, batch_limit=100, lazy=False, full=True, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         if not self.steem.is_connected():
             return
@@ -2261,7 +2265,7 @@ class Accounts(AccountsObject):
 
         super(Accounts, self).__init__(
             [
-                Account(x, lazy=True, steem_instance=self.steem)
+                Account(x, lazy=lazy, full=full, steem_instance=self.steem)
                 for x in accounts
             ]
         )

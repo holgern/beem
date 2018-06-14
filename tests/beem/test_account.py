@@ -96,7 +96,7 @@ class Testcases(unittest.TestCase):
             zero_element = 0
         else:
             account = self.account_appbase
-            zero_element = 0  # Bug in steem
+            zero_element = 1  # Bug in steem
         h_all_raw = []
         for h in account.history_reverse(raw_output=True):
             h_all_raw.append(h)
@@ -104,7 +104,8 @@ class Testcases(unittest.TestCase):
         h_list = []
         for h in account.history(stop=10, use_block_num=False, batch_size=10, raw_output=True):
             h_list.append(h)
-        zero_element = h_list[0][0]
+        zero_element = h_all_raw[-1][0]
+        self.assertEqual(h_list[0][0], zero_element)
         self.assertEqual(h_list[-1][0], 10)
         self.assertEqual(h_list[0][1]['block'], h_all_raw[-1][1]['block'])
         self.assertEqual(h_list[-1][1]['block'], h_all_raw[-11 + zero_element][1]['block'])
@@ -127,6 +128,7 @@ class Testcases(unittest.TestCase):
         h_list = []
         for h in account.history_reverse(start=10, stop=0, use_block_num=False, batch_size=10, raw_output=False):
             h_list.append(h)
+        # zero_element = h_list[-1]['index']
         self.assertEqual(h_list[0]['index'], 10)
         self.assertEqual(h_list[-1]['index'], zero_element)
         self.assertEqual(h_list[0]['block'], h_all_raw[-11 + zero_element][1]['block'])
@@ -475,7 +477,10 @@ class Testcases(unittest.TestCase):
 
         for k in keys:
             if k not in "json_metadata" and k != 'reputation' and k != 'active_votes':
-                self.assertEqual(content[k], json_content[k])
+                if isinstance(content[k], dict) and isinstance(json_content[k], list):
+                    self.assertEqual(list(content[k].values()), json_content[k])
+                else:
+                    self.assertEqual(content[k], json_content[k])
 
     def test_estimate_virtual_op_num(self):
         stm = self.bts

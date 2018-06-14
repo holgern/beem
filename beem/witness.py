@@ -42,6 +42,7 @@ class Witness(BlockchainObject):
         steem_instance=None
     ):
         self.full = full
+        self.lazy = lazy
         super(Witness, self).__init__(
             owner,
             lazy=lazy,
@@ -64,7 +65,7 @@ class Witness(BlockchainObject):
             witness = self.steem.rpc.get_witness_by_account(self.identifier)
         if not witness:
             raise WitnessDoesNotExistsException(self.identifier)
-        super(Witness, self).__init__(witness, id_item="owner", steem_instance=self.steem)
+        super(Witness, self).__init__(witness, id_item="owner", lazy=self.lazy, full=self.full, steem_instance=self.steem)
         self.identifier = self["owner"]
 
     @property
@@ -219,7 +220,7 @@ class Witnesses(WitnessesObject):
         :param steem steem_instance: Steem() instance to use when
             accesing a RPC
     """
-    def __init__(self, steem_instance=None):
+    def __init__(self, lazy=False, full=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
@@ -232,7 +233,7 @@ class Witnesses(WitnessesObject):
         self.identifier = ""
         super(Witnesses, self).__init__(
             [
-                Witness(x, lazy=True, steem_instance=self.steem)
+                Witness(x, lazy=lazy, full=full, steem_instance=self.steem)
                 for x in self.active_witnessess
             ]
         )
@@ -245,7 +246,7 @@ class WitnessesVotedByAccount(WitnessesObject):
         :param steem steem_instance: Steem() instance to use when
             accesing a RPC
     """
-    def __init__(self, account, steem_instance=None):
+    def __init__(self, account, lazy=False, full=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.account = Account(account, full=True, steem_instance=self.steem)
         account_name = self.account["name"]
@@ -266,7 +267,7 @@ class WitnessesVotedByAccount(WitnessesObject):
 
         super(WitnessesVotedByAccount, self).__init__(
             [
-                Witness(x, lazy=True, steem_instance=self.steem)
+                Witness(x, lazy=lazy, full=full, steem_instance=self.steem)
                 for x in witnessess
             ]
         )
@@ -279,7 +280,7 @@ class WitnessesRankedByVote(WitnessesObject):
         :param steem steem_instance: Steem() instance to use when
             accesing a RPC
     """
-    def __init__(self, from_account="", limit=100, steem_instance=None):
+    def __init__(self, from_account="", limit=100, lazy=False, full=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         witnessList = []
         last_limit = limit
@@ -313,7 +314,7 @@ class WitnessesRankedByVote(WitnessesObject):
             witnessess = witnessess[1:]
         if len(witnessess) > 0:
             for x in witnessess:
-                witnessList.append(Witness(x, lazy=True, steem_instance=self.steem))
+                witnessList.append(Witness(x, lazy=lazy, full=full, steem_instance=self.steem))
         if len(witnessList) == 0:
             return
         super(WitnessesRankedByVote, self).__init__(witnessList)
@@ -326,7 +327,7 @@ class ListWitnesses(WitnessesObject):
         :param steem steem_instance: Steem() instance to use when
             accesing a RPC
     """
-    def __init__(self, from_account, limit, steem_instance=None):
+    def __init__(self, from_account, limit, lazy=False, full=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.identifier = from_account
         self.steem.rpc.set_next_node_on_empty_reply(False)
@@ -338,7 +339,7 @@ class ListWitnesses(WitnessesObject):
             return
         super(ListWitnesses, self).__init__(
             [
-                Witness(x, lazy=True, steem_instance=self.steem)
+                Witness(x, lazy=lazy, full=full, steem_instance=self.steem)
                 for x in witnessess
             ]
         )

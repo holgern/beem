@@ -12,6 +12,7 @@ from beem.blockchain import Blockchain
 from beem.block import Block
 from beem.steem import Steem
 from beem.utils import parse_time, formatTimedelta
+from beem.nodelist import NodeList
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
@@ -19,18 +20,19 @@ logging.basicConfig(level=logging.INFO)
 if __name__ == "__main__":
     node_setup = 0
     how_many_hours = 1
+    nodes = NodeList()
     if node_setup == 0:
-        stm = Steem(node="https://api.steemit.com", num_retries=10)
+        stm = Steem(node=nodes.get_nodes(normal=False, wss=False), num_retries=10)
         max_batch_size = None
         threading = False
         thread_num = 8
     elif node_setup == 1:
-        stm = Steem(node="https://api.steemit.com", num_retries=10)
+        stm = Steem(node=nodes.get_nodes(normal=False, wss=False), num_retries=10)
         max_batch_size = None
         threading = True
         thread_num = 8
     elif node_setup == 2:
-        stm = Steem(num_retries=10)
+        stm = Steem(node=nodes.get_nodes(appbase=False, https=False), num_retries=10)
         max_batch_size = None
         threading = True
         thread_num = 16

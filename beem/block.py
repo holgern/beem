@@ -59,6 +59,7 @@ class Block(BlockchainObject):
 
         """
         self.full = full
+        self.lazy = lazy
         self.only_ops = only_ops
         self.only_virtual_ops = only_virtual_ops
         super(Block, self).__init__(
@@ -85,9 +86,14 @@ class Block(BlockchainObject):
                     ops = self.steem.rpc.get_ops_in_block(self.identifier, self.only_virtual_ops)
             else:
                 ops = self.steem.rpc.get_ops_in_block(self.identifier, self.only_virtual_ops)
-            block = {'block': ops[0]["block"],
-                     'timestamp': ops[0]["timestamp"],
-                     'operations': ops}
+            if bool(ops):
+                block = {'block': ops[0]["block"],
+                         'timestamp': ops[0]["timestamp"],
+                         'operations': ops}
+            else:
+                block = {'block': [],
+                         'timestamp': '',
+                         'operations': []}
         else:
             if self.steem.rpc.get_use_appbase():
                 block = self.steem.rpc.get_block({"block_num": self.identifier}, api="block")
@@ -97,7 +103,7 @@ class Block(BlockchainObject):
                 block = self.steem.rpc.get_block(self.identifier)
         if not block:
             raise BlockDoesNotExistsException(str(self.identifier))
-        super(Block, self).__init__(block, steem_instance=self.steem)
+        super(Block, self).__init__(block, lazy=self.lazy, full=self.full, steem_instance=self.steem)
 
     @property
     def block_num(self):
@@ -145,20 +151,17 @@ class Block(BlockchainObject):
                 ops_stat[key] = 0
         else:
             ops_stat = add_to_ops_stat.copy()
-        if self.only_ops or self.only_virtual_ops:
-            for op in self["operations"]:
-                ops_stat[op["op"][0]] += 1
-            return ops_stat
-        trxs = self["transactions"]
-        for tx in trxs:
-            for op in tx["operations"]:
+        for op in self.operations:
                 if isinstance(op, dict) and 'type' in op:
                     op_type = op["type"]
                     if len(op_type) > 10 and op_type[len(op_type) - 10:] == "_operation":
                         op_type = op_type[:-10]
                     ops_stat[op_type] += 1
                 else:
-                    ops_stat[op[0]] += 1
+                    if "op" in op:
+                        ops_stat[op["op"][0]] += 1
+                    else:
+                        ops_stat[op[0]] += 1
         return ops_stat
 
 

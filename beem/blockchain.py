@@ -402,7 +402,11 @@ class Blockchain(object):
             return
         if stop is None:
             stop = current_block
-        for block in self.blocks(start=start, stop=stop, only_ops=True):
+        for block in self.blocks(start=start, stop=stop, only_ops=False, only_virtual_ops=False):
+            if verbose:
+                print(block["identifier"] + " " + block["timestamp"])
+            ops_stat = block.ops_statistics(add_to_ops_stat=ops_stat)
+        for block in self.blocks(start=start, stop=stop, only_ops=True, only_virtual_ops=True):
             if verbose:
                 print(block["identifier"] + " " + block["timestamp"])
             ops_stat = block.ops_statistics(add_to_ops_stat=ops_stat)
