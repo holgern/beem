@@ -716,7 +716,10 @@ class Market(dict):
             "https://www.okcoin.com/api/v1/ticker.do?symbol=btc_usd",
             "https://www.bitstamp.net/api/v2/ticker/btcusd/",
         ]
-        responses = list(requests.get(u, timeout=30) for u in urls)
+        try:
+            responses = list(requests.get(u, timeout=30) for u in urls)
+        except Exception as e:
+            log.debug(str(e))
 
         for r in [x for x in responses
                   if hasattr(x, "status_code") and x.status_code == 200 and x.json()]:
@@ -775,7 +778,10 @@ class Market(dict):
         ]
         headers = {'Content-type': 'application/x-www-form-urlencoded',
                    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36'}
-        responses = list(requests.get(u, headers=headers, timeout=30) for u in urls)
+        try:
+            responses = list(requests.get(u, headers=headers, timeout=30) for u in urls)
+        except Exception as e:
+            log.debug(str(e))
 
         for r in [x for x in responses
                   if hasattr(x, "status_code") and x.status_code == 200 and x.json()]:

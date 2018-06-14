@@ -166,7 +166,9 @@ Changelog
 * json_metadata update for comment edit improved
 * use_stored_data option added to steem.info()
 * poloniex removed and huobi and ubpit added to steem_btc_ticker()
-* Add timeout to websocket connetions
+* Add timeout to websocket connections
+* Documentation improved by crokkon
+* time, reputation and rshares are parsed from string in all vote objects
 
 0.19.37
 -------

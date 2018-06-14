@@ -143,7 +143,7 @@ class Block(BlockchainObject):
         return ops
 
     def ops_statistics(self, add_to_ops_stat=None):
-        """Returns a statistic with the occurance of the different operation types"""
+        """Returns a statistic with the occurrence of the different operation types"""
         if add_to_ops_stat is None:
             import beembase.operationids
             ops_stat = beembase.operationids.operations.copy()
