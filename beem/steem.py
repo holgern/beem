@@ -132,7 +132,7 @@ class Steem(object):
                 to ``False``) *(optional)*
             :param int expiration: Delay in seconds until transactions are supposed
                 to expire *(optional)* (default is 30)
-            :param str blocking: Wait for broadcasted transactions to be included
+            :param str blocking: Wait for broadcast transactions to be included
                 in a block and return full transaction (can be "head" or
                 "irreversible")
             :param bool bundle: Do not broadcast transactions right away, but allow
@@ -232,7 +232,7 @@ class Steem(object):
         """ Read and stores steem blockchain parameters
             If the last data refresh is older than data_refresh_time_seconds, data will be refreshed
 
-            :param bool force_refresh: if True, data are forced to refreshed
+            :param bool force_refresh: if True, a refresh of the data is enforced
             :param float data_refresh_time_seconds: set a new minimal refresh time in seconds
 
         """
@@ -270,7 +270,7 @@ class Steem(object):
         return self.rpc.get_dynamic_global_properties(api="database")
 
     def get_reserve_ratio(self, use_stored_data=True):
-        """ This call returns the *dynamic global properties*
+        """ This call returns the *reserve ratio*
 
             :param bool use_stored_data: if True, stored data will be returned. If stored data are
                 empty or old, refresh_data() is used.
@@ -405,7 +405,7 @@ class Steem(object):
         return a.as_base("SBD")
 
     def get_block_interval(self, use_stored_data=True):
-        """Returns the block intervall in seconds"""
+        """Returns the block interval in seconds"""
         props = self.get_config(use_stored_data=use_stored_data, replace_steemit_by_steem=True)
         if props and "STEEM_BLOCK_INTERVAL" in props:
             block_interval = props["STEEM_BLOCK_INTERVAL"]
@@ -423,7 +423,7 @@ class Steem(object):
         return blockchain_version
 
     def rshares_to_sbd(self, rshares, use_stored_data=True):
-        """ Calculates the SBD amount of a vote
+        """ Calculates the current SBD value of a vote
         """
         payout = float(rshares) * self.get_sbd_per_rshares(use_stored_data=use_stored_data)
         return payout
@@ -441,7 +441,11 @@ class Steem(object):
         return fund_per_share * SBD_price
 
     def get_steem_per_mvest(self, time_stamp=None, use_stored_data=True):
-        """ Returns the current mvest to steem ratio
+        """ Returns the MVEST to STEEM ratio
+
+            :param datetime time_stamp: (optional) if set, return an estimated
+                STEEM per MVEST ratio for the given time stamp. If unset the
+                current ratio is returned (default).
         """
         if time_stamp is not None:
             a = 2.1325476281078992e-05
@@ -465,7 +469,7 @@ class Steem(object):
 
             :param beem.amount.Amount vests/float vests: Vests to convert
             :param int timestamp: (Optional) Can be used to calculate
-                convertion in the past
+                the conversion rate from the past
 
         """
         if isinstance(vests, Amount):
@@ -477,24 +481,24 @@ class Steem(object):
 
             :param float sp: Steem power to convert
             :param datetime timestamp: (Optional) Can be used to calculate
-                convertion in the past
+                the conversion rate from the past
         """
         return sp * 1e6 / self.get_steem_per_mvest(timestamp, use_stored_data=use_stored_data)
 
     def sp_to_sbd(self, sp, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, use_stored_data=True):
-        """ Obtain the resulting sbd amount from Steem power
+        """ Obtain the resulting SBD vote value from Steem power
             :param number steem_power: Steem Power
             :param int voting_power: voting power (100% = 10000)
-            :param int vote_pct: voting participation (100% = 10000)
+            :param int vote_pct: voting percentage (100% = 10000)
         """
         vesting_shares = int(self.sp_to_vests(sp, use_stored_data=use_stored_data))
         return self.vests_to_sbd(vesting_shares, voting_power=voting_power, vote_pct=vote_pct)
 
     def vests_to_sbd(self, vests, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, use_stored_data=True):
-        """ Obtain the resulting sbd voting amount from vests
+        """ Obtain the resulting SBD vote value from vests
             :param number vests: vesting shares
             :param int voting_power: voting power (100% = 10000)
-            :param int vote_pct: voting participation (100% = 10000)
+            :param int vote_pct: voting percentage (100% = 10000)
         """
         reward_fund = self.get_reward_funds(use_stored_data=use_stored_data)
         reward_balance = Amount(reward_fund["reward_balance"], steem_instance=self).amount
@@ -526,7 +530,7 @@ class Steem(object):
 
             :param number steem_power: Steem Power
             :param int voting_power: voting power (100% = 10000)
-            :param int vote_pct: voting participation (100% = 10000)
+            :param int vote_pct: voting percentage (100% = 10000)
 
         """
         # calculate our account voting shares (from vests)
@@ -538,7 +542,7 @@ class Steem(object):
 
             :param number vests: vesting shares
             :param int voting_power: voting power (100% = 10000)
-            :param int vote_pct: voting participation (100% = 10000)
+            :param int vote_pct: voting percentage (100% = 10000)
 
         """
         used_power = self._calc_resulting_vote(voting_power=voting_power, vote_pct=vote_pct, use_stored_data=use_stored_data)
@@ -650,7 +654,7 @@ class Steem(object):
     def set_password_storage(self, password_storage):
         """ Set the password storage mode.
 
-            When set to "no", the password has to provided everytime.
+            When set to "no", the password has to be provided each time.
             When set to "environment" the password is taken from the
             UNLOCK variable
 
@@ -710,7 +714,7 @@ class Steem(object):
             the wallet, finalizes the transaction, signs it and
             broadacasts it
 
-            :param operation ops: The operation (or list of operaions) to
+            :param operation ops: The operation (or list of operations) to
                 broadcast
             :param operation account: The account that authorizes the
                 operation
@@ -769,7 +773,7 @@ class Steem(object):
             return self.txbuffer.broadcast()
 
     def sign(self, tx=None, wifs=[]):
-        """ Sign a provided transaction witht he provided key(s)
+        """ Sign a provided transaction with the provided key(s)
 
             :param dict tx: The transaction to be signed and returned
             :param string wifs: One or many wif keys to use for signing
@@ -937,8 +941,8 @@ class Steem(object):
                 names
             :param bool storekeys: Store new keys in the wallet (default:
                 ``True``)
-            :param delegation_fee_steem: If set, `creator` pay a
-                fee of this amount, and delegate the rest with VESTS (calculated
+            :param delegation_fee_steem: If set, `creator` pays a
+                fee of this amount, and delegates the rest with VESTS (calculated
                 automatically). Minimum: 1 STEEM. If left to 0 (Default), full fee
                 is paid without VESTS delegation.
             :param str creator: which account should pay the registration fee
@@ -1363,8 +1367,9 @@ class Steem(object):
                         account=None, **kwargs):
         """ Set the comment options
 
-            :param str identifier: Post identifier
             :param dict options: The options to define.
+            :param str identifier: Post identifier
+            :param list beneficiaries: (optional) list of beneficiaries
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
 
