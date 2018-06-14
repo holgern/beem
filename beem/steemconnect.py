@@ -20,7 +20,7 @@ from beem.amount import Amount
 class SteemConnect(object):
     """ SteemConnect
 
-        :param str scope: comma seperate string with scopes
+        :param str scope: comma separated string with scopes
             login,offline,vote,comment,delete_comment,comment_options,custom_json,claim_reward_balance
 
 
@@ -235,10 +235,9 @@ class SteemConnect(object):
         return r.json()
 
     def url_from_tx(self, tx, redirect_uri=None):
-        """ Creates a link for broadcasting a operation
+        """ Creates a link for broadcasting an operation
 
-            :param dict tx: inlcudes the operation, which should be broadcast
-            :param dict params: operation dict params
+            :param dict tx: includes the operation, which should be broadcast
             :param str redirect_uri: Redirects to this uri, when set
         """
         if not isinstance(tx, dict):
@@ -270,7 +269,7 @@ class SteemConnect(object):
             return urls
 
     def create_hot_sign_url(self, operation, params, redirect_uri=None):
-        """ Creates a link for broadcasting a operation
+        """ Creates a link for broadcasting an operation
 
             :param str operation: operation name (e.g.: vote)
             :param dict params: operation dict params

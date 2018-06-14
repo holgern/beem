@@ -119,7 +119,7 @@ class Blockchain(object):
         """ This call returns the current block number
 
             .. note:: The block number returned depends on the ``mode`` used
-                      when instanciating from this class.
+                      when instantiating from this class.
         """
         props = self.steem.get_dynamic_global_properties(False)
         if props is None:
@@ -133,7 +133,7 @@ class Blockchain(object):
             :param bool only_virtual_ops: Includes only virtual operations (default: False)
 
             .. note:: The block number returned depends on the ``mode`` used
-                      when instanciating from this class.
+                      when instantiating from this class.
         """
         return Block(
             self.get_current_block_num(),
@@ -148,7 +148,7 @@ class Blockchain(object):
             :param datetime date: block time for which a block number is estimated
 
             .. note:: The block number returned depends on the ``mode`` used
-                      when instanciating from this class.
+                      when instantiating from this class.
         """
         last_block = self.get_current_block()
         date = addTzInfo(date)
@@ -196,7 +196,7 @@ class Blockchain(object):
 
     def block_timestamp(self, block_num):
         """ Returns the timestamp of the block with the given block
-            number.
+            number as integer.
 
             :param int block_num: Block number
         """
@@ -212,10 +212,11 @@ class Blockchain(object):
             :param int start: Starting block
             :param int stop: Stop at this block
             :param int max_batch_size: only for appbase nodes. When not None, batch calls of are used.
-                Cannot combine with threading
+                Cannot be combined with threading
             :param bool threading: Enables threading. Cannot be combined with batch calls
             :param int thread_num: Defines the number of threads, when `threading` is set.
-            :param bool only_ops: Only yielding operations, when set to True (default: False)
+            :param bool only_ops: Only yield operations (default: False).
+                Cannot be combined with ``only_virtual_ops=True``.
             :param bool only_virtual_ops: Only yield virtual operations (default: False)
 
             .. note:: If you want instant confirmation, you need to instantiate
@@ -378,7 +379,7 @@ class Blockchain(object):
         raise DeprecationWarning('Blockchain.ops() is deprecated. Please use Blockchain.stream() instead.')
 
     def ops_statistics(self, start, stop=None, add_to_ops_stat=None, verbose=False):
-        """ Generates a statistics for all operations (including virtual operations) starting from
+        """ Generates statistics for all operations (including virtual operations) starting from
             ``start``.
 
             :param int start: Starting block
@@ -411,20 +412,20 @@ class Blockchain(object):
         """ Yield specific operations (e.g. comments) only
 
             :param array opNames: List of operations to filter for
-            :param bool raw_ops: When set to True, it returns the unmodified operations as the
-                deprecated ops() function
+            :param bool raw_ops: When set to True, it returns the unmodified operations (default: False)
             :param int start: Start at this block
             :param int stop: Stop at this block
             :param int max_batch_size: only for appbase nodes. When not None, batch calls of are used.
-                Cannot combine with threading
+                Cannot be combined with threading
             :param bool threading: Enables threading. Cannot be combined with batch calls
             :param int thread_num: Defines the number of threads, when `threading` is set.
-            :param bool only_ops: Only yielding operations, when set to True (default: False)
+            :param bool only_ops: Only yield operations (default: False)
+                Cannot be combined with ``only_virtual_ops=True``
             :param bool only_virtual_ops: Only yield virtual operations (default: False)
 
-            The dict output is formated such that ``type`` caries the
-            operation type, timestamp and block_num are taken from the
-            block the operation was stored in and the other key depend
+            The dict output is formated such that ``type`` carries the
+            operation type. Timestamp and block_num are taken from the
+            block the operation was stored in and the other keys depend
             on the actualy operation.
 
             .. note:: If you want instant confirmation, you need to instantiate
@@ -509,6 +510,8 @@ class Blockchain(object):
     def awaitTxConfirmation(self, transaction, limit=10):
         """ Returns the transaction as seen by the blockchain after being
             included into a block
+            :param dict transaction: transaction to wait for
+            :param int limit: (optional) number of blocks to wait for the transaction (default: 10)
 
             .. note:: If you want instant confirmation, you need to instantiate
                       class:`beem.blockchain.Blockchain` with

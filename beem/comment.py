@@ -26,8 +26,9 @@ log = logging.getLogger(__name__)
 class Comment(BlockchainObject):
     """ Read data about a Comment/Post in the chain
 
-        :param str authorperm: perm link to post/comment
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param str authorperm: identifier to post/comment in the form of
+            ``@author/permlink``
+        :param steem steem_instance: Steem() instance to use when accessing a RPC
 
 
         .. code-block:: python
@@ -538,14 +539,13 @@ class Comment(BlockchainObject):
     def vote(self, weight, account=None, identifier=None, **kwargs):
         """ Vote for a post
 
-            :param str identifier: Identifier for the post to upvote Takes
-                the form ``@author/permlink``
-            :param float weight: Voting weight. Range: -100.0 - +100.0. May
-                not be 0.0
-            :param str account: Voter to use for voting. (Optional)
+            :param float weight: Voting weight. Range: -100.0 - +100.0.
+            :param str account: (optional) Account to use for voting. If
+                ``account`` is not defined, the ``default_account`` will be used
+                or a ValueError will be raised
+            :param str identifier: Identifier for the post to vote. Takes the
+                form ``@author/permlink``.
 
-            If ``voter`` is not defines, the ``default_account`` will be taken
-            or a ValueError will be raised
         """
         if not account:
             if "default_account" in self.steem.config:
@@ -640,12 +640,17 @@ class Comment(BlockchainObject):
     def delete(self, account=None, identifier=None):
         """ Delete an existing post/comment
 
-            :param str identifier: Identifier for the post to upvote Takes
-                the form ``@author/permlink``
-            :param str account: Voter to use for voting. (Optional)
+            :param str account: (optional) Account to use for deletion. If
+                ``account`` is not defined, the ``default_account`` will be
+                taken or a ValueError will be raised.
 
-            If ``voter`` is not defines, the ``default_account`` will be taken
-            or a ValueError will be raised
+            :param str identifier: (optional) Identifier for the post to delete.
+                Takes the form ``@author/permlink``. By default the current post
+                will be used.
+
+            Note: a post/comment can only be deleted as long as it has no
+                replies and no positive rshares on it.
+
         """
         if not account:
             if "default_account" in self.steem.config:
@@ -694,6 +699,8 @@ class RecentReplies(list):
     """ Obtain a list of recent replies
 
         :param str author: author
+        :param bool skip_own: (optional) Skip replies of the author to him/herself.
+            Default: True
         :param steem steem_instance: Steem() instance to use when accesing a RPC
     """
     def __init__(self, author, skip_own=True, steem_instance=None):

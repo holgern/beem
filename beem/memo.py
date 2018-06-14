@@ -52,12 +52,12 @@ class Memo(object):
 
         In Steem, memos are AES-256 encrypted with a shared secret between sender and
         receiver. It is derived from the memo private key of the sender and the memo
-        publick key of the receiver.
+        public key of the receiver.
 
         In order for the receiver to decode the memo, the shared secret has to be
         derived from the receiver's private key and the senders public key.
 
-        The memo public key is part of the account and can be retreived with the
+        The memo public key is part of the account and can be retrieved with the
         `get_account` call:
 
         .. code-block:: js

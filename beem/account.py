@@ -40,7 +40,7 @@ class Account(BlockchainObject):
                 does not exist
 
         Instances of this class are dictionaries that come with additional
-        methods (see below) that allow dealing with an account and it's
+        methods (see below) that allow dealing with an account and its
         corresponding functions.
 
         .. code-block:: python
@@ -53,8 +53,8 @@ class Account(BlockchainObject):
 
         .. note:: This class comes with its own caching function to reduce the
                   load on the API server. Instances of this class can be
-                  refreshed with ``Account.refresh()``. The chache can be cleared with
-                  ``Account.clear_cache()``
+                  refreshed with ``Account.refresh()``. The cache can be
+                  cleared with ``Account.clear_cache()``
 
     """
 
@@ -67,7 +67,7 @@ class Account(BlockchainObject):
         lazy=False,
         steem_instance=None
     ):
-        """Initilize an account
+        """Initialize an account
 
         :param str account: Name of the account
         :param beem.steem.Steem steem_instance: Steem
@@ -172,7 +172,7 @@ class Account(BlockchainObject):
         return json.loads(str(json.dumps(output)))
 
     def getSimilarAccountNames(self, limit=5):
-        """Depriated, please use get_similar_account_names"""
+        """Deprecated, please use get_similar_account_names"""
         return self.get_similar_account_names(limit=limit)
 
     def get_similar_account_names(self, limit=5):
@@ -224,10 +224,14 @@ class Account(BlockchainObject):
 
     @property
     def sp(self):
+        """ Returns the accounts Steem Power
+        """
         return self.get_steem_power()
 
     @property
     def vp(self):
+        """ Returns the account voting power in the range of 0-100%
+        """
         return self.get_voting_power()
 
     @property
@@ -283,7 +287,7 @@ class Account(BlockchainObject):
             print(ret)
 
     def get_reputation(self):
-        """ Returns the account reputation
+        """ Returns the account reputation in the (steemit) normalized form
         """
         if not self.steem.is_connected():
             return None
@@ -297,7 +301,7 @@ class Account(BlockchainObject):
         return reputation_to_score(rep)
 
     def get_voting_power(self, with_regeneration=True):
-        """ Returns the account voting power
+        """ Returns the account voting power in the range of 0-100%
         """
         if with_regeneration:
             diff_in_seconds = (addTzInfo(datetime.utcnow()) - (self["last_vote_time"])).total_seconds()
@@ -343,7 +347,7 @@ class Account(BlockchainObject):
         return ops[0]['creator']
 
     def get_recharge_time_str(self, voting_power_goal=100):
-        """ Returns the account recharge time
+        """ Returns the account recharge time as string
 
             :param float voting_power_goal: voting power goal in percentage (default is 100)
 
@@ -1588,7 +1592,7 @@ class Account(BlockchainObject):
     def approvewitness(self, witness, account=None, approve=True, **kwargs):
         """ Approve a witness
 
-            :param list witnesses: list of Witness name or id
+            :param list witness: list of Witness name or id
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
 
@@ -1615,7 +1619,7 @@ class Account(BlockchainObject):
     def disapprovewitness(self, witness, account=None, **kwargs):
         """ Disapprove a witness
 
-            :param list witnesses: list of Witness name or id
+            :param list witness: list of Witness name or id
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
         """
@@ -1732,9 +1736,9 @@ class Account(BlockchainObject):
         return self.steem.finalizeOp(op, account, "active", **kwargs)
 
     def convert(self, amount, account=None, request_id=None):
-        """ Convert SteemDollars to Steem (takes one week to settle)
+        """ Convert SteemDollars to Steem (takes 3.5 days to settle)
 
-            :param float amount: number of VESTS to withdraw
+            :param float amount: amount of SBD to convert
             :param str account: (optional) the source account for the transfer
                 if not ``default_account``
             :param str request_id: (optional) identifier for tracking the
@@ -1967,7 +1971,7 @@ class Account(BlockchainObject):
         """ Withdraw VESTS from the vesting account.
 
             :param float amount: number of VESTS to withdraw over a period of
-                104 weeks
+                13 weeks
             :param str account: (optional) the source account for the transfer
                 if not ``default_account``
 
@@ -2004,7 +2008,7 @@ class Account(BlockchainObject):
             :param float percentage: The percent of the withdraw to go
                 to the 'to' account.
             :param str account: (optional) the vesting account
-            :param bool auto_vest: Set to true if the from account
+            :param bool auto_vest: Set to true if the 'to' account
                 should receive the VESTS as VESTS, or false if it should
                 receive them as STEEM. (defaults to ``False``)
 
@@ -2036,11 +2040,11 @@ class Account(BlockchainObject):
                 smaller than the threshold, additional signatures will
                 be required. (defaults to threshold)
             :param str permission: (optional) The actual permission to
-                modify (defaults to ``active``)
+                modify (defaults to ``posting``)
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
-            :param int threshold: The threshold that needs to be reached
-                by signatures to be able to interact
+            :param int threshold: (optional) The threshold that needs to be
+                reached by signatures to be able to interact
         """
         from copy import deepcopy
         if account is None:
@@ -2109,7 +2113,7 @@ class Account(BlockchainObject):
 
             :param str foreign: The foreign account that will obtain access
             :param str permission: (optional) The actual permission to
-                modify (defaults to ``active``)
+                modify (defaults to ``posting``)
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
             :param int threshold: The threshold that needs to be reached
@@ -2234,8 +2238,11 @@ class AccountsObject(list):
 class Accounts(AccountsObject):
     """ Obtain a list of accounts
 
+        :param list name_list: list of accounts to fetch
+        :param int batch_limit: (optional) maximum number of accounts
+            to fetch per call, defaults to 100
         :param steem steem_instance: Steem() instance to use when
-            accesing a RPC
+            accessing a RPC
     """
     def __init__(self, name_list, batch_limit=100, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()

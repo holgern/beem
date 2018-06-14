@@ -393,6 +393,8 @@ class Wallet(object):
 
     def removeTokenFromPublicName(self, name):
         """ Remove a token from the wallet database
+
+            :param str name: token to be removed
         """
         if self.tokenStorage:
             # Test if wallet exists
@@ -401,7 +403,10 @@ class Wallet(object):
             self.tokenStorage.delete(name)
 
     def addPrivateKey(self, wif):
-        """Add a private key to the wallet database"""
+        """Add a private key to the wallet database
+
+            :param str wif: Private key
+        """
         pub = self._get_pub_from_wif(wif)
         if isinstance(wif, PrivateKey):
             wif = str(wif)
@@ -436,6 +441,8 @@ class Wallet(object):
 
     def removePrivateKeyFromPublicKey(self, pub):
         """ Remove a key from the wallet database
+
+            :param str pub: Public key
         """
         if self.keyStorage:
             # Test if wallet exists
@@ -445,6 +452,8 @@ class Wallet(object):
 
     def removeAccount(self, account):
         """ Remove all keys associated with a given account
+
+            :param str account: name of account to be removed
         """
         accounts = self.getAccounts()
         for a in accounts:
@@ -453,6 +462,10 @@ class Wallet(object):
 
     def getKeyForAccount(self, name, key_type):
         """ Obtain `key_type` Private Key for an account from the wallet database
+
+            :param str name: Account name
+            :param str key_type: key type, has to be one of "owner", "active",
+                "posting" or "memo"
         """
         if key_type not in ["owner", "active", "posting", "memo"]:
             raise AssertionError("Wrong key type")
@@ -487,6 +500,10 @@ class Wallet(object):
 
     def getKeysForAccount(self, name, key_type):
         """ Obtain a List of `key_type` Private Keys for an account from the wallet database
+
+            :param str name: Account name
+            :param str key_type: key type, has to be one of "owner", "active",
+                "posting" or "memo"
         """
         if key_type not in ["owner", "active", "posting", "memo"]:
             raise AssertionError("Wrong key type")
