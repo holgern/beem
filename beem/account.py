@@ -167,12 +167,12 @@ class Account(BlockchainObject):
             "sbd_seconds", "savings_sbd_seconds", "average_bandwidth", "lifetime_bandwidth", "lifetime_market_bandwidth", "reputation",
         ]
         for p in parse_int:
-            if p in output and isinstance(output[p], int) and output[p] != 0:
+            if p in output and isinstance(output[p], integer_types) and output[p] != 0:
                 output[p] = str(output[p])
         if "proxied_vsf_votes" in output:
             proxied_vsf_votes = []
             for p_int in output["proxied_vsf_votes"]:
-                if isinstance(p_int, int) and p_int != 0:
+                if isinstance(p_int, integer_types) and p_int != 0:
                     proxied_vsf_votes.append(str(p_int))
                 else:
                     proxied_vsf_votes.append(p_int)

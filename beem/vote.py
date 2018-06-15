@@ -148,7 +148,7 @@ class Vote(BlockchainObject):
             "rshares", "reputation",
         ]
         for p in parse_int:
-            if p in output and isinstance(output[p], int):
+            if p in output and isinstance(output[p], integer_types):
                 output[p] = str(output[p])
         return json.loads(str(json.dumps(output)))
 

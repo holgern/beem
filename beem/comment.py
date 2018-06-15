@@ -185,7 +185,7 @@ class Comment(BlockchainObject):
             "author_reputation",
         ]
         for p in parse_int:
-            if p in output and isinstance(output[p], int):
+            if p in output and isinstance(output[p], integer_types):
                 output[p] = str(output[p])
         if "active_votes" in output:
             new_active_votes = []
@@ -200,7 +200,7 @@ class Comment(BlockchainObject):
                     "rshares", "reputation",
                 ]
                 for p in parse_int:
-                    if p in vote and isinstance(vote[p], int):
+                    if p in vote and isinstance(vote[p], integer_types):
                         vote[p] = str(vote[p])
                 new_active_votes.append(vote)
             output["active_votes"] = new_active_votes
@@ -462,7 +462,7 @@ class Comment(BlockchainObject):
         else:
             if pending_payout_value is None:
                 pending_payout_value = Amount(self["pending_payout_value"], steem_instance=self.steem)
-            elif isinstance(pending_payout_value, (float, int)):
+            elif isinstance(pending_payout_value, (float, integer_types)):
                 pending_payout_value = Amount(pending_payout_value, "SBD", steem_instance=self.steem)
             elif isinstance(pending_payout_value, str):
                 pending_payout_value = Amount(pending_payout_value, steem_instance=self.steem)
