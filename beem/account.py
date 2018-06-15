@@ -46,9 +46,9 @@ class Account(BlockchainObject):
         .. code-block:: python
 
             >>> from beem.account import Account
-            >>> account = Account("test")
+            >>> account = Account("gtg")
             >>> print(account)
-            <Account test>
+            <Account gtg>
             >>> print(account.balances) # doctest: +SKIP
 
         .. note:: This class comes with its own caching function to reduce the
@@ -78,6 +78,9 @@ class Account(BlockchainObject):
         """
         self.full = full
         self.lazy = lazy
+        self.steem = steem_instance or shared_steem_instance()
+        if isinstance(account, dict):
+            account = self._parse_json_data(account)
         super(Account, self).__init__(
             account,
             lazy=lazy,
@@ -85,7 +88,6 @@ class Account(BlockchainObject):
             id_item="name",
             steem_instance=steem_instance
         )
-        self._parse_json_data()
 
     def refresh(self):
         """ Refresh/Obtain an account's data from the API server
@@ -108,13 +110,27 @@ class Account(BlockchainObject):
             account = account[0]
         if not account:
             raise AccountDoesNotExistsException(self.identifier)
+        account = self._parse_json_data(account)
         self.identifier = account["name"]
         # self.steem.refresh_data()
 
         super(Account, self).__init__(account, id_item="name", lazy=self.lazy, full=self.full, steem_instance=self.steem)
-        self._parse_json_data()
 
-    def _parse_json_data(self):
+    def _parse_json_data(self, account):
+        parse_int = [
+            "sbd_seconds", "savings_sbd_seconds", "average_bandwidth", "lifetime_bandwidth", "lifetime_market_bandwidth", "reputation",
+        ]
+        for p in parse_int:
+            if p in account and isinstance(account.get(p), string_types):
+                account[p] = int(account.get(p, "0"))
+        if "proxied_vsf_votes" in account:
+            proxied_vsf_votes = []
+            for p_int in account["proxied_vsf_votes"]:
+                if isinstance(p_int, string_types):
+                    proxied_vsf_votes.append(int(p_int))
+                else:
+                    proxied_vsf_votes.append(p_int)
+            account["proxied_vsf_votes"] = proxied_vsf_votes
         parse_times = [
             "last_owner_update", "last_account_update", "created", "last_owner_proved", "last_active_proved",
             "last_account_recovery", "last_vote_time", "sbd_seconds_last_update", "sbd_last_interest_payment",
@@ -122,8 +138,8 @@ class Account(BlockchainObject):
             "last_market_bandwidth_update", "last_post", "last_root_post", "last_bandwidth_update"
         ]
         for p in parse_times:
-            if p in self and isinstance(self.get(p), string_types):
-                self[p] = formatTimeString(self.get(p, "1970-01-01T00:00:00"))
+            if p in account and isinstance(account.get(p), string_types):
+                account[p] = formatTimeString(account.get(p, "1970-01-01T00:00:00"))
         # Parse Amounts
         amounts = [
             "balance",
@@ -136,14 +152,31 @@ class Account(BlockchainObject):
             "reward_vesting_steem",
             "vesting_shares",
             "delegated_vesting_shares",
-            "received_vesting_shares"
+            "received_vesting_shares",
+            "vesting_withdraw_rate",
+            "vesting_balance",
         ]
         for p in amounts:
-            if p in self and isinstance(self.get(p), (string_types, list, dict)):
-                self[p] = Amount(self[p], steem_instance=self.steem)
+            if p in account and isinstance(account.get(p), (string_types, list, dict)):
+                account[p] = Amount(account[p], steem_instance=self.steem)
+        return account
 
     def json(self):
         output = self.copy()
+        parse_int = [
+            "sbd_seconds", "savings_sbd_seconds", "average_bandwidth", "lifetime_bandwidth", "lifetime_market_bandwidth", "reputation",
+        ]
+        for p in parse_int:
+            if p in output and isinstance(output[p], int) and output[p] != 0:
+                output[p] = str(output[p])
+        if "proxied_vsf_votes" in output:
+            proxied_vsf_votes = []
+            for p_int in output["proxied_vsf_votes"]:
+                if isinstance(p_int, int) and p_int != 0:
+                    proxied_vsf_votes.append(str(p_int))
+                else:
+                    proxied_vsf_votes.append(p_int)
+            output["proxied_vsf_votes"] = proxied_vsf_votes
         parse_times = [
             "last_owner_update", "last_account_update", "created", "last_owner_proved", "last_active_proved",
             "last_account_recovery", "last_vote_time", "sbd_seconds_last_update", "sbd_last_interest_payment",
@@ -152,11 +185,11 @@ class Account(BlockchainObject):
         ]
         for p in parse_times:
             if p in output:
-                date = output.get(p, datetime(1970, 1, 1, 0, 0))
-                if isinstance(date, (datetime, date, time)):
-                    output[p] = formatTimeString(date)
+                p_date = output.get(p, datetime(1970, 1, 1, 0, 0))
+                if isinstance(p_date, (datetime, date, time)):
+                    output[p] = formatTimeString(p_date)
                 else:
-                    output[p] = date
+                    output[p] = p_date
         amounts = [
             "balance",
             "savings_balance",
@@ -168,7 +201,9 @@ class Account(BlockchainObject):
             "reward_vesting_steem",
             "vesting_shares",
             "delegated_vesting_shares",
-            "received_vesting_shares"
+            "received_vesting_shares",
+            "vesting_withdraw_rate",
+            "vesting_balance"
         ]
         for p in amounts:
             if p in output:

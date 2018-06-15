@@ -9,7 +9,7 @@ import math
 import pytz
 import logging
 from prettytable import PrettyTable
-from datetime import datetime
+from datetime import datetime, date
 from beemgraphenebase.py23 import integer_types, string_types, text_type
 from .instance import shared_steem_instance
 from .account import Account
@@ -46,6 +46,7 @@ class Vote(BlockchainObject):
     ):
         self.full = full
         self.lazy = lazy
+        self.steem = steem_instance or shared_steem_instance()
         if isinstance(voter, string_types) and authorperm is not None:
             [author, permlink] = resolve_authorperm(authorperm)
             self["voter"] = voter
@@ -56,6 +57,7 @@ class Vote(BlockchainObject):
         elif isinstance(voter, dict) and "author" in voter and "permlink" in voter and "voter" in voter:
             authorpermvoter = voter
             authorpermvoter["authorpermvoter"] = construct_authorpermvoter(voter["author"], voter["permlink"], voter["voter"])
+            authorpermvoter = self._parse_json_data(authorpermvoter)
         elif isinstance(voter, dict) and "authorperm" in voter and authorperm is not None:
             [author, permlink] = resolve_authorperm(voter["authorperm"])
             authorpermvoter = voter
@@ -63,12 +65,14 @@ class Vote(BlockchainObject):
             authorpermvoter["author"] = author
             authorpermvoter["permlink"] = permlink
             authorpermvoter["authorpermvoter"] = construct_authorpermvoter(author, permlink, authorperm)
+            authorpermvoter = self._parse_json_data(authorpermvoter)
         elif isinstance(voter, dict) and "voter" in voter and authorperm is not None:
             [author, permlink] = resolve_authorperm(authorperm)
             authorpermvoter = voter
             authorpermvoter["author"] = author
             authorpermvoter["permlink"] = permlink
             authorpermvoter["authorpermvoter"] = construct_authorpermvoter(author, permlink, voter["voter"])
+            authorpermvoter = self._parse_json_data(authorpermvoter)
         else:
             authorpermvoter = voter
             [author, permlink, voter] = resolve_authorpermvoter(authorpermvoter)
@@ -82,7 +86,6 @@ class Vote(BlockchainObject):
             full=full,
             steem_instance=steem_instance
         )
-        self._parse_json_data()
 
     def refresh(self):
         if self.identifier is None:
@@ -105,25 +108,25 @@ class Vote(BlockchainObject):
                 vote = x
         if not vote:
             raise VoteDoesNotExistsException(self.identifier)
+        vote = self._parse_json_data(vote)
+        vote["authorpermvoter"] = construct_authorpermvoter(author, permlink, voter)
         super(Vote, self).__init__(vote, id_item="authorpermvoter", lazy=self.lazy, full=self.full, steem_instance=self.steem)
 
-        self.identifier = construct_authorpermvoter(author, permlink, voter)
-        self._parse_json_data()
-
-    def _parse_json_data(self):
+    def _parse_json_data(self, vote):
         parse_int = [
             "rshares", "reputation",
         ]
         for p in parse_int:
-            if p in self and isinstance(self.get(p), string_types):
-                self[p] = int(self.get(p, "0"))
+            if p in vote and isinstance(vote.get(p), string_types):
+                vote[p] = int(vote.get(p, "0"))
 
-        if "time" in self and isinstance(self.get("time"), string_types) and self.get("time") != '':
-            self["time"] = formatTimeString(self.get("time", "1970-01-01T00:00:00"))
-        elif "timestamp" in self and isinstance(self.get("timestamp"), string_types) and self.get("timestamp") != '':
-            self["time"] = formatTimeString(self.get("timestamp", "1970-01-01T00:00:00"))
+        if "time" in vote and isinstance(vote.get("time"), string_types) and vote.get("time") != '':
+            vote["time"] = formatTimeString(vote.get("time", "1970-01-01T00:00:00"))
+        elif "timestamp" in vote and isinstance(vote.get("timestamp"), string_types) and vote.get("timestamp") != '':
+            vote["time"] = formatTimeString(vote.get("timestamp", "1970-01-01T00:00:00"))
         else:
-            self["time"] = formatTimeString("1970-01-01T00:00:00")
+            vote["time"] = formatTimeString("1970-01-01T00:00:00")
+        return vote
 
     def json(self):
         output = self.copy()
@@ -136,11 +139,11 @@ class Vote(BlockchainObject):
         ]
         for p in parse_times:
             if p in output:
-                date = output.get(p, datetime(1970, 1, 1, 0, 0))
-                if isinstance(date, (datetime, date)):
-                    output[p] = formatTimeString(date)
+                p_date = output.get(p, datetime(1970, 1, 1, 0, 0))
+                if isinstance(p_date, (datetime, date)):
+                    output[p] = formatTimeString(p_date)
                 else:
-                    output[p] = date
+                    output[p] = p_date
         parse_int = [
             "rshares", "reputation",
         ]

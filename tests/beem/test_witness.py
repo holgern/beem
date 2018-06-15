@@ -121,3 +121,30 @@ class Testcases(unittest.TestCase):
         w.printAsTable()
         self.assertTrue(len(w) > 0)
         self.assertTrue(isinstance(w[0], Witness))
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_export(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        else:
+            bts = self.appbase
+        owner = "gtg"
+        if bts.rpc.get_use_appbase():
+            witness = bts.rpc.find_witnesses({'owners': [owner]}, api="database")['witnesses']
+            if len(witness) > 0:
+                witness = witness[0]
+        else:
+            witness = bts.rpc.get_witness_by_account(owner)
+
+        w = Witness(owner, steem_instance=bts)
+        keys = list(witness.keys())
+        json_witness = w.json()
+
+        for k in keys:
+            if isinstance(witness[k], dict) and isinstance(json_witness[k], list):
+                self.assertEqual(list(witness[k].values()), json_witness[k])
+            else:
+                self.assertEqual(witness[k], json_witness[k])

@@ -107,3 +107,49 @@ class Testcases(unittest.TestCase):
             exceptions.BlockDoesNotExistsException
         ):
             BlockHeader(0, steem_instance=bts)
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_export(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        else:
+            bts = self.appbase
+        block_num = 2000000
+        if bts.rpc.get_use_appbase():
+            block = bts.rpc.get_block({"block_num": block_num}, api="block")
+            if block and "block" in block:
+                block = block["block"]
+        else:
+            block = bts.rpc.get_block(block_num)
+
+        b = Block(block_num, steem_instance=bts)
+        keys = list(block.keys())
+        json_content = b.json()
+
+        for k in keys:
+            if k not in "json_metadata":
+                if isinstance(block[k], dict) and isinstance(json_content[k], list):
+                    self.assertEqual(list(block[k].values()), json_content[k])
+                else:
+                    self.assertEqual(block[k], json_content[k])
+
+        if bts.rpc.get_use_appbase():
+            block = bts.rpc.get_block_header({"block_num": block_num}, api="block")
+            if "header" in block:
+                block = block["header"]
+        else:
+            block = bts.rpc.get_block_header(block_num)
+
+        b = BlockHeader(block_num, steem_instance=bts)
+        keys = list(block.keys())
+        json_content = b.json()
+
+        for k in keys:
+            if k not in "json_metadata":
+                if isinstance(block[k], dict) and isinstance(json_content[k], list):
+                    self.assertEqual(list(block[k].values()), json_content[k])
+                else:
+                    self.assertEqual(block[k], json_content[k])

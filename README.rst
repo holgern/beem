@@ -168,7 +168,13 @@ Changelog
 * poloniex removed and huobi and ubpit added to steem_btc_ticker()
 * Add timeout to websocket connections
 * Documentation improved by crokkon
-* time, reputation and rshares are parsed from string in all vote objects
+* "time", "reputation" and "rshares" are parsed from string in all vote objects and inside all active_votes from a comment object
+* lazy and full properly passed
+* "votes", "virtual_last_update", "virtual_position", "virtual_scheduled_time",
+    "created", "last_sbd_exchange_update", "hardfork_time_vote" are properly casted in all witness objects
+* "time" and "expiration" are parsed to a datetime object inside all block objects
+* The json() function returns the original not parsed json dict. It is available for Account, Block, BlockHeader, Comment, Vote and Witness
+* json_transactions and json_operations added to Block, for returning all dates as string
 
 0.19.37
 -------

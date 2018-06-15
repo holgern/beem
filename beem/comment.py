@@ -53,13 +53,16 @@ class Comment(BlockchainObject):
     ):
         self.full = full
         self.lazy = lazy
+        self.steem = steem_instance or shared_steem_instance()
         if isinstance(authorperm, string_types) and authorperm != "":
             [author, permlink] = resolve_authorperm(authorperm)
             self["id"] = 0
             self["author"] = author
             self["permlink"] = permlink
+            self["authorperm"] = authorperm
         elif isinstance(authorperm, dict) and "author" in authorperm and "permlink" in authorperm:
             authorperm["authorperm"] = construct_authorperm(authorperm["author"], authorperm["permlink"])
+            authorperm = self._parse_json_data(authorperm)
         super(Comment, self).__init__(
             authorperm,
             id_item="authorperm",
@@ -67,18 +70,15 @@ class Comment(BlockchainObject):
             full=full,
             steem_instance=steem_instance
         )
-        if "author" in self and "permlink" in self:
-            self.identifier = construct_authorperm(self["author"], self["permlink"])
-        self._parse_json_data()
 
-    def _parse_json_data(self):
+    def _parse_json_data(self, comment):
         parse_times = [
             "active", "cashout_time", "created", "last_payout", "last_update",
             "max_cashout_time"
         ]
         for p in parse_times:
-            if p in self and isinstance(self.get(p), string_types):
-                self[p] = formatTimeString(self.get(p, "1970-01-01T00:00:00"))
+            if p in comment and isinstance(comment.get(p), string_types):
+                comment[p] = formatTimeString(comment.get(p, "1970-01-01T00:00:00"))
         # Parse Amounts
         sbd_amounts = [
             "total_payout_value",
@@ -89,36 +89,48 @@ class Comment(BlockchainObject):
             "promoted",
         ]
         for p in sbd_amounts:
-            if p in self and isinstance(self.get(p), (string_types, list, dict)):
-                self[p] = Amount(self.get(p, "0.000 SBD"), steem_instance=self.steem)
+            if p in comment and isinstance(comment.get(p), (string_types, list, dict)):
+                comment[p] = Amount(comment.get(p, "0.000 SBD"), steem_instance=self.steem)
 
         # turn json_metadata into python dict
-        self._metadata_to_dict()
-        self["tags"] = []
-        self['community'] = ''
-        if isinstance(self['json_metadata'], dict):
-            if "tags" in self['json_metadata']:
-                self["tags"] = self['json_metadata']["tags"]
-            if 'community' in self['json_metadata']:
-                self['community'] = self['json_metadata']['community']
+        meta_str = comment.get("json_metadata", "{}")
+        if meta_str == "{}":
+            comment['json_metadata'] = meta_str
+        if isinstance(meta_str, (string_types, bytes_types, bytearray)):
+            try:
+                comment['json_metadata'] = json.loads(meta_str)
+            except:
+                comment['json_metadata'] = {}
+
+        comment["tags"] = []
+        comment['community'] = ''
+        if isinstance(comment['json_metadata'], dict):
+            if "tags" in comment['json_metadata']:
+                comment["tags"] = comment['json_metadata']["tags"]
+            if 'community' in comment['json_metadata']:
+                comment['community'] = comment['json_metadata']['community']
 
         parse_int = [
             "author_reputation",
         ]
         for p in parse_int:
-            if p in self and isinstance(self.get(p), string_types):
-                self[p] = int(self.get(p, "0"))
+            if p in comment and isinstance(comment.get(p), string_types):
+                comment[p] = int(comment.get(p, "0"))
 
-    def _metadata_to_dict(self):
-        """turn json_metadata into python dict"""
-        meta_str = self.get("json_metadata", "{}")
-        if meta_str == "{}":
-            self['json_metadata'] = meta_str
-        if isinstance(meta_str, (string_types, bytes_types, bytearray)):
-            try:
-                self['json_metadata'] = json.loads(meta_str)
-            except:
-                self['json_metadata'] = {}
+        if "active_votes" in comment:
+            new_active_votes = []
+            for vote in comment["active_votes"]:
+                if 'time' in vote and isinstance(vote.get('time'), string_types):
+                    vote['time'] = formatTimeString(vote.get('time', "1970-01-01T00:00:00"))
+                parse_int = [
+                    "rshares", "reputation",
+                ]
+                for p in parse_int:
+                    if p in vote and isinstance(vote.get(p), string_types):
+                        vote[p] = int(vote.get(p, "0"))
+                new_active_votes.append(vote)
+            comment["active_votes"] = new_active_votes
+        return comment
 
     def refresh(self):
         if self.identifier == "":
@@ -133,10 +145,9 @@ class Comment(BlockchainObject):
             content = self.steem.rpc.get_content(author, permlink)
         if not content or not content['author'] or not content['permlink']:
             raise ContentDoesNotExistsException(self.identifier)
+        content = self._parse_json_data(content)
+        content["authorperm"] = construct_authorperm(content['author'], content['permlink'])
         super(Comment, self).__init__(content, id_item="authorperm", lazy=self.lazy, full=self.full, steem_instance=self.steem)
-        self["authorperm"] = construct_authorperm(self["author"], self["permlink"])
-        self.identifier = self["authorperm"]
-        self._parse_json_data()
 
     def json(self):
         output = self.copy()
@@ -154,11 +165,11 @@ class Comment(BlockchainObject):
         ]
         for p in parse_times:
             if p in output:
-                date = output.get(p, datetime(1970, 1, 1, 0, 0))
-                if isinstance(date, (datetime, date)):
-                    output[p] = formatTimeString(date)
+                p_date = output.get(p, datetime(1970, 1, 1, 0, 0))
+                if isinstance(p_date, (datetime, date)):
+                    output[p] = formatTimeString(p_date)
                 else:
-                    output[p] = date
+                    output[p] = p_date
         sbd_amounts = [
             "total_payout_value",
             "max_accepted_payout",
@@ -176,6 +187,23 @@ class Comment(BlockchainObject):
         for p in parse_int:
             if p in output and isinstance(output[p], int):
                 output[p] = str(output[p])
+        if "active_votes" in output:
+            new_active_votes = []
+            for vote in output["active_votes"]:
+                if 'time' in vote:
+                    p_date = vote.get('time', datetime(1970, 1, 1, 0, 0))
+                    if isinstance(p_date, (datetime, date)):
+                        vote['time'] = formatTimeString(p_date)
+                    else:
+                        vote['time'] = p_date
+                parse_int = [
+                    "rshares", "reputation",
+                ]
+                for p in parse_int:
+                    if p in vote and isinstance(vote[p], int):
+                        vote[p] = str(vote[p])
+                new_active_votes.append(vote)
+            output["active_votes"] = new_active_votes
         return json.loads(str(json.dumps(output)))
 
     @property

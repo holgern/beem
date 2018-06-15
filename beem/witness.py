@@ -4,6 +4,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
+import json
 from beem.instance import shared_steem_instance
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from .account import Account
@@ -11,7 +12,7 @@ from .amount import Amount
 from .exceptions import WitnessDoesNotExistsException
 from .blockchainobject import BlockchainObject
 from .utils import formatTimeString
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from beembase import transactions, operations
 from beemgraphenebase.account import PrivateKey, PublicKey
 import pytz
@@ -43,6 +44,9 @@ class Witness(BlockchainObject):
     ):
         self.full = full
         self.lazy = lazy
+        self.steem = steem_instance or shared_steem_instance()
+        if isinstance(owner, dict):
+            owner = self._parse_json_data(owner)
         super(Witness, self).__init__(
             owner,
             lazy=lazy,
@@ -65,8 +69,43 @@ class Witness(BlockchainObject):
             witness = self.steem.rpc.get_witness_by_account(self.identifier)
         if not witness:
             raise WitnessDoesNotExistsException(self.identifier)
+        witness = self._parse_json_data(witness)
         super(Witness, self).__init__(witness, id_item="owner", lazy=self.lazy, full=self.full, steem_instance=self.steem)
-        self.identifier = self["owner"]
+
+    def _parse_json_data(self, witness):
+        parse_times = [
+            "created", "last_sbd_exchange_update", "hardfork_time_vote",
+        ]
+        for p in parse_times:
+            if p in witness and isinstance(witness.get(p), string_types):
+                witness[p] = formatTimeString(witness.get(p, "1970-01-01T00:00:00"))
+        parse_int = [
+            "votes", "virtual_last_update", "virtual_position", "virtual_scheduled_time",
+        ]
+        for p in parse_int:
+            if p in witness and isinstance(witness.get(p), string_types):
+                witness[p] = int(witness.get(p, "0"))
+        return witness
+
+    def json(self):
+        output = self.copy()
+        parse_times = [
+            "created", "last_sbd_exchange_update", "hardfork_time_vote",
+        ]
+        for p in parse_times:
+            if p in output:
+                p_date = output.get(p, datetime(1970, 1, 1, 0, 0))
+                if isinstance(p_date, (datetime, date)):
+                    output[p] = formatTimeString(p_date)
+                else:
+                    output[p] = p_date
+        parse_int = [
+            "votes", "virtual_last_update", "virtual_position", "virtual_scheduled_time",
+        ]
+        for p in parse_int:
+            if p in output and isinstance(output[p], int):
+                output[p] = str(output[p])
+        return json.loads(str(json.dumps(output)))
 
     @property
     def account(self):
@@ -156,7 +195,7 @@ class WitnessesObject(list):
         elif sort_key == 'quote':
             sortedList = sorted(self, key=lambda self: self['sbd_exchange_rate']['quote'], reverse=reverse)
         elif sort_key == 'last_sbd_exchange_update':
-            sortedList = sorted(self, key=lambda self: (utc.localize(datetime.utcnow()) - formatTimeString(self['last_sbd_exchange_update'])).total_seconds(), reverse=reverse)
+            sortedList = sorted(self, key=lambda self: (utc.localize(datetime.utcnow()) - self['last_sbd_exchange_update']).total_seconds(), reverse=reverse)
         elif sort_key == 'account_creation_fee':
             sortedList = sorted(self, key=lambda self: self['props']['account_creation_fee'], reverse=reverse)
         elif sort_key == 'sbd_interest_rate':
@@ -168,7 +207,7 @@ class WitnessesObject(list):
         else:
             sortedList = sorted(self, key=lambda self: self[sort_key], reverse=reverse)
         for witness in sortedList:
-            td = utc.localize(datetime.utcnow()) - formatTimeString(witness['last_sbd_exchange_update'])
+            td = utc.localize(datetime.utcnow()) - witness['last_sbd_exchange_update']
             disabled = ""
             if not witness.is_active:
                 disabled = "yes"
@@ -219,8 +258,15 @@ class Witnesses(WitnessesObject):
 
         :param steem steem_instance: Steem() instance to use when
             accesing a RPC
+
+        .. code-block:: python
+
+           >>> from beem.witness import Witnesses
+           >>> Witnesses()
+           <Witnesses >
+
     """
-    def __init__(self, lazy=False, full=False, steem_instance=None):
+    def __init__(self, lazy=False, full=True, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
@@ -245,8 +291,15 @@ class WitnessesVotedByAccount(WitnessesObject):
         :param str account: Account name
         :param steem steem_instance: Steem() instance to use when
             accesing a RPC
+
+        .. code-block:: python
+
+           >>> from beem.witness import WitnessesVotedByAccount
+           >>> WitnessesVotedByAccount("gtg")
+           <WitnessesVotedByAccount gtg>
+
     """
-    def __init__(self, account, lazy=False, full=False, steem_instance=None):
+    def __init__(self, account, lazy=False, full=True, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.account = Account(account, full=True, steem_instance=self.steem)
         account_name = self.account["name"]
@@ -276,9 +329,17 @@ class WitnessesVotedByAccount(WitnessesObject):
 class WitnessesRankedByVote(WitnessesObject):
     """ Obtain a list of witnesses ranked by Vote
 
-        :param str from_account: Witness name
+        :param str from_account: Witness name from which the lists starts (default = "")
+        :param int limit: Limits the number of shown witnesses (default = 100)
         :param steem steem_instance: Steem() instance to use when
             accesing a RPC
+
+        .. code-block:: python
+
+           >>> from beem.witness import WitnessesRankedByVote
+           >>> WitnessesRankedByVote(limit=100)
+           <WitnessesRankedByVote >
+
     """
     def __init__(self, from_account="", limit=100, lazy=False, full=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
@@ -321,13 +382,21 @@ class WitnessesRankedByVote(WitnessesObject):
 
 
 class ListWitnesses(WitnessesObject):
-    """ Obtain a list of witnesses which have been voted by an account
+    """ List witnesses ranked by name
 
-        :param str from_account: Account name
+        :param str from_account: Witness name from which the lists starts (default = "")
+        :param int limit: Limits the number of shown witnesses (default = 100)
         :param steem steem_instance: Steem() instance to use when
             accesing a RPC
+
+        .. code-block:: python
+
+           >>> from beem.witness import ListWitnesses
+           >>> ListWitnesses(from_account="gtg", limit=100)
+           <ListWitnesses gtg>
+
     """
-    def __init__(self, from_account, limit, lazy=False, full=False, steem_instance=None):
+    def __init__(self, from_account="", limit=100, lazy=False, full=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.identifier = from_account
         self.steem.rpc.set_next_node_on_empty_reply(False)

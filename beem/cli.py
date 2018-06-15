@@ -2221,7 +2221,7 @@ def curation(authorperm, account, limit, min_vote, max_vote, min_performance, ma
             else:
                 performance = 0
                 penalty = 0
-            vote_befor_min = ((formatTimeString(vote["time"]) - comment["created"]).total_seconds() / 60)
+            vote_befor_min = (((vote["time"]) - comment["created"]).total_seconds() / 60)
             sum_curation[0] += vote_SBD
             sum_curation[1] += penalty
             sum_curation[2] += float(curation_SP)
@@ -2413,7 +2413,7 @@ def rewards(accounts, only_sum, post, comment, curation, length, author, permlin
                             permlink_row = c.permlink
                     rows.append([c["author"],
                                  permlink_row,
-                                 ((now - formatTimeString(v["timestamp"])).total_seconds() / 60 / 60 / 24),
+                                 ((now - (v["timestamp"])).total_seconds() / 60 / 60 / 24),
                                  (payout_SBD),
                                  (payout_STEEM),
                                  (payout_SP),
@@ -2433,7 +2433,7 @@ def rewards(accounts, only_sum, post, comment, curation, length, author, permlin
                         permlink_row = v["comment_permlink"]
                     rows.append([v["comment_author"],
                                  permlink_row,
-                                 ((now - formatTimeString(v["timestamp"])).total_seconds() / 60 / 60 / 24),
+                                 ((now - (v["timestamp"])).total_seconds() / 60 / 60 / 24),
                                  0.000,
                                  0.000,
                                  payout_SP,
@@ -2865,8 +2865,9 @@ def info(objects):
             if block:
                 t = PrettyTable(["Key", "Value"])
                 t.align = "l"
-                for key in sorted(block):
-                    value = block[key]
+                block_json = block.json()
+                for key in sorted(block_json):
+                    value = block_json[key]
                     if key == "transactions" and not bool(tran_nr):
                         t.add_row(["Nr. of transactions", len(value)])
                     elif key == "transactions" and bool(tran_nr):

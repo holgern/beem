@@ -16,6 +16,7 @@ from .amount import Amount
 from .price import Price, Order, FilledOrder
 from .account import Account
 from beembase import operations
+from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 REQUEST_MODULE = None
 if not REQUEST_MODULE:
     try:
@@ -404,7 +405,7 @@ class Market(dict):
         else:
             return ret
 
-    def market_history(self, bucket_seconds=300, start_age=3600, end_age=0):
+    def market_history(self, bucket_seconds=300, start_age=3600, end_age=0, raw_data=False):
         """ Return the market history (filled orders).
 
             :param int bucket_seconds: Bucket size in seconds (see
@@ -413,6 +414,7 @@ class Market(dict):
                 window (default: 1h/3600)
             :param int end_age: Age (in seconds) of the end of the window
                 (default: now/0)
+            :param bool raw_data: (optional) returns raw data if set True
 
             Example:
                 .. code-block:: js
@@ -451,7 +453,14 @@ class Market(dict):
                 formatTimeFromNow(-start_age - end_age),
                 formatTimeFromNow(-end_age),
                 api="market_history")
-        return history
+        if raw_data:
+            return history
+        new_history = []
+        for h in history:
+            if 'open' in h and isinstance(h.get('open'), string_types):
+                h['open'] = formatTimeString(h.get('open', "1970-01-01T00:00:00"))
+            new_history.append(h)
+        return new_history
 
     def accountopenorders(self, account=None, raw_data=False):
         """ Returns open Orders

@@ -3,10 +3,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+from datetime import datetime, timedelta, date
+import json
 from .exceptions import BlockDoesNotExistsException
-from .utils import parse_time
+from .utils import parse_time, formatTimeString
 from .blockchainobject import BlockchainObject
 from beemapi.exceptions import ApiNotSupported
+from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 
 
 class Block(BlockchainObject):
@@ -62,12 +65,75 @@ class Block(BlockchainObject):
         self.lazy = lazy
         self.only_ops = only_ops
         self.only_virtual_ops = only_virtual_ops
+        if isinstance(block, float):
+            block = int(block)
+        elif isinstance(block, dict):
+            block = self._parse_json_data(block)
         super(Block, self).__init__(
             block,
             lazy=lazy,
             full=full,
             steem_instance=steem_instance
         )
+
+    def _parse_json_data(self, block):
+        parse_times = [
+            "timestamp",
+        ]
+        for p in parse_times:
+            if p in block and isinstance(block.get(p), string_types):
+                block[p] = formatTimeString(block.get(p, "1970-01-01T00:00:00"))
+        if "transactions" in block:
+            new_transactions = []
+            for trx in block["transactions"]:
+                if 'expiration' in trx and isinstance(trx.get('expiration'), string_types):
+                    trx['expiration'] = formatTimeString(trx.get('expiration', "1970-01-01T00:00:00"))
+                new_transactions.append(trx)
+            block["transactions"] = new_transactions
+        elif "operations" in block:
+            new_operations = []
+            for trx in block["operations"]:
+                if 'timestamp' in trx and isinstance(trx.get('timestamp'), string_types):
+                    trx['timestamp'] = formatTimeString(trx.get('timestamp', "1970-01-01T00:00:00"))
+                new_operations.append(trx)
+            block["operations"] = new_operations
+        return block
+
+    def json(self):
+        output = self.copy()
+        parse_times = [
+            "timestamp",
+        ]
+        for p in parse_times:
+            if p in output:
+                p_date = output.get(p, datetime(1970, 1, 1, 0, 0))
+                if isinstance(p_date, (datetime, date)):
+                    output[p] = formatTimeString(p_date)
+                else:
+                    output[p] = p_date
+        if "transactions" in output:
+            new_transactions = []
+            for trx in output["transactions"]:
+                if 'expiration' in trx:
+                    p_date = trx.get('expiration', datetime(1970, 1, 1, 0, 0))
+                    if isinstance(p_date, (datetime, date)):
+                        trx['expiration'] = formatTimeString(p_date)
+                    else:
+                        trx['expiration'] = p_date
+                new_transactions.append(trx)
+            output["transactions"] = new_transactions
+        elif "operations" in output:
+            new_operations = []
+            for trx in output["operations"]:
+                if 'timestamp' in trx:
+                    p_date = trx.get('timestamp', datetime(1970, 1, 1, 0, 0))
+                    if isinstance(p_date, (datetime, date)):
+                        trx['timestamp'] = formatTimeString(p_date)
+                    else:
+                        trx['timestamp'] = p_date
+                new_operations.append(trx)
+            output["operations"] = new_operations
+        return json.loads(str(json.dumps(output)))
 
     def refresh(self):
         """ Even though blocks never change, you freshly obtain its contents
@@ -103,6 +169,7 @@ class Block(BlockchainObject):
                 block = self.steem.rpc.get_block(self.identifier)
         if not block:
             raise BlockDoesNotExistsException(str(self.identifier))
+        block = self._parse_json_data(block)
         super(Block, self).__init__(block, lazy=self.lazy, full=self.full, steem_instance=self.steem)
 
     @property
@@ -112,7 +179,7 @@ class Block(BlockchainObject):
 
     def time(self):
         """Return a datatime instance for the timestamp of this block"""
-        return parse_time(self['timestamp'])
+        return self['timestamp']
 
     @property
     def transactions(self):
@@ -142,6 +209,46 @@ class Block(BlockchainObject):
                 ops.append(op)
         return ops
 
+    @property
+    def json_transactions(self):
+        """ Returns all transactions as list, all dates are strings."""
+        if self.only_ops or self.only_virtual_ops:
+            return list()
+        trxs = self["transactions"]
+        for i in range(len(trxs)):
+            trx = trxs[i]
+            trx['transaction_id'] = self['transaction_ids'][i]
+            trx['block_num'] = self.block_num
+            trx['transaction_num'] = i
+            if 'expiration' in trx:
+                p_date = trx.get('expiration', datetime(1970, 1, 1, 0, 0))
+                if isinstance(p_date, (datetime, date)):
+                    trx['expiration'] = formatTimeString(p_date)
+                else:
+                    trx['expiration'] = p_date
+            trxs[i] = trx
+        return trxs
+
+    @property
+    def json_operations(self):
+        """Returns all block operations as list, all dates are strings."""
+        if self.only_ops or self.only_virtual_ops:
+            return self["operations"]
+        ops = []
+        trxs = self["transactions"]
+        for tx in trxs:
+            for op in tx["operations"]:
+                # Replace opid by op name
+                # op[0] = getOperationNameForId(op[0])
+                if 'timestamp' in op:
+                    p_date = op.get('timestamp', datetime(1970, 1, 1, 0, 0))
+                    if isinstance(p_date, (datetime, date)):
+                        op['timestamp'] = formatTimeString(p_date)
+                    else:
+                        op['timestamp'] = p_date
+                ops.append(op)
+        return ops
+
     def ops_statistics(self, add_to_ops_stat=None):
         """Returns a statistic with the occurrence of the different operation types"""
         if add_to_ops_stat is None:
@@ -166,6 +273,49 @@ class Block(BlockchainObject):
 
 
 class BlockHeader(BlockchainObject):
+    """ Read a single block header from the chain
+
+        :param int block: block number
+        :param beem.steem.Steem steem_instance: Steem
+            instance
+        :param bool lazy: Use lazy loading
+
+        In addition to the block data, the block number is stored as self["id"] or self.identifier.
+
+        .. code-block:: python
+
+            >>> from beem.block import BlockHeader
+            >>> block = BlockHeader(1)
+            >>> print(block)
+            <BlockHeader 1>
+
+    """
+    def __init__(
+        self,
+        block,
+        full=True,
+        lazy=False,
+        steem_instance=None
+    ):
+        """ Initilize a block
+
+            :param int block: block number
+            :param beem.steem.Steem steem_instance: Steem
+                instance
+            :param bool lazy: Use lazy loading
+
+        """
+        self.full = full
+        self.lazy = lazy
+        if isinstance(block, float):
+            block = int(block)
+        super(BlockHeader, self).__init__(
+            block,
+            lazy=lazy,
+            full=full,
+            steem_instance=steem_instance
+        )
+
     def refresh(self):
         """ Even though blocks never change, you freshly obtain its contents
             from an API with this method
@@ -181,17 +331,41 @@ class BlockHeader(BlockchainObject):
             block = self.steem.rpc.get_block_header(self.identifier)
         if not block:
             raise BlockDoesNotExistsException(str(self.identifier))
+        block = self._parse_json_data(block)
         super(BlockHeader, self).__init__(
-            block,
+            block, lazy=self.lazy, full=self.full,
             steem_instance=self.steem
         )
 
     def time(self):
         """ Return a datatime instance for the timestamp of this block
         """
-        return parse_time(self['timestamp'])
+        return self['timestamp']
 
     @property
     def block_num(self):
         """Returns the block number"""
         return self.identifier
+
+    def _parse_json_data(self, block):
+        parse_times = [
+            "timestamp",
+        ]
+        for p in parse_times:
+            if p in block and isinstance(block.get(p), string_types):
+                block[p] = formatTimeString(block.get(p, "1970-01-01T00:00:00"))
+        return block
+
+    def json(self):
+        output = self.copy()
+        parse_times = [
+            "timestamp",
+        ]
+        for p in parse_times:
+            if p in output:
+                p_date = output.get(p, datetime(1970, 1, 1, 0, 0))
+                if isinstance(p_date, (datetime, date)):
+                    output[p] = formatTimeString(p_date)
+                else:
+                    output[p] = p_date
+        return json.loads(str(json.dumps(output)))

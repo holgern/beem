@@ -28,6 +28,7 @@ class Testcases(unittest.TestCase):
             node=nodelist.get_nodes(normal=False, appbase=True, dev=True),
             nobroadcast=True,
             num_retries=10,
+            timeout=30,
             use_condenser=False,
             keys={"active": wif},
         )

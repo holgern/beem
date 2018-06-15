@@ -264,7 +264,9 @@ class PointInTime(object):
 
     def __bytes__(self):
         """Returns bytes representation."""
-        if sys.version > '3':
+        if isinstance(self.data, datetime):
+            unixtime = timegm(self.data.timetuple())
+        elif sys.version > '3':
             unixtime = timegm(time.strptime((self.data + "UTC"), timeformat))
         else:
             unixtime = timegm(time.strptime((self.data + "UTC"), timeformat.encode("utf-8")))
