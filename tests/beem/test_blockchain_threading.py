@@ -36,9 +36,8 @@ class Testcases(unittest.TestCase):
         cls.bts.set_default_account("test")
 
         b = Blockchain(steem_instance=cls.bts)
-        # num = b.get_current_block_num()
-        num = 2000000
-        cls.start = num - 25
+        num = b.get_current_block_num()
+        cls.start = num - 100
         cls.stop = num
 
     def test_stream_threading(self):
@@ -46,7 +45,7 @@ class Testcases(unittest.TestCase):
         b = Blockchain(steem_instance=bts)
         ops_stream = []
         opNames = ["transfer", "vote"]
-        
+
         for op in b.stream(opNames=opNames, start=self.start, stop=self.stop, threading=True, thread_num=8):
             ops_stream.append(op)
 
@@ -58,7 +57,7 @@ class Testcases(unittest.TestCase):
         for op in b.blocks(start=self.start, stop=self.stop, threading=True, thread_num=8):
             ops_blocks.append(op)
             self.assertEqual(op.identifier, last_id + 1)
-            last_id += 1            
+            last_id += 1
         op_stat4 = {"transfer": 0, "vote": 0}
         self.assertTrue(len(ops_blocks) > 0)
         for block in ops_blocks:

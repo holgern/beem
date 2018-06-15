@@ -104,6 +104,9 @@ class Testcases(unittest.TestCase):
         for acc in b.get_all_accounts(steps=100, limit=100):
             accounts.append(acc)
         self.assertEqual(len(accounts), 100)
+        limit = 5000
+        self.assertEqual(len(list(b.get_all_accounts(limit=limit))), limit)
+        self.assertEqual(len(set(b.get_all_accounts(limit=limit))), limit)
 
     @parameterized.expand([
         ("non_appbase"),

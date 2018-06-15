@@ -39,7 +39,7 @@ class Testcases(unittest.TestCase):
 
         b = Blockchain(steem_instance=cls.bts)
         num = b.get_current_block_num()
-        cls.start = num - 25
+        cls.start = num - 100
         cls.stop = num
         cls.max_batch_size = 1  # appbase does not support batch rpc calls at the momement (internal error)
 
