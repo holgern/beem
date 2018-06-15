@@ -63,8 +63,17 @@ class Testcases(unittest.TestCase):
         self.assertTrue(len(ops_blocks) > 0)
         for block in ops_blocks:
             for op in block.operations:
-                if op[0] in opNames:
-                    op_stat4[op[0]] += 1
+                if isinstance(op, dict) and 'type' in op:
+                    op_type = op["type"]
+                    if len(op_type) > 10 and op_type[len(op_type) - 10:] == "_operation":
+                        op_type = op_type[:-10]
+                else:
+                    if "op" in op:
+                        op_type = op["op"][0]
+                    else:
+                        op_type = op[0]
+                if op_type in opNames:
+                    op_stat4[op_type] += 1
             self.assertTrue(block.identifier >= self.start)
             self.assertTrue(block.identifier <= self.stop)
         self.assertEqual(op_stat["transfer"], op_stat4["transfer"])
