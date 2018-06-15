@@ -175,6 +175,8 @@ Changelog
 * "time" and "expiration" are parsed to a datetime object inside all block objects
 * The json() function returns the original not parsed json dict. It is available for Account, Block, BlockHeader, Comment, Vote and Witness
 * json_transactions and json_operations added to Block, for returning all dates as string
+* Issues #27 and #28 fixed (thanks to crokkon for reporting)
+* Thread and Worker class for blockchain.blocks(threading=True)
 
 0.19.37
 -------

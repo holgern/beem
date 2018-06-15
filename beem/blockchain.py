@@ -7,10 +7,13 @@ from future.utils import python_2_unicode_compatible
 from builtins import str
 from builtins import range
 from builtins import object
+import sys
 import time
 import hashlib
 import json
 import math
+from threading import Thread, Event
+from time import sleep
 import logging
 from datetime import datetime, timedelta
 from .utils import formatTimeString, addTzInfo
@@ -20,13 +23,139 @@ from beemgraphenebase.py23 import py23_bytes
 from beem.instance import shared_steem_instance
 from .amount import Amount
 log = logging.getLogger(__name__)
-FUTURES_MODULE = None
-if not FUTURES_MODULE:
-    try:
-        from concurrent.futures import ThreadPoolExecutor, wait, as_completed
-        FUTURES_MODULE = "futures"
-    except ImportError:
-        FUTURES_MODULE = None
+if sys.version_info < (3, 0):
+    from Queue import Queue
+else:
+    from queue import Queue
+
+
+# default exception handler. if you want to take some action on failed tasks
+# maybe add the task back into the queue, then make your own handler and pass it in
+def default_handler(name, exception, *args, **kwargs):
+    print('%s raised %s with args %s and kwargs %s' % (name, str(exception), repr(args), repr(kwargs)))
+    pass
+
+
+class Worker(Thread):
+    """Thread executing tasks from a given tasks queue"""
+    def __init__(self, name, queue, results, abort, idle, exception_handler):
+        Thread.__init__(self)
+        self.name = name
+        self.queue = queue
+        self.results = results
+        self.abort = abort
+        self.idle = idle
+        self.exception_handler = exception_handler
+        self.daemon = True
+        self.start()
+
+    def run(self):
+        """Thread work loop calling the function with the params"""
+        # keep running until told to abort
+        while not self.abort.is_set():
+            try:
+                # get a task and raise immediately if none available
+                func, args, kwargs = self.queue.get(False)
+                self.idle.clear()
+            except:
+                # no work to do
+                # if not self.idle.is_set():
+                #  print >> stdout, '%s is idle' % self.name
+                self.idle.set()
+                continue
+
+            try:
+                # the function may raise
+                result = func(*args, **kwargs)
+                if(result is not None):
+                    self.results.put(result)
+            except Exception as e:
+                # so we move on and handle it in whatever way the caller wanted
+                self.exception_handler(self.name, e, args, kwargs)
+            finally:
+                # task complete no matter what happened
+                self.queue.task_done()
+
+
+# class for thread pool
+class Pool:
+    """Pool of threads consuming tasks from a queue"""
+    def __init__(self, thread_count, batch_mode=False, exception_handler=default_handler):
+        # batch mode means block when adding tasks if no threads available to process
+        self.queue = Queue(thread_count if batch_mode else 0)
+        self.resultQueue = Queue(0)
+        self.thread_count = thread_count
+        self.exception_handler = exception_handler
+        self.aborts = []
+        self.idles = []
+        self.threads = []
+
+    def __del__(self):
+        """Tell my threads to quit"""
+        self.abort()
+
+    def run(self, block=False):
+        """Start the threads, or restart them if you've aborted"""
+        # either wait for them to finish or return false if some arent
+        if block:
+            while self.alive():
+                sleep(1)
+        elif self.alive():
+            return False
+
+        # go start them
+        self.aborts = []
+        self.idles = []
+        self.threads = []
+        for n in range(self.thread_count):
+            abort = Event()
+            idle = Event()
+            self.aborts.append(abort)
+            self.idles.append(idle)
+            self.threads.append(Worker('thread-%d' % n, self.queue, self.resultQueue, abort, idle, self.exception_handler))
+        return True
+
+    def enqueue(self, func, *args, **kargs):
+        """Add a task to the queue"""
+        self.queue.put((func, args, kargs))
+
+    def join(self):
+        """Wait for completion of all the tasks in the queue"""
+        self.queue.join()
+
+    def abort(self, block=False):
+        """Tell each worker that its done working"""
+        # tell the threads to stop after they are done with what they are currently doing
+        for a in self.aborts:
+            a.set()
+        # wait for them to finish if requested
+        while block and self.alive():
+            sleep(1)
+
+    def alive(self):
+        """Returns True if any threads are currently running"""
+        return True in [t.is_alive() for t in self.threads]
+
+    def idle(self):
+        """Returns True if all threads are waiting for work"""
+        return False not in [i.is_set() for i in self.idles]
+
+    def done(self):
+        """Returns True if not tasks are left to be completed"""
+        return self.queue.empty()
+
+    def results(self, sleep_time=0):
+        """Get the set of results that have been processed, repeatedly call until done"""
+        sleep(sleep_time)
+        results = []
+        try:
+            while True:
+                # get a result, raises empty exception immediately if none available
+                results.append(self.resultQueue.get(False))
+                self.resultQueue.task_done()
+        except:
+            pass
+        return results
 
 
 @python_2_unicode_compatible
@@ -208,7 +337,7 @@ class Blockchain(object):
         ).time()
         return int(time.mktime(block_time.timetuple()))
 
-    def blocks(self, start=None, stop=None, max_batch_size=None, threading=False, thread_num=8, only_ops=False, only_virtual_ops=False):
+    def blocks(self, start=None, stop=None, max_batch_size=None, threading=False, thread_num=8, thread_limit=1000, only_ops=False, only_virtual_ops=False):
         """ Yields blocks starting from ``start``.
 
             :param int start: Starting block
@@ -217,6 +346,7 @@ class Blockchain(object):
                 Cannot be combined with threading
             :param bool threading: Enables threading. Cannot be combined with batch calls
             :param int thread_num: Defines the number of threads, when `threading` is set.
+            :param int thread_limit: Thread queue size (Default 1000)
             :param bool only_ops: Only yield operations (default: False).
                 Cannot be combined with ``only_virtual_ops=True``.
             :param bool only_virtual_ops: Only yield virtual operations (default: False)
@@ -242,42 +372,53 @@ class Blockchain(object):
             else:
                 current_block_num = self.get_current_block_num()
                 head_block = current_block_num
-            if threading and FUTURES_MODULE and not head_block_reached:
-                pool = ThreadPoolExecutor(max_workers=thread_num + 1)
+            if threading and not head_block_reached:
+                # pool = ThreadPoolExecutor(max_workers=thread_num + 1)
+                pool = Pool(thread_num + 1)
                 # disable autoclean
                 auto_clean = current_block.get_cache_auto_clean()
                 current_block.set_cache_auto_clean(False)
-                latest_block = 0
-                for blocknum in range(start, head_block + 1, thread_num):
-                    futures = []
-                    i = blocknum
+                latest_block = start
+                for blocknum in range(start, head_block + 1, thread_limit):
+                    # futures = []
+                    i = 0
                     block_num_list = []
-
-                    while i < blocknum + thread_num and i <= head_block:
-                        block_num_list.append(i)
-                        futures.append(pool.submit(Block, i, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem))
+                    results = []
+                    while i < thread_limit and blocknum + i <= head_block:
+                        block_num_list.append(blocknum + i)
+                        pool.enqueue(Block, blocknum + i, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
                         i += 1
-                    try:
-                        results = [r.result() for r in as_completed(futures)]
-                    except Exception as e:
-                        log.warning(str(e))
+                    pool.run(True)
+                    results = []
+                    while not pool.done() or not pool.idle():
+                        for result in pool.results():
+                            results.append(result)
+                    for result in pool.results():
+                        results.append(result)
+                    pool.abort()
+
                     result_block_nums = []
+                    checked_results = []
                     for b in results:
-                        result_block_nums.append(int(b.identifier))
-                        if latest_block < int(b.identifier):
-                            latest_block = int(b.identifier)
+                        if isinstance(b, dict) and "transactions" in b:
+                            if len(b.operations) > 0:
+                                checked_results.append(b)
+                                result_block_nums.append(int(b.identifier))
+
                     missing_block_num = list(set(block_num_list).difference(set(result_block_nums)))
                     if len(missing_block_num) > 0:
                         for blocknum in missing_block_num:
                             block = Block(blocknum, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
-                            results.append(block)
+                            checked_results.append(block)
                     from operator import itemgetter
-                    blocks = sorted(results, key=itemgetter('id'))
+                    blocks = sorted(checked_results, key=itemgetter('id'))
                     for b in blocks:
+                        if latest_block < int(b.identifier):
+                            latest_block = int(b.identifier)
                         yield b
                     current_block.clear_cache_from_expired_items()
                 if latest_block < head_block:
-                    for blocknum in range(latest_block, head_block + 1):
+                    for blocknum in range(latest_block + 1, head_block + 1):
                         block = Block(blocknum, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
                         yield block
                 current_block.set_cache_auto_clean(auto_clean)
@@ -391,7 +532,7 @@ class Blockchain(object):
         """
         raise DeprecationWarning('Blockchain.ops() is deprecated. Please use Blockchain.stream() instead.')
 
-    def ops_statistics(self, start, stop=None, add_to_ops_stat=None, verbose=False):
+    def ops_statistics(self, start, stop=None, add_to_ops_stat=None, with_virtual_ops=True, verbose=False):
         """ Generates statistics for all operations (including virtual operations) starting from
             ``start``.
 
@@ -419,10 +560,11 @@ class Blockchain(object):
             if verbose:
                 print(block["identifier"] + " " + block["timestamp"])
             ops_stat = block.ops_statistics(add_to_ops_stat=ops_stat)
-        for block in self.blocks(start=start, stop=stop, only_ops=True, only_virtual_ops=True):
-            if verbose:
-                print(block["identifier"] + " " + block["timestamp"])
-            ops_stat = block.ops_statistics(add_to_ops_stat=ops_stat)
+        if with_virtual_ops:
+            for block in self.blocks(start=start, stop=stop, only_ops=True, only_virtual_ops=True):
+                if verbose:
+                    print(block["identifier"] + " " + block["timestamp"])
+                ops_stat = block.ops_statistics(add_to_ops_stat=ops_stat)
         return ops_stat
 
     def stream(self, opNames=[], raw_ops=False, *args, **kwargs):

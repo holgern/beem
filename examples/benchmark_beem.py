@@ -22,12 +22,12 @@ if __name__ == "__main__":
     how_many_hours = 1
     nodes = NodeList()
     if node_setup == 0:
-        stm = Steem(node=nodes.get_nodes(normal=False, wss=False), num_retries=10)
+        stm = Steem(node=nodes.get_nodes(normal=True, wss=True), num_retries=10)
         max_batch_size = None
         threading = False
         thread_num = 8
     elif node_setup == 1:
-        stm = Steem(node=nodes.get_nodes(normal=False, wss=False), num_retries=10)
+        stm = Steem(node=nodes.get_nodes(normal=True, wss=True), num_retries=10)
         max_batch_size = None
         threading = True
         thread_num = 8
@@ -60,9 +60,9 @@ if __name__ == "__main__":
             for op in tx["operations"]:
                 total_transaction += 1
         if "block" in entry:
-            block_time = parse_time(entry["block"]["timestamp"])
+            block_time = (entry["block"]["timestamp"])
         else:
-            block_time = parse_time(entry["timestamp"])
+            block_time = (entry["timestamp"])
 
         if block_time > stopTime:
             total_duration = formatTimedelta(datetime.now() - startTime)

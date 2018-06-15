@@ -15,8 +15,6 @@ from beem.block import Block
 from beem.instance import set_shared_steem_instance
 from beem.nodelist import NodeList
 
-wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-
 
 class Testcases(unittest.TestCase):
     @classmethod
@@ -24,21 +22,23 @@ class Testcases(unittest.TestCase):
         nodelist = NodeList()
         nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
         cls.bts = Steem(
-            node=nodelist.get_nodes(appbase=False),
+            node=nodelist.get_nodes(),
             nobroadcast=True,
             timeout=30,
             num_retries=10,
-            keys={"active": wif},
         )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(cls.bts)
         cls.bts.set_default_account("test")
 
-        b = Blockchain(steem_instance=cls.bts)
-        num = b.get_current_block_num()
+        # b = Blockchain(steem_instance=cls.bts)
+        # num = b.get_current_block_num()
+        num = 23346630
         cls.start = num - 100
         cls.stop = num
+        cls.N_transfer = 121
+        cls.N_vote = 2825
 
     def test_stream_threading(self):
         bts = self.bts
@@ -48,10 +48,11 @@ class Testcases(unittest.TestCase):
 
         for op in b.stream(opNames=opNames, start=self.start, stop=self.stop, threading=True, thread_num=8):
             ops_stream.append(op)
+        self.assertEqual(self.N_transfer + self.N_vote, len(ops_stream))
 
-        self.assertTrue(len(ops_stream) > 0)
-        op_stat = b.ops_statistics(start=self.start, stop=self.stop)
-        self.assertEqual(op_stat["vote"] + op_stat["transfer"], len(ops_stream))
+        # op_stat = b.ops_statistics(start=self.start, stop=self.stop)
+        # self.assertEqual(op_stat["vote"] + op_stat["transfer"], len(ops_stream))
+
         ops_blocks = []
         last_id = self.start - 1
         for op in b.blocks(start=self.start, stop=self.stop, threading=True, thread_num=8):
@@ -61,11 +62,10 @@ class Testcases(unittest.TestCase):
         op_stat4 = {"transfer": 0, "vote": 0}
         self.assertTrue(len(ops_blocks) > 0)
         for block in ops_blocks:
-            for tran in block["transactions"]:
-                for op in tran['operations']:
-                    if op[0] in opNames:
-                        op_stat4[op[0]] += 1
+            for op in block.operations:
+                if op[0] in opNames:
+                    op_stat4[op[0]] += 1
             self.assertTrue(block.identifier >= self.start)
             self.assertTrue(block.identifier <= self.stop)
-        self.assertEqual(op_stat["transfer"], op_stat4["transfer"])
-        self.assertEqual(op_stat["vote"], op_stat4["vote"])
+        self.assertEqual(self.N_transfer, op_stat4["transfer"])
+        self.assertEqual(self.N_vote, op_stat4["vote"])
