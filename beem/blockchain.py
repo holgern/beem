@@ -246,6 +246,7 @@ class Blockchain(object):
                 auto_clean = current_block.get_cache_auto_clean()
                 current_block.set_cache_auto_clean(False)
                 latest_block = 0
+                starting_block = 0
                 for blocknum in range(start, head_block + 1, thread_num):
                     futures = []
                     i = blocknum
@@ -254,12 +255,31 @@ class Blockchain(object):
                         i += 1
                     results = [r.result() for r in as_completed(futures)]
                     block_nums = []
+                    missing_nums = []
+                    starting_block = int(results[0].identifier)
                     for b in results:
                         block_nums.append(int(b.identifier))
                         if latest_block < int(b.identifier):
                             latest_block = int(b.identifier)
+                        if starting_block > int(b.identifier):
+                            starting_block = int(b.identifier)
+                    if starting_block > blocknum:
+                        for i in range(blocknum, starting_block):
+                            missing_nums.append(i)
+
                     from operator import itemgetter
                     blocks = sorted(results, key=itemgetter('id'))
+                    last_i = blocks[0].identifier - 1
+                    for b in blocks:
+                        if b.identifier - last_i > 1:
+                            for j in range(last_i + 1, b.identifier):
+                                missing_nums.append(j)
+                        last_i = b.identifier
+                    if len(missing_nums) > 0:
+                        for block_num in missing_nums:
+                            block = Block(block_num, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
+                            results.append(block)
+                        blocks = sorted(results, key=itemgetter('id'))
                     for b in blocks:
                         yield b
                     current_block.clear_cache_from_expired_items()

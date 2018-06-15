@@ -139,6 +139,8 @@ class Block(BlockchainObject):
         """ Even though blocks never change, you freshly obtain its contents
             from an API with this method
         """
+        if self.identifier is None and "id" in self:
+            self.identifier = self["id"]
         if not isinstance(self.identifier, int):
             self.identifier = int(self.identifier)
         if not self.steem.is_connected():
@@ -170,6 +172,7 @@ class Block(BlockchainObject):
         if not block:
             raise BlockDoesNotExistsException(str(self.identifier))
         block = self._parse_json_data(block)
+        block["id"] = self.identifier
         super(Block, self).__init__(block, lazy=self.lazy, full=self.full, steem_instance=self.steem)
 
     @property
@@ -186,13 +189,15 @@ class Block(BlockchainObject):
         """ Returns all transactions as list"""
         if self.only_ops or self.only_virtual_ops:
             return list()
-        trxs = self["transactions"]
-        for i in range(len(trxs)):
-            trx = trxs[i]
-            trx['transaction_id'] = self['transaction_ids'][i]
-            trx['block_num'] = self.block_num
-            trx['transaction_num'] = i
-            trxs[i] = trx
+        trxs = []
+        i = 0
+        for trx in self["transactions"]:
+            trx_new = trx.copy()
+            trx_new['transaction_id'] = self['transaction_ids'][i]
+            trx_new['block_num'] = self.block_num
+            trx_new['transaction_num'] = i
+            trxs.append(trx_new)
+            i += 1
         return trxs
 
     @property
@@ -214,19 +219,21 @@ class Block(BlockchainObject):
         """ Returns all transactions as list, all dates are strings."""
         if self.only_ops or self.only_virtual_ops:
             return list()
-        trxs = self["transactions"]
-        for i in range(len(trxs)):
-            trx = trxs[i]
-            trx['transaction_id'] = self['transaction_ids'][i]
-            trx['block_num'] = self.block_num
-            trx['transaction_num'] = i
+        trxs = []
+        i = 0
+        for trx in self["transactions"]:
+            trx_new = trx.copy()
+            trx_new['transaction_id'] = self['transaction_ids'][i]
+            trx_new['block_num'] = self.block_num
+            trx_new['transaction_num'] = i
             if 'expiration' in trx:
                 p_date = trx.get('expiration', datetime(1970, 1, 1, 0, 0))
                 if isinstance(p_date, (datetime, date)):
-                    trx['expiration'] = formatTimeString(p_date)
+                    trx_new['expiration'] = formatTimeString(p_date)
                 else:
-                    trx['expiration'] = p_date
-            trxs[i] = trx
+                    trx_new['expiration'] = p_date
+            trxs.append(trx_new)
+            i += 1
         return trxs
 
     @property
@@ -235,8 +242,7 @@ class Block(BlockchainObject):
         if self.only_ops or self.only_virtual_ops:
             return self["operations"]
         ops = []
-        trxs = self["transactions"]
-        for tx in trxs:
+        for tx in self["transactions"]:
             for op in tx["operations"]:
                 # Replace opid by op name
                 # op[0] = getOperationNameForId(op[0])
