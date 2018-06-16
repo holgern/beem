@@ -57,8 +57,7 @@ Creating a wallet
    from beem import Steem
    steem = Steem()
    steem.wallet.wipe(True)
-   steem.wallet.create("wallet-passphrase")
-
+   steem.wallet.unlock("wallet-passphrase")
 
 Adding keys to the wallet
 ~~~~~~~~~~~~~~~~~~~~~~~~~
