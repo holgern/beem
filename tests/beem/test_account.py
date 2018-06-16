@@ -478,7 +478,8 @@ class Testcases(unittest.TestCase):
         for k in keys:
             if k not in "json_metadata" and k != 'reputation' and k != 'active_votes' and k != 'savings_sbd_seconds':
                 if isinstance(content[k], dict) and isinstance(json_content[k], list):
-                    self.assertEqual(list(content[k].values()), json_content[k])
+                    content_list = [content[k]["amount"], content[k]["precision"], content[k]["nai"]]
+                    self.assertEqual(content_list, json_content[k])
                 else:
                     self.assertEqual(content[k], json_content[k])
 
