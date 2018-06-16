@@ -802,6 +802,7 @@ class Account(BlockchainObject):
     def get_owner_history(self, account=None):
         """ get_owner_history
 
+            :param str account: Account name to get interest for (default None)
             :rtype: list
 
         """
@@ -874,6 +875,26 @@ class Account(BlockchainObject):
             return self.steem.rpc.verify_account_authority({'account': account, 'signers': keys}, api="database")
         else:
             return self.steem.rpc.verify_account_authority(account, keys)
+
+    def get_expiring_vesting_delegations(self, start=None, limit=1000, account=None):
+        """ Returns the expirations for vesting delegations.
+
+            :rtype: list
+
+        """
+        if account is None:
+            account = self
+        else:
+            account = Account(account, steem_instance=self.steem)
+        if not self.steem.is_connected():
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
+        self.steem.rpc.set_next_node_on_empty_reply(False)
+        if start is None:
+            start = addTzInfo(datetime.utcnow()) - timedelta(days=8)
+        if self.steem.rpc.get_use_appbase():
+            return self.steem.rpc.find_vesting_delegation_expirations({'account': account["name"]}, api="database")['delegations']
+        else:
+            return self.steem.rpc.get_expiring_vesting_delegations(account["name"], formatTimeString(start), limit)
 
     def get_account_votes(self, account=None):
         """Returns all votes that the account has done"""

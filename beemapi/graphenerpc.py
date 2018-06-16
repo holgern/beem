@@ -249,6 +249,7 @@ class GrapheneRPC(object):
         """Close Websocket"""
         if self.ws is None:
             return
+        # if self.ws.connected:
         self.ws.close()
 
     def request_send(self, payload):

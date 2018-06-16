@@ -47,8 +47,7 @@ class Testcases(unittest.TestCase):
         ops_stream_no_threading = []
         opNames = ["transfer", "vote"]
         block_num_list = []
-        thread_limit = 16
-        for op in b.stream(opNames=opNames, start=self.start, stop=self.stop, threading=True, thread_num=16, thread_limit=thread_limit):
+        for op in b.stream(opNames=opNames, start=self.start, stop=self.stop, threading=True, thread_num=16):
             ops_stream.append(op)
             if op["block_num"] not in block_num_list:
                 block_num_list.append(op["block_num"])
@@ -67,7 +66,7 @@ class Testcases(unittest.TestCase):
 
         ops_blocks = []
         last_id = self.start - 1
-        for op in b.blocks(start=self.start, stop=self.stop, threading=True, thread_num=16, thread_limit=thread_limit):
+        for op in b.blocks(start=self.start, stop=self.stop, threading=True, thread_num=16):
             ops_blocks.append(op)
             self.assertEqual(op.identifier, last_id + 1)
             last_id += 1

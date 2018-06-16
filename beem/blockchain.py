@@ -339,7 +339,7 @@ class Blockchain(object):
         ).time()
         return int(time.mktime(block_time.timetuple()))
 
-    def blocks(self, start=None, stop=None, max_batch_size=None, threading=False, thread_num=8, thread_limit=1000, only_ops=False, only_virtual_ops=False):
+    def blocks(self, start=None, stop=None, max_batch_size=None, threading=False, thread_num=8, only_ops=False, only_virtual_ops=False):
         """ Yields blocks starting from ``start``.
 
             :param int start: Starting block
@@ -348,7 +348,6 @@ class Blockchain(object):
                 Cannot be combined with threading
             :param bool threading: Enables threading. Cannot be combined with batch calls
             :param int thread_num: Defines the number of threads, when `threading` is set.
-            :param int thread_limit: Thread queue size (Default 1000)
             :param bool only_ops: Only yield operations (default: False).
                 Cannot be combined with ``only_virtual_ops=True``.
             :param bool only_virtual_ops: Only yield virtual operations (default: False)
@@ -376,21 +375,18 @@ class Blockchain(object):
                 head_block = current_block_num
             if threading and not head_block_reached:
                 # pool = ThreadPoolExecutor(max_workers=thread_num + 1)
-                pool = Pool(thread_num + 1)
+                pool = Pool(thread_num + 1, batch_mode=True)
                 # disable autoclean
                 auto_clean = current_block.get_cache_auto_clean()
                 current_block.set_cache_auto_clean(False)
                 latest_block = start
-                block_num_step = thread_limit
-                if block_num_step == 0:
-                    block_num_step = 1
                 result_block_nums = []
-                for blocknum in range(start, head_block + 1, block_num_step):
+                for blocknum in range(start, head_block + 1, thread_num):
                     # futures = []
                     i = 0
-                    block_num_list = []
                     results = []
-                    while i < thread_limit and blocknum + i <= head_block:
+                    block_num_list = []
+                    while i < thread_num and blocknum + i <= head_block:
                         block_num_list.append(blocknum + i)
                         pool.enqueue(Block, blocknum + i, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
                         i += 1
@@ -399,14 +395,15 @@ class Blockchain(object):
                     while not pool.done() or not pool.idle():
                         for result in pool.results():
                             results.append(result)
+                    pool.join()
                     for result in pool.results():
                         results.append(result)
                     pool.abort()
 
                     checked_results = []
                     for b in results:
-                        if isinstance(b, dict) and "transactions" in b:
-                            if len(b.operations) > 0 and int(b.identifier) not in result_block_nums:
+                        if isinstance(b, dict) and "transactions" in b and "transaction_ids" in b:
+                            if len(b["transactions"]) == len(b["transaction_ids"]) and int(b.identifier) not in result_block_nums:
                                 checked_results.append(b)
                                 result_block_nums.append(int(b.identifier))
 
