@@ -51,6 +51,7 @@ stored encrypted in a sql-database (wallet).
 Creating a wallet
 ~~~~~~~~~~~~~~~~~
 ``steem.wallet.wipe(True)`` is only necessary when there was already an wallet created.
+
 .. code-block:: python
 
    from beem import Steem
@@ -201,4 +202,4 @@ Sell STEEM on the market
    market = Market("SBD:STEEM", steem_instance=steem)
    print(market.ticker())
    market.steem.wallet.unlock("wallet-passphrase")
-   print(market.sell(300, 100)  # sell 100 STEEM for 300 STEEM/SBD
+   print(market.sell(300, 100))  # sell 100 STEEM for 300 STEEM/SBD

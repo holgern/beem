@@ -44,14 +44,18 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         b = Blockchain(steem_instance=bts)
         ops_stream = []
+        ops_stream_no_threading = []
+        ops_stream_vote = []
         opNames = ["transfer", "vote"]
 
         for op in b.stream(opNames=opNames, start=self.start, stop=self.stop, threading=True, thread_num=8):
             ops_stream.append(op)
-        # self.assertEqual(self.N_transfer + self.N_vote, len(ops_stream))
 
-        op_stat = b.ops_statistics(start=self.start, stop=self.stop, with_virtual_ops=False)
-        self.assertEqual(op_stat["vote"] + op_stat["transfer"], len(ops_stream))
+        for op in b.stream(opNames=opNames, start=self.start, stop=self.stop, threading=False, thread_num=8):
+            ops_stream_no_threading.append(op)
+
+        self.assertEqual(len(ops_stream_no_threading), len(ops_stream))
+            
 
         ops_blocks = []
         last_id = self.start - 1
@@ -76,5 +80,4 @@ class Testcases(unittest.TestCase):
                     op_stat4[op_type] += 1
             self.assertTrue(block.identifier >= self.start)
             self.assertTrue(block.identifier <= self.stop)
-        self.assertEqual(op_stat["transfer"], op_stat4["transfer"])
-        self.assertEqual(op_stat["vote"], op_stat4["vote"])
+        self.assertEqual(len(ops_stream_no_threading), op_stat4["transfer"] + op_stat4["vote"])

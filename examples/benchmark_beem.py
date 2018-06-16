@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 if __name__ == "__main__":
-    node_setup = 0
+    node_setup = 1
     how_many_hours = 1
     nodes = NodeList()
     if node_setup == 0:
@@ -30,7 +30,7 @@ if __name__ == "__main__":
         stm = Steem(node=nodes.get_nodes(normal=True, wss=True), num_retries=10)
         max_batch_size = None
         threading = True
-        thread_num = 8
+        thread_num = 16
     elif node_setup == 2:
         stm = Steem(node=nodes.get_nodes(appbase=False, https=False), num_retries=10)
         max_batch_size = None
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     start_time = time.time()
     last_node = blockchain.steem.rpc.url
     print("Current node:", last_node)
-    for entry in blockchain.blocks(start=last_block_id, max_batch_size=max_batch_size, threading=threading, thread_num=thread_num):
+    for entry in blockchain.blocks(start=last_block_id, max_batch_size=max_batch_size, threading=threading, thread_num=thread_num, thread_limit=1200):
         block_no = entry.identifier
         if "block" in entry:
             trxs = entry["block"]["transactions"]

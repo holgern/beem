@@ -154,7 +154,7 @@ class Pool:
                 results.append(self.resultQueue.get(False))
                 self.resultQueue.task_done()
         except:
-            pass
+            return results
         return results
 
 
