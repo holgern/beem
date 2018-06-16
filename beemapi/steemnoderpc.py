@@ -148,7 +148,7 @@ class SteemNodeRPC(GrapheneRPC):
             self.nodes.increase_error_cnt()
             self.nodes.sleep_and_check_retries(str(msg), sleep=False)
             self.next()
-            doRetry = True            
+            doRetry = True
         elif msg:
             raise exceptions.UnhandledRPCError(msg)
         else:

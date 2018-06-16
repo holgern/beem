@@ -159,9 +159,7 @@ class Block(BlockchainObject):
                          'timestamp': ops[0]["timestamp"],
                          'operations': ops}
             else:
-                block = {'block': [],
-                         'timestamp': '',
-                         'operations': []}
+                block = {}
         else:
             if self.steem.rpc.get_use_appbase():
                 block = self.steem.rpc.get_block({"block_num": self.identifier}, api="block")

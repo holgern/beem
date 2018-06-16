@@ -51,7 +51,7 @@ class Testcases(unittest.TestCase):
         for op in b.stream(opNames=opNames, start=self.start, stop=self.stop, threading=True, thread_num=16, thread_limit=thread_limit):
             ops_stream.append(op)
             if op["block_num"] not in block_num_list:
-                block_num_list.append(op["block_num"])            
+                block_num_list.append(op["block_num"])
         block_num_list2 = []
         for op in b.stream(opNames=opNames, start=self.start, stop=self.stop, threading=False):
             ops_stream_no_threading.append(op)
