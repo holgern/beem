@@ -255,6 +255,8 @@ class Blockchain(object):
         props = self.steem.get_dynamic_global_properties(False)
         if props is None:
             raise ValueError("Could not receive dynamic_global_properties!")
+        if self.mode not in props:
+            raise ValueError(self.mode + " is not in " + props)
         return int(props.get(self.mode))
 
     def get_current_block(self, only_ops=False, only_virtual_ops=False):
@@ -379,7 +381,11 @@ class Blockchain(object):
                 auto_clean = current_block.get_cache_auto_clean()
                 current_block.set_cache_auto_clean(False)
                 latest_block = start
-                for blocknum in range(start, head_block + 1, thread_limit):
+                block_num_step = thread_limit
+                if block_num_step == 0:
+                    block_num_step = 1
+                result_block_nums = []
+                for blocknum in range(start, head_block + 1, block_num_step):
                     # futures = []
                     i = 0
                     block_num_list = []
@@ -397,11 +403,10 @@ class Blockchain(object):
                         results.append(result)
                     pool.abort()
 
-                    result_block_nums = []
                     checked_results = []
                     for b in results:
                         if isinstance(b, dict) and "transactions" in b:
-                            if len(b.operations) > 0:
+                            if len(b.operations) > 0 and int(b.identifier) not in result_block_nums:
                                 checked_results.append(b)
                                 result_block_nums.append(int(b.identifier))
 
@@ -410,6 +415,7 @@ class Blockchain(object):
                         for blocknum in missing_block_num:
                             block = Block(blocknum, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
                             checked_results.append(block)
+                            result_block_nums.append(int(block.identifier))
                     from operator import itemgetter
                     blocks = sorted(checked_results, key=itemgetter('id'))
                     for b in blocks:
@@ -418,9 +424,11 @@ class Blockchain(object):
                         yield b
                     current_block.clear_cache_from_expired_items()
                 if latest_block < head_block:
-                    for blocknum in range(latest_block + 1, head_block + 1):
-                        block = Block(blocknum, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
-                        yield block
+                    for blocknum in range(latest_block, head_block + 1):
+                        if blocknum not in result_block_nums:
+                            block = Block(blocknum, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
+                            result_block_nums.append(blocknum)
+                            yield block
                 current_block.set_cache_auto_clean(auto_clean)
             elif max_batch_size is not None and (head_block - start) >= max_batch_size and not head_block_reached:
                 if not self.steem.is_connected():

@@ -142,6 +142,13 @@ class SteemNodeRPC(GrapheneRPC):
             raise exceptions.UnkownKey(msg)
         elif re.search("Assert Exception:v.is_object(): Input data have to treated as object", msg):
             raise exceptions.UnhandledRPCError("Use Operation(op, appbase=True) to prevent error: " + msg)
+        elif re.search("Client returned invalid format. Expected JSON!", msg):
+            if self.nodes.working_nodes_count == 1:
+                raise exceptions.UnhandledRPCError(msg)
+            self.nodes.increase_error_cnt()
+            self.nodes.sleep_and_check_retries(str(msg), sleep=False)
+            self.next()
+            doRetry = True            
         elif msg:
             raise exceptions.UnhandledRPCError(msg)
         else:

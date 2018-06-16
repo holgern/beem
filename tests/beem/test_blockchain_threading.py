@@ -25,7 +25,7 @@ class Testcases(unittest.TestCase):
             node=nodelist.get_nodes(),
             nobroadcast=True,
             timeout=30,
-            num_retries=10,
+            num_retries=30,
         )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
@@ -46,23 +46,35 @@ class Testcases(unittest.TestCase):
         ops_stream = []
         ops_stream_no_threading = []
         opNames = ["transfer", "vote"]
-
-        for op in b.stream(opNames=opNames, start=self.start, stop=self.stop, threading=True, thread_num=32):
+        block_num_list = []
+        thread_limit = 16
+        for op in b.stream(opNames=opNames, start=self.start, stop=self.stop, threading=True, thread_num=16, thread_limit=thread_limit):
             ops_stream.append(op)
-
+            if op["block_num"] not in block_num_list:
+                block_num_list.append(op["block_num"])            
+        block_num_list2 = []
         for op in b.stream(opNames=opNames, start=self.start, stop=self.stop, threading=False):
             ops_stream_no_threading.append(op)
+            if op["block_num"] not in block_num_list2:
+                block_num_list2.append(op["block_num"])
 
-        self.assertEqual(len(ops_stream_no_threading), len(ops_stream))
-        for i in range(len(ops_stream)):
-            self.assertEqual(ops_stream[i]["block_num"], ops_stream_no_threading[i]["block_num"])
+        self.assertEqual(ops_stream[0]["block_num"], ops_stream_no_threading[0]["block_num"])
+        self.assertEqual(ops_stream[-1]["block_num"], ops_stream_no_threading[-1]["block_num"])
+
+        self.assertEqual(len(block_num_list), len(block_num_list2))
+        for i in range(len(block_num_list)):
+            self.assertEqual(block_num_list[i], block_num_list2[i])
 
         ops_blocks = []
         last_id = self.start - 1
-        for op in b.blocks(start=self.start, stop=self.stop, threading=True, thread_num=8):
+        for op in b.blocks(start=self.start, stop=self.stop, threading=True, thread_num=16, thread_limit=thread_limit):
             ops_blocks.append(op)
             self.assertEqual(op.identifier, last_id + 1)
             last_id += 1
+        self.assertEqual(len(ops_stream_no_threading), len(ops_stream))
+        for i in range(len(ops_blocks)):
+            self.assertEqual(ops_blocks[i]["id"], block_num_list2[i])
+
         op_stat4 = {"transfer": 0, "vote": 0}
         self.assertTrue(len(ops_blocks) > 0)
         for block in ops_blocks:
