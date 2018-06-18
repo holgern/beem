@@ -13,7 +13,7 @@ import logging
 from prettytable import PrettyTable
 from beem.instance import shared_steem_instance
 from .exceptions import AccountDoesNotExistsException, OfflineHasNoRPCException
-from beemapi.exceptions import ApiNotSupported
+from beemapi.exceptions import ApiNotSupported, MissingRequiredActiveAuthority
 from .blockchainobject import BlockchainObject
 from .blockchain import Blockchain
 from .utils import formatTimeString, formatTimedelta, remove_from_dict, reputation_to_score, addTzInfo
@@ -414,20 +414,41 @@ class Account(BlockchainObject):
         """
         return addTzInfo(datetime.utcnow()) + self.get_recharge_timedelta(voting_power_goal)
 
-    def get_feed(self, start_entry_id=0, limit=100, raw_data=False, account=None):
-        """ Returns the user feed
+    def get_feed(self, start_entry_id=0, limit=100, raw_data=False, short_entries=False, account=None):
+        """ Returns a list of items in an account’s feed
 
             :param int start_entry_id: default is 0
             :param int limit: default is 100
             :param bool raw_data: default is False
-            :param beem.account.Account account: default is None
+            :param bool short_entries: when set to True and raw_data is True, get_feed_entries is used istead of get_feed
+            :param str account: When set, a different account name is used (Default is object account name)
+
+            :rtype: list
+
+            .. code-block:: python
+
+                >>> from beem.account import Account
+                >>> account = Account("steemit")
+                >>> account.get_feed(0, 1, raw_data=True)
+                []
+
         """
         if account is None:
             account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]
         if not self.steem.is_connected():
             return None
         self.steem.rpc.set_next_node_on_empty_reply(False)
-        if raw_data and self.steem.rpc.get_use_appbase():
+        if raw_data and short_entries and self.steem.rpc.get_use_appbase():
+            return [
+                c for c in self.steem.rpc.get_feed_entries({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
+            ]
+        elif raw_data and short_entries and not self.steem.rpc.get_use_appbase():
+            return [
+                c for c in self.steem.rpc.get_feed_entries(account, start_entry_id, limit, api='follow')
+            ]
+        elif raw_data and self.steem.rpc.get_use_appbase():
             return [
                 c for c in self.steem.rpc.get_feed({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
             ]
@@ -438,27 +459,98 @@ class Account(BlockchainObject):
         elif not raw_data and self.steem.rpc.get_use_appbase():
             from .comment import Comment
             return [
-                Comment(c['comment'], steem_instance=self.steem) for c in self.steem.rpc.get_feed({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
+                Comment(c, steem_instance=self.steem) for c in self.steem.rpc.get_feed_entries({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
             ]
         else:
             from .comment import Comment
             return [
-                Comment(c['comment'], steem_instance=self.steem) for c in self.steem.rpc.get_feed(account, start_entry_id, limit, api='follow')
+                Comment(c, steem_instance=self.steem) for c in self.steem.rpc.get_feed_entries(account, start_entry_id, limit, api='follow')
             ]
 
-    def get_blog_entries(self, start_entry_id=0, limit=100, raw_data=False, account=None):
+    def get_feed_entries(self, start_entry_id=0, limit=100, raw_data=True,
+                         account=None):
+        """ Returns a list of entries in an account’s feed
+
+            :param int start_entry_id: default is 0
+            :param int limit: default is 100
+            :param bool raw_data: default is False
+            :param bool short_entries: when set to True and raw_data is True, get_feed_entries is used istead of get_feed
+            :param str account: When set, a different account name is used (Default is object account name)
+
+            :rtype: list
+
+            .. code-block:: python
+
+                >>> from beem.account import Account
+                >>> account = Account("steemit")
+                >>> account.get_feed_entries(0, 1)
+                []
+
+        """
+        return self.get_feed(start_entry_id=start_entry_id, limit=limit, raw_data=raw_data, short_entries=True, account=account)
+
+    def get_blog_entries(self, start_entry_id=0, limit=100, raw_data=True,
+                         account=None):
+        """ Returns the list of blog entries for an account
+
+            :param int start_entry_id: default is 0
+            :param int limit: default is 100
+            :param bool raw_data: default is False
+            :param str account: When set, a different account name is used (Default is object account name)
+
+            :rtype: list
+
+            .. code-block:: python
+
+                >>> from beem.account import Account
+                >>> account = Account("steemit")
+                >>> account.get_blog_entries(0, 1, raw_data=True)
+                [{'author': 'steemit', 'permlink': 'firstpost', 'blog': 'steemit', 'reblog_on': '1970-01-01T00:00:00', 'entry_id': 0}]
+
+        """
+        return self.get_blog(start_entry_id=start_entry_id, limit=limit, raw_data=raw_data, short_entries=True, account=account)
+
+    def get_blog(self, start_entry_id=0, limit=100, raw_data=False, short_entries=False, account=None):
+        """ Returns the list of blog entries for an account
+
+            :param int start_entry_id: default is 0
+            :param int limit: default is 100
+            :param bool raw_data: default is False
+            :param bool short_entries: when set to True and raw_data is True, get_blog_entries is used istead of get_blog
+            :param str account: When set, a different account name is used (Default is object account name)
+
+            :rtype: list
+
+            .. code-block:: python
+
+                >>> from beem.account import Account
+                >>> account = Account("steemit")
+                >>> account.get_blog(0, 1)
+                [<Comment @steemit/firstpost>]
+
+        """
         if account is None:
             account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]
         if not self.steem.is_connected():
-            return None
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
-        if raw_data and self.steem.rpc.get_use_appbase():
+        if raw_data and short_entries and self.steem.rpc.get_use_appbase():
             return [
                 c for c in self.steem.rpc.get_blog_entries({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["blog"]
             ]
-        elif raw_data and not self.steem.rpc.get_use_appbase():
+        elif raw_data and short_entries and not self.steem.rpc.get_use_appbase():
             return [
                 c for c in self.steem.rpc.get_blog_entries(account, start_entry_id, limit, api='follow')
+            ]
+        elif raw_data and self.steem.rpc.get_use_appbase():
+            return [
+                c for c in self.steem.rpc.get_blog({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["blog"]
+            ]
+        elif raw_data and not self.steem.rpc.get_use_appbase():
+            return [
+                c for c in self.steem.rpc.get_blog(account, start_entry_id, limit, api='follow')
             ]
         elif not raw_data and self.steem.rpc.get_use_appbase():
             from .comment import Comment
@@ -471,34 +563,25 @@ class Account(BlockchainObject):
                 Comment(c, steem_instance=self.steem) for c in self.steem.rpc.get_blog_entries(account, start_entry_id, limit, api='follow')
             ]
 
-    def get_blog(self, start_entry_id=0, limit=100, raw_data=False, account=None):
-        if account is None:
-            account = self["name"]
-        if not self.steem.is_connected():
-            raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if raw_data and self.steem.rpc.get_use_appbase():
-            return [
-                c for c in self.steem.rpc.get_blog({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["blog"]
-            ]
-        elif raw_data and not self.steem.rpc.get_use_appbase():
-            return [
-                c for c in self.steem.rpc.get_blog(account, start_entry_id, limit, api='follow')
-            ]
-        elif not raw_data and self.steem.rpc.get_use_appbase():
-            from .comment import Comment
-            return [
-                Comment(c["comment"], steem_instance=self.steem) for c in self.steem.rpc.get_blog({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["blog"]
-            ]
-        else:
-            from .comment import Comment
-            return [
-                Comment(c["comment"], steem_instance=self.steem) for c in self.steem.rpc.get_blog(account, start_entry_id, limit, api='follow')
-            ]
+    def get_blog_authors(self, account=None):
+        """ Returns a list of authors that have had their content reblogged on a given blog account
 
-    def get_blog_account(self, account=None):
+            :param str account: When set, a different account name is used (Default is object account name)
+
+            :rtype: list
+
+            .. code-block:: python
+
+                >>> from beem.account import Account
+                >>> account = Account("steemit")
+                >>> account.get_blog_authors()
+                []
+
+        """
         if account is None:
             account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]
         if not self.steem.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
@@ -511,6 +594,8 @@ class Account(BlockchainObject):
         """ get_follow_count """
         if account is None:
             account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]
         if not self.steem.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
@@ -800,14 +885,24 @@ class Account(BlockchainObject):
         # print("bandwidth percent remaining: " + str(100 - (100 * used_bandwidth / allocated_bandwidth)))
 
     def get_owner_history(self, account=None):
-        """ get_owner_history
+        """ Returns the owner history of an account.
 
-            :param str account: Account name to get interest for (default None)
+            :param str account: When set, a different account is used for the request (Default is object account name)
+
             :rtype: list
+
+            .. code-block:: python
+
+                >>> from beem.account import Account
+                >>> account = Account("test")
+                >>> account.get_owner_history()
+                []
 
         """
         if account is None:
             account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]
         if not self.steem.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
@@ -817,13 +912,24 @@ class Account(BlockchainObject):
             return self.steem.rpc.get_owner_history(account)
 
     def get_conversion_requests(self, account=None):
-        """ Returns get_owner_history
+        """ Returns a list of SBD conversion request
+
+            :param str account: When set, a different account is used for the request (Default is object account name)
 
             :rtype: list
+
+            .. code-block:: python
+
+                >>> from beem.account import Account
+                >>> account = Account("test")
+                >>> account.get_conversion_requests()
+                []
 
         """
         if account is None:
             account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]
         if not self.steem.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
@@ -833,13 +939,24 @@ class Account(BlockchainObject):
             return self.steem.rpc.get_conversion_requests(account)
 
     def get_withdraw_routes(self, account=None):
-        """ Returns withdraw_routes
+        """ Returns the withdraw routes for an account.
+
+            :param str account: When set, a different account is used for the request (Default is object account name)
 
             :rtype: list
+
+            .. code-block:: python
+
+                >>> from beem.account import Account
+                >>> account = Account("test")
+                >>> account.get_withdraw_routes()
+                []
 
         """
         if account is None:
             account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]
         if not self.steem.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
@@ -848,14 +965,54 @@ class Account(BlockchainObject):
         else:
             return self.steem.rpc.get_withdraw_routes(account, 'all')
 
-    def get_recovery_request(self, account=None):
-        """ Returns get_recovery_request
+    def get_savings_withdrawals(self, direction="from", account=None):
+        """ Returns the list of savings withdrawls for an account.
+
+            :param str account: When set, a different account is used for the request (Default is object account name)
+            :param str direction: Can be either from or to (only non appbase nodes)
 
             :rtype: list
+
+            .. code-block:: python
+
+                >>> from beem.account import Account
+                >>> account = Account("test")
+                >>> account.get_savings_withdrawals()
+                []
 
         """
         if account is None:
             account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]
+        if not self.steem.is_connected():
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
+        self.steem.rpc.set_next_node_on_empty_reply(False)
+        if self.steem.rpc.get_use_appbase():
+            return self.steem.rpc.find_savings_withdrawals({'account': account}, api="database")['withdrawals']
+        elif direction == "from":
+            return self.steem.rpc.get_savings_withdraw_from(account)
+        elif direction == "to":
+            return self.steem.rpc.get_savings_withdraw_to(account)
+
+    def get_recovery_request(self, account=None):
+        """ Returns the recovery request for an account
+
+            :param str account: When set, a different account is used for the request (Default is object account name)
+
+            :rtype: list
+
+            .. code-block:: python
+
+                >>> from beem.account import Account
+                >>> account = Account("test")
+                >>> account.get_recovery_request()
+
+        """
+        if account is None:
+            account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]
         if not self.steem.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
@@ -864,51 +1021,110 @@ class Account(BlockchainObject):
         else:
             return self.steem.rpc.get_recovery_request(account)
 
-    def verify_account_authority(self, keys, account=None):
-        """ verify_account_authority """
-        if account is None:
-            account = self["name"]
-        if not self.steem.is_connected():
-            raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.verify_account_authority({'account': account, 'signers': keys}, api="database")
-        else:
-            return self.steem.rpc.verify_account_authority(account, keys)
+    def get_escrow(self, escrow_id=0, account=None):
+        """ Returns the escrow for a certain account by id
 
-    def get_expiring_vesting_delegations(self, start=None, limit=1000, account=None):
-        """ Returns the expirations for vesting delegations.
+            :param int escrow_id: Id (only pre appbase)
+            :param str account: When set, a different account is used for the request (Default is object account name)
 
             :rtype: list
 
+            .. code-block:: python
+
+                >>> from beem.account import Account
+                >>> account = Account("test")
+                >>> account.get_escrow(1234)
+
         """
         if account is None:
-            account = self
-        else:
-            account = Account(account, steem_instance=self.steem)
+            account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]
         if not self.steem.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
-        if start is None:
-            start = addTzInfo(datetime.utcnow()) - timedelta(days=8)
         if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.find_vesting_delegation_expirations({'account': account["name"]}, api="database")['delegations']
+            return self.steem.rpc.find_escrows({'from': account}, api="database")['escrows']
         else:
-            return self.steem.rpc.get_expiring_vesting_delegations(account["name"], formatTimeString(start), limit)
+            return self.steem.rpc.get_escrow(account, escrow_id)
+
+    def verify_account_authority(self, keys, account=None):
+        """ Returns true if the signers have enough authority to authorize an account.
+
+            :param list keys: public key
+            :param str account: When set, a different account is used for the request (Default is object account name)
+
+            :rtype: dict
+
+            .. code-block:: python
+
+                >>> from beem.account import Account
+                >>> account = Account("steemit")
+                >>> account.verify_account_authority(["STM7Q2rLBqzPzFeteQZewv9Lu3NLE69fZoLeL6YK59t7UmssCBNTU"])
+                {'valid': False}
+
+        """
+        if account is None:
+            account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]
+        if not self.steem.is_connected():
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
+        if not isinstance(keys, list):
+            keys = [keys]
+        self.steem.rpc.set_next_node_on_empty_reply(False)
+        try:
+            if self.steem.rpc.get_use_appbase():
+                return self.steem.rpc.verify_account_authority({'account': account, 'signers': keys}, api="database")
+            else:
+                return self.steem.rpc.verify_account_authority(account, keys)
+        except MissingRequiredActiveAuthority:
+            return {'valid': False}
+
+    def get_expiring_vesting_delegations(self, after=None, limit=1000, account=None):
+        """ Returns the expirations for vesting delegations.
+
+            :param datetime after : expiration after (only for pre appbase nodes)
+            :param int limit: limits number of shown entries (only for pre appbase nodes)
+            :param str account: When set, a different account is used for the request (Default is object account name)
+
+            :rtype: list
+
+            .. code-block:: python
+
+                >>> from beem.account import Account
+                >>> account = Account("test")
+                >>> account.get_expiring_vesting_delegations()
+                []
+
+        """
+        if account is None:
+            account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]
+        if not self.steem.is_connected():
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
+        self.steem.rpc.set_next_node_on_empty_reply(False)
+        if after is None:
+            after = addTzInfo(datetime.utcnow()) - timedelta(days=8)
+        if self.steem.rpc.get_use_appbase():
+            return self.steem.rpc.find_vesting_delegation_expirations({'account': account}, api="database")['delegations']
+        else:
+            return self.steem.rpc.get_expiring_vesting_delegations(account, formatTimeString(after), limit)
 
     def get_account_votes(self, account=None):
         """Returns all votes that the account has done"""
         if account is None:
-            account = self
-        else:
-            account = Account(account, steem_instance=self.steem)
+            account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]
         if not self.steem.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.get_account_votes(account["name"])
+            return self.steem.rpc.get_account_votes(account)
         else:
-            return self.steem.rpc.get_account_votes(account["name"])
+            return self.steem.rpc.get_account_votes(account)
 
     def get_vote(self, comment):
         """Returns a vote if the account has already voted for comment.

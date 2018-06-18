@@ -748,3 +748,39 @@ class Blockchain(object):
             lastname = account_name
             if len(ret) < steps:
                 raise StopIteration
+
+    def get_account_reputations(self, start='', stop='', steps=1e3, limit=-1, **kwargs):
+        """ Yields account reputation between start and stop.
+
+            :param str start: Start at this account name
+            :param str stop: Stop at this account name
+            :param int steps: Obtain ``steps`` ret with a single call from RPC
+        """
+        cnt = 1
+        if not self.steem.is_connected():
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
+        if self.steem.rpc.get_use_appbase() and start == "":
+            lastname = None
+        else:
+            lastname = start
+        self.steem.rpc.set_next_node_on_empty_reply(False)
+        while True:
+            if self.steem.rpc.get_use_appbase():
+                ret = self.steem.rpc.get_account_reputations({'account_lower_bound': lastname, 'limit': steps}, api="follow")["reputations"]
+            else:
+                ret = self.steem.rpc.get_account_reputations(lastname, steps, api="follow")
+            for account in ret:
+                if isinstance(account, dict):
+                    account_name = account["account"]
+                else:
+                    account_name = account
+                if account_name != lastname:
+                    yield account
+                    cnt += 1
+                    if account_name == stop or (limit > 0 and cnt > limit):
+                        raise StopIteration
+            if lastname == account_name:
+                raise StopIteration
+            lastname = account_name
+            if len(ret) < steps:
+                raise StopIteration
