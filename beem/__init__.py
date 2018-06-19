@@ -21,5 +21,6 @@ __all__ = [
     "discussions",
     "witness",
     "profile",
-    "nodelist"
+    "nodelist",
+    "imageuploader"
 ]

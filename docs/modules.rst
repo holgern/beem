@@ -20,6 +20,7 @@ beem Modules
    beem.comment
    beem.discussions
    beem.exceptions
+   beem.imageuploader
    beem.instance
    beem.market
    beem.memo

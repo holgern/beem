@@ -80,7 +80,7 @@ class Worker(Thread):
 # class for thread pool
 class Pool:
     """Pool of threads consuming tasks from a queue"""
-    def __init__(self, thread_count, batch_mode=False, exception_handler=default_handler):
+    def __init__(self, thread_count, batch_mode=True, exception_handler=default_handler):
         # batch mode means block when adding tasks if no threads available to process
         self.queue = Queue(thread_count if batch_mode else 0)
         self.resultQueue = Queue(0)
@@ -375,7 +375,7 @@ class Blockchain(object):
                 head_block = current_block_num
             if threading and not head_block_reached:
                 # pool = ThreadPoolExecutor(max_workers=thread_num + 1)
-                pool = Pool(thread_num + 1, batch_mode=True)
+                pool = Pool(thread_num, batch_mode=True)
                 # disable autoclean
                 auto_clean = current_block.get_cache_auto_clean()
                 current_block.set_cache_auto_clean(False)
