@@ -398,28 +398,15 @@ class Blockchain(object):
                     pool.abort()
                     current_block.clear_cache_from_expired_items()
                     current_block.set_cache_auto_clean(auto_clean)
-                    checked_results = []
-                    for b in results:
-                        if isinstance(b, dict) and "transactions" in b and "transaction_ids" in b:
-                            if len(b["transactions"]) == len(b["transaction_ids"]) and int(b.identifier) not in result_block_nums:
-                                checked_results.append(b)
-                                result_block_nums.append(int(b.identifier))
-
-                    missing_block_num = list(set(block_num_list).difference(set(result_block_nums)))
-                    if len(missing_block_num) > 0:
-                        for blocknum in missing_block_num:
-                            block = Block(blocknum, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
-                            checked_results.append(block)
-                            result_block_nums.append(int(block.identifier))
                     from operator import itemgetter
-                    blocks = sorted(checked_results, key=itemgetter('id'))
+                    blocks = sorted(results, key=itemgetter('id'))
                     for b in blocks:
                         if latest_block < int(b.identifier):
                             latest_block = int(b.identifier)
                         yield b
 
                 if latest_block <= head_block:
-                    for blocknum in range(latest_block, head_block + 1):
+                    for blocknum in range(latest_block + 1, head_block + 1):
                         if blocknum not in result_block_nums:
                             block = Block(blocknum, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
                             result_block_nums.append(blocknum)
@@ -746,6 +733,15 @@ class Blockchain(object):
             lastname = account_name
             if len(ret) < steps:
                 raise StopIteration
+
+    def get_account_count(self):
+        """ Returns the number of accounts"""
+        self.steem.rpc.set_next_node_on_empty_reply(False)
+        if self.steem.rpc.get_use_appbase():
+            ret = self.steem.rpc.get_account_count(api="condenser")
+        else:
+            ret = self.steem.rpc.get_account_count()
+        return ret
 
     def get_account_reputations(self, start='', stop='', steps=1e3, limit=-1, **kwargs):
         """ Yields account reputation between start and stop.
