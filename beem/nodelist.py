@@ -231,8 +231,19 @@ class NodeList(list):
             }]
         super(NodeList, self).__init__(nodes)
 
-    def update_nodes(self, steem_instance=None):
-        """ Reads metadata from fullnodeupdate"""
+    def update_nodes(self, weights=None, steem_instance=None):
+        """ Reads metadata from fullnodeupdate and recalculates the nodes score
+
+            :params list/dict weight: can be used to weight the different benchmarks
+
+            .. code-block:: python
+                from beem.nodelist import NodeList
+                nl = NodeList()
+                weights = [0, 0.1, 0.2, 1]
+                nl.update_nodes(weights)
+                weights = {'block': 0.1, 'history': 0.1, 'apicall': 1, 'config': 1}
+                nl.update_nodes(weights)
+        """
         steem = steem_instance or shared_steem_instance()
         account = Account("fullnodeupdate", steem_instance=steem)
         metadata = json.loads(account["json_metadata"])
@@ -240,6 +251,34 @@ class NodeList(list):
         failing_nodes = metadata["failing_nodes"]
         parameter = metadata["parameter"]
         benchmarks = parameter["benchmarks"]
+        if weights is None:
+            weights_dict = {}
+            for benchmark in benchmarks:
+                weights_dict[benchmark] = (1. / len(benchmarks))
+        elif isinstance(weights, list):
+            weights_dict = {}
+            i = 0
+            weight_sum = 0
+            for w in weights:
+                weight_sum += w
+            for benchmark in benchmarks:
+                if i < len(weights):
+                    weights_dict[benchmark] = weights[i] / weight_sum
+                else:
+                    weights_dict[benchmark] = 0.
+                i += 1
+        elif isinstance(weights, dict):
+            weights_dict = {}
+            i = 0
+            weight_sum = 0
+            for w in weights:
+                weight_sum += weights[w]
+            for benchmark in benchmarks:
+                if benchmark in weights:
+                    weights_dict[benchmark] = weights[benchmark] / weight_sum
+                else:
+                    weights_dict[benchmark] = 0.
+
         max_score = len(report) + 1
         new_nodes = []
         for node in self:
@@ -247,17 +286,19 @@ class NodeList(list):
             for report_node in report:
                 if node["url"] == report_node["node"]:
                     new_node["version"] = report_node["version"]
-                    ranks = []
+                    scores = []
                     for benchmark in benchmarks:
                         result = report_node[benchmark]
                         rank = result["rank"]
                         if not result["ok"]:
                             rank = max_score + 1
-                        ranks.append(rank)
-                    sum_rank = 0
-                    for rank in ranks:
-                        sum_rank += rank
-                    new_node["score"] = ((len(ranks) * max_score) - sum_rank) / len(ranks) * 10
+                        score = (max_score - rank) / (max_score - 1) * 100
+                        weigthed_score = score * weights_dict[benchmark]
+                        scores.append(weigthed_score)
+                    sum_score = 0
+                    for score in scores:
+                        sum_score += score
+                    new_node["score"] = sum_score
             for node_failing in failing_nodes:
                 if node["url"] == node_failing:
                     new_node["score"] = -1
