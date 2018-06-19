@@ -459,12 +459,12 @@ class Account(BlockchainObject):
         elif not raw_data and self.steem.rpc.get_use_appbase():
             from .comment import Comment
             return [
-                Comment(c, steem_instance=self.steem) for c in self.steem.rpc.get_feed_entries({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
+                Comment(c, steem_instance=self.steem) for c in self.steem.rpc.get_feed({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
             ]
         else:
             from .comment import Comment
             return [
-                Comment(c, steem_instance=self.steem) for c in self.steem.rpc.get_feed_entries(account, start_entry_id, limit, api='follow')
+                Comment(c, steem_instance=self.steem) for c in self.steem.rpc.get_feed(account, start_entry_id, limit, api='follow')
             ]
 
     def get_feed_entries(self, start_entry_id=0, limit=100, raw_data=True,
@@ -555,12 +555,12 @@ class Account(BlockchainObject):
         elif not raw_data and self.steem.rpc.get_use_appbase():
             from .comment import Comment
             return [
-                Comment(c, steem_instance=self.steem) for c in self.steem.rpc.get_blog_entries({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["blog"]
+                Comment(c, steem_instance=self.steem) for c in self.steem.rpc.get_blog({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["blog"]
             ]
         else:
             from .comment import Comment
             return [
-                Comment(c, steem_instance=self.steem) for c in self.steem.rpc.get_blog_entries(account, start_entry_id, limit, api='follow')
+                Comment(c, steem_instance=self.steem) for c in self.steem.rpc.get_blog(account, start_entry_id, limit, api='follow')
             ]
 
     def get_blog_authors(self, account=None):

@@ -224,7 +224,10 @@ class Comment(BlockchainObject):
 
     @property
     def category(self):
-        return self["category"]
+        if "category" in self:
+            return self["category"]
+        else:
+            return ""
 
     @property
     def parent_author(self):
@@ -236,15 +239,24 @@ class Comment(BlockchainObject):
 
     @property
     def title(self):
-        return self["title"]
+        if "title" in self:
+            return self["title"]
+        else:
+            return ""
 
     @property
     def body(self):
-        return self["body"]
+        if "body" in self:
+            return self["body"]
+        else:
+            return ""
 
     @property
     def json_metadata(self):
-        return self["json_metadata"]
+        if "json_metadata" in self:
+            return self["json_metadata"]
+        else:
+            return {}
 
     def is_main_post(self):
         """ Retuns True if main post, and False if this is a comment (reply).
