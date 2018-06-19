@@ -35,7 +35,7 @@ class Testcases(unittest.TestCase):
         b = Blockchain(steem_instance=cls.bts)
         num = b.get_current_block_num()
         # num = 23346630
-        cls.start = num - 50
+        cls.start = num - 25
         cls.stop = num
         # cls.N_transfer = 121
         # cls.N_vote = 2825
@@ -47,7 +47,7 @@ class Testcases(unittest.TestCase):
         ops_stream_no_threading = []
         opNames = ["transfer", "vote"]
         block_num_list = []
-        for op in b.stream(opNames=opNames, start=self.start, stop=self.stop, threading=True, thread_num=8):
+        for op in b.stream(opNames=opNames, start=self.start, stop=self.stop, threading=True, thread_num=2):
             ops_stream.append(op)
             if op["block_num"] not in block_num_list:
                 block_num_list.append(op["block_num"])
@@ -69,7 +69,7 @@ class Testcases(unittest.TestCase):
 
         blocks = []
         last_id = self.start - 1
-        for block in b.blocks(start=self.start, stop=self.stop, threading=True, thread_num=8):
+        for block in b.blocks(start=self.start, stop=self.stop, threading=True, thread_num=2):
             blocks.append(block)
             self.assertEqual(block.identifier, last_id + 1)
             last_id += 1

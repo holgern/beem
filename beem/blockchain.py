@@ -378,7 +378,7 @@ class Blockchain(object):
                 pool = Pool(thread_num, batch_mode=True)
                 # disable autoclean
                 auto_clean = current_block.get_cache_auto_clean()
-                latest_block = start
+                latest_block = start - 1
                 result_block_nums = []
                 for blocknum in range(start, head_block + 1, thread_num):
                     # futures = []
@@ -418,7 +418,7 @@ class Blockchain(object):
                             latest_block = int(b.identifier)
                         yield b
 
-                if latest_block < head_block:
+                if latest_block <= head_block:
                     for blocknum in range(latest_block, head_block + 1):
                         if blocknum not in result_block_nums:
                             block = Block(blocknum, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
