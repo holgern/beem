@@ -59,37 +59,20 @@ class Testcases(unittest.TestCase):
 
         self.assertEqual(ops_stream[0]["block_num"], ops_stream_no_threading[0]["block_num"])
         self.assertEqual(ops_stream[-1]["block_num"], ops_stream_no_threading[-1]["block_num"])
+        self.assertEqual(len(ops_stream_no_threading), len(ops_stream))
+        for i in range(len(ops_stream)):
+            self.assertEqual(ops_stream[i], ops_stream_no_threading[i])
 
         self.assertEqual(len(block_num_list), len(block_num_list2))
         for i in range(len(block_num_list)):
             self.assertEqual(block_num_list[i], block_num_list2[i])
 
-        ops_blocks = []
+        blocks = []
         last_id = self.start - 1
-        for op in b.blocks(start=self.start, stop=self.stop, threading=True, thread_num=8):
-            ops_blocks.append(op)
-            self.assertEqual(op.identifier, last_id + 1)
+        for block in b.blocks(start=self.start, stop=self.stop, threading=True, thread_num=8):
+            blocks.append(block)
+            self.assertEqual(block.identifier, last_id + 1)
             last_id += 1
-        self.assertEqual(len(ops_stream_no_threading), len(ops_stream))
-        for i in range(len(ops_blocks)):
-            self.assertEqual(ops_blocks[i]["id"], block_num_list2[i])
 
-        op_stat4 = {"transfer": 0, "vote": 0}
-        self.assertTrue(len(ops_blocks) > 0)
-        for block in ops_blocks:
-            for op in block.operations:
-                op_type = ""
-                if isinstance(op, dict) and 'type' in op:
-                    op_type = op["type"]
-                    if len(op_type) > 10 and op_type[len(op_type) - 10:] == "_operation":
-                        op_type = op_type[:-10]
-                else:
-                    if "op" in op:
-                        op_type = op["op"][0]
-                    else:
-                        op_type = op[0]
-                if op_type in opNames:
-                    op_stat4[op_type] += 1
-            self.assertTrue(block.identifier >= self.start)
-            self.assertTrue(block.identifier <= self.stop)
-        self.assertEqual(len(ops_stream_no_threading), op_stat4["transfer"] + op_stat4["vote"])
+        for i in range(len(blocks)):
+            self.assertEqual(blocks[i]["id"], block_num_list2[i])

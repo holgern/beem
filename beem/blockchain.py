@@ -378,7 +378,6 @@ class Blockchain(object):
                 pool = Pool(thread_num, batch_mode=True)
                 # disable autoclean
                 auto_clean = current_block.get_cache_auto_clean()
-                current_block.set_cache_auto_clean(False)
                 latest_block = start
                 result_block_nums = []
                 for blocknum in range(start, head_block + 1, thread_num):
@@ -386,20 +385,19 @@ class Blockchain(object):
                     i = 0
                     results = []
                     block_num_list = []
+                    current_block.set_cache_auto_clean(False)
                     while i < thread_num and blocknum + i <= head_block:
                         block_num_list.append(blocknum + i)
                         pool.enqueue(Block, blocknum + i, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
                         i += 1
                     pool.run(True)
-                    results = []
-                    while not pool.done() or not pool.idle():
-                        for result in pool.results():
-                            results.append(result)
                     pool.join()
+                    results = []
                     for result in pool.results():
                         results.append(result)
                     pool.abort()
-
+                    current_block.clear_cache_from_expired_items()
+                    current_block.set_cache_auto_clean(auto_clean)
                     checked_results = []
                     for b in results:
                         if isinstance(b, dict) and "transactions" in b and "transaction_ids" in b:
@@ -419,7 +417,7 @@ class Blockchain(object):
                         if latest_block < int(b.identifier):
                             latest_block = int(b.identifier)
                         yield b
-                    current_block.clear_cache_from_expired_items()
+
                 if latest_block < head_block:
                     for blocknum in range(latest_block, head_block + 1):
                         if blocknum not in result_block_nums:
