@@ -19,6 +19,7 @@ from datetime import datetime, timedelta
 from .utils import formatTimeString, addTzInfo
 from .block import Block
 from .exceptions import BatchedCallsNotSupported, BlockDoesNotExistsException, BlockWaitTimeExceeded, OfflineHasNoRPCException
+from beemapi.exceptions import NumRetriesReached
 from beemgraphenebase.py23 import py23_bytes
 from beem.instance import shared_steem_instance
 from .amount import Amount
@@ -67,6 +68,7 @@ class Worker(Thread):
             try:
                 # the function may raise
                 result = func(*args, **kwargs)
+                # print(result)
                 if(result is not None):
                     self.results.put(result)
             except Exception as e:
@@ -364,6 +366,9 @@ class Blockchain(object):
         if not start:
             start = current_block_num
         head_block_reached = False
+        if threading:
+            # pool = ThreadPoolExecutor(max_workers=thread_num + 1)
+            pool = Pool(thread_num, batch_mode=True)
         # We are going to loop indefinitely
         while True:
 
@@ -374,8 +379,6 @@ class Blockchain(object):
                 current_block_num = self.get_current_block_num()
                 head_block = current_block_num
             if threading and not head_block_reached:
-                # pool = ThreadPoolExecutor(max_workers=thread_num + 1)
-                pool = Pool(thread_num, batch_mode=True)
                 # disable autoclean
                 auto_clean = current_block.get_cache_auto_clean()
                 latest_block = start - 1
@@ -392,7 +395,6 @@ class Blockchain(object):
                         i += 1
                     pool.run(True)
                     pool.join()
-                    results = []
                     for result in pool.results():
                         results.append(result)
                     pool.abort()
