@@ -46,12 +46,15 @@ class Nodes(list):
         self.num_retries = num_retries
         self.num_retries_call = num_retries_call
         self.current_node_index = -1
+        self.freeze_current_node = False
 
     def __iter__(self):
         return self
 
     def __next__(self):
         next_node_count = 0
+        if self.freeze_current_node:
+            return self.url
         while next_node_count == 0 and (self.num_retries < 0 or self.node.error_cnt < self.num_retries):
             self.current_node_index += 1
             if self.current_node_index >= self.working_nodes_count:
@@ -73,6 +76,13 @@ class Nodes(list):
     @property
     def working_nodes_count(self):
         n = 0
+        if self.freeze_current_node:
+            i = self.current_node_index
+            if self.current_node_index < 0:
+                i = 0
+            if self.num_retries < 0 or self[i].error_cnt <= self.num_retries:
+                n += 1
+            return n
         for i in range(len(self)):
             if self.num_retries < 0 or self[i].error_cnt <= self.num_retries:
                 n += 1

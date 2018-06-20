@@ -18,6 +18,7 @@ import logging
 from datetime import datetime, timedelta
 from .utils import formatTimeString, addTzInfo
 from .block import Block
+from beemapi.node import Nodes
 from .exceptions import BatchedCallsNotSupported, BlockDoesNotExistsException, BlockWaitTimeExceeded, OfflineHasNoRPCException
 from beemapi.exceptions import NumRetriesReached
 from beemgraphenebase.py23 import py23_bytes
@@ -63,6 +64,7 @@ class Worker(Thread):
                 # if not self.idle.is_set():
                 #  print >> stdout, '%s is idle' % self.name
                 self.idle.set()
+                # time.sleep(1)
                 continue
 
             try:
@@ -389,6 +391,11 @@ class Blockchain(object):
                     results = []
                     block_num_list = []
                     current_block.set_cache_auto_clean(False)
+                    freeze = self.steem.rpc.nodes.freeze_current_node
+                    num_retries = self.steem.rpc.nodes.num_retries
+                    self.steem.rpc.nodes.freeze_current_node = True
+                    self.steem.rpc.nodes.num_retries = 1
+                    error_cnt = self.steem.rpc.nodes.node.error_cnt
                     while i < thread_num and blocknum + i <= head_block:
                         block_num_list.append(blocknum + i)
                         pool.enqueue(Block, blocknum + i, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
@@ -400,8 +407,29 @@ class Blockchain(object):
                     pool.abort()
                     current_block.clear_cache_from_expired_items()
                     current_block.set_cache_auto_clean(auto_clean)
+                    self.steem.rpc.nodes.num_retries = num_retries
+                    self.steem.rpc.nodes.freeze_current_node = freeze
+                    new_error_cnt = self.steem.rpc.nodes.node.error_cnt
+                    self.steem.rpc.nodes.node.error_cnt = error_cnt
+                    if new_error_cnt > error_cnt:
+                        self.steem.rpc.nodes.node.error_cnt += 1
+                        self.steem.rpc.next()
+
+                    checked_results = []
+                    for b in results:
+                        if isinstance(b, dict) and "transactions" in b and "transaction_ids" in b:
+                            if len(b["transactions"]) == len(b["transaction_ids"]) and int(b.identifier) not in result_block_nums:
+                                checked_results.append(b)
+                                result_block_nums.append(int(b.identifier))
+
+                    missing_block_num = list(set(block_num_list).difference(set(result_block_nums)))
+                    if len(missing_block_num) > 0:
+                        for blocknum in missing_block_num:
+                            block = Block(blocknum, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
+                            checked_results.append(block)
+                            result_block_nums.append(int(block.identifier))
                     from operator import itemgetter
-                    blocks = sorted(results, key=itemgetter('id'))
+                    blocks = sorted(checked_results, key=itemgetter('id'))
                     for b in blocks:
                         if latest_block < int(b.identifier):
                             latest_block = int(b.identifier)

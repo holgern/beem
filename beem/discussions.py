@@ -69,6 +69,30 @@ class Discussions_by_trending(list):
         )
 
 
+class Discussions_by_author_before_date(list):
+    """ Get Discussions by author before date
+
+        :param beem.discussions.Query: discussion_query
+        :param beem.steem.Steem steem_instance: Steem instance
+
+    """
+    def __init__(self, author="", start_permlink="", before_date="1970-01-01T00:00:00", limit=100, steem_instance=None):
+        self.steem = steem_instance or shared_steem_instance()
+        limit_ok = limit > 0
+        self.steem.rpc.set_next_node_on_empty_reply(limit_ok)
+        if self.steem.rpc.get_use_appbase():
+            discussion_query = {"author": author, "start_permlink": start_permlink, "before_date": before_date, "limit": limit}
+            posts = self.steem.rpc.get_discussions_by_author_before_date(discussion_query, api="tags")['discussions']
+        else:
+            posts = self.steem.rpc.get_discussions_by_author_before_date(author, start_permlink, before_date, limit)
+        super(Discussions_by_author_before_date, self).__init__(
+            [
+                Comment(x, steem_instance=self.steem)
+                for x in posts
+            ]
+        )
+
+
 class Comment_discussions_by_payout(list):
     """ Get comment_discussions_by_payout
 
@@ -255,8 +279,6 @@ class Discussions_by_feed(list):
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
-        limit_ok = "limit" in discussion_query and discussion_query["limit"] > 0
-        self.steem.rpc.set_next_node_on_empty_reply(limit_ok)
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_feed(discussion_query, api="tags")['discussions']
         else:
@@ -302,13 +324,12 @@ class Discussions_by_blog(list):
 class Discussions_by_comments(list):
     """ Get discussions by comments
 
-        :param beem.discussions.Query: discussion_query
+        :param beem.discussions.Query: discussion_query, start_author and start_permlink must be set.
         :param beem.steem.Steem steem_instance: Steem instance
+
     """
     def __init__(self, discussion_query, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
-        limit_ok = "limit" in discussion_query and discussion_query["limit"] > 0
-        self.steem.rpc.set_next_node_on_empty_reply(limit_ok)
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_comments(discussion_query, api="tags")['discussions']
         else:
