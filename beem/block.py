@@ -84,19 +84,13 @@ class Block(BlockchainObject):
             if p in block and isinstance(block.get(p), string_types):
                 block[p] = formatTimeString(block.get(p, "1970-01-01T00:00:00"))
         if "transactions" in block:
-            new_transactions = []
-            for trx in block["transactions"]:
-                if 'expiration' in trx and isinstance(trx.get('expiration'), string_types):
-                    trx['expiration'] = formatTimeString(trx.get('expiration', "1970-01-01T00:00:00"))
-                new_transactions.append(trx)
-            block["transactions"] = new_transactions
+            for i in range(len(block["transactions"])):
+                if 'expiration' in block["transactions"][i] and isinstance(block["transactions"][i]["expiration"], string_types):
+                    block["transactions"][i]["expiration"] = formatTimeString(block["transactions"][i]["expiration"])
         elif "operations" in block:
-            new_operations = []
-            for trx in block["operations"]:
-                if 'timestamp' in trx and isinstance(trx.get('timestamp'), string_types):
-                    trx['timestamp'] = formatTimeString(trx.get('timestamp', "1970-01-01T00:00:00"))
-                new_operations.append(trx)
-            block["operations"] = new_operations
+            for i in range(len(block["operations"])):
+                if 'timestamp' in block["operations"][i]  and isinstance(block["operations"][i]["timestamp"], string_types):
+                    block["operations"][i]["timestamp"] = formatTimeString(block["operations"][i]["timestamp"])
         return block
 
     def json(self):
@@ -111,29 +105,19 @@ class Block(BlockchainObject):
                     output[p] = formatTimeString(p_date)
                 else:
                     output[p] = p_date
+
         if "transactions" in output:
-            new_transactions = []
-            for trx in output["transactions"]:
-                if 'expiration' in trx:
-                    p_date = trx.get('expiration', datetime(1970, 1, 1, 0, 0))
-                    if isinstance(p_date, (datetime, date)):
-                        trx['expiration'] = formatTimeString(p_date)
-                    else:
-                        trx['expiration'] = p_date
-                new_transactions.append(trx)
-            output["transactions"] = new_transactions
+            for i in range(len(output["transactions"])):
+                if 'expiration' in output["transactions"][i] and isinstance(output["transactions"][i]["expiration"], (datetime, date)):
+                    output["transactions"][i]["expiration"] = formatTimeString(output["transactions"][i]["expiration"])
         elif "operations" in output:
-            new_operations = []
-            for trx in output["operations"]:
-                if 'timestamp' in trx:
-                    p_date = trx.get('timestamp', datetime(1970, 1, 1, 0, 0))
-                    if isinstance(p_date, (datetime, date)):
-                        trx['timestamp'] = formatTimeString(p_date)
-                    else:
-                        trx['timestamp'] = p_date
-                new_operations.append(trx)
-            output["operations"] = new_operations
-        return json.loads(str(json.dumps(output)))
+            for i in range(len(output["operations"])):
+                if 'timestamp' in output["operations"][i]  and isinstance(output["operations"][i]["timestamp"], (datetime, date)):
+                    output["operations"][i]["timestamp"] = formatTimeString(output["operations"][i]["timestamp"])
+
+        ret = json.loads(str(json.dumps(output)))
+        output = self._parse_json_data(output)
+        return ret
 
     def refresh(self):
         """ Even though blocks never change, you freshly obtain its contents
