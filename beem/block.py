@@ -123,12 +123,10 @@ class Block(BlockchainObject):
         """ Even though blocks never change, you freshly obtain its contents
             from an API with this method
         """
-        if self.identifier is None and "id" in self:
-            self.identifier = self["id"]
-        if not isinstance(self.identifier, int):
-            self.identifier = int(self.identifier)
+        if self.identifier is None:
+            return
         if not self.steem.is_connected():
-            return None
+            return
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.only_ops or self.only_virtual_ops:
             if self.steem.rpc.get_use_appbase():
@@ -154,13 +152,12 @@ class Block(BlockchainObject):
         if not block:
             raise BlockDoesNotExistsException(str(self.identifier))
         block = self._parse_json_data(block)
-        block["id"] = self.identifier
         super(Block, self).__init__(block, lazy=self.lazy, full=self.full, steem_instance=self.steem)
 
     @property
     def block_num(self):
         """Returns the block number"""
-        return self.identifier
+        return int(self['block_id'][:8], base=16)
 
     def time(self):
         """Return a datatime instance for the timestamp of this block"""

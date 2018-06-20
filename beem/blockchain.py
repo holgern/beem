@@ -410,25 +410,28 @@ class Blockchain(object):
                 for blocknum in range(start, head_block + 1, thread_num):
                     # futures = []
                     i = 0
-                    results = []
                     if FUTURES_MODULE is not None:
                         futures = []
                     block_num_list = []
                     current_block.set_cache_auto_clean(False)
                     freeze = self.steem.rpc.nodes.freeze_current_node
-                    num_retries = self.steem.rpc.nodes.num_retries
+                    # num_retries = self.steem.rpc.nodes.num_retries
                     self.steem.rpc.nodes.freeze_current_node = True
-                    self.steem.rpc.nodes.num_retries = 1
+                    # self.steem.rpc.nodes.num_retries = 1
                     error_cnt = self.steem.rpc.nodes.node.error_cnt
                     while i < thread_num and blocknum + i <= head_block:
                         block_num_list.append(blocknum + i)
+                        results = []
                         if FUTURES_MODULE is not None:
                             futures.append(pool.submit(Block, blocknum + i, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem))
                         else:
                             pool.enqueue(Block, blocknum + i, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
                         i += 1
                     if FUTURES_MODULE is not None:
-                        results = [r.result() for r in as_completed(futures)]
+                        try:
+                            results = [r.result() for r in as_completed(futures)]
+                        except Exception as e:
+                            log.error(str(e))
                     else:
                         pool.run(True)
                         pool.join()
@@ -437,7 +440,7 @@ class Blockchain(object):
                         pool.abort()
                     current_block.clear_cache_from_expired_items()
                     current_block.set_cache_auto_clean(auto_clean)
-                    self.steem.rpc.nodes.num_retries = num_retries
+                    # self.steem.rpc.nodes.num_retries = num_retries
                     self.steem.rpc.nodes.freeze_current_node = freeze
                     new_error_cnt = self.steem.rpc.nodes.node.error_cnt
                     self.steem.rpc.nodes.node.error_cnt = error_cnt
@@ -447,22 +450,24 @@ class Blockchain(object):
 
                     checked_results = []
                     for b in results:
+                        b["id"] = b.block_num
+                        b.identifier = b.block_num
                         if isinstance(b, dict) and "transactions" in b and "transaction_ids" in b:
-                            if len(b["transactions"]) == len(b["transaction_ids"]) and int(b.identifier) not in result_block_nums:
+                            if len(b["transactions"]) == len(b["transaction_ids"]) and int(b.block_num) not in result_block_nums:
                                 checked_results.append(b)
-                                result_block_nums.append(int(b.identifier))
+                                result_block_nums.append(int(b.block_num))
 
                     missing_block_num = list(set(block_num_list).difference(set(result_block_nums)))
                     if len(missing_block_num) > 0:
                         for blocknum in missing_block_num:
                             block = Block(blocknum, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
                             checked_results.append(block)
-                            result_block_nums.append(int(block.identifier))
+                            result_block_nums.append(int(block.block_num))
                     from operator import itemgetter
                     blocks = sorted(checked_results, key=itemgetter('id'))
                     for b in blocks:
-                        if latest_block < int(b.identifier):
-                            latest_block = int(b.identifier)
+                        if latest_block < int(b.block_num):
+                            latest_block = int(b.block_num)
                         yield b
 
                 if latest_block <= head_block:
@@ -679,6 +684,10 @@ class Blockchain(object):
                 trx = block["transactions"]
             else:
                 trx = [block]
+            block_num = 0
+            trx_id = ""
+            _id = ""
+            timestamp = ""
             for trx_nr in range(len(trx)):
                 for event in trx[trx_nr]["operations"]:
                     if isinstance(event, list):
@@ -702,7 +711,7 @@ class Blockchain(object):
                         block_num = event.get("block")
                         _id = self.hash_op(event["op"])
                         timestamp = event.get("timestamp")
-                    if not opNames or op_type in opNames:
+                    if not bool(opNames) or op_type in opNames and block_num > 0:
                         if raw_ops:
                             yield {"block_num": block_num,
                                    "op": [op_type, op],

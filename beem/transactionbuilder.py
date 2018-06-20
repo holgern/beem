@@ -5,6 +5,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
 from future.utils import python_2_unicode_compatible
+import logging
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from .account import Account
 from .utils import formatTimeFromNow
@@ -21,7 +22,6 @@ from .exceptions import (
     OfflineHasNoRPCException
 )
 from beem.instance import shared_steem_instance
-import logging
 log = logging.getLogger(__name__)
 
 
