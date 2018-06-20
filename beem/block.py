@@ -190,7 +190,10 @@ class Block(BlockchainObject):
             for op in tx["operations"]:
                 # Replace opid by op name
                 # op[0] = getOperationNameForId(op[0])
-                ops.append(op.copy())
+                if isinstance(op, list):
+                    ops.append(list(op))
+                else:
+                    ops.append(op.copy())
         return ops
 
     @property
@@ -224,7 +227,10 @@ class Block(BlockchainObject):
             for op in tx["operations"]:
                 # Replace opid by op name
                 # op[0] = getOperationNameForId(op[0])
-                op_new = op.copy()
+                if isinstance(op, list):
+                    op_new = list(op)
+                else:
+                    op_new = op.copy()
                 if 'timestamp' in op:
                     p_date = op.get('timestamp', datetime(1970, 1, 1, 0, 0))
                     if isinstance(p_date, (datetime, date)):
