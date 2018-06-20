@@ -73,7 +73,7 @@ Quickstart
 
    from beem.blockchain import Blockchain
    blockchain = Blockchain()
-   for op in Blockchain.ops():
+   for op in blockchain.stream():
        print(op)
 
 .. code-block:: python
