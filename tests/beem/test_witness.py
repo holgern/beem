@@ -144,7 +144,8 @@ class Testcases(unittest.TestCase):
         json_witness = w.json()
 
         for k in keys:
-            if isinstance(witness[k], dict) and isinstance(json_witness[k], list):
-                self.assertEqual(list(witness[k].values()), json_witness[k])
-            else:
-                self.assertEqual(witness[k], json_witness[k])
+            if k not in 'votes':
+                if isinstance(witness[k], dict) and isinstance(json_witness[k], list):
+                    self.assertEqual(list(witness[k].values()), json_witness[k])
+                else:
+                    self.assertEqual(witness[k], json_witness[k])
