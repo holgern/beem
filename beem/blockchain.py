@@ -29,6 +29,13 @@ if sys.version_info < (3, 0):
     from Queue import Queue
 else:
     from queue import Queue
+FUTURES_MODULE = None
+if not FUTURES_MODULE:
+    try:
+        from concurrent.futures import ThreadPoolExecutor, wait, as_completed
+        FUTURES_MODULE = "futures"
+    except ImportError:
+        FUTURES_MODULE = None
 
 
 # default exception handler. if you want to take some action on failed tasks
@@ -382,8 +389,9 @@ class Blockchain(object):
         if not start:
             start = current_block_num
         head_block_reached = False
-        if threading:
-            # pool = ThreadPoolExecutor(max_workers=thread_num + 1)
+        if threading and FUTURES_MODULE is not None:
+            pool = ThreadPoolExecutor(max_workers=thread_num)
+        elif threading:
             pool = Pool(thread_num, batch_mode=True)
         # We are going to loop indefinitely
         while True:
@@ -403,6 +411,8 @@ class Blockchain(object):
                     # futures = []
                     i = 0
                     results = []
+                    if FUTURES_MODULE is not None:
+                        futures = []
                     block_num_list = []
                     current_block.set_cache_auto_clean(False)
                     freeze = self.steem.rpc.nodes.freeze_current_node
@@ -412,13 +422,19 @@ class Blockchain(object):
                     error_cnt = self.steem.rpc.nodes.node.error_cnt
                     while i < thread_num and blocknum + i <= head_block:
                         block_num_list.append(blocknum + i)
-                        pool.enqueue(Block, blocknum + i, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
+                        if FUTURES_MODULE is not None:
+                            futures.append(pool.submit(Block, blocknum + i, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem))
+                        else:
+                            pool.enqueue(Block, blocknum + i, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
                         i += 1
-                    pool.run(True)
-                    pool.join()
-                    for result in pool.results():
-                        results.append(result)
-                    pool.abort()
+                    if FUTURES_MODULE is not None:
+                        results = [r.result() for r in as_completed(futures)]
+                    else:
+                        pool.run(True)
+                        pool.join()
+                        for result in pool.results():
+                            results.append(result)
+                        pool.abort()
                     current_block.clear_cache_from_expired_items()
                     current_block.set_cache_auto_clean(auto_clean)
                     self.steem.rpc.nodes.num_retries = num_retries

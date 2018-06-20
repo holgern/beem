@@ -172,14 +172,14 @@ class Block(BlockchainObject):
         if self.only_ops or self.only_virtual_ops:
             return list()
         trxs = []
-        i = 0
+        trx_id = 0
         for trx in self["transactions"]:
-            trx_new = trx.copy()
-            trx_new['transaction_id'] = self['transaction_ids'][i]
-            trx_new['block_num'] = self.block_num
-            trx_new['transaction_num'] = i
+            trx_new = {"transaction_id": self['transaction_ids'][trx_id]}
+            trx_new.update(trx.copy())
+            trx_new.update({"block_num": self.block_num,
+                            "transaction_num": trx_id})
             trxs.append(trx_new)
-            i += 1
+            trx_id += 1
         return trxs
 
     @property
@@ -193,7 +193,7 @@ class Block(BlockchainObject):
             for op in tx["operations"]:
                 # Replace opid by op name
                 # op[0] = getOperationNameForId(op[0])
-                ops.append(op)
+                ops.append(op.copy())
         return ops
 
     @property
@@ -202,20 +202,19 @@ class Block(BlockchainObject):
         if self.only_ops or self.only_virtual_ops:
             return list()
         trxs = []
-        i = 0
+        trx_id = 0
         for trx in self["transactions"]:
-            trx_new = trx.copy()
-            trx_new['transaction_id'] = self['transaction_ids'][i]
-            trx_new['block_num'] = self.block_num
-            trx_new['transaction_num'] = i
+            trx_new = {"transaction_id": self['transaction_ids'][trx_id]}
+            trx_new.update(trx.copy())
+            trx_new.update({"block_num": self.block_num,
+                            "transaction_num": trx_id})
             if 'expiration' in trx:
                 p_date = trx.get('expiration', datetime(1970, 1, 1, 0, 0))
                 if isinstance(p_date, (datetime, date)):
-                    trx_new['expiration'] = formatTimeString(p_date)
-                else:
-                    trx_new['expiration'] = p_date
+                    trx_new.update({'expiration': formatTimeString(p_date)})
+
             trxs.append(trx_new)
-            i += 1
+            trx_id += 1
         return trxs
 
     @property
@@ -228,13 +227,12 @@ class Block(BlockchainObject):
             for op in tx["operations"]:
                 # Replace opid by op name
                 # op[0] = getOperationNameForId(op[0])
+                op_new = op.copy()
                 if 'timestamp' in op:
                     p_date = op.get('timestamp', datetime(1970, 1, 1, 0, 0))
                     if isinstance(p_date, (datetime, date)):
-                        op['timestamp'] = formatTimeString(p_date)
-                    else:
-                        op['timestamp'] = p_date
-                ops.append(op)
+                        op_new.update({'timestamp': formatTimeString(p_date)})
+                ops.append(op_new)
         return ops
 
     def ops_statistics(self, add_to_ops_stat=None):

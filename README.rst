@@ -160,7 +160,10 @@ Changelog
 -------
 * get_feed_entries, get_blog_authors, get_savings_withdrawals, get_escrow, verify_account_authority, get_expiring_vesting_delegations, get_vesting_delegations, get_tags_used_by_author added to Account
 * get_account_reputations, get_account_count added to Blockchain
+* Replies_by_last_update, Trending_tags, Discussions_by_author_before_date 
 * ImageUploader class added
+* Score calculation improved in update_nodes
+* apidefinitions added to docs, which includes a complete condenser API call list.
 
 0.19.38
 -------
