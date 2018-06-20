@@ -847,3 +847,29 @@ class Blockchain(object):
             lastname = account_name
             if len(ret) < steps:
                 raise StopIteration
+
+    def get_similar_account_names(self, name, limit=5):
+        """ Returns limit similar accounts with name as list
+
+        :param str name: account name to search similars for
+        :param int limit: limits the number of accounts, which will be returned
+        :returns: Similar account names as list
+        :rtype: list
+
+        .. code-block:: python
+
+            >>> from beem.blockchain import Blockchain
+            >>> blockchain = Blockchain()
+            >>> blockchain.get_similar_account_names("test", limit=5)
+            ['test', 'test-1', 'test-2', 'test-ico', 'test-ilionx-123']
+
+        """
+        if not self.steem.is_connected():
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
+        if self.steem.rpc.get_use_appbase():
+            account = self.steem.rpc.list_accounts({'start': name, 'limit': limit}, api="database")
+            if bool(account):
+                return account["accounts"]
+        else:
+            return self.steem.rpc.lookup_accounts(name, limit)
