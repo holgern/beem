@@ -38,7 +38,7 @@ class Testcases(unittest.TestCase):
             num_retries=10
         )
         acc = Account("holger80", steem_instance=cls.bts)
-        comment = acc.get_blog(limit=1)[0]
+        comment = acc.get_blog(limit=20)[-1]
         cls.authorperm = comment.authorperm
         [author, permlink] = resolve_authorperm(cls.authorperm)
         cls.author = author
