@@ -250,6 +250,20 @@ class Blockchain(object):
             ret = self.steem.rpc.get_transaction(transaction_id, api="database")
         return ret
 
+    def get_transaction_hex(self, transaction):
+        """ Returns a hexdump of the serialized binary form of a transaction.
+
+            :param dict transaction: transaction
+        """
+        if not self.steem.is_connected():
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
+        self.steem.rpc.set_next_node_on_empty_reply(False)
+        if self.steem.rpc.get_use_appbase():
+            ret = self.steem.rpc.get_transaction({'trx': transaction}, api="database")["hex"]
+        else:
+            ret = self.steem.rpc.get_transaction_hex(transaction, api="database")
+        return ret
+
     def get_current_block_num(self):
         """ This call returns the current block number
 

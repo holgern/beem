@@ -504,8 +504,9 @@ class Account(BlockchainObject):
 
                 >>> from beem.account import Account
                 >>> account = Account("steemit")
-                >>> account.get_blog_entries(0, 1, raw_data=True)
-                [{'author': 'steemit', 'permlink': 'firstpost', 'blog': 'steemit', 'reblog_on': '1970-01-01T00:00:00', 'entry_id': 0}]
+                >>> entry = account.get_blog_entries(0, 1, raw_data=True)[0]
+                >>> print("%s - %s - %s - %s" % (entry["author"], entry["permlink"], entry["blog"], entry["reblog_on"]))
+                steemit - firstpost - steemit - 1970-01-01T00:00:00
 
         """
         return self.get_blog(start_entry_id=start_entry_id, limit=limit, raw_data=raw_data, short_entries=True, account=account)
@@ -1088,8 +1089,8 @@ class Account(BlockchainObject):
 
                 >>> from beem.account import Account
                 >>> account = Account("steemit")
-                >>> account.verify_account_authority(["STM7Q2rLBqzPzFeteQZewv9Lu3NLE69fZoLeL6YK59t7UmssCBNTU"])
-                {'valid': False}
+                >>> print(account.verify_account_authority(["STM7Q2rLBqzPzFeteQZewv9Lu3NLE69fZoLeL6YK59t7UmssCBNTU"])["valid"])
+                False
 
         """
         if account is None:
@@ -1108,6 +1109,33 @@ class Account(BlockchainObject):
                 return self.steem.rpc.verify_account_authority(account, keys)
         except MissingRequiredActiveAuthority:
             return {'valid': False}
+
+    def get_tags_used_by_author(self, account=None):
+        """ Returns a list of tags used by an author.
+
+            :param str account: When set, a different account is used for the request (Default is object account name)
+
+            :rtype: list
+
+            .. code-block:: python
+
+                >>> from beem.account import Account
+                >>> account = Account("test")
+                >>> account.get_tags_used_by_author()
+                []
+
+        """
+        if account is None:
+            account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]
+        if not self.steem.is_connected():
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
+        self.steem.rpc.set_next_node_on_empty_reply(False)
+        if self.steem.rpc.get_use_appbase():
+            return self.steem.rpc.get_tags_used_by_author({'account': account}, api="tags")['tags']
+        else:
+            return self.steem.rpc.get_tags_used_by_author(account, api="tags")
 
     def get_expiring_vesting_delegations(self, after=None, limit=1000, account=None):
         """ Returns the expirations for vesting delegations.

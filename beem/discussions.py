@@ -22,6 +22,7 @@ class Query(dict):
         :param array select_tags:
         :param str start_author:
         :param str start_permlink:
+        :param str start_tag:
         :param str parent_author:
         :param str parent_permlink:
 
@@ -33,7 +34,7 @@ class Query(dict):
     """
     def __init__(self, limit=0, tag="", truncate_body=0,
                  filter_tags=[], select_authors=[], select_tags=[],
-                 start_author=None, start_permlink=None, parent_author=None, parent_permlink=None):
+                 start_author=None, start_permlink=None, start_tag=None, parent_author=None, parent_permlink=None):
         self["limit"] = limit
         self["truncate_body"] = truncate_body
         self["tag"] = tag
@@ -42,6 +43,7 @@ class Query(dict):
         self["select_tags"] = select_tags
         self["start_author"] = start_author
         self["start_permlink"] = start_permlink
+        self["start_tag"] = start_tag
         self["parent_author"] = parent_author
         self["parent_permlink"] = parent_permlink
 
@@ -360,5 +362,49 @@ class Discussions_by_promoted(list):
             [
                 Comment(x, steem_instance=self.steem)
                 for x in posts
+            ]
+        )
+
+
+class Replies_by_last_update(list):
+    """ Returns a list of replies by last update
+
+        :param beem.discussions.Query: discussion_query, start_author and start_permlink must be set.
+        :param beem.steem.Steem steem_instance: Steem instance
+    """
+    def __init__(self, discussion_query, steem_instance=None):
+        self.steem = steem_instance or shared_steem_instance()
+        limit_ok = "limit" in discussion_query and discussion_query["limit"] > 0
+        self.steem.rpc.set_next_node_on_empty_reply(limit_ok)
+        if self.steem.rpc.get_use_appbase():
+            posts = self.steem.rpc.get_replies_by_last_update(discussion_query, api="tags")['discussions']
+        else:
+            posts = self.steem.rpc.get_replies_by_last_update(discussion_query["start_author"], discussion_query["start_permlink"], discussion_query["limit"])
+        super(Replies_by_last_update, self).__init__(
+            [
+                Comment(x, steem_instance=self.steem)
+                for x in posts
+            ]
+        )
+
+
+class Trending_tags(list):
+    """ Returns the list of trending tags.
+
+        :param beem.discussions.Query: discussion_query, start_tag can be set.
+        :param beem.steem.Steem steem_instance: Steem instance
+    """
+    def __init__(self, discussion_query, steem_instance=None):
+        self.steem = steem_instance or shared_steem_instance()
+        limit_ok = "limit" in discussion_query and discussion_query["limit"] > 0
+        self.steem.rpc.set_next_node_on_empty_reply(limit_ok)
+        if self.steem.rpc.get_use_appbase():
+            tags = self.steem.rpc.get_trending_tags(discussion_query, api="tags")['tags']
+        else:
+            tags = self.steem.rpc.get_trending_tags(discussion_query["start_tag"], discussion_query["limit"], api="tags")
+        super(Trending_tags, self).__init__(
+            [
+                x
+                for x in tags
             ]
         )

@@ -118,6 +118,7 @@ General
    tutorials
    cli
    configuration
+   apidefinitions
    modules
    contribute
    support

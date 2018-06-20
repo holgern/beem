@@ -272,6 +272,7 @@ class Witnesses(WitnessesObject):
         if self.steem.rpc.get_use_appbase():
             self.active_witnessess = self.steem.rpc.get_active_witnesses(api="database")['witnesses']
             self.schedule = self.steem.rpc.get_witness_schedule(api="database")
+            self.witness_count = self.steem.rpc.get_witness_count(api="condenser")
         else:
             self.active_witnessess = self.steem.rpc.get_active_witnesses()
             self.schedule = self.steem.rpc.get_witness_schedule()

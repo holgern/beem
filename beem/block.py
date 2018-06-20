@@ -89,7 +89,7 @@ class Block(BlockchainObject):
                     block["transactions"][i]["expiration"] = formatTimeString(block["transactions"][i]["expiration"])
         elif "operations" in block:
             for i in range(len(block["operations"])):
-                if 'timestamp' in block["operations"][i]  and isinstance(block["operations"][i]["timestamp"], string_types):
+                if 'timestamp' in block["operations"][i] and isinstance(block["operations"][i]["timestamp"], string_types):
                     block["operations"][i]["timestamp"] = formatTimeString(block["operations"][i]["timestamp"])
         return block
 
@@ -112,7 +112,7 @@ class Block(BlockchainObject):
                     output["transactions"][i]["expiration"] = formatTimeString(output["transactions"][i]["expiration"])
         elif "operations" in output:
             for i in range(len(output["operations"])):
-                if 'timestamp' in output["operations"][i]  and isinstance(output["operations"][i]["timestamp"], (datetime, date)):
+                if 'timestamp' in output["operations"][i] and isinstance(output["operations"][i]["timestamp"], (datetime, date)):
                     output["operations"][i]["timestamp"] = formatTimeString(output["operations"][i]["timestamp"])
 
         ret = json.loads(str(json.dumps(output)))

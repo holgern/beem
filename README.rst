@@ -158,7 +158,7 @@ Changelog
 =========
 0.19.39
 -------
-* get_feed_entries, get_blog_authors, get_savings_withdrawals, get_escrow, verify_account_authority, get_expiring_vesting_delegations added to Account
+* get_feed_entries, get_blog_authors, get_savings_withdrawals, get_escrow, verify_account_authority, get_expiring_vesting_delegations, get_vesting_delegations, get_tags_used_by_author added to Account
 * get_account_reputations, get_account_count added to Blockchain
 * ImageUploader class added
 
