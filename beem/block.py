@@ -157,7 +157,12 @@ class Block(BlockchainObject):
     @property
     def block_num(self):
         """Returns the block number"""
-        return int(self['block_id'][:8], base=16)
+        if "block_id" in self:
+            return int(self['block_id'][:8], base=16)
+        elif "id" in self:
+            return self['id']
+        else:
+            return self.identifier
 
     def time(self):
         """Return a datatime instance for the timestamp of this block"""

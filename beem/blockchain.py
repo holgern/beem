@@ -689,6 +689,8 @@ class Blockchain(object):
             _id = ""
             timestamp = ""
             for trx_nr in range(len(trx)):
+                if "operations" not in trx[trx_nr]:
+                    continue
                 for event in trx[trx_nr]["operations"]:
                     if isinstance(event, list):
                         op_type, op = event
