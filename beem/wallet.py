@@ -580,7 +580,9 @@ class Wallet(object):
         return self.getAccountFromPublicKey(pub)
 
     def getAccountsFromPublicKey(self, pub):
-        """ Obtain all accounts associated with a public key
+        """ Obtain all account names associated with a public key
+
+            :param str pub: Public key
         """
         if not self.steem.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
@@ -595,14 +597,14 @@ class Wallet(object):
 
     def getAccountFromPublicKey(self, pub):
         """ Obtain the first account name from public key
+
+            :param str pub: Public key
+
+            Note: this returns only the first account with the given key. To
+            get all accounts associated with a given public key, use
+            ``getAccountsFromPublicKey``.
         """
-        # FIXME, this only returns the first associated key.
-        # If the key is used by multiple accounts, this
-        # will surely lead to undesired behavior
-        if self.rpc.get_use_appbase():
-            names = self.rpc.get_key_references({'keys': [pub]}, api="account_by_key")["accounts"][0]
-        else:
-            names = self.rpc.get_key_references([pub], api="account_by_key")[0]
+        names = list(self.getAccountsFromPublicKey(pub))
         if not names:
             return None
         else:
@@ -611,6 +613,8 @@ class Wallet(object):
     def getAllAccounts(self, pub):
         """ Get the account data for a public key (all accounts found for this
             public key)
+
+            :param str pub: Public key
         """
         for name in self.getAccountsFromPublicKey(pub):
             try:
@@ -625,6 +629,8 @@ class Wallet(object):
     def getAccount(self, pub):
         """ Get the account data for a public key (first account found for this
             public key)
+
+            :param str pub: Public key
         """
         name = self.getAccountFromPublicKey(pub)
         if not name:
@@ -641,6 +647,10 @@ class Wallet(object):
 
     def getKeyType(self, account, pub):
         """ Get key type
+
+            :param beem.account.Account/dict account: Account data
+            :param str pub: Public key
+
         """
         for authority in ["owner", "active", "posting"]:
             for key in account[authority]["key_auths"]:

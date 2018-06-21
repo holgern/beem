@@ -215,29 +215,20 @@ class Account(BlockchainObject):
         return self.get_similar_account_names(limit=limit)
 
     def get_similar_account_names(self, limit=5):
-        """ Returns limit similar accounts with name as list
+        """ Returns ``limit`` account names similar to the current account
+            name as a list
 
-        :param int limit: limits the number of accounts, which will be returned
-        :returns: Similar account names as list
-        :rtype: list
+            :param int limit: limits the number of accounts, which will be
+                returned
+            :returns: Similar account names as list
+            :rtype: list
 
-        .. code-block:: python
-
-            >>> from beem.account import Account
-            >>> account = Account("test")
-            >>> len(account.get_similar_account_names(limit=5))
-            5
+            This is a wrapper around ``Blockchain.get_similar_account_names()``
+            using the current account name as reference.
 
         """
-        if not self.steem.is_connected():
-            return None
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            account = self.steem.rpc.list_accounts({'start': self.name, 'limit': limit}, api="database")
-            if bool(account):
-                return account["accounts"]
-        else:
-            return self.steem.rpc.lookup_accounts(self.name, limit)
+        b = Blockchain(steem_instance=self.steem)
+        return b.get_similar_account_names(self.name, limit=limit)
 
     @property
     def name(self):
