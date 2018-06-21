@@ -150,7 +150,7 @@ class Block(BlockchainObject):
             else:
                 block = self.steem.rpc.get_block(self.identifier)
         if not block:
-            raise BlockDoesNotExistsException(str(self.identifier))
+            raise BlockDoesNotExistsException("output: %s of identifier %s" % (str(block), str(self.identifier)))
         block = self._parse_json_data(block)
         super(Block, self).__init__(block, lazy=self.lazy, full=self.full, steem_instance=self.steem)
 
@@ -174,6 +174,8 @@ class Block(BlockchainObject):
         if self.only_ops or self.only_virtual_ops:
             return list()
         trxs = []
+        if "transactions" not in self:
+            return []
         trx_id = 0
         for trx in self["transactions"]:
             trx_new = {"transaction_id": self['transaction_ids'][trx_id]}
@@ -190,8 +192,12 @@ class Block(BlockchainObject):
         if self.only_ops or self.only_virtual_ops:
             return self["operations"]
         ops = []
-        trxs = self["transactions"]
+        trxs = []
+        if "transactions" in self:
+            trxs = self["transactions"]
         for tx in trxs:
+            if "operations" not in tx:
+                continue
             for op in tx["operations"]:
                 # Replace opid by op name
                 # op[0] = getOperationNameForId(op[0])
@@ -207,6 +213,8 @@ class Block(BlockchainObject):
         if self.only_ops or self.only_virtual_ops:
             return list()
         trxs = []
+        if "transactions" not in self:
+            return []
         trx_id = 0
         for trx in self["transactions"]:
             trx_new = {"transaction_id": self['transaction_ids'][trx_id]}
@@ -230,6 +238,8 @@ class Block(BlockchainObject):
         ops = []
         for tx in self["transactions"]:
             for op in tx["operations"]:
+                if "operations" not in tx:
+                    continue
                 # Replace opid by op name
                 # op[0] = getOperationNameForId(op[0])
                 if isinstance(op, list):

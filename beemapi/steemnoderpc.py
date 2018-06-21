@@ -118,7 +118,7 @@ class SteemNodeRPC(GrapheneRPC):
             raise exceptions.NoMethodWithName(msg)
         elif re.search("Could not find API", msg):
             if self._check_api_name(msg):
-                raise exceptions.ApiNotSupported(msg)
+                self._switch_to_next_node(msg, "ApiNotSupported")
             else:
                 raise exceptions.NoApiWithName(msg)
         elif re.search("irrelevant signature included", msg):
@@ -132,22 +132,14 @@ class SteemNodeRPC(GrapheneRPC):
             self.nodes.sleep_and_check_retries(str(msg), call_retry=True)
             doRetry = True
         elif re.search("!check_max_block_age", str(e)):
-            if self.nodes.working_nodes_count == 1:
-                raise exceptions.UnhandledRPCError(msg)
-            self.nodes.increase_error_cnt()
-            self.nodes.sleep_and_check_retries(str(msg), sleep=False)
-            self.next()
+            self._switch_to_next_node(str(e))
             doRetry = True
         elif re.search("out_of_rangeEEEE: unknown key", msg) or re.search("unknown key:unknown key", msg):
             raise exceptions.UnkownKey(msg)
         elif re.search("Assert Exception:v.is_object(): Input data have to treated as object", msg):
             raise exceptions.UnhandledRPCError("Use Operation(op, appbase=True) to prevent error: " + msg)
         elif re.search("Client returned invalid format. Expected JSON!", msg):
-            if self.nodes.working_nodes_count == 1:
-                raise exceptions.UnhandledRPCError(msg)
-            self.nodes.increase_error_cnt()
-            self.nodes.sleep_and_check_retries(str(msg), sleep=False)
-            self.next()
+            self._switch_to_next_node(msg)
             doRetry = True
         elif msg:
             raise exceptions.UnhandledRPCError(msg)
@@ -155,8 +147,18 @@ class SteemNodeRPC(GrapheneRPC):
             raise e
         return doRetry
 
+    def _switch_to_next_node(self, msg, error_type="UnhandledRPCError"):
+        if self.nodes.working_nodes_count == 1:
+            if error_type == "UnhandledRPCError":
+                raise exceptions.UnhandledRPCError(msg)
+            elif error_type == "ApiNotSupported":
+                raise exceptions.ApiNotSupported(msg)
+        self.nodes.increase_error_cnt()
+        self.nodes.sleep_and_check_retries(str(msg), sleep=False)
+        self.next()
+
     def _check_api_name(self, msg):
-        error_start = "Could not find API "
+        error_start = "Could not find API"
         known_apis = ['account_history_api', 'tags_api',
                       'database_api', 'market_history_api',
                       'block_api', 'account_by_key_api', 'chain_api',
@@ -164,8 +166,10 @@ class SteemNodeRPC(GrapheneRPC):
                       'witness_api', 'test_api',
                       'network_broadcast_api']
         for api in known_apis:
-            if re.search(error_start + api, msg):
+            if re.search(error_start + " " + api, msg):
                 return True
+        if msg[-18:] == error_start:
+            return True
         return False
 
     def get_account(self, name, **kwargs):
