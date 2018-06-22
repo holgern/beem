@@ -118,7 +118,8 @@ class SteemNodeRPC(GrapheneRPC):
             raise exceptions.NoMethodWithName(msg)
         elif re.search("Could not find API", msg):
             if self._check_api_name(msg):
-                self._switch_to_next_node(msg, "ApiNotSupported")
+                # self._switch_to_next_node(msg, "ApiNotSupported")
+                raise exceptions.ApiNotSupported(msg)
             else:
                 raise exceptions.NoApiWithName(msg)
         elif re.search("irrelevant signature included", msg):
@@ -126,6 +127,9 @@ class SteemNodeRPC(GrapheneRPC):
         elif re.search("WinError", msg):
             raise exceptions.RPCError(msg)
         elif re.search("Unable to acquire database lock", msg):
+            self.nodes.sleep_and_check_retries(str(msg), call_retry=True)
+            doRetry = True
+        elif re.search("Request Timeout", msg):
             self.nodes.sleep_and_check_retries(str(msg), call_retry=True)
             doRetry = True
         elif re.search("Internal Error", msg) or re.search("Unknown exception", msg):

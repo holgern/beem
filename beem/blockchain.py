@@ -451,10 +451,10 @@ class Blockchain(object):
 
                     checked_results = []
                     for b in results:
-                        b["id"] = b.block_num
-                        b.identifier = b.block_num
                         if len(b.operations) > 0:
-                            if int(b.block_num) not in result_block_nums:
+                            if b.block_num is not None and int(b.block_num) not in result_block_nums:
+                                b["id"] = b.block_num
+                                b.identifier = b.block_num
                                 checked_results.append(b)
                                 result_block_nums.append(int(b.block_num))
 

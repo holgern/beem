@@ -1220,12 +1220,11 @@ class Account(BlockchainObject):
         if not self.steem.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
-        # self.steem.rpc.set_next_node_on_empty_reply(True)
         if self.steem.rpc.get_use_appbase():
             try:
                 ret = self.steem.rpc.get_account_history({'account': account["name"], 'start': start, 'limit': limit}, api="account_history")['history']
             except ApiNotSupported:
-                ret = self.steem.rpc.get_account_history(account["name"], start, limit)
+                ret = self.steem.rpc.get_account_history(account["name"], start, limit, api="condenser")
         else:
             ret = self.steem.rpc.get_account_history(account["name"], start, limit, api="database")
         return ret
@@ -1415,6 +1414,8 @@ class Account(BlockchainObject):
             raise ValueError("order must be -1 or 1!")
         # self.steem.rpc.set_next_node_on_empty_reply(True)
         txs = self._get_account_history(start=index, limit=limit)
+        if txs is None:
+            return
         start = addTzInfo(start)
         stop = addTzInfo(stop)
 

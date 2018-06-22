@@ -133,7 +133,7 @@ class Block(BlockchainObject):
                 try:
                     ops = self.steem.rpc.get_ops_in_block({"block_num": self.identifier, 'only_virtual': self.only_virtual_ops}, api="account_history")["ops"]
                 except ApiNotSupported:
-                    ops = self.steem.rpc.get_ops_in_block(self.identifier, self.only_virtual_ops)
+                    ops = self.steem.rpc.get_ops_in_block(self.identifier, self.only_virtual_ops, api="condenser")
             else:
                 ops = self.steem.rpc.get_ops_in_block(self.identifier, self.only_virtual_ops)
             if bool(ops):
@@ -144,9 +144,12 @@ class Block(BlockchainObject):
                 block = {}
         else:
             if self.steem.rpc.get_use_appbase():
-                block = self.steem.rpc.get_block({"block_num": self.identifier}, api="block")
-                if block and "block" in block:
-                    block = block["block"]
+                try:
+                    block = self.steem.rpc.get_block({"block_num": self.identifier}, api="block")
+                    if block and "block" in block:
+                        block = block["block"]
+                except ApiNotSupported:
+                    block = self.steem.rpc.get_block(self.identifier, api="condenser")
             else:
                 block = self.steem.rpc.get_block(self.identifier)
         if not block:
@@ -159,10 +162,8 @@ class Block(BlockchainObject):
         """Returns the block number"""
         if "block_id" in self:
             return int(self['block_id'][:8], base=16)
-        elif "id" in self:
-            return self['id']
         else:
-            return self.identifier
+            return None
 
     def time(self):
         """Return a datatime instance for the timestamp of this block"""
