@@ -19,11 +19,13 @@ from datetime import datetime, timedelta
 from .utils import formatTimeString, addTzInfo
 from .block import Block
 from beemapi.node import Nodes
+from beemapi.steemnoderpc import SteemNodeRPC
 from .exceptions import BatchedCallsNotSupported, BlockDoesNotExistsException, BlockWaitTimeExceeded, OfflineHasNoRPCException
 from beemapi.exceptions import NumRetriesReached
 from beemgraphenebase.py23 import py23_bytes
 from beem.instance import shared_steem_instance
 from .amount import Amount
+import beem as stm
 log = logging.getLogger(__name__)
 if sys.version_info < (3, 0):
     from Queue import Queue
@@ -394,6 +396,13 @@ class Blockchain(object):
             pool = ThreadPoolExecutor(max_workers=thread_num)
         elif threading:
             pool = Pool(thread_num, batch_mode=True)
+        if threading:
+            steem_instance = []
+            for i in range(thread_num):
+                steem_instance.append(stm.Steem(node=self.steem.rpc.nodes,
+                                                num_retries=self.steem.rpc.num_retries,
+                                                num_retries_call=self.steem.rpc.num_retries_call,
+                                                timeout=self.steem.rpc.timeout))
         # We are going to loop indefinitely
         while True:
 
@@ -424,9 +433,9 @@ class Blockchain(object):
                         block_num_list.append(blocknum + i)
                         results = []
                         if FUTURES_MODULE is not None:
-                            futures.append(pool.submit(Block, blocknum + i, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem))
+                            futures.append(pool.submit(Block, blocknum + i, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=steem_instance[i]))
                         else:
-                            pool.enqueue(Block, blocknum + i, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
+                            pool.enqueue(Block, blocknum + i, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=steem_instance[i])
                         i += 1
                     if FUTURES_MODULE is not None:
                         try:
@@ -867,8 +876,9 @@ class Blockchain(object):
 
             >>> from beem.blockchain import Blockchain
             >>> blockchain = Blockchain()
-            >>> print(blockchain.get_similar_account_names("test", limit=5))
-            ['test', 'test-1', 'test-2', 'test-ico', 'test-ilionx-123']
+            >>> ret = blockchain.get_similar_account_names("test", limit=5)
+            >>> ret == ['test', 'test-1', 'test-2', 'test-ico', 'test-ilionx-123']
+            True
 
         """
         if not self.steem.is_connected():

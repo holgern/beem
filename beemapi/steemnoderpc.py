@@ -132,6 +132,9 @@ class SteemNodeRPC(GrapheneRPC):
         elif re.search("Request Timeout", msg):
             self.nodes.sleep_and_check_retries(str(msg), call_retry=True)
             doRetry = True
+        elif re.search("Bad or missing upstream response", msg):
+            self.nodes.sleep_and_check_retries(str(msg), call_retry=True)
+            doRetry = True
         elif re.search("Internal Error", msg) or re.search("Unknown exception", msg):
             self.nodes.sleep_and_check_retries(str(msg), call_retry=True)
             doRetry = True
