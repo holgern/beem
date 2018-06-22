@@ -156,6 +156,13 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.40
+-------
+* Improvement of blocks/stream with threading
+* Remove 5 tag limit
+* Empty answer fixed for discussions
+* Add fallback to condenser api for appbase nodes
+
 0.19.39
 -------
 * get_feed_entries, get_blog_authors, get_savings_withdrawals, get_escrow, verify_account_authority, get_expiring_vesting_delegations, get_vesting_delegations, get_tags_used_by_author added to Account
