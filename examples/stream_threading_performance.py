@@ -37,26 +37,28 @@ if __name__ == "__main__":
     thread_num = 8
     timeout = 10
     nodes = NodeList()
-    nodes.update_nodes()
-    node_list = nodes.get_nodes()
+    nodes.update_nodes(weights={"block": 1})
+    node_list_wss = nodes.get_nodes(wss=False)[:5]
+    node_list_https = nodes.get_nodes(https=False)[:5]
 
     vote_result = []
     duration = []
-    stm = Steem(node=node_list, timeout=timeout)
-    print("Without threading")
-    stream_votes(stm, False, 8)
+    stm_wss = Steem(node=node_list_wss, timeout=timeout)
+    stm_https = Steem(node=node_list_https, timeout=timeout)
+    print("Without threading wss")
+    opcount_wot_wss, total_duration_wot_wss = stream_votes(stm_wss, False, 8)
+    print("Without threading wss")
+    opcount_wot_https, total_duration_wot_https = stream_votes(stm_https, False, 8)
     if threading:
         print("\n Threading with %d threads is activated now." % thread_num)
 
-    for n in range(len(node_list)):
-        print("\n Round %d / %d" % (n, len(node_list)))
-        stm = Steem(node=node_list, timeout=timeout)
-        print(stm)
-        opcount, total_duration = stream_votes(stm, threading, thread_num)
-        vote_result.append(opcount)
-        duration.append(total_duration)
-        node_list = node_list[1:] + [node_list[0]]
+    stm = Steem(node=node_list_wss, timeout=timeout)
+    opcount_wss, total_duration_wss = stream_votes(stm, threading, thread_num)
+    opcount_https, total_duration_https = stream_votes(stm, threading, thread_num)
     print("Finished!")
 
-    for n in range(len(node_list)):
-        print(" votes: %d, time %.2f" % (vote_result[n], duration[n]))
+    print("Results:")
+    print("No Threads with wss duration: %.2f s - votes: %d" % (total_duration_wot_wss, opcount_wot_wss))
+    print("No Threads with https duration: %.2f s - votes: %d" % (total_duration_wot_https, opcount_wot_https))
+    print("%d Threads with wss duration: %.2f s - votes: %d" % (thread_num, total_duration_wss, opcount_wss))
+    print("%d Threads with https duration: %.2f s - votes: %d" % (thread_num, total_duration_https, opcount_https))

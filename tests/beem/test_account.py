@@ -207,7 +207,7 @@ class Testcases(unittest.TestCase):
             stm = self.appbase
         account = Account("gtg", steem_instance=stm)
         h_list = []
-        max_index = account.virtual_op_count() - 1
+        max_index = account.virtual_op_count() - 100
         for h in account.history(start=max_index - 4, stop=max_index, use_block_num=False, batch_size=2, raw_output=False):
             h_list.append(h)
         self.assertEqual(len(h_list), 5)
@@ -246,7 +246,7 @@ class Testcases(unittest.TestCase):
             stm = self.appbase
         account = Account("gtg", steem_instance=stm)
         h_list = []
-        max_index = account.virtual_op_count() - 1
+        max_index = account.virtual_op_count() - 100
         for h in account.history_reverse(start=max_index, stop=max_index - 4, use_block_num=False, batch_size=2, raw_output=False):
             h_list.append(h)
         self.assertEqual(len(h_list), 5)
