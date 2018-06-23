@@ -38,8 +38,8 @@ if __name__ == "__main__":
     timeout = 10
     nodes = NodeList()
     nodes.update_nodes(weights={"block": 1})
-    node_list_wss = nodes.get_nodes(wss=False)[:5]
-    node_list_https = nodes.get_nodes(https=False)[:5]
+    node_list_wss = nodes.get_nodes(https=False)[:5]
+    node_list_https = nodes.get_nodes(wss=False)[:5]
 
     vote_result = []
     duration = []

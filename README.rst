@@ -158,7 +158,7 @@ Changelog
 =========
 0.19.40
 -------
-* Improvement of blocks/stream with threading
+* Improvement of blocks/stream with threading (issue #32 fixed)
 * Remove 5 tag limit
 * Empty answer fixed for discussions
 * Add fallback to condenser api for appbase nodes
