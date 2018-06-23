@@ -52,6 +52,12 @@ class Testcases(unittest.TestCase):
             num_retries=10
         )
         set_shared_steem_instance(cls.bts)
+        acc = Account("holger80", steem_instance=cls.bts)
+        comment = acc.get_blog(limit=20)[-1]
+        cls.authorperm = comment.authorperm
+        votes = acc.get_account_votes()
+        last_vote = votes[-1]
+        cls.authorpermvoter = '@' + last_vote['authorperm'] + '|' + acc["name"]
 
     @classmethod
     def tearDownClass(cls):
@@ -160,21 +166,21 @@ class Testcases(unittest.TestCase):
     def test_comment(self, node_param):
         if node_param == "instance":
             set_shared_steem_instance(self.bts)
-            o = Comment("@gtg/witness-gtg-log")
+            o = Comment(self.authorperm)
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
                 RPCConnection
             ):
-                Comment("@gtg/witness-gtg-log", steem_instance=Steem(node="https://abc.d", autoconnect=False, num_retries=1))
+                Comment(self.authorperm, steem_instance=Steem(node="https://abc.d", autoconnect=False, num_retries=1))
         else:
             set_shared_steem_instance(Steem(node="https://abc.d", autoconnect=False, num_retries=1))
             stm = self.bts
-            o = Comment("@gtg/witness-gtg-log", steem_instance=stm)
+            o = Comment(self.authorperm, steem_instance=stm)
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
                 RPCConnection
             ):
-                Comment("@gtg/witness-gtg-log")
+                Comment(self.authorperm)
 
     @parameterized.expand([
         ("instance"),
@@ -229,21 +235,21 @@ class Testcases(unittest.TestCase):
     def test_vote(self, node_param):
         if node_param == "instance":
             set_shared_steem_instance(self.bts)
-            o = Vote("@gtg/ffdhu-gtg-witness-log|gandalf")
+            o = Vote(self.authorpermvoter)
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
                 RPCConnection
             ):
-                Vote("@gtg/ffdhu-gtg-witness-log|gandalf", steem_instance=Steem(node="https://abc.d", autoconnect=False, num_retries=1))
+                Vote(self.authorpermvoter, steem_instance=Steem(node="https://abc.d", autoconnect=False, num_retries=1))
         else:
             set_shared_steem_instance(Steem(node="https://abc.d", autoconnect=False, num_retries=1))
             stm = self.bts
-            o = Vote("@gtg/ffdhu-gtg-witness-log|gandalf", steem_instance=stm)
+            o = Vote(self.authorpermvoter, steem_instance=stm)
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
                 RPCConnection
             ):
-                Vote("@gtg/ffdhu-gtg-witness-log|gandalf")
+                Vote(self.authorpermvoter)
 
     @parameterized.expand([
         ("instance"),
