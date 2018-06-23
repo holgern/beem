@@ -398,8 +398,9 @@ class Blockchain(object):
             pool = Pool(thread_num, batch_mode=True)
         if threading:
             steem_instance = []
+            nodelist = self.steem.rpc.nodes.export_working_nodes()
             for i in range(thread_num):
-                steem_instance.append(stm.Steem(node=self.steem.rpc.nodes,
+                steem_instance.append(stm.Steem(node=nodelist,
                                                 num_retries=self.steem.rpc.num_retries,
                                                 num_retries_call=self.steem.rpc.num_retries_call,
                                                 timeout=self.steem.rpc.timeout))

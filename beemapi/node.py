@@ -66,11 +66,15 @@ class Nodes(list):
 
     next = __next__  # Python 2
 
-    def __repr__(self):
+    def export_working_nodes(self):
         nodes_list = []
         for i in range(len(self)):
             if self.num_retries < 0 or self[i].error_cnt <= self.num_retries:
                 nodes_list.append(self[i].url)
+        return nodes_list
+
+    def __repr__(self):
+        nodes_list = self.export_working_nodes()
         return str(nodes_list)
 
     @property
