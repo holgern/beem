@@ -162,9 +162,9 @@ class Testcases(unittest.TestCase):
         c = Comment(self.authorperm, steem_instance=bts)
         keys = list(content.keys())
         json_content = c.json()
-
+        exclude_list = ["json_metadata", "reputation", "active_votes"]
         for k in keys:
-            if k not in "json_metadata" and k != 'reputation' and k != 'active_votes':
+            if k not in exclude_list:
                 if isinstance(content[k], dict) and isinstance(json_content[k], list):
                     self.assertEqual(list(content[k].values()), json_content[k])
                 else:

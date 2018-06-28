@@ -474,9 +474,9 @@ class Testcases(unittest.TestCase):
             content = self.bts.rpc.get_accounts([account["name"]])[0]
         keys = list(content.keys())
         json_content = account.json()
-
+        exclude_list = ['json_metadata', 'reputation', 'active_votes', 'savings_sbd_seconds']
         for k in keys:
-            if k not in "json_metadata" and k != 'reputation' and k != 'active_votes' and k != 'savings_sbd_seconds':
+            if k not in exclude_list:
                 if isinstance(content[k], dict) and isinstance(json_content[k], list):
                     content_list = [content[k]["amount"], content[k]["precision"], content[k]["nai"]]
                     self.assertEqual(content_list, json_content[k])
