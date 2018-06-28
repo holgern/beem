@@ -8,6 +8,7 @@ from builtins import object
 import json
 import logging
 import re
+import os
 import math
 import ast
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
@@ -1216,6 +1217,7 @@ class Steem(object):
              tags=None,
              beneficiaries=None,
              self_vote=False,
+             parse_body=False,
              **kwargs):
         """ Create a new post.
         If this post is intended as a reply/comment, `reply_identifier` needs
@@ -1258,7 +1260,7 @@ class Steem(object):
             `json_metadata`.
         :param str app: (Optional) Name of the app which are used for posting
             when not set, beem/<version> is used
-        :param str/list tags: (Optional) A list of tags (5 max) to go with the
+        :param str/list tags: (Optional) A list of tags to go with the
             post. This will also override the tags specified in
             `json_metadata`. The first tag will be used as a 'category'. If
             provided as a string, it should be space separated.
@@ -1276,6 +1278,10 @@ class Steem(object):
 
         :param bool self_vote: (Optional) Upvote the post as author, right after
             posting.
+        :param bool parse_body: (Optional) When set to True, all mentioned users,
+            used links and images are put into users, links and images array inside
+            json_metadata. This will override provided links, images and users inside
+            json_metadata
 
         """
 
@@ -1291,6 +1297,7 @@ class Steem(object):
             json_metadata.update({'app': app})
         elif 'app' not in json_metadata:
             json_metadata.update({'app': 'beem/%s' % (beem_version)})
+
         if not author and config["default_account"]:
             author = config["default_account"]
         if not author:
@@ -1306,6 +1313,30 @@ class Steem(object):
             # first tag should be a category
             category = tags[0]
             json_metadata.update({"tags": tags})
+
+        if parse_body:
+            def get_urls(mdstring):
+                return list(set(re.findall('http[s]*://[^\s"><\)\(]+', mdstring)))
+
+            def get_users(mdstring):
+                return list(set(re.findall('@([\d\w\.-]{2,15}[\w\d])', mdstring)))
+
+            users = []
+            image = []
+            links = []
+            for url in get_urls(body):
+                img_exts = ['.jpg', '.png', '.gif', '.svg']
+                if os.path.splitext(url)[1].lower() in img_exts:
+                    image.append(url)
+                else:
+                    links.append(url)
+            users = get_users(body)
+            if len(users) > 0:
+                json_metadata.update({"users": users})
+            if len(image) > 0:
+                json_metadata.update({"image": image})
+            if len(links) > 0:
+                json_metadata.update({"links": links})
 
         # can't provide a category while replying to a post
         if reply_identifier and category:

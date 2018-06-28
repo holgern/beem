@@ -718,6 +718,7 @@ class Market(dict):
             weighted by the exchange volume.
         """
         prices = {}
+        responses = []
         urls = [
             "https://api.bitfinex.com/v1/pubticker/BTCUSD",
             "https://api.gdax.com/products/BTC-USD/ticker",
@@ -778,6 +779,7 @@ class Market(dict):
             weighted by the exchange volume.
         """
         prices = {}
+        responses = []
         urls = [
             # "https://poloniex.com/public?command=returnTicker",
             "https://bittrex.com/api/v1.1/public/getmarketsummary?market=BTC-STEEM",
