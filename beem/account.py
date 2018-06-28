@@ -1296,13 +1296,13 @@ class Account(BlockchainObject):
             account_lifespan_sec = (formatTimeString(last_trx["timestamp"]) - created).total_seconds()
             if (formatTimeString(last_trx["timestamp"]) - blocktime).total_seconds() < 0:
                 return max_index
-            factor = account_lifespan_sec / max_index
+            factor = account_lifespan_sec / max_index or 1
             first_op_num = int((blocktime - created).total_seconds() / factor)
         else:
             account_lifespan_block = (last_trx["block"] - created_blocknum)
             if (last_trx["block"] - blocktime) < 0:
                 return max_index
-            factor = account_lifespan_block / max_index
+            factor = account_lifespan_block / max_index or 1
             first_op_num = (blocktime - created_blocknum) / factor
         estimated_op_num = int(first_op_num)
         op_diff = stop_diff + 1
@@ -1325,10 +1325,14 @@ class Account(BlockchainObject):
 
             if op_start_last is not None:
                 diff_op = (op_start_last[0][0] - estimated_op_num)
-                if isinstance(blocktime, (datetime, date, time)) and diff_op != 0:
+                if diff_op == 0:
+                    factor = 1
+                elif isinstance(blocktime, (datetime, date, time)):
                     factor = (formatTimeString(op_start_last[0][1]["timestamp"]) - formatTimeString(trx["timestamp"])).total_seconds() / diff_op
-                elif not isinstance(blocktime, (datetime, date, time)) and diff_op != 0:
-                    factor = (op_start_last[0][1]["block"] - trx["block"]) / diff_op
+                else:
+                    factor = ((op_start_last[0][1]["block"] - trx["block"]) / diff_op)
+                if factor == 0:
+                    factor = 1
             if isinstance(blocktime, (datetime, date, time)):
                 op_diff = (blocktime - formatTimeString(trx["timestamp"])).total_seconds() / factor
             else:
