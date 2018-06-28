@@ -156,6 +156,16 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.41
+-------
+* Issue #34 fixed thanks to crokkon
+* "Bad or missing upstream response" is handled
+* Use thread_num - 1 instances for blocks with threading
+* Fix missing repsonses in market
+* add parse_body to post() (thanks to crokkon)
+* Examples added to all Discussions classes
+* Discussions added for fetch more than 100 posts
+
 0.19.40
 -------
 * Improvement of blocks/stream with threading (issue #32 fixed)
