@@ -1281,7 +1281,7 @@ class Steem(object):
         :param bool parse_body: (Optional) When set to True, all mentioned users,
             used links and images are put into users, links and images array inside
             json_metadata. This will override provided links, images and users inside
-            json_metadata
+            json_metadata. Hashtags will added to tags until its length is below five entries.
 
         """
 
@@ -1309,34 +1309,50 @@ class Steem(object):
 
         category = None
         tags = tags or json_metadata.get('tags', [])
-        if tags:
-            # first tag should be a category
-            category = tags[0]
-            json_metadata.update({"tags": tags})
 
         if parse_body:
             def get_urls(mdstring):
                 return list(set(re.findall('http[s]*://[^\s"><\)\(]+', mdstring)))
 
             def get_users(mdstring):
-                return list(set(re.findall('@([\d\w\.-]{2,15}[\w\d])', mdstring)))
+                users = []
+                for u in re.findall('(^|[^a-zA-Z0-9_!#$%&*@＠\/]|(^|[^a-zA-Z0-9_+~.-\/#]))[@＠]([a-z][-\.a-z\d]+[a-z\d])', mdstring):
+                    users.append(list(u)[-1])
+                return users
+
+            def get_hashtags(mdstring):
+                hashtags = []
+                for t in re.findall('(^|\s)(#[-a-z\d]+)', mdstring):
+                    hashtags.append(list(t)[-1])
+                return hashtags
 
             users = []
             image = []
             links = []
             for url in get_urls(body):
-                img_exts = ['.jpg', '.png', '.gif', '.svg']
+                img_exts = ['.jpg', '.png', '.gif', '.svg', '.jpeg']
                 if os.path.splitext(url)[1].lower() in img_exts:
                     image.append(url)
                 else:
                     links.append(url)
             users = get_users(body)
+            hashtags = get_hashtags(body)
+            users = list(set(users).difference(set([author])))
             if len(users) > 0:
                 json_metadata.update({"users": users})
             if len(image) > 0:
                 json_metadata.update({"image": image})
             if len(links) > 0:
                 json_metadata.update({"links": links})
+            if len(tags) < 5:
+                for i in range(5 - len(tags)):
+                    if len(hashtags) > i:
+                        tags.append(hashtags[i])
+
+        if tags:
+            # first tag should be a category
+            category = tags[0]
+            json_metadata.update({"tags": tags})
 
         # can't provide a category while replying to a post
         if reply_identifier and category:
