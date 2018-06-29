@@ -6,7 +6,7 @@ ecdsa==0.13
 requests==2.19.1
 websocket-client==0.48.0
 pytz==2018.4
-pycryptodomex==3.6.1
+pycryptodomex==3.6.3
 scrypt==0.8.6
 Events==0.3
 secp256k1==0.13.2
