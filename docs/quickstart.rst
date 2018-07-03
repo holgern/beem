@@ -19,12 +19,14 @@ By creating this object different options can be set.
 .. code-block:: python
 
    from beem import Steem
+   from beem.account import Account
    stm = Steem()
    account = Account("test", steem_instance=stm)
 
 .. code-block:: python
 
    from beem import Steem
+   from beem.account import Account
    from beem.instance import set_shared_steem_instance
    stm = Steem()
    set_shared_steem_instance(stm)
