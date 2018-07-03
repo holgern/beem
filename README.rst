@@ -156,6 +156,12 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.42
+-------
+* improve parse_body for post()
+* Add conversion of datetime objects to timestamp in get_steem_per_mvest
+* Fix beem for steem update 0.19.5 and 0.19.10
+
 0.19.41
 -------
 * Issue #34 fixed thanks to crokkon
