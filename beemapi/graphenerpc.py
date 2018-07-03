@@ -288,6 +288,8 @@ class GrapheneRPC(object):
             if v["chain_id"] == chain_id and v["min_version"] <= network_version:
                 if highest_version_chain is None:
                     highest_version_chain = v
+                elif v["min_version"] == '0.19.5' and self.use_condenser:
+                    highest_version_chain = v
                 elif v["min_version"] == '0.0.0' and self.use_condenser:
                     highest_version_chain = v
                 elif v["min_version"] > highest_version_chain["min_version"] and not self.use_condenser:

@@ -14,8 +14,8 @@ from beemapi.rpcutils import (
 
 class Testcases(unittest.TestCase):
     def test_is_network_appbase_ready(self):
-        self.assertTrue(is_network_appbase_ready({'STEEM_BLOCKCHAIN_VERSION': '0.19.4'}))
-        self.assertTrue(is_network_appbase_ready({'STEEMIT_BLOCKCHAIN_VERSION': '0.19.4'}))
+        self.assertTrue(is_network_appbase_ready({'STEEM_BLOCKCHAIN_VERSION': '0.19.10'}))
+        self.assertTrue(is_network_appbase_ready({'STEEMIT_BLOCKCHAIN_VERSION': '0.19.10'}))
         self.assertFalse(is_network_appbase_ready({'STEEM_BLOCKCHAIN_VERSION': '0.19.2'}))
         self.assertFalse(is_network_appbase_ready({'STEEM_BLOCKCHAIN_VERSION': '0.19.2'}))
 

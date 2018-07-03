@@ -61,7 +61,7 @@ class Testcases(unittest.TestCase):
 
     def test_non_appbase(self):
         bts = self.bts
-        self.assertTrue(bts.chain_params['min_version'] == '0.0.0')
+        self.assertTrue(bts.chain_params['min_version'] == '0.19.5')
         self.assertFalse(bts.rpc.get_use_appbase())
         self.assertTrue(isinstance(bts.rpc.get_config(api="database"), dict))
         with self.assertRaises(
@@ -71,7 +71,7 @@ class Testcases(unittest.TestCase):
 
     def test_appbase(self):
         bts = self.appbase
-        self.assertTrue(bts.chain_params['min_version'] == '0.19.4')
+        self.assertTrue(bts.chain_params['min_version'] == '0.19.10')
         self.assertTrue(bts.rpc.get_use_appbase())
         self.assertTrue(isinstance(bts.rpc.get_config(api="database"), dict))
         with self.assertRaises(

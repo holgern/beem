@@ -156,6 +156,10 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.43
+-------
+* Fix minimal version in known_chains from 0.0.0 to 0.19.5
+
 0.19.42
 -------
 * improve parse_body for post()

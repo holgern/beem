@@ -16,7 +16,7 @@ known_chains = {
     },
     "STEEM": {
         "chain_id": "0" * int(256 / 4),
-        "min_version": '0.0.0',
+        "min_version": '0.19.5',
         "prefix": "STM",
         "chain_assets": [
             {"asset": "SBD", "symbol": "SBD", "precision": 3, "id": 0},
