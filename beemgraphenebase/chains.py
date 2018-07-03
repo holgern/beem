@@ -6,7 +6,7 @@ default_prefix = "STM"
 known_chains = {
     "STEEMAPPBASE": {
         "chain_id": "0" * int(256 / 4),
-        "min_version": '0.19.4',
+        "min_version": '0.19.10',
         "prefix": "STM",
         "chain_assets": [
             {"asset": "@@000000013", "symbol": "SBD", "precision": 3, "id": 0},
