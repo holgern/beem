@@ -55,4 +55,14 @@ known_chains = {
             {"asset": "VESTS", "symbol": "GESTS", "precision": 6, "id": 2}
         ],
     },
+    "VIT": {
+        "chain_id": "73f14dd4b7b07a8663be9d84300de0f65ef2ee7e27aae32bbe911c548c08f000",
+        "min_version": "0.0.0",
+        "prefix": "VIT",
+        "chain_assets": [
+            {"asset": "SBD", "symbol": "VBD", "precision": 3, "id": 0},
+            {"asset": "STEEM", "symbol": "VIT", "precision": 3, "id": 1},
+            {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
+        ],
+    }
 }
