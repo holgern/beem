@@ -1229,7 +1229,7 @@ class Account(BlockchainObject):
             ret = self.steem.rpc.get_account_history(account["name"], start, limit, api="database")
         return ret
 
-    def estimate_virtual_op_num(self, blocktime, stop_diff=1, max_count=100):
+    def estimate_virtual_op_num(self, blocktime, stop_diff=0, max_count=100):
         """ Returns an estimation of an virtual operation index for a given time or blockindex
 
             :param int/datetime blocktime: start time or start block index from which account
@@ -1270,89 +1270,87 @@ class Account(BlockchainObject):
                 print(block_est - block_num)
 
         """
+        def get_blocknum(index):
+            op = self._get_account_history(start=(index))
+            return op[0][1]['block']
+
         max_index = self.virtual_op_count()
-        created = self["created"]
-        if stop_diff <= 0:
-            raise ValueError("stop_diff <= 0 is not allowed and would lead to an endless lopp...")
-        if not isinstance(blocktime, (datetime, date, time)):
-            b = Blockchain(steem_instance=self.steem)
-            created_blocknum = b.get_estimated_block_num(created, accurate=True)
-            if blocktime < created_blocknum:
-                return 0
-        else:
-            blocktime = addTzInfo(blocktime)
-            if blocktime < created:
-                return 0
         if max_index < stop_diff:
             return 0
 
-        op_last = self._get_account_history(start=-1)
-        if isinstance(op_last, list) and len(op_last) > 0 and len(op_last[0]) > 0:
-            last_trx = op_last[0][1]
-        else:
-            return 0
+        # calculate everything with block numbers
+        created = get_blocknum(0)
 
+        # convert blocktime to block number if given as a datetime/date/time
         if isinstance(blocktime, (datetime, date, time)):
-            account_lifespan_sec = (formatTimeString(last_trx["timestamp"]) - created).total_seconds()
-            if (formatTimeString(last_trx["timestamp"]) - blocktime).total_seconds() < 0:
-                return max_index
-            factor = account_lifespan_sec / max_index or 1
-            first_op_num = int((blocktime - created).total_seconds() / factor)
+            b = Blockchain(steem_instance=self.steem)
+            target_blocknum = b.get_estimated_block_num(addTzInfo(blocktime), accurate=True)
         else:
-            account_lifespan_block = (last_trx["block"] - created_blocknum)
-            if (last_trx["block"] - blocktime) < 0:
-                return max_index
-            factor = account_lifespan_block / max_index or 1
-            first_op_num = (blocktime - created_blocknum) / factor
-        estimated_op_num = int(first_op_num)
-        op_diff = stop_diff + 1
-        op_num_1 = estimated_op_num + 1
-        op_num_2 = estimated_op_num + 2
-        cnt = 0
-        op_start_last = None
-        op_start = None
+            target_blocknum = blocktime
 
-        while (op_diff > stop_diff or op_diff < -stop_diff) and (max_count < 0 or cnt < max_count) and op_num_2 != estimated_op_num:
-            op_num_2 = op_num_1
-            op_num_1 = (estimated_op_num)
-            op_start_last = op_start
-            op_start = self._get_account_history(start=(estimated_op_num))
-            if isinstance(op_start, list) and len(op_start) > 0 and len(op_start[0]) > 0:
-                trx = op_start[0][1]
-                estimated_op_num = op_start[0][0]
-            else:
-                return 0
-
-            if op_start_last is not None:
-                diff_op = (op_start_last[0][0] - estimated_op_num)
-                if diff_op == 0:
-                    factor = 1
-                elif isinstance(blocktime, (datetime, date, time)):
-                    factor = (formatTimeString(op_start_last[0][1]["timestamp"]) - formatTimeString(trx["timestamp"])).total_seconds() / diff_op
-                else:
-                    factor = ((op_start_last[0][1]["block"] - trx["block"]) / diff_op)
-                if factor == 0:
-                    factor = 1
-            if isinstance(blocktime, (datetime, date, time)):
-                op_diff = (blocktime - formatTimeString(trx["timestamp"])).total_seconds() / factor
-            else:
-                op_diff = (blocktime - trx["block"]) / factor
-            if op_diff > max_index / 10.:
-                estimated_op_num += math.ceil(max_index / 10.)
-            elif op_diff > 0:
-                estimated_op_num += math.ceil(op_diff)
-            elif op_diff < (-max_index / 10.):
-                estimated_op_num += math.floor((-max_index / 10.))
-            else:
-                estimated_op_num += math.floor(op_diff)
-            cnt += 1
-
-        if estimated_op_num < 0:
+        # the requested blocknum/timestamp is before the account creation date
+        if target_blocknum <= created:
             return 0
-        elif estimated_op_num > max_index:
+
+        # get the block number from the account's latest operation
+        latest_blocknum = get_blocknum(-1)
+
+        # requested blocknum/timestamp is after the latest account operation
+        if target_blocknum >= latest_blocknum:
             return max_index
-        else:
-            return estimated_op_num
+
+        # all account ops in a single block
+        if latest_blocknum - created == 0:
+            return 0
+
+        # set inital search range
+        op_num = 0
+        op_lower = 0
+        block_lower = created
+        op_upper = max_index
+        block_upper = latest_blocknum
+        last_op_num = None
+        cnt = 0
+
+        while True:
+            # check if the maximum number of iterations was reached
+            if max_count != -1 and cnt >= max_count:
+                # did not converge, return the current state
+                return op_num
+
+            # linear approximation between the known upper and
+            # lower bounds for the first iteration
+            if cnt < 1:
+                op_num = int((target_blocknum - block_lower) /
+                             (block_upper - block_lower) *
+                             (op_upper - op_lower) + op_lower)
+            else:
+                # divide and conquer for the following iterations
+                op_num = int((op_upper + op_lower) / 2)
+                if op_upper == op_lower + 1:  # round up if we're close to target
+                    op_num += 1
+
+            # get block number for current op number estimation
+            if op_num != last_op_num:
+                block_num = get_blocknum(op_num)
+                last_op_num = op_num
+
+            # check if the required accuracy was reached
+            if op_upper - op_lower <= stop_diff or \
+               op_upper == op_lower + 1:
+                return op_num
+
+            # set new upper/lower boundaries for next iteration
+            if block_num < target_blocknum:
+                # current op number was too low -> search upwards
+                op_lower = op_num
+                block_lower = block_num
+            else:
+                # current op number was too high or matched the target block
+                # -> search downwards
+                op_upper = op_num
+                block_upper = block_num
+            cnt += 1
 
     def get_curation_reward(self, days=7):
         """Returns the curation reward of the last `days` days
