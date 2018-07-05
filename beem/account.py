@@ -1718,6 +1718,8 @@ class Account(BlockchainObject):
         """
         _limit = batch_size
         first = self.virtual_op_count()
+        start = addTzInfo(start)
+        stop = addTzInfo(stop)
         if not first or not batch_size:
             return
         if start is not None and isinstance(start, int) and start < 0 and not use_block_num:
@@ -1748,8 +1750,6 @@ class Account(BlockchainObject):
             first = op_est + est_diff
         if stop is not None and isinstance(stop, int) and stop < 0 and not use_block_num:
             stop += first
-        start = addTzInfo(start)
-        stop = addTzInfo(stop)
 
         while True:
             # RPC call
