@@ -156,6 +156,13 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.44
+-------
+* Fix start and datetime in history_reverse
+* add lazy option to all Discussion classes
+* VIT and SMT testnet added to chains
+* estimate_virtual_op_num improved by crokkon (fixes issue #36)
+
 0.19.43
 -------
 * Fix minimal version in known_chains from 0.0.0 to 0.19.5
