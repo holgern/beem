@@ -48,6 +48,26 @@ class Testcases(unittest.TestCase):
         time.sleep(2)
         self.assertNotIn("foo", cache)
         self.assertEqual(str(cache), "ObjectCache(n=0, default_expiration=1)")
+        self.assertEqual(len(list(cache)), 0)
 
+        # Get
+        self.assertEqual(cache.get("foo", "New"), "New")
+
+    def test_use_del(self):
+        cache = ObjectCache(default_expiration=1, auto_clean=True, use_del=False)
+        self.assertEqual(str(cache), "ObjectCache(n=0, default_expiration=1)")
+
+        # Data
+        cache["foo"] = "bar"
+        self.assertEqual(str(cache), "ObjectCache(n=1, default_expiration=1)")
+        self.assertIn("foo", cache)
+        self.assertEqual(cache["foo"], "bar")
+        self.assertEqual(cache.get("foo", "New"), "bar")
+
+        # Expiration
+        time.sleep(2)
+        self.assertNotIn("foo", cache)
+        self.assertEqual(str(cache), "ObjectCache(n=0, default_expiration=1)")
+        self.assertEqual(len(list(cache)), 1)
         # Get
         self.assertEqual(cache.get("foo", "New"), "New")

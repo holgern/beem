@@ -14,10 +14,11 @@ import json
 @python_2_unicode_compatible
 class ObjectCache(dict):
 
-    def __init__(self, initial_data={}, default_expiration=10, auto_clean=True):
+    def __init__(self, initial_data={}, default_expiration=10, auto_clean=True, use_del=True):
         super(ObjectCache, self).__init__(initial_data)
         self.default_expiration = default_expiration
         self.auto_clean = auto_clean
+        self.use_del = use_del
 
     def __setitem__(self, key, value):
         if key in self:
@@ -34,11 +35,15 @@ class ObjectCache(dict):
     def __getitem__(self, key):
         if key in self:
             value = dict.__getitem__(self, key)
-            return value["data"]
+            if value is not None:
+                return value["data"]
 
     def get(self, key, default):
         if key in self:
-            return self[key]
+            if self[key] is not None:
+                return self[key]
+            else:
+                return default
         else:
             return default
 
@@ -48,12 +53,19 @@ class ObjectCache(dict):
             keys.append(key)
         for key in keys:
             value = dict.__getitem__(self, key)
+            if value is None:
+                continue
             if datetime.utcnow() >= value["expires"]:
-                del self[key]
+                if self.use_del:
+                    del self[key]
+                else:
+                    self[key] = None
 
     def __contains__(self, key):
         if dict.__contains__(self, key):
             value = dict.__getitem__(self, key)
+            if value is None:
+                return False
             if datetime.utcnow() < value["expires"]:
                 return True
             else:
@@ -63,8 +75,15 @@ class ObjectCache(dict):
     def __str__(self):
         if self.auto_clean:
             self.clear_expired_items()
+        n = 0
+        if self.use_del:
+            n = len(list(self.keys()))
+        else:
+            for key in self:
+                if self[key] is not None:
+                    n += 1
         return "ObjectCache(n={}, default_expiration={})".format(
-            len(list(self.keys())), self.default_expiration)
+            n, self.default_expiration)
 
 
 class BlockchainObject(dict):
@@ -169,11 +188,17 @@ class BlockchainObject(dict):
     def set_cache_auto_clean(self, auto_clean):
         BlockchainObject._cache.auto_clean = auto_clean
 
+    def set_cache_use_del(self, use_del):
+        BlockchainObject._cache.use_del = use_del
+
     def get_cache_expiration(self):
         return BlockchainObject._cache.default_expiration
 
     def get_cache_auto_clean(self):
         return BlockchainObject._cache.auto_clean
+
+    def get_cache_use_del(self):
+        return BlockchainObject._cache.use_del
 
     def iscached(self, id):
         return id in BlockchainObject._cache
