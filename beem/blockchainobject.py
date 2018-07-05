@@ -48,18 +48,18 @@ class ObjectCache(dict):
             return default
 
     def clear_expired_items(self):
-        keys = []
-        for key in self.keys():
-            keys.append(key)
-        for key in keys:
+        del_list = []
+        for key in self:
             value = dict.__getitem__(self, key)
             if value is None:
                 continue
             if datetime.utcnow() >= value["expires"]:
-                if self.use_del:
-                    del self[key]
-                else:
-                    self[key] = None
+                del_list.append(key)
+        for key in del_list:
+            if self.use_del:
+                del self[key]
+            else:
+                self[key] = None
 
     def __contains__(self, key):
         if dict.__contains__(self, key):
