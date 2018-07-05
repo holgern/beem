@@ -19,6 +19,7 @@ class ObjectCache(dict):
         self.default_expiration = default_expiration
         self.auto_clean = auto_clean
         self.use_del = use_del
+        self.cleaning = False
 
     def __setitem__(self, key, value):
         if key in self:
@@ -48,6 +49,9 @@ class ObjectCache(dict):
             return default
 
     def clear_expired_items(self):
+        if self.cleaning:
+            return
+        self.cleaning = True
         del_list = []
         for key in self:
             value = dict.__getitem__(self, key)
@@ -60,6 +64,7 @@ class ObjectCache(dict):
                 del self[key]
             else:
                 self[key] = None
+        self.cleaning = False
 
     def __contains__(self, key):
         if dict.__contains__(self, key):
