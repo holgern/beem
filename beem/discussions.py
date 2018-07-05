@@ -54,8 +54,9 @@ class Discussions(object):
         :param beem.steem.Steem steem_instance: Steem instance
 
     """
-    def __init__(self, steem_instance=None):
+    def __init__(self, lazy=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        self.lazy = lazy
 
     def get_discussions(self, discussion_type, discussion_query, limit=1000):
         """ Get Discussions
@@ -87,37 +88,37 @@ class Discussions(object):
             discussion_query["start_permlink"] = start_permlink
             discussion_query["start_permlink"] = start_tag
             if discussion_type == "trending":
-                dd = Discussions_by_trending(discussion_query, self.steem)
+                dd = Discussions_by_trending(discussion_query, self.steem, lazy=self.lazy)
             elif discussion_type == "author_before_date":
-                dd = Discussions_by_author_before_date(discussion_query, self.steem)
+                dd = Discussions_by_author_before_date(discussion_query, self.steem, lazy=self.lazy)
             elif discussion_type == "payout":
-                dd = Comment_discussions_by_payout(discussion_query, self.steem)
+                dd = Comment_discussions_by_payout(discussion_query, self.steem, lazy=self.lazy)
             elif discussion_type == "post_payout":
-                dd = Post_discussions_by_payout(discussion_query, self.steem)
+                dd = Post_discussions_by_payout(discussion_query, self.steem, lazy=self.lazy)
             elif discussion_type == "created":
-                dd = Discussions_by_created(discussion_query, self.steem)
+                dd = Discussions_by_created(discussion_query, self.steem, lazy=self.lazy)
             elif discussion_type == "active":
-                dd = Discussions_by_active(discussion_query, self.steem)
+                dd = Discussions_by_active(discussion_query, self.steem, lazy=self.lazy)
             elif discussion_type == "cashout":
-                dd = Discussions_by_cashout(discussion_query, self.steem)
+                dd = Discussions_by_cashout(discussion_query, self.steem, lazy=self.lazy)
             elif discussion_type == "votes":
-                dd = Discussions_by_votes(discussion_query, self.steem)
+                dd = Discussions_by_votes(discussion_query, self.steem, lazy=self.lazy)
             elif discussion_type == "children":
-                dd = Discussions_by_children(discussion_query, self.steem)
+                dd = Discussions_by_children(discussion_query, self.steem, lazy=self.lazy)
             elif discussion_type == "hot":
-                dd = Discussions_by_hot(discussion_query, self.steem)
+                dd = Discussions_by_hot(discussion_query, self.steem, lazy=self.lazy)
             elif discussion_type == "feed":
-                dd = Discussions_by_feed(discussion_query, self.steem)
+                dd = Discussions_by_feed(discussion_query, self.steem, lazy=self.lazy)
             elif discussion_type == "blog":
-                dd = Discussions_by_blog(discussion_query, self.steem)
+                dd = Discussions_by_blog(discussion_query, self.steem, lazy=self.lazy)
             elif discussion_type == "comments":
-                dd = Discussions_by_comments(discussion_query, self.steem)
+                dd = Discussions_by_comments(discussion_query, self.steem, lazy=self.lazy)
             elif discussion_type == "promoted":
-                dd = Discussions_by_promoted(discussion_query, self.steem)
+                dd = Discussions_by_promoted(discussion_query, self.steem, lazy=self.lazy)
             elif discussion_type == "replies":
-                dd = Replies_by_last_update(discussion_query, self.steem)
+                dd = Replies_by_last_update(discussion_query, self.steem, lazy=self.lazy)
             elif discussion_type == "tags":
-                dd = Trending_tags(discussion_query, self.steem)
+                dd = Trending_tags(discussion_query, self.steem, lazy=self.lazy)
 
             for d in dd:
                 double_result = True
@@ -151,7 +152,7 @@ class Discussions_by_trending(list):
                 print(h)
 
     """
-    def __init__(self, discussion_query, steem_instance=None):
+    def __init__(self, discussion_query, lazy=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
@@ -160,7 +161,7 @@ class Discussions_by_trending(list):
             posts = self.steem.rpc.get_discussions_by_trending(discussion_query)
         super(Discussions_by_trending, self).__init__(
             [
-                Comment(x, steem_instance=self.steem)
+                Comment(x, lazy=lazy, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -179,7 +180,7 @@ class Discussions_by_author_before_date(list):
                 print(h)
 
     """
-    def __init__(self, author="", start_permlink="", before_date="1970-01-01T00:00:00", limit=100, steem_instance=None):
+    def __init__(self, author="", start_permlink="", before_date="1970-01-01T00:00:00", limit=100, lazy=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
@@ -189,7 +190,7 @@ class Discussions_by_author_before_date(list):
             posts = self.steem.rpc.get_discussions_by_author_before_date(author, start_permlink, before_date, limit)
         super(Discussions_by_author_before_date, self).__init__(
             [
-                Comment(x, steem_instance=self.steem)
+                Comment(x, lazy=lazy, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -210,7 +211,7 @@ class Comment_discussions_by_payout(list):
                 print(h)
 
     """
-    def __init__(self, discussion_query, steem_instance=None):
+    def __init__(self, discussion_query, lazy=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
@@ -219,7 +220,7 @@ class Comment_discussions_by_payout(list):
             posts = self.steem.rpc.get_comment_discussions_by_payout(discussion_query)
         super(Comment_discussions_by_payout, self).__init__(
             [
-                Comment(x, steem_instance=self.steem)
+                Comment(x, lazy=lazy, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -240,7 +241,7 @@ class Post_discussions_by_payout(list):
                 print(h)
 
     """
-    def __init__(self, discussion_query, steem_instance=None):
+    def __init__(self, discussion_query, lazy=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
@@ -249,7 +250,7 @@ class Post_discussions_by_payout(list):
             posts = self.steem.rpc.get_post_discussions_by_payout(discussion_query)
         super(Post_discussions_by_payout, self).__init__(
             [
-                Comment(x, steem_instance=self.steem)
+                Comment(x, lazy=lazy, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -270,7 +271,7 @@ class Discussions_by_created(list):
                 print(h)
 
     """
-    def __init__(self, discussion_query, steem_instance=None):
+    def __init__(self, discussion_query, lazy=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
@@ -279,7 +280,7 @@ class Discussions_by_created(list):
             posts = self.steem.rpc.get_discussions_by_created(discussion_query)
         super(Discussions_by_created, self).__init__(
             [
-                Comment(x, steem_instance=self.steem)
+                Comment(x, lazy=lazy, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -300,7 +301,7 @@ class Discussions_by_active(list):
                 print(h)
 
     """
-    def __init__(self, discussion_query, steem_instance=None):
+    def __init__(self, discussion_query, lazy=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
@@ -309,7 +310,7 @@ class Discussions_by_active(list):
             posts = self.steem.rpc.get_discussions_by_active(discussion_query)
         super(Discussions_by_active, self).__init__(
             [
-                Comment(x, steem_instance=self.steem)
+                Comment(x, lazy=lazy, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -331,7 +332,7 @@ class Discussions_by_cashout(list):
                 print(h)
 
     """
-    def __init__(self, discussion_query, steem_instance=None):
+    def __init__(self, discussion_query, lazy=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
@@ -340,7 +341,7 @@ class Discussions_by_cashout(list):
             posts = self.steem.rpc.get_discussions_by_cashout(discussion_query)
         super(Discussions_by_cashout, self).__init__(
             [
-                Comment(x, steem_instance=self.steem)
+                Comment(x, lazy=lazy, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -361,7 +362,7 @@ class Discussions_by_votes(list):
                 print(h)
 
     """
-    def __init__(self, discussion_query, steem_instance=None):
+    def __init__(self, discussion_query, lazy=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
@@ -370,7 +371,7 @@ class Discussions_by_votes(list):
             posts = self.steem.rpc.get_discussions_by_votes(discussion_query)
         super(Discussions_by_votes, self).__init__(
             [
-                Comment(x, steem_instance=self.steem)
+                Comment(x, lazy=lazy, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -391,7 +392,7 @@ class Discussions_by_children(list):
                 print(h)
 
     """
-    def __init__(self, discussion_query, steem_instance=None):
+    def __init__(self, discussion_query, lazy=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
@@ -400,7 +401,7 @@ class Discussions_by_children(list):
             posts = self.steem.rpc.get_discussions_by_children(discussion_query)
         super(Discussions_by_children, self).__init__(
             [
-                Comment(x, steem_instance=self.steem)
+                Comment(x, lazy=lazy, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -421,7 +422,7 @@ class Discussions_by_hot(list):
                 print(h)
 
     """
-    def __init__(self, discussion_query, steem_instance=None):
+    def __init__(self, discussion_query, lazy=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
@@ -430,7 +431,7 @@ class Discussions_by_hot(list):
             posts = self.steem.rpc.get_discussions_by_hot(discussion_query)
         super(Discussions_by_hot, self).__init__(
             [
-                Comment(x, steem_instance=self.steem)
+                Comment(x, lazy=lazy, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -451,7 +452,7 @@ class Discussions_by_feed(list):
                 print(h)
 
     """
-    def __init__(self, discussion_query, steem_instance=None):
+    def __init__(self, discussion_query, lazy=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_feed(discussion_query, api="tags")['discussions']
@@ -463,7 +464,7 @@ class Discussions_by_feed(list):
             posts = self.steem.rpc.get_discussions_by_feed(discussion_query)
         super(Discussions_by_feed, self).__init__(
             [
-                Comment(x, steem_instance=self.steem)
+                Comment(x, lazy=lazy, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -484,7 +485,7 @@ class Discussions_by_blog(list):
                 print(h)
 
     """
-    def __init__(self, discussion_query, steem_instance=None):
+    def __init__(self, discussion_query, lazy=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
@@ -497,7 +498,7 @@ class Discussions_by_blog(list):
             posts = self.steem.rpc.get_discussions_by_blog(discussion_query)
         super(Discussions_by_blog, self).__init__(
             [
-                Comment(x, steem_instance=self.steem)
+                Comment(x, lazy=lazy, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -518,7 +519,7 @@ class Discussions_by_comments(list):
                 print(h)
 
     """
-    def __init__(self, discussion_query, steem_instance=None):
+    def __init__(self, discussion_query, lazy=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_comments(discussion_query, api="tags")['discussions']
@@ -526,7 +527,7 @@ class Discussions_by_comments(list):
             posts = self.steem.rpc.get_discussions_by_comments(discussion_query)
         super(Discussions_by_comments, self).__init__(
             [
-                Comment(x, steem_instance=self.steem)
+                Comment(x, lazy=lazy, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -547,7 +548,7 @@ class Discussions_by_promoted(list):
                 print(h)
 
     """
-    def __init__(self, discussion_query, steem_instance=None):
+    def __init__(self, discussion_query, lazy=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
@@ -556,7 +557,7 @@ class Discussions_by_promoted(list):
             posts = self.steem.rpc.get_discussions_by_promoted(discussion_query)
         super(Discussions_by_promoted, self).__init__(
             [
-                Comment(x, steem_instance=self.steem)
+                Comment(x, lazy=lazy, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -577,7 +578,7 @@ class Replies_by_last_update(list):
                 print(h)
 
     """
-    def __init__(self, discussion_query, steem_instance=None):
+    def __init__(self, discussion_query, lazy=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
@@ -586,7 +587,7 @@ class Replies_by_last_update(list):
             posts = self.steem.rpc.get_replies_by_last_update(discussion_query["start_author"], discussion_query["start_permlink"], discussion_query["limit"])
         super(Replies_by_last_update, self).__init__(
             [
-                Comment(x, steem_instance=self.steem)
+                Comment(x, lazy=lazy, steem_instance=self.steem)
                 for x in posts
             ]
         )
@@ -607,7 +608,7 @@ class Trending_tags(list):
                 print(h)
 
     """
-    def __init__(self, discussion_query, steem_instance=None):
+    def __init__(self, discussion_query, lazy=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
