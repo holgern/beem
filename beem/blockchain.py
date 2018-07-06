@@ -424,7 +424,7 @@ class Blockchain(object):
                     if FUTURES_MODULE is not None:
                         futures = []
                     block_num_list = []
-                    current_block.set_cache_auto_clean(False)
+                    # current_block.set_cache_auto_clean(False)
                     freeze = self.steem.rpc.nodes.freeze_current_node
                     num_retries = self.steem.rpc.nodes.num_retries
                     # self.steem.rpc.nodes.freeze_current_node = True
@@ -449,8 +449,8 @@ class Blockchain(object):
                         for result in pool.results():
                             results.append(result)
                         pool.abort()
-                    current_block.clear_cache_from_expired_items()
-                    current_block.set_cache_auto_clean(auto_clean)
+                    # current_block.clear_cache_from_expired_items()
+                    # current_block.set_cache_auto_clean(auto_clean)
                     self.steem.rpc.nodes.num_retries = num_retries
                     self.steem.rpc.nodes.freeze_current_node = freeze
                     new_error_cnt = self.steem.rpc.nodes.node.error_cnt
