@@ -637,23 +637,34 @@ class Account(BlockchainObject):
         """
         if not self.steem.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            query = {'account': self.name, 'start': last_user, 'type': what, 'limit': limit}
-            if direction == "follower":
-                followers = self.steem.rpc.get_followers(query, api='follow')['followers']
-            elif direction == "following":
-                followers = self.steem.rpc.get_following(query, api='follow')['following']
-        else:
-            if direction == "follower":
-                followers = self.steem.rpc.get_followers(self.name, last_user, what, limit, api='follow')
-            elif direction == "following":
-                followers = self.steem.rpc.get_following(self.name, last_user, what, limit, api='follow')
+        followers_list = []
+        limit_reached = True
+        cnt = 0
+        while limit_reached:
+            self.steem.rpc.set_next_node_on_empty_reply(False)
+            if self.steem.rpc.get_use_appbase():
+                query = {'account': self.name, 'start': last_user, 'type': what, 'limit': limit}
+                if direction == "follower":
+                    followers = self.steem.rpc.get_followers(query, api='follow')['followers']
+                elif direction == "following":
+                    followers = self.steem.rpc.get_following(query, api='follow')['following']
+            else:
+                if direction == "follower":
+                    followers = self.steem.rpc.get_followers(self.name, last_user, what, limit, api='follow')
+                elif direction == "following":
+                    followers = self.steem.rpc.get_following(self.name, last_user, what, limit, api='follow')
+            if cnt == 0:
+                followers_list = followers
+            elif len(followers) > 1:
+                followers_list += followers[1:]
+            if len(followers) >= limit:
+                last_user = followers[-1][direction]
+                limit_reached = True
+                cnt += 1
+            else:
+                limit_reached = False
 
-        if len(followers) >= limit:
-            followers += self._get_followers(
-                direction=direction, last_user=followers[-1][direction])[1:]
-        return followers
+        return followers_list
 
     @property
     def available_balances(self):
