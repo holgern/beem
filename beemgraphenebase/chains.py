@@ -24,6 +24,16 @@ known_chains = {
             {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
         ],
     },
+    "STEEMZERO": {
+        "chain_id": "0" * int(256 / 4),
+        "min_version": '0.0.0',
+        "prefix": "STM",
+        "chain_assets": [
+            {"asset": "SBD", "symbol": "SBD", "precision": 3, "id": 0},
+            {"asset": "STEEM", "symbol": "STEEM", "precision": 3, "id": 1},
+            {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
+        ],
+    },
     "TESTNET": {
         "chain_id": "79276aea5d4877d9a25892eaa01b0adf019d3e5cb12a97478df3298ccdd01673",
         "min_version": '0.0.0',

@@ -156,6 +156,13 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.45
+-------
+* Add RLock to ObjectCache (ObjectCache is threadsafe now)
+* Fix Blockchain Version comparison
+* Add support for RPC Nodes below 0.19.5
+* Add Example for measuring objectcache performance
+
 0.19.44
 -------
 * Fix start and datetime in history_reverse

@@ -269,6 +269,10 @@ class GrapheneRPC(object):
         reply = self.ws.recv()
         return reply
 
+    def version_string_to_int(self, network_version):
+        version_list = network_version.split('.')
+        return int(int(version_list[0]) * 1e8 + int(version_list[1]) * 1e4 + int(version_list[2]))
+
     def get_network(self, props=None):
         """ Identify the connected network. This call returns a
             dictionary with keys chain_id, core_symbol and prefix
@@ -285,14 +289,14 @@ class GrapheneRPC(object):
             raise("Connecting to unknown network!")
         highest_version_chain = None
         for k, v in list(known_chains.items()):
-            if v["chain_id"] == chain_id and v["min_version"] <= network_version:
+            if v["chain_id"] == chain_id and self.version_string_to_int(v["min_version"]) <= self.version_string_to_int(network_version):
                 if highest_version_chain is None:
                     highest_version_chain = v
                 elif v["min_version"] == '0.19.5' and self.use_condenser:
                     highest_version_chain = v
                 elif v["min_version"] == '0.0.0' and self.use_condenser:
                     highest_version_chain = v
-                elif v["min_version"] > highest_version_chain["min_version"] and not self.use_condenser:
+                elif self.version_string_to_int(v["min_version"]) > self.version_string_to_int(highest_version_chain["min_version"]) and not self.use_condenser:
                     highest_version_chain = v
         if highest_version_chain is None:
             raise("Connecting to unknown network!")
