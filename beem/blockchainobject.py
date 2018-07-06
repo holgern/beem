@@ -9,6 +9,7 @@ from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text
 from beem.instance import shared_steem_instance
 from datetime import datetime, timedelta
 import json
+import threading
 
 
 @python_2_unicode_compatible
@@ -19,74 +20,76 @@ class ObjectCache(dict):
         self.default_expiration = default_expiration
         self.auto_clean = auto_clean
         self.use_del = use_del
-        self.cleaning = False
+        self.lock = threading.RLock()
 
     def __setitem__(self, key, value):
-        if key in self:
-            del self[key]
-        data = {
-            "expires": datetime.utcnow() + timedelta(
-                seconds=self.default_expiration),
-            "data": value
-        }
-        dict.__setitem__(self, key, data)
+        with self.lock:
+            if key in self:
+                del self[key]
+            data = {
+                "expires": datetime.utcnow() + timedelta(
+                    seconds=self.default_expiration),
+                "data": value
+            }
+            dict.__setitem__(self, key, data)
         if self.auto_clean:
             self.clear_expired_items()
 
     def __getitem__(self, key):
-        if key in self:
-            value = dict.__getitem__(self, key)
-            if value is not None:
-                return value["data"]
+        with self.lock:
+            if key in self:
+                value = dict.__getitem__(self, key)
+                if value is not None:
+                    return value["data"]
 
     def get(self, key, default):
-        if key in self:
-            if self[key] is not None:
-                return self[key]
+        with self.lock:
+            if key in self:
+                if self[key] is not None:
+                    return self[key]
+                else:
+                    return default
             else:
                 return default
-        else:
-            return default
 
     def clear_expired_items(self):
-        if self.cleaning:
-            return
-        self.cleaning = True
-        del_list = []
-        for key in self:
-            value = dict.__getitem__(self, key)
-            if value is None:
-                continue
-            if datetime.utcnow() >= value["expires"]:
-                del_list.append(key)
-        for key in del_list:
-            if self.use_del:
-                del self[key]
-            else:
-                self[key] = None
-        self.cleaning = False
+        with self.lock:
+            del_list = []
+            for key in self:
+                value = dict.__getitem__(self, key)
+                if value is None:
+                    continue
+                if datetime.utcnow() >= value["expires"]:
+                    del_list.append(key)
+            for key in del_list:
+                if self.use_del:
+                    del self[key]
+                else:
+                    self[key] = None
 
     def __contains__(self, key):
-        if dict.__contains__(self, key):
-            value = dict.__getitem__(self, key)
-            if value is None:
-                return False
-            if datetime.utcnow() < value["expires"]:
-                return True
-            else:
-                value["data"] = None
-        return False
+        with self.lock:
+            if dict.__contains__(self, key):
+                value = dict.__getitem__(self, key)
+                if value is None:
+                    return False
+                if datetime.utcnow() < value["expires"]:
+                    return True
+                else:
+                    value["data"] = None
+            return False
 
     def __str__(self):
         if self.auto_clean:
             self.clear_expired_items()
         n = 0
-        if self.use_del:
-            n = len(list(self.keys()))
-        else:
-            for key in self:
-                if self[key] is not None:
-                    n += 1
+        with self.lock:
+            if self.use_del:
+                n = len(list(self.keys()))
+            else:
+                for key in self:
+                    if self[key] is not None:
+                        n += 1
         return "ObjectCache(n={}, default_expiration={})".format(
             n, self.default_expiration)
 
