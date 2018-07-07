@@ -172,7 +172,7 @@ class Steem(object):
                          rpcpassword=rpcpassword,
                          **kwargs)
 
-        self.data = {'last_refresh': None, 'dynamic_global_properties': None, 'feed_history': None,
+        self.data = {'last_refresh': None, 'last_node': None, 'dynamic_global_properties': None, 'feed_history': None,
                      'get_feed_history': None, 'hardfork_properties': None,
                      'network': None, 'witness_schedule': None, 'reserve_ratio': None,
                      'config': None, 'reward_funds': None}
@@ -242,10 +242,11 @@ class Steem(object):
             return
         if data_refresh_time_seconds is not None:
             self.data_refresh_time_seconds = data_refresh_time_seconds
-        if self.data['last_refresh'] is not None and not force_refresh:
+        if self.data['last_refresh'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
             if (datetime.utcnow() - self.data['last_refresh']).total_seconds() < self.data_refresh_time_seconds:
                 return
         self.data['last_refresh'] = datetime.utcnow()
+        self.data["last_node"] = self.rpc.url
         self.data["dynamic_global_properties"] = self.get_dynamic_global_properties(False)
         self.data['feed_history'] = self.get_feed_history(False)
         self.data['get_feed_history'] = self.get_feed_history(False)

@@ -156,6 +156,13 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.46
+-------
+* Force refresh of chain_params on node switch
+* Replace recursive call in _get_followers
+* Nodelist updated and bitcoiner.me node disabled
+* First testing version of beem.snapshot with example added (thanks to crokkon for his example)
+
 0.19.45
 -------
 * Add RLock to ObjectCache (ObjectCache is threadsafe now)

@@ -22,5 +22,6 @@ __all__ = [
     "witness",
     "profile",
     "nodelist",
-    "imageuploader"
+    "imageuploader",
+    "snapshot"
 ]
