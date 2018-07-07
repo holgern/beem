@@ -25,7 +25,8 @@ known_prefixes = [
     "STX",
     "GLX",
     "GLS",
-    "EOS"
+    "EOS",
+    "VIT"
 ]
 
 
