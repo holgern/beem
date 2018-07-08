@@ -59,14 +59,15 @@ class SteemConnect(object):
             from beembase import operations
             from beem.steemconnect import SteemConnect
             from pprint import pprint
-            stm = Steem()
+            stm = Steem(nobroadcast=True, unsigned=True)
+            sc2 = SteemConnect(steem_instance=stm)
             tx = TransactionBuilder(steem_instance=stm)
             op = operations.Transfer(**{"from": 'test',
                                         "to": 'test1',
                                         "amount": '1.000 STEEM',
                                         "memo": 'test'})
             tx.appendOps(op)
-            pprint(sc2.url_from_tx(tx)
+            pprint(sc2.url_from_tx(tx.json()))
 
         .. testcode::
 
