@@ -38,6 +38,14 @@ Install beem by pip::
 
     pip install -U beem
 
+Sometimes this does not work. Please try::
+
+    pip3 install -U beem
+
+or::
+
+    python -m pip install beem
+
 Manual installation
 -------------------
     
@@ -69,3 +77,16 @@ Once the conda-forge channel has been enabled, beem can be installed with::
 Signing and Verify can be fasten (200 %) by installing cryptography::
 
     conda install cryptography
+
+Enable Logging
+--------------
+
+Add the following for enabling logging in your python script::
+
+    import logging
+    log = logging.getLogger(__name__)
+    logging.basicConfig(level=logging.INFO)
+
+When you want to see only critical errors, replace the last line by::
+
+    logging.basicConfig(level=logging.CRITICAL)

@@ -23,8 +23,8 @@ class Testcases(unittest.TestCase):
 
     def test_get_nodes(self):
         nodelist = NodeList()
-        all_nodes = nodelist.get_nodes(normal=True, appbase=True, dev=True, testnet=True)
-        self.assertEqual(len(nodelist), len(all_nodes))
+        all_nodes = nodelist.get_nodes(normal=True, appbase=True, dev=True, testnet=True, testnetdev=True)
+        self.assertEqual(len(nodelist) - 2, len(all_nodes))
         https_nodes = nodelist.get_nodes(wss=False)
         self.assertEqual(https_nodes[0][:5], 'https')
 
