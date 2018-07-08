@@ -21,8 +21,11 @@ if __name__ == "__main__":
         account = sys.argv[1]
     acc_snapshot = AccountSnapshot(account)
     acc_snapshot.get_account_history()
-    acc_snapshot.build_vests_history()
-    acc_snapshot.build_arrays()
+    acc_snapshot.build()
+    # acc_snapshot.build(only_ops=["producer_reward"])
+    # acc_snapshot.build(only_ops=["curation_reward"])
+    # acc_snapshot.build(only_ops=["author_reward"])
+    acc_snapshot.build_sp_arrays()
     timestamps = acc_snapshot.timestamps
     own_sp = acc_snapshot.own_sp
     eff_sp = acc_snapshot.eff_sp

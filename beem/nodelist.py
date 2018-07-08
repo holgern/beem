@@ -228,6 +228,13 @@ class NodeList(list):
                 "type": "testnet",
                 "owner": "almost-digital",
                 "score": 5
+            },
+            {
+                "url": "https://testnet.steemitdev.com",
+                "version": "0.21.0",
+                "type": "testnet-dev",
+                "owner": "steemit",
+                "score": 5
             }]
         super(NodeList, self).__init__(nodes)
 
@@ -305,13 +312,14 @@ class NodeList(list):
             new_nodes.append(new_node)
         super(NodeList, self).__init__(new_nodes)
 
-    def get_nodes(self, normal=True, appbase=True, dev=False, testnet=False, wss=True, https=True):
+    def get_nodes(self, normal=True, appbase=True, dev=False, testnet=False, testnetdev=False, wss=True, https=True):
         """ Returns nodes as list
 
             :param bool normal: when True, nodes with version 0.19.5 are included
             :param bool appbase: when True, nodes with version 0.19.10 are included
             :param bool dev: when True, dev nodes with version 0.19.10 are included
             :param bool testnet: when True, testnet nodes are included
+            :param bool testnetdev: When True, testnet-dev nodes are included
 
         """
         node_list = []
@@ -324,6 +332,8 @@ class NodeList(list):
             node_type_list.append("appbase-dev")
         if testnet:
             node_type_list.append("testnet")
+        if testnetdev:
+            node_type_list.append("testnet-dev")
         for node in self:
             if node["type"] in node_type_list and node["score"] >= 0:
                 if not https and node["url"][:5] == 'https':
@@ -334,6 +344,6 @@ class NodeList(list):
 
         return [node["url"] for node in sorted(node_list, key=lambda self: self['score'], reverse=True)]
 
-    def get_testnet(self):
+    def get_testnet(self, testnet=True, testnetdev=False):
         """Returns testnet nodes"""
-        return self.get_nodes(normal=False, appbase=False, testnet=True)
+        return self.get_nodes(normal=False, appbase=False, testnet=testnet, testnetdev=testnetdev)

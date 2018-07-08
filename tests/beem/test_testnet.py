@@ -78,10 +78,10 @@ class Testcases(unittest.TestCase):
         stm.wallet.addPrivateKey(self.memo_key1)
         stm.wallet.addPrivateKey(self.posting_key1)
 
-        self.active_private_key_of_steemfiles = '5HvwMUj7phRn6JeWi8HNHC9FuNEhaATt3PHWZoKPXouvb4wBmz1'
-        self.active_private_key_of_elf = '5JeUg6eXYLKqESf2dyP8bshK3YZGKo4UCsvZAP4GW9yDrxzySSK'
-        stm.wallet.addPrivateKey(self.active_private_key_of_steemfiles)
-        stm.wallet.addPrivateKey(self.active_private_key_of_elf)
+        self.active_private_key_of_beem4 = '5JkZZEUWrDsu3pYF7aknSo7BLJx7VfxB3SaRtQaHhsPouDYjxzi'
+        self.active_private_key_of_beem5 = '5Hvbm9VjRbd1B3ft8Lm81csaqQudwFwPGdiRKrCmTKcomFS3Z9J'
+        stm.wallet.addPrivateKey(self.active_private_key_of_beem4)
+        stm.wallet.addPrivateKey(self.active_private_key_of_beem5)
 
     @classmethod
     def tearDownClass(cls):
@@ -98,15 +98,15 @@ class Testcases(unittest.TestCase):
         priv_key = stm.wallet.getKeyForAccount("beem1", "posting")
         self.assertEqual(str(priv_key), self.posting_key1)
 
-        priv_key = stm.wallet.getPrivateKeyForPublicKey(str(PrivateKey(self.active_private_key_of_steemfiles, prefix=stm.prefix).pubkey))
-        self.assertEqual(str(priv_key), self.active_private_key_of_steemfiles)
-        priv_key = stm.wallet.getKeyForAccount("steemfiles", "active")
-        self.assertEqual(str(priv_key), self.active_private_key_of_steemfiles)
+        priv_key = stm.wallet.getPrivateKeyForPublicKey(str(PrivateKey(self.active_private_key_of_beem4, prefix=stm.prefix).pubkey))
+        self.assertEqual(str(priv_key), self.active_private_key_of_beem4)
+        priv_key = stm.wallet.getKeyForAccount("beem4", "active")
+        self.assertEqual(str(priv_key), self.active_private_key_of_beem4)
 
-        priv_key = stm.wallet.getPrivateKeyForPublicKey(str(PrivateKey(self.active_private_key_of_elf, prefix=stm.prefix).pubkey))
-        self.assertEqual(str(priv_key), self.active_private_key_of_elf)
-        priv_key = stm.wallet.getKeyForAccount("elf", "active")
-        self.assertEqual(str(priv_key), self.active_private_key_of_elf)
+        priv_key = stm.wallet.getPrivateKeyForPublicKey(str(PrivateKey(self.active_private_key_of_beem5, prefix=stm.prefix).pubkey))
+        self.assertEqual(str(priv_key), self.active_private_key_of_beem5)
+        priv_key = stm.wallet.getKeyForAccount("beem5", "active")
+        self.assertEqual(str(priv_key), self.active_private_key_of_beem5)
 
     def test_transfer(self):
         bts = self.bts
@@ -115,7 +115,7 @@ class Testcases(unittest.TestCase):
         # bts.prefix ="STX"
         acc = Account("beem", steem_instance=bts)
         tx = acc.transfer(
-            "test1", 1.33, "SBD", memo="Foobar")
+            "beem1", 1.33, "SBD", memo="Foobar")
         self.assertEqual(
             tx["operations"][0][0],
             "transfer"
@@ -124,7 +124,7 @@ class Testcases(unittest.TestCase):
         op = tx["operations"][0][1]
         self.assertIn("memo", op)
         self.assertEqual(op["from"], "beem")
-        self.assertEqual(op["to"], "test1")
+        self.assertEqual(op["to"], "beem1")
         amount = Amount(op["amount"], steem_instance=bts)
         self.assertEqual(float(amount), 1.33)
         bts.nobroadcast = True
@@ -135,7 +135,7 @@ class Testcases(unittest.TestCase):
         bts.wallet.unlock("123")
         acc = Account("beem", steem_instance=bts)
         tx = acc.transfer(
-            "test1", 1.33, "SBD", memo="#Foobar")
+            "beem1", 1.33, "SBD", memo="#Foobar")
         self.assertEqual(
             tx["operations"][0][0],
             "transfer"
@@ -148,7 +148,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual(memo, "Foobar")
 
         self.assertEqual(op["from"], "beem")
-        self.assertEqual(op["to"], "test1")
+        self.assertEqual(op["to"], "beem1")
         amount = Amount(op["amount"], steem_instance=bts)
         self.assertEqual(float(amount), 1.33)
         bts.nobroadcast = True
@@ -158,7 +158,7 @@ class Testcases(unittest.TestCase):
         steem.nobroadcast = False
         tx = TransactionBuilder(steem_instance=steem)
         tx.appendOps(Transfer(**{"from": 'beem',
-                                 "to": 'leprechaun',
+                                 "to": 'beem1',
                                  "amount": '0.01 SBD',
                                  "memo": '1 of 1 transaction'}))
         self.assertEqual(
@@ -173,70 +173,70 @@ class Testcases(unittest.TestCase):
         steem.nobroadcast = True
 
     def test_transfer_2of2_simple(self):
-        # Send a 2 of 2 transaction from elf which needs steemfiles's cosign to send funds
+        # Send a 2 of 2 transaction from elf which needs beem4's cosign to send funds
         steem = self.bts
         steem.nobroadcast = False
         tx = TransactionBuilder(steem_instance=steem)
-        tx.appendOps(Transfer(**{"from": 'elf',
-                                 "to": 'leprechaun',
+        tx.appendOps(Transfer(**{"from": 'beem5',
+                                 "to": 'beem1',
                                  "amount": '0.01 SBD',
                                  "memo": '2 of 2 simple transaction'}))
 
-        tx.appendWif(self.active_private_key_of_elf)
+        tx.appendWif(self.active_private_key_of_beem5)
         tx.sign()
         tx.clearWifs()
-        tx.appendWif(self.active_private_key_of_steemfiles)
+        tx.appendWif(self.active_private_key_of_beem4)
         tx.sign(reconstruct_tx=False)
         self.assertEqual(len(tx['signatures']), 2)
         tx.broadcast()
         steem.nobroadcast = True
 
     def test_transfer_2of2_wallet(self):
-        # Send a 2 of 2 transaction from elf which needs steemfiles's cosign to send
-        # priv key of elf and steemfiles are stored in the wallet
+        # Send a 2 of 2 transaction from elf which needs beem4's cosign to send
+        # priv key of elf and beem4 are stored in the wallet
         # appendSigner fetches both keys and signs automatically with both keys.
         steem = self.bts
         steem.nobroadcast = False
         steem.wallet.unlock("123")
 
         tx = TransactionBuilder(steem_instance=steem)
-        tx.appendOps(Transfer(**{"from": 'elf',
-                                 "to": 'leprechaun',
+        tx.appendOps(Transfer(**{"from": 'beem5',
+                                 "to": 'beem1',
                                  "amount": '0.01 SBD',
                                  "memo": '2 of 2 serialized/deserialized transaction'}))
 
-        tx.appendSigner("elf", "active")
+        tx.appendSigner("beem5", "active")
         tx.sign()
         self.assertEqual(len(tx['signatures']), 2)
         tx.broadcast()
         steem.nobroadcast = True
 
     def test_transfer_2of2_serialized_deserialized(self):
-        # Send a 2 of 2 transaction from elf which needs steemfiles's cosign to send
-        # funds but sign the transaction with elf's key and then serialize the transaction
-        # and deserialize the transaction.  After that, sign with steemfiles's key.
+        # Send a 2 of 2 transaction from beem5 which needs beem4's cosign to send
+        # funds but sign the transaction with beem5's key and then serialize the transaction
+        # and deserialize the transaction.  After that, sign with beem4's key.
         steem = self.bts
         steem.nobroadcast = False
         steem.wallet.unlock("123")
-        steem.wallet.removeAccount("steemfiles")
+        steem.wallet.removeAccount("beem4")
 
         tx = TransactionBuilder(steem_instance=steem)
-        tx.appendOps(Transfer(**{"from": 'elf',
-                                 "to": 'leprechaun',
+        tx.appendOps(Transfer(**{"from": 'beem5',
+                                 "to": 'beem1',
                                  "amount": '0.01 SBD',
                                  "memo": '2 of 2 serialized/deserialized transaction'}))
 
-        tx.appendSigner("elf", "active")
-        tx.addSigningInformation("elf", "active")
+        tx.appendSigner("beem5", "active")
+        tx.addSigningInformation("beem5", "active")
         tx.sign()
         tx.clearWifs()
         self.assertEqual(len(tx['signatures']), 1)
-        steem.wallet.removeAccount("elf")
+        steem.wallet.removeAccount("beem5")
         tx_json = tx.json()
         del tx
         new_tx = TransactionBuilder(tx=tx_json, steem_instance=steem)
         self.assertEqual(len(new_tx['signatures']), 1)
-        steem.wallet.addPrivateKey(self.active_private_key_of_steemfiles)
+        steem.wallet.addPrivateKey(self.active_private_key_of_beem4)
         new_tx.appendMissingSignatures()
         new_tx.sign(reconstruct_tx=False)
         self.assertEqual(len(new_tx['signatures']), 2)
@@ -244,54 +244,54 @@ class Testcases(unittest.TestCase):
         steem.nobroadcast = True
 
     def test_transfer_2of2_offline(self):
-        # Send a 2 of 2 transaction from elf which needs steemfiles's cosign to send
-        # funds but sign the transaction with elf's key and then serialize the transaction
-        # and deserialize the transaction.  After that, sign with steemfiles's key.
+        # Send a 2 of 2 transaction from beem5 which needs beem4's cosign to send
+        # funds but sign the transaction with beem5's key and then serialize the transaction
+        # and deserialize the transaction.  After that, sign with beem4's key.
         steem = self.bts
         steem.nobroadcast = False
         steem.wallet.unlock("123")
-        steem.wallet.removeAccount("steemfiles")
+        steem.wallet.removeAccount("beem4")
 
         tx = TransactionBuilder(steem_instance=steem)
-        tx.appendOps(Transfer(**{"from": 'elf',
-                                 "to": 'leprechaun',
+        tx.appendOps(Transfer(**{"from": 'beem5',
+                                 "to": 'beem',
                                  "amount": '0.01 SBD',
                                  "memo": '2 of 2 serialized/deserialized transaction'}))
 
-        tx.appendSigner("elf", "active")
-        tx.addSigningInformation("elf", "active")
+        tx.appendSigner("beem5", "active")
+        tx.addSigningInformation("beem5", "active")
         tx.sign()
         tx.clearWifs()
         self.assertEqual(len(tx['signatures']), 1)
-        steem.wallet.removeAccount("elf")
-        steem.wallet.addPrivateKey(self.active_private_key_of_steemfiles)
+        steem.wallet.removeAccount("beem5")
+        steem.wallet.addPrivateKey(self.active_private_key_of_beem4)
         tx.appendMissingSignatures()
         tx.sign(reconstruct_tx=False)
         self.assertEqual(len(tx['signatures']), 2)
         tx.broadcast()
         steem.nobroadcast = True
-        steem.wallet.addPrivateKey(self.active_private_key_of_elf)
+        steem.wallet.addPrivateKey(self.active_private_key_of_beem5)
 
     def test_transfer_2of2_wif(self):
         nodelist = NodeList()
-        # Send a 2 of 2 transaction from elf which needs steemfiles's cosign to send
+        # Send a 2 of 2 transaction from elf which needs beem4's cosign to send
         # funds but sign the transaction with elf's key and then serialize the transaction
-        # and deserialize the transaction.  After that, sign with steemfiles's key.
+        # and deserialize the transaction.  After that, sign with beem4's key.
         steem = Steem(
             node=nodelist.get_testnet(),
             num_retries=10,
-            keys=[self.active_private_key_of_elf],
+            keys=[self.active_private_key_of_beem5],
             expiration=360,
         )
 
         tx = TransactionBuilder(steem_instance=steem)
-        tx.appendOps(Transfer(**{"from": 'elf',
-                                 "to": 'leprechaun',
+        tx.appendOps(Transfer(**{"from": 'beem5',
+                                 "to": 'beem',
                                  "amount": '0.01 SBD',
                                  "memo": '2 of 2 serialized/deserialized transaction'}))
 
-        tx.appendSigner("elf", "active")
-        tx.addSigningInformation("elf", "active")
+        tx.appendSigner("beem5", "active")
+        tx.addSigningInformation("beem5", "active")
         tx.sign()
         tx.clearWifs()
         self.assertEqual(len(tx['signatures']), 1)
@@ -302,7 +302,7 @@ class Testcases(unittest.TestCase):
         steem = Steem(
             node=nodelist.get_testnet(),
             num_retries=10,
-            keys=[self.active_private_key_of_steemfiles],
+            keys=[self.active_private_key_of_beem4],
             expiration=360,
         )
         new_tx = TransactionBuilder(tx=tx_json, steem_instance=steem)
@@ -316,7 +316,7 @@ class Testcases(unittest.TestCase):
         stm.wallet.unlock("123")
         tx = TransactionBuilder(steem_instance=stm)
         tx.appendOps(Transfer(**{"from": "beem",
-                                 "to": "test1",
+                                 "to": "beem1",
                                  "amount": "1.33 STEEM",
                                  "memo": "Foobar"}))
         account = Account("beem", steem_instance=stm)
@@ -343,8 +343,8 @@ class Testcases(unittest.TestCase):
             memo_key=format(key4.pubkey, core_unit),
             additional_owner_keys=[format(key5.pubkey, core_unit)],
             additional_active_keys=[format(key5.pubkey, core_unit)],
-            additional_owner_accounts=["test1"],  # 1.2.0
-            additional_active_accounts=["test1"],
+            additional_owner_accounts=["beem1"],  # 1.2.0
+            additional_active_accounts=["beem1"],
             storekeys=False
         )
         self.assertEqual(
@@ -360,7 +360,7 @@ class Testcases(unittest.TestCase):
             format(key5.pubkey, core_unit),
             [x[0] for x in op[role]["key_auths"]])
         self.assertIn(
-            "test1",
+            "beem1",
             [x[0] for x in op[role]["account_auths"]])
         role = "owner"
         self.assertIn(
@@ -370,7 +370,7 @@ class Testcases(unittest.TestCase):
             format(key5.pubkey, core_unit),
             [x[0] for x in op[role]["key_auths"]])
         self.assertIn(
-            "test1",
+            "beem1",
             [x[0] for x in op[role]["account_auths"]])
         self.assertEqual(
             op["creator"],
@@ -403,9 +403,9 @@ class Testcases(unittest.TestCase):
         tx2 = bts.new_tx()
 
         acc = Account("beem", steem_instance=bts)
-        acc.transfer("test1", 1, "STEEM", append_to=tx1)
-        acc.transfer("test1", 2, "STEEM", append_to=tx2)
-        acc.transfer("test1", 3, "STEEM", append_to=tx1)
+        acc.transfer("beem1", 1, "STEEM", append_to=tx1)
+        acc.transfer("beem1", 2, "STEEM", append_to=tx2)
+        acc.transfer("beem1", 3, "STEEM", append_to=tx1)
         tx1 = tx1.json()
         tx2 = tx2.json()
         ops1 = tx1["operations"]
@@ -495,14 +495,14 @@ class Testcases(unittest.TestCase):
     def test_approvewitness(self):
         bts = self.bts
         w = Account("beem", steem_instance=bts)
-        tx = w.approvewitness("test1")
+        tx = w.approvewitness("beem1")
         self.assertEqual(
             (tx["operations"][0][0]),
             "account_witness_vote"
         )
         op = tx["operations"][0][1]
         self.assertIn(
-            "test1",
+            "beem1",
             op["witness"])
 
     def test_appendWif(self):
@@ -513,7 +513,7 @@ class Testcases(unittest.TestCase):
                     num_retries=10)
         tx = TransactionBuilder(steem_instance=stm)
         tx.appendOps(Transfer(**{"from": "beem",
-                                 "to": "test1",
+                                 "to": "beem1",
                                  "amount": Amount("1 STEEM", steem_instance=stm),
                                  "memo": ""}))
         with self.assertRaises(
@@ -537,7 +537,7 @@ class Testcases(unittest.TestCase):
                     num_retries=10)
         tx = TransactionBuilder(steem_instance=stm)
         tx.appendOps(Transfer(**{"from": "beem",
-                                 "to": "test1",
+                                 "to": "beem1",
                                  "amount": Amount("1 STEEM", steem_instance=stm),
                                  "memo": ""}))
         account = Account("beem", steem_instance=stm)
@@ -559,10 +559,10 @@ class Testcases(unittest.TestCase):
                     num_retries=10)
         tx = TransactionBuilder(steem_instance=stm)
         tx.appendOps(Transfer(**{"from": "beem",
-                                 "to": "test1",
+                                 "to": "beem1",
                                  "amount": Amount("1 STEEM", steem_instance=stm),
                                  "memo": ""}))
-        account = Account("test", steem_instance=stm)
+        account = Account("beem2", steem_instance=stm)
         tx.appendSigner(account, "active")
         tx.appendWif(self.posting_key)
         self.assertTrue(len(tx.wifs) > 0)
@@ -583,7 +583,7 @@ class Testcases(unittest.TestCase):
 
         tx = TransactionBuilder(expiration=10, steem_instance=stm)
         tx.appendOps(Transfer(**{"from": "beem",
-                                 "to": "test1",
+                                 "to": "beem1",
                                  "amount": Amount("1 STEEM", steem_instance=stm),
                                  "memo": ""}))
         tx.appendSigner("beem", "active")
@@ -593,7 +593,7 @@ class Testcases(unittest.TestCase):
     def test_TransactionConstructor(self):
         stm = self.bts
         opTransfer = Transfer(**{"from": "beem",
-                                 "to": "test1",
+                                 "to": "beem1",
                                  "amount": Amount("1 STEEM", steem_instance=stm),
                                  "memo": ""})
         tx1 = TransactionBuilder(steem_instance=stm)

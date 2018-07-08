@@ -1638,18 +1638,18 @@ def buy(amount, asset, price, account, orderid):
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    if not account:
+    if account is None:
         account = stm.config["default_account"]
     if asset == "SBD":
         market = Market(base=Asset("STEEM"), quote=Asset("SBD"), steem_instance=stm)
     else:
         market = Market(base=Asset("SBD"), quote=Asset("STEEM"), steem_instance=stm)
-    if not price:
+    if price is None:
         orderbook = market.orderbook(limit=1, raw_data=False)
         if asset == "STEEM" and len(orderbook["bids"]) > 0:
             p = Price(orderbook["bids"][0]["base"], orderbook["bids"][0]["quote"], steem_instance=stm).invert()
             p_show = p
-        else:
+        elif len(orderbook["asks"]) > 0:
             p = Price(orderbook["asks"][0]["base"], orderbook["asks"][0]["quote"], steem_instance=stm).invert()
             p_show = p
         price_ok = click.prompt("Is the following Price ok: %s [y/n]" % (str(p_show)))

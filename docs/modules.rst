@@ -27,6 +27,7 @@ beem Modules
    beem.message
    beem.notify
    beem.price
+   beem.snapshot
    beem.storage
    beem.transactionbuilder
    beem.utils

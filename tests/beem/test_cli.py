@@ -206,13 +206,14 @@ class Testcases(unittest.TestCase):
 
     def test_permissions(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['permissions', 'test'])
+        runner.invoke(cli, ['-o', 'set', 'nodes', str(self.nodelist.get_testnet())])
+        result = runner.invoke(cli, ['permissions', 'beem'])
         self.assertEqual(result.exit_code, 0)
 
     def test_follower(self):
         runner = CliRunner()
         runner.invoke(cli, ['-o', 'set', 'nodes', str(self.nodelist.get_testnet())])
-        result = runner.invoke(cli, ['follower', 'beem2'])
+        result = runner.invoke(cli, ['follower', 'beem1'])
         self.assertEqual(result.exit_code, 0)
 
     def test_following(self):
@@ -224,7 +225,7 @@ class Testcases(unittest.TestCase):
     def test_muter(self):
         runner = CliRunner()
         runner.invoke(cli, ['-o', 'set', 'nodes', str(self.nodelist.get_testnet())])
-        result = runner.invoke(cli, ['muter', 'beem2'])
+        result = runner.invoke(cli, ['muter', 'beem1'])
         self.assertEqual(result.exit_code, 0)
 
     def test_muting(self):
@@ -278,7 +279,7 @@ class Testcases(unittest.TestCase):
     def test_importaccount(self):
         runner = CliRunner()
         runner.invoke(cli, ['-o', 'set', 'nodes', str(self.nodelist.get_testnet())])
-        result = runner.invoke(cli, ['importaccount', '--roles', '["owner", "active", "posting", "memo"]', 'beem2'], input="test\ntest\n")
+        result = runner.invoke(cli, ['importaccount', '--roles', '["owner", "active", "posting", "memo"]', 'beem2'], input="test\numybjvCafrt8LdoCjEimQiQ4\n")
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['delkey', '--confirm', 'STX7mLs2hns87f7kbf3o2HBqNoEaXiTeeU89eVF6iUCrMQJFzBsPo'], input="test\n")
         self.assertEqual(result.exit_code, 0)
@@ -302,24 +303,28 @@ class Testcases(unittest.TestCase):
 
     def test_buy(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-d', 'buy', '1', 'STEEM', '2.2'], input="test\n")
+        runner.invoke(cli, ['-o', 'set', 'nodes', self.nodelist.get_nodes()])
+        result = runner.invoke(cli, ['-d', '-x', 'buy', '1', 'STEEM', '2.2'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-d', 'buy', '1', 'STEEM'], input="y\ntest\n")
+        result = runner.invoke(cli, ['-d', '-x', 'buy', '1', 'STEEM'], input="y\ntest\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-d', 'buy', '1', 'SBD', '2.2'], input="test\n")
+        result = runner.invoke(cli, ['-d', '-x', 'buy', '1', 'SBD', '2.2'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-d', 'buy', '1', 'SBD'], input="y\ntest\n")
+        result = runner.invoke(cli, ['-d', '-x', 'buy', '1', 'SBD'], input="y\ntest\n")
+        runner.invoke(cli, ['-o', 'set', 'nodes', str(self.nodelist.get_testnet())])
         self.assertEqual(result.exit_code, 0)
 
     def test_sell(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-d', 'sell', '1', 'STEEM', '2.2'], input="test\n")
+        runner.invoke(cli, ['-o', 'set', 'nodes', self.nodelist.get_nodes()])
+        result = runner.invoke(cli, ['-d', '-x', 'sell', '1', 'STEEM', '2.2'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-d', 'sell', '1', 'SBD', '2.2'], input="test\n")
+        result = runner.invoke(cli, ['-d', '-x', 'sell', '1', 'SBD', '2.2'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-d', 'sell', '1', 'STEEM'], input="y\ntest\n")
+        result = runner.invoke(cli, ['-d', '-x', 'sell', '1', 'STEEM'], input="y\ntest\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-d', 'sell', '1', 'SBD'], input="y\ntest\n")
+        result = runner.invoke(cli, ['-d', '-x', 'sell', '1', 'SBD'], input="y\ntest\n")
+        runner.invoke(cli, ['-o', 'set', 'nodes', str(self.nodelist.get_testnet())])
         self.assertEqual(result.exit_code, 0)
 
     def test_cancel(self):

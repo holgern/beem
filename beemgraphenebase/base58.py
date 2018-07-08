@@ -21,6 +21,7 @@ known_prefixes = [
     "BTS",
     "MUSE",
     "TEST",
+    "TST",
     "STM",
     "STX",
     "GLX",

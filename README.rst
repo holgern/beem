@@ -156,6 +156,13 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.47
+-------
+* Some bug fixes
+* Unit tests using testnet fixed
+* beem.snapshot improved
+* Example account_sp_over_time added
+
 0.19.46
 -------
 * Force refresh of chain_params on node switch
