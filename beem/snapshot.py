@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, date, time
 import math
 import random
 import logging
+from bisect import bisect_left
 from beem.utils import formatTimeString, formatTimedelta, remove_from_dict, reputation_to_score, addTzInfo, parse_time
 from beem.amount import Amount
 from beem.account import Account
@@ -44,29 +45,37 @@ class AccountSnapshot(list):
         self.ops_statistics = beembase.operationids.operations.copy()
         for key in self.ops_statistics:
             self.ops_statistics[key] = 0
+        self.reward_timestamps = []
+        self.author_rewards = []
+        self.curation_rewards = []
+        self.curation_per_1000_SP_timestamp = []
+        self.curation_per_1000_SP = []
 
-    def get_data(self, timestamp=None):
+    def get_data(self, timestamp=None, index=0):
         """ Returns snapshot for given timestamp"""
         if timestamp is None:
             timestamp = datetime.utcnow()
         timestamp = addTzInfo(timestamp)
-        for (ts, own, din, dout, steem, sbd) in zip(self.timestamps, self.own_vests,
-                                                    self.delegated_vests_in,
-                                                    self.delegated_vests_out,
-                                                    self.own_steem,
-                                                    self.own_sbd):
-            sum_in = sum([din[key].amount for key in din])
-            sum_out = sum([dout[key].amount for key in dout])
-            sp_in = self.steem.vests_to_sp(sum_in, timestamp=ts)
-            sp_out = self.steem.vests_to_sp(sum_out, timestamp=ts)
-            sp_own = self.steem.vests_to_sp(own, timestamp=ts)
-            sp_eff = sp_own + sp_in - sp_out
-            if timestamp < ts:
-                continue
-            else:
-                return {"timestamp": ts, "vests": own, "delegated_vests_in": din, "delegated_vests_out": dout,
-                        "sp_own": sp_own, "sp_eff": sp_eff, "steem": steem, "sbd": sbd}
-        return {}
+        # Find rightmost value less than x
+        i = bisect_left(self.timestamps, timestamp)
+        if i:
+            index = i - 1
+        else:
+            return {}
+        ts = self.timestamps[index]
+        own = self.own_vests[index]
+        din = self.delegated_vests_in[index]
+        dout = self.delegated_vests_out[index]
+        steem = self.own_steem[index]
+        sbd = self.own_sbd[index]
+        sum_in = sum([din[key].amount for key in din])
+        sum_out = sum([dout[key].amount for key in dout])
+        sp_in = self.steem.vests_to_sp(sum_in, timestamp=ts)
+        sp_out = self.steem.vests_to_sp(sum_out, timestamp=ts)
+        sp_own = self.steem.vests_to_sp(own, timestamp=ts)
+        sp_eff = sp_own + sp_in - sp_out
+        return {"timestamp": ts, "vests": own, "delegated_vests_in": din, "delegated_vests_out": dout,
+                "sp_own": sp_own, "sp_eff": sp_eff, "steem": steem, "sbd": sbd, "index": index}
 
     def get_account_history(self, start=None, stop=None, use_block_num=True):
         """ Uses account history to fetch all related ops
@@ -85,6 +94,11 @@ class AccountSnapshot(list):
                 for h in self.account.history(start=start, stop=stop, use_block_num=use_block_num)
             ]
         )
+
+    def update_rewards(self, timestamp, curation_reward, author_vests, author_steem, author_sbd):
+        self.reward_timestamps.append(timestamp)
+        self.curation_rewards.append(curation_reward)
+        self.author_rewards.append({"vests": author_vests, "steem": author_steem, "sbd": author_sbd})
 
     def update(self, timestamp, own, delegated_in=None, delegated_out=None, steem=0, sbd=0):
         """ Updates the internal state arrays
@@ -135,7 +149,7 @@ class AccountSnapshot(list):
 
         self.delegated_vests_out.append(new_deleg)
 
-    def build(self, only_ops=[], exclude_ops=[]):
+    def build(self, only_ops=[], exclude_ops=[], enable_rewards=False):
         """ Builds the account history based on all account operations
 
             :param array only_ops: Limit generator by these
@@ -263,18 +277,24 @@ class AccountSnapshot(list):
                 continue
 
             if op['type'] == "curation_reward":
-                if "curation_reward" in only_ops:
+                if "curation_reward" in only_ops or enable_rewards:
                     vests = Amount(op['reward'], steem_instance=self.steem)
+                if "curation_reward" in only_ops:
                     self.update(ts, vests, 0, 0)
+                if enable_rewards:
+                    self.update_rewards(ts, vests, 0, 0, 0)
                 continue
 
             if op['type'] == "author_reward":
-                if "author_reward" in only_ops:
+                if "author_reward" in only_ops or enable_rewards:
                     # print(op)
                     vests = Amount(op['vesting_payout'], steem_instance=self.steem)
                     steem = Amount(op['steem_payout'], steem_instance=self.steem)
                     sbd = Amount(op['sbd_payout'], steem_instance=self.steem)
+                if "author_reward" in only_ops:
                     self.update(ts, vests, 0, 0, steem, sbd)
+                if enable_rewards:
+                    self.update_rewards(ts, 0, vests, steem, sbd)
                 continue
 
             if op['type'] == "producer_reward":
@@ -330,6 +350,35 @@ class AccountSnapshot(list):
             sp_eff = sp_own + sp_in - sp_out
             self.own_sp.append(sp_own)
             self.eff_sp.append(sp_eff)
+
+    def build_curation_arrays(self, end_date=None, sum_days=7):
+        """ Build curation arrays"""
+        self.curation_per_1000_SP_timestamp = []
+        self.curation_per_1000_SP = []
+        if sum_days <= 0:
+            raise ValueError("sum_days must be greater than 0")
+        index = 0
+        curation_sum = 0
+        days = (self.reward_timestamps[-1] - self.reward_timestamps[0]).days // sum_days * sum_days
+        if end_date is None:
+            end_date = self.reward_timestamps[-1] - timedelta(days=days)
+        for (ts, vests) in zip(self.reward_timestamps, self.curation_rewards):
+            if vests == 0:
+                continue
+            sp = self.steem.vests_to_sp(vests, timestamp=ts)
+            data = self.get_data(timestamp=ts, index=index)
+            index = data["index"]
+            if "sp_eff" in data and data["sp_eff"] > 0:
+                curation_1k_sp = sp / data["sp_eff"] * 1000 / sum_days * 7
+            else:
+                curation_1k_sp = 0
+            if ts < end_date:
+                curation_sum += curation_1k_sp
+            else:
+                self.curation_per_1000_SP_timestamp.append(end_date)
+                self.curation_per_1000_SP.append(curation_sum)
+                end_date = end_date + timedelta(days=sum_days)
+                curation_sum = 0
 
     def __str__(self):
         return self.__repr__()
