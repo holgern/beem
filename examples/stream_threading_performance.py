@@ -47,7 +47,7 @@ if __name__ == "__main__":
     stm_https = Steem(node=node_list_https, timeout=timeout)
     print("Without threading wss")
     opcount_wot_wss, total_duration_wot_wss = stream_votes(stm_wss, False, 8)
-    print("Without threading wss")
+    print("Without threading https")
     opcount_wot_https, total_duration_wot_https = stream_votes(stm_https, False, 8)
     if threading:
         print("\n Threading with %d threads is activated now." % thread_num)

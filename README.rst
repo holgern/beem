@@ -162,6 +162,8 @@ Changelog
 * Unit tests using testnet fixed
 * beem.snapshot improved
 * Example account_sp_over_time added
+* Example account_curation_per_week_and_1k_sp added
+* Add block_number check to wait_for_and_get_block
 
 0.19.46
 -------

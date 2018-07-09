@@ -405,6 +405,7 @@ class Blockchain(object):
                                                 num_retries_call=self.steem.rpc.num_retries_call,
                                                 timeout=self.steem.rpc.timeout))
         # We are going to loop indefinitely
+        latest_block = 0
         while True:
 
             # Get chain properies to identify the
@@ -547,7 +548,7 @@ class Blockchain(object):
                 # Blocks from start until head block
                 for blocknum in range(start, head_block + 1):
                     # Get full block
-                    block = self.wait_for_and_get_block(blocknum, only_ops=only_ops, only_virtual_ops=only_virtual_ops)
+                    block = self.wait_for_and_get_block(blocknum, only_ops=only_ops, only_virtual_ops=only_virtual_ops, block_number_check_cnt=5)
                     yield block
             # Set new start
             start = head_block + 1
@@ -560,7 +561,7 @@ class Blockchain(object):
             # Sleep for one block
             time.sleep(self.block_interval)
 
-    def wait_for_and_get_block(self, block_number, blocks_waiting_for=None, only_ops=False, only_virtual_ops=False):
+    def wait_for_and_get_block(self, block_number, blocks_waiting_for=None, only_ops=False, only_virtual_ops=False, block_number_check_cnt=-1):
         """ Get the desired block from the chain, if the current head block is smaller (for both head and irreversible)
             then we wait, but a maxmimum of blocks_waiting_for * max_block_wait_repetition time before failure.
 
@@ -569,6 +570,7 @@ class Blockchain(object):
                 how many blocks we are willing to wait, positive int (default: None)
             :param bool only_ops: Returns blocks with operations only, when set to True (default: False)
             :param bool only_virtual_ops: Includes only virtual operations (default: False)
+            :param int block_number_check_cnt: limit the number of retries when greater than -1
 
         """
         if not blocks_waiting_for:
@@ -584,10 +586,12 @@ class Blockchain(object):
                     raise BlockWaitTimeExceeded("Already waited %d s" % (blocks_waiting_for * self.max_block_wait_repetition * self.block_interval))
         # block has to be returned properly
         repetition = 0
+        cnt = 0
         block = None
-        while not block:
+        while (block is None or block.block_num is None or int(block.block_num) != block_number) and (block_number_check_cnt < 0 or cnt < block_number_check_cnt):
             try:
                 block = Block(block_number, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
+                cnt += 1
             except BlockDoesNotExistsException:
                 block = None
                 if repetition > blocks_waiting_for * self.max_block_wait_repetition:
