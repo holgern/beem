@@ -60,7 +60,7 @@ class Amount(dict):
             2.000 STEEM
 
     """
-    def __init__(self, amount, asset=None, new_appbase_format=False, steem_instance=None):
+    def __init__(self, amount, asset=None, new_appbase_format=True, steem_instance=None):
         self["asset"] = {}
         self.new_appbase_format = new_appbase_format
         self.steem = steem_instance or shared_steem_instance()

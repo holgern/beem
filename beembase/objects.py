@@ -50,12 +50,17 @@ class Amount(object):
             self.precision = d[1]
             a = Array([String(d[0]), d[1], d[2]])
             self.str_repr = str(a.__str__())
+        elif isinstance(d, dict) and "nai" in d:
+            self.amount = d["amount"]
+            self.asset = d["nai"]
+            self.precision = d["precision"]
+            self.str_repr = json.dumps(d)
         else:
             self.amount = d.amount
             self.asset = d.symbol
             self.precision = d.asset["precision"]
             self.amount = int(float(self.amount) * 10 ** self.precision)
-            self.str_repr = json.dumps((d.json()))
+            self.str_repr = str(d)  # json.dumps((d.json()))
 
     def __bytes__(self):
         # padding
