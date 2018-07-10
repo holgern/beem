@@ -186,21 +186,21 @@ class Testcases(unittest.TestCase):
         )
         op = tx["operations"][0][1]
         self.assertIn("test", op["owner"])
-        self.assertEqual(Amount('0.100 STEEM', steem_instance=bts).json(), op["min_to_receive"])
-        self.assertEqual(Amount('0.500 SBD', steem_instance=bts).json(), op["amount_to_sell"])
+        self.assertEqual(str(Amount('0.100 STEEM', steem_instance=bts)), op["min_to_receive"])
+        self.assertEqual(str(Amount('0.500 SBD', steem_instance=bts)), op["amount_to_sell"])
 
         p = Price(5, u"SBD:STEEM", steem_instance=bts)
         tx = m.buy(p, 0.1, account="test")
         op = tx["operations"][0][1]
-        self.assertEqual(Amount('0.100 STEEM', steem_instance=bts).json(), op["min_to_receive"])
-        self.assertEqual(Amount('0.500 SBD', steem_instance=bts).json(), op["amount_to_sell"])
+        self.assertEqual(str(Amount('0.100 STEEM', steem_instance=bts)), op["min_to_receive"])
+        self.assertEqual(str(Amount('0.500 SBD', steem_instance=bts)), op["amount_to_sell"])
 
         p = Price(5, u"SBD:STEEM", steem_instance=bts)
         a = Amount(0.1, "STEEM", steem_instance=bts)
         tx = m.buy(p, a, account="test")
         op = tx["operations"][0][1]
-        self.assertEqual(a.json(), op["min_to_receive"])
-        self.assertEqual(Amount('0.500 SBD', steem_instance=bts).json(), op["amount_to_sell"])
+        self.assertEqual(str(a), op["min_to_receive"])
+        self.assertEqual(str(Amount('0.500 SBD', steem_instance=bts)), op["amount_to_sell"])
 
     @parameterized.expand([
         ("non_appbase"),
@@ -220,21 +220,21 @@ class Testcases(unittest.TestCase):
         )
         op = tx["operations"][0][1]
         self.assertIn("test", op["owner"])
-        self.assertEqual(Amount('0.500 SBD', steem_instance=bts).json(), op["min_to_receive"])
-        self.assertEqual(Amount('0.100 STEEM', steem_instance=bts).json(), op["amount_to_sell"])
+        self.assertEqual(str(Amount('0.500 SBD', steem_instance=bts)), op["min_to_receive"])
+        self.assertEqual(str(Amount('0.100 STEEM', steem_instance=bts)), op["amount_to_sell"])
 
         p = Price(5, u"SBD:STEEM")
         tx = m.sell(p, 0.1, account="test")
         op = tx["operations"][0][1]
-        self.assertEqual(Amount('0.500 SBD', steem_instance=bts).json(), op["min_to_receive"])
-        self.assertEqual(Amount('0.100 STEEM', steem_instance=bts).json(), op["amount_to_sell"])
+        self.assertEqual(str(Amount('0.500 SBD', steem_instance=bts)), op["min_to_receive"])
+        self.assertEqual(str(Amount('0.100 STEEM', steem_instance=bts)), op["amount_to_sell"])
 
         p = Price(5, u"SBD:STEEM", steem_instance=bts)
         a = Amount(0.1, "STEEM", steem_instance=bts)
         tx = m.sell(p, a, account="test")
         op = tx["operations"][0][1]
-        self.assertEqual(Amount('0.500 SBD', steem_instance=bts).json(), op["min_to_receive"])
-        self.assertEqual(Amount('0.100 STEEM', steem_instance=bts).json(), op["amount_to_sell"])
+        self.assertEqual(str(Amount('0.500 SBD', steem_instance=bts)), op["min_to_receive"])
+        self.assertEqual(str(Amount('0.100 STEEM', steem_instance=bts)), op["amount_to_sell"])
 
     @parameterized.expand([
         ("non_appbase"),

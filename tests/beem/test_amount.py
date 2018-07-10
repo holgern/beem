@@ -124,7 +124,7 @@ class Testcases(unittest.TestCase):
 
     def test_json_appbase(self):
         asset = Asset("SBD", steem_instance=self.appbase)
-        amount = Amount("1", asset, steem_instance=self.appbase)
+        amount = Amount("1", asset, new_appbase_format=False, steem_instance=self.appbase)
         self.assertEqual(
             amount.json(),
             [str(1 * 10 ** asset.precision), asset.precision, asset.asset])
