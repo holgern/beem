@@ -66,6 +66,7 @@ class TransactionBuilder(dict):
             self._require_reconstruction = False
         else:
             self._require_reconstruction = True
+        self._use_condenser_api = True
         self.set_expiration(kwargs.get("expiration", self.steem.expiration))
 
     def set_expiration(self, p):
@@ -80,7 +81,7 @@ class TransactionBuilder(dict):
         """List all ops"""
         if self.steem.is_connected() and self.steem.rpc.get_use_appbase():
             # appbase disabled by now
-            appbase = False
+            appbase = not self._use_condenser_api
         else:
             appbase = False
         return [Operation(o, appbase=appbase) for o in self.ops]
@@ -238,7 +239,7 @@ class TransactionBuilder(dict):
         if self.steem.is_connected() and self.steem.rpc.get_use_appbase():
             # appbase disabled by now
             # broadcasting does not work at the moment
-            appbase = False
+            appbase = not self._use_condenser_api
         else:
             appbase = False
         for op in self.ops:
@@ -381,9 +382,12 @@ class TransactionBuilder(dict):
         ret = self.json()
         if self.steem.is_connected() and self.steem.rpc.get_use_appbase():
             # Returns an internal Error at the moment
-            # args = {'trx': self.json(), 'max_block_age': max_block_age}
-            args = self.json()
-            broadcast_api = "condenser"
+            if not self._use_condenser_api:
+                args = {'trx': self.json(), 'max_block_age': max_block_age}
+                broadcast_api = "network_broadcast"
+            else:
+                args = self.json()
+                broadcast_api = "condenser"
         else:
             args = self.json()
             broadcast_api = "network_broadcast"

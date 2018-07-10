@@ -3,7 +3,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import unittest
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from beem.utils import (
     formatTimedelta,
     assets_from_string,
@@ -15,7 +15,10 @@ from beem.utils import (
     derive_permlink,
     resolve_root_identifier,
     make_patch,
-    remove_from_dict
+    remove_from_dict,
+    formatToTimeStamp,
+    formatTimeString,
+    addTzInfo
 )
 
 
@@ -77,3 +80,21 @@ class Testcases(unittest.TestCase):
         self.assertEqual(remove_from_dict(b, ['a'], keep_keys=False), {'b': 2})
         self.assertEqual(remove_from_dict(b, [], keep_keys=True), {})
         self.assertEqual(remove_from_dict(a, ['a', 'b'], keep_keys=False), {})
+
+    def test_formatDateTimetoTimeStamp(self):
+        t = "1970-01-01T00:00:00"
+        t = formatTimeString(t)
+        timestamp = formatToTimeStamp(t)
+        self.assertEqual(timestamp, 0)
+        t2 = "2018-07-10T10:08:39"
+        timestamp = formatToTimeStamp(t2)
+        self.assertEqual(timestamp, 1531217319)
+        t3 = datetime(2018, 7, 10, 10, 8, 39)
+        timestamp = formatToTimeStamp(t3)
+        self.assertEqual(timestamp, 1531217319)
+
+    def test_formatTimeString(self):
+        t = "2018-07-10T10:08:39"
+        t = formatTimeString(t)
+        t2 = addTzInfo(datetime(2018, 7, 10, 10, 8, 39))
+        self.assertEqual(t, t2)

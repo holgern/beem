@@ -30,7 +30,7 @@ from .exceptions import (
 from .wallet import Wallet
 from .steemconnect import SteemConnect
 from .transactionbuilder import TransactionBuilder
-from .utils import formatTime, resolve_authorperm, derive_permlink, remove_from_dict, addTzInfo
+from .utils import formatTime, resolve_authorperm, derive_permlink, remove_from_dict, addTzInfo, formatToTimeStamp
 from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_100_PERCENT, STEEM_1_PERCENT
 
 log = logging.getLogger(__name__)
@@ -452,9 +452,7 @@ class Steem(object):
         """
         if time_stamp is not None:
             if isinstance(time_stamp, (datetime, date)):
-                time_stamp = addTzInfo(time_stamp)
-                epoch = addTzInfo(datetime(1970, 1, 1))
-                time_stamp = (time_stamp - epoch) // timedelta(seconds=1)
+                time_stamp = formatToTimeStamp(time_stamp)
             a = 2.1325476281078992e-05
             b = -31099.685481490847
             a2 = 2.9019227739473682e-07

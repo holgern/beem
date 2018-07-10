@@ -28,21 +28,34 @@ def formatTime(t):
         return t.strftime("%Y%m%dt%H%M%S%Z")
 
 
-def formatTimeString(t):
-    """ Properly Format Time for permlinks
-    """
-    if isinstance(t, (datetime, date, time)):
-        return t.strftime(timeFormat)
-    utc = pytz.timezone('UTC')
-    return utc.localize(datetime.strptime(t, timeFormat))
-
-
 def addTzInfo(t, timezone='UTC'):
     """Returns a datetime object with tzinfo added"""
     if t and isinstance(t, (datetime, date, time)) and t.tzinfo is None:
         utc = pytz.timezone(timezone)
         t = utc.localize(t)
     return t
+
+
+def formatTimeString(t):
+    """ Properly Format Time for permlinks
+    """
+    if isinstance(t, (datetime, date, time)):
+        return t.strftime(timeFormat)
+    return addTzInfo(datetime.strptime(t, timeFormat))
+
+
+def formatToTimeStamp(t):
+    """ Retuns a timestamp integer
+
+        :param datetime t: datetime object
+        :return: Timestamp as integer
+    """
+    if isinstance(t, (datetime, date, time)):
+        t = addTzInfo(t)
+    else:
+        t = formatTimeString(t)
+    epoch = addTzInfo(datetime(1970, 1, 1))
+    return (t - epoch) // timedelta(seconds=1)
 
 
 def formatTimeFromNow(secs=0):

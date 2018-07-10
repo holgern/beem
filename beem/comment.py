@@ -14,7 +14,7 @@ from .instance import shared_steem_instance
 from .account import Account
 from .amount import Amount
 from .price import Price
-from .utils import resolve_authorperm, construct_authorperm, derive_permlink, remove_from_dict, make_patch, formatTimeString
+from .utils import resolve_authorperm, construct_authorperm, derive_permlink, remove_from_dict, make_patch, formatTimeString, formatToTimeStamp
 from .blockchainobject import BlockchainObject
 from .exceptions import ContentDoesNotExistsException, VotingInvalidOnArchivedPost
 from beembase import operations
@@ -551,8 +551,10 @@ class Comment(BlockchainObject):
             :param str voter: (optional) Voting account
 
         """
-        if self.get('net_rshares', None) is None:
-            raise VotingInvalidOnArchivedPost
+        last_payout = self.get('last_payout', None)
+        if last_payout is not None:
+            if formatToTimeStamp(last_payout) > 0:
+                raise VotingInvalidOnArchivedPost
         return self.vote(weight, account=voter)
 
     def downvote(self, weight=-100, voter=None):
@@ -563,8 +565,10 @@ class Comment(BlockchainObject):
             :param str voter: (optional) Voting account
 
         """
-        if self.get('net_rshares', None) is None:
-            raise VotingInvalidOnArchivedPost
+        last_payout = self.get('last_payout', None)
+        if last_payout is not None:
+            if formatToTimeStamp(last_payout) > 0:
+                raise VotingInvalidOnArchivedPost
         return self.vote(weight, account=voter)
 
     def vote(self, weight, account=None, identifier=None, **kwargs):
