@@ -156,6 +156,12 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.48
+-------
+* Fix issue #45 (upvote() and downvote() of a pending post/comment without vote did not work)
+* fix Amount for condenser broadcast ops on appbase nodes (fixes transfer broadcast for example)
+* Added get_all_replies() to Comment for fetching all replies to a post
+
 0.19.47
 -------
 * Some bug fixes

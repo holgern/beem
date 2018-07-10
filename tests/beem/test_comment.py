@@ -38,7 +38,7 @@ class Testcases(unittest.TestCase):
             num_retries=10
         )
         acc = Account("holger80", steem_instance=cls.bts)
-        comment = acc.get_blog(limit=20)[-1]
+        comment = acc.get_feed(limit=20)[-1]
         cls.authorperm = comment.authorperm
         [author, permlink] = resolve_authorperm(cls.authorperm)
         cls.author = author
@@ -63,7 +63,16 @@ class Testcases(unittest.TestCase):
             exceptions.ContentDoesNotExistsException
         ):
             Comment("@abcdef/abcdef", steem_instance=bts)
-        c = Comment(self.authorperm, steem_instance=bts)
+        title = ''
+        cnt = 0
+        while title == '' and cnt < 5:
+            c = Comment(self.authorperm, steem_instance=bts)
+            title = c.title
+            cnt += 1
+            if title == '':
+                c.steem.rpc.next()
+                c.refresh()
+                title = c.title
         self.assertTrue(isinstance(c.id, int))
         self.assertTrue(c.id > 0)
         self.assertEqual(c.author, self.author)
@@ -97,8 +106,18 @@ class Testcases(unittest.TestCase):
             bts = self.bts
         else:
             bts = self.appbase
-        c = Comment({'author': self.author, 'permlink': self.permlink}, steem_instance=bts)
-        c.refresh()
+        title = ''
+        cnt = 0
+        while title == '' and cnt < 5:
+            c = Comment({'author': self.author, 'permlink': self.permlink}, steem_instance=bts)
+            c.refresh()
+            title = c.title
+            cnt += 1
+            if title == '':
+                c.steem.rpc.next()
+                c.refresh()
+                title = c.title
+
         self.assertEqual(c.author, self.author)
         self.assertEqual(c.permlink, self.permlink)
         self.assertEqual(c.authorperm, self.authorperm)

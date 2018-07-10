@@ -516,7 +516,7 @@ class Comment(BlockchainObject):
             return self.steem.rpc.get_reblogged_by(post_author, post_permlink, api="follow")
 
     def get_replies(self, raw_data=False, identifier=None):
-        """ Returns all content replies
+        """ Returns content replies
 
             :param bool raw_data: When set to False, the replies will be returned as Comment class objects
         """
@@ -535,6 +535,20 @@ class Comment(BlockchainObject):
         if raw_data:
             return content_replies
         return [Comment(c, steem_instance=self.steem) for c in content_replies]
+
+    def get_all_replies(self, parent=None):
+        """ Returns all content replies
+        """
+        if parent is None:
+            parent = self
+        if parent["children"] > 0:
+            children = parent.get_replies()
+            if children is None:
+                return []
+            for cc in children[:]:
+                children.extend(self.get_all_replies(parent=cc))
+            return children
+        return []
 
     def get_votes(self, raw_data=False):
         """Returns all votes as ActiveVotes object"""
