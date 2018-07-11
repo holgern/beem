@@ -5,6 +5,8 @@ from __future__ import unicode_literals
 from builtins import super
 import unittest
 from parameterized import parameterized
+import pytz
+from datetime import datetime, timedelta
 from pprint import pprint
 from beem import Steem, exceptions
 from beem.comment import Comment
@@ -40,10 +42,17 @@ class Testcases(unittest.TestCase):
         cls.bts.set_default_account("test")
 
         acc = Account("holger80", steem_instance=cls.bts)
-        votes = acc.get_account_votes()
-        last_vote = votes[-1]
+        n_votes = 0
+        index = 0
+        while n_votes == 0:
+            comment = acc.get_feed(limit=30)[::-1][index]
+            votes = comment.get_votes()
+            n_votes = len(votes)
+            index += 1
 
-        cls.authorpermvoter = '@' + last_vote['authorperm'] + '|' + acc["name"]
+        last_vote = votes[0]
+
+        cls.authorpermvoter = construct_authorpermvoter(last_vote['author'], last_vote['permlink'], last_vote["voter"])
         [author, permlink, voter] = resolve_authorpermvoter(cls.authorpermvoter)
         cls.author = author
         cls.permlink = permlink
@@ -140,6 +149,8 @@ class Testcases(unittest.TestCase):
             bts = self.bts
         else:
             bts = self.appbase
-        votes = AccountVotes(self.author, steem_instance=bts)
+        utc = pytz.timezone('UTC')
+        limit_time = utc.localize(datetime.utcnow()) - timedelta(days=7)
+        votes = AccountVotes(self.author, start=limit_time, steem_instance=bts)
         self.assertTrue(len(votes) > 0)
         self.assertTrue(isinstance(votes[0], Vote))
