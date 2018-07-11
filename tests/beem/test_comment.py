@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from builtins import super
+from builtins import super, str
 import unittest
 from parameterized import parameterized
 from pprint import pprint
@@ -186,6 +186,8 @@ class Testcases(unittest.TestCase):
             if k not in exclude_list:
                 if isinstance(content[k], dict) and isinstance(json_content[k], list):
                     self.assertEqual(list(content[k].values()), json_content[k])
+                elif isinstance(content[k], str) and isinstance(json_content[k], str):
+                    self.assertEqual(content[k].encode('utf-8'), json_content[k].encode('utf-8'))
                 else:
                     self.assertEqual(content[k], json_content[k])
 
