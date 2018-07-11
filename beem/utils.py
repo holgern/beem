@@ -55,7 +55,7 @@ def formatToTimeStamp(t):
     else:
         t = formatTimeString(t)
     epoch = addTzInfo(datetime(1970, 1, 1))
-    return (t - epoch) // timedelta(seconds=1)
+    return int((t - epoch).total_seconds())
 
 
 def formatTimeFromNow(secs=0):
