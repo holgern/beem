@@ -2730,7 +2730,10 @@ def pending(accounts, only_sum, post, comment, curation, length, author, permlin
 @click.option('--reward_steem', help='Amount of STEEM you would like to claim', default="0 STEEM")
 @click.option('--reward_sbd', help='Amount of SBD you would like to claim', default="0 SBD")
 @click.option('--reward_vests', help='Amount of VESTS you would like to claim', default="0 VESTS")
-def claimreward(account, reward_steem, reward_sbd, reward_vests):
+@click.option('--claim_all_steem', help='Claim all STEEM, overwrites reward_steem', is_flag=True)
+@click.option('--claim_all_sbd', help='Claim all SBD, overwrites reward_sbd', is_flag=True)
+@click.option('--claim_all_vests', help='Claim all VESTS, overwrites reward_vests', is_flag=True)
+def claimreward(account, reward_steem, reward_sbd, reward_vests, claim_all_steem, claim_all_sbd, claim_all_vests):
     """Claim reward balances
 
         By default, this will claim ``all`` outstanding balances.
@@ -2747,6 +2750,12 @@ def claimreward(account, reward_steem, reward_sbd, reward_vests):
         return
     if not unlock_wallet(stm):
         return
+    if claim_all_steem:
+        reward_steem = r[0]
+    if claim_all_sbd:
+        reward_sbd = r[1]
+    if claim_all_vests:
+        reward_vests = r[2]
 
     tx = acc.claim_reward_balance(reward_steem, reward_sbd, reward_vests)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:

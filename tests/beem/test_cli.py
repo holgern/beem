@@ -381,6 +381,9 @@ class Testcases(unittest.TestCase):
     def test_claimreward(self):
         runner = CliRunner()
         result = runner.invoke(cli, ['-d', 'claimreward'], input="test\n")
+        result = runner.invoke(cli, ['-d', 'claimreward', '--claim_all_steem'], input="test\n")
+        result = runner.invoke(cli, ['-d', 'claimreward', '--claim_all_sbd'], input="test\n")
+        result = runner.invoke(cli, ['-d', 'claimreward', '--claim_all_vests'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_power(self):

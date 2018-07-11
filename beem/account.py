@@ -2056,12 +2056,8 @@ class Account(BlockchainObject):
             to = self  # powerup on the same account
         else:
             to = Account(to, steem_instance=self.steem)
-        if isinstance(amount, (string_types, Amount)):
-            amount = Amount(amount, steem_instance=self.steem)
-        else:
-            amount = Amount(amount, "STEEM", steem_instance=self.steem)
-        if not amount["symbol"] == "STEEM":
-            raise AssertionError()
+        amount = self._check_amount(amount, "STEEM")
+
         to = Account(to, steem_instance=self.steem)
 
         op = operations.Transfer_to_vesting(**{
@@ -2086,12 +2082,7 @@ class Account(BlockchainObject):
             account = self
         else:
             account = Account(account, steem_instance=self.steem)
-        if isinstance(amount, (string_types, Amount)):
-            amount = Amount(amount, steem_instance=self.steem)
-        else:
-            amount = Amount(amount, "SBD", steem_instance=self.steem)
-        if not amount["symbol"] == "SBD":
-            raise AssertionError()
+        amount = self._check_amount(amount, "SBD")
         if request_id:
             request_id = int(request_id)
         else:
@@ -2210,6 +2201,17 @@ class Account(BlockchainObject):
         })
         return self.steem.finalizeOp(op, account, "active", **kwargs)
 
+    def _check_amount(self, amount, symbol):
+        if isinstance(amount, (float, integer_types)):
+            amount = Amount(amount, symbol, steem_instance=self.steem)
+        elif isinstance(amount, string_types) and amount.replace('.', '', 1).replace(',', '', 1).isdigit():
+            amount = Amount(float(amount), symbol, steem_instance=self.steem)
+        else:
+            amount = Amount(amount, steem_instance=self.steem)
+        if not amount["symbol"] == symbol:
+            raise AssertionError()
+        return amount
+
     def claim_reward_balance(self,
                              reward_steem='0 STEEM',
                              reward_sbd='0 SBD',
@@ -2236,26 +2238,11 @@ class Account(BlockchainObject):
 
         # if no values were set by user, claim all outstanding balances on
         # account
-        if isinstance(reward_steem, (string_types, Amount)):
-            reward_steem = Amount(reward_steem, steem_instance=self.steem)
-        else:
-            reward_steem = Amount(reward_steem, "STEEM", steem_instance=self.steem)
-        if not reward_steem["symbol"] == "STEEM":
-            raise AssertionError()
 
-        if isinstance(reward_sbd, (string_types, Amount)):
-            reward_sbd = Amount(reward_sbd, steem_instance=self.steem)
-        else:
-            reward_sbd = Amount(reward_sbd, "SBD", steem_instance=self.steem)
-        if not reward_sbd["symbol"] == "SBD":
-            raise AssertionError()
+        reward_steem = self._check_amount(reward_steem, "STEEM")
+        reward_sbd = self._check_amount(reward_sbd, "SBD")
+        reward_vests = self._check_amount(reward_vests, "VESTS")
 
-        if isinstance(reward_vests, (string_types, Amount)):
-            reward_vests = Amount(reward_vests, steem_instance=self.steem)
-        else:
-            reward_vests = Amount(reward_vests, "VESTS", steem_instance=self.steem)
-        if not reward_vests["symbol"] == "VESTS":
-            raise AssertionError()
         if reward_steem.amount == 0 and reward_sbd.amount == 0 and reward_vests.amount == 0:
             reward_steem = account.balances["rewards"][0]
             reward_sbd = account.balances["rewards"][1]
@@ -2289,12 +2276,8 @@ class Account(BlockchainObject):
         to_account = Account(to_account, steem_instance=self.steem)
         if to_account is None:
             raise ValueError("You need to provide a to_account")
-        if isinstance(vesting_shares, (string_types, Amount)):
-            vesting_shares = Amount(vesting_shares, steem_instance=self.steem)
-        else:
-            vesting_shares = Amount(vesting_shares, "VESTS", steem_instance=self.steem)
-        if not vesting_shares["symbol"] == "VESTS":
-            raise AssertionError()
+        vesting_shares = self._check_amount(vesting_shares, "VESTS")
+
         op = operations.Delegate_vesting_shares(
             **{
                 "delegator": account["name"],
@@ -2317,12 +2300,8 @@ class Account(BlockchainObject):
             account = self
         else:
             account = Account(account, steem_instance=self.steem)
-        if isinstance(amount, (string_types, Amount)):
-            amount = Amount(amount, steem_instance=self.steem)
-        else:
-            amount = Amount(amount, "VESTS", steem_instance=self.steem)
-        if not amount["symbol"] == "VESTS":
-            raise AssertionError()
+        amount = self._check_amount(amount, "VESTS")
+
         op = operations.Withdraw_vesting(
             **{
                 "account": account["name"],
