@@ -11,7 +11,7 @@ scrypt==0.8.6
 Events==0.3
 secp256k1==0.13.2
 cryptography==2.2.2
-pyyaml==3.12
+pyyaml==3.13
 mock==2.0.0
 appdirs==1.4.3
 Click==6.7
