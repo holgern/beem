@@ -21,26 +21,18 @@ if __name__ == "__main__":
         account = sys.argv[1]
     acc_snapshot = AccountSnapshot(account)
     acc_snapshot.get_account_history()
-    acc_snapshot.build()
-    # acc_snapshot.build(only_ops=["producer_reward"])
-    # acc_snapshot.build(only_ops=["curation_reward"])
-    # acc_snapshot.build(only_ops=["author_reward"])
-    acc_snapshot.build_sp_arrays()
-    timestamps = acc_snapshot.timestamps
-    own_sp = acc_snapshot.own_sp
-    eff_sp = acc_snapshot.eff_sp
-
+    acc_snapshot.build(enable_votes=True)
+    acc_snapshot.build_vp_arrays()
+    timestamps = acc_snapshot.vp_timestamp
+    vp = acc_snapshot.vp
     plt.figure(figsize=(12, 6))
     opts = {'linestyle': '-', 'marker': '.'}
-    plt.plot_date(timestamps[1:], own_sp[1:], label="Own SP", **opts)
-    plt.plot_date(timestamps[1:], eff_sp[1:], label="Effective SP", **opts)
+    plt.plot_date(timestamps, vp, label="Voting power", **opts)
     plt.grid()
     plt.legend()
-    plt.title("SP over time - @%s" % (account))
+    plt.title("Voting power over time - @%s" % (account))
     plt.xlabel("Date")
-    plt.ylabel("SteemPower (SP)")
+    plt.ylabel("Voting power over time")
     # plt.show()
-    plt.savefig("sp_over_time-%s.png" % (account))
-
-    print("last effective SP: %.1f SP" % (eff_sp[-1]))
-    print("last own SP: %.1f SP" % (own_sp[-1]))
+    plt.savefig("voting-power-%s.png" % (account))
+    print("last voting power %d" % (vp[-1]))

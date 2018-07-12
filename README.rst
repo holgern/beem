@@ -161,6 +161,11 @@ Changelog
 * Fix issue #45 (upvote() and downvote() of a pending post/comment without vote did not work)
 * fix Amount for condenser broadcast ops on appbase nodes (fixes transfer broadcast for example)
 * Added get_all_replies() to Comment for fetching all replies to a post
+* bemepy claimreward improved
+* Amount handling in Account improved
+* upvote and downvote in beempy fixed
+* update_vote and build_vp_arrays added to AccountSnapshot for showing vote power history
+* account_vp_over_time added to examples
 
 0.19.47
 -------

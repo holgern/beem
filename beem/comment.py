@@ -608,7 +608,7 @@ class Comment(BlockchainObject):
         else:
             [post_author, post_permlink] = resolve_authorperm(identifier)
 
-        vote_weight = int(weight * STEEM_1_PERCENT)
+        vote_weight = int(float(weight) * STEEM_1_PERCENT)
         if vote_weight > STEEM_100_PERCENT:
             vote_weight = STEEM_100_PERCENT
         if vote_weight < -STEEM_100_PERCENT:

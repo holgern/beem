@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from builtins import bytes, int, str
 import pytz
 import json
+import re
 from datetime import datetime, timedelta, date, time
 import math
 import random
@@ -15,6 +16,7 @@ from beem.utils import formatTimeString, formatTimedelta, remove_from_dict, repu
 from beem.amount import Amount
 from beem.account import Account
 from beem.instance import shared_steem_instance
+from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_1_PERCENT, STEEM_100_PERCENT
 
 log = logging.getLogger(__name__)
 
@@ -50,6 +52,71 @@ class AccountSnapshot(list):
         self.curation_rewards = []
         self.curation_per_1000_SP_timestamp = []
         self.curation_per_1000_SP = []
+        self.out_vote_timestamp = []
+        self.out_vote_weight = []
+        self.vp = []
+        self.vp_timestamp = []
+
+    def search(self, search_str, start=None, stop=None, use_block_num=True):
+        """ Returns ops in the given range"""
+        ops = []
+        if start is not None:
+            start = addTzInfo(start)
+        if stop is not None:
+            stop = addTzInfo(stop)
+        for op in self:
+            if use_block_num and start is not None and isinstance(start, int):
+                if op["block"] < start:
+                    continue
+            elif not use_block_num and start is not None and isinstance(start, int):
+                if op["index"] < start:
+                    continue
+            elif start is not None and isinstance(start, (datetime, date, time)):
+                if start > formatTimeString(op["timestamp"]):
+                    continue
+            if use_block_num and stop is not None and isinstance(stop, int):
+                if op["block"] > stop:
+                    continue
+            elif not use_block_num and stop is not None and isinstance(stop, int):
+                if op["index"] > stop:
+                    continue
+            elif stop is not None and isinstance(stop, (datetime, date, time)):
+                if stop < formatTimeString(op["timestamp"]):
+                    continue
+            op_string = json.dumps(list(op.values()))
+            if re.search(search_str, op_string):
+                ops.append(op)
+        return ops
+
+    def get_ops(self, start=None, stop=None, use_block_num=True, only_ops=[], exclude_ops=[]):
+        """ Returns ops in the given range"""
+        if start is not None:
+            start = addTzInfo(start)
+        if stop is not None:
+            stop = addTzInfo(stop)
+        for op in self:
+            if use_block_num and start is not None and isinstance(start, int):
+                if op["block"] < start:
+                    continue
+            elif not use_block_num and start is not None and isinstance(start, int):
+                if op["index"] < start:
+                    continue
+            elif start is not None and isinstance(start, (datetime, date, time)):
+                if start > formatTimeString(op["timestamp"]):
+                    continue
+            if use_block_num and stop is not None and isinstance(stop, int):
+                if op["block"] > stop:
+                    continue
+            elif not use_block_num and stop is not None and isinstance(stop, int):
+                if op["index"] > stop:
+                    continue
+            elif stop is not None and isinstance(stop, (datetime, date, time)):
+                if stop < formatTimeString(op["timestamp"]):
+                    continue
+            if exclude_ops and op["type"] in exclude_ops:
+                continue
+            if not only_ops or op["type"] in only_ops:
+                yield op
 
     def get_data(self, timestamp=None, index=0):
         """ Returns snapshot for given timestamp"""
@@ -100,6 +167,10 @@ class AccountSnapshot(list):
         self.curation_rewards.append(curation_reward)
         self.author_rewards.append({"vests": author_vests, "steem": author_steem, "sbd": author_sbd})
 
+    def update_vote(self, timestamp, weight):
+        self.out_vote_timestamp.append(timestamp)
+        self.out_vote_weight.append(weight)
+
     def update(self, timestamp, own, delegated_in=None, delegated_out=None, steem=0, sbd=0):
         """ Updates the internal state arrays
 
@@ -149,7 +220,7 @@ class AccountSnapshot(list):
 
         self.delegated_vests_out.append(new_deleg)
 
-    def build(self, only_ops=[], exclude_ops=[], enable_rewards=False):
+    def build(self, only_ops=[], exclude_ops=[], enable_rewards=False, enable_votes=False):
         """ Builds the account history based on all account operations
 
             :param array only_ops: Limit generator by these
@@ -172,168 +243,181 @@ class AccountSnapshot(list):
             if len(only_ops) > 0 and op['type'] not in only_ops:
                 continue
             self.ops_statistics[op['type']] += 1
-            if op['type'] == "account_create":
-                fee_steem = Amount(op['fee'], steem_instance=self.steem).amount
-                fee_vests = self.steem.sp_to_vests(Amount(op['fee'], steem_instance=self.steem).amount, timestamp=ts)
-                # print(fee_vests)
-                if op['new_account_name'] == self.account["name"]:
-                    self.update(ts, fee_vests, 0, 0)
-                    continue
-                if op['creator'] == self.account["name"]:
-                    self.update(ts, 0, 0, 0, fee_steem * (-1), 0)
-                    continue
+            self.parse_op(op, only_ops=only_ops, enable_rewards=enable_rewards, enable_votes=enable_votes)
 
-            if op['type'] == "account_create_with_delegation":
-                fee_steem = Amount(op['fee'], steem_instance=self.steem).amount
-                fee_vests = self.steem.sp_to_vests(Amount(op['fee'], steem_instance=self.steem).amount, timestamp=ts)
-                if op['new_account_name'] == self.account["name"]:
-                    if Amount(op['delegation'], steem_instance=self.steem).amount > 0:
-                        delegation = {'account': op['creator'], 'amount':
-                                      Amount(op['delegation'], steem_instance=self.steem)}
-                    else:
-                        delegation = None
-                    self.update(ts, fee_vests, delegation, 0)
-                    continue
+    def parse_op(self, op, only_ops=[], enable_rewards=False, enable_votes=False):
+        """ Parse account history operation"""
+        ts = parse_time(op['timestamp'])
 
-                if op['creator'] == self.account["name"]:
-                    delegation = {'account': op['new_account_name'], 'amount':
+        if op['type'] == "account_create":
+            fee_steem = Amount(op['fee'], steem_instance=self.steem).amount
+            fee_vests = self.steem.sp_to_vests(Amount(op['fee'], steem_instance=self.steem).amount, timestamp=ts)
+            # print(fee_vests)
+            if op['new_account_name'] == self.account["name"]:
+                self.update(ts, fee_vests, 0, 0)
+                return
+            if op['creator'] == self.account["name"]:
+                self.update(ts, 0, 0, 0, fee_steem * (-1), 0)
+                return
+
+        elif op['type'] == "account_create_with_delegation":
+            fee_steem = Amount(op['fee'], steem_instance=self.steem).amount
+            fee_vests = self.steem.sp_to_vests(Amount(op['fee'], steem_instance=self.steem).amount, timestamp=ts)
+            if op['new_account_name'] == self.account["name"]:
+                if Amount(op['delegation'], steem_instance=self.steem).amount > 0:
+                    delegation = {'account': op['creator'], 'amount':
                                   Amount(op['delegation'], steem_instance=self.steem)}
-                    self.update(ts, 0, 0, delegation, fee_steem * (-1), 0)
-                    continue
-
-            if op['type'] == "delegate_vesting_shares":
-                vests = Amount(op['vesting_shares'], steem_instance=self.steem)
-                # print(op)
-                if op['delegator'] == self.account["name"]:
-                    delegation = {'account': op['delegatee'], 'amount': vests}
-                    self.update(ts, 0, 0, delegation)
-                    continue
-                if op['delegatee'] == self.account["name"]:
-                    delegation = {'account': op['delegator'], 'amount': vests}
-                    self.update(ts, 0, delegation, 0)
-                    continue
-
-            if op['type'] == "transfer":
-                amount = Amount(op['amount'], steem_instance=self.steem)
-                # print(op)
-                if op['from'] == self.account["name"]:
-                    if amount.symbol == "STEEM":
-                        self.update(ts, 0, 0, 0, amount * (-1), 0)
-                    elif amount.symbol == "SBD":
-                        self.update(ts, 0, 0, 0, 0, amount * (-1))
-                if op['to'] == self.account["name"]:
-                    if amount.symbol == "STEEM":
-                        self.update(ts, 0, 0, 0, amount, 0)
-                    elif amount.symbol == "SBD":
-                        self.update(ts, 0, 0, 0, 0, amount)
-                # print(op, vests)
-                # self.update(ts, vests, 0, 0)
-                continue
-
-            if op['type'] == "fill_order":
-                current_pays = Amount(op["current_pays"], steem_instance=self.steem)
-                open_pays = Amount(op["open_pays"], steem_instance=self.steem)
-                if op["current_owner"] == self.account["name"]:
-                    if current_pays.symbol == "STEEM":
-                        self.update(ts, 0, 0, 0, current_pays * (-1), open_pays)
-                    elif current_pays.symbol == "SBD":
-                        self.update(ts, 0, 0, 0, open_pays, current_pays * (-1))
-                if op["open_owner"] == self.account["name"]:
-                    if current_pays.symbol == "STEEM":
-                        self.update(ts, 0, 0, 0, current_pays, open_pays * (-1))
-                    elif current_pays.symbol == "SBD":
-                        self.update(ts, 0, 0, 0, open_pays * (-1), current_pays)
-                # print(op)
-                continue
-
-            if op['type'] == "transfer_to_vesting":
-                steem = Amount(op['amount'], steem_instance=self.steem)
-                vests = self.steem.sp_to_vests(steem.amount, timestamp=ts)
-                if op['from'] == self.account["name"]:
-                    self.update(ts, vests, 0, 0, steem * (-1), 0)
                 else:
-                    self.update(ts, vests, 0, 0, 0, 0)
-                # print(op)
-                # print(op, vests)
-                continue
+                    delegation = None
+                self.update(ts, fee_vests, delegation, 0)
+                return
 
-            if op['type'] == "fill_vesting_withdraw":
-                # print(op)
-                vests = Amount(op['withdrawn'], steem_instance=self.steem)
-                self.update(ts, vests * (-1), 0, 0)
-                continue
+            if op['creator'] == self.account["name"]:
+                delegation = {'account': op['new_account_name'], 'amount':
+                              Amount(op['delegation'], steem_instance=self.steem)}
+                self.update(ts, 0, 0, delegation, fee_steem * (-1), 0)
+                return
 
-            if op['type'] == "return_vesting_delegation":
-                delegation = {'account': None, 'amount':
-                              Amount(op['vesting_shares'], steem_instance=self.steem)}
-                self.update(ts, 0, 0, delegation)
-                continue
-
-            if op['type'] == "claim_reward_balance":
-                vests = Amount(op['reward_vests'], steem_instance=self.steem)
-                steem = Amount(op['reward_steem'], steem_instance=self.steem)
-                sbd = Amount(op['reward_sbd'], steem_instance=self.steem)
-                self.update(ts, vests, 0, 0, steem, sbd)
-                continue
-
-            if op['type'] == "curation_reward":
-                if "curation_reward" in only_ops or enable_rewards:
-                    vests = Amount(op['reward'], steem_instance=self.steem)
-                if "curation_reward" in only_ops:
-                    self.update(ts, vests, 0, 0)
-                if enable_rewards:
-                    self.update_rewards(ts, vests, 0, 0, 0)
-                continue
-
-            if op['type'] == "author_reward":
-                if "author_reward" in only_ops or enable_rewards:
-                    # print(op)
-                    vests = Amount(op['vesting_payout'], steem_instance=self.steem)
-                    steem = Amount(op['steem_payout'], steem_instance=self.steem)
-                    sbd = Amount(op['sbd_payout'], steem_instance=self.steem)
-                if "author_reward" in only_ops:
-                    self.update(ts, vests, 0, 0, steem, sbd)
-                if enable_rewards:
-                    self.update_rewards(ts, 0, vests, steem, sbd)
-                continue
-
-            if op['type'] == "producer_reward":
-                vests = Amount(op['vesting_shares'], steem_instance=self.steem)
-                self.update(ts, vests, 0, 0)
-                continue
-
-            if op['type'] == "comment_benefactor_reward":
-                if op['benefactor'] == self.account["name"]:
-                    vests = Amount(op['reward'], steem_instance=self.steem)
-                    self.update(ts, vests, 0, 0)
-                    continue
-                else:
-                    continue
-
-            if op['type'] == "fill_convert_request":
-                amount_in = Amount(op["amount_in"], steem_instance=self.steem)
-                amount_out = Amount(op["amount_out"], steem_instance=self.steem)
-                if op["owner"] == self.account["name"]:
-                    self.update(ts, 0, 0, 0, amount_out, amount_in * (-1))
-                continue
-
-            if op['type'] == "interest":
-                interest = Amount(op["interest"], steem_instance=self.steem)
-                self.update(ts, 0, 0, 0, 0, interest)
-                continue
-
-            if op['type'] in ['comment', 'vote', 'feed_publish', 'shutdown_witness',
-                              'account_witness_vote', 'witness_update', 'custom_json',
-                              'limit_order_create', 'account_update',
-                              'account_witness_proxy', 'limit_order_cancel', 'comment_options',
-                              'delete_comment', 'interest', 'recover_account', 'pow',
-                              'fill_convert_request', 'convert', 'request_account_recovery']:
-                continue
-
-            # if "vests" in str(op).lower():
-            #     print(op)
-            # else:
+        elif op['type'] == "delegate_vesting_shares":
+            vests = Amount(op['vesting_shares'], steem_instance=self.steem)
             # print(op)
+            if op['delegator'] == self.account["name"]:
+                delegation = {'account': op['delegatee'], 'amount': vests}
+                self.update(ts, 0, 0, delegation)
+                return
+            if op['delegatee'] == self.account["name"]:
+                delegation = {'account': op['delegator'], 'amount': vests}
+                self.update(ts, 0, delegation, 0)
+                return
+
+        elif op['type'] == "transfer":
+            amount = Amount(op['amount'], steem_instance=self.steem)
+            # print(op)
+            if op['from'] == self.account["name"]:
+                if amount.symbol == "STEEM":
+                    self.update(ts, 0, 0, 0, amount * (-1), 0)
+                elif amount.symbol == "SBD":
+                    self.update(ts, 0, 0, 0, 0, amount * (-1))
+            if op['to'] == self.account["name"]:
+                if amount.symbol == "STEEM":
+                    self.update(ts, 0, 0, 0, amount, 0)
+                elif amount.symbol == "SBD":
+                    self.update(ts, 0, 0, 0, 0, amount)
+            # print(op, vests)
+            # self.update(ts, vests, 0, 0)
+            return
+
+        elif op['type'] == "fill_order":
+            current_pays = Amount(op["current_pays"], steem_instance=self.steem)
+            open_pays = Amount(op["open_pays"], steem_instance=self.steem)
+            if op["current_owner"] == self.account["name"]:
+                if current_pays.symbol == "STEEM":
+                    self.update(ts, 0, 0, 0, current_pays * (-1), open_pays)
+                elif current_pays.symbol == "SBD":
+                    self.update(ts, 0, 0, 0, open_pays, current_pays * (-1))
+            if op["open_owner"] == self.account["name"]:
+                if current_pays.symbol == "STEEM":
+                    self.update(ts, 0, 0, 0, current_pays, open_pays * (-1))
+                elif current_pays.symbol == "SBD":
+                    self.update(ts, 0, 0, 0, open_pays * (-1), current_pays)
+            # print(op)
+            return
+
+        elif op['type'] == "transfer_to_vesting":
+            steem = Amount(op['amount'], steem_instance=self.steem)
+            vests = self.steem.sp_to_vests(steem.amount, timestamp=ts)
+            if op['from'] == self.account["name"]:
+                self.update(ts, vests, 0, 0, steem * (-1), 0)
+            else:
+                self.update(ts, vests, 0, 0, 0, 0)
+            # print(op)
+            # print(op, vests)
+            return
+
+        elif op['type'] == "fill_vesting_withdraw":
+            # print(op)
+            vests = Amount(op['withdrawn'], steem_instance=self.steem)
+            self.update(ts, vests * (-1), 0, 0)
+            return
+
+        elif op['type'] == "return_vesting_delegation":
+            delegation = {'account': None, 'amount':
+                          Amount(op['vesting_shares'], steem_instance=self.steem)}
+            self.update(ts, 0, 0, delegation)
+            return
+
+        elif op['type'] == "claim_reward_balance":
+            vests = Amount(op['reward_vests'], steem_instance=self.steem)
+            steem = Amount(op['reward_steem'], steem_instance=self.steem)
+            sbd = Amount(op['reward_sbd'], steem_instance=self.steem)
+            self.update(ts, vests, 0, 0, steem, sbd)
+            return
+
+        elif op['type'] == "curation_reward":
+            if "curation_reward" in only_ops or enable_rewards:
+                vests = Amount(op['reward'], steem_instance=self.steem)
+            if "curation_reward" in only_ops:
+                self.update(ts, vests, 0, 0)
+            if enable_rewards:
+                self.update_rewards(ts, vests, 0, 0, 0)
+            return
+
+        elif op['type'] == "author_reward":
+            if "author_reward" in only_ops or enable_rewards:
+                # print(op)
+                vests = Amount(op['vesting_payout'], steem_instance=self.steem)
+                steem = Amount(op['steem_payout'], steem_instance=self.steem)
+                sbd = Amount(op['sbd_payout'], steem_instance=self.steem)
+            if "author_reward" in only_ops:
+                self.update(ts, vests, 0, 0, steem, sbd)
+            if enable_rewards:
+                self.update_rewards(ts, 0, vests, steem, sbd)
+            return
+
+        elif op['type'] == "producer_reward":
+            vests = Amount(op['vesting_shares'], steem_instance=self.steem)
+            self.update(ts, vests, 0, 0)
+            return
+
+        elif op['type'] == "comment_benefactor_reward":
+            if op['benefactor'] == self.account["name"]:
+                vests = Amount(op['reward'], steem_instance=self.steem)
+                self.update(ts, vests, 0, 0)
+                return
+            else:
+                return
+
+        elif op['type'] == "fill_convert_request":
+            amount_in = Amount(op["amount_in"], steem_instance=self.steem)
+            amount_out = Amount(op["amount_out"], steem_instance=self.steem)
+            if op["owner"] == self.account["name"]:
+                self.update(ts, 0, 0, 0, amount_out, amount_in * (-1))
+            return
+
+        elif op['type'] == "interest":
+            interest = Amount(op["interest"], steem_instance=self.steem)
+            self.update(ts, 0, 0, 0, 0, interest)
+            return
+
+        elif op['type'] == "vote":
+            if "vote" in only_ops or enable_votes:
+                weight = int(op['weight'])
+                if op["voter"] == self.account["name"]:
+                    self.update_vote(ts, weight)
+            return
+
+        elif op['type'] in ['comment', 'feed_publish', 'shutdown_witness',
+                            'account_witness_vote', 'witness_update', 'custom_json',
+                            'limit_order_create', 'account_update',
+                            'account_witness_proxy', 'limit_order_cancel', 'comment_options',
+                            'delete_comment', 'interest', 'recover_account', 'pow',
+                            'fill_convert_request', 'convert', 'request_account_recovery']:
+            return
+
+        # if "vests" in str(op).lower():
+        #     print(op)
+        # else:
+        # print(op)
 
     def build_sp_arrays(self):
         """ Builds the own_sp and eff_sp array"""
@@ -350,6 +434,25 @@ class AccountSnapshot(list):
             sp_eff = sp_own + sp_in - sp_out
             self.own_sp.append(sp_own)
             self.eff_sp.append(sp_eff)
+
+    def build_vp_arrays(self):
+        """ Build vote power arrays"""
+        self.vp_timestamp = [self.timestamps[1]]
+        self.vp = [STEEM_100_PERCENT]
+        for (ts, weight) in zip(self.out_vote_timestamp, self.out_vote_weight):
+            self.vp.append(self.vp[-1])
+
+            if self.vp[-1] < STEEM_100_PERCENT:
+                regenerated_vp = ((ts - self.vp_timestamp[-1]).total_seconds()) * STEEM_100_PERCENT / STEEM_VOTE_REGENERATION_SECONDS
+                self.vp[-1] += int(regenerated_vp)
+
+            if self.vp[-1] > STEEM_100_PERCENT:
+                self.vp[-1] = STEEM_100_PERCENT
+            self.vp[-1] -= self.steem._calc_resulting_vote(self.vp[-1], weight)
+            if self.vp[-1] < 0:
+                self.vp[-1] = 0
+
+            self.vp_timestamp.append(ts)
 
     def build_curation_arrays(self, end_date=None, sum_days=7):
         """ Build curation arrays"""
