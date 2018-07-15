@@ -268,6 +268,11 @@ class Witnesses(WitnessesObject):
     """
     def __init__(self, lazy=False, full=True, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        self.lazy = lazy
+        self.full = full
+        self.refresh()
+
+    def refresh(self):
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             self.active_witnessess = self.steem.rpc.get_active_witnesses(api="database")['witnesses']
@@ -277,10 +282,11 @@ class Witnesses(WitnessesObject):
             self.active_witnessess = self.steem.rpc.get_active_witnesses()
             self.schedule = self.steem.rpc.get_witness_schedule()
             self.witness_count = self.steem.rpc.get_witness_count()
+        self.current_witness = self.steem.get_dynamic_global_properties(use_stored_data=False)["current_witness"]
         self.identifier = ""
         super(Witnesses, self).__init__(
             [
-                Witness(x, lazy=lazy, full=full, steem_instance=self.steem)
+                Witness(x, lazy=self.lazy, full=self.full, steem_instance=self.steem)
                 for x in self.active_witnessess
             ]
         )

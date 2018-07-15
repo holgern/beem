@@ -2429,7 +2429,7 @@ def rewards(accounts, only_sum, post, comment, curation, length, author, permlin
                             permlink_row = c.permlink
                     rows.append([c["author"],
                                  permlink_row,
-                                 ((now - (v["timestamp"])).total_seconds() / 60 / 60 / 24),
+                                 ((now - formatTimeString(v["timestamp"])).total_seconds() / 60 / 60 / 24),
                                  (payout_SBD),
                                  (payout_STEEM),
                                  (payout_SP),
@@ -2449,7 +2449,7 @@ def rewards(accounts, only_sum, post, comment, curation, length, author, permlin
                         permlink_row = v["comment_permlink"]
                     rows.append([v["comment_author"],
                                  permlink_row,
-                                 ((now - (v["timestamp"])).total_seconds() / 60 / 60 / 24),
+                                 ((now - formatTimeString(v["timestamp"])).total_seconds() / 60 / 60 / 24),
                                  0.000,
                                  0.000,
                                  payout_SP,

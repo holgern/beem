@@ -550,6 +550,14 @@ class Comment(BlockchainObject):
             return children
         return []
 
+    def get_parent(self, children=None):
+        """ Returns the parent post width depth == 0"""
+        if children is None:
+            children = self
+        while children["depth"] > 0:
+            children = Comment(construct_authorperm(children["parent_author"], children["parent_permlink"]), steem_instance=self.steem)
+        return children
+
     def get_votes(self, raw_data=False):
         """Returns all votes as ActiveVotes object"""
         if raw_data:
