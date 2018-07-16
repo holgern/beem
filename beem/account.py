@@ -2494,6 +2494,75 @@ class Account(BlockchainObject):
         else:
             return self.steem.finalizeOp(op, account, "active", **kwargs)
 
+    def blog_history(self, limit=None, start=-1, reblogs=True, account=None):
+        """ stream the blog entries done by an account in reverse time order.
+                Note that RPC nodes keep a limited history of entries for the
+                user blog. Older blog posts of an account may not be available
+                via this call due to these node limitations.
+
+            :param int limit: (optional) stream the latest `limit`
+                blog entries. If unset (default), all available blog
+                entries are streamed.
+            :param int start: (optional) start streaming the blog
+                entries from this index. `start=-1` (default) starts
+                with the latest available entry.
+            :param bool reblogs: (optional) if set `True` (default)
+                reblogs / resteems are included. If set `False`,
+                reblogs/resteems are omitted.
+            :param str account: (optional) the account to stream blog
+                entries for (defaults to ``default_account``)
+
+            blog_history_reverse example:
+            .. code-block:: python
+
+                from beem.account import Account
+                acc = Account("steemitblog")
+                for post in acc.blog_history(limit=10):
+                    print(post)
+
+        """
+        if limit is not None:
+            if not isinstance(limit, integer_types) or limit <= 0:
+                raise AssertionError("`limit` has to be greater than 0`")
+
+        if account is None:
+            account = self
+        else:
+            account = Account(account, steem_instance=self.steem)
+
+        post_count = 0
+        start_permlink = None
+        start_author = None
+        while True:
+            query_limit = 100
+            if limit is not None and reblogs:
+                query_limit = min(limit - post_count + 1, query_limit)
+            if not start_permlink:
+                # first iteration uses `get_blog`
+                results = self.get_blog(start_entry_id=start,
+                                        account=account,
+                                        limit=query_limit)
+            else:
+                # all following iterations use `get_discussions_by_blog`
+                from .discussions import Query, Discussions_by_blog
+                query = Query(start_author=start_author,
+                              start_permlink=start_permlink,
+                              limit=query_limit, tag=account['name'])
+                results = Discussions_by_blog(query,
+                                              steem_instance=self.steem)
+            if len(results) == 0 or (start_permlink and len(results) == 1):
+                raise StopIteration
+            if start_permlink:
+                results = results[1:]  # strip duplicates from previous iteration
+            for post in results:
+                if (reblogs or post['author'] == account['name']):
+                    post_count += 1
+                    yield post
+                start_permlink = post['permlink']
+                start_author = post['author']
+                if post_count == limit:
+                    raise StopIteration
+
 
 class AccountsObject(list):
     def printAsTable(self):
