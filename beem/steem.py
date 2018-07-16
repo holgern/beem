@@ -513,7 +513,8 @@ class Steem(object):
         resulting_vote = self._calc_resulting_vote(voting_power=voting_power, vote_pct=vote_pct)
         median_price = self.get_median_price(use_stored_data=use_stored_data)
         SBD_price = (median_price * Amount("1 STEEM", steem_instance=self)).amount
-        VoteValue = (vests * resulting_vote * 100) * reward_share * SBD_price
+        VoteValue = math.copysign(vests * resulting_vote * 100 *
+                                  reward_share * SBD_price, vote_pct)
         return VoteValue
 
     def _max_vote_denom(self, use_stored_data=True):
@@ -525,7 +526,7 @@ class Steem(object):
 
     def _calc_resulting_vote(self, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, use_stored_data=True):
         # determine voting power used
-        used_power = int((voting_power * vote_pct) / STEEM_100_PERCENT * (60 * 60 * 24))
+        used_power = int((voting_power * abs(vote_pct)) / STEEM_100_PERCENT * (60 * 60 * 24))
         max_vote_denom = self._max_vote_denom(use_stored_data=use_stored_data)
         used_power = int((used_power + max_vote_denom - 1) / max_vote_denom)
         return used_power
@@ -552,17 +553,17 @@ class Steem(object):
         """
         used_power = self._calc_resulting_vote(voting_power=voting_power, vote_pct=vote_pct, use_stored_data=use_stored_data)
         # calculate vote rshares
-        rshares = int((vests * used_power) / STEEM_100_PERCENT)
+        rshares = int(math.copysign(vests * used_power / STEEM_100_PERCENT, vote_pct))
         return rshares
 
     def rshares_to_vote_pct(self, rshares, steem_power=None, vests=None, voting_power=STEEM_100_PERCENT, use_stored_data=True):
         """ Obtain the voting percentage for a desired rshares value
             for a given Steem Power or vesting shares and voting_power
             Give either steem_power or vests, not both.
-            When the output is greater than 10000, the given rshares
-            are too high
+            When the output is greater than 10000 or less than -10000,
+            the given absolute rshares are too high
 
-            Returns the voting participation (100% = 10000)
+            Returns the required voting percentage (100% = 10000)
 
             :param number rshares: desired rshares value
             :param number steem_power: Steem Power
@@ -579,11 +580,11 @@ class Steem(object):
 
         max_vote_denom = self._max_vote_denom(use_stored_data=use_stored_data)
 
-        used_power = int(math.ceil(rshares * STEEM_100_PERCENT / vests))
+        used_power = int(math.ceil(abs(rshares) * STEEM_100_PERCENT / vests))
         used_power = used_power * max_vote_denom
 
-        vote_pct = int(used_power * STEEM_100_PERCENT / (60 * 60 * 24) / voting_power)
-        return vote_pct
+        vote_pct = used_power * STEEM_100_PERCENT / (60 * 60 * 24) / voting_power
+        return int(math.copysign(vote_pct, rshares))
 
     def get_chain_properties(self, use_stored_data=True):
         """ Return witness elected chain properties
