@@ -80,13 +80,15 @@ class Discussions(object):
         elif limit < 100 and discussion_query["limit"] == 0:
             discussion_query["limit"] = limit
         query_count = 0
+        found_more_than_start_entry = True
         start_author = discussion_query["start_author"]
         start_permlink = discussion_query["start_permlink"]
-        start_tag = discussion_query["start_permlink"]
-        while (query_count < limit):
+        start_tag = discussion_query["start_tag"]
+        while (query_count < limit and found_more_than_start_entry):
+            rpc_query_count = 0
             discussion_query["start_author"] = start_author
             discussion_query["start_permlink"] = start_permlink
-            discussion_query["start_permlink"] = start_tag
+            discussion_query["start_tag"] = start_tag
             if discussion_type == "trending":
                 dd = Discussions_by_trending(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "author_before_date":
@@ -121,16 +123,21 @@ class Discussions(object):
                 dd = Trending_tags(discussion_query, steem_instance=self.steem, lazy=self.lazy)
 
             for d in dd:
-                double_result = True
+                double_result = False
                 if discussion_type == "tags":
-                    if query_count == 0 or (d["name"] != start_tag):
-                        double_result = False
+                    if rpc_query_count == 0 and (d["name"] == start_tag):
+                        double_result = True
+                        if len(dd) == 1:
+                            found_more_than_start_entry = False
                     start_tag = d["name"]
                 else:
-                    if query_count == 0 or (d["author"] != start_author and d["permlink"] != start_permlink):
-                        double_result = False
+                    if rpc_query_count == 0 and (d["author"] == start_author and d["permlink"] == start_permlink):
+                        double_result = True
+                        if len(dd) == 1:
+                            found_more_than_start_entry = False
                     start_author = d["author"]
                     start_permlink = d["permlink"]
+                rpc_query_count += 1
                 if not double_result:
                     query_count += 1
                     if query_count <= limit:
