@@ -131,20 +131,20 @@ class Discussions(object):
             for d in dd:
                 double_result = False
                 if discussion_type == "tags":
-                    if rpc_query_count == 0 and (d["name"] == start_tag):
+                    if query_count != 0 and rpc_query_count == 0 and (d["name"] == start_tag):
                         double_result = True
                         if len(dd) == 1:
                             found_more_than_start_entry = False
                     start_tag = d["name"]
                 elif discussion_type == "replies":
-                    if rpc_query_count == 0 and (d["author"] == start_parent_author and d["permlink"] == start_permlink):
+                    if query_count != 0 and rpc_query_count == 0 and (d["author"] == start_parent_author and d["permlink"] == start_permlink):
                         double_result = True
                         if len(dd) == 1:
                             found_more_than_start_entry = False
                     start_parent_author = d["author"]
                     start_permlink = d["permlink"]
                 else:
-                    if rpc_query_count == 0 and (d["author"] == start_author and d["permlink"] == start_permlink):
+                    if query_count != 0 and rpc_query_count == 0 and (d["author"] == start_author and d["permlink"] == start_permlink):
                         double_result = True
                         if len(dd) == 1:
                             found_more_than_start_entry = False
