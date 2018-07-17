@@ -88,11 +88,13 @@ class Discussions(object):
         start_author = discussion_query["start_author"]
         start_permlink = discussion_query["start_permlink"]
         start_tag = discussion_query["start_tag"]
+        start_parent_author = discussion_query["start_parent_author"]
         while (query_count < limit and found_more_than_start_entry):
             rpc_query_count = 0
             discussion_query["start_author"] = start_author
             discussion_query["start_permlink"] = start_permlink
             discussion_query["start_tag"] = start_tag
+            discussion_query["start_parent_author"] = start_parent_author
             if discussion_type == "trending":
                 dd = Discussions_by_trending(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "author_before_date":
@@ -134,6 +136,13 @@ class Discussions(object):
                         if len(dd) == 1:
                             found_more_than_start_entry = False
                     start_tag = d["name"]
+                elif discussion_type == "replies":
+                    if rpc_query_count == 0 and (d["author"] == start_parent_author and d["permlink"] == start_permlink):
+                        double_result = True
+                        if len(dd) == 1:
+                            found_more_than_start_entry = False
+                    start_parent_author = d["author"]
+                    start_permlink = d["permlink"]
                 else:
                     if rpc_query_count == 0 and (d["author"] == start_author and d["permlink"] == start_permlink):
                         double_result = True
@@ -578,13 +587,13 @@ class Replies_by_last_update(list):
     """ Returns a list of replies by last update
 
         :param beem.discussions.Query discussion_query: Defines the parameter
-            searching posts start_author and start_permlink must be set.
+            searching posts start_parent_author and start_permlink must be set.
         :param beem.steem.Steem steem_instance: Steem instance
 
         .. testcode::
 
             from beem.discussions import Query, Replies_by_last_update
-            q = Query(limit=10, start_author="steemit", start_permlink="firstpost")
+            q = Query(limit=10, start_parent_author="steemit", start_permlink="firstpost")
             for h in Replies_by_last_update(q):
                 print(h)
 
