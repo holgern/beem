@@ -25,6 +25,7 @@ class Query(dict):
         :param str start_tag:
         :param str parent_author:
         :param str parent_permlink:
+        :param str start_parent_author:
 
         .. testcode::
 
@@ -34,7 +35,9 @@ class Query(dict):
     """
     def __init__(self, limit=0, tag="", truncate_body=0,
                  filter_tags=[], select_authors=[], select_tags=[],
-                 start_author=None, start_permlink=None, start_tag=None, parent_author=None, parent_permlink=None):
+                 start_author=None, start_permlink=None,
+                 start_tag=None, parent_author=None,
+                 parent_permlink=None, start_parent_author=None):
         self["limit"] = limit
         self["truncate_body"] = truncate_body
         self["tag"] = tag
@@ -46,6 +49,7 @@ class Query(dict):
         self["start_tag"] = start_tag
         self["parent_author"] = parent_author
         self["parent_permlink"] = parent_permlink
+        self["start_parent_author"] = start_parent_author
 
 
 class Discussions(object):
@@ -591,7 +595,7 @@ class Replies_by_last_update(list):
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_replies_by_last_update(discussion_query, api="tags")['discussions']
         else:
-            posts = self.steem.rpc.get_replies_by_last_update(discussion_query["start_author"], discussion_query["start_permlink"], discussion_query["limit"])
+            posts = self.steem.rpc.get_replies_by_last_update(discussion_query["start_parent_author"], discussion_query["start_permlink"], discussion_query["limit"])
         super(Replies_by_last_update, self).__init__(
             [
                 Comment(x, lazy=lazy, steem_instance=self.steem)
