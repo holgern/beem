@@ -88,37 +88,37 @@ class Discussions(object):
             discussion_query["start_permlink"] = start_permlink
             discussion_query["start_permlink"] = start_tag
             if discussion_type == "trending":
-                dd = Discussions_by_trending(discussion_query, self.steem, lazy=self.lazy)
+                dd = Discussions_by_trending(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "author_before_date":
-                dd = Discussions_by_author_before_date(discussion_query, self.steem, lazy=self.lazy)
+                dd = Discussions_by_author_before_date(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "payout":
-                dd = Comment_discussions_by_payout(discussion_query, self.steem, lazy=self.lazy)
+                dd = Comment_discussions_by_payout(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "post_payout":
-                dd = Post_discussions_by_payout(discussion_query, self.steem, lazy=self.lazy)
+                dd = Post_discussions_by_payout(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "created":
-                dd = Discussions_by_created(discussion_query, self.steem, lazy=self.lazy)
+                dd = Discussions_by_created(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "active":
-                dd = Discussions_by_active(discussion_query, self.steem, lazy=self.lazy)
+                dd = Discussions_by_active(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "cashout":
-                dd = Discussions_by_cashout(discussion_query, self.steem, lazy=self.lazy)
+                dd = Discussions_by_cashout(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "votes":
-                dd = Discussions_by_votes(discussion_query, self.steem, lazy=self.lazy)
+                dd = Discussions_by_votes(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "children":
-                dd = Discussions_by_children(discussion_query, self.steem, lazy=self.lazy)
+                dd = Discussions_by_children(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "hot":
-                dd = Discussions_by_hot(discussion_query, self.steem, lazy=self.lazy)
+                dd = Discussions_by_hot(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "feed":
-                dd = Discussions_by_feed(discussion_query, self.steem, lazy=self.lazy)
+                dd = Discussions_by_feed(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "blog":
-                dd = Discussions_by_blog(discussion_query, self.steem, lazy=self.lazy)
+                dd = Discussions_by_blog(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "comments":
-                dd = Discussions_by_comments(discussion_query, self.steem, lazy=self.lazy)
+                dd = Discussions_by_comments(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "promoted":
-                dd = Discussions_by_promoted(discussion_query, self.steem, lazy=self.lazy)
+                dd = Discussions_by_promoted(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "replies":
-                dd = Replies_by_last_update(discussion_query, self.steem, lazy=self.lazy)
+                dd = Replies_by_last_update(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "tags":
-                dd = Trending_tags(discussion_query, self.steem, lazy=self.lazy)
+                dd = Trending_tags(discussion_query, steem_instance=self.steem, lazy=self.lazy)
 
             for d in dd:
                 double_result = True
