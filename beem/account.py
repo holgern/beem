@@ -2563,6 +2563,63 @@ class Account(BlockchainObject):
                 if post_count == limit:
                     raise StopIteration
 
+    def comment_history(self, limit=None, start_permlink=None,
+                        account=None):
+        """ stream the comments done by an account in reverse time order.
+                Note that RPC nodes keep a limited history of entries
+                for the user comments. Older comments by an account
+                may not be available via this call due to these node
+                limitations.
+
+            :param int limit: (optional) stream the latest `limit`
+                comments. If unset (default), all available comments
+                are streamed.
+            :param str start_permlink: (optional) start streaming the
+                comments from this permlink. `start_permlink=None`
+                (default) starts with the latest available entry.
+            :param str account: (optional) the account to stream
+                comments for (defaults to ``default_account``)
+
+            comment_history_reverse example:
+            .. code-block:: python
+
+                from beem.account import Account
+                acc = Account("ned")
+                for comment in acc.comment_history(limit=10):
+                    print(comment)
+
+        """
+        if limit is not None:
+            if not isinstance(limit, integer_types) or limit <= 0:
+                raise AssertionError("`limit` has to be greater than 0`")
+
+        if account is None:
+            account = self
+        else:
+            account = Account(account, steem_instance=self.steem)
+
+        comment_count = 0
+        while True:
+            query_limit = 100
+            if limit is not None:
+                query_limit = min(limit - comment_count + 1, query_limit)
+            from .discussions import Query, Discussions_by_comments
+            query = Query(start_author=account['name'],
+                          start_permlink=start_permlink,
+                          limit=query_limit, tag=account['name'])
+            results = Discussions_by_comments(query,
+                                              steem_instance=self.steem)
+            if len(results) == 0 or (start_permlink and len(results) == 1):
+                raise StopIteration
+            if comment_count > 0 and start_permlink:
+                results = results[1:]  # strip duplicates from previous iteration
+            for comment in results:
+                comment_count += 1
+                yield comment
+                start_permlink = comment['permlink']
+                if comment_count == limit:
+                    raise StopIteration
+
 
 class AccountsObject(list):
     def printAsTable(self):
