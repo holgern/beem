@@ -474,6 +474,7 @@ class Discussions_by_feed(list):
     """
     def __init__(self, discussion_query, lazy=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_feed(discussion_query, api="tags")['discussions']
         else:
@@ -541,6 +542,7 @@ class Discussions_by_comments(list):
     """
     def __init__(self, discussion_query, lazy=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
+        self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
             posts = self.steem.rpc.get_discussions_by_comments(discussion_query, api="tags")['discussions']
         else:
