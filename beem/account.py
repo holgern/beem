@@ -164,9 +164,15 @@ class Account(BlockchainObject):
     def json(self):
         output = self.copy()
         parse_int = [
-            "sbd_seconds", "savings_sbd_seconds", "average_bandwidth", "lifetime_bandwidth", "lifetime_market_bandwidth", "reputation",
+            "sbd_seconds", "savings_sbd_seconds",
+        ]
+        parse_int_without_zero = [
+            "average_bandwidth", "lifetime_bandwidth", "lifetime_market_bandwidth", "reputation",
         ]
         for p in parse_int:
+            if p in output and isinstance(output[p], integer_types):
+                output[p] = str(output[p])
+        for p in parse_int_without_zero:
             if p in output and isinstance(output[p], integer_types) and output[p] != 0:
                 output[p] = str(output[p])
         if "proxied_vsf_votes" in output:

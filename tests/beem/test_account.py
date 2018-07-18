@@ -46,8 +46,8 @@ class Testcases(unittest.TestCase):
             keys={"active": wif},
             num_retries=10
         )
-        cls.account = Account("test", full=True, steem_instance=cls.bts)
-        cls.account_appbase = Account("test", full=True, steem_instance=cls.appbase)
+        cls.account = Account("beembot", full=True, steem_instance=cls.bts)
+        cls.account_appbase = Account("beembot", full=True, steem_instance=cls.appbase)
         set_shared_steem_instance(cls.bts)
 
     @parameterized.expand([
@@ -61,14 +61,14 @@ class Testcases(unittest.TestCase):
         else:
             stm = self.appbase
             account = self.account_appbase
-        Account("test", steem_instance=stm)
+        Account("beembot", steem_instance=stm)
         with self.assertRaises(
             exceptions.AccountDoesNotExistsException
         ):
             Account("DoesNotExistsXXX", steem_instance=stm)
         # asset = Asset("1.3.0")
         # symbol = asset["symbol"]
-        self.assertEqual(account.name, "test")
+        self.assertEqual(account.name, "beembot")
         self.assertEqual(account["name"], account.name)
         self.assertIsInstance(account.get_balance("available", "SBD"), Amount)
         account.print_info()
@@ -83,7 +83,7 @@ class Testcases(unittest.TestCase):
         self.assertIn("id", account)
         account.cached = False
         # self.assertEqual(account["id"], "1.2.1")
-        self.assertEqual(str(account), "<Account test>")
+        self.assertEqual(str(account), "<Account beembot>")
         self.assertIsInstance(Account(account), Account)
 
     @parameterized.expand([
@@ -205,9 +205,9 @@ class Testcases(unittest.TestCase):
             stm = self.bts
         else:
             stm = self.appbase
-        account = Account("gtg", steem_instance=stm)
+        account = Account("beembot", steem_instance=stm)
         h_list = []
-        max_index = account.virtual_op_count() - 100
+        max_index = account.virtual_op_count()
         for h in account.history(start=max_index - 4, stop=max_index, use_block_num=False, batch_size=2, raw_output=False):
             h_list.append(h)
         self.assertEqual(len(h_list), 5)
@@ -244,9 +244,9 @@ class Testcases(unittest.TestCase):
             stm = self.bts
         else:
             stm = self.appbase
-        account = Account("gtg", steem_instance=stm)
+        account = Account("beembot", steem_instance=stm)
         h_list = []
-        max_index = account.virtual_op_count() - 100
+        max_index = account.virtual_op_count()
         for h in account.history_reverse(start=max_index, stop=max_index - 4, use_block_num=False, batch_size=2, raw_output=False):
             h_list.append(h)
         self.assertEqual(len(h_list), 5)
@@ -365,7 +365,7 @@ class Testcases(unittest.TestCase):
         )
         op = tx["operations"][0][1]
         self.assertIn(
-            "test",
+            "beembot",
             op["account"])
 
     def test_delegate_vesting_shares(self):
@@ -378,7 +378,7 @@ class Testcases(unittest.TestCase):
         )
         op = tx["operations"][0][1]
         self.assertIn(
-            "test",
+            "beembot",
             op["delegator"])
 
     def test_claim_reward_balance(self):
@@ -391,7 +391,7 @@ class Testcases(unittest.TestCase):
         )
         op = tx["operations"][0][1]
         self.assertIn(
-            "test",
+            "beembot",
             op["account"])
 
     def test_cancel_transfer_from_savings(self):
@@ -404,7 +404,7 @@ class Testcases(unittest.TestCase):
         )
         op = tx["operations"][0][1]
         self.assertIn(
-            "test",
+            "beembot",
             op["from"])
 
     def test_transfer_from_savings(self):
@@ -417,7 +417,7 @@ class Testcases(unittest.TestCase):
         )
         op = tx["operations"][0][1]
         self.assertIn(
-            "test",
+            "beembot",
             op["from"])
 
     def test_transfer_to_savings(self):
@@ -430,7 +430,7 @@ class Testcases(unittest.TestCase):
         )
         op = tx["operations"][0][1]
         self.assertIn(
-            "test",
+            "beembot",
             op["from"])
 
     def test_convert(self):
@@ -443,7 +443,7 @@ class Testcases(unittest.TestCase):
         )
         op = tx["operations"][0][1]
         self.assertIn(
-            "test",
+            "beembot",
             op["owner"])
 
     def test_transfer_to_vesting(self):
@@ -456,7 +456,7 @@ class Testcases(unittest.TestCase):
         )
         op = tx["operations"][0][1]
         self.assertIn(
-            "test",
+            "beembot",
             op["from"])
 
     @parameterized.expand([

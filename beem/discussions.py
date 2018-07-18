@@ -85,10 +85,22 @@ class Discussions(object):
             discussion_query["limit"] = limit
         query_count = 0
         found_more_than_start_entry = True
-        start_author = discussion_query["start_author"]
-        start_permlink = discussion_query["start_permlink"]
-        start_tag = discussion_query["start_tag"]
-        start_parent_author = discussion_query["start_parent_author"]
+        if "start_author" in discussion_query:
+            start_author = discussion_query["start_author"]
+        else:
+            start_author = None
+        if "start_permlink" in discussion_query:
+            start_permlink = discussion_query["start_permlink"]
+        else:
+            start_permlink = None
+        if "start_tag" in discussion_query:
+            start_tag = discussion_query["start_tag"]
+        else:
+            start_tag = None
+        if "start_parent_author" in discussion_query:
+            start_parent_author = discussion_query["start_parent_author"]
+        else:
+            start_parent_author = None
         while (query_count < limit and found_more_than_start_entry):
             rpc_query_count = 0
             discussion_query["start_author"] = start_author

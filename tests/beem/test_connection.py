@@ -36,7 +36,7 @@ class Testcases(unittest.TestCase):
             nobroadcast=True,
         )
         set_shared_steem_instance(b1)
-        test = Account("test")
+        test = Account("beem")
 
         b2 = Steem(
             node=nodelist.get_nodes(appbase=False),
@@ -44,7 +44,7 @@ class Testcases(unittest.TestCase):
         )
         set_shared_steem_instance(b2)
 
-        bts = Account("test")
+        bts = Account("beem")
 
         self.assertEqual(test.steem.prefix, "TST")
         self.assertEqual(bts.steem.prefix, "STM")

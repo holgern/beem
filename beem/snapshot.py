@@ -15,6 +15,7 @@ from bisect import bisect_left
 from beem.utils import formatTimeString, formatTimedelta, remove_from_dict, reputation_to_score, addTzInfo, parse_time
 from beem.amount import Amount
 from beem.account import Account
+from beem.vote import Vote
 from beem.instance import shared_steem_instance
 from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_1_PERCENT, STEEM_100_PERCENT
 
@@ -54,8 +55,14 @@ class AccountSnapshot(list):
         self.curation_per_1000_SP = []
         self.out_vote_timestamp = []
         self.out_vote_weight = []
+        self.in_vote_timestamp = []
+        self.in_vote_weight = []
+        self.in_vote_rep = []
+        self.in_vote_rshares = []
         self.vp = []
         self.vp_timestamp = []
+        self.rep = []
+        self.rep_timestamp = []
 
     def search(self, search_str, start=None, stop=None, use_block_num=True):
         """ Returns ops in the given range"""
@@ -167,9 +174,21 @@ class AccountSnapshot(list):
         self.curation_rewards.append(curation_reward)
         self.author_rewards.append({"vests": author_vests, "steem": author_steem, "sbd": author_sbd})
 
-    def update_vote(self, timestamp, weight):
+    def update_out_vote(self, timestamp, weight):
         self.out_vote_timestamp.append(timestamp)
         self.out_vote_weight.append(weight)
+
+    def update_in_vote(self, timestamp, weight, op):
+        v = Vote(op)
+        try:
+            v.refresh()
+            self.in_vote_timestamp.append(timestamp)
+            self.in_vote_weight.append(weight)
+            self.in_vote_rep.append(int(v["reputation"]))
+            self.in_vote_rshares.append(int(v["rshares"]))
+        except:
+            print("Could not found: %s" % v)
+            return
 
     def update(self, timestamp, own, delegated_in=None, delegated_out=None, steem=0, sbd=0):
         """ Updates the internal state arrays
@@ -220,7 +239,7 @@ class AccountSnapshot(list):
 
         self.delegated_vests_out.append(new_deleg)
 
-    def build(self, only_ops=[], exclude_ops=[], enable_rewards=False, enable_votes=False):
+    def build(self, only_ops=[], exclude_ops=[], enable_rewards=False, enable_out_votes=False, enable_in_votes=False):
         """ Builds the account history based on all account operations
 
             :param array only_ops: Limit generator by these
@@ -243,9 +262,9 @@ class AccountSnapshot(list):
             if len(only_ops) > 0 and op['type'] not in only_ops:
                 continue
             self.ops_statistics[op['type']] += 1
-            self.parse_op(op, only_ops=only_ops, enable_rewards=enable_rewards, enable_votes=enable_votes)
+            self.parse_op(op, only_ops=only_ops, enable_rewards=enable_rewards, enable_out_votes=enable_out_votes, enable_in_votes=enable_in_votes)
 
-    def parse_op(self, op, only_ops=[], enable_rewards=False, enable_votes=False):
+    def parse_op(self, op, only_ops=[], enable_rewards=False, enable_out_votes=False, enable_in_votes=False):
         """ Parse account history operation"""
         ts = parse_time(op['timestamp'])
 
@@ -400,10 +419,13 @@ class AccountSnapshot(list):
             return
 
         elif op['type'] == "vote":
-            if "vote" in only_ops or enable_votes:
+            if "vote" in only_ops or enable_out_votes:
                 weight = int(op['weight'])
                 if op["voter"] == self.account["name"]:
-                    self.update_vote(ts, weight)
+                    self.update_out_vote(ts, weight)
+            if "vote" in only_ops or enable_in_votes and op["author"] == self.account["name"]:
+                weight = int(op['weight'])
+                self.update_in_vote(ts, weight, op)
             return
 
         elif op['type'] in ['comment', 'feed_publish', 'shutdown_witness',
@@ -434,6 +456,18 @@ class AccountSnapshot(list):
             sp_eff = sp_own + sp_in - sp_out
             self.own_sp.append(sp_own)
             self.eff_sp.append(sp_eff)
+
+    def build_rep_arrays(self):
+        """ Build reputation arrays """
+        self.rep_timestamp = [self.timestamps[1]]
+        self.rep = [reputation_to_score(0)]
+        current_reputation = 0
+        for (ts, rshares, rep) in zip(self.in_vote_timestamp, self.in_vote_rshares, self.in_vote_rep):
+            if rep > 0:
+                if rshares > 0 or (rshares < 0 and rep > current_reputation):
+                    current_reputation += rshares >> 6
+            self.rep.append(reputation_to_score(current_reputation))
+            self.rep_timestamp.append(ts)
 
     def build_vp_arrays(self):
         """ Build vote power arrays"""

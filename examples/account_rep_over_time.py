@@ -21,18 +21,18 @@ if __name__ == "__main__":
         account = sys.argv[1]
     acc_snapshot = AccountSnapshot(account)
     acc_snapshot.get_account_history()
-    acc_snapshot.build(enable_out_votes=True)
-    acc_snapshot.build_vp_arrays()
-    timestamps = acc_snapshot.vp_timestamp
-    vp = acc_snapshot.vp
+    acc_snapshot.build(enable_in_votes=True)
+    acc_snapshot.build_rep_arrays()
+    timestamps = acc_snapshot.rep_timestamp
+    rep = acc_snapshot.rep
     plt.figure(figsize=(12, 6))
     opts = {'linestyle': '-', 'marker': '.'}
-    plt.plot_date(timestamps, vp, label="Voting power", **opts)
+    plt.plot_date(timestamps, rep, label="Reputation", **opts)
     plt.grid()
     plt.legend()
-    plt.title("Voting power over time - @%s" % (account))
+    plt.title("Reputation over time - @%s" % (account))
     plt.xlabel("Date")
-    plt.ylabel("Voting power over time")
+    plt.ylabel("Reputation over time")
     # plt.show()
-    plt.savefig("voting-power-%s.png" % (account))
-    print("last voting power %d" % (vp[-1]))
+    plt.savefig("reputation-%s.png" % (account))
+    print("last reputation %f" % (rep[-1]))
