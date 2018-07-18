@@ -2494,6 +2494,70 @@ class Account(BlockchainObject):
         else:
             return self.steem.finalizeOp(op, account, "active", **kwargs)
 
+    def feed_history(self, limit=None, start_author=None, start_permlink=None,
+                     account=None):
+        """ stream the feed entries of an account in reverse time order.
+                Note that RPC nodes keep a limited history of entries for the
+                user feed. Older entries may not be available via this call due
+                to these node limitations.
+
+            :param int limit: (optional) stream the latest `limit`
+                feed entries. If unset (default), all available entries
+                are streamed.
+            :param str start_author: (optional) start streaming the
+                replies from this author. `start_permlink=None`
+                (default) starts with the latest available entry.
+                If set, `start_permlink` has to be set as well.
+            :param str start_permlink: (optional) start streaming the
+                replies from this permlink. `start_permlink=None`
+                (default) starts with the latest available entry.
+                If set, `start_author` has to be set as well.
+            :param str account: (optional) the account to get replies
+                to (defaults to ``default_account``)
+
+            comment_history_reverse example:
+            .. code-block:: python
+
+                from beem.account import Account
+                acc = Account("ned")
+                for reply in acc.feed_history(limit=10):
+                    print(reply)
+
+        """
+        if limit is not None:
+            if not isinstance(limit, integer_types) or limit <= 0:
+                raise AssertionError("`limit` has to be greater than 0`")
+        if (start_author is None and start_permlink is not None) or \
+           (start_author is not None and start_permlink is None):
+            raise AssertionError("either both or none of `start_author` and "
+                                 "`start_permlink` have to be set")
+
+        if account is None:
+            account = self
+        else:
+            account = Account(account, steem_instance=self.steem)
+        feed_count = 0
+        while True:
+            query_limit = 100
+            if limit is not None:
+                query_limit = min(limit - feed_count + 1, query_limit)
+            from .discussions import Query, Discussions_by_feed
+            query = Query(start_author=start_author,
+                          start_permlink=start_permlink, limit=query_limit,
+                          tag=account['name'])
+            results = Discussions_by_feed(query, steem_instance=self.steem)
+            if len(results) == 0 or (start_permlink and len(results) == 1):
+                raise StopIteration
+            if feed_count > 0 and start_permlink:
+                results = results[1:]  # strip duplicates from previous iteration
+            for entry in results:
+                feed_count += 1
+                yield entry
+                start_permlink = entry['permlink']
+                start_author = entry['author']
+                if feed_count == limit:
+                    raise StopIteration
+
     def blog_history(self, limit=None, start=-1, reblogs=True, account=None):
         """ stream the blog entries done by an account in reverse time order.
                 Note that RPC nodes keep a limited history of entries for the
