@@ -449,7 +449,7 @@ class Order(Price):
         elif isinstance(base, Amount) and isinstance(quote, Amount):
             super(Order, self).__init__(None, base=base, quote=quote)
         else:
-            raise ValueError("Unkown format to load Order")
+            raise ValueError("Unknown format to load Order")
 
     def __repr__(self):
         if "deleted" in self and self["deleted"]:

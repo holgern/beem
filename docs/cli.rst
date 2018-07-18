@@ -20,7 +20,7 @@ You can change the password via `changewalletpassphrase` command.
 From this point on, every time an action requires your private keys, you will be prompted ot enter
 this password (from CLI as well as while using `steem` library).
 
-To bypass password entry, you can set an environmnet variable ``UNLOCK``.
+To bypass password entry, you can set an environment variable ``UNLOCK``.
 
 ::
 
@@ -105,7 +105,7 @@ You can see all available commands with ``beempy --help``
 
     ~ % beempy --help
    Usage: cli.py [OPTIONS] COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]...
-   
+
    Options:
      -n, --node TEXT        URL for public Steem API (e.g.
                             https://api.steemit.com)
@@ -118,7 +118,7 @@ You can see all available commands with ``beempy --help``
      -v, --verbose INTEGER  Verbosity
      --version              Show the version and exit.
      --help                 Show this message and exit.
-   
+
    Commands:
      addkey                  Add key to wallet When no [OPTION] is given,...
      allow                   Allow an account/key to interact with your...
@@ -177,6 +177,3 @@ You can see all available commands with ``beempy --help``
      witnesscreate           Create a witness
      witnesses               List witnesses
      witnessupdate           Change witness properties
-
-
-

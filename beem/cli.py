@@ -505,7 +505,7 @@ def walletinfo(test_unlock):
         t.add_row(["keyring installed", "no"])
     if test_unlock:
         if unlock_wallet(stm):
-            t.add_row(["Wallet unlock", "sucessful"])
+            t.add_row(["Wallet unlock", "successful"])
         else:
             t.add_row(["Wallet unlock", "not working"])
     # t.add_row(["getPublicKeys", str(stm.wallet.getPublicKeys())])
@@ -2148,7 +2148,7 @@ def votes(account, direction, outgoing, incoming, days, export):
 @click.option('--min-vote', '-v', help='Show only votes higher than the given value')
 @click.option('--max-vote', '-w', help='Show only votes lower than the given value')
 @click.option('--min-performance', '-x', help='Show only votes with performance higher than the given value')
-@click.option('--max-performance', '-y', help='Show only votes with perfromance lower than the given value')
+@click.option('--max-performance', '-y', help='Show only votes with performance lower than the given value')
 @click.option('--payout', default=None, help="Show the curation for a potential payout in SBD as float")
 @click.option('--export', '-e', default=None, help="Export results to HTML-file")
 @click.option('--short', '-s', is_flag=True, default=False, help="Show only Curation without sum")

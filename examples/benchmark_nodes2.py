@@ -36,7 +36,7 @@ def benchmark_node(node, how_many_minutes=10, how_many_seconds=30):
     access_time = 0
     follow_time = 0
     blockchain_version = u'0.0.0'
-    sucessfull = True
+    successful = True
     error_msg = None
     start_total = timer()
     max_batch_size = None
@@ -102,16 +102,16 @@ def benchmark_node(node, how_many_minutes=10, how_many_seconds=30):
     except NumRetriesReached:
         error_msg = 'NumRetriesReached'
         history_count = -1
-        sucessfull = False
+        successful = False
     except KeyboardInterrupt:
         error_msg = 'KeyboardInterrupt'
         history_count = -1
-        sucessfull = False
+        successful = False
         # quit = True
     except Exception as e:
         error_msg = str(e)
         history_count = -1
-        sucessfull = False
+        successful = False
 
     try:
         stm = Steem(node=node, num_retries=3, num_retries_call=3, timeout=30)
@@ -144,7 +144,7 @@ def benchmark_node(node, how_many_minutes=10, how_many_seconds=30):
     except Exception as e:
         error_msg = str(e)
         access_time = -1
-    return {'sucessfull': sucessfull, 'node': node, 'error': error_msg,
+    return {'successful': successful, 'node': node, 'error': error_msg,
             'total_duration': timer() - start_total, 'block_count': block_count,
             'history_count': history_count, 'access_time': access_time, 'follow_time': follow_time,
             'version': blockchain_version}
@@ -188,7 +188,7 @@ if __name__ == "__main__":
 
     sortedList = sorted(results, key=lambda self: self["history_count"], reverse=True)
     for result in sortedList:
-        if result["sucessfull"]:
+        if result["successful"]:
             t.add_row([
                 result["node"],
                 result["block_count"],

@@ -11,13 +11,13 @@ The library name is derived from a beam maschine, similar to the analogy between
 .. image:: https://img.shields.io/pypi/pyversions/beem.svg
     :target: https://pypi.python.org/pypi/beem/
     :alt: Python Versions
-    
 
-.. image:: https://anaconda.org/conda-forge/beem/badges/version.svg   
+
+.. image:: https://anaconda.org/conda-forge/beem/badges/version.svg
     :target: https://anaconda.org/conda-forge/beem
 
- 
-.. image:: https://anaconda.org/conda-forge/beem/badges/downloads.svg   
+
+.. image:: https://anaconda.org/conda-forge/beem/badges/downloads.svg
     :target: https://anaconda.org/conda-forge/beem
 
 
@@ -36,7 +36,7 @@ Current build status
 .. image:: https://readthedocs.org/projects/beem/badge/?version=latest
   :target: http://beem.readthedocs.org/en/latest/?badge=latest
 
-.. image:: https://api.codacy.com/project/badge/Grade/e5476faf97df4c658697b8e7a7efebd7    
+.. image:: https://api.codacy.com/project/badge/Grade/e5476faf97df4c658697b8e7a7efebd7
     :target: https://www.codacy.com/app/holgern/beem?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=holgern/beem&amp;utm_campaign=Badge_Grade
 
 .. image:: https://pyup.io/repos/github/holgern/beem/shield.svg
@@ -68,7 +68,7 @@ Advantages over the official steem-python library
 * Contains all broadcast operations
 * Estimation of virtual account operation index from date or block number
 * the command line tool beempy uses click and has more commands
-* SteemNodeRPC can be used to excecute even not implemented RPC-Calls
+* SteemNodeRPC can be used to execute even not implemented RPC-Calls
 * More complete implemention
 
 Installation
@@ -78,7 +78,7 @@ The minimal working python version is 2.7.x. or 3.4.x
 beem can be installed parallel to python-steem.
 
 For Debian and Ubuntu, please ensure that the following packages are installed:
-        
+
 .. code:: bash
 
     sudo apt-get install build-essential libssl-dev python-dev
@@ -106,32 +106,32 @@ Signing and Verify can be fasten (200 %) by installing cryptography:
 .. code:: bash
 
     pip install -U cryptography
-    
+
 Install beem by pip::
 
     pip install -U beem
-    
+
 You can install beem from this repository if you want the latest
 but possibly non-compiling version::
 
     git clone https://github.com/holgern/beem.git
     cd beem
     python setup.py build
-    
+
     python setup.py install --user
 
 Run tests after install::
 
     pytest
-    
-    
+
+
 Installing beem with conda-forge
 --------------------------------
 
 Installing beem from the conda-forge channel can be achieved by adding conda-forge to your channels with::
 
     conda config --add channels conda-forge
-    
+
 Once the conda-forge channel has been enabled, beem can be installed with::
 
     conda install beem
@@ -139,7 +139,7 @@ Once the conda-forge channel has been enabled, beem can be installed with::
 Signing and Verify can be fasten (200 %) by installing cryptography::
 
     conda install cryptography
-    
+
 
 CLI tool beempy
 ---------------
@@ -228,7 +228,7 @@ Changelog
 -------
 * get_feed_entries, get_blog_authors, get_savings_withdrawals, get_escrow, verify_account_authority, get_expiring_vesting_delegations, get_vesting_delegations, get_tags_used_by_author added to Account
 * get_account_reputations, get_account_count added to Blockchain
-* Replies_by_last_update, Trending_tags, Discussions_by_author_before_date 
+* Replies_by_last_update, Trending_tags, Discussions_by_author_before_date
 * ImageUploader class added
 * Score calculation improved in update_nodes
 * apidefinitions added to docs, which includes a complete condenser API call list.
@@ -237,7 +237,7 @@ Changelog
 -------
 * Bug fixes
 * Bool variables for SteemConnect link creation fixed
-* Account handling in beem.account is improved 
+* Account handling in beem.account is improved
 * json_metadata property added to beem.account
 * missing addTzInfo added to beem.blockchain
 * json_metadata update for comment edit improved
@@ -397,7 +397,7 @@ Changelog
 
 0.19.23
 -------
-* new function for beempy added: power, follower, following, muter, muting, mute, nextnode, pingnode, currentnode 
+* new function for beempy added: power, follower, following, muter, muting, mute, nextnode, pingnode, currentnode
 * support for read-only systems added
 * more unit tests
 * Several improvements and bug fixes
@@ -540,7 +540,7 @@ Changelog
 
 0.19.1
 ------
-* Imported from https://github.com/xeroc/python-bitshares 
+* Imported from https://github.com/xeroc/python-bitshares
 * Replaced all BitShares by Steem
 * Flake8 fixed
 * Unit tests are working

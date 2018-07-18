@@ -367,7 +367,7 @@ class TransactionBuilder(dict):
             Returns the signed transaction and clears itself
             after broadast
 
-            Clears itself when broadcast was not sucessfully.
+            Clears itself when broadcast was not successfully.
 
             :param int max_block_age: paramerter only used
                 for appbase ready nodes

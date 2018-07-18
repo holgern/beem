@@ -45,7 +45,7 @@ def formatTimeString(t):
 
 
 def formatToTimeStamp(t):
-    """ Retuns a timestamp integer
+    """ Returns a timestamp integer
 
         :param datetime t: datetime object
         :return: Timestamp as integer

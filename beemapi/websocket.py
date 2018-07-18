@@ -78,7 +78,7 @@ class SteemWebsocket(Events):
         self.only_block_id = only_block_id
         self.nodes = Nodes(urls, num_retries, 5)
 
-        # Instanciate Events
+        # Instantiate Events
         Events.__init__(self)
         self.events = Events()
 

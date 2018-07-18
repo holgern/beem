@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        # print("ERROR: command line paramter mismatch!")
+        # print("ERROR: command line parameter mismatch!")
         # print("usage: %s [account]" % (sys.argv[0]))
         account = "holger80"
     else:

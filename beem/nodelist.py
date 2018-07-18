@@ -300,8 +300,8 @@ class NodeList(list):
                         if not result["ok"]:
                             rank = max_score + 1
                         score = (max_score - rank) / (max_score - 1) * 100
-                        weigthed_score = score * weights_dict[benchmark]
-                        scores.append(weigthed_score)
+                        weighted_score = score * weights_dict[benchmark]
+                        scores.append(weighted_score)
                     sum_score = 0
                     for score in scores:
                         sum_score += score
