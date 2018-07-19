@@ -1320,7 +1320,7 @@ class Account(BlockchainObject):
         if latest_blocknum - created == 0:
             return 0
 
-        # set inital search range
+        # set initial search range
         op_num = 0
         op_lower = 0
         block_lower = created

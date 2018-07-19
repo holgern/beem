@@ -259,12 +259,12 @@ class Comment(BlockchainObject):
             return {}
 
     def is_main_post(self):
-        """ Retuns True if main post, and False if this is a comment (reply).
+        """ Returns True if main post, and False if this is a comment (reply).
         """
         return self['depth'] == 0
 
     def is_comment(self):
-        """ Retuns True if post is a comment
+        """ Returns True if post is a comment
         """
         return self['depth'] > 0
 

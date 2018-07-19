@@ -407,8 +407,6 @@ class Blockchain(object):
         # We are going to loop indefinitely
         latest_block = 0
         while True:
-
-            # Get chain properies to identify the
             if stop:
                 head_block = stop
             else:
@@ -615,7 +613,7 @@ class Blockchain(object):
             :param dict add_to_ops_stat: if set, the result is added to add_to_ops_stat
             :param bool verbose: if True, the current block number and timestamp is printed
 
-            This call returns a dict with all possible operations and their occurence.
+            This call returns a dict with all possible operations and their occurrence.
 
         """
         if add_to_ops_stat is None:
@@ -659,7 +657,7 @@ class Blockchain(object):
             The dict output is formated such that ``type`` carries the
             operation type. Timestamp and block_num are taken from the
             block the operation was stored in and the other keys depend
-            on the actualy operation.
+            on the actual operation.
 
             .. note:: If you want instant confirmation, you need to instantiate
                       class:`beem.blockchain.Blockchain` with

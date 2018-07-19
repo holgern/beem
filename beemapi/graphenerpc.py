@@ -225,7 +225,7 @@ class GrapheneRPC(object):
                             self.current_rpc = self.rpc_methods['appbase']
                         props = self.get_config(api="database")
                 if props is None:
-                    raise RPCError("Could not recieve answer for get_config")
+                    raise RPCError("Could not receive answer for get_config")
                 if is_network_appbase_ready(props):
                     if self.ws:
                         self.current_rpc = self.rpc_methods["wsappbase"]

@@ -326,7 +326,7 @@ class Market(dict):
             intervall times to reduce the call duration time. E.g. it is possible to
             receive the trades from the last 7 days, by fetching 100 trades each 6 hours.
 
-            When intervall is set to None, all trades are recieved between start and stop.
+            When intervall is set to None, all trades are received between start and stop.
             This can take a while.
 
             :param datetime start: Start date

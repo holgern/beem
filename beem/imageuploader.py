@@ -21,10 +21,10 @@ class ImageUploader(object):
     def __init__(
         self,
         base_url="https://steemitimages.com",
-        challange="ImageSigningChallenge",
+        challenge="ImageSigningChallenge",
         steem_instance=None,
     ):
-        self.challange = challange
+        self.challenge = challenge
         self.base_url = base_url
         self.steem = steem_instance or shared_steem_instance()
 
@@ -59,7 +59,7 @@ class ImageUploader(object):
         else:
             image_data = image
 
-        message = py23_bytes(self.challange, "ascii") + image_data
+        message = py23_bytes(self.challenge, "ascii") + image_data
         signature = sign_message(message, posting_wif)
         signature_in_hex = hexlify(signature).decode("ascii")
 

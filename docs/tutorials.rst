@@ -36,7 +36,7 @@ one comment operation from each sender.
   # Account and Comment will use now stm
   account = Account("test")
 
-  # Post 
+  # Post
   c = Comment("@gtg/witness-gtg-log")
 
   account.transfer("test1", 1, "STEEM")
@@ -122,12 +122,12 @@ Simple Sell Script
     from beem.market import Market
     from beem.price import Price
     from beem.amount import Amount
-    
+
     # Only for testing not a real working key
     wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-  
+
     #
-    # Instanciate Steem (pick network via API node)
+    # Instantiate Steem (pick network via API node)
     #
     steem = Steem(
         nobroadcast=True,   # <<--- set this to False when you want to fire!
@@ -179,7 +179,7 @@ Sell at a timely rate
 
     if __name__ == "__main__":
         #
-        # Instanciate Steem (pick network via API node)
+        # Instantiate Steem (pick network via API node)
         #
         steem = Steem(
             nobroadcast=True,   # <<--- set this to False when you want to fire!
@@ -235,7 +235,7 @@ Lets calculate the curation reward from the last 7 days:
     from datetime import datetime, timedelta
     from beem.account import Account
     from beem.amount import Amount
-    
+
     acc = Account("gtg")
     stop = datetime.utcnow() - timedelta(days=7)
     reward_vests = Amount("0 VESTS")

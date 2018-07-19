@@ -128,7 +128,7 @@ class BlockchainObject(dict):
             self.identifier = data.get(self.id_item)
             super(BlockchainObject, self).__init__(data)
         elif isinstance(data, integer_types):
-            # This is only for block number bascially
+            # This is only for block number basically
             self.identifier = data
             if not lazy and not self.cached:
                 self.refresh()

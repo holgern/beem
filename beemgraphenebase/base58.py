@@ -86,7 +86,7 @@ class Base58(object):
         elif _format.upper() in known_prefixes:
             return _format.upper() + str(self)
         else:
-            log.warn("Format %s unkown. You've been warned!\n" % _format)
+            log.warn("Format %s unknown. You've been warned!\n" % _format)
             return _format.upper() + str(self)
 
     def __repr__(self):
