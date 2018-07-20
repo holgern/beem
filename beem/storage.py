@@ -406,8 +406,8 @@ class Configuration(DataDir):
         "order-expiration": 7 * 24 * 60 * 60,
         "client_id": "",
         "hot_sign_redirect_uri": None,
-        "sc2_api_url": "https://v2.steemconnect.com/api/",
-        "oauth_base_url": "https://v2.steemconnect.com/oauth2/"}
+        "sc2_api_url": "https://steemconnect.com/api/",
+        "oauth_base_url": "https://steemconnect.com/oauth2/"}
 
     def __init__(self):
         super(Configuration, self).__init__()

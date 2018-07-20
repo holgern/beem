@@ -404,7 +404,8 @@ class TransactionBuilder(dict):
             elif self.steem.blocking:
                 ret = self.steem.rpc.broadcast_transaction_synchronous(
                     args, api=broadcast_api)
-                ret.update(**ret.get("trx"))
+                if "trx" in ret:
+                    ret.update(**ret.get("trx"))
             else:
                 self.steem.rpc.broadcast_transaction(
                     args, api=broadcast_api)

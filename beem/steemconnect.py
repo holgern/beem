@@ -50,7 +50,7 @@ class SteemConnect(object):
 
         .. testcode::
 
-            'https://v2.steemconnect.com/sign/transfer?from=test&to=test1&amount=1.000+STEEM&memo=test'
+            'https://steemconnect.com/sign/transfer?from=test&to=test1&amount=1.000+STEEM&memo=test'
 
         .. testoutput::
 
@@ -71,7 +71,7 @@ class SteemConnect(object):
 
         .. testcode::
 
-            'https://v2.steemconnect.com/sign/transfer?from=test&to=test1&amount=1.000+STEEM&memo=test'
+            'https://steemconnect.com/sign/transfer?from=test&to=test1&amount=1.000+STEEM&memo=test'
 
     """
 

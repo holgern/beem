@@ -353,28 +353,37 @@ class WitnessesRankedByVote(WitnessesObject):
         witnessList = []
         last_limit = limit
         self.identifier = ""
+        use_condenser = True
         self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase() and from_account == "":
+        if self.steem.rpc.get_use_appbase() and not use_condenser:
+            query_limit = 1000
+        else:
+            query_limit = 100
+        if self.steem.rpc.get_use_appbase() and not use_condenser and from_account == "":
             last_account = None
+        elif self.steem.rpc.get_use_appbase() and not use_condenser:
+            last_account = Witness(from_account, steem_instance=self.steem)["votes"]
         else:
             last_account = from_account
-        if limit > 100:
-            while last_limit > 100:
-                tmpList = WitnessesRankedByVote(last_account, 100)
+        if limit > query_limit:
+            while last_limit > query_limit:
+                tmpList = WitnessesRankedByVote(last_account, query_limit)
                 if (last_limit < limit):
                     witnessList.extend(tmpList[1:])
-                    last_limit -= 99
+                    last_limit -= query_limit - 1
                 else:
                     witnessList.extend(tmpList)
-                    last_limit -= 100
+                    last_limit -= query_limit
                 if self.steem.rpc.get_use_appbase():
-                    last_account = str(witnessList[-1]["votes"])
+                    last_account = witnessList[-1]["votes"]
                 else:
                     last_account = witnessList[-1]["owner"]
         if (last_limit < limit):
             last_limit += 1
-        if self.steem.rpc.get_use_appbase():
+        if self.steem.rpc.get_use_appbase() and not use_condenser:
             witnessess = self.steem.rpc.list_witnesses({'start': [last_account], 'limit': last_limit, 'order': 'by_vote_name'}, api="database")['witnesses']
+        elif self.steem.rpc.get_use_appbase() and use_condenser:
+            witnessess = self.steem.rpc.get_witnesses_by_vote(last_account, last_limit, api="condenser")
         else:
             witnessess = self.steem.rpc.get_witnesses_by_vote(last_account, last_limit)
         # self.witness_count = len(self.voted_witnessess)
