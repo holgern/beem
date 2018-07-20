@@ -289,7 +289,7 @@ class SteemConnect(object):
         if redirect_uri is not None:
             params.update({"redirect_uri": redirect_uri})
 
-        params = urlencode(params)
+        params = urlencode(params).replace("%27", "%22")
         url = urljoin(base_url, "sign/%s" % operation)
         url += "?" + params
 

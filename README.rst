@@ -156,6 +156,24 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.49
+-------
+* add get_parent() to comment
+* fix for beempy reward
+* fix #46 (used power calculation may treat downvotes incorrectly) by crokkon
+* fix #49 (discussions: set steem inst. as keyword argument) by crokkon
+* Fix issue #51 (Discussions.get_discussions("blog", ...) returns the same two comments over and over)
+* Fix #52 discussions.Replies_by_last_update() by crokkon
+* Some bug fixes for Discussions
+* Fix #54 (discussions may fail to handle empty responses correctly) by crokkon
+* Snapshot improved
+* Unit tests fixed
+* Examples account_vp_over_time, account_reputation_by_SP 
+* Spelling errors fix by crokkon
+* Adding account methods for feed, blog, comments and replies by crokkon
+* Fix #57 (SteemConnect expects double quotes in JSON)
+* Improved handling of "Client returned invalid format. Expected JSON!" erros
+
 0.19.48
 -------
 * Fix issue #45 (upvote() and downvote() of a pending post/comment without vote did not work)
