@@ -122,7 +122,7 @@ class Account(BlockchainObject):
         ]
         for p in parse_int:
             if p in account and isinstance(account.get(p), string_types):
-                account[p] = int(account.get(p, "0"))
+                account[p] = int(account.get(p, 0))
         if "proxied_vsf_votes" in account:
             proxied_vsf_votes = []
             for p_int in account["proxied_vsf_votes"]:
@@ -167,7 +167,7 @@ class Account(BlockchainObject):
             "sbd_seconds", "savings_sbd_seconds",
         ]
         parse_int_without_zero = [
-            "average_bandwidth", "lifetime_bandwidth", "lifetime_market_bandwidth", "reputation",
+            "lifetime_bandwidth",
         ]
         for p in parse_int:
             if p in output and isinstance(output[p], integer_types):
@@ -759,7 +759,7 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("test")
+                >>> account = Account("beem.app")
                 >>> account.get_balance("rewards", "SBD")
                 0.000 SBD
 
@@ -903,7 +903,7 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("test")
+                >>> account = Account("beem.app")
                 >>> account.get_owner_history()
                 []
 
@@ -930,7 +930,7 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("test")
+                >>> account = Account("beem.app")
                 >>> account.get_conversion_requests()
                 []
 
@@ -958,7 +958,7 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("test")
+                >>> account = Account("beem.app")
                 >>> account.get_vesting_delegations()
                 []
 
@@ -985,7 +985,7 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("test")
+                >>> account = Account("beem.app")
                 >>> account.get_withdraw_routes()
                 []
 
@@ -1013,7 +1013,7 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("test")
+                >>> account = Account("beem.app")
                 >>> account.get_savings_withdrawals()
                 []
 
@@ -1042,7 +1042,7 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("test")
+                >>> account = Account("beem.app")
                 >>> account.get_recovery_request()
 
         """
@@ -1069,7 +1069,7 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("test")
+                >>> account = Account("beem.app")
                 >>> account.get_escrow(1234)
 
         """
@@ -1128,7 +1128,7 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("test")
+                >>> account = Account("beem.app")
                 >>> account.get_tags_used_by_author()
                 []
 
@@ -1157,7 +1157,7 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("test")
+                >>> account = Account("beem.app")
                 >>> account.get_expiring_vesting_delegations()
                 []
 
@@ -1177,7 +1177,18 @@ class Account(BlockchainObject):
             return self.steem.rpc.get_expiring_vesting_delegations(account, formatTimeString(after), limit)
 
     def get_account_votes(self, account=None):
-        """Returns all votes that the account has done"""
+        """ Returns all votes that the account has done
+
+            :rtype: list
+
+            .. code-block:: python
+
+                >>> from beem.account import Account
+                >>> account = Account("beem.app")
+                >>> account.get_account_votes()
+                []
+
+        """
         if account is None:
             account = self["name"]
         elif isinstance(account, Account):
@@ -1186,7 +1197,7 @@ class Account(BlockchainObject):
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.get_account_votes(account)
+            return self.steem.rpc.get_account_votes(account, api="condenser")
         else:
             return self.steem.rpc.get_account_votes(account)
 
@@ -1883,10 +1894,10 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 from beem.account import Account
-                acc = Account("test")
-                profile = acc.profile
+                account = Account("test")
+                profile = account.profile
                 profile["about"] = "test account"
-                acc.update_account_profile(profile)
+                account.update_account_profile(profile)
 
         """
         if account is None:

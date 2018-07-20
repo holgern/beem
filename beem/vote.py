@@ -393,6 +393,8 @@ class AccountVotes(VotesObject):
         votes = account.get_account_votes()
         self.identifier = account["name"]
         vote_list = []
+        if votes is None:
+            votes = []
         for x in votes:
             time = x.get("time", "")
             if time != "" and isinstance(time, string_types):

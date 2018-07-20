@@ -238,6 +238,10 @@ class Comment(BlockchainObject):
         return self["parent_permlink"]
 
     @property
+    def depth(self):
+        return self["depth"]
+
+    @property
     def title(self):
         if "title" in self:
             return self["title"]

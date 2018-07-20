@@ -474,7 +474,7 @@ class Testcases(unittest.TestCase):
             content = self.bts.rpc.get_accounts([account["name"]])[0]
         keys = list(content.keys())
         json_content = account.json()
-        exclude_list = ['json_metadata', 'reputation', 'active_votes', 'savings_sbd_seconds']
+        exclude_list = [] # ['json_metadata', 'reputation', 'active_votes', 'savings_sbd_seconds']
         for k in keys:
             if k not in exclude_list:
                 if isinstance(content[k], dict) and isinstance(json_content[k], list):
@@ -534,3 +534,53 @@ class Testcases(unittest.TestCase):
         for v in account.history(start=start_num, only_ops=["vote"]):
             votes_list2.append(v)
         self.assertTrue(abs(len(votes_list) - len(votes_list2)) < 2)
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_comment_history(self, node_param):
+        if node_param == "non_appbase":
+            account = self.account
+        else:
+            account = self.account_appbase
+        comments = []
+        for c in account.comment_history(limit=1):
+            comments.append(c)
+        self.assertEqual(len(comments), 1)
+        self.assertEqual(comments[0]["author"], account["name"])
+        self.assertTrue(comments[0].is_comment())
+        self.assertTrue(comments[0].depth > 0)
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_blog_history(self, node_param):
+        if node_param == "non_appbase":
+            account = self.account
+        else:
+            account = self.account_appbase
+        posts = []
+        for p in account.blog_history(limit=1):
+            posts.append(p)
+        self.assertEqual(len(posts), 1)
+        self.assertEqual(posts[0]["author"], account["name"])
+        self.assertTrue(posts[0].is_main_post())
+        self.assertTrue(posts[0].depth == 0)
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
+    def test_reply_history(self, node_param):
+        if node_param == "non_appbase":
+            account = self.account
+        else:
+            account = self.account_appbase
+        replies = []
+        for r in account.reply_history(limit=1):
+            replies.append(r)
+        self.assertEqual(len(replies), 1)
+        self.assertTrue(replies[0].is_comment())
+        self.assertTrue(replies[0].depth > 0)
