@@ -18,6 +18,7 @@ from beemapi.steemnoderpc import SteemNodeRPC
 from beemapi.exceptions import NoAccessApi, NoApiWithName
 from beemgraphenebase.account import PrivateKey, PublicKey
 from beembase import transactions, operations
+from beemgraphenebase.chains import known_chains
 from .account import Account
 from .amount import Amount
 from .price import Price
@@ -69,6 +70,7 @@ class Steem(object):
         :param bool use_sc2: When True, a steemconnect object is created. Can be used for
             broadcast posting op or creating hot_links (default is False)
         :param SteemConnect steemconnect: A SteemConnect object can be set manually, set use_sc2 to True
+        :param dict custom_chains: custom chain which should be added to the known chains
 
         Three wallet operation modes are possible:
 
@@ -162,6 +164,7 @@ class Steem(object):
         self.steemconnect = kwargs.get("steemconnect", None)
         self.use_sc2 = bool(kwargs.get("use_sc2", False))
         self.blocking = kwargs.get("blocking", False)
+        self.custom_chains = kwargs.get("custom_chains", {})
 
         # Store config for access through other Classes
         self.config = config
@@ -392,7 +395,6 @@ class Steem(object):
         try:
             return self.rpc.get_network()
         except:
-            from beemgraphenebase.chains import known_chains
             return known_chains["STEEM"]
 
     def get_median_price(self, use_stored_data=True):
@@ -642,7 +644,6 @@ class Steem(object):
     @property
     def chain_params(self):
         if self.offline or self.rpc is None:
-            from beemgraphenebase.chains import known_chains
             return known_chains["STEEM"]
         else:
             return self.get_network()

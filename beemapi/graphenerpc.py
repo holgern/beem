@@ -99,6 +99,7 @@ class GrapheneRPC(object):
     :param bool autoconnect: When set to false, connection is performed on the first rpc call (default is True)
     :param bool use_condenser: Use the old condenser_api rpc protocol on nodes with version
         0.19.4 or higher. The settings has no effect on nodes with version of 0.19.3 or lower.
+    :param dict custom_chains: custom chain which should be added to the known chains
 
     Available APIs:
 
@@ -132,6 +133,13 @@ class GrapheneRPC(object):
         num_retries = kwargs.get("num_retries", -1)
         num_retries_call = kwargs.get("num_retries_call", 5)
         self.use_condenser = kwargs.get("use_condenser", False)
+        self.known_chains = known_chains
+        custom_chain = kwargs.get("custom_chains", {})
+        if len(custom_chain) > 0:
+            for c in custom_chain:
+                if c not in self.known_chains:
+                    self.known_chains[c] = custom_chain[c]
+
         self.nodes = Nodes(urls, num_retries, num_retries_call)
         if self.nodes.working_nodes_count == 0:
             self.current_rpc = self.rpc_methods["offline"]
@@ -288,7 +296,7 @@ class GrapheneRPC(object):
         else:
             raise("Connecting to unknown network!")
         highest_version_chain = None
-        for k, v in list(known_chains.items()):
+        for k, v in list(self.known_chains.items()):
             if v["chain_id"] == chain_id and self.version_string_to_int(v["min_version"]) <= self.version_string_to_int(network_version):
                 if highest_version_chain is None:
                     highest_version_chain = v

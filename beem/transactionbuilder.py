@@ -256,7 +256,8 @@ class TransactionBuilder(dict):
             ref_block_prefix=ref_block_prefix,
             expiration=expiration,
             operations=ops,
-            ref_block_num=ref_block_num
+            ref_block_num=ref_block_num,
+            custom_chains=self.steem.custom_chains
         )
 
         super(TransactionBuilder, self).update(self.tx.json())
@@ -290,7 +291,7 @@ class TransactionBuilder(dict):
             operations.default_prefix = self["blockchain"]["prefix"]
 
         try:
-            signedtx = Signed_Transaction(**self.json())
+            signedtx = Signed_Transaction(**self.json(), custom_chains=self.steem.custom_chains)
         except:
             raise ValueError("Invalid TransactionBuilder Format")
 

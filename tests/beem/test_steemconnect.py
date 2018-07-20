@@ -65,7 +65,7 @@ class Testcases(unittest.TestCase):
             "test1", 1.000, "STEEM", memo="test")
         sc2 = SteemConnect(steem_instance=bts)
         url = sc2.url_from_tx(tx)
-        url_test = 'https://v2.steemconnect.com/sign/transfer?from=test&to=test1&amount=1.000+STEEM&memo=test'
+        url_test = 'https://steemconnect.com/sign/transfer?from=test&to=test1&amount=1.000+STEEM&memo=test'
         self.assertEqual(len(url), len(url_test))
         self.assertEqual(len(url.split('?')), 2)
         self.assertEqual(url.split('?')[0], url_test.split('?')[0])
@@ -87,7 +87,7 @@ class Testcases(unittest.TestCase):
             bts = self.appbase
         sc2 = SteemConnect(steem_instance=bts)
         url = sc2.get_login_url("localhost", scope="login,vote")
-        url_test = 'https://v2.steemconnect.com/oauth2/authorize?client_id=None&redirect_uri=localhost&scope=login,vote'
+        url_test = 'https://steemconnect.com/oauth2/authorize?client_id=None&redirect_uri=localhost&scope=login,vote'
         self.assertEqual(len(url), len(url_test))
         self.assertEqual(len(url.split('?')), 2)
         self.assertEqual(url.split('?')[0], url_test.split('?')[0])
