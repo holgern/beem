@@ -6,7 +6,6 @@ from builtins import bytes, int, str
 import re
 import sys
 from .graphenerpc import GrapheneRPC
-from beemgraphenebase.chains import known_chains
 from . import exceptions
 import logging
 log = logging.getLogger(__name__)

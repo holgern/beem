@@ -19,17 +19,10 @@ from beemgraphenebase.objects import GrapheneObject, isArgsThisClass
 from .objecttypes import object_type
 from beemgraphenebase.account import PublicKey
 from beemgraphenebase.objects import Operation as GPHOperation
+from beemgraphenebase.chains import known_chains
 from .operationids import operations
 import struct
 default_prefix = "STM"
-
-asset_precision = {
-    "STEEM": 3,
-    "VESTS": 6,
-    "SBD": 3,
-    "GBG": 3,
-    "GOLOS": 3
-}
 
 
 @python_2_unicode_compatible
@@ -37,9 +30,16 @@ class Amount(object):
     def __init__(self, d):
         if isinstance(d, string_types):
             self.amount, self.asset = d.strip().split(" ")
-            if self.asset in asset_precision:
-                self.precision = asset_precision[self.asset]
-            else:
+            self.precision = None
+            for c in known_chains:
+                if self.precision is not None:
+                    continue
+                for asset in known_chains[c]["chain_assets"]:
+                    if self.precision is not None:
+                        continue
+                    if asset["symbol"] == self.asset:
+                        self.precision = asset["precision"]
+            if self.precision is None:
                 raise Exception("Asset unknown")
             self.amount = int(float(self.amount) * 10 ** self.precision)
 
