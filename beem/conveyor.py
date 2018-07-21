@@ -202,3 +202,26 @@ class Conveyor(object):
         return self._conveyor_method(account, signing_account,
                                      "conveyor.get_feature_flags",
                                      [account['name']])
+
+    def get_feature_flag(self, account, flag, signing_account=None):
+        """ Test if a specific feature flag is set for an account. The request
+            has to be signed by the requested account or an admin account.
+
+            :param str account: requested account
+            :param str flag: flag to be tested
+            :param str signing_account: (optional) account to sign the
+                request. If unset, `account` is used.
+
+            Example:
+            .. code-block:: python
+                from beem import Steem
+                from beem.conveyor import Conveyor
+                s = Steem(keys=[5JPOSTINGKEY])
+                c = Conveyor(steem_instance=s)
+                print(c.get_feature_flag('accountname', 'accepted_tos'))
+
+        """
+        account = Account(account, steem_instance=self.steem)
+        return self._conveyor_method(account, signing_account,
+                                     "conveyor.get_feature_flag",
+                                     [account['name'], flag])
