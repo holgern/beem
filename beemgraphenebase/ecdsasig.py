@@ -149,10 +149,7 @@ def sign_message(message, wif, hashfn=hashlib.sha256):
     if not isinstance(message, bytes_types):
         message = py23_bytes(message, "utf-8")
 
-    if hashfn is not None:
-        digest = hashfn(message).digest()
-    else:
-        digest = message
+    digest = hashfn(message).digest()
     priv_key = PrivateKey(wif)
     if SECP256K1_MODULE == "secp256k1":
         p = py23_bytes(priv_key)
