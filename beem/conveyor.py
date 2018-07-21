@@ -158,6 +158,29 @@ class Conveyor(object):
                                      "conveyor.get_user_data",
                                      [account['name']])
 
+    def set_user_data(self, account, params, signing_account=None):
+        """ Set the account's email address and phone number. The request has to be
+            signed by an admin account.
+
+            :param str account: requested account
+            :param dict param: user data to be set
+            :param str signing_account: (optional) account to sign the
+                request. If unset, `account` is used.
+
+            Example:
+            .. code-block:: python
+                from beem import Steem
+                from beem.conveyor import Conveyor
+                s = Steem(keys=[5JADMINPOSTINGKEY])
+                c = Conveyor(steem_instance=s)
+                userdata = {'email': 'foo@bar.com', 'phone':'+123456789'}
+                c.set_user_data('accountname', userdata, 'adminaccountname')
+
+        """
+        return self._conveyor_method(account, signing_account,
+                                     "conveyor.set_user_data",
+                                     [params])
+
     def get_feature_flags(self, account, signing_account=None):
         """ Get the account's feature flags. The request has to be signed by the
             requested account or an admin account.
