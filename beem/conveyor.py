@@ -65,9 +65,10 @@ class Conveyor(object):
         self.K = hashlib.sha256(py23_bytes('steem_jsonrpc_auth',
                                            self.ENCODING)).digest()
 
-    def hash_message(self, timestamp, account, method, params, nonce):
-        """ Hash a Conveyor API request with SHA256 according to
-            https://github.com/steemit/rpc-auth
+    def prehash_message(self, timestamp, account, method, params, nonce):
+        """ Prepare a hash for the Conveyor API request with SHA256 according
+            to https://github.com/steemit/rpc-auth
+            Hashing of `second` is then done inside `ecdsasig.sign_message()`.
 
             :param str timestamp: valid iso8601 datetime ending in "Z"
             :param str account: valid steem blockchain account name
@@ -78,8 +79,7 @@ class Conveyor(object):
         """
         first = hashlib.sha256(py23_bytes(timestamp + account + method +
                                           params, self.ENCODING))
-        second = hashlib.sha256(self.K + first.digest() + nonce)
-        return second.digest()
+        return self.K + first.digest() + nonce
 
     def _request(self, account, method, params, key):
         """Assemble the request, hash it, sign it and send it to the Conveyor
@@ -98,9 +98,9 @@ class Conveyor(object):
         nonce_bytes = struct.pack('>Q', nonce_int)  # 64bit ULL, big endian
         nonce_str = "%016x" % (nonce_int)
 
-        message = self.hash_message(timestamp, account, method,
-                                    params_enc, nonce_bytes)
-        signature = sign_message(message, key, hashfn=None)
+        message = self.prehash_message(timestamp, account, method,
+                                       params_enc, nonce_bytes)
+        signature = sign_message(message, key)
         signature_hex = hexlify(signature).decode(self.ENCODING)
 
         request = {
