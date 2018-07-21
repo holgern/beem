@@ -34,6 +34,11 @@ class Conveyor(object):
             assigning tags to accounts (or other identifiers) and querying for
             them."
 
+        Not contained in the documentation, but implemented and working:
+
+        * Draft handling: saving, listing and removing post drafts
+            consisting of a post title and a body.
+
         The underlying RPC authentication and request signing procedure is
         described here: https://github.com/steemit/rpc-auth
 
@@ -225,3 +230,49 @@ class Conveyor(object):
         return self._conveyor_method(account, signing_account,
                                      "conveyor.get_feature_flag",
                                      [account['name'], flag])
+
+    def save_draft(self, account, title, body):
+        """ Save a draft in the Conveyor database
+
+            :param str account: requested account
+            :param str title: draft post title
+            :param str body: draft post body
+
+        """
+        account = Account(account, steem_instance=self.steem)
+        draft = {'title': title, 'body': body}
+        return self._conveyor_method(account, None,
+                                     "conveyor.save_draft",
+                                     [account['name'], draft])
+
+    def list_drafts(self, account):
+        """ List all saved drafts from `account`
+
+            :param str account: requested account
+
+            Sample output:
+                .. code-block:: js
+                    {
+                        'jsonrpc': '2.0', 'id': 2, 'result': [
+                            {'title': 'draft-title', 'body': 'draft-body',
+                             'uuid': '06497e1e-ac30-48cb-a069-27e1672924c9'}
+                        ]
+                    }
+
+        """
+        account = Account(account, steem_instance=self.steem)
+        return self._conveyor_method(account, None,
+                                     "conveyor.list_drafts",
+                                     [account['name']])
+    def remove_draft(self, account, uuid):
+        """ Remove a draft from the Conveyor database
+
+            :param str account: requested account
+            :param str uuid: draft identifier as returned from
+                `list_drafts`
+
+        """
+        account = Account(account, steem_instance=self.steem)
+        return self._conveyor_method(account, None,
+                                     "conveyor.remove_draft",
+                                     [account['name'], uuid])
