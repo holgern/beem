@@ -15,6 +15,10 @@ from .instance import shared_steem_instance
 from .account import Account
 from beemgraphenebase.py23 import py23_bytes
 from beemgraphenebase.ecdsasig import sign_message
+try:
+    from urllib.parse import urljoin
+except ImportError:
+    from urlparse import urljoin
 
 
 class Conveyor(object):
@@ -264,6 +268,7 @@ class Conveyor(object):
         return self._conveyor_method(account, None,
                                      "conveyor.list_drafts",
                                      [account['name']])
+
     def remove_draft(self, account, uuid):
         """ Remove a draft from the Conveyor database
 
@@ -276,3 +281,16 @@ class Conveyor(object):
         return self._conveyor_method(account, None,
                                      "conveyor.remove_draft",
                                      [account['name'], uuid])
+
+    def healthcheck(self):
+        """ Get the Conveyor status
+
+            Sample output:
+
+            `{'ok': True, 'version': '1.1.1-4d28e36-1528725174',
+              'date': '2018-07-21T12:12:25.502Z'}`
+
+        """
+        url = urljoin(self.url, "/.well-known/healthcheck.json")
+        r = requests.get(url)
+        return r.json()
