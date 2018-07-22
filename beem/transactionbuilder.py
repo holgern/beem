@@ -291,7 +291,7 @@ class TransactionBuilder(dict):
             operations.default_prefix = self["blockchain"]["prefix"]
 
         try:
-            signedtx = Signed_Transaction(**self.json(), custom_chains=self.steem.custom_chains)
+            signedtx = Signed_Transaction(**self.json().update(custom_chains=self.steem.custom_chains))
         except:
             raise ValueError("Invalid TransactionBuilder Format")
 
