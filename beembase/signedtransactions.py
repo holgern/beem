@@ -29,6 +29,12 @@ class Signed_Transaction(GrapheneSigned_Transaction):
                     self.known_chains[c] = custom_chain[c]
         super(Signed_Transaction, self).__init__(*args, **kwargs)
 
+    def add_custom_chains(self, custom_chain):
+        if len(custom_chain) > 0:
+            for c in custom_chain:
+                if c not in self.known_chains:
+                    self.known_chains[c] = custom_chain[c]
+
     def sign(self, wifkeys, chain=u"STEEM"):
         return super(Signed_Transaction, self).sign(wifkeys, chain)
 
