@@ -18,6 +18,7 @@ beem Modules
    beem.blockchain
    beem.blockchainobject
    beem.comment
+   beem.conveyor
    beem.discussions
    beem.exceptions
    beem.imageuploader

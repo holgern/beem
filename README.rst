@@ -156,6 +156,11 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.50
+-------
+* Class to access Steemit Conveyor instances added by crokkon
+* Option added to loed custom chains into the Steem object
+
 0.19.49
 -------
 * add get_parent() to comment
