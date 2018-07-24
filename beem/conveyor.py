@@ -154,7 +154,9 @@ class Conveyor(object):
                 request. If unset, `account` is used.
 
             Example:
+
             .. code-block:: python
+
                 from beem import Steem
                 from beem.conveyor import Conveyor
                 s = Steem(keys=[5JPOSTINGKEY])
@@ -177,7 +179,9 @@ class Conveyor(object):
                 request. If unset, `account` is used.
 
             Example:
+
             .. code-block:: python
+
                 from beem import Steem
                 from beem.conveyor import Conveyor
                 s = Steem(keys=[5JADMINPOSTINGKEY])
@@ -199,7 +203,9 @@ class Conveyor(object):
                 request. If unset, `account` is used.
 
             Example:
+
             .. code-block:: python
+
                 from beem import Steem
                 from beem.conveyor import Conveyor
                 s = Steem(keys=[5JPOSTINGKEY])
@@ -222,7 +228,9 @@ class Conveyor(object):
                 request. If unset, `account` is used.
 
             Example:
+
             .. code-block:: python
+
                 from beem import Steem
                 from beem.conveyor import Conveyor
                 s = Steem(keys=[5JPOSTINGKEY])
@@ -255,13 +263,15 @@ class Conveyor(object):
             :param str account: requested account
 
             Sample output:
-                .. code-block:: js
-                    {
-                        'jsonrpc': '2.0', 'id': 2, 'result': [
-                            {'title': 'draft-title', 'body': 'draft-body',
-                             'uuid': '06497e1e-ac30-48cb-a069-27e1672924c9'}
-                        ]
-                    }
+
+            .. code-block:: js
+
+                {
+                    'jsonrpc': '2.0', 'id': 2, 'result': [
+                        {'title': 'draft-title', 'body': 'draft-body',
+                         'uuid': '06497e1e-ac30-48cb-a069-27e1672924c9'}
+                    ]
+                }
 
         """
         account = Account(account, steem_instance=self.steem)
@@ -287,8 +297,12 @@ class Conveyor(object):
 
             Sample output:
 
-            `{'ok': True, 'version': '1.1.1-4d28e36-1528725174',
-              'date': '2018-07-21T12:12:25.502Z'}`
+            .. code-block:: js
+
+                {
+                    'ok': True, 'version': '1.1.1-4d28e36-1528725174',
+                    'date': '2018-07-21T12:12:25.502Z'
+                }
 
         """
         url = urljoin(self.url, "/.well-known/healthcheck.json")
