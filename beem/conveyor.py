@@ -31,7 +31,7 @@ class Conveyor(object):
           hide certain features behind flags."
         * User data: "Conveyor is the central point for storing sensitive user
           data (email, phone, etc). No other services should store this data
-        and should instead query for it here every time."
+          and should instead query for it here every time."
         * User tags: "Tagging mechanism for other services, allows defining and
           assigning tags to accounts (or other identifiers) and querying for
           them."
