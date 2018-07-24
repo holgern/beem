@@ -101,7 +101,7 @@ Receive all Blocks from the Blockchain
 
    from beem.blockchain import Blockchain
    blockchain = Blockchain()
-   for op in Blockchain.ops():
+   for op in blockchain.stream():
        print(op)
 
 Access one Block

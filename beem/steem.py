@@ -110,6 +110,22 @@ class Steem(object):
             >>> print(steem.get_blockchain_version())  # doctest: +SKIP
 
         This class also deals with edits, votes and reading content.
+
+        Example for adding a custom chain:
+
+        .. code-block:: python
+
+            from beem import Steem
+            stm = Steem(node=["https://mytstnet.com"], custom_chains={"MYTESTNET":
+                {'chain_assets': [{'asset': 'SBD', 'id': 0, 'precision': 3, 'symbol': 'SBD'},
+                                  {'asset': 'STEEM', 'id': 1, 'precision': 3, 'symbol': 'STEEM'},
+                                  {'asset': 'VESTS', 'id': 2, 'precision': 6, 'symbol': 'VESTS'}],
+                 'chain_id': '79276aea5d4877d9a25892eaa01b0adf019d3e5cb12a97478df3298ccdd01674',
+                 'min_version': '0.0.0',
+                 'prefix': 'MTN'}
+                }
+            )
+
     """
 
     def __init__(self,
@@ -592,6 +608,7 @@ class Steem(object):
         """ Return witness elected chain properties
 
             Properties:::
+
                 {
                     'account_creation_fee': '30.000 STEEM',
                     'maximum_block_size': 65536,

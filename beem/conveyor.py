@@ -28,20 +28,18 @@ class Conveyor(object):
         Description from the official documentation:
 
         * Feature flags: "Feature flags allows our apps (condenser mainly) to
-            hide certain features behind flags."
-
+          hide certain features behind flags."
         * User data: "Conveyor is the central point for storing sensitive user
-            data (email, phone, etc). No other services should store this data
-            and should instead query for it here every time."
-
+          data (email, phone, etc). No other services should store this data
+        and should instead query for it here every time."
         * User tags: "Tagging mechanism for other services, allows defining and
-            assigning tags to accounts (or other identifiers) and querying for
-            them."
+          assigning tags to accounts (or other identifiers) and querying for
+          them."
 
         Not contained in the documentation, but implemented and working:
 
         * Draft handling: saving, listing and removing post drafts
-            consisting of a post title and a body.
+          consisting of a post title and a body.
 
         The underlying RPC authentication and request signing procedure is
         described here: https://github.com/steemit/rpc-auth
@@ -159,7 +157,7 @@ class Conveyor(object):
 
                 from beem import Steem
                 from beem.conveyor import Conveyor
-                s = Steem(keys=[5JPOSTINGKEY])
+                s = Steem(keys=["5JPOSTINGKEY"])
                 c = Conveyor(steem_instance=s)
                 print(c.get_user_data('accountname'))
 
@@ -184,7 +182,7 @@ class Conveyor(object):
 
                 from beem import Steem
                 from beem.conveyor import Conveyor
-                s = Steem(keys=[5JADMINPOSTINGKEY])
+                s = Steem(keys=["5JADMINPOSTINGKEY"])
                 c = Conveyor(steem_instance=s)
                 userdata = {'email': 'foo@bar.com', 'phone':'+123456789'}
                 c.set_user_data('accountname', userdata, 'adminaccountname')
@@ -208,7 +206,7 @@ class Conveyor(object):
 
                 from beem import Steem
                 from beem.conveyor import Conveyor
-                s = Steem(keys=[5JPOSTINGKEY])
+                s = Steem(keys=["5JPOSTINGKEY"])
                 c = Conveyor(steem_instance=s)
                 print(c.get_feature_flags('accountname'))
 
@@ -233,7 +231,7 @@ class Conveyor(object):
 
                 from beem import Steem
                 from beem.conveyor import Conveyor
-                s = Steem(keys=[5JPOSTINGKEY])
+                s = Steem(keys=["5JPOSTINGKEY"])
                 c = Conveyor(steem_instance=s)
                 print(c.get_feature_flag('accountname', 'accepted_tos'))
 
