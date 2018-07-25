@@ -133,6 +133,7 @@ class GrapheneRPC(object):
         num_retries = kwargs.get("num_retries", -1)
         num_retries_call = kwargs.get("num_retries_call", 5)
         self.use_condenser = kwargs.get("use_condenser", False)
+        self.disable_chain_detection = kwargs.get("disable_chain_detection", False)
         self.known_chains = known_chains
         custom_chain = kwargs.get("custom_chains", {})
         if len(custom_chain) > 0:
@@ -218,6 +219,13 @@ class GrapheneRPC(object):
                 if self.ws:
                     self.ws.connect(self.url)
                     self.rpclogin(self.user, self.password)
+                if self.disable_chain_detection:
+                    # Set to appbase rpc format
+                    if self.current_rpc == self.rpc_methods['ws']:
+                        self.current_rpc = self.rpc_methods['wsappbase']
+                    else:
+                        self.current_rpc = self.rpc_methods['appbase']
+                    break
                 try:
                     props = None
                     if not self.use_condenser:

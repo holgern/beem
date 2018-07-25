@@ -133,10 +133,31 @@ def resolve_authorperm(identifier):
 
     Splits the string into author and permlink with the
     following separator: ``/``.
+
+    Examples:
+
+        .. code-block:: python
+
+            >>> from beem.utils import resolve_authorperm
+            >>> print(resolve_authorperm('https://d.tube/#!/v/pottlund/m5cqkd1a'))
+            ('pottlund', 'm5cqkd1a')
+            >>> print(resolve_authorperm("https://steemit.com/witness-category/@gtg/24lfrm-gtg-witness-log"))
+            ('gtg', '24lfrm-gtg-witness-log')
+            >>> print(resolve_authorperm("@gtg/24lfrm-gtg-witness-log"))
+            ('gtg', '24lfrm-gtg-witness-log')
+            >>> print(resolve_authorperm("https://busy.org/@gtg/24lfrm-gtg-witness-log"))
+            ('gtg', '24lfrm-gtg-witness-log')
+
     """
+    # without any http(s)
     match = re.match("@?([\w\-\.]*)/([\w\-]*)", identifier)
     if hasattr(match, "group"):
         return match.group(1), match.group(2)
+    # dtube url
+    match = re.match("([\w\-\.]+[^#?\s]+)/#!/v/?([\w\-\.]*)/([\w\-]*)", identifier)
+    if hasattr(match, "group"):
+        return match.group(2), match.group(3)
+    # url
     match = re.match("([\w\-\.]+[^#?\s]+)/@?([\w\-\.]*)/([\w\-]*)", identifier)
     if not hasattr(match, "group"):
         raise ValueError("Invalid identifier")
