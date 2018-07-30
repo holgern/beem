@@ -101,12 +101,11 @@ class Testcases(unittest.TestCase):
             bts = self.appbase
         b = Blockchain(steem_instance=bts)
         accounts = []
-        for acc in b.get_all_accounts(steps=100, limit=100):
+        limit = 200
+        for acc in b.get_all_accounts(steps=100, limit=limit):
             accounts.append(acc)
-        self.assertEqual(len(accounts), 100)
-        limit = 5000
-        self.assertEqual(len(list(b.get_all_accounts(limit=limit))), limit)
-        self.assertEqual(len(set(b.get_all_accounts(limit=limit))), limit)
+        self.assertEqual(len(accounts), limit)
+        self.assertEqual(len(set(accounts)), limit)
 
     @parameterized.expand([
         ("non_appbase"),
