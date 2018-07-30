@@ -139,14 +139,10 @@ def resolve_authorperm(identifier):
         .. code-block:: python
 
             >>> from beem.utils import resolve_authorperm
-            >>> print(resolve_authorperm('https://d.tube/#!/v/pottlund/m5cqkd1a'))
-            ('pottlund', 'm5cqkd1a')
-            >>> print(resolve_authorperm("https://steemit.com/witness-category/@gtg/24lfrm-gtg-witness-log"))
-            ('gtg', '24lfrm-gtg-witness-log')
-            >>> print(resolve_authorperm("@gtg/24lfrm-gtg-witness-log"))
-            ('gtg', '24lfrm-gtg-witness-log')
-            >>> print(resolve_authorperm("https://busy.org/@gtg/24lfrm-gtg-witness-log"))
-            ('gtg', '24lfrm-gtg-witness-log')
+            >>> author, permlink = resolve_authorperm('https://d.tube/#!/v/pottlund/m5cqkd1a')
+            >>> author, permlink = resolve_authorperm("https://steemit.com/witness-category/@gtg/24lfrm-gtg-witness-log")
+            >>> author, permlink = resolve_authorperm("@gtg/24lfrm-gtg-witness-log")
+            >>> author, permlink = resolve_authorperm("https://busy.org/@gtg/24lfrm-gtg-witness-log")
 
     """
     # without any http(s)
