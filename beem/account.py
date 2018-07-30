@@ -94,7 +94,7 @@ class Account(BlockchainObject):
         """
         if not self.steem.is_connected():
             return
-        self.steem.rpc.set_next_node_on_empty_reply(False)
+        self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
                 account = self.steem.rpc.find_accounts({'accounts': [self.identifier]}, api="database")
         else:

@@ -12,7 +12,7 @@ from beem.discussions import (
     Post_discussions_by_payout, Discussions_by_created, Discussions_by_active,
     Discussions_by_cashout, Discussions_by_votes,
     Discussions_by_children, Discussions_by_hot, Discussions_by_feed, Discussions_by_blog,
-    Discussions_by_comments, Discussions_by_promoted
+    Discussions_by_comments, Discussions_by_promoted, Discussions
 )
 from datetime import datetime
 from beem.instance import set_shared_steem_instance
@@ -214,4 +214,9 @@ class Testcases(unittest.TestCase):
         query["limit"] = 10
         query["tag"] = "steemit"
         d = Discussions_by_promoted(query, steem_instance=bts)
+        discussions = Discussions(steem_instance=bts)
+        d2 = []
+        for dd in discussions.get_discussions("promoted", query, limit=10):
+            d2.append(dd)
         self.assertEqual(len(d), 10)
+        self.assertEqual(len(d2), 10)

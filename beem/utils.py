@@ -268,6 +268,8 @@ def remove_from_dict(obj, keys=list(), keep_keys=True):
     """
     if type(obj) == dict:
         items = list(obj.items())
+    elif isinstance(obj, dict):
+        items = list(obj.items())
     else:
         items = list(obj.__dict__.items())
     if keep_keys:

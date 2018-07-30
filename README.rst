@@ -156,6 +156,13 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.51
+-------
+* Add missing trx_num to streamed block operation
+* Add d.tube format to resolve_authorperm
+* disable_chain_detection added to graphenerpc (for testing hivemind e.g.)
+* set_next_node_on_empty_reply added to some appbase rpc calls
+
 0.19.50
 -------
 * Class to access Steemit Conveyor instances added by crokkon

@@ -675,7 +675,7 @@ class Blockchain(object):
                     'memo': 'https://steemit.com/lofi/@johngreenfield/lofi-joji-yeah-right',
                     '_id': '6d4c5f2d4d8ef1918acaee4a8dce34f9da384786',
                     'timestamp': datetime.datetime(2018, 5, 9, 11, 23, 6, tzinfo=<UTC>),
-                    'block_num': 22277588, 'trx_id': 'cf11b2ac8493c71063ec121b2e8517ab1e0e6bea'
+                    'block_num': 22277588, 'trx_num': 35, 'trx_id': 'cf11b2ac8493c71063ec121b2e8517ab1e0e6bea'
                 }
 
             output when `raw_ops=True` is set:
@@ -733,6 +733,7 @@ class Blockchain(object):
                     if not bool(opNames) or op_type in opNames and block_num > 0:
                         if raw_ops:
                             yield {"block_num": block_num,
+                                   "trx_num": trx_nr,
                                    "op": [op_type, op],
                                    "timestamp": timestamp}
                         else:
@@ -741,6 +742,7 @@ class Blockchain(object):
                             updated_op.update({"_id": _id,
                                                "timestamp": timestamp,
                                                "block_num": block_num,
+                                               "trx_num": trx_nr,
                                                "trx_id": trx_id})
                             yield updated_op
 
@@ -800,7 +802,7 @@ class Blockchain(object):
             lastname = None
         else:
             lastname = start
-        self.steem.rpc.set_next_node_on_empty_reply(False)
+        self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         while True:
             if self.steem.rpc.get_use_appbase():
                 ret = self.steem.rpc.list_accounts({'start': lastname, 'limit': steps, 'order': 'by_name'}, api="database")["accounts"]
