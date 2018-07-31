@@ -156,6 +156,13 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.52
+-------
+* appbase.buildtime.io node added
+* history is made ready for appbase
+* account refresh fixed
+* fix ops_statistics for new appase nodes
+
 0.19.51
 -------
 * Add missing trx_num to streamed block operation

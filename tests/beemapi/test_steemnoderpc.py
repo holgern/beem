@@ -83,6 +83,16 @@ class Testcases(unittest.TestCase):
         ):
             bts.rpc.get_config_abc()
 
+    def test_normal_appbase_switch(self):
+        bts = Steem(node=[self.nodes[0], self.nodes_appbase[0]])
+        self.assertTrue(bts.chain_params['min_version'] == '0.19.5')
+        self.assertFalse(bts.rpc.get_use_appbase())
+        self.assertTrue(isinstance(bts.rpc.get_config(api="database"), dict))
+        bts.rpc.next()
+        self.assertTrue(bts.chain_params['min_version'] == '0.19.10')
+        self.assertTrue(bts.rpc.get_use_appbase())
+        self.assertTrue(isinstance(bts.rpc.get_config(api="database"), dict))
+
     def test_connect_test_node(self):
         rpc = self.rpc
         self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)

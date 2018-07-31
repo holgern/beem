@@ -264,16 +264,15 @@ class Block(BlockchainObject):
         else:
             ops_stat = add_to_ops_stat.copy()
         for op in self.operations:
+                if "op" in op:
+                    op = op["op"]
                 if isinstance(op, dict) and 'type' in op:
                     op_type = op["type"]
                     if len(op_type) > 10 and op_type[len(op_type) - 10:] == "_operation":
                         op_type = op_type[:-10]
-                    ops_stat[op_type] += 1
                 else:
-                    if "op" in op:
-                        ops_stat[op["op"][0]] += 1
-                    else:
-                        ops_stat[op[0]] += 1
+                    op_type = op[0]
+                ops_stat[op_type] += 1
         return ops_stat
 
 
