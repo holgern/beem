@@ -1479,7 +1479,14 @@ class Account(BlockchainObject):
                 return
             elif stop is not None and not use_block_num and order == -1 and item_index < stop:
                 return
-            op_type, op = event['op']
+
+            if isinstance(event['op'], list):
+                op_type, op = event['op']
+            else:
+                op_type = event['op']['type']
+                if len(op_type) > 10 and op_type[len(op_type) - 10:] == "_operation":
+                    op_type = op_type[:-10]
+                op = event['op']['value']
             block_props = remove_from_dict(event, keys=['op'], keep_keys=False)
 
             def construct_op(account_name):
