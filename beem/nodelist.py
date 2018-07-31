@@ -123,7 +123,7 @@ class NodeList(list):
                 "type": "appbase",
                 "owner": "themarkymark",
                 "score": 120
-            },            
+            },
             {
                 "url": "wss://gtg.steem.house:8090",
                 "version": "0.19.5",
