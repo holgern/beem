@@ -111,6 +111,20 @@ class NodeList(list):
                 "score": 120
             },
             {
+                "url": "wss://appbase.buildteam.io",
+                "version": "0.19.10",
+                "type": "appbase",
+                "owner": "themarkymark",
+                "score": 165
+            },
+            {
+                "url": "https://appbase.buildteam.io",
+                "version": "0.19.10",
+                "type": "appbase",
+                "owner": "themarkymark",
+                "score": 120
+            },            
+            {
                 "url": "wss://gtg.steem.house:8090",
                 "version": "0.19.5",
                 "type": "normal",
