@@ -269,7 +269,7 @@ class Blockchain(object):
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
-            ret = self.steem.rpc.get_transaction({'trx': transaction}, api="database")["hex"]
+            ret = self.steem.rpc.get_transaction_hex({'trx': transaction}, api="database")["hex"]
         else:
             ret = self.steem.rpc.get_transaction_hex(transaction, api="database")
         return ret
