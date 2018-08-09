@@ -41,6 +41,7 @@ from beembase import operations
 from beemgraphenebase.account import PrivateKey, PublicKey, BrainKey
 from beemgraphenebase.base58 import Base58
 from beem.nodelist import NodeList
+from beem.conveyor import Conveyor
 
 
 click.disable_unicode_literals_warning = True
@@ -1145,6 +1146,8 @@ def allow(foreign_account, permission, account, weight, threshold):
         from beemgraphenebase.account import PasswordKey
         pwd = click.prompt("Password for Key Derivation", confirmation_prompt=True, hide_input=True)
         foreign_account = format(PasswordKey(account, pwd, permission).get_public(), stm.prefix)
+    if threshold is not None:
+        threshold = int(threshold)
     tx = acc.allow(foreign_account, weight=weight, permission=permission, threshold=threshold)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
@@ -1170,6 +1173,8 @@ def disallow(foreign_account, permission, account, threshold):
     if permission not in ["posting", "active", "owner"]:
         print("Wrong permission, please use: posting, active or owner!")
         return
+    if threshold is not None:
+        threshold = int(threshold)
     acc = Account(account, steem_instance=stm)
     if not foreign_account:
         from beemgraphenebase.account import PasswordKey
@@ -2986,6 +2991,64 @@ def info(objects):
                 print("Post now known" % obj)
         else:
             print("Couldn't identify object to read")
+
+
+@cli.command()
+@click.argument('account', nargs=1, required=False)
+@click.option('--signing-account', '-s', help='Signing account, when empty account is used.')
+def userdata(account, signing_account):
+    """ Get the account's email address and phone number.
+
+        The request has to be signed by the requested account or an admin account.
+    """
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not unlock_wallet(stm):
+        return
+    if not account:
+        if "default_account" in stm.config:
+            account = stm.config["default_account"]
+    account = Account(account, steem_instance=stm)
+    if signing_account is not None:
+        signing_account = Account(signing_account, steem_instance=stm)
+    c = Conveyor(steem_instance=stm)
+    user_data = c.get_user_data(account, signing_account=signing_account)
+    t = PrettyTable(["Key", "Value"])
+    t.align = "l"
+    for key in user_data:
+        # hide internal config data
+        t.add_row([key, user_data[key]])
+    print(t)
+
+
+@cli.command()
+@click.argument('account', nargs=1, required=False)
+@click.option('--signing-account', '-s', help='Signing account, when empty account is used.')
+def featureflags(account, signing_account):
+    """ Get the account's feature flags.
+
+        The request has to be signed by the requested account or an admin account.
+    """
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not unlock_wallet(stm):
+        return
+    if not account:
+        if "default_account" in stm.config:
+            account = stm.config["default_account"]
+    account = Account(account, steem_instance=stm)
+    if signing_account is not None:
+        signing_account = Account(signing_account, steem_instance=stm)
+    c = Conveyor(steem_instance=stm)
+    user_data = c.get_feature_flags(account, signing_account=signing_account)
+    t = PrettyTable(["Key", "Value"])
+    t.align = "l"
+    for key in user_data:
+        # hide internal config data
+        t.add_row([key, user_data[key]])
+    print(t)
 
 
 if __name__ == "__main__":

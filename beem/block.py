@@ -166,7 +166,7 @@ class Block(BlockchainObject):
             return None
 
     def time(self):
-        """Return a datatime instance for the timestamp of this block"""
+        """Return a datetime instance for the timestamp of this block"""
         return self['timestamp']
 
     @property
@@ -342,7 +342,7 @@ class BlockHeader(BlockchainObject):
         )
 
     def time(self):
-        """ Return a datatime instance for the timestamp of this block
+        """ Return a datetime instance for the timestamp of this block
         """
         return self['timestamp']
 

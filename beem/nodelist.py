@@ -143,14 +143,14 @@ class NodeList(list):
                 "version": "0.19.2",
                 "type": "normal",
                 "owner": "pharesim",
-                "score": 10
+                "score": -10
             },
             {
                 "url": "https://steemd.pevo.science",
                 "version": "0.19.3",
                 "type": "normal",
                 "owner": "pharesim",
-                "score": 10
+                "score": -10
             },
             {
                 "url": "wss://rpc.steemliberator.com",
@@ -185,14 +185,14 @@ class NodeList(list):
                 "version": "0.19.3",
                 "type": "normal",
                 "owner": "steemgigs",
-                "score": 10
+                "score": -10
             },
             {
                 "url": "https://steemd.steemgigs.org",
                 "version": "0.19.3",
                 "type": "normal",
                 "owner": "steemgigs",
-                "score": 10
+                "score": -10
             },
             {
                 "url": "wss://steemd.minnowsupportproject.org",

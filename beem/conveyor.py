@@ -163,9 +163,13 @@ class Conveyor(object):
 
         """
         account = Account(account, steem_instance=self.steem)
-        return self._conveyor_method(account, signing_account,
-                                     "conveyor.get_user_data",
-                                     [account['name']])
+        user_data = self._conveyor_method(account, signing_account,
+                                          "conveyor.get_user_data",
+                                          [account['name']])
+        if "result" in user_data:
+            return user_data["result"]
+        else:
+            return user_data
 
     def set_user_data(self, account, params, signing_account=None):
         """ Set the account's email address and phone number. The request has to be
@@ -212,9 +216,13 @@ class Conveyor(object):
 
         """
         account = Account(account, steem_instance=self.steem)
-        return self._conveyor_method(account, signing_account,
-                                     "conveyor.get_feature_flags",
-                                     [account['name']])
+        feature_flags = self._conveyor_method(account, signing_account,
+                                              "conveyor.get_feature_flags",
+                                              [account['name']])
+        if "result" in feature_flags:
+            return feature_flags["result"]
+        else:
+            return feature_flags
 
     def get_feature_flag(self, account, flag, signing_account=None):
         """ Test if a specific feature flag is set for an account. The request
