@@ -571,7 +571,7 @@ class Steem(object):
         """
         used_power = self._calc_resulting_vote(voting_power=voting_power, vote_pct=vote_pct, use_stored_data=use_stored_data)
         # calculate vote rshares
-        rshares = int(math.copysign(vests * used_power / STEEM_100_PERCENT, vote_pct))
+        rshares = int(math.copysign(vests * 1e6 * used_power / STEEM_100_PERCENT, vote_pct))
         return rshares
 
     def rshares_to_vote_pct(self, rshares, steem_power=None, vests=None, voting_power=STEEM_100_PERCENT, use_stored_data=True):
