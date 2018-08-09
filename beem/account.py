@@ -1141,7 +1141,7 @@ class Account(BlockchainObject):
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.get_tags_used_by_author({'account': account}, api="tags")['tags']
+            return self.steem.rpc.get_tags_used_by_author({'author': account}, api="tags")['tags']
         else:
             return self.steem.rpc.get_tags_used_by_author(account, api="tags")
 
