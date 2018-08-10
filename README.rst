@@ -163,6 +163,7 @@ Changelog
 * bug fixed in allow and disallow for CLI
 * Issue #52 closed thanks to crokkon
 * Issue #64 fixed
+* Issue #66 fixed thanks to flugschwein
 
 0.19.52
 -------

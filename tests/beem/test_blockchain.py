@@ -11,6 +11,7 @@ import time
 from pprint import pprint
 from beem import Steem
 from beem.blockchain import Blockchain
+from beem.exceptions import BlockWaitTimeExceeded
 from beem.block import Block
 from beem.instance import set_shared_steem_instance
 from beem.nodelist import NodeList
@@ -234,15 +235,24 @@ class Testcases(unittest.TestCase):
             bts = self.bts
         else:
             bts = self.appbase
-        b = Blockchain(steem_instance=bts, max_block_wait_repetition=6)
+        b = Blockchain(steem_instance=bts, max_block_wait_repetition=18)
         start_num = b.get_current_block_num()
         blocknum = start_num
         last_fetched_block_num = None
         for i in range(3):
             block = b.wait_for_and_get_block(blocknum)
             last_fetched_block_num = block.block_num
-            blocknum = last_fetched_block_num + 2
-        self.assertEqual(last_fetched_block_num, start_num + 4)
+            blocknum = last_fetched_block_num + 1
+        self.assertEqual(last_fetched_block_num, start_num + 2)
+
+        b2 = Blockchain(steem_instance=bts, max_block_wait_repetition=1)
+        with self.assertRaises(
+            BlockWaitTimeExceeded
+        ):
+            for i in range(300):
+                block = b2.wait_for_and_get_block(blocknum)
+                last_fetched_block_num = block.block_num
+                blocknum = last_fetched_block_num + 2
 
     def test_hash_op(self):
         bts = self.bts
