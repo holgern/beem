@@ -523,17 +523,8 @@ class Steem(object):
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
         """
-        reward_fund = self.get_reward_funds(use_stored_data=use_stored_data)
-        reward_balance = Amount(reward_fund["reward_balance"], steem_instance=self).amount
-        recent_claims = float(reward_fund["recent_claims"])
-        reward_share = reward_balance / recent_claims
-
-        resulting_vote = self._calc_resulting_vote(voting_power=voting_power, vote_pct=vote_pct)
-        median_price = self.get_median_price(use_stored_data=use_stored_data)
-        SBD_price = (median_price * Amount("1 STEEM", steem_instance=self)).amount
-        VoteValue = math.copysign(vests * resulting_vote * 100 *
-                                  reward_share * SBD_price, vote_pct)
-        return VoteValue
+        vote_rshares = self.vests_to_rshares(vests, voting_power=voting_power, vote_pct=vote_pct)
+        return self.rshares_to_sbd(vote_rshares)
 
     def _max_vote_denom(self, use_stored_data=True):
         # get props
