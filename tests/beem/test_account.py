@@ -558,9 +558,9 @@ class Testcases(unittest.TestCase):
     ])
     def test_blog_history(self, node_param):
         if node_param == "non_appbase":
-            account = self.account
+            account = Account("holger80", steem_instance=self.bts)
         else:
-            account = self.account_appbase
+            account = Account("holger80", steem_instance=self.appbase)
         posts = []
         for p in account.blog_history(limit=1):
             posts.append(p)

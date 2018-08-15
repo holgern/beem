@@ -167,7 +167,7 @@ class Account(BlockchainObject):
             "sbd_seconds", "savings_sbd_seconds",
         ]
         parse_int_without_zero = [
-            "lifetime_bandwidth",
+            "lifetime_bandwidth", 'average_bandwidth',
         ]
         for p in parse_int:
             if p in output and isinstance(output[p], integer_types):
@@ -2643,6 +2643,8 @@ class Account(BlockchainObject):
             if start_permlink:
                 results = results[1:]  # strip duplicates from previous iteration
             for post in results:
+                if post['author'] == '':
+                    continue
                 if (reblogs or post['author'] == account['name']):
                     post_count += 1
                     yield post
@@ -2702,6 +2704,8 @@ class Account(BlockchainObject):
             if comment_count > 0 and start_permlink:
                 results = results[1:]  # strip duplicates from previous iteration
             for comment in results:
+                if comment["permlink"] == '':
+                    continue
                 comment_count += 1
                 yield comment
                 start_permlink = comment['permlink']
@@ -2771,6 +2775,8 @@ class Account(BlockchainObject):
             if reply_count > 0 and start_permlink:
                 results = results[1:]  # strip duplicates from previous iteration
             for reply in results:
+                if reply['author'] == '':
+                    continue
                 reply_count += 1
                 yield reply
                 start_author = reply['author']
