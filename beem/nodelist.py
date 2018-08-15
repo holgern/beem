@@ -28,56 +28,56 @@ class NodeList(list):
         nodes = [
             {
                 "url": "https://api.steemit.com",
-                "version": "0.19.10",
+                "version": "0.19.11",
                 "type": "appbase",
                 "owner": "steemit",
                 "score": 100
             },
             {
                 "url": "wss://appbasetest.timcliff.com",
-                "version": "0.19.10",
+                "version": "0.19.11",
                 "type": "appbase",
                 "owner": "timcliff",
                 "score": 20
             },
             {
                 "url": "https://appbasetest.timcliff.com",
-                "version": "0.19.10",
+                "version": "0.19.11",
                 "type": "appbase",
                 "owner": "timcliff",
                 "score": 10
             },
             {
                 "url": "https://api.steem.house",
-                "version": "0.19.10",
+                "version": "0.19.11",
                 "type": "appbase",
                 "owner": "gtg",
                 "score": 90
             },
             {
                 "url": "https://api.steemitdev.com",
-                "version": "0.19.10",
+                "version": "0.19.11",
                 "type": "appbase-dev",
                 "owner": "steemit",
                 "score": 100
             },
             {
                 "url": "https://api.steemitstage.com",
-                "version": "0.19.10",
+                "version": "0.19.11",
                 "type": "appbase-dev",
                 "owner": "steemit",
                 "score": 110
             },
             {
                 "url": "wss://rpc.steemviz.com",
-                "version": "0.19.3",
+                "version": "0.19.6",
                 "type": "normal",
                 "owner": "ausbitbank",
                 "score": 1
             },
             {
                 "url": "https://rpc.steemviz.com",
-                "version": "0.19.3",
+                "version": "0.19.6",
                 "type": "normal",
                 "owner": "ausbitbank",
                 "score": 1
@@ -112,14 +112,14 @@ class NodeList(list):
             },
             {
                 "url": "wss://appbase.buildteam.io",
-                "version": "0.19.10",
+                "version": "0.19.11",
                 "type": "appbase",
                 "owner": "themarkymark",
                 "score": 165
             },
             {
                 "url": "https://appbase.buildteam.io",
-                "version": "0.19.10",
+                "version": "0.19.11",
                 "type": "appbase",
                 "owner": "themarkymark",
                 "score": 120
@@ -147,7 +147,7 @@ class NodeList(list):
             },
             {
                 "url": "https://steemd.pevo.science",
-                "version": "0.19.3",
+                "version": "0.19.6",
                 "type": "normal",
                 "owner": "pharesim",
                 "score": -10
@@ -168,43 +168,43 @@ class NodeList(list):
             },
             {
                 "url": "wss://seed.bitcoiner.me",
-                "version": "0.19.3",
+                "version": "0.19.6",
                 "type": "normal",
                 "owner": "bitcoiner",
                 "score": -10
             },
             {
                 "url": "https://seed.bitcoiner.me",
-                "version": "0.19.3",
+                "version": "0.19.6",
                 "type": "normal",
                 "owner": "bitcoiner",
                 "score": -10
             },
             {
                 "url": "wss://steemd.steemgigs.org",
-                "version": "0.19.3",
+                "version": "0.19.6",
                 "type": "normal",
                 "owner": "steemgigs",
                 "score": -10
             },
             {
                 "url": "https://steemd.steemgigs.org",
-                "version": "0.19.3",
+                "version": "0.19.6",
                 "type": "normal",
                 "owner": "steemgigs",
                 "score": -10
             },
             {
                 "url": "wss://steemd.minnowsupportproject.org",
-                "version": "0.19.3",
-                "type": "normal",
+                "version": "0.19.11",
+                "type": "appbase",
                 "owner": "followbtcnews",
                 "score": 10
             },
             {
                 "url": "https://steemd.minnowsupportproject.org",
-                "version": "0.19.3",
-                "type": "normal",
+                "version": "0.19.11",
+                "type": "appbase",
                 "owner": "followbtcnews",
                 "score": 10
             },
@@ -330,8 +330,8 @@ class NodeList(list):
         """ Returns nodes as list
 
             :param bool normal: when True, nodes with version 0.19.5 are included
-            :param bool appbase: when True, nodes with version 0.19.10 are included
-            :param bool dev: when True, dev nodes with version 0.19.10 are included
+            :param bool appbase: when True, nodes with version 0.19.11 are included
+            :param bool dev: when True, dev nodes with version 0.19.11 are included
             :param bool testnet: when True, testnet nodes are included
             :param bool testnetdev: When True, testnet-dev nodes are included
 
