@@ -359,7 +359,7 @@ class Account(BlockchainObject):
             vests = vests - (self["delegated_vesting_shares"]) + (self["received_vesting_shares"])
         return self.steem.vests_to_sp(vests)
 
-    def get_voting_value_SBD(self, voting_weight=100, voting_power=None, steem_power=None, new_vote=True):
+    def get_voting_value_SBD(self, voting_weight=100, voting_power=None, steem_power=None, not_broadcasted_vote=True):
         """ Returns the account voting value in SBD
         """
         if voting_power is None:
@@ -369,7 +369,7 @@ class Account(BlockchainObject):
         else:
             sp = steem_power
 
-        VoteValue = self.steem.sp_to_sbd(sp, voting_power=voting_power * 100, vote_pct=voting_weight * 100, new_vote=new_vote)
+        VoteValue = self.steem.sp_to_sbd(sp, voting_power=voting_power * 100, vote_pct=voting_weight * 100, not_broadcasted_vote=not_broadcasted_vote)
         return VoteValue
 
     def get_creator(self):

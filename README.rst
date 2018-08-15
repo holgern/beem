@@ -156,6 +156,15 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.54
+-------
+* Issue #69 fixed
+* bug in batched streaming + cli fixed
+* Nodelist updated
+* unit tests improved
+* Add last_current_block_num parameter to wait_for_and_get_block for reducing the number of api calls
+* not_broadcasted_vote parameter added for improving vote calculation accuracy thanks to flugschwein
+
 0.19.53
 -------
 * Add userdata and featureflags to beempy
