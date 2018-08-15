@@ -74,3 +74,17 @@ class Testcases(unittest.TestCase):
             self.assertTrue(block.identifier <= self.stop)
         self.assertEqual(op_stat["transfer"], op_stat4["transfer"])
         self.assertEqual(op_stat["vote"], op_stat4["vote"])
+
+    def test_stream_batch2(self):
+        bts = self.bts
+        b = Blockchain(steem_instance=bts)
+        ops_stream = []
+        start_block = 25097000
+        stop_block = 25097100
+        opNames = ["account_create", "custom_json"]
+        for op in b.stream(start=int(start_block), stop=int(stop_block), opNames=opNames, max_batch_size=50, threading=False, thread_num=8):
+            ops_stream.append(op)
+        self.assertTrue(ops_stream[0]["block_num"] >= start_block)
+        self.assertTrue(ops_stream[-1]["block_num"] <= stop_block)
+        op_stat = b.ops_statistics(start=start_block, stop=stop_block)
+        self.assertEqual(op_stat["account_create"] + op_stat["custom_json"], len(ops_stream))

@@ -543,7 +543,7 @@ class Blockchain(object):
                 # Blocks from start until head block
                 for blocknum in range(start, head_block + 1):
                     # Get full block
-                    block = self.wait_for_and_get_block(blocknum, only_ops=only_ops, only_virtual_ops=only_virtual_ops, block_number_check_cnt=5)
+                    block = self.wait_for_and_get_block(blocknum, only_ops=only_ops, only_virtual_ops=only_virtual_ops, block_number_check_cnt=5, last_current_block_num=current_block_num)
                     yield block
             # Set new start
             start = head_block + 1
@@ -556,7 +556,7 @@ class Blockchain(object):
             # Sleep for one block
             time.sleep(self.block_interval)
 
-    def wait_for_and_get_block(self, block_number, blocks_waiting_for=None, only_ops=False, only_virtual_ops=False, block_number_check_cnt=-1):
+    def wait_for_and_get_block(self, block_number, blocks_waiting_for=None, only_ops=False, only_virtual_ops=False, block_number_check_cnt=-1, last_current_block_num=None):
         """ Get the desired block from the chain, if the current head block is smaller (for both head and irreversible)
             then we wait, but a maxmimum of blocks_waiting_for * max_block_wait_repetition time before failure.
 
@@ -566,17 +566,25 @@ class Blockchain(object):
             :param bool only_ops: Returns blocks with operations only, when set to True (default: False)
             :param bool only_virtual_ops: Includes only virtual operations (default: False)
             :param int block_number_check_cnt: limit the number of retries when greater than -1
+            :param int last_current_block_num: can be used to reduce the number of get_current_block_num() api calls
 
         """
+        if last_current_block_num is None:
+            last_current_block_num = self.get_current_block_num()
+        elif last_current_block_num - block_number < 50:
+            last_current_block_num = self.get_current_block_num()
+
         if not blocks_waiting_for:
             blocks_waiting_for = max(
-                1, block_number - self.get_current_block_num())
+                1, block_number - last_current_block_num)
 
             repetition = 0
             # can't return the block before the chain has reached it (support future block_num)
-            while self.get_current_block_num() < block_number:
+            while last_current_block_num < block_number:
                 repetition += 1
                 time.sleep(self.block_interval)
+                if last_current_block_num - block_number < 50:
+                    last_current_block_num = self.get_current_block_num()
                 if repetition > blocks_waiting_for * self.max_block_wait_repetition:
                     raise BlockWaitTimeExceeded("Already waited %d s" % (blocks_waiting_for * self.max_block_wait_repetition * self.block_interval))
         # block has to be returned properly

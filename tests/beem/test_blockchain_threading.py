@@ -83,3 +83,18 @@ class Testcases(unittest.TestCase):
         self.assertEqual(len(block_num_list), len(block_num_list2))
         for i in range(len(block_num_list)):
             self.assertEqual(block_num_list[i], block_num_list2[i])
+
+    def test_stream_threading2(self):
+        bts = self.bts
+        b = Blockchain(steem_instance=bts)
+
+        ops_stream = []
+        start_block = 25097000
+        stop_block = 25097100
+        opNames = ["account_create", "custom_json"]
+        for op in b.stream(start=int(start_block), stop=int(stop_block), opNames=opNames, threading=True, thread_num=8):
+            ops_stream.append(op)
+        self.assertTrue(ops_stream[0]["block_num"] >= start_block)
+        self.assertTrue(ops_stream[-1]["block_num"] <= stop_block)
+        op_stat = b.ops_statistics(start=start_block, stop=stop_block)
+        self.assertEqual(op_stat["account_create"] + op_stat["custom_json"], len(ops_stream))
