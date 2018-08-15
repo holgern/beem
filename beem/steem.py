@@ -443,18 +443,19 @@ class Steem(object):
             blockchain_version = '0.0.0'
         return blockchain_version
 
-    def rshares_to_sbd(self, rshares, use_stored_data=True):
+    def rshares_to_sbd(self, rshares, new_vote=False, use_stored_data=True):
         """ Calculates the current SBD value of a vote
         """
-        payout = float(rshares) * self.get_sbd_per_rshares(use_stored_data=use_stored_data)
+        payout = float(rshares) * self.get_sbd_per_rshares(use_stored_data=use_stored_data,
+                                                           new_vote_rshares=rshares if new_vote else 0)
         return payout
 
-    def get_sbd_per_rshares(self, use_stored_data=True):
+    def get_sbd_per_rshares(self, new_vote_rshares=0, use_stored_data=True):
         """ Returns the current rshares to SBD ratio
         """
         reward_fund = self.get_reward_funds(use_stored_data=use_stored_data)
         reward_balance = Amount(reward_fund["reward_balance"], steem_instance=self).amount
-        recent_claims = float(reward_fund["recent_claims"])
+        recent_claims = float(reward_fund["recent_claims"]) + new_vote_rshares
 
         fund_per_share = reward_balance / (recent_claims)
         median_price = self.get_median_price(use_stored_data=use_stored_data)
@@ -508,32 +509,25 @@ class Steem(object):
         """
         return sp * 1e6 / self.get_steem_per_mvest(timestamp, use_stored_data=use_stored_data)
 
-    def sp_to_sbd(self, sp, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, use_stored_data=True):
+    def sp_to_sbd(self, sp, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, new_vote=True, use_stored_data=True):
         """ Obtain the resulting SBD vote value from Steem power
             :param number steem_power: Steem Power
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
+            :param bool new_vote: new or already existing vote (True = new vote). Only impactful for very big votes. Slight modification to the value calculation.
         """
         vesting_shares = int(self.sp_to_vests(sp, use_stored_data=use_stored_data))
-        return self.vests_to_sbd(vesting_shares, voting_power=voting_power, vote_pct=vote_pct)
+        return self.vests_to_sbd(vesting_shares, voting_power=voting_power, vote_pct=vote_pct, new_vote=new_vote, use_stored_data=use_stored_data)
 
-    def vests_to_sbd(self, vests, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, use_stored_data=True):
+    def vests_to_sbd(self, vests, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, new_vote=True, use_stored_data=True):
         """ Obtain the resulting SBD vote value from vests
             :param number vests: vesting shares
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
+            :param bool new_vote: new or already existing vote (True = new vote). Only impactful for very big votes. Slight modification to the value calculation.
         """
-        reward_fund = self.get_reward_funds(use_stored_data=use_stored_data)
-        reward_balance = Amount(reward_fund["reward_balance"], steem_instance=self).amount
-        recent_claims = float(reward_fund["recent_claims"])
-        reward_share = reward_balance / recent_claims
-
-        resulting_vote = self._calc_resulting_vote(voting_power=voting_power, vote_pct=vote_pct)
-        median_price = self.get_median_price(use_stored_data=use_stored_data)
-        SBD_price = (median_price * Amount("1 STEEM", steem_instance=self)).amount
-        VoteValue = math.copysign(vests * resulting_vote * 100 *
-                                  reward_share * SBD_price, vote_pct)
-        return VoteValue
+        vote_rshares = self.vests_to_rshares(vests, voting_power=voting_power, vote_pct=vote_pct)
+        return self.rshares_to_sbd(vote_rshares, new_vote=new_vote, use_stored_data=use_stored_data)
 
     def _max_vote_denom(self, use_stored_data=True):
         # get props
