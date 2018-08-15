@@ -413,8 +413,6 @@ class Blockchain(object):
                 current_block_num = self.get_current_block_num()
                 head_block = current_block_num
             if threading and not head_block_reached:
-                # disable autoclean
-                auto_clean = current_block.get_cache_auto_clean()
                 latest_block = start - 1
                 result_block_nums = []
                 for blocknum in range(start, head_block + 1, thread_num):
@@ -423,8 +421,7 @@ class Blockchain(object):
                     if FUTURES_MODULE is not None:
                         futures = []
                     block_num_list = []
-                    # current_block.set_cache_auto_clean(False)
-                    freeze = self.steem.rpc.nodes.freeze_current_node
+                    # freeze = self.steem.rpc.nodes.freeze_current_node
                     num_retries = self.steem.rpc.nodes.num_retries
                     # self.steem.rpc.nodes.freeze_current_node = True
                     self.steem.rpc.nodes.num_retries = thread_num
@@ -448,10 +445,8 @@ class Blockchain(object):
                         for result in pool.results():
                             results.append(result)
                         pool.abort()
-                    # current_block.clear_cache_from_expired_items()
-                    # current_block.set_cache_auto_clean(auto_clean)
                     self.steem.rpc.nodes.num_retries = num_retries
-                    self.steem.rpc.nodes.freeze_current_node = freeze
+                    # self.steem.rpc.nodes.freeze_current_node = freeze
                     new_error_cnt = self.steem.rpc.nodes.node.error_cnt
                     self.steem.rpc.nodes.node.error_cnt = error_cnt
                     if new_error_cnt > error_cnt:
@@ -460,12 +455,11 @@ class Blockchain(object):
 
                     checked_results = []
                     for b in results:
-                        if len(b.operations) > 0:
-                            if b.block_num is not None and int(b.block_num) not in result_block_nums:
-                                b["id"] = b.block_num
-                                b.identifier = b.block_num
-                                checked_results.append(b)
-                                result_block_nums.append(int(b.block_num))
+                        if b.block_num is not None and int(b.block_num) not in result_block_nums:
+                            b["id"] = b.block_num
+                            b.identifier = b.block_num
+                            checked_results.append(b)
+                            result_block_nums.append(int(b.block_num))
 
                     missing_block_num = list(set(block_num_list).difference(set(result_block_nums)))
                     while len(missing_block_num) > 0:
@@ -490,7 +484,6 @@ class Blockchain(object):
                             block = Block(blocknum, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
                             result_block_nums.append(blocknum)
                             yield block
-                current_block.set_cache_auto_clean(auto_clean)
             elif max_batch_size is not None and (head_block - start) >= max_batch_size and not head_block_reached:
                 if not self.steem.is_connected():
                     raise OfflineHasNoRPCException("No RPC available in offline mode!")
@@ -534,14 +527,18 @@ class Blockchain(object):
                         if not isinstance(block_batch, list):
                             block_batch = [block_batch]
                         for block in block_batch:
+                            if not bool(block):
+                                continue
                             if self.steem.rpc.get_use_appbase():
                                 if only_virtual_ops:
                                     block = block["ops"]
                                 else:
                                     block = block["block"]
-                            block["id"] = blocknum
-                            yield Block(block, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
-                            blocknum += 1
+                            block = Block(block, only_ops=only_ops, only_virtual_ops=only_virtual_ops, steem_instance=self.steem)
+                            block["id"] = block.block_num
+                            block.identifier = block.block_num
+                            yield block
+                            blocknum = block.block_num
             else:
                 # Blocks from start until head block
                 for blocknum in range(start, head_block + 1):

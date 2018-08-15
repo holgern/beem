@@ -1882,13 +1882,13 @@ def witnessupdate(witness, maximum_block_size, account_creation_fee, sbd_interes
         return
     witness = Witness(witness, steem_instance=stm)
     props = witness["props"]
-    if account_creation_fee:
+    if account_creation_fee is not None:
         props["account_creation_fee"] = str(
-            Amount("%f STEEM" % account_creation_fee))
-    if maximum_block_size:
-        props["maximum_block_size"] = maximum_block_size
-    if sbd_interest_rate:
-        props["sbd_interest_rate"] = int(sbd_interest_rate * 100)
+            Amount("%f STEEM" % float(account_creation_fee)))
+    if maximum_block_size is not None:
+        props["maximum_block_size"] = int(maximum_block_size)
+    if sbd_interest_rate is not None:
+        props["sbd_interest_rate"] = int(float(sbd_interest_rate) * 100)
     tx = witness.update(signing_key or witness["signing_key"], url or witness["url"], props)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
