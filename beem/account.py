@@ -373,6 +373,12 @@ class Account(BlockchainObject):
         return VoteValue
 
     def get_vote_pct_for_SBD(self, sbd, voting_power=None, steem_power=None):
+        """ Returns the voting percentage needed to have a vote worth a given number of SBD.
+
+            If the retuned number is bigger than 10000 or smaller than -10000,
+            the given SBD value is too high for that account
+
+            :param amount sbd: The amount of SBD in vote value"""
         if voting_power is None:
             voting_power = self.get_voting_power()
         if steem_power is None:
