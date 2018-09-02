@@ -573,6 +573,9 @@ class Steem(object):
         return rshares
 
     def sbd_to_rshares(self, sbd, use_stored_data=True):
+        """ Obtain the r-shares from SBD
+
+        :param amount sbd: SBD"""
         if isinstance(sbd, Amount):
             sbd = Amount(sbd, steem_instance=self)
         elif isinstance(sbd, string_types):
