@@ -375,14 +375,17 @@ class Account(BlockchainObject):
     def get_vote_pct_for_SBD(self, sbd, voting_power=None, steem_power=None):
         """ Returns the voting percentage needed to have a vote worth a given number of SBD.
 
-            If the retuned number is bigger than 10000 or smaller than -10000,
+            If the returned number is bigger than 10000 or smaller than -10000,
             the given SBD value is too high for that account
 
-            :param amount sbd: The amount of SBD in vote value"""
+            :param str/int/Amount sbd: The amount of SBD in vote value
+
+        """
         if voting_power is None:
             voting_power = self.get_voting_power()
         if steem_power is None:
             steem_power = self.get_steem_power()
+
         if isinstance(sbd, Amount):
             sbd = Amount(sbd, steem_instance=self)
         elif isinstance(sbd, string_types):
@@ -390,8 +393,7 @@ class Account(BlockchainObject):
         else:
             sbd = Amount(sbd, 'SBD', steem_instance=self)
         if sbd['symbol'] != 'SBD':
-            raise AssertionError('Should input SBD, not any other currency!')
-
+            raise AssertionError('Should input SBD, not any other asset!')
 
         vote_pct = self.steem.rshares_to_vote_pct(self.steem.sbd_to_rshares(sbd), voting_power=voting_power * 100, steem_power=steem_power)
         return vote_pct

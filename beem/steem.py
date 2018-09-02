@@ -575,7 +575,9 @@ class Steem(object):
     def sbd_to_rshares(self, sbd, use_stored_data=True):
         """ Obtain the r-shares from SBD
 
-        :param amount sbd: SBD"""
+        :param amount sbd: SBD
+
+        """
         if isinstance(sbd, Amount):
             sbd = Amount(sbd, steem_instance=self)
         elif isinstance(sbd, string_types):
@@ -583,9 +585,8 @@ class Steem(object):
         else:
             sbd = Amount(sbd, 'SBD', steem_instance=self)
         if sbd['symbol'] != 'SBD':
-            raise AssertionError('Should input SBD, not any other currency!')
+            raise AssertionError('Should input SBD, not any other asset!')
         return int(sbd.amount / self.get_sbd_per_rshares(use_stored_data=use_stored_data))
-
 
     def rshares_to_vote_pct(self, rshares, steem_power=None, vests=None, voting_power=STEEM_100_PERCENT, use_stored_data=True):
         """ Obtain the voting percentage for a desired rshares value
@@ -619,16 +620,18 @@ class Steem(object):
 
     def sbd_to_vote_pct(self, sbd, steem_power=None, vests=None, voting_power=STEEM_100_PERCENT, use_stored_data=True):
         """ Obtain the voting percentage for a desired SBD value
-                    for a given Steem Power or vesting shares and voting power
-                    Give either Steem Power or vests, not both.
-                    When the output is greater than 10000 or smaller than -10000,
-                    the SBD value is too high.
+            for a given Steem Power or vesting shares and voting power
+            Give either Steem Power or vests, not both.
+            When the output is greater than 10000 or smaller than -10000,
+            the SBD value is too high.
 
-                    Returns the required voting percentage (100% = 10000)
+            Returns the required voting percentage (100% = 10000)
 
-                    :param amount sbd: desired SBD value
-                    :param number steem_power: Steem Power
-                    :param number vests: vesting shares"""
+            :param str/int/Amount sbd: desired SBD value
+            :param number steem_power: Steem Power
+            :param number vests: vesting shares
+
+        """
         if isinstance(sbd, Amount):
             sbd = Amount(sbd, steem_instance=self)
         elif isinstance(sbd, string_types):
