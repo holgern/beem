@@ -377,6 +377,15 @@ class Account(BlockchainObject):
             voting_power = self.get_voting_power()
         if steem_power is None:
             steem_power = self.get_steem_power()
+        if isinstance(sbd, Amount):
+            sbd = Amount(sbd, steem_instance=self)
+        elif isinstance(sbd, string_types):
+            sbd = Amount(sbd, steem_instance=self)
+        else:
+            sbd = Amount(sbd, 'SBD', steem_instance=self)
+        if sbd['symbol'] != 'SBD':
+            raise AssertionError('Should input SBD, not any other currency!')
+
 
         vote_pct = self.steem.rshares_to_vote_pct(self.steem.sbd_to_rshares(sbd), voting_power=voting_power * 100, steem_power=steem_power)
         return vote_pct
