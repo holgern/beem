@@ -372,6 +372,15 @@ class Account(BlockchainObject):
         VoteValue = self.steem.sp_to_sbd(sp, voting_power=voting_power * 100, vote_pct=voting_weight * 100, not_broadcasted_vote=not_broadcasted_vote)
         return VoteValue
 
+    def get_vote_pct_for_SBD(self, sbd, voting_power=None, steem_power=None):
+        if voting_power is None:
+            voting_power = self.get_voting_power()
+        if steem_power is None:
+            steem_power = self.get_steem_power()
+
+        vote_pct = self.steem.rshares_to_vote_pct(self.steem.sbd_to_rshares(sbd), voting_power=voting_power * 100, steem_power=steem_power)
+        return vote_pct
+
     def get_creator(self):
         """ Returns the account creator or `None` if the account was mined
         """
