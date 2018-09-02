@@ -372,7 +372,7 @@ class Account(BlockchainObject):
         VoteValue = self.steem.sp_to_sbd(sp, voting_power=voting_power * 100, vote_pct=voting_weight * 100, not_broadcasted_vote=not_broadcasted_vote)
         return VoteValue
 
-    def get_vote_pct_for_SBD(self, sbd, voting_power=None, steem_power=None):
+    def get_vote_pct_for_SBD(self, sbd, voting_power=None, steem_power=None, not_broadcasted_vote=True):
         """ Returns the voting percentage needed to have a vote worth a given number of SBD.
 
             If the returned number is bigger than 10000 or smaller than -10000,
@@ -395,7 +395,7 @@ class Account(BlockchainObject):
         if sbd['symbol'] != 'SBD':
             raise AssertionError('Should input SBD, not any other asset!')
 
-        vote_pct = self.steem.rshares_to_vote_pct(self.steem.sbd_to_rshares(sbd), voting_power=voting_power * 100, steem_power=steem_power)
+        vote_pct = self.steem.rshares_to_vote_pct(self.steem.sbd_to_rshares(sbd, not_broadcasted_vote=not_broadcasted_vote), voting_power=voting_power * 100, steem_power=steem_power)
         return vote_pct
 
     def get_creator(self):

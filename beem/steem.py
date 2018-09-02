@@ -572,7 +572,7 @@ class Steem(object):
         rshares = int(math.copysign(vests * 1e6 * used_power / STEEM_100_PERCENT, vote_pct))
         return rshares
 
-    def sbd_to_rshares(self, sbd, use_stored_data=True):
+    def sbd_to_rshares(self, sbd, not_broadcasted_vote=False, precision_iterations=10, use_stored_data=True):
         """ Obtain the r-shares from SBD
 
         :param amount sbd: SBD
@@ -586,7 +586,12 @@ class Steem(object):
             sbd = Amount(sbd, 'SBD', steem_instance=self)
         if sbd['symbol'] != 'SBD':
             raise AssertionError('Should input SBD, not any other asset!')
-        return int(sbd.amount / self.get_sbd_per_rshares(use_stored_data=use_stored_data))
+        if not not_broadcasted_vote:
+            return sbd.amount / self.get_sbd_per_rshares(use_stored_data=use_stored_data)
+        rshares = self.sbd_to_rshares(sbd, not_broadcasted_vote=False, use_stored_data=use_stored_data)
+        for i in range(precision_iterations):
+            rshares = sbd.amount / self.get_sbd_per_rshares(not_broadcasted_vote_rshares=rshares, use_stored_data=use_stored_data)
+        return int(sbd.amount / self.get_sbd_per_rshares(not_broadcasted_vote_rshares=rshares, use_stored_data=use_stored_data))
 
     def rshares_to_vote_pct(self, rshares, steem_power=None, vests=None, voting_power=STEEM_100_PERCENT, use_stored_data=True):
         """ Obtain the voting percentage for a desired rshares value
@@ -618,7 +623,7 @@ class Steem(object):
         vote_pct = used_power * STEEM_100_PERCENT / (60 * 60 * 24) / voting_power
         return int(math.copysign(vote_pct, rshares))
 
-    def sbd_to_vote_pct(self, sbd, steem_power=None, vests=None, voting_power=STEEM_100_PERCENT, use_stored_data=True):
+    def sbd_to_vote_pct(self, sbd, steem_power=None, vests=None, voting_power=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
         """ Obtain the voting percentage for a desired SBD value
             for a given Steem Power or vesting shares and voting power
             Give either Steem Power or vests, not both.
@@ -640,7 +645,7 @@ class Steem(object):
             sbd = Amount(sbd, 'SBD', steem_instance=self)
         if sbd['symbol'] != 'SBD':
             raise AssertionError()
-        rshares = self.sbd_to_rshares(sbd, use_stored_data=use_stored_data)
+        rshares = self.sbd_to_rshares(sbd, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)
         return self.rshares_to_vote_pct(rshares, steem_power=steem_power, vests=vests, voting_power=voting_power, use_stored_data=use_stored_data)
 
     def get_chain_properties(self, use_stored_data=True):
