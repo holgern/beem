@@ -614,6 +614,18 @@ class Steem(object):
         vote_pct = used_power * STEEM_100_PERCENT / (60 * 60 * 24) / voting_power
         return int(math.copysign(vote_pct, rshares))
 
+    def sbd_to_vote_pct(self, sbd, steem_power=None, vests=None, voting_power=STEEM_100_PERCENT, use_stored_data=True):
+        if isinstance(sbd, Amount):
+            sbd = Amount(sbd, steem_instance=self)
+        elif isinstance(sbd, string_types):
+            sbd = Amount(sbd, steem_instance=self)
+        else:
+            sbd = Amount(sbd, 'SBD', steem_instance=self)
+        if sbd['symbol'] != 'SBD':
+            raise AssertionError()
+        rshares = self.sbd_to_rshares(sbd, use_stored_data=use_stored_data)
+        return self.rshares_to_vote_pct(rshares, steem_power=steem_power, vests=vests, voting_power=voting_power, use_stored_data=use_stored_data)
+
     def get_chain_properties(self, use_stored_data=True):
         """ Return witness elected chain properties
 
