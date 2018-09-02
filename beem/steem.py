@@ -615,6 +615,17 @@ class Steem(object):
         return int(math.copysign(vote_pct, rshares))
 
     def sbd_to_vote_pct(self, sbd, steem_power=None, vests=None, voting_power=STEEM_100_PERCENT, use_stored_data=True):
+        """ Obtain the voting percentage for a desired SBD value
+                    for a given Steem Power or vesting shares and voting power
+                    Give either Steem Power or vests, not both.
+                    When the output is greater than 10000 or smaller than -10000,
+                    the SBD value is too high.
+
+                    Returns the required voting percentage (100% = 10000)
+
+                    :param amount sbd: desired SBD value
+                    :param number steem_power: Steem Power
+                    :param number vests: vesting shares"""
         if isinstance(sbd, Amount):
             sbd = Amount(sbd, steem_instance=self)
         elif isinstance(sbd, string_types):
