@@ -580,7 +580,7 @@ class Steem(object):
         else:
             sbd = Amount(sbd, 'SBD', steem_instance=self)
         if sbd['symbol'] != 'SBD':
-            raise AssertionError()
+            raise AssertionError('Should input SBD, not any other currency!')
         return int(sbd.amount / self.get_sbd_per_rshares(use_stored_data=use_stored_data))
 
 
