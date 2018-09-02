@@ -572,6 +572,18 @@ class Steem(object):
         rshares = int(math.copysign(vests * 1e6 * used_power / STEEM_100_PERCENT, vote_pct))
         return rshares
 
+    def sbd_to_rshares(self, sbd, use_stored_data=True):
+        if isinstance(sbd, Amount):
+            sbd = Amount(sbd, steem_instance=self)
+        elif isinstance(sbd, string_types):
+            sbd = Amount(sbd, steem_instance=self)
+        else:
+            sbd = Amount(sbd, 'SBD', steem_instance=self)
+        if sbd['symbol'] != 'SBD':
+            raise AssertionError()
+        return int(sbd.amount / self.get_sbd_per_rshares(use_stored_data=use_stored_data))
+
+
     def rshares_to_vote_pct(self, rshares, steem_power=None, vests=None, voting_power=STEEM_100_PERCENT, use_stored_data=True):
         """ Obtain the voting percentage for a desired rshares value
             for a given Steem Power or vesting shares and voting_power
