@@ -575,7 +575,10 @@ class Steem(object):
     def sbd_to_rshares(self, sbd, not_broadcasted_vote=False, precision_iterations=10, use_stored_data=True):
         """ Obtain the r-shares from SBD
 
-        :param amount sbd: SBD
+        :param Amount sbd: SBD
+        :param int precision_iterations: This is needed for making the calculation more precise.
+         The higher the number, the bigger the computational effort needed. It gets automatically adjusted
+         normally.
 
         """
         if isinstance(sbd, Amount):
