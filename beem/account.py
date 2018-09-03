@@ -387,11 +387,11 @@ class Account(BlockchainObject):
             steem_power = self.get_steem_power()
 
         if isinstance(sbd, Amount):
-            sbd = Amount(sbd, steem_instance=self)
+            sbd = Amount(sbd, steem_instance=self.steem)
         elif isinstance(sbd, string_types):
-            sbd = Amount(sbd, steem_instance=self)
+            sbd = Amount(sbd, steem_instance=self.steem)
         else:
-            sbd = Amount(sbd, 'SBD', steem_instance=self)
+            sbd = Amount(sbd, 'SBD', steem_instance=self.steem)
         if sbd['symbol'] != 'SBD':
             raise AssertionError('Should input SBD, not any other asset!')
 
