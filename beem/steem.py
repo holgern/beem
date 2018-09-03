@@ -572,10 +572,10 @@ class Steem(object):
         rshares = int(math.copysign(vests * 1e6 * used_power / STEEM_100_PERCENT, vote_pct))
         return rshares
 
-    def sbd_to_rshares(self, sbd, not_broadcasted_vote=False, precision_iterations=10, use_stored_data=True):
+    def sbd_to_rshares(self, sbd, not_broadcasted_vote=False, precision_iterations=None, use_stored_data=True):
         """ Obtain the r-shares from SBD
 
-        :param Amount sbd: SBD
+        :param str/int/Amount sbd: SBD
         :param int precision_iterations: This is needed for making the calculation more precise.
          The higher the number, the bigger the computational effort needed. It gets automatically adjusted
          normally.
@@ -589,12 +589,25 @@ class Steem(object):
             sbd = Amount(sbd, 'SBD', steem_instance=self)
         if sbd['symbol'] != 'SBD':
             raise AssertionError('Should input SBD, not any other asset!')
+        reward_pool_sbd = self.get_median_price(use_stored_data=use_stored_data) * Amount(self.get_reward_funds(use_stored_data=use_stored_data)['reward_balance'])
+        if sbd.amount > reward_pool_sbd.amount:
+            raise ValueError('Provided more SBD than available in the reward pool.')
+
         if not not_broadcasted_vote:
             return sbd.amount / self.get_sbd_per_rshares(use_stored_data=use_stored_data)
+
+        if precision_iterations is None:
+            if 0 <= abs(sbd.amount) < 10000:
+                precision_iterations = 10
+            elif 10000 <= abs(sbd.amount) < 100000:
+                precision_iterations = 100
+            elif abs(sbd.amount) >= 100000:
+                precision_iterations = 1000
+
         rshares = self.sbd_to_rshares(sbd, not_broadcasted_vote=False, use_stored_data=use_stored_data)
         for i in range(precision_iterations):
             rshares = sbd.amount / self.get_sbd_per_rshares(not_broadcasted_vote_rshares=rshares, use_stored_data=use_stored_data)
-        return int(sbd.amount / self.get_sbd_per_rshares(not_broadcasted_vote_rshares=rshares, use_stored_data=use_stored_data))
+        return int(rshares)
 
     def rshares_to_vote_pct(self, rshares, steem_power=None, vests=None, voting_power=STEEM_100_PERCENT, use_stored_data=True):
         """ Obtain the voting percentage for a desired rshares value
