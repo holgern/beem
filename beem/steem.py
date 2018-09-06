@@ -1274,7 +1274,7 @@ class Steem(object):
 
             .. code-block:: python
                steem.custom_json("id", "json_data",
-               required_posting_auths=['account']) 
+               required_posting_auths=['account'])
 
         """
         account = None
