@@ -51,8 +51,14 @@ class Amount(object):
             a = Array([String(d[0]), d[1], d[2]])
             self.str_repr = str(a.__str__())
         elif isinstance(d, dict) and "nai" in d:
+            self.asset = None
+            for c in known_chains:
+                for asset in known_chains[c]["chain_assets"]:
+                    if asset["asset"] == d["nai"]:
+                        self.asset = asset["symbol"]
+            if not self.asset:
+                raise ValueError("Unknown NAI, cannot resolve symbol")
             self.amount = d["amount"]
-            self.asset = d["nai"]
             self.precision = d["precision"]
             self.str_repr = json.dumps(d)
         else:
@@ -261,7 +267,14 @@ class CommentOptionExtensions(Static_variant):
 
     """
     def __init__(self, o):
-        type_id, data = o
+        if type(o) == dict and 'type' in o and 'value' in o:
+            if o['type'] == "comment_payout_beneficiaries":
+                type_id = 0
+            else:
+                type_id = ~0
+            data = o['value']
+        else:
+            type_id, data = o
         if type_id == 0:
             data = (Beneficiaries(data))
         else:
