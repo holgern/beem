@@ -230,6 +230,23 @@ class Testcases(unittest.TestCase):
         ("non_appbase"),
         ("appbase"),
     ])
+    def test_stream2(self, node_param):
+        if node_param == "non_appbase":
+            bts = self.bts
+        else:
+            bts = self.appbase
+        b = Blockchain(steem_instance=bts)
+        stop_block = b.get_current_block_num()
+        start_block = stop_block - 10
+        ops_stream = []
+        for op in b.stream(start=start_block, stop=stop_block):
+            ops_stream.append(op)
+        self.assertTrue(len(ops_stream) > 0)
+
+    @parameterized.expand([
+        ("non_appbase"),
+        ("appbase"),
+    ])
     def test_wait_for_and_get_block(self, node_param):
         if node_param == "non_appbase":
             bts = self.bts
