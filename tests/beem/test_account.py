@@ -584,3 +584,8 @@ class Testcases(unittest.TestCase):
         self.assertEqual(len(replies), 1)
         self.assertTrue(replies[0].is_comment())
         self.assertTrue(replies[0].depth > 0)
+
+    def test_get_vote_pct_for_SBD(self):
+        account = self.account
+        for vote_pwr in range(5, 100, 5):
+            self.assertTrue(9900 <= account.get_vote_pct_for_SBD(account.get_voting_value_SBD(voting_power=vote_pwr), voting_power=vote_pwr) <= 11000)

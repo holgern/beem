@@ -588,6 +588,16 @@ class Testcases(unittest.TestCase):
         ret = stm.sp_to_sbd(sp)
         self.assertTrue(ret is not None)
 
+    def test_sbd_to_rshares(self):
+        stm = self.bts
+        test_values = [1, 10, 100, 1e3, 1e4, 1e5, 1e6, 1e7]
+        for v in test_values:
+            try:
+                sbd = round(stm.rshares_to_sbd(stm.sbd_to_rshares(v)), 5)
+            except ValueError: # Reward pool smaller than 1e7 SBD (e.g. caused by a very low steem price)
+                continue
+            self.assertEqual(sbd, v)
+
     def test_rshares_to_vote_pct(self):
         stm = self.bts
         sp = 1000

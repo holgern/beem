@@ -372,6 +372,32 @@ class Account(BlockchainObject):
         VoteValue = self.steem.sp_to_sbd(sp, voting_power=voting_power * 100, vote_pct=voting_weight * 100, not_broadcasted_vote=not_broadcasted_vote)
         return VoteValue
 
+    def get_vote_pct_for_SBD(self, sbd, voting_power=None, steem_power=None, not_broadcasted_vote=True):
+        """ Returns the voting percentage needed to have a vote worth a given number of SBD.
+
+            If the returned number is bigger than 10000 or smaller than -10000,
+            the given SBD value is too high for that account
+
+            :param str/int/Amount sbd: The amount of SBD in vote value
+
+        """
+        if voting_power is None:
+            voting_power = self.get_voting_power()
+        if steem_power is None:
+            steem_power = self.get_steem_power()
+
+        if isinstance(sbd, Amount):
+            sbd = Amount(sbd, steem_instance=self.steem)
+        elif isinstance(sbd, string_types):
+            sbd = Amount(sbd, steem_instance=self.steem)
+        else:
+            sbd = Amount(sbd, 'SBD', steem_instance=self.steem)
+        if sbd['symbol'] != 'SBD':
+            raise AssertionError('Should input SBD, not any other asset!')
+
+        vote_pct = self.steem.rshares_to_vote_pct(self.steem.sbd_to_rshares(sbd, not_broadcasted_vote=not_broadcasted_vote), voting_power=voting_power * 100, steem_power=steem_power)
+        return vote_pct
+
     def get_creator(self):
         """ Returns the account creator or `None` if the account was mined
         """
