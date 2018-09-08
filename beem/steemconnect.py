@@ -134,6 +134,7 @@ class SteemConnect(object):
         """ Calls the me function from steemconnect
 
         .. code-block:: python
+
             from beem.steemconnect import SteemConnect
             sc2 = SteemConnect()
             sc2.steem.wallet.unlock("supersecret-passphrase")

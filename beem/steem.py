@@ -1,4 +1,4 @@
-# This Python file uses the following encoding: utf-8
+﻿# This Python file uses the following encoding: utf-8
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -515,8 +515,8 @@ class Steem(object):
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
             :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
-                Only impactful for very big votes. Slight modification to the value calculation, as the not_broadcasted
-                vote rshares decreases the reward pool.
+            Only impactful for very big votes. Slight modification to the value calculation, as the not_broadcasted
+            vote rshares decreases the reward pool.
         """
         vesting_shares = int(self.sp_to_vests(sp, use_stored_data=use_stored_data))
         return self.vests_to_sbd(vesting_shares, voting_power=voting_power, vote_pct=vote_pct, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)
@@ -527,8 +527,8 @@ class Steem(object):
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
             :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
-                Only impactful for very big votes. Slight modification to the value calculation, as the not_broadcasted
-                vote rshares decreases the reward pool.
+            Only impactful for very big votes. Slight modification to the value calculation, as the not_broadcasted
+            vote rshares decreases the reward pool.
         """
         vote_rshares = self.vests_to_rshares(vests, voting_power=voting_power, vote_pct=vote_pct)
         return self.rshares_to_sbd(vote_rshares, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)
@@ -576,9 +576,12 @@ class Steem(object):
         """ Obtain the r-shares from SBD
 
         :param str/int/Amount sbd: SBD
+        :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
+         Only impactful for very high amounts of SBD. Slight modification to the value calculation, as the not_broadcasted
+         vote rshares decreases the reward pool.
         :param int precision_iterations: This is needed for making the calculation more precise.
          The higher the number, the bigger the computational effort needed. It gets automatically adjusted
-         normally.
+         normally. Only needed if not_broadcasted_vote = True
 
         """
         if isinstance(sbd, Amount):
@@ -651,6 +654,9 @@ class Steem(object):
             :param str/int/Amount sbd: desired SBD value
             :param number steem_power: Steem Power
             :param number vests: vesting shares
+            :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
+             Only impactful for very high amounts of SBD. Slight modification to the value calculation, as the not_broadcasted
+             vote rshares decreases the reward pool.
 
         """
         if isinstance(sbd, Amount):
@@ -1273,6 +1279,7 @@ class Steem(object):
             json.
 
             .. code-block:: python
+
                steem.custom_json("id", "json_data",
                required_posting_auths=['account'])
 
