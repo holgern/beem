@@ -15,6 +15,7 @@ from beem.exceptions import BlockWaitTimeExceeded
 from beem.block import Block
 from beem.instance import set_shared_steem_instance
 from beem.nodelist import NodeList
+from beembase.signedtransactions import Signed_Transaction
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 nodes_appbase = ["https://api.steemitstage.com", "https://api.steem.house", "https://api.steemit.com"]
@@ -279,3 +280,11 @@ class Testcases(unittest.TestCase):
         hash1 = b.hash_op(op1)
         hash2 = b.hash_op(op2)
         self.assertEqual(hash1, hash2)
+
+    def test_signing_appbase(self):
+        b = Blockchain(steem_instance=self.appbase)
+        st = None
+        for block in b.blocks(start=25304468, stop=25304468):
+            for trx in block.transactions:
+                st = Signed_Transaction(trx.copy())
+        self.assertTrue(st is not None)

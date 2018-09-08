@@ -628,37 +628,37 @@ class Account(BlockchainObject):
         else:
             return self.steem.rpc.get_follow_count(account, api='follow')
 
-    def get_followers(self, raw_name_list=True):
+    def get_followers(self, raw_name_list=True, limit=100):
         """ Returns the account followers as list
         """
-        name_list = [x['follower'] for x in self._get_followers(direction="follower")]
+        name_list = [x['follower'] for x in self._get_followers(direction="follower", limit=limit)]
         if raw_name_list:
             return name_list
         else:
             return Accounts(name_list, steem_instance=self.steem)
 
-    def get_following(self, raw_name_list=True):
+    def get_following(self, raw_name_list=True, limit=100):
         """ Returns who the account is following as list
         """
-        name_list = [x['following'] for x in self._get_followers(direction="following")]
+        name_list = [x['following'] for x in self._get_followers(direction="following", limit=limit)]
         if raw_name_list:
             return name_list
         else:
             return Accounts(name_list, steem_instance=self.steem)
 
-    def get_muters(self, raw_name_list=True):
+    def get_muters(self, raw_name_list=True, limit=100):
         """ Returns the account muters as list
         """
-        name_list = [x['follower'] for x in self._get_followers(direction="follower", what="ignore")]
+        name_list = [x['follower'] for x in self._get_followers(direction="follower", what="ignore", limit=limit)]
         if raw_name_list:
             return name_list
         else:
             return Accounts(name_list, steem_instance=self.steem)
 
-    def get_mutings(self, raw_name_list=True):
+    def get_mutings(self, raw_name_list=True, limit=100):
         """ Returns who the account is muting as list
         """
-        name_list = [x['following'] for x in self._get_followers(direction="following", what="ignore")]
+        name_list = [x['following'] for x in self._get_followers(direction="following", what="ignore", limit=limit)]
         if raw_name_list:
             return name_list
         else:

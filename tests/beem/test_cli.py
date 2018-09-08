@@ -480,8 +480,13 @@ class Testcases(unittest.TestCase):
 
     def test_verify(self):
         runner = CliRunner()
-        runner.invoke(cli, ['-o', 'set', 'nodes', self.nodelist.get_nodes()])
+        runner.invoke(cli, ['-o', 'set', 'nodes', self.nodelist.get_nodes(normal=False, appbase=True)])
+        result = runner.invoke(cli, ['verify', '--trx', '3', '25304468'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['verify', '--trx', '5', '25304468'])
+        self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['verify', '--trx', '0'])
+        self.assertEqual(result.exit_code, 0)
         runner.invoke(cli, ['-o', 'set', 'nodes', str(self.nodelist.get_testnet())])
         self.assertEqual(result.exit_code, 0)
 
