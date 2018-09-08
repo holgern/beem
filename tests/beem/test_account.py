@@ -474,7 +474,7 @@ class Testcases(unittest.TestCase):
             content = self.bts.rpc.get_accounts([account["name"]])[0]
         keys = list(content.keys())
         json_content = account.json()
-        exclude_list = []  # ['json_metadata', 'reputation', 'active_votes', 'savings_sbd_seconds']
+        exclude_list = ['owner_challenged', 'average_bandwidth']  # ['json_metadata', 'reputation', 'active_votes', 'savings_sbd_seconds']
         for k in keys:
             if k not in exclude_list:
                 if isinstance(content[k], dict) and isinstance(json_content[k], list):
