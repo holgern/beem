@@ -16,7 +16,6 @@ log = logging.getLogger(__name__)
 
 def is_network_appbase_ready(props):
     """Checks if the network is appbase ready"""
-    network_version = '0.0.0'
     if "STEEMIT_BLOCKCHAIN_VERSION" in props:
         return False
     elif "STEEM_BLOCKCHAIN_VERSION" in props:

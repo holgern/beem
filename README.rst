@@ -156,6 +156,16 @@ before transmitting the packed file. Please check the hash-sum after downloading
 
 Changelog
 =========
+0.19.55
+-------
+* Issue #72 fixed by crokkon
+* Improved Docu by jrswab
+* Add get_vote_pct_for_SBD, sbd_to_vote_pct and sbd_to_rshares by flugschwein
+* beembase/objects: fix serialization of appbase trx by crokkon
+* Fix many documentation errors (based on error messages when building) by flugschwein
+* Appbase detection fixed
+* Unit tests fixed
+
 0.19.54
 -------
 * Issue #69 fixed
