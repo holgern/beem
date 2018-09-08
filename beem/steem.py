@@ -576,9 +576,12 @@ class Steem(object):
         """ Obtain the r-shares from SBD
 
         :param str/int/Amount sbd: SBD
+        :param bool not_broadcasted_vote: value of a not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
+        Only impactful for very high amounts of SBD. Slight modification to the value calculation, as the not_broadcasted
+        vote rshares decreases the reward pool.
         :param int precision_iterations: This is needed for making the calculation more precise.
          The higher the number, the bigger the computational effort needed. It gets automatically adjusted
-         normally.
+         normally. Only needed if not_broadcasted_vote = True
 
         """
         if isinstance(sbd, Amount):
