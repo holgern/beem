@@ -1,4 +1,4 @@
-# This Python file uses the following encoding: utf-8
+﻿# This Python file uses the following encoding: utf-8
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -2566,6 +2566,7 @@ class Account(BlockchainObject):
                 to (defaults to ``default_account``)
 
             comment_history_reverse example:
+
             .. code-block:: python
 
                 from beem.account import Account
@@ -2627,6 +2628,7 @@ class Account(BlockchainObject):
                 entries for (defaults to ``default_account``)
 
             blog_history_reverse example:
+
             .. code-block:: python
 
                 from beem.account import Account
@@ -2697,6 +2699,7 @@ class Account(BlockchainObject):
                 comments for (defaults to ``default_account``)
 
             comment_history_reverse example:
+
             .. code-block:: python
 
                 from beem.account import Account
@@ -2761,6 +2764,7 @@ class Account(BlockchainObject):
                 to (defaults to ``default_account``)
 
             comment_history_reverse example:
+
             .. code-block:: python
 
                 from beem.account import Account

@@ -670,6 +670,7 @@ class Blockchain(object):
                       confirmed in an irreversible block.
 
             output when `raw_ops=False` is set:
+
             .. code-block:: js
 
                 {
@@ -684,6 +685,7 @@ class Blockchain(object):
                 }
 
             output when `raw_ops=True` is set:
+
             .. code-block:: js
 
                 {

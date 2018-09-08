@@ -69,7 +69,7 @@ beemgraphenebase Modules
    beemgraphenebase.account
    beemgraphenebase.base58
    beemgraphenebase.bip38
-   beemgraphenebase.ecdasig
+   beemgraphenebase.ecdsasig
    beemgraphenebase.objects
    beemgraphenebase.objecttypes
    beemgraphenebase.operations
