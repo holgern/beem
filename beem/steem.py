@@ -579,7 +579,7 @@ class Steem(object):
         :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
          Only impactful for very high amounts of SBD. Slight modification to the value calculation, as the not_broadcasted
          vote rshares decreases the reward pool.
-         
+
         """
         if isinstance(sbd, Amount):
             sbd = Amount(sbd, steem_instance=self)
@@ -592,33 +592,32 @@ class Steem(object):
         reward_pool_sbd = self.get_median_price(use_stored_data=use_stored_data) * Amount(self.get_reward_funds(use_stored_data=use_stored_data)['reward_balance'])
         if sbd.amount > reward_pool_sbd.amount:
             raise ValueError('Provided more SBD than available in the reward pool.')
-            
+
         # If the vote was already broadcasted we can assume the blockchain values to be true
         if not not_broadcasted_vote:
             return sbd.amount / self.get_sbd_per_rshares(use_stored_data=use_stored_data)
-        
-        # If the vote wasn't broadcasted (yet), we have to calculate the rshares while considering 
+
+        # If the vote wasn't broadcasted (yet), we have to calculate the rshares while considering
         # the change our vote is causing to the recent_claims. This is more important for really
         # big votes which have a significant impact on the recent_claims.
-        
+
         # Get some data from the blockchain
         reward_fund = self.get_reward_funds(use_stored_data=use_stored_data)
         reward_balance = Amount(reward_fund["reward_balance"], steem_instance=self).amount
         recent_claims = float(reward_fund["recent_claims"])
-        fund_per_share = reward_balance / (recent_claims)
         median_price = self.get_median_price(use_stored_data=use_stored_data)
         SBD_price = (median_price * Amount("1 STEEM", steem_instance=self)).amount
-        
+
         # This is the formular we can use to determine the "true" rshares
-        # We get this formular by some math magic using the previous used formulars
+        # We get this formular by some math magic using the previous used formulas
         # FundsPerShare = (balance / (claims+newShares))*Price
         # newShares = Amount / FundsPerShare
-        # We can now resolve both formulars for FundsPerShare and set the formulars to be equal
+        # We can now resolve both formulas for FundsPerShare and set the formulas to be equal
         # (balance / (claims+newShares))*Price = Amount / newShares
         # Now we resolve for newShares resulting in:
         # newShares = = claims * amount / (balance*price -amount)
-        rshares = recent_claims * sbd.amount / (reward_balance*SBD_price -sbd.amount)
-        
+        rshares = recent_claims * sbd.amount / ( ( reward_balance * SBD_price ) - sbd.amount )
+
         return int(rshares)
 
     def rshares_to_vote_pct(self, rshares, steem_power=None, vests=None, voting_power=STEEM_100_PERCENT, use_stored_data=True):
