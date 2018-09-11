@@ -85,5 +85,15 @@ known_chains = {
             {"asset": "STEEM", "symbol": "VIT", "precision": 3, "id": 1},
             {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
         ],
-    }
+    },
+    "WEKU": {
+        "chain_id": "b24e09256ee14bab6d58bfa3a4e47b0474a73ef4d6c47eeea007848195fa085e",
+        "min_version": "0.19.3",
+        "prefix": "WKA",
+        "chain_assets": [
+            {"asset": "SBD", "symbol": "WKD", "precision": 3, "id": 0},
+            {"asset": "STEEM", "symbol": "WEKU", "precision": 3, "id": 1},
+            {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
+        ],
+    },
 }
