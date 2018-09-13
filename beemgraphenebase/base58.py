@@ -27,7 +27,8 @@ known_prefixes = [
     "GLX",
     "GLS",
     "EOS",
-    "VIT"
+    "VIT",
+    "WKA",
 ]
 
 
