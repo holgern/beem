@@ -1,4 +1,4 @@
-﻿# This Python file uses the following encoding: utf-8
+# This Python file uses the following encoding: utf-8
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -450,12 +450,12 @@ class Steem(object):
                                                            not_broadcasted_vote_rshares=rshares if not_broadcasted_vote else 0)
         return payout
 
-    def get_sbd_per_rshares(self, use_stored_data=True):
+    def get_sbd_per_rshares(self, not_broadcasted_vote_rshares=0, use_stored_data=True):
         """ Returns the current rshares to SBD ratio
         """
         reward_fund = self.get_reward_funds(use_stored_data=use_stored_data)
         reward_balance = Amount(reward_fund["reward_balance"], steem_instance=self).amount
-        recent_claims = float(reward_fund["recent_claims"])
+        recent_claims = float(reward_fund["recent_claims"]) + not_broadcasted_vote_rshares
 
         fund_per_share = reward_balance / (recent_claims)
         median_price = self.get_median_price(use_stored_data=use_stored_data)
@@ -616,7 +616,7 @@ class Steem(object):
         # (balance / (claims+newShares))*Price = Amount / newShares
         # Now we resolve for newShares resulting in:
         # newShares = = claims * amount / (balance*price -amount)
-        rshares = recent_claims * sbd.amount / ( ( reward_balance * SBD_price ) - sbd.amount )
+        rshares = recent_claims * sbd.amount / ((reward_balance * SBD_price) - sbd.amount)
 
         return int(rshares)
 
