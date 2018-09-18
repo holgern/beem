@@ -860,6 +860,37 @@ def powerdown(amount, account):
 
 
 @cli.command()
+@click.argument('amount', nargs=1)
+@click.argument('to_account', nargs=1)
+@click.option('--account', '-a', help='Powerup from this account')
+def delegate(amount, to_account, account):
+    """Delegate (start delegate VESTS to another account)
+
+        amount is in VESTS / Steem
+    """
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm):
+        return
+    acc = Account(account, steem_instance=stm)
+    try:
+        amount = float(amount)
+    except:
+        amount = Amount(str(amount), steem_instance=stm)
+        if amount.symbol == "STEEM":
+            amount = stm.sp_to_vests(float(amount))
+
+    tx = acc.delegate_vesting_shares(to_account, amount)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
 @click.argument('to', nargs=1)
 @click.option('--percentage', default=100, help='The percent of the withdraw to go to the "to" account')
 @click.option('--account', '-a', help='Powerup from this account')

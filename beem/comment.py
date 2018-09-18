@@ -474,7 +474,7 @@ class Comment(BlockchainObject):
             unclaimed_rewards = Amount(self["total_payout_value"], steem_instance=self.steem) * 0.25 - max_rewards
             total_vote_weight = 0
             for vote in self["active_votes"]:
-                total_vote_weight += vote["weight"]
+                total_vote_weight += int(vote["weight"])
         else:
             if pending_payout_value is None:
                 pending_payout_value = Amount(self["pending_payout_value"], steem_instance=self.steem)
@@ -492,7 +492,7 @@ class Comment(BlockchainObject):
         active_votes = {}
         for vote in self["active_votes"]:
             if total_vote_weight > 0:
-                claim = max_rewards * vote["weight"] / total_vote_weight
+                claim = max_rewards * int(vote["weight"]) / total_vote_weight
             else:
                 claim = 0
             if claim > 0 and pending_rewards:

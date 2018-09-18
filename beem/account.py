@@ -1,4 +1,4 @@
-﻿# This Python file uses the following encoding: utf-8
+# This Python file uses the following encoding: utf-8
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -340,11 +340,18 @@ class Account(BlockchainObject):
         """ Returns the account voting power in the range of 0-100%
         """
         if with_regeneration:
-            diff_in_seconds = (addTzInfo(datetime.utcnow()) - (self["last_vote_time"])).total_seconds()
+            if "last_vote_time" in self:
+                last_vote_time = self["last_vote_time"]
+            elif "voting_manabar" in self:
+                last_vote_time = self["voting_manabar"]["last_update_time"]
+            diff_in_seconds = (addTzInfo(datetime.utcnow()) - (last_vote_time)).total_seconds()
             regenerated_vp = diff_in_seconds * STEEM_100_PERCENT / STEEM_VOTE_REGENERATION_SECONDS / 100
         else:
             regenerated_vp = 0
-        total_vp = (self["voting_power"] / 100 + regenerated_vp)
+        if "voting_power" in self:
+            total_vp = (self["voting_power"] / 100 + regenerated_vp)
+        elif "voting_manabar" in self:
+            total_vp = (self["voting_manabar"]["current_mana"] / 100 + regenerated_vp)
         if total_vp > 100:
             return 100
         if total_vp < 0:
