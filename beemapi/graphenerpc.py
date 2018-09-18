@@ -269,11 +269,17 @@ class GrapheneRPC(object):
         self.ws.close()
 
     def request_send(self, payload):
-        response = self.session.post(self.url,
-                                     data=payload,
-                                     headers=self.headers,
-                                     timeout=self.timeout,
-                                     auth=(self.user, self.password))
+        if self.user is not None and self.password is not None:
+            response = self.session.post(self.url,
+                                         data=payload,
+                                         headers=self.headers,
+                                         timeout=self.timeout,
+                                         auth=(self.user, self.password))
+        else:
+            response = self.session.post(self.url,
+                                         data=payload,
+                                         headers=self.headers,
+                                         timeout=self.timeout)
         if response.status_code == 401:
             raise UnauthorizedError
         return response.text

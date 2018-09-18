@@ -550,7 +550,6 @@ class Blockchain(object):
             head_block_reached = True
 
             if stop and start > stop:
-                # raise StopIteration
                 return
 
             # Sleep for one block
@@ -824,12 +823,12 @@ class Blockchain(object):
                     yield account_name
                     cnt += 1
                     if account_name == stop or (limit > 0 and cnt > limit):
-                        raise StopIteration
+                        return
             if lastname == account_name:
-                raise StopIteration
+                return
             lastname = account_name
             if len(ret) < steps:
-                raise StopIteration
+                return
 
     def get_account_count(self):
         """ Returns the number of accounts"""
@@ -869,12 +868,12 @@ class Blockchain(object):
                     yield account
                     cnt += 1
                     if account_name == stop or (limit > 0 and cnt > limit):
-                        raise StopIteration
+                        return
             if lastname == account_name:
-                raise StopIteration
+                return
             lastname = account_name
             if len(ret) < steps:
-                raise StopIteration
+                return
 
     def get_similar_account_names(self, name, limit=5):
         """ Returns limit similar accounts with name as list

@@ -2605,7 +2605,7 @@ class Account(BlockchainObject):
                           tag=account['name'])
             results = Discussions_by_feed(query, steem_instance=self.steem)
             if len(results) == 0 or (start_permlink and len(results) == 1):
-                raise StopIteration
+                return
             if feed_count > 0 and start_permlink:
                 results = results[1:]  # strip duplicates from previous iteration
             for entry in results:
@@ -2614,7 +2614,7 @@ class Account(BlockchainObject):
                 start_permlink = entry['permlink']
                 start_author = entry['author']
                 if feed_count == limit:
-                    raise StopIteration
+                    return
 
     def blog_history(self, limit=None, start=-1, reblogs=True, account=None):
         """ stream the blog entries done by an account in reverse time order.
@@ -2674,7 +2674,7 @@ class Account(BlockchainObject):
                 results = Discussions_by_blog(query,
                                               steem_instance=self.steem)
             if len(results) == 0 or (start_permlink and len(results) == 1):
-                raise StopIteration
+                return
             if start_permlink:
                 results = results[1:]  # strip duplicates from previous iteration
             for post in results:
@@ -2686,7 +2686,7 @@ class Account(BlockchainObject):
                 start_permlink = post['permlink']
                 start_author = post['author']
                 if post_count == limit:
-                    raise StopIteration
+                    return
 
     def comment_history(self, limit=None, start_permlink=None,
                         account=None):
@@ -2736,7 +2736,7 @@ class Account(BlockchainObject):
             results = Discussions_by_comments(query,
                                               steem_instance=self.steem)
             if len(results) == 0 or (start_permlink and len(results) == 1):
-                raise StopIteration
+                return
             if comment_count > 0 and start_permlink:
                 results = results[1:]  # strip duplicates from previous iteration
             for comment in results:
@@ -2746,7 +2746,7 @@ class Account(BlockchainObject):
                 yield comment
                 start_permlink = comment['permlink']
                 if comment_count == limit:
-                    raise StopIteration
+                    return
 
     def reply_history(self, limit=None, start_author=None,
                       start_permlink=None, account=None):
@@ -2808,7 +2808,7 @@ class Account(BlockchainObject):
             results = Replies_by_last_update(query,
                                              steem_instance=self.steem)
             if len(results) == 0 or (start_permlink and len(results) == 1):
-                raise StopIteration
+                return
             if reply_count > 0 and start_permlink:
                 results = results[1:]  # strip duplicates from previous iteration
             for reply in results:
@@ -2819,7 +2819,7 @@ class Account(BlockchainObject):
                 start_author = reply['author']
                 start_permlink = reply['permlink']
                 if reply_count == limit:
-                    raise StopIteration
+                    return
 
 
 class AccountsObject(list):
