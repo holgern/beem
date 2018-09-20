@@ -443,6 +443,15 @@ class Steem(object):
             blockchain_version = '0.0.0'
         return blockchain_version
 
+    def get_dust_threshold(self, use_stored_data=True):
+        """Returns the vote dust threshold"""
+        props = self.get_config(use_stored_data=use_stored_data, replace_steemit_by_steem=True)
+        if props and 'STEEM_VOTE_DUST_THRESHOLD' in props:
+            dust_threshold = props['STEEM_VOTE_DUST_THRESHOLD']
+        else:
+            dust_threshold = 0
+        return dust_threshold
+
     def rshares_to_sbd(self, rshares, not_broadcasted_vote=False, use_stored_data=True):
         """ Calculates the current SBD value of a vote
         """
