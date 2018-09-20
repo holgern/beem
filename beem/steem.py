@@ -740,6 +740,14 @@ class Steem(object):
             return self.get_network()
 
     @property
+    def hardfork(self):
+        if self.offline or self.rpc is None:
+            versions = known_chains['STEEM']['min_version']
+        else:
+            versions = self.get_blockchain_version()
+        return int(versions.split('.')[1])
+
+    @property
     def prefix(self):
         return self.chain_params["prefix"]
 
