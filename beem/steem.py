@@ -580,7 +580,7 @@ class Steem(object):
         # calculate vote rshares
         rshares = int(math.copysign(vests * 1e6 * used_power / STEEM_100_PERCENT, vote_pct))
         if self.hardfork == 20:
-            rshares -= self.get_dust_threshold(use_stored_data=use_stored_data)
+            rshares -= math.copysign(self.get_dust_threshold(use_stored_data=use_stored_data), vote_pct)
         return rshares
 
     def sbd_to_rshares(self, sbd, not_broadcasted_vote=False, use_stored_data=True):
@@ -654,7 +654,7 @@ class Steem(object):
             vests = int(self.sp_to_vests(steem_power, use_stored_data=use_stored_data) * 1e6)
 
         if self.hardfork == 20:
-            rshares += self.get_dust_threshold(use_stored_data=use_stored_data)
+            rshares += math.copysign(self.get_dust_threshold(use_stored_data=use_stored_data), rshares)
 
         max_vote_denom = self._max_vote_denom(use_stored_data=use_stored_data)
 
