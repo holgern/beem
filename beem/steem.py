@@ -580,6 +580,8 @@ class Steem(object):
         # calculate vote rshares
         rshares = int(math.copysign(vests * 1e6 * used_power / STEEM_100_PERCENT, vote_pct))
         if self.hardfork == 20:
+            if abs(rshares) <= self.get_dust_threshold(use_stored_data=use_stored_data):
+                return 0
             rshares -= math.copysign(self.get_dust_threshold(use_stored_data=use_stored_data), vote_pct)
         return rshares
 
