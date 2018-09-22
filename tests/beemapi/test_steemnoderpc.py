@@ -32,8 +32,8 @@ class Testcases(unittest.TestCase):
     def setUpClass(cls):
         nodelist = NodeList()
         nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=3))
-        cls.nodes = nodelist.get_nodes(https=False, appbase=False)
-        cls.nodes_https = nodelist.get_nodes(wss=False, appbase=False)
+        cls.nodes = nodelist.get_nodes(https=False, appbase=True)
+        cls.nodes_https = nodelist.get_nodes(wss=False, appbase=True)
         cls.nodes_appbase = nodelist.get_nodes(normal=False)
         cls.test_list = nodelist.get_nodes()
 

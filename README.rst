@@ -107,7 +107,7 @@ Signing and Verify can be fasten (200 %) by installing cryptography:
 
     pip install -U cryptography
 
-Install beem by pip::
+Install or update beem by pip::
 
     pip install -U beem
 
@@ -140,6 +140,9 @@ Signing and Verify can be fasten (200 %) by installing cryptography::
 
     conda install cryptography
 
+beem can be updated by::
+
+    conda update beem
 
 CLI tool beempy
 ---------------
