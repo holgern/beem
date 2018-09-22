@@ -389,8 +389,10 @@ class Testcases(unittest.TestCase):
 
     def test_power(self):
         runner = CliRunner()
+        runner.invoke(cli, ['-o', 'set', 'nodes', self.nodelist.get_nodes()])
         result = runner.invoke(cli, ['power'])
         self.assertEqual(result.exit_code, 0)
+        runner.invoke(cli, ['-o', 'set', 'nodes', str(self.nodelist.get_testnet())])
 
     def test_nextnode(self):
         runner = CliRunner()

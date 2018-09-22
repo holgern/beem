@@ -72,6 +72,9 @@ class Testcases(unittest.TestCase):
         if "STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF20" in steem_conf:
             self.assertEqual(constants.STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF20, steem_conf["STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF20"])
 
+        if "STEEM_VOTE_DUST_THRESHOLD" in steem_conf:
+            self.assertEqual(constants.STEEM_VOTE_DUST_THRESHOLD, steem_conf["STEEM_VOTE_DUST_THRESHOLD"])
+
         if "STEEM_VOTE_REGENERATION_SECONDS" in steem_conf:
             STEEM_VOTE_REGENERATION_SECONDS = steem_conf['STEEM_VOTE_REGENERATION_SECONDS']
             self.assertEqual(constants.STEEM_VOTE_REGENERATION_SECONDS, STEEM_VOTE_REGENERATION_SECONDS)

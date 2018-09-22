@@ -21,7 +21,7 @@ from beem.amount import Amount
 from beembase import operations
 from beemgraphenebase.account import PrivateKey, PublicKey
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
-from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_1_PERCENT, STEEM_100_PERCENT
+from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_1_PERCENT, STEEM_100_PERCENT, STEEM_VOTING_MANA_REGENERATION_SECONDS
 log = logging.getLogger(__name__)
 
 
@@ -340,12 +340,14 @@ class Account(BlockchainObject):
         """ Returns the account voting power in the range of 0-100%
         """
         if with_regeneration:
+            regenerated_vp = 0
             if "last_vote_time" in self:
                 last_vote_time = self["last_vote_time"]
+                regenerated_vp = diff_in_seconds * STEEM_100_PERCENT / STEEM_VOTE_REGENERATION_SECONDS / 100
             elif "voting_manabar" in self:
                 last_vote_time = self["voting_manabar"]["last_update_time"]
+                regenerated_vp = diff_in_seconds * STEEM_100_PERCENT / STEEM_VOTING_MANA_REGENERATION_SECONDS / 100
             diff_in_seconds = (addTzInfo(datetime.utcnow()) - (last_vote_time)).total_seconds()
-            regenerated_vp = diff_in_seconds * STEEM_100_PERCENT / STEEM_VOTE_REGENERATION_SECONDS / 100
         else:
             regenerated_vp = 0
         if "voting_power" in self:

@@ -16,6 +16,7 @@ logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
     stm = Steem(node="https://api.steemit.com")
+    # stm = Steem(node="https://testnet.steemitdev.com")
     # stm = Steem(node="wss://appbasetest.timcliff.com")
     # stm = Steem(node="https://api.steemitstage.com")
     # stm = Steem(node="https://api.steemitdev.com")
