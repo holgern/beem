@@ -49,7 +49,7 @@ class NodeList(list):
             },
             {
                 "url": "https://api.steem.house",
-                "version": "0.19.11",
+                "version": "0.20.2",
                 "type": "appbase",
                 "owner": "gtg",
                 "score": 90
@@ -70,71 +70,57 @@ class NodeList(list):
             },
             {
                 "url": "wss://rpc.steemviz.com",
-                "version": "0.19.6",
-                "type": "normal",
+                "version": "0.19.12",
+                "type": "appbase",
                 "owner": "ausbitbank",
-                "score": 1
+                "score": 100
             },
             {
                 "url": "https://rpc.steemviz.com",
-                "version": "0.19.6",
-                "type": "normal",
+                "version": "0.19.12",
+                "type": "appbase",
                 "owner": "ausbitbank",
-                "score": 1
+                "score": 100
             },
             {
                 "url": "wss://steemd.privex.io",
-                "version": "0.19.5",
-                "type": "normal",
+                "version": "0.20.2",
+                "type": "appbase",
                 "owner": "privex",
-                "score": 150
+                "score": 50
             },
             {
                 "url": "https://steemd.privex.io",
-                "version": "0.19.5",
-                "type": "normal",
+                "version": "0.20.2",
+                "type": "appbase",
                 "owner": "privex",
                 "score": 50
             },
             {
                 "url": "wss://rpc.buildteam.io",
-                "version": "0.19.5",
-                "type": "normal",
+                "version": "0.20.2",
+                "type": "appbase",
                 "owner": "themarkymark",
-                "score": 165
+                "score": 65
             },
             {
                 "url": "https://rpc.buildteam.io",
-                "version": "0.19.5",
-                "type": "normal",
-                "owner": "themarkymark",
-                "score": 120
-            },
-            {
-                "url": "wss://appbase.buildteam.io",
-                "version": "0.19.11",
+                "version": "0.20.2",
                 "type": "appbase",
                 "owner": "themarkymark",
-                "score": 165
-            },
-            {
-                "url": "https://appbase.buildteam.io",
-                "version": "0.19.11",
-                "type": "appbase",
-                "owner": "themarkymark",
-                "score": 120
+                "score": 20
             },
             {
                 "url": "wss://gtg.steem.house:8090",
-                "version": "0.19.5",
-                "type": "normal",
+                "version": "0.19.12",
+                "type": "appbase",
                 "owner": "gtg",
                 "score": 75
             },
             {
                 "url": "https://gtg.steem.house:8090",
-                "version": "0.19.5",
-                "type": "normal",
+                "version": "0.19.12",
+                "type": "appbase",
                 "owner": "gtg",
                 "score": 80
             },
@@ -154,15 +140,15 @@ class NodeList(list):
             },
             {
                 "url": "wss://rpc.steemliberator.com",
-                "version": "0.19.5",
-                "type": "normal",
+                "version": "0.19.12",
+                "type": "appbase",
                 "owner": "netuoso",
                 "score": 50
             },
             {
                 "url": "https://rpc.steemliberator.com",
-                "version": "0.19.5",
-                "type": "normal",
+                "version": "0.19.12",
+                "type": "appbase",
                 "owner": "netuoso",
                 "score": 20
             },
@@ -203,7 +189,7 @@ class NodeList(list):
             },
             {
                 "url": "https://steemd.minnowsupportproject.org",
-                "version": "0.19.11",
+                "version": "0.19.12",
                 "type": "appbase",
                 "owner": "followbtcnews",
                 "score": 10
@@ -213,7 +199,7 @@ class NodeList(list):
                 "version": "0.19.5",
                 "type": "normal",
                 "owner": "curie",
-                "score": 50
+                "score": -10
             },
             {
                 "url": "wss://testnet.steem.vc",

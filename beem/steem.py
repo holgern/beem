@@ -445,10 +445,7 @@ class Steem(object):
 
     def get_dust_threshold(self, use_stored_data=True):
         """Returns the vote dust threshold"""
-        props = self.data['config']
-        if props is None:
-            self.refresh_data()
-            props = self.data['config']
+        props = self.get_config(use_stored_data=use_stored_data, replace_steemit_by_steem=True)
         if props and 'STEEM_VOTE_DUST_THRESHOLD' in props:
             dust_threshold = props['STEEM_VOTE_DUST_THRESHOLD']
         else:
@@ -582,7 +579,7 @@ class Steem(object):
         used_power = self._calc_resulting_vote(voting_power=voting_power, vote_pct=vote_pct, use_stored_data=use_stored_data)
         # calculate vote rshares
         rshares = int(math.copysign(vests * 1e6 * used_power / STEEM_100_PERCENT, vote_pct))
-        if self.hardfork == 20:
+        if self.hardfork >= 20:
             if abs(rshares) <= self.get_dust_threshold(use_stored_data=use_stored_data):
                 return 0
             rshares -= math.copysign(self.get_dust_threshold(use_stored_data=use_stored_data), vote_pct)
@@ -658,7 +655,7 @@ class Steem(object):
         if steem_power is not None:
             vests = int(self.sp_to_vests(steem_power, use_stored_data=use_stored_data) * 1e6)
 
-        if self.hardfork == 20:
+        if self.hardfork >= 20:
             rshares += math.copysign(self.get_dust_threshold(use_stored_data=use_stored_data), rshares)
 
         max_vote_denom = self._max_vote_denom(use_stored_data=use_stored_data)
@@ -763,7 +760,7 @@ class Steem(object):
         if self.offline or self.rpc is None:
             versions = known_chains['STEEM']['min_version']
         else:
-            versions = self.get_blockchain_version()
+            versions = self.get_hardfork_properties()["current_hardfork_version"]
         return int(versions.split('.')[1])
 
     @property

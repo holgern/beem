@@ -19,7 +19,7 @@ from .blockchainobject import BlockchainObject
 from .exceptions import ContentDoesNotExistsException, VotingInvalidOnArchivedPost
 from beembase import operations
 from beemgraphenebase.py23 import py23_bytes, bytes_types, integer_types, string_types, text_type
-from beem.constants import STEEM_REVERSE_AUCTION_WINDOW_SECONDS, STEEM_100_PERCENT, STEEM_1_PERCENT
+from beem.constants import STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF6, STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF20, STEEM_100_PERCENT, STEEM_1_PERCENT
 log = logging.getLogger(__name__)
 
 
@@ -338,7 +338,10 @@ class Comment(BlockchainObject):
             elapsed_seconds = (vote_time - self["created"]).total_seconds()
         else:
             raise ValueError("vote_time must be a string or a datetime")
-        reward = (elapsed_seconds / STEEM_REVERSE_AUCTION_WINDOW_SECONDS)
+        if self.steem.hardfork >= 20:
+            reward = (elapsed_seconds / STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF20)
+        else:
+            reward = (elapsed_seconds / STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF6)
         if reward > 1:
             reward = 1.0
         return 1.0 - reward

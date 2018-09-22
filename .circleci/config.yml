@@ -133,3 +133,6 @@ workflows:
       - build-python3.5:
           requires:
             - build-python3.4
+      - build-python3.7:
+        requires:
+          - build-python3.7
