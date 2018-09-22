@@ -446,16 +446,48 @@ class Limit_order_cancel(GrapheneObject):
             ]))
 
 
-class Prove_authority(GrapheneObject):
+class Claim_account(GrapheneObject):
     def __init__(self, *args, **kwargs):
         if check_for_class(self, args):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
-        super(Prove_authority, self).__init__(
+        super(Claim_account, self).__init__(
             OrderedDict([
-                ('challenged', String(kwargs["challenged"])),
-                ('require_owner', Bool(kwargs["require_owner"])),
+                ('creator', String(kwargs["creator"])),
+                ('fee', Amount(kwargs["fee"])),
+                ('extensions', Array([])),
+            ]))
+
+
+class Create_claimed_account(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        prefix = kwargs.get("prefix", default_prefix)
+
+        if not len(kwargs["new_account_name"]) <= 16:
+            raise AssertionError("Account name must be at most 16 chars long")
+
+        meta = ""
+        if "json_metadata" in kwargs and kwargs["json_metadata"]:
+            if isinstance(kwargs["json_metadata"], dict):
+                meta = json.dumps(kwargs["json_metadata"])
+            else:
+                meta = kwargs["json_metadata"]
+
+        super(Create_claimed_account, self).__init__(
+            OrderedDict([
+                ('creator', String(kwargs["creator"])),
+                ('new_account_name', String(kwargs["new_account_name"])),
+                ('owner', Permission(kwargs["owner"], prefix=prefix)),
+                ('active', Permission(kwargs["active"], prefix=prefix)),
+                ('posting', Permission(kwargs["posting"], prefix=prefix)),
+                ('memo_key', PublicKey(kwargs["memo_key"], prefix=prefix)),
+                ('json_metadata', String(meta)),
+                ('extensions', Array([])),
             ]))
 
 
