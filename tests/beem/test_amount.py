@@ -22,8 +22,8 @@ class Testcases(unittest.TestCase):
             nobroadcast=True,
             num_retries=10
         )
-        cls.appbase = Steem(
-            node=nodelist.get_nodes(normal=False, appbase=True),
+        cls.testnet = Steem(
+            node="https://testnet.steemitdev.com",
             nobroadcast=True,
             use_condenser=False,
             num_retries=10
@@ -41,14 +41,14 @@ class Testcases(unittest.TestCase):
         self.assertIsInstance(ret["amount"], float)
 
     @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
+        ("normal"),
+        ("testnet"),
     ])
     def test_init(self, node_param):
-        if node_param == "non_appbase":
+        if node_param == "normal":
             stm = self.bts
         else:
-            stm = self.appbase
+            stm = self.testnet
         # String init
         asset = Asset("SBD", steem_instance=stm)
         symbol = asset["symbol"]
@@ -111,21 +111,10 @@ class Testcases(unittest.TestCase):
             amount.tuple(),
             (1.0, self.symbol))
 
-    def test_json(self):
-        amount = Amount("1", self.symbol)
-        self.assertEqual(
-            amount.json(),
-            "{:.{prec}f} {}".format(
-                1,
-                self.asset["symbol"],
-                prec=self.precision
-            )
-        )
-
     def test_json_appbase(self):
-        asset = Asset("SBD", steem_instance=self.appbase)
-        amount = Amount("1", asset, new_appbase_format=False, steem_instance=self.appbase)
-        if self.appbase.rpc.get_use_appbase():
+        asset = Asset("SBD", steem_instance=self.bts)
+        amount = Amount("1", asset, new_appbase_format=False, steem_instance=self.bts)
+        if self.bts.rpc.get_use_appbase():
             self.assertEqual(
                 amount.json(),
                 [str(1 * 10 ** asset.precision), asset.precision, asset.asset])
@@ -133,9 +122,9 @@ class Testcases(unittest.TestCase):
             self.assertEqual(amount.json(), "1.000 SBD")
 
     def test_json_appbase2(self):
-        asset = Asset("SBD", steem_instance=self.appbase)
-        amount = Amount("1", asset, new_appbase_format=True, steem_instance=self.appbase)
-        if self.appbase.rpc.get_use_appbase():
+        asset = Asset("SBD", steem_instance=self.bts)
+        amount = Amount("1", asset, new_appbase_format=True, steem_instance=self.bts)
+        if self.bts.rpc.get_use_appbase():
             self.assertEqual(
                 amount.json(),
                 {'amount': str(1 * 10 ** asset.precision), 'nai': asset.asset, 'precision': asset.precision})

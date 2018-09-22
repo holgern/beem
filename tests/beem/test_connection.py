@@ -21,7 +21,7 @@ class Testcases(unittest.TestCase):
         )
 
         b2 = Steem(
-            node=nodelist.get_nodes(appbase=False),
+            node=nodelist.get_nodes(),
             nobroadcast=True,
             num_retries=10
         )
@@ -39,7 +39,7 @@ class Testcases(unittest.TestCase):
         test = Account("beem")
 
         b2 = Steem(
-            node=nodelist.get_nodes(appbase=False),
+            node=nodelist.get_nodes(),
             nobroadcast=True,
         )
         set_shared_steem_instance(b2)

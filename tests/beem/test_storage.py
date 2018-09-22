@@ -36,15 +36,15 @@ class Testcases(unittest.TestCase):
         nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
 
         cls.stm = Steem(
-            node=nodelist.get_nodes(appbase=False),
+            node=nodelist.get_nodes(),
             nobroadcast=True,
             # We want to bundle many operations into a single transaction
             bundle=True,
             num_retries=10
             # Overwrite wallet to use this list of wifs only
         )
-        cls.appbase = Steem(
-            node=nodelist.get_nodes(normal=False, appbase=True),
+        cls.testnet = Steem(
+            node="https://testnet.steemitdev.com",
             nobroadcast=True,
             bundle=True,
             num_retries=10
@@ -65,14 +65,14 @@ class Testcases(unittest.TestCase):
         stm.config.recover_with_latest_backup()
 
     @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
+        ("normal"),
+        ("testnet"),
     ])
     def test_set_default_account(self, node_param):
-        if node_param == "non_appbase":
+        if node_param == "normal":
             stm = self.stm
-        elif node_param == "appbase":
-            stm = self.appbase
+        elif node_param == "testnet":
+            stm = self.testnet
         stm.set_default_account("test")
 
         self.assertEqual(stm.config["default_account"], "test")

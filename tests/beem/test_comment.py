@@ -23,15 +23,15 @@ class Testcases(unittest.TestCase):
         nodelist = NodeList()
         nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
         cls.bts = Steem(
-            node=nodelist.get_nodes(appbase=False),
+            node=nodelist.get_nodes(),
             use_condenser=True,
             nobroadcast=True,
             unsigned=True,
             keys={"active": wif},
             num_retries=10
         )
-        cls.appbase = Steem(
-            node=nodelist.get_nodes(normal=False, appbase=True),
+        cls.testnet = Steem(
+            node="https://testnet.steemitdev.com",
             nobroadcast=True,
             unsigned=True,
             keys={"active": wif},
@@ -50,15 +50,8 @@ class Testcases(unittest.TestCase):
         # set_shared_steem_instance(cls.bts)
         # cls.bts.set_default_account("test")
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_comment(self, node_param):
-        if node_param == "non_appbase":
-            bts = self.bts
-        else:
-            bts = self.appbase
+    def test_comment(self):
+        bts = self.bts
         with self.assertRaises(
             exceptions.ContentDoesNotExistsException
         ):
@@ -93,19 +86,11 @@ class Testcases(unittest.TestCase):
         self.assertTrue(isinstance(c.get_reblogged_by(), list))
         self.assertTrue(len(c.get_reblogged_by()) > 0)
         self.assertTrue(isinstance(c.get_votes(), list))
-        if node_param == "appbase":
-            self.assertTrue(len(c.get_votes()) > 0)
-            self.assertTrue(isinstance(c.get_votes()[0], Vote))
+        self.assertTrue(len(c.get_votes()) > 0)
+        self.assertTrue(isinstance(c.get_votes()[0], Vote))
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_comment_dict(self, node_param):
-        if node_param == "non_appbase":
-            bts = self.bts
-        else:
-            bts = self.appbase
+    def test_comment_dict(self):
+        bts = self.bts
         title = ''
         cnt = 0
         while title == '' and cnt < 5:
@@ -126,15 +111,8 @@ class Testcases(unittest.TestCase):
         self.assertEqual(c.parent_permlink, self.category)
         self.assertEqual(c.title, self.title)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_vote(self, node_param):
-        if node_param == "non_appbase":
-            bts = self.bts
-        else:
-            bts = self.appbase
+    def test_vote(self):
+        bts = self.bts
         c = Comment(self.authorperm, steem_instance=bts)
         bts.txbuffer.clear()
         tx = c.vote(100, account="test")
@@ -163,15 +141,8 @@ class Testcases(unittest.TestCase):
         op = tx["operations"][0][1]
         self.assertEqual(op["weight"], -9990)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_export(self, node_param):
-        if node_param == "non_appbase":
-            bts = self.bts
-        else:
-            bts = self.appbase
+    def test_export(self):
+        bts = self.bts
 
         if bts.rpc.get_use_appbase():
             content = bts.rpc.get_discussion({'author': self.author, 'permlink': self.permlink}, api="tags")

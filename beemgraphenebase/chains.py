@@ -58,11 +58,11 @@ known_chains = {
     "TESTDEV": {
         "chain_id":
         "18dcf0a285365fc58b71f18b3d3fec954aa0c141c44e4e5cb4cf777b9eab274e",
-        "min_version": '0.0.0',
+        "min_version": '0.20.0',
         "prefix": "TST",
         "chain_assets": [
-            {"asset": "@@000000013", "symbol": "SBD", "precision": 3, "id": 0},
-            {"asset": "@@000000021", "symbol": "STEEM", "precision": 3, "id": 1},
+            {"asset": "@@000000013", "symbol": "TBD", "precision": 3, "id": 0},
+            {"asset": "@@000000021", "symbol": "TESTS", "precision": 3, "id": 1},
             {"asset": "@@000000037", "symbol": "VESTS", "precision": 6, "id": 2}
         ],
     },

@@ -27,14 +27,14 @@ class Testcases(unittest.TestCase):
         nodelist = NodeList()
         nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
         cls.bts = Steem(
-            node=nodelist.get_nodes(appbase=False),
+            node=nodelist.get_nodes(),
             use_condenser=True,
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10
         )
-        cls.appbase = Steem(
-            node=nodelist.get_nodes(normal=False, appbase=True),
+        cls.testnet = Steem(
+            node="https://testnet.steemitdev.com",
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10
@@ -44,75 +44,41 @@ class Testcases(unittest.TestCase):
         set_shared_steem_instance(cls.bts)
         cls.bts.set_default_account("test")
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_trending(self, node_param):
-        if node_param == "non_appbase":
-            bts = self.bts
-        else:
-            bts = self.appbase
+    def test_trending(self):
+        bts = self.bts
         query = Query()
         query["limit"] = 10
         query["tag"] = "steemit"
         d = Discussions_by_trending(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_comment_payout(self, node_param):
-        if node_param == "non_appbase":
-            bts = self.bts
-        else:
-            bts = self.appbase
+    def test_comment_payout(self):
+        bts = self.bts
         query = Query()
         query["limit"] = 10
         query["tag"] = "steemit"
         d = Comment_discussions_by_payout(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_post_payout(self, node_param):
-        if node_param == "non_appbase":
-            bts = self.bts
-        else:
-            bts = self.appbase
+    def test_post_payout(self):
+        bts = self.bts
+
         query = Query()
         query["limit"] = 10
         query["tag"] = "steemit"
         d = Post_discussions_by_payout(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_created(self, node_param):
-        if node_param == "non_appbase":
-            bts = self.bts
-        else:
-            bts = self.appbase
+    def test_created(self):
+        bts = self.bts
         query = Query()
         query["limit"] = 10
         query["tag"] = "steemit"
         d = Discussions_by_created(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_active(self, node_param):
-        if node_param == "non_appbase":
-            bts = self.bts
-        else:
-            bts = self.appbase
+    def test_active(self):
+        bts = self.bts
         query = Query()
         query["limit"] = 10
         query["tag"] = "steemit"
@@ -120,80 +86,45 @@ class Testcases(unittest.TestCase):
         self.assertEqual(len(d), 10)
 
     def test_cashout(self):
-        bts = self.appbase
+        bts = self.testnet
         query = Query(limit=10)
         Discussions_by_cashout(query, steem_instance=bts)
         # self.assertEqual(len(d), 10)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_votes(self, node_param):
-        if node_param == "non_appbase":
-            bts = self.bts
-        else:
-            bts = self.appbase
+    def test_votes(self):
+        bts = self.bts
         query = Query()
         query["limit"] = 10
         query["tag"] = "steemit"
         d = Discussions_by_votes(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_children(self, node_param):
-        if node_param == "non_appbase":
-            bts = self.bts
-        else:
-            bts = self.appbase
+    def test_children(self):
+        bts = self.bts
         query = Query()
         query["limit"] = 10
         query["tag"] = "steemit"
         d = Discussions_by_children(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_feed(self, node_param):
-        if node_param == "non_appbase":
-            bts = self.bts
-        else:
-            bts = self.appbase
+    def test_feed(self):
+        bts = self.bts
         query = Query()
         query["limit"] = 10
         query["tag"] = "gtg"
         d = Discussions_by_feed(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_blog(self, node_param):
-        if node_param == "non_appbase":
-            bts = self.bts
-        else:
-            bts = self.appbase
+    def test_blog(self):
+        bts = self.bts
         query = Query()
         query["limit"] = 10
         query["tag"] = "gtg"
         d = Discussions_by_blog(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_comments(self, node_param):
-        if node_param == "non_appbase":
-            bts = self.bts
-        else:
-            bts = self.appbase
+    def test_comments(self):
+        bts = self.bts
         query = Query()
         query["limit"] = 10
         query["filter_tags"] = ["gtg"]
@@ -201,15 +132,8 @@ class Testcases(unittest.TestCase):
         d = Discussions_by_comments(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_promoted(self, node_param):
-        if node_param == "non_appbase":
-            bts = self.bts
-        else:
-            bts = self.appbase
+    def test_promoted(self):
+        bts = self.bts
         query = Query()
         query["limit"] = 10
         query["tag"] = "steemit"

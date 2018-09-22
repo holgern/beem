@@ -19,59 +19,56 @@ class Testcases(unittest.TestCase):
         nodelist = NodeList()
         nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
         cls.bts = Steem(
-            node=nodelist.get_nodes(appbase=False),
+            node=nodelist.get_nodes(),
             nobroadcast=True,
             num_retries=10
         )
-        cls.appbase = Steem(
-            node=nodelist.get_nodes(normal=False, appbase=True),
+        cls.testnet = Steem(
+            node="https://testnet.steemitdev.com",
             nobroadcast=True,
             num_retries=10
         )
         set_shared_steem_instance(cls.bts)
 
     @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
+        ("normal"),
+        ("testnet"),
     ])
     def test_assert(self, node_param):
-        if node_param == "non_appbase":
+        if node_param == "normal":
             stm = self.bts
         else:
-            stm = self.appbase
+            stm = self.testnet
         with self.assertRaises(AssetDoesNotExistsException):
             Asset("FOObarNonExisting", full=False, steem_instance=stm)
 
     @parameterized.expand([
-        ("non_appbase", "SBD", "SBD", 3, "SBD"),
-        ("non_appbase", "STEEM", "STEEM", 3, "STEEM"),
-        ("non_appbase", "VESTS", "VESTS", 6, "VESTS"),
-        ("appbase", "SBD", "SBD", 3, "@@000000013"),
-        ("appbase", "STEEM", "STEEM", 3, "@@000000021"),
-        ("appbase", "VESTS", "VESTS", 6, "@@000000037"),
-        ("appbase", "@@000000013", "SBD", 3, "@@000000013"),
-        ("appbase", "@@000000021", "STEEM", 3, "@@000000021"),
-        ("appbase", "@@000000037", "VESTS", 6, "@@000000037"),
+        ("normal", "SBD", "SBD", 3, "@@000000013"),
+        ("normal", "STEEM", "STEEM", 3, "@@000000021"),
+        ("normal", "VESTS", "VESTS", 6, "@@000000037"),
+        ("normal", "@@000000013", "SBD", 3, "@@000000013"),
+        ("normal", "@@000000021", "STEEM", 3, "@@000000021"),
+        ("normal", "@@000000037", "VESTS", 6, "@@000000037"),
     ])
     def test_properties(self, node_param, data, symbol_str, precision, asset_str):
-        if node_param == "non_appbase":
+        if node_param == "normal":
             stm = self.bts
         else:
-            stm = self.appbase
+            stm = self.testnet
         asset = Asset(data, full=False, steem_instance=stm)
         self.assertEqual(asset.symbol, symbol_str)
         self.assertEqual(asset.precision, precision)
         self.assertEqual(asset.asset, asset_str)
 
     @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
+        ("normal"),
+        ("testnet"),
     ])
     def test_assert_equal(self, node_param):
-        if node_param == "non_appbase":
+        if node_param == "normal":
             stm = self.bts
         else:
-            stm = self.appbase
+            stm = self.testnet
         asset1 = Asset("SBD", full=False, steem_instance=stm)
         asset2 = Asset("SBD", full=False, steem_instance=stm)
         self.assertTrue(asset1 == asset2)

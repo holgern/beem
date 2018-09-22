@@ -20,14 +20,15 @@ class Testcases(unittest.TestCase):
         nodelist = NodeList()
         nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
         cls.bts = Steem(
-            node=nodelist.get_nodes(appbase=False),
+            node=nodelist.get_nodes(),
             nobroadcast=True,
             unsigned=True,
             keys={"active": wif},
             num_retries=10
         )
-        cls.appbase = Steem(
-            node=nodelist.get_nodes(normal=False, appbase=True),
+        cls.testnet = Steem(
+            # node="https://testnet.timcliff.com",
+            node=nodelist.get_nodes(),
             nobroadcast=True,
             unsigned=True,
             keys={"active": wif},
@@ -39,14 +40,14 @@ class Testcases(unittest.TestCase):
         cls.bts.set_default_account("test")
 
     @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
+        ("normal"),
+        ("testnet"),
     ])
     def test_feed_publish(self, node_param):
-        if node_param == "non_appbase":
+        if node_param == "normal":
             bts = self.bts
         else:
-            bts = self.appbase
+            bts = self.testnet
         bts.txbuffer.clear()
         w = Witness("gtg", steem_instance=bts)
         tx = w.feed_publish("4 SBD", "1 STEEM")
@@ -60,14 +61,14 @@ class Testcases(unittest.TestCase):
             op["publisher"])
 
     @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
+        ("normal"),
+        ("testnet"),
     ])
     def test_update(self, node_param):
-        if node_param == "non_appbase":
+        if node_param == "normal":
             bts = self.bts
         else:
-            bts = self.appbase
+            bts = self.testnet
         bts.txbuffer.clear()
         w = Witness("gtg", steem_instance=bts)
         props = {"account_creation_fee": "0.1 STEEM",
@@ -81,56 +82,56 @@ class Testcases(unittest.TestCase):
             op["owner"])
 
     @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
+        ("normal"),
+        ("testnet"),
     ])
     def test_witnesses(self, node_param):
-        if node_param == "non_appbase":
+        if node_param == "normal":
             bts = self.bts
         else:
-            bts = self.appbase
+            bts = self.testnet
         w = Witnesses(steem_instance=bts)
         w.printAsTable()
         self.assertTrue(len(w) > 0)
         self.assertTrue(isinstance(w[0], Witness))
 
     @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
+        ("normal"),
+        ("testnet"),
     ])
     def test_WitnessesVotedByAccount(self, node_param):
-        if node_param == "non_appbase":
+        if node_param == "normal":
             bts = self.bts
         else:
-            bts = self.appbase
+            bts = self.testnet
         w = WitnessesVotedByAccount("gtg", steem_instance=bts)
         w.printAsTable()
         self.assertTrue(len(w) > 0)
         self.assertTrue(isinstance(w[0], Witness))
 
     @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
+        ("normal"),
+        ("testnet"),
     ])
     def test_WitnessesRankedByVote(self, node_param):
-        if node_param == "non_appbase":
+        if node_param == "normal":
             bts = self.bts
         else:
-            bts = self.appbase
+            bts = self.testnet
         w = WitnessesRankedByVote(steem_instance=bts)
         w.printAsTable()
         self.assertTrue(len(w) > 0)
         self.assertTrue(isinstance(w[0], Witness))
 
     @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
+        ("normal"),
+        ("testnet"),
     ])
     def test_export(self, node_param):
-        if node_param == "non_appbase":
+        if node_param == "normal":
             bts = self.bts
         else:
-            bts = self.appbase
+            bts = self.testnet
         owner = "gtg"
         if bts.rpc.get_use_appbase():
             witness = bts.rpc.find_witnesses({'owners': [owner]}, api="database")['witnesses']

@@ -27,13 +27,18 @@ class Testcases(unittest.TestCase):
         nodelist = NodeList()
         nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
         cls.bts = Steem(
-            node=nodelist.get_nodes(appbase=False),
+            node=nodelist.get_nodes(),
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10
         )
-        cls.appbase = Steem(
-            node=nodes_appbase,
+        b = Blockchain(steem_instance=cls.bts)
+        num = b.get_current_block_num()
+        cls.start = num - 25
+        cls.stop = num
+
+        cls.testnet = Steem(
+            node="https://testnet.steemitdev.com",
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10
@@ -42,21 +47,20 @@ class Testcases(unittest.TestCase):
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(cls.bts)
         cls.bts.set_default_account("test")
-
-        b = Blockchain(steem_instance=cls.bts)
+        b = Blockchain(steem_instance=cls.testnet)
         num = b.get_current_block_num()
-        cls.start = num - 25
-        cls.stop = num
+        cls.start_testnet = num - 25
+        cls.stop_testnet = num
 
     @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
+        ("normal"),
+        ("testnet"),
     ])
     def test_blockchain(self, node_param):
-        if node_param == "non_appbase":
+        if node_param == "normal":
             bts = self.bts
         else:
-            bts = self.appbase
+            bts = self.testnet
         b = Blockchain(steem_instance=bts)
         num = b.get_current_block_num()
         self.assertTrue(num > 0)
@@ -71,14 +75,14 @@ class Testcases(unittest.TestCase):
         self.assertEqual(block_timestamp, timestamp)
 
     @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
+        ("normal"),
+        ("testnet"),
     ])
     def test_estimate_block_num(self, node_param):
-        if node_param == "non_appbase":
+        if node_param == "normal":
             bts = self.bts
         else:
-            bts = self.appbase
+            bts = self.testnet
         b = Blockchain(steem_instance=bts)
         last_block = b.get_current_block()
         num = last_block.identifier
@@ -93,14 +97,14 @@ class Testcases(unittest.TestCase):
         est_block_num = b.get_estimated_block_num(date, estimateForwards=True, accurate=False)
 
     @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
+        ("normal"),
+        ("testnet"),
     ])
     def test_get_all_accounts(self, node_param):
-        if node_param == "non_appbase":
+        if node_param == "normal":
             bts = self.bts
         else:
-            bts = self.appbase
+            bts = self.testnet
         b = Blockchain(steem_instance=bts)
         accounts = []
         limit = 200
@@ -110,14 +114,14 @@ class Testcases(unittest.TestCase):
         self.assertEqual(len(set(accounts)), limit)
 
     @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
+        ("normal"),
+        ("testnet"),
     ])
     def test_awaitTX(self, node_param):
-        if node_param == "non_appbase":
+        if node_param == "normal":
             bts = self.bts
         else:
-            bts = self.appbase
+            bts = self.testnet
         b = Blockchain(steem_instance=bts)
         trans = {'ref_block_num': 3855, 'ref_block_prefix': 1730859721,
                  'expiration': '2018-03-09T06:21:06', 'operations': [],
@@ -129,47 +133,42 @@ class Testcases(unittest.TestCase):
         ):
             b.awaitTxConfirmation(trans)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_stream(self, node_param):
-        if node_param == "non_appbase":
-            bts = self.bts
-        else:
-            bts = self.appbase
+    def test_stream(self):
+        bts = self.bts
+        start = self.start
+        stop = self.stop
         b = Blockchain(steem_instance=bts)
         ops_stream = []
         opNames = ["transfer", "vote"]
-        for op in b.stream(opNames=opNames, start=self.start, stop=self.stop):
+        for op in b.stream(opNames=opNames, start=start, stop=stop):
             ops_stream.append(op)
         self.assertTrue(len(ops_stream) > 0)
 
         ops_raw_stream = []
         opNames = ["transfer", "vote"]
-        for op in b.stream(opNames=opNames, raw_ops=True, start=self.start, stop=self.stop):
+        for op in b.stream(opNames=opNames, raw_ops=True, start=start, stop=stop):
             ops_raw_stream.append(op)
         self.assertTrue(len(ops_raw_stream) > 0)
 
         only_ops_stream = []
         opNames = ["transfer", "vote"]
-        for op in b.stream(opNames=opNames, start=self.start, stop=self.stop, only_ops=True):
+        for op in b.stream(opNames=opNames, start=start, stop=stop, only_ops=True):
             only_ops_stream.append(op)
         self.assertTrue(len(only_ops_stream) > 0)
 
         only_ops_raw_stream = []
         opNames = ["transfer", "vote"]
-        for op in b.stream(opNames=opNames, raw_ops=True, start=self.start, stop=self.stop, only_ops=True):
+        for op in b.stream(opNames=opNames, raw_ops=True, start=start, stop=stop, only_ops=True):
             only_ops_raw_stream.append(op)
         self.assertTrue(len(only_ops_raw_stream) > 0)
 
-        op_stat = b.ops_statistics(start=self.start, stop=self.stop)
+        op_stat = b.ops_statistics(start=start, stop=stop)
         op_stat2 = {"transfer": 0, "vote": 0}
         for op in ops_stream:
             self.assertIn(op["type"], opNames)
             op_stat2[op["type"]] += 1
-            self.assertTrue(op["block_num"] >= self.start)
-            self.assertTrue(op["block_num"] <= self.stop)
+            self.assertTrue(op["block_num"] >= start)
+            self.assertTrue(op["block_num"] <= stop)
         self.assertEqual(op_stat["transfer"], op_stat2["transfer"])
         self.assertEqual(op_stat["vote"], op_stat2["vote"])
 
@@ -177,8 +176,8 @@ class Testcases(unittest.TestCase):
         for op in ops_raw_stream:
             self.assertIn(op["op"][0], opNames)
             op_stat3[op["op"][0]] += 1
-            self.assertTrue(op["block_num"] >= self.start)
-            self.assertTrue(op["block_num"] <= self.stop)
+            self.assertTrue(op["block_num"] >= start)
+            self.assertTrue(op["block_num"] <= stop)
         self.assertEqual(op_stat["transfer"], op_stat3["transfer"])
         self.assertEqual(op_stat["vote"], op_stat3["vote"])
 
@@ -186,8 +185,8 @@ class Testcases(unittest.TestCase):
         for op in only_ops_stream:
             self.assertIn(op["type"], opNames)
             op_stat5[op["type"]] += 1
-            self.assertTrue(op["block_num"] >= self.start)
-            self.assertTrue(op["block_num"] <= self.stop)
+            self.assertTrue(op["block_num"] >= start)
+            self.assertTrue(op["block_num"] <= stop)
         self.assertEqual(op_stat["transfer"], op_stat5["transfer"])
         self.assertEqual(op_stat["vote"], op_stat5["vote"])
 
@@ -195,13 +194,13 @@ class Testcases(unittest.TestCase):
         for op in only_ops_raw_stream:
             self.assertIn(op["op"][0], opNames)
             op_stat6[op["op"][0]] += 1
-            self.assertTrue(op["block_num"] >= self.start)
-            self.assertTrue(op["block_num"] <= self.stop)
+            self.assertTrue(op["block_num"] >= start)
+            self.assertTrue(op["block_num"] <= stop)
         self.assertEqual(op_stat["transfer"], op_stat6["transfer"])
         self.assertEqual(op_stat["vote"], op_stat6["vote"])
 
         ops_blocks = []
-        for op in b.blocks(start=self.start, stop=self.stop):
+        for op in b.blocks(start=start, stop=stop):
             ops_blocks.append(op)
         op_stat4 = {"transfer": 0, "vote": 0}
         self.assertTrue(len(ops_blocks) > 0)
@@ -216,8 +215,8 @@ class Testcases(unittest.TestCase):
                             op_type = op_type[:-10]
                         if op_type in opNames:
                             op_stat4[op_type] += 1
-            self.assertTrue(block.identifier >= self.start)
-            self.assertTrue(block.identifier <= self.stop)
+            self.assertTrue(block.identifier >= start)
+            self.assertTrue(block.identifier <= stop)
         self.assertEqual(op_stat["transfer"], op_stat4["transfer"])
         self.assertEqual(op_stat["vote"], op_stat4["vote"])
 
@@ -228,14 +227,14 @@ class Testcases(unittest.TestCase):
         self.assertTrue(len(ops_blocks) == 1)
 
     @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
+        ("normal"),
+        ("testnet"),
     ])
     def test_stream2(self, node_param):
-        if node_param == "non_appbase":
+        if node_param == "normal":
             bts = self.bts
         else:
-            bts = self.appbase
+            bts = self.testnet
         b = Blockchain(steem_instance=bts)
         stop_block = b.get_current_block_num()
         start_block = stop_block - 10
@@ -245,14 +244,14 @@ class Testcases(unittest.TestCase):
         self.assertTrue(len(ops_stream) > 0)
 
     @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
+        ("normal"),
+        ("testnet"),
     ])
     def test_wait_for_and_get_block(self, node_param):
-        if node_param == "non_appbase":
+        if node_param == "normal":
             bts = self.bts
         else:
-            bts = self.appbase
+            bts = self.testnet
         b = Blockchain(steem_instance=bts, max_block_wait_repetition=18)
         start_num = b.get_current_block_num()
         blocknum = start_num
@@ -282,7 +281,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual(hash1, hash2)
 
     def test_signing_appbase(self):
-        b = Blockchain(steem_instance=self.appbase)
+        b = Blockchain(steem_instance=self.bts)
         st = None
         for block in b.blocks(start=25304468, stop=25304468):
             for trx in block.transactions:

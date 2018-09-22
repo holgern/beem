@@ -36,12 +36,7 @@ class Testcases(unittest.TestCase):
         cls.nodes_https = nodelist.get_nodes(wss=False, appbase=False)
         cls.nodes_appbase = nodelist.get_nodes(normal=False)
         cls.test_list = nodelist.get_nodes()
-        cls.bts = Steem(
-            node=cls.nodes,
-            nobroadcast=True,
-            keys={"active": wif, "owner": wif, "memo": wif},
-            num_retries=10
-        )
+
         cls.appbase = Steem(
             node=cls.nodes_appbase,
             nobroadcast=True,
@@ -51,23 +46,13 @@ class Testcases(unittest.TestCase):
         cls.rpc = SteemNodeRPC(urls=cls.test_list)
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
-        set_shared_steem_instance(cls.bts)
-        cls.bts.set_default_account("test")
+        set_shared_steem_instance(cls.appbase)
+        cls.appbase.set_default_account("test")
 
     def get_reply(self, msg):
         reply = '<html>  <head><title>403 Forbidden</title></head><body bgcolor="white"><center><h1>' \
                 '%s</h1></center><hr><center>nginx</center></body>    </html>' % (msg)
         return reply
-
-    def test_non_appbase(self):
-        bts = self.bts
-        self.assertTrue(bts.chain_params['min_version'] == '0.19.5')
-        self.assertFalse(bts.rpc.get_use_appbase())
-        self.assertTrue(isinstance(bts.rpc.get_config(api="database"), dict))
-        with self.assertRaises(
-            exceptions.NoMethodWithName
-        ):
-            bts.rpc.get_config_abc()
 
     def test_appbase(self):
         bts = self.appbase
@@ -82,16 +67,6 @@ class Testcases(unittest.TestCase):
             exceptions.NoMethodWithName
         ):
             bts.rpc.get_config_abc()
-
-    def test_normal_appbase_switch(self):
-        bts = Steem(node=[self.nodes[0], self.nodes_appbase[0]])
-        self.assertTrue(bts.chain_params['min_version'] == '0.19.5')
-        self.assertFalse(bts.rpc.get_use_appbase())
-        self.assertTrue(isinstance(bts.rpc.get_config(api="database"), dict))
-        bts.rpc.next()
-        self.assertTrue(bts.chain_params['min_version'] == '0.19.10')
-        self.assertTrue(bts.rpc.get_use_appbase())
-        self.assertTrue(isinstance(bts.rpc.get_config(api="database"), dict))
 
     def test_connect_test_node(self):
         rpc = self.rpc
@@ -203,7 +178,7 @@ class Testcases(unittest.TestCase):
             SteemNodeRPC(urls=nodes, num_retries=0, num_retries_call=0, timeout=1)
 
     def test_error_handling(self):
-        rpc = SteemNodeRPC(urls=self.nodes, num_retries=2, num_retries_call=3)
+        rpc = SteemNodeRPC(urls=self.nodes_appbase, num_retries=2, num_retries_call=3)
         with self.assertRaises(
             exceptions.NoMethodWithName
         ):

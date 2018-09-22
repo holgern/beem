@@ -730,6 +730,15 @@ class Blockchain(object):
                         block_num = block.get("id")
                         _id = self.hash_op(event)
                         timestamp = block.get("timestamp")
+                    elif "op" in event and isinstance(event["op"], dict) and "type" in event["op"] and "value" in event["op"]:
+                        op_type = event["op"]["type"]
+                        if len(op_type) > 10 and op_type[len(op_type) - 10:] == "_operation":
+                            op_type = op_type[:-10]
+                        op = event["op"]["value"]
+                        trx_id = event.get("trx_id")
+                        block_num = event.get("block")
+                        _id = self.hash_op(event["op"])
+                        timestamp = event.get("timestamp")
                     else:
                         op_type, op = event["op"]
                         trx_id = event.get("trx_id")

@@ -29,7 +29,7 @@ class Testcases(unittest.TestCase):
         nodelist = NodeList()
         nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
         cls.bts = Steem(
-            node=nodelist.get_nodes(normal=True, appbase=False),
+            node=nodelist.get_nodes(),
             nobroadcast=True,
             bundle=False,
             unsigned=True,
@@ -37,8 +37,8 @@ class Testcases(unittest.TestCase):
             keys={"active": wif},
             num_retries=10
         )
-        cls.appbase = Steem(
-            node=nodelist.get_nodes(normal=False, appbase=True, dev=False),
+        cls.testnet = Steem(
+            node="https://testnet.steemitdev.com",
             nobroadcast=True,
             bundle=False,
             unsigned=True,
@@ -47,20 +47,12 @@ class Testcases(unittest.TestCase):
             num_retries=10
         )
         cls.account = Account("beembot", full=True, steem_instance=cls.bts)
-        cls.account_appbase = Account("beembot", full=True, steem_instance=cls.appbase)
+        cls.account_testnet = Account("beembot", full=True, steem_instance=cls.testnet)
         set_shared_steem_instance(cls.bts)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_account(self, node_param):
-        if node_param == "non_appbase":
-            stm = self.bts
-            account = self.account
-        else:
-            stm = self.appbase
-            account = self.account_appbase
+    def test_account(self):
+        stm = self.bts
+        account = self.account
         Account("beembot", steem_instance=stm)
         with self.assertRaises(
             exceptions.AccountDoesNotExistsException
@@ -86,17 +78,9 @@ class Testcases(unittest.TestCase):
         self.assertEqual(str(account), "<Account beembot>")
         self.assertIsInstance(Account(account), Account)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_history(self, node_param):
-        if node_param == "non_appbase":
-            account = self.account
-            zero_element = 0
-        else:
-            account = self.account_appbase
-            zero_element = 1  # Bug in steem
+    def test_history(self):
+        account = self.account
+        zero_element = 0
         h_all_raw = []
         for h in account.history_reverse(raw_output=True):
             h_all_raw.append(h)
@@ -196,15 +180,8 @@ class Testcases(unittest.TestCase):
         self.assertEqual(h_list[0][1]['block'], h_all_raw[-10 + zero_element][1]['block'])
         self.assertEqual(h_list[-1][1]['block'], h_all_raw[-2 + zero_element][1]['block'])
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_history2(self, node_param):
-        if node_param == "non_appbase":
-            stm = self.bts
-        else:
-            stm = self.appbase
+    def test_history2(self):
+        stm = self.bts
         account = Account("beembot", steem_instance=stm)
         h_list = []
         max_index = account.virtual_op_count()
@@ -235,15 +212,8 @@ class Testcases(unittest.TestCase):
         for i in range(1, 5):
             self.assertEqual(h_list[i][0] - h_list[i - 1][0], 1)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_history_reverse2(self, node_param):
-        if node_param == "non_appbase":
-            stm = self.bts
-        else:
-            stm = self.appbase
+    def test_history_reverse2(self):
+        stm = self.bts
         account = Account("beembot", steem_instance=stm)
         h_list = []
         max_index = account.virtual_op_count()
@@ -274,17 +244,9 @@ class Testcases(unittest.TestCase):
         for i in range(1, 5):
             self.assertEqual(h_list[i][0] - h_list[i - 1][0], -1)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_history_block_num(self, node_param):
-        if node_param == "non_appbase":
-            stm = self.bts
-            zero_element = 0
-        else:
-            stm = self.appbase
-            zero_element = 0  # bug in steem
+    def test_history_block_num(self):
+        stm = self.bts
+        zero_element = 0
         account = Account("fullnodeupdate", steem_instance=stm)
         h_all_raw = []
         for h in account.history_reverse(raw_output=True):
@@ -318,15 +280,8 @@ class Testcases(unittest.TestCase):
         self.assertEqual(h_list[0][1]['block'], h_all_raw[-10 + zero_element][1]['block'])
         self.assertEqual(h_list[-1][1]['block'], h_all_raw[-2 + zero_element][1]['block'])
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_account_props(self, node_param):
-        if node_param == "non_appbase":
-            account = self.account
-        else:
-            account = self.account_appbase
+    def test_account_props(self):
+        account = self.account
         rep = account.get_reputation()
         self.assertTrue(isinstance(rep, float))
         vp = account.get_voting_power()
@@ -459,17 +414,10 @@ class Testcases(unittest.TestCase):
             "beembot",
             op["from"])
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_json_export(self, node_param):
-        if node_param == "non_appbase":
-            account = self.account
-        else:
-            account = self.account_appbase
+    def test_json_export(self):
+        account = self.account
         if account.steem.rpc.get_use_appbase():
-            content = self.appbase.rpc.find_accounts({'accounts': [account["name"]]}, api="database")["accounts"][0]
+            content = self.testnet.rpc.find_accounts({'accounts': [account["name"]]}, api="database")["accounts"][0]
         else:
             content = self.bts.rpc.get_accounts([account["name"]])[0]
         keys = list(content.keys())
@@ -535,15 +483,8 @@ class Testcases(unittest.TestCase):
             votes_list2.append(v)
         self.assertTrue(abs(len(votes_list) - len(votes_list2)) < 2)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_comment_history(self, node_param):
-        if node_param == "non_appbase":
-            account = self.account
-        else:
-            account = self.account_appbase
+    def test_comment_history(self):
+        account = self.account
         comments = []
         for c in account.comment_history(limit=1):
             comments.append(c)
@@ -553,14 +494,14 @@ class Testcases(unittest.TestCase):
         self.assertTrue(comments[0].depth > 0)
 
     @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
+        ("normal"),
+        ("testnet"),
     ])
     def test_blog_history(self, node_param):
-        if node_param == "non_appbase":
+        if node_param == "normal":
             account = Account("holger80", steem_instance=self.bts)
         else:
-            account = Account("holger80", steem_instance=self.appbase)
+            account = Account("holger80", steem_instance=self.testnet)
         posts = []
         for p in account.blog_history(limit=1):
             posts.append(p)
@@ -569,15 +510,8 @@ class Testcases(unittest.TestCase):
         self.assertTrue(posts[0].is_main_post())
         self.assertTrue(posts[0].depth == 0)
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_reply_history(self, node_param):
-        if node_param == "non_appbase":
-            account = self.account
-        else:
-            account = self.account_appbase
+    def test_reply_history(self):
+        account = self.account
         replies = []
         for r in account.reply_history(limit=1):
             replies.append(r)

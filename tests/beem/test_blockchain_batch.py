@@ -25,7 +25,7 @@ class Testcases(unittest.TestCase):
         nodelist = NodeList()
         nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
         cls.bts = Steem(
-            node=nodelist.get_nodes(normal=False, appbase=True, dev=True),
+            node=nodelist.get_nodes(),
             nobroadcast=True,
             num_retries=10,
             timeout=30,
