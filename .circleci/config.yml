@@ -120,7 +120,6 @@ jobs:
           command: |
             tox -e py35
 
-
   build-python3.7:
     docker:
       - image: circleci/python:3.7.0
@@ -156,5 +155,5 @@ workflows:
           requires:
             - build-python3.4
       - build-python3.7:
-        requires:
-          - build-python3.7
+          requires:
+            - build-python3.7
