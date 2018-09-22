@@ -897,7 +897,7 @@ class Blockchain(object):
             >>> from beem.blockchain import Blockchain
             >>> blockchain = Blockchain()
             >>> ret = blockchain.get_similar_account_names("test", limit=5)
-            >>> ret == ['test', 'test-1', 'test-2', 'test-ico', 'test-ilionx-123']
+            >>> len(ret) == 5
             True
 
         """

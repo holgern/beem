@@ -40,15 +40,8 @@ class Testcases(unittest.TestCase):
         self.assertIsInstance(ret["asset"], dict)
         self.assertIsInstance(ret["amount"], float)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_init(self, node_param):
-        if node_param == "normal":
-            stm = self.bts
-        else:
-            stm = self.testnet
+    def test_init(self):
+        stm = self.bts
         # String init
         asset = Asset("SBD", steem_instance=stm)
         symbol = asset["symbol"]

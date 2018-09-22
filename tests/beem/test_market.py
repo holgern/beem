@@ -30,27 +30,13 @@ class Testcases(unittest.TestCase):
             keys={"active": wif},
             num_retries=10
         )
-        cls.testnet = Steem(
-            node="https://testnet.steemitdev.com",
-            nobroadcast=True,
-            unsigned=True,
-            keys={"active": wif},
-            num_retries=10
-        )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(cls.bts)
         cls.bts.set_default_account("test")
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_market(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-        else:
-            bts = self.testnet
+    def test_market(self):
+        bts = self.bts
         m1 = Market(u'STEEM', u'SBD', steem_instance=bts)
         self.assertEqual(m1.get_string(), u'SBD:STEEM')
         m2 = Market(steem_instance=bts)
@@ -64,30 +50,16 @@ class Testcases(unittest.TestCase):
         m = Market(base, quote, steem_instance=bts)
         self.assertEqual(m.get_string(), u'STEEM:SBD')
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_ticker(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-        else:
-            bts = self.testnet
+    def test_ticker(self):
+        bts = self.bts
         m = Market(u'STEEM:SBD', steem_instance=bts)
         ticker = m.ticker()
         self.assertEqual(len(ticker), 6)
         self.assertEqual(ticker['steem_volume']["symbol"], u'STEEM')
         self.assertEqual(ticker['sbd_volume']["symbol"], u'SBD')
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_volume(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-        else:
-            bts = self.testnet
+    def test_volume(self):
+        bts = self.bts
         m = Market(u'STEEM:SBD', steem_instance=bts)
         volume = m.volume24h()
         self.assertEqual(volume['STEEM']["symbol"], u'STEEM')
@@ -127,28 +99,14 @@ class Testcases(unittest.TestCase):
         history = m.market_history(buckets[2])
         self.assertTrue(len(history) > 0)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_accountopenorders(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-        else:
-            bts = self.testnet
+    def test_accountopenorders(self):
+        bts = self.bts
         m = Market(u'STEEM:SBD', steem_instance=bts)
         openOrder = m.accountopenorders("test")
         self.assertTrue(isinstance(openOrder, list))
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_buy(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-        else:
-            bts = self.testnet
+    def test_buy(self):
+        bts = self.bts
         m = Market(u'STEEM:SBD', steem_instance=bts)
         bts.txbuffer.clear()
         tx = m.buy(5, 0.1, account="test")
@@ -174,15 +132,8 @@ class Testcases(unittest.TestCase):
         self.assertEqual(str(a), op["min_to_receive"])
         self.assertEqual(str(Amount('0.500 SBD', steem_instance=bts)), op["amount_to_sell"])
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_sell(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-        else:
-            bts = self.testnet
+    def test_sell(self):
+        bts = self.bts
         bts.txbuffer.clear()
         m = Market(u'STEEM:SBD', steem_instance=bts)
         tx = m.sell(5, 0.1, account="test")
@@ -208,15 +159,8 @@ class Testcases(unittest.TestCase):
         self.assertEqual(str(Amount('0.500 SBD', steem_instance=bts)), op["min_to_receive"])
         self.assertEqual(str(Amount('0.100 STEEM', steem_instance=bts)), op["amount_to_sell"])
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_cancel(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-        else:
-            bts = self.testnet
+    def test_cancel(self):
+        bts = self.bts
         bts.txbuffer.clear()
         m = Market(u'STEEM:SBD', steem_instance=bts)
         tx = m.cancel(5, account="test")

@@ -422,7 +422,7 @@ class Testcases(unittest.TestCase):
             content = self.bts.rpc.get_accounts([account["name"]])[0]
         keys = list(content.keys())
         json_content = account.json()
-        exclude_list = ['owner_challenged', 'average_bandwidth']  # ['json_metadata', 'reputation', 'active_votes', 'savings_sbd_seconds']
+        exclude_list = ['owner_challenged', 'average_bandwidth', 'id']  # ['json_metadata', 'reputation', 'active_votes', 'savings_sbd_seconds']
         for k in keys:
             if k not in exclude_list:
                 if isinstance(content[k], dict) and isinstance(json_content[k], list):
@@ -493,15 +493,8 @@ class Testcases(unittest.TestCase):
         self.assertTrue(comments[0].is_comment())
         self.assertTrue(comments[0].depth > 0)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_blog_history(self, node_param):
-        if node_param == "normal":
-            account = Account("holger80", steem_instance=self.bts)
-        else:
-            account = Account("holger80", steem_instance=self.testnet)
+    def test_blog_history(self):
+        account = Account("holger80", steem_instance=self.bts)
         posts = []
         for p in account.blog_history(limit=1):
             posts.append(p)

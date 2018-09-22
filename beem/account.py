@@ -1077,6 +1077,7 @@ class Account(BlockchainObject):
                 >>> from beem.account import Account
                 >>> account = Account("beem.app")
                 >>> account.get_recovery_request()
+                []
 
         """
         if account is None:
@@ -1104,6 +1105,7 @@ class Account(BlockchainObject):
                 >>> from beem.account import Account
                 >>> account = Account("beem.app")
                 >>> account.get_escrow(1234)
+                []
 
         """
         if account is None:

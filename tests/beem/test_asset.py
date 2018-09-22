@@ -60,15 +60,8 @@ class Testcases(unittest.TestCase):
         self.assertEqual(asset.precision, precision)
         self.assertEqual(asset.asset, asset_str)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_assert_equal(self, node_param):
-        if node_param == "normal":
-            stm = self.bts
-        else:
-            stm = self.testnet
+    def test_assert_equal(self):
+        stm = self.bts
         asset1 = Asset("SBD", full=False, steem_instance=stm)
         asset2 = Asset("SBD", full=False, steem_instance=stm)
         self.assertTrue(asset1 == asset2)
