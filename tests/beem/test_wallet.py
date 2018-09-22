@@ -34,12 +34,6 @@ class Testcases(unittest.TestCase):
             num_retries=10
             # Overwrite wallet to use this list of wifs only
         )
-        cls.testnet = Steem(
-            node="https://testnet.steemitdev.com",
-            nobroadcast=True,
-            bundle=True,
-            num_retries=10
-        )
         cls.stm.set_default_account("test")
         set_shared_steem_instance(cls.stm)
         # self.stm.newWallet("TestingOneTwoThree")
@@ -87,15 +81,8 @@ class Testcases(unittest.TestCase):
         private = self.wallet.getPrivateKeyForPublicKey(pub)
         self.assertEqual(private, wif)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_account_by_pub(self, node_param):
-        if node_param == "normal":
-            stm = self.stm
-        else:
-            stm = self.testnet
+    def test_account_by_pub(self):
+        stm = self.stm
         self.wallet.steem = stm
         self.wallet.unlock(pwd="TestingOneTwoThree")
         acc = Account("gtg")
@@ -114,15 +101,8 @@ class Testcases(unittest.TestCase):
         self.assertEqual("gtg", acc_by_pub_list[0]["name"])
         self.assertEqual(pub, acc_by_pub_list[0]["pubkey"])
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_pub_lookup(self, node_param):
-        if node_param == "normal":
-            stm = self.stm
-        else:
-            stm = self.testnet
+    def test_pub_lookup(self):
+        stm = self.stm
         self.wallet.steem = stm
         self.wallet.unlock(pwd="TestingOneTwoThree")
         with self.assertRaises(
@@ -142,15 +122,8 @@ class Testcases(unittest.TestCase):
         ):
             self.wallet.getPostingKeyForAccount("test")
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_pub_lookup_keys(self, node_param):
-        if node_param == "normal":
-            stm = self.stm
-        else:
-            stm = self.testnet
+    def test_pub_lookup_keys(self):
+        stm = self.stm
         self.wallet.steem = stm
         self.wallet.unlock(pwd="TestingOneTwoThree")
         with self.assertRaises(

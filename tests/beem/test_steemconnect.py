@@ -49,17 +49,9 @@ class Testcases(unittest.TestCase):
         cls.account = Account("test", full=True, steem_instance=cls.bts)
         cls.account_testnet = Account("test", full=True, steem_instance=cls.testnet)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_transfer(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-            acc = self.account
-        elif node_param == "testnet":
-            bts = self.testnet
-            acc = self.account_testnet
+    def test_transfer(self):
+        bts = self.bts
+        acc = self.account
         acc.steem.txbuffer.clear()
         tx = acc.transfer(
             "test1", 1.000, "STEEM", memo="test")

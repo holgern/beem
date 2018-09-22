@@ -47,7 +47,6 @@ class Testcases(unittest.TestCase):
             num_retries=10
         )
         cls.account = Account("beembot", full=True, steem_instance=cls.bts)
-        cls.account_testnet = Account("beembot", full=True, steem_instance=cls.testnet)
         set_shared_steem_instance(cls.bts)
 
     def test_account(self):
@@ -417,12 +416,12 @@ class Testcases(unittest.TestCase):
     def test_json_export(self):
         account = self.account
         if account.steem.rpc.get_use_appbase():
-            content = self.testnet.rpc.find_accounts({'accounts': [account["name"]]}, api="database")["accounts"][0]
+            content = self.bts.rpc.find_accounts({'accounts': [account["name"]]}, api="database")["accounts"][0]
         else:
             content = self.bts.rpc.get_accounts([account["name"]])[0]
         keys = list(content.keys())
         json_content = account.json()
-        exclude_list = ['owner_challenged', 'average_bandwidth', 'id']  # ['json_metadata', 'reputation', 'active_votes', 'savings_sbd_seconds']
+        exclude_list = ['owner_challenged', 'average_bandwidth']  # ['json_metadata', 'reputation', 'active_votes', 'savings_sbd_seconds']
         for k in keys:
             if k not in exclude_list:
                 if isinstance(content[k], dict) and isinstance(json_content[k], list):

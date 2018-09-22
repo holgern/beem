@@ -78,27 +78,14 @@ class Testcases(unittest.TestCase):
         amount = Amount(op["amount"], steem_instance=bts)
         self.assertEqual(float(amount), 1.33)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_create_account(self, node_param):
-        if node_param == "normal":
-            bts = Steem(node=self.nodelist.get_nodes(),
-                        nobroadcast=True,
-                        unsigned=True,
-                        data_refresh_time_seconds=900,
-                        keys={"active": wif, "owner": wif, "memo": wif},
-                        num_retries=10)
-            core_unit = "STM"
-        elif node_param == "testnet":
-            bts = Steem(node="https://testnet.steemitdev.com",
-                        nobroadcast=True,
-                        unsigned=True,
-                        data_refresh_time_seconds=900,
-                        keys={"active": wif, "owner": wif, "memo": wif},
-                        num_retries=10)
-            core_unit = "TST"
+    def test_create_account(self):
+        bts = Steem(node=self.nodelist.get_nodes(),
+                    nobroadcast=True,
+                    unsigned=True,
+                    data_refresh_time_seconds=900,
+                    keys={"active": wif, "owner": wif, "memo": wif},
+                    num_retries=10)
+        core_unit = "STM"
         name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
         key1 = PrivateKey()
         key2 = PrivateKey()
@@ -160,27 +147,14 @@ class Testcases(unittest.TestCase):
             op["creator"],
             "test")
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_create_account_password(self, node_param):
-        if node_param == "normal":
-            bts = Steem(node=self.nodelist.get_nodes(),
-                        nobroadcast=True,
-                        unsigned=True,
-                        data_refresh_time_seconds=900,
-                        keys={"active": wif, "owner": wif, "memo": wif},
-                        num_retries=10)
-            core_unit = "STM"
-        elif node_param == "testnet":
-            bts = Steem(node="https://testnet.steemitdev.com",
-                        nobroadcast=True,
-                        unsigned=True,
-                        data_refresh_time_seconds=900,
-                        keys={"active": wif, "owner": wif, "memo": wif},
-                        num_retries=10)
-            core_unit = "TST"
+    def test_create_account_password(self):
+        bts = Steem(node=self.nodelist.get_nodes(),
+                    nobroadcast=True,
+                    unsigned=True,
+                    data_refresh_time_seconds=900,
+                    keys={"active": wif, "owner": wif, "memo": wif},
+                    num_retries=10)
+        core_unit = "STM"
         name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
         key5 = PrivateKey()
         bts.txbuffer.clear()
@@ -225,27 +199,14 @@ class Testcases(unittest.TestCase):
             op["creator"],
             "test")
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_create_account_with_delegation(self, node_param):
-        if node_param == "normal":
-            bts = Steem(node=self.nodelist.get_nodes(),
-                        nobroadcast=True,
-                        unsigned=True,
-                        data_refresh_time_seconds=900,
-                        keys={"active": wif, "owner": wif, "memo": wif},
-                        num_retries=10)
-            core_unit = "STM"
-        elif node_param == "testnet":
-            bts = Steem(node="https://testnet.steemitdev.com",
-                        nobroadcast=True,
-                        unsigned=True,
-                        data_refresh_time_seconds=900,
-                        keys={"active": wif, "owner": wif, "memo": wif},
-                        num_retries=10)
-            core_unit = "TST"
+    def test_create_account_with_delegation(self):
+        bts = Steem(node=self.nodelist.get_nodes(),
+                    nobroadcast=True,
+                    unsigned=True,
+                    data_refresh_time_seconds=900,
+                    keys={"active": wif, "owner": wif, "memo": wif},
+                    num_retries=10)
+        core_unit = "STM"
         name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
         key1 = PrivateKey()
         key2 = PrivateKey()
