@@ -443,6 +443,18 @@ class Steem(object):
             blockchain_version = '0.0.0'
         return blockchain_version
 
+    def get_dust_threshold(self, use_stored_data=True):
+        """Returns the vote dust threshold"""
+        props = self.data['config']
+        if props is None:
+            self.refresh_data()
+            props = self.data['config']
+        if props and 'STEEM_VOTE_DUST_THRESHOLD' in props:
+            dust_threshold = props['STEEM_VOTE_DUST_THRESHOLD']
+        else:
+            dust_threshold = 0
+        return dust_threshold
+
     def rshares_to_sbd(self, rshares, not_broadcasted_vote=False, use_stored_data=True):
         """ Calculates the current SBD value of a vote
         """
@@ -570,6 +582,10 @@ class Steem(object):
         used_power = self._calc_resulting_vote(voting_power=voting_power, vote_pct=vote_pct, use_stored_data=use_stored_data)
         # calculate vote rshares
         rshares = int(math.copysign(vests * 1e6 * used_power / STEEM_100_PERCENT, vote_pct))
+        if self.hardfork == 20:
+            if abs(rshares) <= self.get_dust_threshold(use_stored_data=use_stored_data):
+                return 0
+            rshares -= math.copysign(self.get_dust_threshold(use_stored_data=use_stored_data), vote_pct)
         return rshares
 
     def sbd_to_rshares(self, sbd, not_broadcasted_vote=False, use_stored_data=True):
@@ -641,6 +657,9 @@ class Steem(object):
             raise ValueError("Either steem_power or vests has to be set. Not both!")
         if steem_power is not None:
             vests = int(self.sp_to_vests(steem_power, use_stored_data=use_stored_data) * 1e6)
+
+        if self.hardfork == 20:
+            rshares += math.copysign(self.get_dust_threshold(use_stored_data=use_stored_data), rshares)
 
         max_vote_denom = self._max_vote_denom(use_stored_data=use_stored_data)
 
@@ -738,6 +757,14 @@ class Steem(object):
             return known_chains["STEEM"]
         else:
             return self.get_network()
+
+    @property
+    def hardfork(self):
+        if self.offline or self.rpc is None:
+            versions = known_chains['STEEM']['min_version']
+        else:
+            versions = self.get_blockchain_version()
+        return int(versions.split('.')[1])
 
     @property
     def prefix(self):
