@@ -445,7 +445,10 @@ class Steem(object):
 
     def get_dust_threshold(self, use_stored_data=True):
         """Returns the vote dust threshold"""
-        props = self.get_config(use_stored_data=use_stored_data, replace_steemit_by_steem=True)
+        props = self.data['config']
+        if props is None:
+            self.refresh_data()
+            props = self.data['config']
         if props and 'STEEM_VOTE_DUST_THRESHOLD' in props:
             dust_threshold = props['STEEM_VOTE_DUST_THRESHOLD']
         else:
