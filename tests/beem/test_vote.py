@@ -119,15 +119,8 @@ class Testcases(unittest.TestCase):
         ):
             Vote(construct_authorpermvoter("sdalfj", "dsfa", "asdfsldfjlasd"), steem_instance=bts)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_activevotes(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-        else:
-            bts = self.testnet
+    def test_activevotes(self):
+        bts = self.bts
         votes = ActiveVotes(self.authorperm, steem_instance=bts)
         votes.printAsTable()
         vote_list = votes.get_list()
