@@ -343,11 +343,12 @@ class Account(BlockchainObject):
             regenerated_vp = 0
             if "last_vote_time" in self:
                 last_vote_time = self["last_vote_time"]
+                diff_in_seconds = (addTzInfo(datetime.utcnow()) - (last_vote_time)).total_seconds()
                 regenerated_vp = diff_in_seconds * STEEM_100_PERCENT / STEEM_VOTE_REGENERATION_SECONDS / 100
             elif "voting_manabar" in self:
                 last_vote_time = self["voting_manabar"]["last_update_time"]
+                diff_in_seconds = (addTzInfo(datetime.utcnow()) - (last_vote_time)).total_seconds()
                 regenerated_vp = diff_in_seconds * STEEM_100_PERCENT / STEEM_VOTING_MANA_REGENERATION_SECONDS / 100
-            diff_in_seconds = (addTzInfo(datetime.utcnow()) - (last_vote_time)).total_seconds()
         else:
             regenerated_vp = 0
         if "voting_power" in self:
