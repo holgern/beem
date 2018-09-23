@@ -41,8 +41,8 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         nodelist = NodeList()
-        stm = shared_steem_instance()
-        stm.config.refreshBackup()
+        # stm = shared_steem_instance()
+        # stm.config.refreshBackup()
         cls.bts = Steem(
             node=nodelist.get_testnet(),
             nobroadcast=True,
@@ -156,10 +156,10 @@ class Testcases(unittest.TestCase):
     def test_transfer_1of1(self):
         steem = self.bts
         steem.nobroadcast = False
-        tx = TransactionBuilder(steem_instance=steem)
+        tx = TransactionBuilder(use_condenser_api=False, steem_instance=steem)
         tx.appendOps(Transfer(**{"from": 'beem',
                                  "to": 'beem1',
-                                 "amount": '0.01 SBD',
+                                 "amount": {"amount": "10", "precision": 3, "nai": "@@000000017"},
                                  "memo": '1 of 1 transaction'}))
         self.assertEqual(
             tx["operations"][0][0],
@@ -176,10 +176,10 @@ class Testcases(unittest.TestCase):
         # Send a 2 of 2 transaction from elf which needs beem4's cosign to send funds
         steem = self.bts
         steem.nobroadcast = False
-        tx = TransactionBuilder(steem_instance=steem)
+        tx = TransactionBuilder(use_condenser_api=False, steem_instance=steem)
         tx.appendOps(Transfer(**{"from": 'beem5',
                                  "to": 'beem1',
-                                 "amount": '0.01 SBD',
+                                 "amount": {"amount": "10", "precision": 3, "nai": "@@000000017"},
                                  "memo": '2 of 2 simple transaction'}))
 
         tx.appendWif(self.active_private_key_of_beem5)
@@ -199,10 +199,10 @@ class Testcases(unittest.TestCase):
         steem.nobroadcast = False
         steem.wallet.unlock("123")
 
-        tx = TransactionBuilder(steem_instance=steem)
+        tx = TransactionBuilder(use_condenser_api=False, steem_instance=steem)
         tx.appendOps(Transfer(**{"from": 'beem5',
                                  "to": 'beem1',
-                                 "amount": '0.01 SBD',
+                                 "amount": {"amount": "10", "precision": 3, "nai": "@@000000017"},
                                  "memo": '2 of 2 serialized/deserialized transaction'}))
 
         tx.appendSigner("beem5", "active")
@@ -220,10 +220,10 @@ class Testcases(unittest.TestCase):
         steem.wallet.unlock("123")
         steem.wallet.removeAccount("beem4")
 
-        tx = TransactionBuilder(steem_instance=steem)
+        tx = TransactionBuilder(use_condenser_api=False, steem_instance=steem)
         tx.appendOps(Transfer(**{"from": 'beem5',
                                  "to": 'beem1',
-                                 "amount": '0.01 SBD',
+                                 "amount": {"amount": "10", "precision": 3, "nai": "@@000000017"},
                                  "memo": '2 of 2 serialized/deserialized transaction'}))
 
         tx.appendSigner("beem5", "active")
@@ -252,10 +252,10 @@ class Testcases(unittest.TestCase):
         steem.wallet.unlock("123")
         steem.wallet.removeAccount("beem4")
 
-        tx = TransactionBuilder(steem_instance=steem)
+        tx = TransactionBuilder(use_condenser_api=False, steem_instance=steem)
         tx.appendOps(Transfer(**{"from": 'beem5',
                                  "to": 'beem',
-                                 "amount": '0.01 SBD',
+                                 "amount": {"amount": "10", "precision": 3, "nai": "@@000000017"},
                                  "memo": '2 of 2 serialized/deserialized transaction'}))
 
         tx.appendSigner("beem5", "active")
@@ -284,10 +284,10 @@ class Testcases(unittest.TestCase):
             expiration=360,
         )
 
-        tx = TransactionBuilder(steem_instance=steem)
+        tx = TransactionBuilder(use_condenser_api=False, steem_instance=steem)
         tx.appendOps(Transfer(**{"from": 'beem5',
                                  "to": 'beem',
-                                 "amount": '0.01 SBD',
+                                 "amount": {"amount": "10", "precision": 3, "nai": "@@000000017"},
                                  "memo": '2 of 2 serialized/deserialized transaction'}))
 
         tx.appendSigner("beem5", "active")
@@ -314,10 +314,10 @@ class Testcases(unittest.TestCase):
     def test_verifyAuthority(self):
         stm = self.bts
         stm.wallet.unlock("123")
-        tx = TransactionBuilder(steem_instance=stm)
+        tx = TransactionBuilder(use_condenser_api=False, steem_instance=stm)
         tx.appendOps(Transfer(**{"from": "beem",
                                  "to": "beem1",
-                                 "amount": "1.33 STEEM",
+                                 "amount": {"amount": "1300", "precision": 3, "nai": "@@000000013"},
                                  "memo": "Foobar"}))
         account = Account("beem", steem_instance=stm)
         tx.appendSigner(account, "active")
@@ -511,7 +511,7 @@ class Testcases(unittest.TestCase):
                     nobroadcast=True,
                     expiration=120,
                     num_retries=10)
-        tx = TransactionBuilder(steem_instance=stm)
+        tx = TransactionBuilder(use_condenser_api=False, steem_instance=stm)
         tx.appendOps(Transfer(**{"from": "beem",
                                  "to": "beem1",
                                  "amount": Amount("1 STEEM", steem_instance=stm),
@@ -535,7 +535,7 @@ class Testcases(unittest.TestCase):
                     nobroadcast=True,
                     expiration=120,
                     num_retries=10)
-        tx = TransactionBuilder(steem_instance=stm)
+        tx = TransactionBuilder(use_condenser_api=False, steem_instance=stm)
         tx.appendOps(Transfer(**{"from": "beem",
                                  "to": "beem1",
                                  "amount": Amount("1 STEEM", steem_instance=stm),
@@ -557,7 +557,7 @@ class Testcases(unittest.TestCase):
                     nobroadcast=True,
                     expiration=120,
                     num_retries=10)
-        tx = TransactionBuilder(steem_instance=stm)
+        tx = TransactionBuilder(use_condenser_api=False, steem_instance=stm)
         tx.appendOps(Transfer(**{"from": "beem",
                                  "to": "beem1",
                                  "amount": Amount("1 STEEM", steem_instance=stm),
@@ -581,7 +581,7 @@ class Testcases(unittest.TestCase):
                     expiration=120,
                     num_retries=10)
 
-        tx = TransactionBuilder(expiration=10, steem_instance=stm)
+        tx = TransactionBuilder(use_condenser_api=False, expiration=10, steem_instance=stm)
         tx.appendOps(Transfer(**{"from": "beem",
                                  "to": "beem1",
                                  "amount": Amount("1 STEEM", steem_instance=stm),
@@ -596,7 +596,7 @@ class Testcases(unittest.TestCase):
                                  "to": "beem1",
                                  "amount": Amount("1 STEEM", steem_instance=stm),
                                  "memo": ""})
-        tx1 = TransactionBuilder(steem_instance=stm)
+        tx1 = TransactionBuilder(use_condenser_api=False, steem_instance=stm)
         tx1.appendOps(opTransfer)
         tx = TransactionBuilder(tx1, steem_instance=stm)
         self.assertFalse(tx.is_empty())

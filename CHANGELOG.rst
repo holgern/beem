@@ -2,7 +2,6 @@ Changelog
 =========
 0.19.56
 -------
-* Issue
 * adding methods to claim and create discounted accouts (PR #84) by crokkon
 * Make vote rshare calculations HF20 ready (PR #85) by flugschwein
 * Issue #80 fixed

@@ -272,6 +272,35 @@ class Account_update(GrapheneObject):
         ]))
 
 
+class Witness_set_properties(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        prefix = kwargs.pop("prefix", default_prefix)
+        extensions = Array([])
+        props = {}
+        for k in kwargs["props"]:
+            if "key" == k[0]:
+                block_signing_key = (PublicKey(k[1], prefix=prefix))
+                props["key"] = repr(block_signing_key)
+        for k in kwargs["props"]:
+            if k[0] == "key":
+                continue
+            props[k[0]] = (k[1])
+        props_list = []
+        for k in props:
+            props_list.append(Array([String(k), String(props[k])]))
+        map_props = Array(props_list)
+
+        super(Witness_set_properties, self).__init__(OrderedDict([
+            ('owner', String(kwargs["owner"])),
+            ('props', map_props),
+            ('extensions', extensions),
+        ]))
+
+
 class Witness_update(GrapheneObject):
     def __init__(self, *args, **kwargs):
         if check_for_class(self, args):

@@ -213,7 +213,8 @@ class Account(BlockchainObject):
         ]
         for p in amounts:
             if p in output:
-                output[p] = output.get(p, Amount("0.000 SBD", steem_instance=self.steem)).json()
+                if p in output:
+                    output[p] = output.get(p).json()
         return json.loads(str(json.dumps(output)))
 
     def getSimilarAccountNames(self, limit=5):

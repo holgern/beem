@@ -30,8 +30,8 @@ class Testcases(unittest.TestCase):
         cls.nodelist = NodeList()
         cls.nodelist.update_nodes()
         cls.nodelist.update_nodes(steem_instance=Steem(node=cls.nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
-        stm = shared_steem_instance()
-        stm.config.refreshBackup()
+        # stm = shared_steem_instance()
+        # stm.config.refreshBackup()
         runner = CliRunner()
         result = runner.invoke(cli, ['-o', 'set', 'default_vote_weight', '100'])
         if result.exit_code != 0:

@@ -39,20 +39,9 @@ known_chains = {
         "min_version": '0.0.0',
         "prefix": "STX",
         "chain_assets": [
-            {"asset": "SBD", "symbol": "SBD", "precision": 3, "id": 0},
-            {"asset": "STEEM", "symbol": "STEEM", "precision": 3, "id": 1},
-            {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
-        ],
-    },
-    "TEST": {
-        "chain_id":
-        "9afbce9f2416520733bacb370315d32b6b2c43d6097576df1c1222859d91eecc",
-        "min_version": '0.0.0',
-        "prefix": "TST",
-        "chain_assets": [
-            {"asset": "SBD", "symbol": "TBD", "precision": 3, "id": 0},
-            {"asset": "STEEM", "symbol": "TESTS", "precision": 3, "id": 1},
-            {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
+            {"asset": "@@000000013", "symbol": "SBD", "precision": 3, "id": 0},
+            {"asset": "@@000000021", "symbol": "STEEM", "precision": 3, "id": 1},
+            {"asset": "@@000000037", "symbol": "VESTS", "precision": 6, "id": 2}
         ],
     },
     "TESTDEV": {

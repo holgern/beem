@@ -61,6 +61,7 @@ ops = [
     'comment_payout_update',
     'return_vesting_delegation',
     'comment_benefactor_reward',
+    'witness_set_properties'
 ]
 operations = {o: ops.index(o) for o in ops}
 
