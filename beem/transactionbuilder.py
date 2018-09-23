@@ -54,6 +54,7 @@ class TransactionBuilder(dict):
     def __init__(
         self,
         tx={},
+        use_condenser_api=True,
         steem_instance=None,
         **kwargs
     ):
@@ -66,7 +67,7 @@ class TransactionBuilder(dict):
             self._require_reconstruction = False
         else:
             self._require_reconstruction = True
-        self._use_condenser_api = True
+        self._use_condenser_api = use_condenser_api
         self.set_expiration(kwargs.get("expiration", self.steem.expiration))
 
     def set_expiration(self, p):
@@ -230,7 +231,7 @@ class TransactionBuilder(dict):
         """Clear all stored wifs"""
         self.wifs = set()
 
-    def constructTx(self):
+    def constructTx(self, ref_block_num=None, ref_block_prefix=None):
         """ Construct the actual transaction and store it in the class's dict
             store
 
@@ -250,8 +251,9 @@ class TransactionBuilder(dict):
         expiration = formatTimeFromNow(
             self.expiration or self.steem.expiration
         )
-        ref_block_num, ref_block_prefix = transactions.getBlockParams(
-            self.steem.rpc)
+        if ref_block_num is None or ref_block_prefix is None:
+            ref_block_num, ref_block_prefix = transactions.getBlockParams(
+                self.steem.rpc)
         self.tx = Signed_Transaction(
             ref_block_prefix=ref_block_prefix,
             expiration=expiration,
