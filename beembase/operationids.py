@@ -45,6 +45,7 @@ ops = [
     'set_reset_account',
     'claim_reward_balance',
     'delegate_vesting_shares',
+    'witness_set_properties',
     'account_create_with_delegation',
     'fill_convert_request',
     'author_reward',
@@ -61,7 +62,6 @@ ops = [
     'comment_payout_update',
     'return_vesting_delegation',
     'comment_benefactor_reward',
-    'witness_set_properties'
 ]
 operations = {o: ops.index(o) for o in ops}
 

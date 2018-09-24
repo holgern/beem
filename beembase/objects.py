@@ -29,7 +29,7 @@ default_prefix = "STM"
 class Amount(object):
     def __init__(self, d):
         if isinstance(d, string_types):
-            self.amount, self.asset = d.strip().split(" ")
+            self.amount, self.symbol = d.strip().split(" ")
             self.precision = None
             for c in known_chains:
                 if self.precision is not None:
@@ -37,15 +37,17 @@ class Amount(object):
                 for asset in known_chains[c]["chain_assets"]:
                     if self.precision is not None:
                         continue
-                    if asset["symbol"] == self.asset:
+                    if asset["symbol"] == self.symbol:
                         self.precision = asset["precision"]
-                    elif asset["asset"] == self.asset:
+                        self.asset = asset["asset"]
+                    elif asset["asset"] == self.symbol:
                         self.precision = asset["precision"]
+                        self.asset = asset["asset"]
             if self.precision is None:
                 raise Exception("Asset unknown")
             self.amount = int(float(self.amount) * 10 ** self.precision)
 
-            self.str_repr = '{:.{}f} {}'.format((float(self.amount) / 10 ** self.precision), self.precision, self.asset)
+            self.str_repr = '{:.{}f} {}'.format((float(self.amount) / 10 ** self.precision), self.precision, self.symbol)
         elif isinstance(d, list):
             self.amount = d[0]
             self.asset = d[2]
@@ -57,7 +59,8 @@ class Amount(object):
             for c in known_chains:
                 for asset in known_chains[c]["chain_assets"]:
                     if asset["asset"] == d["nai"]:
-                        self.asset = asset["symbol"]
+                        self.asset = asset["asset"]
+                        self.symbol = asset["symbol"]
             if not self.asset:
                 raise ValueError("Unknown NAI, cannot resolve symbol")
             self.amount = d["amount"]
@@ -65,8 +68,8 @@ class Amount(object):
             self.str_repr = json.dumps(d)
         else:
             self.amount = d.amount
-            self.asset = d.symbol
-            # self.asset = d.asset["asset"]
+            self.symbol = d.symbol
+            self.asset = d.asset["asset"]
             self.precision = d.asset["precision"]
             self.amount = int(float(self.amount) * 10 ** self.precision)
             self.str_repr = str(d)
@@ -75,11 +78,13 @@ class Amount(object):
 
     def __bytes__(self):
         # padding
-        asset = self.asset + "\x00" * (7 - len(self.asset))
+        # asset = self.asset + "\x00" * (7 - len(self.asset))
+        symbol = self.symbol + "\x00" * (7 - len(self.symbol))
         return (struct.pack("<q", int(self.amount)) + struct.pack("<b", self.precision) +
-                py23_bytes(asset, "ascii"))
+                py23_bytes(symbol, "ascii"))
 
     def __str__(self):
+        # return json.dumps({"amount": self.amount, "precision": self.precision, "nai": self.asset})
         return self.str_repr
 
 

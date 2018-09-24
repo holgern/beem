@@ -6,6 +6,8 @@ from builtins import int, str
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from collections import OrderedDict
 import json
+from binascii import hexlify, unhexlify
+import re
 from beemgraphenebase.types import (
     Uint8, Int16, Uint16, Uint32, Uint64,
     Varint32, Int64, String, Bytes, Void,
@@ -285,14 +287,35 @@ class Witness_set_properties(GrapheneObject):
             if "key" == k[0]:
                 block_signing_key = (PublicKey(k[1], prefix=prefix))
                 props["key"] = repr(block_signing_key)
+            elif "new_signing_key" == k[0]:
+                new_signing_key = (PublicKey(k[1], prefix=prefix))
+                props["new_signing_key"] = repr(new_signing_key)
         for k in kwargs["props"]:
-            if k[0] == "key":
+            if k[0] in ["key", "new_signing_key"]:
                 continue
-            props[k[0]] = (k[1])
+            if isinstance(k[1], str):
+                is_hex = re.fullmatch(r'[0-9a-fA-F]+', k[1] or '') is not None
+            else:
+                is_hex = False
+            if isinstance(k[1], int) and k[0] in ["account_subsidy_budget", "account_subsidy_decay", "maximum_block_size", "sbd_interest_rate"]:
+                props[k[0]] = (hexlify(Uint32(k[1]).__bytes__())).decode()
+            elif not isinstance(k[1], str) and k[0] in ["account_creation_fee"]:
+                props[k[0]] = (hexlify(Amount(k[1]).__bytes__())).decode()
+            elif not is_hex and isinstance(k[1], str) and k[0] in ["account_creation_fee"]:
+                props[k[0]] = (hexlify(Amount(k[1]).__bytes__())).decode()
+            elif not isinstance(k[1], str) and k[0] in ["sbd_exchange_rate"]:
+                props[k[0]] = (hexlify(ExchangeRate(k[1]).__bytes__())).decode()
+            elif not is_hex and k[0] in ["url"]:
+                props[k[0]] = (hexlify(String(k[1]).__bytes__())).decode()
+            else:
+                props[k[0]] = (k[1])
         props_list = []
         for k in props:
-            props_list.append(Array([String(k), String(props[k])]))
-        map_props = Array(props_list)
+            if k == "key":
+                props_list.append(([String(k), String(props[k])]))
+            else:
+                props_list.append(([String(k), String(props[k])]))
+        map_props = Map(props_list)
 
         super(Witness_set_properties, self).__init__(OrderedDict([
             ('owner', String(kwargs["owner"])),
