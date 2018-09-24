@@ -653,6 +653,28 @@ class Testcases(unittest.TestCase):
                    "b9f2405478badadb4c")
         self.doit()
 
+    def test_witness_set_properties(self):
+        self.op = operations.Witness_set_properties(
+            **{
+                "owner": "init-1",
+                "props": [
+                    ["key", "032d2a4af3e23294e0a1d9dbc46e0272d8e1977ce2ae3349527cc90fe1cc9c5db9"],
+                    ["account_creation_fee", "d0070000000000000354455354530000"]
+                ],
+                "prefix": default_prefix
+            })
+
+        self.cm = ("f68585abf4dce7c80457012a06696e69742d3102036b65794230"
+                   "3332643261346166336532333239346530613164396462633436"
+                   "6530323732643865313937376365326165333334393532376363"
+                   "39306665316363396335646239146163636f756e745f63726561"
+                   "74696f6e5f666565206430303730303030303030303030303030"
+                   "3335343435353335343533303030300000011f3ed64264c74203"
+                   "7955e9eb71f7de8a6bd2635251ad569629f849f23d53f2874d0a"
+                   "879f2579bee31f34bbc7c67456e5be08ee8436f0fd5e0e4cc030"
+                   "3030000001")
+        self.doit()
+
     def test_witness_vote(self):
         self.op = operations.Account_witness_vote(**{
             "account": "xeroc",

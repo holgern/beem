@@ -13,7 +13,7 @@ from beemgraphenebase.types import (
     Varint32, Int64, String, Bytes, Void,
     Array, PointInTime, Signature, Bool,
     Set, Fixed_array, Optional, Static_variant,
-    Map, Id
+    Map, Id, RawString
 )
 from .objects import GrapheneObject, isArgsThisClass
 from beemgraphenebase.account import PublicKey
@@ -297,8 +297,10 @@ class Witness_set_properties(GrapheneObject):
                 is_hex = re.fullmatch(r'[0-9a-fA-F]+', k[1] or '') is not None
             else:
                 is_hex = False
-            if isinstance(k[1], int) and k[0] in ["account_subsidy_budget", "account_subsidy_decay", "maximum_block_size", "sbd_interest_rate"]:
+            if isinstance(k[1], int) and k[0] in ["account_subsidy_budget", "account_subsidy_decay", "maximum_block_size"]:
                 props[k[0]] = (hexlify(Uint32(k[1]).__bytes__())).decode()
+            elif isinstance(k[1], int) and k[0] in ["sbd_interest_rate"]:
+                props[k[0]] = (hexlify(Uint16(k[1]).__bytes__())).decode()
             elif not isinstance(k[1], str) and k[0] in ["account_creation_fee"]:
                 props[k[0]] = (hexlify(Amount(k[1]).__bytes__())).decode()
             elif not is_hex and isinstance(k[1], str) and k[0] in ["account_creation_fee"]:
@@ -311,10 +313,7 @@ class Witness_set_properties(GrapheneObject):
                 props[k[0]] = (k[1])
         props_list = []
         for k in props:
-            if k == "key":
-                props_list.append(([String(k), String(props[k])]))
-            else:
-                props_list.append(([String(k), String(props[k])]))
+            props_list.append(([String(k), RawString(props[k])]))
         map_props = Map(props_list)
 
         super(Witness_set_properties, self).__init__(OrderedDict([

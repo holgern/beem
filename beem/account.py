@@ -355,7 +355,7 @@ class Account(BlockchainObject):
         if "voting_power" in self:
             total_vp = (self["voting_power"] / 100 + regenerated_vp)
         elif "voting_manabar" in self:
-            total_vp = (self["voting_manabar"]["current_mana"] / 100 + regenerated_vp)
+            total_vp = int(self["voting_manabar"]["current_mana"]) / 100 + regenerated_vp
         if total_vp > 100:
             return 100
         if total_vp < 0:

@@ -79,7 +79,10 @@ class Amount(object):
     def __bytes__(self):
         # padding
         # asset = self.asset + "\x00" * (7 - len(self.asset))
-        symbol = self.symbol + "\x00" * (7 - len(self.symbol))
+        try:
+            symbol = self.symbol + "\x00" * (7 - len(self.symbol))
+        except:
+            symbol = self.asset + "\x00" * (7 - len(self.asset))
         return (struct.pack("<q", int(self.amount)) + struct.pack("<b", self.precision) +
                 py23_bytes(symbol, "ascii"))
 
