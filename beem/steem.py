@@ -1235,6 +1235,45 @@ class Steem(object):
             op = operations.Account_create(**op)
         return self.finalizeOp(op, creator, "active", **kwargs)
 
+    def witness_set_properties(self, wif, owner, props, use_condenser_api=True):
+        """ Set witness properties
+
+            :param privkey wif: Private signing key
+            :param dict props: Properties
+            :param str owner: witness account name
+
+            Properties:::
+
+                {
+                    "account_creation_fee": x,
+                    "account_subsidy_budget": x,
+                    "account_subsidy_decay": x,
+                    "maximum_block_size": x,
+                    "url": x,
+                    "sbd_exchange_rate": x,
+                    "sbd_interest_rate": x,
+                    "new_signing_key": x
+                }
+
+        """
+
+        owner = Account(owner, steem_instance=self)
+
+        try:
+            PrivateKey(wif, prefix=self.prefix)
+        except Exception as e:
+            raise e
+        props_list = [["key", repr(PrivateKey(wif, prefix=self.prefix).pubkey)]]
+        for k in props:
+            props_list.append([k, props[k]])
+
+        op = operations.Witness_set_properties({"owner": owner["name"], "props": props_list, "prefix": self.prefix})
+        tb = TransactionBuilder(use_condenser_api=use_condenser_api, steem_instance=self)
+        tb.appendOps([op])
+        tb.appendWif(wif)
+        tb.sign()
+        return tb.broadcast()
+
     def witness_update(self, signing_key, url, props, account=None, **kwargs):
         """ Creates/updates a witness
 
