@@ -1,5 +1,13 @@
 Changelog
 =========
+0.19.57
+--------
+* last hf19 release
+* working witness_set_properties  operation
+* witness_set_properties() added to steem
+* beempy witnessproperties added
+* beempy pricefeed uses witnessproperties  when witness wif is provided
+
 0.19.56
 -------
 * adding methods to claim and create discounted accouts (PR #84) by crokkon

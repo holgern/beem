@@ -106,7 +106,6 @@ class Testcases(unittest.TestCase):
             additional_owner_accounts=["test1"],  # 1.2.0
             additional_active_accounts=["test1"],
             storekeys=False,
-            delegation_fee_steem="0 STEEM"
         )
         self.assertEqual(
             tx["operations"][0][0],
@@ -168,69 +167,10 @@ class Testcases(unittest.TestCase):
             additional_owner_accounts=["test1"],  # 1.2.0
             additional_active_accounts=["test1"],
             storekeys=False,
-            delegation_fee_steem="0 STEEM"
         )
         self.assertEqual(
             tx["operations"][0][0],
             "account_create"
-        )
-        op = tx["operations"][0][1]
-        role = "active"
-        self.assertIn(
-            format(key5.pubkey, core_unit),
-            [x[0] for x in op[role]["key_auths"]])
-        self.assertIn(
-            format(key5.pubkey, core_unit),
-            [x[0] for x in op[role]["key_auths"]])
-        self.assertIn(
-            "test1",
-            [x[0] for x in op[role]["account_auths"]])
-        role = "owner"
-        self.assertIn(
-            format(key5.pubkey, core_unit),
-            [x[0] for x in op[role]["key_auths"]])
-        self.assertIn(
-            format(key5.pubkey, core_unit),
-            [x[0] for x in op[role]["key_auths"]])
-        self.assertIn(
-            "test1",
-            [x[0] for x in op[role]["account_auths"]])
-        self.assertEqual(
-            op["creator"],
-            "test")
-
-    def test_create_account_with_delegation(self):
-        bts = Steem(node=self.nodelist.get_nodes(),
-                    nobroadcast=True,
-                    unsigned=True,
-                    data_refresh_time_seconds=900,
-                    keys={"active": wif, "owner": wif, "memo": wif},
-                    num_retries=10)
-        core_unit = "STM"
-        name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
-        key1 = PrivateKey()
-        key2 = PrivateKey()
-        key3 = PrivateKey()
-        key4 = PrivateKey()
-        key5 = PrivateKey()
-        bts.txbuffer.clear()
-        tx = bts.create_account(
-            name,
-            creator="test",   # 1.2.7
-            owner_key=format(key1.pubkey, core_unit),
-            active_key=format(key2.pubkey, core_unit),
-            posting_key=format(key3.pubkey, core_unit),
-            memo_key=format(key4.pubkey, core_unit),
-            additional_owner_keys=[format(key5.pubkey, core_unit)],
-            additional_active_keys=[format(key5.pubkey, core_unit)],
-            additional_owner_accounts=["test1"],  # 1.2.0
-            additional_active_accounts=["test1"],
-            storekeys=False,
-            delegation_fee_steem="1 STEEM"
-        )
-        self.assertEqual(
-            tx["operations"][0][0],
-            "account_create_with_delegation"
         )
         op = tx["operations"][0][1]
         role = "active"
@@ -532,7 +472,7 @@ class Testcases(unittest.TestCase):
     def test_sp_to_rshares(self):
         stm = self.bts
         rshares = stm.sp_to_rshares(stm.vests_to_sp(1e6))
-        self.assertTrue(abs(rshares - 20000000000.0) < 2)
+        self.assertTrue(abs(rshares - 19950000000.0) < 2)
 
     def test_rshares_to_vests(self):
         stm = self.bts

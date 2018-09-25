@@ -1003,7 +1003,6 @@ class Steem(object):
         storekeys=True,
         store_owner_key=False,
         json_meta=None,
-        delegation_fee_steem='0 STEEM',
         **kwargs
     ):
         """ Create new account on Steem
@@ -1035,15 +1034,6 @@ class Steem(object):
             .. note:: Account creations cost a fee that is defined by
                        the network. If you create an account, you will
                        need to pay for that fee!
-                       **You can partially pay that fee by delegating VESTS.**
-                       To pay the fee in full in STEEM, leave
-                       ``delegation_fee_steem`` set to ``0 STEEM`` (Default).
-                       To pay the fee partially in STEEM, partially with delegated
-                       VESTS, set ``delegation_fee_steem`` to a value greater than ``1
-                       STEEM``. `Required VESTS will be calculated automatically.`
-                       To pay the fee with maximum amount of delegation, set
-                       ``delegation_fee_steem`` to ``1 STEEM``. `Required VESTS will be
-                       calculated automatically.`
 
             :param str account_name: (**required**) new account name
             :param str json_meta: Optional meta data for the account
@@ -1063,10 +1053,7 @@ class Steem(object):
                 names
             :param bool storekeys: Store new keys in the wallet (default:
                 ``True``)
-            :param delegation_fee_steem: If set, `creator` pays a
-                fee of this amount, and delegates the rest with VESTS (calculated
-                automatically). Minimum: 1 STEEM. If left to 0 (Default), full fee
-                is paid without VESTS delegation.
+
             :param str creator: which account should pay the registration fee
                                 (defaults to ``default_account``)
             :raises AccountExistsException: if the account already exists on
@@ -1091,14 +1078,6 @@ class Steem(object):
             pass
 
         creator = Account(creator, steem_instance=self)
-        if isinstance(delegation_fee_steem, string_types):
-            delegation_fee_steem = Amount(delegation_fee_steem, steem_instance=self)
-        elif isinstance(delegation_fee_steem, Amount):
-            delegation_fee_steem = Amount(delegation_fee_steem, steem_instance=self)
-        else:
-            delegation_fee_steem = Amount(delegation_fee_steem, "STEEM", steem_instance=self)
-        if not delegation_fee_steem["symbol"] == "STEEM":
-            raise AssertionError()
 
         " Generate new keys from password"
         from beemgraphenebase.account import PasswordKey
@@ -1170,69 +1149,28 @@ class Steem(object):
             posting_accounts_authority.append([addaccount["name"], 1])
 
         props = self.get_chain_properties()
-        required_fee_steem = Amount(props["account_creation_fee"], steem_instance=self) * 30
-        required_fee_vests = Amount(0, "VESTS", steem_instance=self)
-        if delegation_fee_steem.amount:
-            # creating accounts without delegation requires 30x
-            # account_creation_fee creating account with delegation allows one
-            # to use VESTS to pay the fee where the ratio must satisfy 1 STEEM
-            # in fee == 5 STEEM in delegated VESTS
-
-            delegated_sp_fee_mult = 5
-
-            if delegation_fee_steem.amount < 1:
-                raise ValueError(
-                    "When creating account with delegation, at least " +
-                    "1 STEEM in fee must be paid.")
-            # calculate required remaining fee in vests
-            remaining_fee = required_fee_steem - delegation_fee_steem
-            if remaining_fee.amount > 0:
-                required_sp = remaining_fee.amount * delegated_sp_fee_mult
-                required_fee_vests = Amount(self.sp_to_vests(required_sp) + 1, "VESTS", steem_instance=self)
-            op = {
-                "fee": delegation_fee_steem,
-                'delegation': required_fee_vests,
-                "creator": creator["name"],
-                "new_account_name": account_name,
-                'owner': {'account_auths': owner_accounts_authority,
-                          'key_auths': owner_key_authority,
-                          "address_auths": [],
-                          'weight_threshold': 1},
-                'active': {'account_auths': active_accounts_authority,
-                           'key_auths': active_key_authority,
-                           "address_auths": [],
-                           'weight_threshold': 1},
-                'posting': {'account_auths': active_accounts_authority,
-                            'key_auths': posting_key_authority,
-                            "address_auths": [],
-                            'weight_threshold': 1},
-                'memo_key': memo,
-                "json_metadata": json_meta or {},
-                "prefix": self.prefix,
-            }
-            op = operations.Account_create_with_delegation(**op)
-        else:
-            op = {
-                "fee": required_fee_steem,
-                "creator": creator["name"],
-                "new_account_name": account_name,
-                'owner': {'account_auths': owner_accounts_authority,
-                          'key_auths': owner_key_authority,
-                          "address_auths": [],
-                          'weight_threshold': 1},
-                'active': {'account_auths': active_accounts_authority,
-                           'key_auths': active_key_authority,
-                           "address_auths": [],
-                           'weight_threshold': 1},
-                'posting': {'account_auths': active_accounts_authority,
-                            'key_auths': posting_key_authority,
-                            "address_auths": [],
-                            'weight_threshold': 1},
-                'memo_key': memo,
-                "json_metadata": json_meta or {},
-                "prefix": self.prefix,
-            }
-            op = operations.Account_create(**op)
+        required_fee_steem = Amount(props["account_creation_fee"], steem_instance=self)
+        op = {
+            "fee": required_fee_steem,
+            "creator": creator["name"],
+            "new_account_name": account_name,
+            'owner': {'account_auths': owner_accounts_authority,
+                      'key_auths': owner_key_authority,
+                      "address_auths": [],
+                      'weight_threshold': 1},
+            'active': {'account_auths': active_accounts_authority,
+                       'key_auths': active_key_authority,
+                       "address_auths": [],
+                       'weight_threshold': 1},
+            'posting': {'account_auths': active_accounts_authority,
+                        'key_auths': posting_key_authority,
+                        "address_auths": [],
+                        'weight_threshold': 1},
+            'memo_key': memo,
+            "json_metadata": json_meta or {},
+            "prefix": self.prefix,
+        }
+        op = operations.Account_create(**op)
         return self.finalizeOp(op, creator, "active", **kwargs)
 
     def witness_set_properties(self, wif, owner, props, use_condenser_api=True):
