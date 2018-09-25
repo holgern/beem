@@ -207,7 +207,7 @@ class NodeList(list):
                 "type": "appbase",
                 "owner": "curie",
                 "score": 50
-            },            
+            },
             {
                 "url": "wss://testnet.steem.vc",
                 "version": "0.19.2",

@@ -13,7 +13,7 @@ from beemgraphenebase.types import (
     Varint32, Int64, String, Bytes, Void,
     Array, PointInTime, Signature, Bool,
     Set, Fixed_array, Optional, Static_variant,
-    Map, Id, RawString
+    Map, Id, HexString
 )
 from .objects import GrapheneObject, isArgsThisClass
 from beemgraphenebase.account import PublicKey
@@ -313,7 +313,12 @@ class Witness_set_properties(GrapheneObject):
                 props[k[0]] = (k[1])
         props_list = []
         for k in props:
-            props_list.append(([String(k), RawString(props[k])]))
+            props_list.append(([String(k), HexString(props[k])]))
+        props_list = sorted(
+            props_list,
+            key=lambda x: str(x[0]),
+            reverse=False,
+        )
         map_props = Map(props_list)
 
         super(Witness_set_properties, self).__init__(OrderedDict([

@@ -27,12 +27,14 @@ default_prefix = "STM"
 
 @python_2_unicode_compatible
 class Amount(object):
-    def __init__(self, d):
+    def __init__(self, d, prefix="STM"):
         if isinstance(d, string_types):
             self.amount, self.symbol = d.strip().split(" ")
             self.precision = None
             for c in known_chains:
                 if self.precision is not None:
+                    continue
+                if known_chains[c]["prefix"] != prefix:
                     continue
                 for asset in known_chains[c]["chain_assets"]:
                     if self.precision is not None:
@@ -52,16 +54,27 @@ class Amount(object):
             self.amount = d[0]
             self.asset = d[2]
             self.precision = d[1]
+            self.symbol = None
+            for c in known_chains:
+                if known_chains[c]["prefix"] != prefix:
+                    continue
+                for asset in known_chains[c]["chain_assets"]:
+                    if asset["asset"] == self.asset:
+                        self.symbol = asset["symbol"]
+            if self.symbol is None:
+                raise ValueError("Unknown NAI, cannot resolve symbol")
             a = Array([String(d[0]), d[1], d[2]])
             self.str_repr = str(a.__str__())
         elif isinstance(d, dict) and "nai" in d:
-            self.asset = None
+            self.asset = d["nai"]
+            self.symbol = None
             for c in known_chains:
+                if known_chains[c]["prefix"] != prefix:
+                    continue
                 for asset in known_chains[c]["chain_assets"]:
                     if asset["asset"] == d["nai"]:
-                        self.asset = asset["asset"]
                         self.symbol = asset["symbol"]
-            if not self.asset:
+            if self.symbol is None:
                 raise ValueError("Unknown NAI, cannot resolve symbol")
             self.amount = d["amount"]
             self.precision = d["precision"]
@@ -78,11 +91,7 @@ class Amount(object):
 
     def __bytes__(self):
         # padding
-        # asset = self.asset + "\x00" * (7 - len(self.asset))
-        try:
-            symbol = self.symbol + "\x00" * (7 - len(self.symbol))
-        except:
-            symbol = self.asset + "\x00" * (7 - len(self.asset))
+        symbol = self.symbol + "\x00" * (7 - len(self.symbol))
         return (struct.pack("<q", int(self.amount)) + struct.pack("<b", self.precision) +
                 py23_bytes(symbol, "ascii"))
 
