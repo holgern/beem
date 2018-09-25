@@ -221,6 +221,20 @@ class Account(BlockchainObject):
         """Deprecated, please use get_similar_account_names"""
         return self.get_similar_account_names(limit=limit)
 
+    def get_rc(self):
+        """Return RC of account"""
+        b = Blockchain(steem_instance=self.steem)
+        return b.find_rc_accounts(self["name"])
+
+    def get_rc_manabar(self):
+        """Returns current_mana and max_mana for RC"""
+        rc_param = self.get_rc()
+        max_mana = int(rc_param["max_rc"])
+        last_update = datetime.utcfromtimestamp(rc_param["rc_manabar"]["last_update_time"])
+        diff_in_seconds = (addTzInfo(datetime.utcnow()) - addTzInfo(last_update)).total_seconds()
+        current_mana = rc_param["rc_manabar"]["current_mana"] + diff_in_seconds * max_mana / (5 * 24 * 60 * 60)
+        return {"current_mana": current_mana, "max_mana": max_mana}
+
     def get_similar_account_names(self, limit=5):
         """ Returns ``limit`` account names similar to the current account
             name as a list
@@ -289,6 +303,11 @@ class Account(BlockchainObject):
             used_kb = bandwidth["used"] / 1024
             allocated_mb = bandwidth["allocated"] / 1024 / 1024
         last_vote_time_str = formatTimedelta(addTzInfo(datetime.utcnow()) - self["last_vote_time"])
+        try:
+            rc_mana = self.get_rc_manabar()
+        except:
+            rc_mana = None
+
         if use_table:
             t = PrettyTable(["Key", "Value"])
             t.align = "l"
@@ -302,6 +321,9 @@ class Account(BlockchainObject):
             if bandwidth["allocated"] > 0:
                 t.add_row(["Remaining Bandwidth", "%.2f %%" % (remaining)])
                 t.add_row(["used/allocated Bandwidth", "(%.0f kb of %.0f mb)" % (used_kb, allocated_mb)])
+            if rc_mana is not None:
+                t.add_row(["Remaining RC", "%.2f %%" % (rc_mana["current_mana"] / rc_mana["max_mana"] * 100)])
+                t.add_row(["used/allocated RC", "(%.0f of %.0f)" % (rc_mana["current_mana"], rc_mana["max_mana"])])
             if return_str:
                 return t.get_string(**kwargs)
             else:
@@ -318,7 +340,11 @@ class Account(BlockchainObject):
             if bandwidth["allocated"] > 0:
                 ret += "--- Bandwidth ---\n"
                 ret += "Remaining: %.2f %%" % (remaining)
-                ret += " (%.0f kb of %.0f mb)" % (used_kb, allocated_mb)
+                ret += " (%.0f kb of %.0f mb)\n" % (used_kb, allocated_mb)
+            if rc_mana is not None:
+                ret += "--- RC manabar ---\n"
+                ret += "Remaining: %.2f %%" % (rc_mana["current_mana"] / rc_mana["max_mana"] * 100)
+                ret += " (%.0f of %.0f)" % (rc_mana["current_mana"], rc_mana["max_mana"])
             if return_str:
                 return ret
             print(ret)
@@ -337,38 +363,51 @@ class Account(BlockchainObject):
             rep = int(self['reputation'])
         return reputation_to_score(rep)
 
+    def get_manabar(self):
+        """"Return manabar"""
+        max_mana = int(self.get_vests())
+        last_update = datetime.utcfromtimestamp(self["voting_manabar"]["last_update_time"])
+        diff_in_seconds = (addTzInfo(datetime.utcnow()) - addTzInfo(last_update)).total_seconds()
+        current_mana = int(self["voting_manabar"]["current_mana"]) + diff_in_seconds * max_mana / (5 * 24 * 60 * 60)
+        return {"current_mana": current_mana, "max_mana": max_mana}
+
     def get_voting_power(self, with_regeneration=True):
         """ Returns the account voting power in the range of 0-100%
         """
         if with_regeneration:
             regenerated_vp = 0
-            if "last_vote_time" in self:
+            if "voting_manabar" in self:
+                last_vote_time = datetime.utcfromtimestamp(self["voting_manabar"]["last_update_time"])
+                diff_in_seconds = (addTzInfo(datetime.utcnow()) - addTzInfo(last_vote_time)).total_seconds()
+                regenerated_vp = diff_in_seconds * STEEM_100_PERCENT / STEEM_VOTING_MANA_REGENERATION_SECONDS / 100
+            elif "last_vote_time" in self:
                 last_vote_time = self["last_vote_time"]
                 diff_in_seconds = (addTzInfo(datetime.utcnow()) - (last_vote_time)).total_seconds()
                 regenerated_vp = diff_in_seconds * STEEM_100_PERCENT / STEEM_VOTE_REGENERATION_SECONDS / 100
-            elif "voting_manabar" in self:
-                last_vote_time = self["voting_manabar"]["last_update_time"]
-                diff_in_seconds = (addTzInfo(datetime.utcnow()) - (last_vote_time)).total_seconds()
-                regenerated_vp = diff_in_seconds * STEEM_100_PERCENT / STEEM_VOTING_MANA_REGENERATION_SECONDS / 100
         else:
             regenerated_vp = 0
         if "voting_power" in self:
             total_vp = (self["voting_power"] / 100 + regenerated_vp)
         elif "voting_manabar" in self:
-            total_vp = int(self["voting_manabar"]["current_mana"]) / 100 + regenerated_vp
+            total_vp = int(self["voting_manabar"]["current_mana"]) / int(self.get_vests()) + regenerated_vp
         if total_vp > 100:
             return 100
         if total_vp < 0:
             return 0
         return total_vp
 
+    def get_vests(self, only_own_vests=False):
+        """ Returns the account vests
+        """
+        vests = (self["vesting_shares"])
+        if not only_own_vests and "delegated_vesting_shares" in self and "received_vesting_shares" in self:
+            vests = vests - (self["delegated_vesting_shares"]) + (self["received_vesting_shares"])
+        return vests
+
     def get_steem_power(self, onlyOwnSP=False):
         """ Returns the account steem power
         """
-        vests = (self["vesting_shares"])
-        if not onlyOwnSP and "delegated_vesting_shares" in self and "received_vesting_shares" in self:
-            vests = vests - (self["delegated_vesting_shares"]) + (self["received_vesting_shares"])
-        return self.steem.vests_to_sp(vests)
+        return self.steem.vests_to_sp(self.get_vests(only_own_vests=onlyOwnSP))
 
     def get_voting_value_SBD(self, voting_weight=100, voting_power=None, steem_power=None, not_broadcasted_vote=True):
         """ Returns the account voting value in SBD
@@ -437,7 +476,7 @@ class Account(BlockchainObject):
         missing_vp = voting_power_goal - self.get_voting_power()
         if missing_vp < 0:
             return 0
-        recharge_seconds = missing_vp * 100 * STEEM_VOTE_REGENERATION_SECONDS / STEEM_100_PERCENT
+        recharge_seconds = missing_vp * 100 * STEEM_VOTING_MANA_REGENERATION_SECONDS / STEEM_100_PERCENT
         return timedelta(seconds=recharge_seconds)
 
     def get_recharge_time(self, voting_power_goal=100):

@@ -2004,12 +2004,12 @@ def witnesscreate(witness, pub_signing_key, maximum_block_size, account_creation
 @cli.command()
 @click.argument('witness', nargs=1)
 @click.argument('wif', nargs=1)
-@click.option('--account_creation_fee', help='Account creation fee')
-@click.option('--account_subsidy_budget', help='Max block size')
-@click.option('--account_subsidy_decay', help='Max block size')
+@click.option('--account_creation_fee', help='Account creation fee (float)')
+@click.option('--account_subsidy_budget', help='Account subisidy per block')
+@click.option('--account_subsidy_decay', help='Per block decay of the account subsidy pool')
 @click.option('--maximum_block_size', help='Max block size')
 @click.option('--sbd_interest_rate', help='SBD interest rate in percent')
-@click.option('--new_signing_key', help='SBD interest rate in percent')
+@click.option('--new_signing_key', help='Set new signing key')
 @click.option('--url', help='Witness URL')
 def witnessproperties(witness, wif, account_creation_fee, account_subsidy_budget, account_subsidy_decay, maximum_block_size, sbd_interest_rate, new_signing_key, url):
     """Update witness properties without pricefeed"""

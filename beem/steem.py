@@ -452,6 +452,14 @@ class Steem(object):
             dust_threshold = 0
         return dust_threshold
 
+    def get_resource_params(self):
+        """Returns the resource parameter"""
+        return self.rpc.get_resource_params(api="rc")["resource_params"]
+
+    def get_resource_pool(self):
+        """Returns the resource pool"""
+        return self.rpc.get_resource_pool(api="rc")["resource_pool"]
+
     def rshares_to_sbd(self, rshares, not_broadcasted_vote=False, use_stored_data=True):
         """ Calculates the current SBD value of a vote
         """
@@ -568,7 +576,7 @@ class Steem(object):
         vesting_shares = int(self.sp_to_vests(steem_power, use_stored_data=use_stored_data))
         return self.vests_to_rshares(vesting_shares, voting_power=voting_power, vote_pct=vote_pct, use_stored_data=use_stored_data)
 
-    def vests_to_rshares(self, vests, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, use_stored_data=True):
+    def vests_to_rshares(self, vests, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, subtract_dust_threshold=True, use_stored_data=True):
         """ Obtain the r-shares from vests
 
             :param number vests: vesting shares
@@ -579,7 +587,7 @@ class Steem(object):
         used_power = self._calc_resulting_vote(voting_power=voting_power, vote_pct=vote_pct, use_stored_data=use_stored_data)
         # calculate vote rshares
         rshares = int(math.copysign(vests * 1e6 * used_power / STEEM_100_PERCENT, vote_pct))
-        if self.hardfork >= 20:
+        if subtract_dust_threshold:
             if abs(rshares) <= self.get_dust_threshold(use_stored_data=use_stored_data):
                 return 0
             rshares -= math.copysign(self.get_dust_threshold(use_stored_data=use_stored_data), vote_pct)
@@ -985,6 +993,233 @@ class Steem(object):
     # -------------------------------------------------------------------------
     # Account related calls
     # -------------------------------------------------------------------------
+    def claim_account(self, creator, fee="0 STEEM", **kwargs):
+        """"Claim account for claimed account creation.
+
+            When fee is 0 STEEM a subsidized account is claimed and can be created
+            later with create_claimed_account.
+            The number of subsidized account is limited.
+
+            :param str creator: which account should pay the registration fee (RC or STEEM)
+                    (defaults to ``default_account``)
+            :param str fee: when set to 0 STEEM, claim account is paid by RC
+        """
+        if not creator and config["default_account"]:
+            creator = config["default_account"]
+        if not creator:
+            raise ValueError(
+                "Not creator account given. Define it with " +
+                "creator=x, or set the default_account using beempy")
+        op = {
+            "fee": Amount(fee, steem_instance=self),
+            "creator": creator["name"],
+            "prefix": self.prefix,
+        }
+        op = operations.Claim_account(**op)
+        return self.finalizeOp(op, creator, "active", **kwargs)
+
+    def create_claimed_account(
+        self,
+        account_name,
+        creator=None,
+        owner_key=None,
+        active_key=None,
+        memo_key=None,
+        posting_key=None,
+        password=None,
+        additional_owner_keys=[],
+        additional_active_keys=[],
+        additional_posting_keys=[],
+        additional_owner_accounts=[],
+        additional_active_accounts=[],
+        additional_posting_accounts=[],
+        storekeys=True,
+        store_owner_key=False,
+        json_meta=None,
+        combine_with_claim_account=False,
+        fee="0 STEEM",
+        **kwargs
+    ):
+        """ Create new claimed account on Steem
+
+            The brainkey/password can be used to recover all generated keys
+            (see `beemgraphenebase.account` for more details.
+
+            By default, this call will use ``default_account`` to
+            register a new name ``account_name`` with all keys being
+            derived from a new brain key that will be returned. The
+            corresponding keys will automatically be installed in the
+            wallet.
+
+            .. warning:: Don't call this method unless you know what
+                          you are doing! Be sure to understand what this
+                          method does and where to find the private keys
+                          for your account.
+
+            .. note:: Please note that this imports private keys
+                      (if password is present) into the wallet by
+                      default when nobroadcast is set to False.
+                      However, it **does not import the owner
+                      key** for security reasons by default.
+                      If you set store_owner_key to True, the
+                      owner key is stored.
+                      Do NOT expect to be able to recover it from
+                      the wallet if you lose your password!
+
+            .. note:: Account creations cost a fee that is defined by
+                       the network. If you create an account, you will
+                       need to pay for that fee!
+
+            :param str account_name: (**required**) new account name
+            :param str json_meta: Optional meta data for the account
+            :param str owner_key: Main owner key
+            :param str active_key: Main active key
+            :param str posting_key: Main posting key
+            :param str memo_key: Main memo_key
+            :param str password: Alternatively to providing keys, one
+                                 can provide a password from which the
+                                 keys will be derived
+            :param array additional_owner_keys:  Additional owner public keys
+            :param array additional_active_keys: Additional active public keys
+            :param array additional_posting_keys: Additional posting public keys
+            :param array additional_owner_accounts: Additional owner account
+                names
+            :param array additional_active_accounts: Additional acctive account
+                names
+            :param bool storekeys: Store new keys in the wallet (default:
+                ``True``)
+            :param bool combine_with_claim_account: When set to True, a
+                claim_account operation is additionally broadcasted
+            :param str fee: When combine_with_claim_account is set to True,
+                this parameter is used for the claim_account operation
+
+            :param str creator: which account should pay the registration fee
+                                (defaults to ``default_account``)
+            :raises AccountExistsException: if the account already exists on
+                the blockchain
+
+        """
+        if not creator and config["default_account"]:
+            creator = config["default_account"]
+        if not creator:
+            raise ValueError(
+                "Not creator account given. Define it with " +
+                "creator=x, or set the default_account using beempy")
+        if password and (owner_key or active_key or memo_key):
+            raise ValueError(
+                "You cannot use 'password' AND provide keys!"
+            )
+
+        try:
+            Account(account_name, steem_instance=self)
+            raise AccountExistsException
+        except AccountDoesNotExistsException:
+            pass
+
+        creator = Account(creator, steem_instance=self)
+
+        " Generate new keys from password"
+        from beemgraphenebase.account import PasswordKey
+        if password:
+            active_key = PasswordKey(account_name, password, role="active", prefix=self.prefix)
+            owner_key = PasswordKey(account_name, password, role="owner", prefix=self.prefix)
+            posting_key = PasswordKey(account_name, password, role="posting", prefix=self.prefix)
+            memo_key = PasswordKey(account_name, password, role="memo", prefix=self.prefix)
+            active_pubkey = active_key.get_public_key()
+            owner_pubkey = owner_key.get_public_key()
+            posting_pubkey = posting_key.get_public_key()
+            memo_pubkey = memo_key.get_public_key()
+            active_privkey = active_key.get_private_key()
+            posting_privkey = posting_key.get_private_key()
+            owner_privkey = owner_key.get_private_key()
+            memo_privkey = memo_key.get_private_key()
+            # store private keys
+            try:
+                if storekeys and not self.nobroadcast:
+                    if store_owner_key:
+                        self.wallet.addPrivateKey(str(owner_privkey))
+                    self.wallet.addPrivateKey(str(active_privkey))
+                    self.wallet.addPrivateKey(str(memo_privkey))
+                    self.wallet.addPrivateKey(str(posting_privkey))
+            except ValueError as e:
+                log.info(str(e))
+
+        elif (owner_key and active_key and memo_key and posting_key):
+            active_pubkey = PublicKey(
+                active_key, prefix=self.prefix)
+            owner_pubkey = PublicKey(
+                owner_key, prefix=self.prefix)
+            posting_pubkey = PublicKey(
+                posting_key, prefix=self.prefix)
+            memo_pubkey = PublicKey(
+                memo_key, prefix=self.prefix)
+        else:
+            raise ValueError(
+                "Call incomplete! Provide either a password or public keys!"
+            )
+        owner = format(owner_pubkey, self.prefix)
+        active = format(active_pubkey, self.prefix)
+        posting = format(posting_pubkey, self.prefix)
+        memo = format(memo_pubkey, self.prefix)
+
+        owner_key_authority = [[owner, 1]]
+        active_key_authority = [[active, 1]]
+        posting_key_authority = [[posting, 1]]
+        owner_accounts_authority = []
+        active_accounts_authority = []
+        posting_accounts_authority = []
+
+        # additional authorities
+        for k in additional_owner_keys:
+            owner_key_authority.append([k, 1])
+        for k in additional_active_keys:
+            active_key_authority.append([k, 1])
+        for k in additional_posting_keys:
+            posting_key_authority.append([k, 1])
+
+        for k in additional_owner_accounts:
+            addaccount = Account(k, steem_instance=self)
+            owner_accounts_authority.append([addaccount["name"], 1])
+        for k in additional_active_accounts:
+            addaccount = Account(k, steem_instance=self)
+            active_accounts_authority.append([addaccount["name"], 1])
+        for k in additional_posting_accounts:
+            addaccount = Account(k, steem_instance=self)
+            posting_accounts_authority.append([addaccount["name"], 1])
+        if combine_with_claim_account:
+            op = {
+                "fee": Amount(fee, steem_instance=self),
+                "creator": creator["name"],
+                "prefix": self.prefix,
+            }
+            op = operations.Claim_account(**op)
+            ops = [op]
+        op = {
+            "creator": creator["name"],
+            "new_account_name": account_name,
+            'owner': {'account_auths': owner_accounts_authority,
+                      'key_auths': owner_key_authority,
+                      "address_auths": [],
+                      'weight_threshold': 1},
+            'active': {'account_auths': active_accounts_authority,
+                       'key_auths': active_key_authority,
+                       "address_auths": [],
+                       'weight_threshold': 1},
+            'posting': {'account_auths': active_accounts_authority,
+                        'key_auths': posting_key_authority,
+                        "address_auths": [],
+                        'weight_threshold': 1},
+            'memo_key': memo,
+            "json_metadata": json_meta or {},
+            "prefix": self.prefix,
+        }
+        op = operations.Create_claimed_account(**op)
+        if combine_with_claim_account:
+            ops.append(op)
+            return self.finalizeOp(ops, creator, "active", **kwargs)
+        else:
+            return self.finalizeOp(op, creator, "active", **kwargs)
+
     def create_account(
         self,
         account_name,
@@ -1064,8 +1299,8 @@ class Steem(object):
             creator = config["default_account"]
         if not creator:
             raise ValueError(
-                "Not registrar account given. Define it with " +
-                "registrar=x, or set the default_account using uptick")
+                "Not creator account given. Define it with " +
+                "creator=x, or set the default_account using beempy")
         if password and (owner_key or active_key or memo_key):
             raise ValueError(
                 "You cannot use 'password' AND provide keys!"

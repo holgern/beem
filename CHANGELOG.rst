@@ -1,5 +1,14 @@
 Changelog
 =========
+0.20.0
+------
+* Fully supporting hf20
+* add get_resource_params(), get_resource_pool(), claim_account(), create_claimed_account() to Steem
+* fix 30x fee for create_account
+* add find_rc_accounts() to Blockchain
+* get_rc(), get_rc_manabar(), get_manabar() added to Account
+* get_voting_power() fixed
+
 0.19.57
 --------
 * last hf19 release

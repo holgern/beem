@@ -910,3 +910,31 @@ class Blockchain(object):
                 return account["accounts"]
         else:
             return self.steem.rpc.lookup_accounts(name, limit)
+
+    def find_rc_accounts(self, name):
+        """ Returns limit similar accounts with name as list
+
+        :param str name: account name to search rc params for (can also be a list of accounts)
+        :returns: RC params
+        :rtype: list
+
+        .. code-block:: python
+
+            >>> from beem.blockchain import Blockchain
+            >>> blockchain = Blockchain()
+            >>> ret = blockchain.find_rc_accounts("test")
+            >>> len(ret) == 1
+            True
+
+        """
+        if not self.steem.is_connected():
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
+        if isinstance(name, list):
+            account = self.steem.rpc.find_rc_accounts({'accounts': name}, api="rc")
+            if bool(account):
+                return account["rc_accounts"]
+        else:
+            account = self.steem.rpc.find_rc_accounts({'accounts': [name]}, api="rc")
+            if bool(account):
+                return account["rc_accounts"][0]
