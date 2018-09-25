@@ -36,7 +36,7 @@ known_chains = {
     },
     "TESTNET": {
         "chain_id": "79276aea5d4877d9a25892eaa01b0adf019d3e5cb12a97478df3298ccdd01673",
-        "min_version": '0.0.0',
+        "min_version": '0.20.0',
         "prefix": "STX",
         "chain_assets": [
             {"asset": "@@000000013", "symbol": "SBD", "precision": 3, "id": 0},

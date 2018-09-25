@@ -38,7 +38,7 @@ class NodeList(list):
                 "version": "0.19.11",
                 "type": "appbase",
                 "owner": "timcliff",
-                "score": 20
+                "score": -10
             },
             {
                 "url": "https://appbasetest.timcliff.com",
@@ -73,7 +73,7 @@ class NodeList(list):
                 "version": "0.19.12",
                 "type": "appbase",
                 "owner": "ausbitbank",
-                "score": 100
+                "score": 10
             },
             {
                 "url": "https://rpc.steemviz.com",
@@ -101,7 +101,7 @@ class NodeList(list):
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "themarkymark",
-                "score": 65
+                "score": -10
             },
             {
                 "url": "https://rpc.buildteam.io",
@@ -143,7 +143,7 @@ class NodeList(list):
                 "version": "0.19.12",
                 "type": "appbase",
                 "owner": "netuoso",
-                "score": 50
+                "score": -10
             },
             {
                 "url": "https://rpc.steemliberator.com",
@@ -185,7 +185,7 @@ class NodeList(list):
                 "version": "0.19.11",
                 "type": "appbase",
                 "owner": "followbtcnews",
-                "score": 10
+                "score": -10
             },
             {
                 "url": "https://steemd.minnowsupportproject.org",
@@ -196,11 +196,18 @@ class NodeList(list):
             },
             {
                 "url": "https://rpc.curiesteem.com",
-                "version": "0.19.5",
-                "type": "normal",
+                "version": "0.20.2",
+                "type": "appbase",
                 "owner": "curie",
                 "score": -10
             },
+            {
+                "url": "wss://rpc.curiesteem.com",
+                "version": "0.20.2",
+                "type": "appbase",
+                "owner": "curie",
+                "score": 50
+            },            
             {
                 "url": "wss://testnet.steem.vc",
                 "version": "0.19.2",
@@ -312,7 +319,7 @@ class NodeList(list):
             new_nodes.append(new_node)
         super(NodeList, self).__init__(new_nodes)
 
-    def get_nodes(self, normal=True, appbase=True, dev=False, testnet=False, testnetdev=False, wss=True, https=True):
+    def get_nodes(self, normal=True, appbase=True, dev=False, testnet=False, testnetdev=False, wss=True, https=True, not_working=False):
         """ Returns nodes as list
 
             :param bool normal: when True, nodes with version 0.19.5 are included
@@ -320,6 +327,7 @@ class NodeList(list):
             :param bool dev: when True, dev nodes with version 0.19.11 are included
             :param bool testnet: when True, testnet nodes are included
             :param bool testnetdev: When True, testnet-dev nodes are included
+            :param bool not_working: When True, all nodes including not working ones will be returned
 
         """
         node_list = []
@@ -335,7 +343,7 @@ class NodeList(list):
         if testnetdev:
             node_type_list.append("testnet-dev")
         for node in self:
-            if node["type"] in node_type_list and node["score"] >= 0:
+            if node["type"] in node_type_list and (node["score"] >= 0 or not_working):
                 if not https and node["url"][:5] == 'https':
                     continue
                 if not wss and node["url"][:3] == 'wss':
