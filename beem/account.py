@@ -235,6 +235,8 @@ class Account(BlockchainObject):
         last_update = datetime.utcfromtimestamp(last_update_time)
         diff_in_seconds = (addTzInfo(datetime.utcnow()) - addTzInfo(last_update)).total_seconds()
         estimated_mana = int(current_mana + diff_in_seconds * estimated_max / STEEM_VOTING_MANA_REGENERATION_SECONDS)
+        if estimated_mana > estimated_max:
+            estimated_mana = estimated_max
         estimated_pct = estimated_mana / estimated_max * 100
         return {"current_mana": current_mana, "last_update_time": last_update_time,
                 "estimated_mana": estimated_mana, "estimated_max": estimated_max, "estimated_pct": estimated_pct}
@@ -328,7 +330,7 @@ class Account(BlockchainObject):
                 t.add_row(["Remaining Bandwidth", "%.2f %%" % (remaining)])
                 t.add_row(["used/allocated Bandwidth", "(%.0f kb of %.0f mb)" % (used_kb, allocated_mb)])
             if rc_mana is not None:
-                t.add_row(["Remaining RC", "%.2f %%" % (rc_mana["current_mana"] / rc_mana["max_mana"] * 100)])
+                t.add_row(["Remaining RC", "%.2f %%" % (rc_mana["estimated_pct"])])
                 t.add_row(["used/allocated RC", "(%.0f of %.0f)" % (int(rc["max_rc"]) * rc_mana["estimated_pct"], int(rc["max_rc"]))])
                 t.add_row(["Full in ", "%s" % (self.get_manabar_recharge_time_str(rc_mana))])
             if return_str:
@@ -350,7 +352,7 @@ class Account(BlockchainObject):
                 ret += " (%.0f kb of %.0f mb)\n" % (used_kb, allocated_mb)
             if rc_mana is not None:
                 ret += "--- RC manabar ---\n"
-                ret += "Remaining: %.2f %%" % (rc_mana["current_mana"] / rc_mana["estimated_max"] * 100)
+                ret += "Remaining: %.2f %%" % (rc_mana["estimated_pct"])
                 ret += " (%.0f of %.0f)\n" % (int(rc["max_rc"]) * rc_mana["estimated_pct"], int(rc["max_rc"]))
                 ret += "full in %s \n" % (self.get_manabar_recharge_time_str(rc_mana))
             if return_str:
@@ -379,6 +381,8 @@ class Account(BlockchainObject):
         last_update = datetime.utcfromtimestamp(last_update_time)
         diff_in_seconds = (addTzInfo(datetime.utcnow()) - addTzInfo(last_update)).total_seconds()
         estimated_mana = int(current_mana + diff_in_seconds * estimated_max / STEEM_VOTING_MANA_REGENERATION_SECONDS)
+        if estimated_mana > estimated_max:
+            estimated_mana = estimated_max
         estimated_pct = estimated_mana / estimated_max * 100
         return {"current_mana": current_mana, "last_update_time": last_update_time,
                 "estimated_mana": estimated_mana, "estimated_max": estimated_max, "estimated_pct": estimated_pct}

@@ -1840,3 +1840,17 @@ class Steem(object):
                 options.get("beneficiaries", []),
             })
         return comment_op
+
+    def get_api_methods(self):
+        """Returns all supported api methods"""
+        return self.rpc.get_methods(api="jsonrpc")
+
+    def get_apis(self):
+        """Returns all enabled apis"""
+        api_methods = self.get_api_methods()
+        api_list = []
+        for a in api_methods:
+            api = a.split(".")[0]
+            if api not in api_list:
+                api_list.append(api)
+        return api_list
