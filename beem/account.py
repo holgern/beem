@@ -228,12 +228,16 @@ class Account(BlockchainObject):
 
     def get_rc_manabar(self):
         """Returns current_mana and max_mana for RC"""
+        estimated_max = int(self.get_vests())
         rc_param = self.get_rc()
-        max_mana = int(rc_param["max_rc"])
-        last_update = datetime.utcfromtimestamp(rc_param["rc_manabar"]["last_update_time"])
+        current_mana = int(rc_param["rc_manabar"]["current_mana"])
+        last_update_time = rc_param["rc_manabar"]["last_update_time"]
+        last_update = datetime.utcfromtimestamp(last_update_time)
         diff_in_seconds = (addTzInfo(datetime.utcnow()) - addTzInfo(last_update)).total_seconds()
-        current_mana = rc_param["rc_manabar"]["current_mana"] + diff_in_seconds * max_mana / (5 * 24 * 60 * 60)
-        return {"current_mana": current_mana, "max_mana": max_mana}
+        estimated_mana = int(current_mana + diff_in_seconds * estimated_max / STEEM_VOTING_MANA_REGENERATION_SECONDS)
+        estimated_pct = estimated_mana / estimated_max * 100
+        return {"current_mana": current_mana, "last_update_time": last_update_time,
+                "estimated_mana": estimated_mana, "estimated_max": estimated_max, "estimated_pct": estimated_pct}
 
     def get_similar_account_names(self, limit=5):
         """ Returns ``limit`` account names similar to the current account
@@ -305,25 +309,28 @@ class Account(BlockchainObject):
         last_vote_time_str = formatTimedelta(addTzInfo(datetime.utcnow()) - self["last_vote_time"])
         try:
             rc_mana = self.get_rc_manabar()
+            rc = self.get_rc()
         except:
             rc_mana = None
+        vote_mana = self.get_manabar()
 
         if use_table:
             t = PrettyTable(["Key", "Value"])
             t.align = "l"
             t.add_row(["Name (rep)", self.name + " (%.2f)" % (self.rep)])
-            t.add_row(["Voting Power", "%.2f %%, " % (self.get_voting_power())])
+            t.add_row(["Voting Power", "%.2f %%, " % (vote_mana["estimated_pct"])])
             t.add_row(["Vote Value", "%.2f $" % (self.get_voting_value_SBD())])
             t.add_row(["Last vote", "%s ago" % last_vote_time_str])
-            t.add_row(["Full in ", "%s" % (self.get_recharge_time_str())])
+            t.add_row(["Full in ", "%s" % (self.get_manabar_recharge_time_str(vote_mana))])
             t.add_row(["Steem Power", "%.2f STEEM" % (self.get_steem_power())])
             t.add_row(["Balance", "%s, %s" % (str(self.balances["available"][0]), str(self.balances["available"][1]))])
-            if bandwidth["allocated"] > 0:
+            if False and bandwidth["allocated"] > 0:
                 t.add_row(["Remaining Bandwidth", "%.2f %%" % (remaining)])
                 t.add_row(["used/allocated Bandwidth", "(%.0f kb of %.0f mb)" % (used_kb, allocated_mb)])
             if rc_mana is not None:
                 t.add_row(["Remaining RC", "%.2f %%" % (rc_mana["current_mana"] / rc_mana["max_mana"] * 100)])
-                t.add_row(["used/allocated RC", "(%.0f of %.0f)" % (rc_mana["current_mana"], rc_mana["max_mana"])])
+                t.add_row(["used/allocated RC", "(%.0f of %.0f)" % (int(rc["max_rc"]) * rc_mana["estimated_pct"], int(rc["max_rc"]))])
+                t.add_row(["Full in ", "%s" % (self.get_manabar_recharge_time_str(rc_mana))])
             if return_str:
                 return t.get_string(**kwargs)
             else:
@@ -331,20 +338,21 @@ class Account(BlockchainObject):
         else:
             ret = self.name + " (%.2f) \n" % (self.rep)
             ret += "--- Voting Power ---\n"
-            ret += "%.2f %%, " % (self.get_voting_power())
+            ret += "%.2f %%, " % (vote_mana["estimated_pct"])
             ret += " VP = %.2f $\n" % (self.get_voting_value_SBD())
-            ret += "full in %s \n" % (self.get_recharge_time_str())
+            ret += "full in %s \n" % (self.get_manabar_recharge_time_str(vote_mana))
             ret += "--- Balance ---\n"
             ret += "%.2f SP, " % (self.get_steem_power())
             ret += "%s, %s\n" % (str(self.balances["available"][0]), str(self.balances["available"][1]))
-            if bandwidth["allocated"] > 0:
+            if False and bandwidth["allocated"] > 0:
                 ret += "--- Bandwidth ---\n"
                 ret += "Remaining: %.2f %%" % (remaining)
                 ret += " (%.0f kb of %.0f mb)\n" % (used_kb, allocated_mb)
             if rc_mana is not None:
                 ret += "--- RC manabar ---\n"
-                ret += "Remaining: %.2f %%" % (rc_mana["current_mana"] / rc_mana["max_mana"] * 100)
-                ret += " (%.0f of %.0f)" % (rc_mana["current_mana"], rc_mana["max_mana"])
+                ret += "Remaining: %.2f %%" % (rc_mana["current_mana"] / rc_mana["estimated_max"] * 100)
+                ret += " (%.0f of %.0f)\n" % (int(rc["max_rc"]) * rc_mana["estimated_pct"], int(rc["max_rc"]))
+                ret += "full in %s \n" % (self.get_manabar_recharge_time_str(rc_mana))
             if return_str:
                 return ret
             print(ret)
@@ -365,31 +373,24 @@ class Account(BlockchainObject):
 
     def get_manabar(self):
         """"Return manabar"""
-        max_mana = int(self.get_vests())
-        last_update = datetime.utcfromtimestamp(self["voting_manabar"]["last_update_time"])
+        estimated_max = int(self.get_vests())
+        current_mana = int(self["voting_manabar"]["current_mana"])
+        last_update_time = self["voting_manabar"]["last_update_time"]
+        last_update = datetime.utcfromtimestamp(last_update_time)
         diff_in_seconds = (addTzInfo(datetime.utcnow()) - addTzInfo(last_update)).total_seconds()
-        current_mana = int(self["voting_manabar"]["current_mana"]) + diff_in_seconds * max_mana / (5 * 24 * 60 * 60)
-        return {"current_mana": current_mana, "max_mana": max_mana}
+        estimated_mana = int(current_mana + diff_in_seconds * estimated_max / STEEM_VOTING_MANA_REGENERATION_SECONDS)
+        estimated_pct = estimated_mana / estimated_max * 100
+        return {"current_mana": current_mana, "last_update_time": last_update_time,
+                "estimated_mana": estimated_mana, "estimated_max": estimated_max, "estimated_pct": estimated_pct}
 
     def get_voting_power(self, with_regeneration=True):
         """ Returns the account voting power in the range of 0-100%
         """
+        manabar = self.get_manabar()
         if with_regeneration:
-            regenerated_vp = 0
-            if "voting_manabar" in self:
-                last_vote_time = datetime.utcfromtimestamp(self["voting_manabar"]["last_update_time"])
-                diff_in_seconds = (addTzInfo(datetime.utcnow()) - addTzInfo(last_vote_time)).total_seconds()
-                regenerated_vp = diff_in_seconds * STEEM_100_PERCENT / STEEM_VOTING_MANA_REGENERATION_SECONDS / 100
-            elif "last_vote_time" in self:
-                last_vote_time = self["last_vote_time"]
-                diff_in_seconds = (addTzInfo(datetime.utcnow()) - (last_vote_time)).total_seconds()
-                regenerated_vp = diff_in_seconds * STEEM_100_PERCENT / STEEM_VOTE_REGENERATION_SECONDS / 100
+            total_vp = manabar["estimated_pct"]
         else:
-            regenerated_vp = 0
-        if "voting_power" in self:
-            total_vp = (self["voting_power"] / 100 + regenerated_vp)
-        elif "voting_manabar" in self:
-            total_vp = int(self["voting_manabar"]["current_mana"]) / int(self.get_vests()) + regenerated_vp
+            total_vp = manabar["current_mana"] / manabar["estimated_max"] * 100
         if total_vp > 100:
             return 100
         if total_vp < 0:
@@ -486,6 +487,38 @@ class Account(BlockchainObject):
 
         """
         return addTzInfo(datetime.utcnow()) + self.get_recharge_timedelta(voting_power_goal)
+
+    def get_manabar_recharge_time_str(self, manabar, recharge_pct_goal=100):
+        """ Returns the account manabar recharge time as string
+
+            :param dict manabar: manabar dict from get_manabar() or get_rc_manabar()
+            :param float recharge_pct_goal: mana recovery goal in percentage (default is 100)
+
+        """
+        remainingTime = self.get_manabar_recharge_timedelta(manabar, recharge_pct_goal=recharge_pct_goal)
+        return formatTimedelta(remainingTime)
+
+    def get_manabar_recharge_timedelta(self, manabar, recharge_pct_goal=100):
+        """ Returns the account mana recharge time as timedelta object
+
+            :param dict manabar: manabar dict from get_manabar() or get_rc_manabar()
+            :param float recharge_pct_goal: mana recovery goal in percentage (default is 100)
+
+        """
+        missing_rc_pct = recharge_pct_goal - manabar["estimated_pct"]
+        if missing_rc_pct < 0:
+            return 0
+        recharge_seconds = missing_rc_pct * 100 * STEEM_VOTING_MANA_REGENERATION_SECONDS / STEEM_100_PERCENT
+        return timedelta(seconds=recharge_seconds)
+
+    def get_manabar_recharge_time(self, manabar, recharge_pct_goal=100):
+        """ Returns the account mana recharge time in minutes
+
+            :param dict manabar: manabar dict from get_manabar() or get_rc_manabar()
+            :param float recharge_pct_goal: mana recovery goal in percentage (default is 100)
+
+        """
+        return addTzInfo(datetime.utcnow()) + self.get_manabar_recharge_timedelta(manabar, recharge_pct_goal)
 
     def get_feed(self, start_entry_id=0, limit=100, raw_data=False, short_entries=False, account=None):
         """ Returns a list of items in an account’s feed

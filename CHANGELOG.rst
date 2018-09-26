@@ -1,5 +1,13 @@
 Changelog
 =========
+0.20.1
+------
+* Improved get_rc_manabar(), get_manabar() output
+* get_voting_power() fixed again
+* print_info for account improved
+* get_manabar_recharge_time_str(), get_manabar_recharge_timedelta() and get_manabar_recharge_time() added
+* https://steemd-appbase.steemit.com added to nodelist
+
 0.20.0
 ------
 * Fully supporting hf20

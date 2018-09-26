@@ -922,7 +922,7 @@ class Blockchain(object):
 
             >>> from beem.blockchain import Blockchain
             >>> blockchain = Blockchain()
-            >>> ret = blockchain.find_rc_accounts("test")
+            >>> ret = blockchain.find_rc_accounts(["test"])
             >>> len(ret) == 1
             True
 

@@ -28,7 +28,21 @@ class NodeList(list):
         nodes = [
             {
                 "url": "https://api.steemit.com",
-                "version": "0.19.11",
+                "version": "0.20.2",
+                "type": "appbase",
+                "owner": "steemit",
+                "score": 100
+            },
+            {
+                "url": "https://steemd-appbase.steemit.com",
+                "version": "0.20.2",
+                "type": "appbase",
+                "owner": "steemit",
+                "score": 100
+            },
+            {
+                "url": "wss://steemd-appbase.steemit.com",
+                "version": "0.20.2",
                 "type": "appbase",
                 "owner": "steemit",
                 "score": 100
@@ -42,7 +56,7 @@ class NodeList(list):
             },
             {
                 "url": "https://appbasetest.timcliff.com",
-                "version": "0.19.11",
+                "version": "0.20.2",
                 "type": "appbase",
                 "owner": "timcliff",
                 "score": 10
