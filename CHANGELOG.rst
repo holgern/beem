@@ -1,5 +1,11 @@
 Changelog
 =========
+0.20.2
+------
+* estimated_mana is now capped by estimated_max
+* print_info fixed()
+* get_api_methods() and get_apis() added to Steem
+
 0.20.1
 ------
 * Improved get_rc_manabar(), get_manabar() output
