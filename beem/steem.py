@@ -1010,6 +1010,7 @@ class Steem(object):
             raise ValueError(
                 "Not creator account given. Define it with " +
                 "creator=x, or set the default_account using beempy")
+        creator = Account(creator, steem_instance=self)
         op = {
             "fee": Amount(fee, steem_instance=self),
             "creator": creator["name"],

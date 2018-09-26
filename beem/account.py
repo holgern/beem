@@ -331,7 +331,7 @@ class Account(BlockchainObject):
                 t.add_row(["used/allocated Bandwidth", "(%.0f kb of %.0f mb)" % (used_kb, allocated_mb)])
             if rc_mana is not None:
                 t.add_row(["Remaining RC", "%.2f %%" % (rc_mana["estimated_pct"])])
-                t.add_row(["used/allocated RC", "(%.0f of %.0f)" % (int(rc["max_rc"]) * rc_mana["estimated_pct"], int(rc["max_rc"]))])
+                t.add_row(["Remaining RC", "(%.0f of %.0f)" % (int(rc["max_rc"]) * rc_mana["estimated_pct"] / 100, int(rc["max_rc"]))])
                 t.add_row(["Full in ", "%s" % (self.get_manabar_recharge_time_str(rc_mana))])
             if return_str:
                 return t.get_string(**kwargs)
@@ -353,8 +353,8 @@ class Account(BlockchainObject):
             if rc_mana is not None:
                 ret += "--- RC manabar ---\n"
                 ret += "Remaining: %.2f %%" % (rc_mana["estimated_pct"])
-                ret += " (%.0f of %.0f)\n" % (int(rc["max_rc"]) * rc_mana["estimated_pct"], int(rc["max_rc"]))
-                ret += "full in %s \n" % (self.get_manabar_recharge_time_str(rc_mana))
+                ret += " (%.0f of %.0f)\n" % (int(rc["max_rc"]) * rc_mana["estimated_pct"] / 100, int(rc["max_rc"]))
+                ret += "full in %s" % (self.get_manabar_recharge_time_str(rc_mana))
             if return_str:
                 return ret
             print(ret)
@@ -1744,6 +1744,8 @@ class Account(BlockchainObject):
             _limit = max_index - start_index + 1
             first = start_index + _limit
         last_round = False
+        if _limit < 0:
+            return
         while True:
             # RPC call
             for item in self.get_account_history(first, _limit, start=None, stop=None, order=1, raw_output=raw_output):
@@ -2967,7 +2969,7 @@ class Accounts(AccountsObject):
         :param int batch_limit: (optional) maximum number of accounts
             to fetch per call, defaults to 100
         :param steem steem_instance: Steem() instance to use when
-            accessing a RPC
+            accessing a RPCcreator = Account(creator, steem_instance=self)
     """
     def __init__(self, name_list, batch_limit=100, lazy=False, full=True, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
