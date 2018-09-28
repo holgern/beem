@@ -1508,7 +1508,8 @@ class Steem(object):
             PublicKey(signing_key, prefix=self.prefix)
         except Exception as e:
             raise e
-
+        if "sbd_interest_rate" in props:
+            props["sbd_interest_rate"] = Amount(props["sbd_interest_rate"], steem_instance=self)
         op = operations.Witness_update(
             **{
                 "owner": account["name"],
