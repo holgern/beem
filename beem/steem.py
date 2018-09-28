@@ -32,7 +32,7 @@ from .wallet import Wallet
 from .steemconnect import SteemConnect
 from .transactionbuilder import TransactionBuilder
 from .utils import formatTime, resolve_authorperm, derive_permlink, remove_from_dict, addTzInfo, formatToTimeStamp
-from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_100_PERCENT, STEEM_1_PERCENT
+from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_100_PERCENT, STEEM_1_PERCENT, STEEM_RC_REGEN_TIME
 
 log = logging.getLogger(__name__)
 
@@ -459,6 +459,38 @@ class Steem(object):
     def get_resource_pool(self):
         """Returns the resource pool"""
         return self.rpc.get_resource_pool(api="rc")["resource_pool"]
+
+    def get_rc_cost(self, resource_count):
+        """Returns the RC costs based on the resource_count"""
+        pools = self.get_resource_pool()
+        params = self.get_resource_params()
+        config = self.get_config()
+        dyn_param = self.get_dynamic_global_properties()
+        rc_regen = int(Amount(dyn_param["total_vesting_shares"], steem_instance=self)) / (STEEM_RC_REGEN_TIME / config["STEEM_BLOCK_INTERVAL"])
+        total_cost = 0
+        if rc_regen == 0:
+            return total_cost
+        for resource_type in resource_count:
+            curve_params = params[resource_type]["price_curve_params"]
+            current_pool = int(pools[resource_type]["pool"])
+            count = resource_count[resource_type]
+            count *= params[resource_type]["resource_dynamics_params"]["resource_unit"]
+            cost = self._compute_rc_cost(curve_params, current_pool, count, rc_regen)
+            total_cost += cost
+        return total_cost
+
+    def _compute_rc_cost(self, curve_params, current_pool, resource_count, rc_regen):
+        """Helper function for computing the RC costs"""
+        num = int(rc_regen)
+        num *= int(curve_params['coeff_a'])
+        num = int(num) >> int(curve_params['shift'])
+        num += 1
+        num *= int(resource_count)
+        denom = int(curve_params['coeff_b'])
+        if int(current_pool) > 0:
+            denom += int(current_pool)
+        num_denom = num / denom
+        return int(num_denom) + 1
 
     def rshares_to_sbd(self, rshares, not_broadcasted_vote=False, use_stored_data=True):
         """ Calculates the current SBD value of a vote
