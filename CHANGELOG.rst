@@ -1,5 +1,13 @@
 Changelog
 =========
+0.20.3
+------
+* add RC class to calculate RC costs of operations
+* add comment, vote, transfer RC costs in account.print_info() and beempy power
+* Shows number of possible comments, votes, tranfers with available RCs in account.print_info() and beempy power
+* get_rc_cost was added to steem to calculation RC costs from resource count
+* bug regarding new amount format in witness update fixed (also for beempy witnessenable and witnessdisable)
+
 0.20.2
 ------
 * estimated_mana is now capped by estimated_max

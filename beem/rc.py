@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 import logging
 import json
 from .instance import shared_steem_instance
-from beem.account import Account
 from beem.constants import state_object_size_info
 import hashlib
 from binascii import hexlify, unhexlify
@@ -54,8 +53,8 @@ class RC(object):
             resource_count["resource_market_bytes"] = market_op_count
         return resource_count
 
-    def comment(self, comment_dict):
-        """Calc RC costs for a comment
+    def comment_dict(self, comment_dict):
+        """Calc RC costs for a comment dict object
 
         Example for calculating RC costs
 
@@ -70,19 +69,24 @@ class RC(object):
                            }
 
             rc = RC()
-            print(rc.comment(comment_dict))
+            print(rc.comment_from_dict(comment_dict))
 
         """
-        state_bytes_count = state_object_size_info["comment_object_base_size"]
-        state_bytes_count += state_object_size_info["comment_object_permlink_char_size"] * len(comment_dict["permlink"])
-        state_bytes_count += state_object_size_info["comment_object_parent_permlink_char_size"] * len(comment_dict["parent_permlink"])
         op = operations.Comment(**comment_dict)
         tx_size = self.get_tx_size(op)
-        resource_count = self.get_resource_count(tx_size, state_bytes_count)
+        permlink_length = len(comment_dict["permlink"])
+        parent_permlink_length = len(comment_dict["parent_permlink"])
+        return self.comment(tx_size=tx_size, permlink_length=permlink_length, parent_permlink_length=parent_permlink_length)
 
+    def comment(self, tx_size=1000, permlink_length=10, parent_permlink_length=10):
+        """Calc RC for a comment"""
+        state_bytes_count = state_object_size_info["comment_object_base_size"]
+        state_bytes_count += state_object_size_info["comment_object_permlink_char_size"] * permlink_length
+        state_bytes_count += state_object_size_info["comment_object_parent_permlink_char_size"] * parent_permlink_length
+        resource_count = self.get_resource_count(tx_size, state_bytes_count)
         return self.steem.get_rc_cost(resource_count)
 
-    def vote(self, vote_dict):
+    def vote_dict(self, vote_dict):
         """Calc RC costs for a vote
 
         Example for calculating RC costs
@@ -101,12 +105,16 @@ class RC(object):
         """
         op = operations.Vote(**vote_dict)
         tx_size = self.get_tx_size(op)
+        return self.vote(tx_size=tx_size)
+
+    def vote(self, tx_size=210):
+        """Calc RC for a vote"""
         state_bytes_count = state_object_size_info["comment_vote_object_base_size"]
         resource_count = self.get_resource_count(tx_size, state_bytes_count)
         return self.steem.get_rc_cost(resource_count)
 
-    def transfer(self, transfer_dict):
-        """Calc RC costs for a transfer
+    def transfer_dict(self, transfer_dict):
+        """Calc RC costs for a transfer dict object
 
         Example for calculating RC costs
 
@@ -127,10 +135,14 @@ class RC(object):
         market_op_count = 1
         op = operations.Transfer(**transfer_dict)
         tx_size = self.get_tx_size(op)
+        return self.transfer(tx_size=tx_size, market_op_count=market_op_count)
+
+    def transfer(self, tx_size=290, market_op_count=1):
+        """Calc RC of a transfer"""
         resource_count = self.get_resource_count(tx_size, market_op_count=market_op_count)
         return self.steem.get_rc_cost(resource_count)
 
-    def custom_json(self, custom_json_dict):
+    def custom_json_dict(self, custom_json_dict):
         """Calc RC costs for a custom_json
 
         Example for calculating RC costs
@@ -138,7 +150,8 @@ class RC(object):
         .. code-block:: python
 
             from beem.rc import RC
-             custom_json_dict = {
+            from collections import OrderedDict
+            custom_json_dict = {
                                  "json": [
                                           "reblog", OrderedDict([("account", "xeroc"), ("author", "chainsquad"),
                                                                  ("permlink", "streemian-com-to-open-its-doors-and-offer-a-20-discount")
@@ -155,10 +168,13 @@ class RC(object):
         """
         op = operations.Custom_json(**custom_json_dict)
         tx_size = self.get_tx_size(op)
+        return self.custom_json(tx_size=tx_size)
+
+    def custom_json(self, tx_size=444):
         resource_count = self.get_resource_count(tx_size)
         return self.steem.get_rc_cost(resource_count)
 
-    def account_update(self, account_update_dict):
+    def account_update_dict(self, account_update_dict):
         """Calc RC costs for account update"""
         op = operations.Account_update(**account_update_dict)
         tx_size = self.get_tx_size(op)
