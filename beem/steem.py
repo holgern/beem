@@ -423,7 +423,7 @@ class Steem(object):
             quote=Amount(median_price['quote'], steem_instance=self),
             steem_instance=self
         )
-        return a.as_base("SBD")
+        return a.as_base(self.sbd_symbol)
 
     def get_block_interval(self, use_stored_data=True):
         """Returns the block interval in seconds"""
@@ -508,7 +508,7 @@ class Steem(object):
 
         fund_per_share = reward_balance / (recent_claims)
         median_price = self.get_median_price(use_stored_data=use_stored_data)
-        SBD_price = (median_price * Amount("1 STEEM", steem_instance=self)).amount
+        SBD_price = (median_price * Amount(1, self.steem_symbol, steem_instance=self)).amount
         return fund_per_share * SBD_price
 
     def get_steem_per_mvest(self, time_stamp=None, use_stored_data=True):
@@ -639,8 +639,8 @@ class Steem(object):
         elif isinstance(sbd, string_types):
             sbd = Amount(sbd, steem_instance=self)
         else:
-            sbd = Amount(sbd, 'SBD', steem_instance=self)
-        if sbd['symbol'] != 'SBD':
+            sbd = Amount(sbd, self.sbd_symbol, steem_instance=self)
+        if sbd['symbol'] != self.sbd_symbol:
             raise AssertionError('Should input SBD, not any other asset!')
         reward_pool_sbd = self.get_median_price(use_stored_data=use_stored_data) * Amount(self.get_reward_funds(use_stored_data=use_stored_data)['reward_balance'])
         if sbd.amount > reward_pool_sbd.amount:
@@ -659,7 +659,7 @@ class Steem(object):
         reward_balance = Amount(reward_fund["reward_balance"], steem_instance=self).amount
         recent_claims = float(reward_fund["recent_claims"])
         median_price = self.get_median_price(use_stored_data=use_stored_data)
-        SBD_price = (median_price * Amount("1 STEEM", steem_instance=self)).amount
+        SBD_price = (median_price * Amount(1, self.steem_symbol, steem_instance=self)).amount
 
         # This is the formular we can use to determine the "true" rshares
         # We get this formular by some math magic using the previous used formulas
@@ -728,8 +728,8 @@ class Steem(object):
         elif isinstance(sbd, string_types):
             sbd = Amount(sbd, steem_instance=self)
         else:
-            sbd = Amount(sbd, 'SBD', steem_instance=self)
-        if sbd['symbol'] != 'SBD':
+            sbd = Amount(sbd, self.sbd_symbol, steem_instance=self)
+        if sbd['symbol'] != self.sbd_symbol:
             raise AssertionError()
         rshares = self.sbd_to_rshares(sbd, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)
         return self.rshares_to_vote_pct(rshares, steem_power=steem_power, vests=vests, voting_power=voting_power, use_stored_data=use_stored_data)
@@ -1025,7 +1025,7 @@ class Steem(object):
     # -------------------------------------------------------------------------
     # Account related calls
     # -------------------------------------------------------------------------
-    def claim_account(self, creator, fee="0 STEEM", **kwargs):
+    def claim_account(self, creator, fee=None, **kwargs):
         """"Claim account for claimed account creation.
 
             When fee is 0 STEEM a subsidized account is claimed and can be created
@@ -1034,8 +1034,9 @@ class Steem(object):
 
             :param str creator: which account should pay the registration fee (RC or STEEM)
                     (defaults to ``default_account``)
-            :param str fee: when set to 0 STEEM, claim account is paid by RC
+            :param str fee: when set to 0 STEEM (default), claim account is paid by RC
         """
+        fee = fee if fee is not None else "0 %s" % (self.steem_symbol)
         if not creator and config["default_account"]:
             creator = config["default_account"]
         if not creator:
@@ -1070,7 +1071,7 @@ class Steem(object):
         store_owner_key=False,
         json_meta=None,
         combine_with_claim_account=False,
-        fee="0 STEEM",
+        fee=None,
         **kwargs
     ):
         """ Create new claimed account on Steem
@@ -1132,6 +1133,7 @@ class Steem(object):
                 the blockchain
 
         """
+        fee = fee if fee is not None else "0 %s" % (self.steem_symbol)
         if not creator and config["default_account"]:
             creator = config["default_account"]
         if not creator:
@@ -1516,7 +1518,7 @@ class Steem(object):
                 "url": url,
                 "block_signing_key": signing_key,
                 "props": props,
-                "fee": Amount("0.000 STEEM", steem_instance=self),
+                "fee": Amount(0, self.steem_symbol, steem_instance=self),
                 "prefix": self.prefix,
             })
         return self.finalizeOp(op, account, "active", **kwargs)
@@ -1853,7 +1855,7 @@ class Steem(object):
 
             options['beneficiaries'] = beneficiaries
 
-        default_max_payout = "1000000.000 SBD"
+        default_max_payout = "1000000.000 %s" % (self.sbd_symbol)
         comment_op = operations.Comment_options(
             **{
                 "author":
@@ -1888,3 +1890,29 @@ class Steem(object):
             if api not in api_list:
                 api_list.append(api)
         return api_list
+
+    def _get_asset_symbol(self, asset_id):
+        """ get the asset symbol from an asset id
+
+            :@param int asset_id: 0 -> SBD, 1 -> STEEM, 2 -> VESTS
+
+        """
+        for asset in self.chain_params['chain_assets']:
+            if asset['id'] == asset_id:
+                return asset['symbol']
+        raise KeyError("asset ID not found in chain assets")
+
+    @property
+    def sbd_symbol(self):
+        """ get the current chains symbol for SBD (e.g. "TBD" on testnet) """
+        return self._get_asset_symbol(0)
+
+    @property
+    def steem_symbol(self):
+        """ get the current chains symbol for STEEM (e.g. "TESTS" on testnet) """
+        return self._get_asset_symbol(1)
+
+    @property
+    def vests_symbol(self):
+        """ get the current chains symbol for VESTS """
+        return self._get_asset_symbol(2)
