@@ -448,7 +448,7 @@ class Account(BlockchainObject):
         """Returns the effective vesting shares"""
         vesting_shares = int(self["vesting_shares"])
         if "delegated_vesting_shares" in self and "received_vesting_shares" in self:
-            vesting_shares -= int(self["delegated_vesting_shares"]) + int(self["received_vesting_shares"])
+            vesting_shares = vesting_shares - int(self["delegated_vesting_shares"]) + int(self["received_vesting_shares"])
 
         if self["next_vesting_withdrawal"].timestamp() > 0 and "vesting_withdraw_rate" in self and "to_withdraw" in self and "withdrawn" in self:
             vesting_shares -= min(int(self["vesting_withdraw_rate"]), int(self["to_withdraw"]) - int(self["withdrawn"]))

@@ -1,9 +1,14 @@
 Changelog
 =========
+0.20.5
+------
+* fix get_effective_vesting_shares()
+
 0.20.4
 ------
 * get_effective_vesting_shares() added to calculated max_mana correctly
 * dict key words adapted to steemd for get_manabar() and get_rc_manabar()
+* Voting mana fixed for 0 SP accounts
 * comment_benefactor_reward adapted for snapshot
 * Custom_json RC costs added to print_info
 
