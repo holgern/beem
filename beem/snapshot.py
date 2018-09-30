@@ -400,8 +400,14 @@ class AccountSnapshot(list):
 
         elif op['type'] == "comment_benefactor_reward":
             if op['benefactor'] == self.account["name"]:
-                vests = Amount(op['reward'], steem_instance=self.steem)
-                self.update(ts, vests, 0, 0)
+                if "reward" in op:
+                    vests = Amount(op['reward'], steem_instance=self.steem)
+                    self.update(ts, vests, 0, 0)
+                else:
+                    vests = Amount(op['vesting_payout'], steem_instance=self.steem)
+                    steem = Amount(op['steem_payout'], steem_instance=self.steem)
+                    sbd = Amount(op['sbd_payout'], steem_instance=self.steem)
+                    self.update(ts, vests, 0, 0, steem, sbd)
                 return
             else:
                 return

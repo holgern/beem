@@ -119,7 +119,7 @@ class Account(BlockchainObject):
 
     def _parse_json_data(self, account):
         parse_int = [
-            "sbd_seconds", "savings_sbd_seconds", "average_bandwidth", "lifetime_bandwidth", "lifetime_market_bandwidth", "reputation",
+            "sbd_seconds", "savings_sbd_seconds", "average_bandwidth", "lifetime_bandwidth", "lifetime_market_bandwidth", "reputation", "withdrawn", "to_withdraw",
         ]
         for p in parse_int:
             if p in account and isinstance(account.get(p), string_types):
@@ -165,7 +165,7 @@ class Account(BlockchainObject):
     def json(self):
         output = self.copy()
         parse_int = [
-            "sbd_seconds", "savings_sbd_seconds",
+            "sbd_seconds", "savings_sbd_seconds", "withdrawn", "to_withdraw"
         ]
         parse_int_without_zero = [
             "lifetime_bandwidth", 'average_bandwidth',
@@ -210,7 +210,7 @@ class Account(BlockchainObject):
             "delegated_vesting_shares",
             "received_vesting_shares",
             "vesting_withdraw_rate",
-            "vesting_balance"
+            "vesting_balance",
         ]
         for p in amounts:
             if p in output:
@@ -230,17 +230,18 @@ class Account(BlockchainObject):
     def get_rc_manabar(self):
         """Returns current_mana and max_mana for RC"""
         rc_param = self.get_rc()
-        estimated_max = int(rc_param["max_rc"])
-        current_mana = int(rc_param["rc_manabar"]["current_mana"])
+        max_mana = int(rc_param["max_rc"])
+        last_mana = int(rc_param["rc_manabar"]["current_mana"])
         last_update_time = rc_param["rc_manabar"]["last_update_time"]
         last_update = datetime.utcfromtimestamp(last_update_time)
         diff_in_seconds = (datetime.utcnow() - last_update).total_seconds()
-        estimated_mana = int(current_mana + diff_in_seconds * estimated_max / STEEM_VOTING_MANA_REGENERATION_SECONDS)
-        if estimated_mana > estimated_max:
-            estimated_mana = estimated_max
-        estimated_pct = estimated_mana / estimated_max * 100
-        return {"current_mana": current_mana, "last_update_time": last_update_time,
-                "estimated_mana": estimated_mana, "estimated_max": estimated_max, "estimated_pct": estimated_pct}
+        current_mana = int(last_mana + diff_in_seconds * max_mana / STEEM_VOTING_MANA_REGENERATION_SECONDS)
+        if current_mana > max_mana:
+            current_mana = max_mana
+        current_pct = current_mana / max_mana * 100
+        max_rc_creation_adjustment = Amount(rc_param["max_rc_creation_adjustment"], steem_instance=self.steem)
+        return {"last_mana": last_mana, "last_update_time": last_update_time, "current_mana": current_mana,
+                "max_mana": max_mana, "current_pct": current_pct, "max_rc_creation_adjustment": max_rc_creation_adjustment}
 
     def get_similar_account_names(self, limit=5):
         """ Returns ``limit`` account names similar to the current account
@@ -323,7 +324,7 @@ class Account(BlockchainObject):
             t = PrettyTable(["Key", "Value"])
             t.align = "l"
             t.add_row(["Name (rep)", self.name + " (%.2f)" % (self.rep)])
-            t.add_row(["Voting Power", "%.2f %%, " % (vote_mana["estimated_pct"])])
+            t.add_row(["Voting Power", "%.2f %%, " % (vote_mana["current_mana_pct"])])
             t.add_row(["Vote Value", "%.2f $" % (self.get_voting_value_SBD())])
             t.add_row(["Last vote", "%s ago" % last_vote_time_str])
             t.add_row(["Full in ", "%s" % (self.get_manabar_recharge_time_str(vote_mana))])
@@ -333,17 +334,19 @@ class Account(BlockchainObject):
                 t.add_row(["Remaining Bandwidth", "%.2f %%" % (remaining)])
                 t.add_row(["used/allocated Bandwidth", "(%.0f kb of %.0f mb)" % (used_kb, allocated_mb)])
             if rc_mana is not None:
-                estimated_rc = int(rc["max_rc"]) * rc_mana["estimated_pct"] / 100
-                t.add_row(["Remaining RC", "%.2f %%" % (rc_mana["estimated_pct"])])
+                estimated_rc = int(rc["max_rc"]) * rc_mana["current_pct"] / 100
+                t.add_row(["Remaining RC", "%.2f %%" % (rc_mana["current_pct"])])
                 t.add_row(["Remaining RC", "(%.0f G RC of %.0f G RC)" % (estimated_rc / 10**9, int(rc["max_rc"]) / 10**9)])
                 t.add_row(["Full in ", "%s" % (self.get_manabar_recharge_time_str(rc_mana))])
                 t.add_row(["Est. RC for a comment", "%.2f G RC" % (rc_calc.comment() / 10**9)])
                 t.add_row(["Est. RC for a vote", "%.2f G RC" % (rc_calc.vote() / 10**9)])
                 t.add_row(["Est. RC for a transfer", "%.2f G RC" % (rc_calc.transfer() / 10**9)])
+                t.add_row(["Est. RC for a custom_json", "%.2f G RC" % (rc_calc.custom_json() / 10**9)])
 
                 t.add_row(["Comments with current RC", "%d comments" % (int(estimated_rc / rc_calc.comment()))])
                 t.add_row(["Votes with current RC", "%d votes" % (int(estimated_rc / rc_calc.vote()))])
                 t.add_row(["Transfer with current RC", "%d transfers" % (int(estimated_rc / rc_calc.transfer()))])
+                t.add_row(["Custom_json with current RC", "%d transfers" % (int(estimated_rc / rc_calc.custom_json()))])
 
             if return_str:
                 return t.get_string(**kwargs)
@@ -352,7 +355,7 @@ class Account(BlockchainObject):
         else:
             ret = self.name + " (%.2f) \n" % (self.rep)
             ret += "--- Voting Power ---\n"
-            ret += "%.2f %%, " % (vote_mana["estimated_pct"])
+            ret += "%.2f %%, " % (vote_mana["current_mana_pct"])
             ret += " VP = %.2f $\n" % (self.get_voting_value_SBD())
             ret += "full in %s \n" % (self.get_manabar_recharge_time_str(vote_mana))
             ret += "--- Balance ---\n"
@@ -363,15 +366,16 @@ class Account(BlockchainObject):
                 ret += "Remaining: %.2f %%" % (remaining)
                 ret += " (%.0f kb of %.0f mb)\n" % (used_kb, allocated_mb)
             if rc_mana is not None:
-                estimated_rc = int(rc["max_rc"]) * rc_mana["estimated_pct"] / 100
+                estimated_rc = int(rc["max_rc"]) * rc_mana["current_pct"] / 100
                 ret += "--- RC manabar ---\n"
-                ret += "Remaining: %.2f %%" % (rc_mana["estimated_pct"])
+                ret += "Remaining: %.2f %%" % (rc_mana["current_pct"])
                 ret += " (%.0f G RC of %.0f G RC)\n" % (estimated_rc / 10**9, int(rc["max_rc"]) / 10**9)
                 ret += "full in %s\n" % (self.get_manabar_recharge_time_str(rc_mana))
                 ret += "--- Approx Costs ---\n"
                 ret += "comment - %.2f G RC - enough RC for %d comments\n" % (rc_calc.comment() / 10**9, int(estimated_rc / rc_calc.comment()))
                 ret += "vote - %.2f G RC - enough RC for %d votes\n" % (rc_calc.vote() / 10**9, int(estimated_rc / rc_calc.vote()))
                 ret += "transfer - %.2f G RC - enough RC for %d transfers\n" % (rc_calc.transfer() / 10**9, int(estimated_rc / rc_calc.transfer()))
+                ret += "custom_json - %.2f G RC - enough RC for %d custom_json\n" % (rc_calc.custom_json() / 10**9, int(estimated_rc / rc_calc.custom_json()))
             if return_str:
                 return ret
             print(ret)
@@ -392,17 +396,21 @@ class Account(BlockchainObject):
 
     def get_manabar(self):
         """"Return manabar"""
-        estimated_max = int(self.get_vests())
-        current_mana = int(self["voting_manabar"]["current_mana"])
+        max_mana = self.get_effective_vesting_shares()
+        if max_mana == 0:
+            props = self.steem.get_chain_properties()
+            required_fee_steem = Amount(props["account_creation_fee"], steem_instance=self.steem)
+            max_mana = int(self.steem.sp_to_vests(required_fee_steem))
+        last_mana = int(self["voting_manabar"]["current_mana"])
         last_update_time = self["voting_manabar"]["last_update_time"]
         last_update = datetime.utcfromtimestamp(last_update_time)
         diff_in_seconds = (addTzInfo(datetime.utcnow()) - addTzInfo(last_update)).total_seconds()
-        estimated_mana = int(current_mana + diff_in_seconds * estimated_max / STEEM_VOTING_MANA_REGENERATION_SECONDS)
-        if estimated_mana > estimated_max:
-            estimated_mana = estimated_max
-        estimated_pct = estimated_mana / estimated_max * 100
-        return {"current_mana": current_mana, "last_update_time": last_update_time,
-                "estimated_mana": estimated_mana, "estimated_max": estimated_max, "estimated_pct": estimated_pct}
+        current_mana = int(last_mana + diff_in_seconds * max_mana / STEEM_VOTING_MANA_REGENERATION_SECONDS)
+        if current_mana > max_mana:
+            current_mana = max_mana
+        current_mana_pct = current_mana / max_mana * 100
+        return {"last_mana": last_mana, "last_update_time": last_update_time,
+                "current_mana": current_mana, "max_mana": max_mana, "current_mana_pct": current_mana_pct}
 
     def get_voting_power(self, with_regeneration=True):
         """ Returns the account voting power in the range of 0-100%
@@ -410,9 +418,9 @@ class Account(BlockchainObject):
         if "voting_manabar" in self:
             manabar = self.get_manabar()
             if with_regeneration:
-                total_vp = manabar["estimated_pct"]
+                total_vp = manabar["current_mana_pct"]
             else:
-                total_vp = manabar["current_mana"] / manabar["estimated_max"] * 100
+                total_vp = manabar["last_mana"] / manabar["max_mana"] * 100
         elif "voting_power" in self:
             if with_regeneration:
                 last_vote_time = self["last_vote_time"]
@@ -433,7 +441,18 @@ class Account(BlockchainObject):
         vests = (self["vesting_shares"])
         if not only_own_vests and "delegated_vesting_shares" in self and "received_vesting_shares" in self:
             vests = vests - (self["delegated_vesting_shares"]) + (self["received_vesting_shares"])
+
         return vests
+
+    def get_effective_vesting_shares(self):
+        """Returns the effective vesting shares"""
+        vesting_shares = int(self["vesting_shares"])
+        if "delegated_vesting_shares" in self and "received_vesting_shares" in self:
+            vesting_shares -= int(self["delegated_vesting_shares"]) + int(self["received_vesting_shares"])
+
+        if self["next_vesting_withdrawal"].timestamp() > 0 and "vesting_withdraw_rate" in self and "to_withdraw" in self and "withdrawn" in self:
+            vesting_shares -= min(int(self["vesting_withdraw_rate"]), int(self["to_withdraw"]) - int(self["withdrawn"]))
+        return vesting_shares
 
     def get_steem_power(self, onlyOwnSP=False):
         """ Returns the account steem power
@@ -535,7 +554,10 @@ class Account(BlockchainObject):
             :param float recharge_pct_goal: mana recovery goal in percentage (default is 100)
 
         """
-        missing_rc_pct = recharge_pct_goal - manabar["estimated_pct"]
+        if "current_mana_pct" in manabar:
+            missing_rc_pct = recharge_pct_goal - manabar["current_mana_pct"]
+        else:
+            missing_rc_pct = recharge_pct_goal - manabar["current_pct"]
         if missing_rc_pct < 0:
             return 0
         recharge_seconds = missing_rc_pct * 100 * STEEM_VOTING_MANA_REGENERATION_SECONDS / STEEM_100_PERCENT
