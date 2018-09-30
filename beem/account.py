@@ -328,7 +328,7 @@ class Account(BlockchainObject):
             t.add_row(["Vote Value", "%.2f $" % (self.get_voting_value_SBD())])
             t.add_row(["Last vote", "%s ago" % last_vote_time_str])
             t.add_row(["Full in ", "%s" % (self.get_manabar_recharge_time_str(vote_mana))])
-            t.add_row(["Steem Power", "%.2f STEEM" % (self.get_steem_power())])
+            t.add_row(["Steem Power", "%.2f %s" % (self.get_steem_power(), self.steem.steem_symbol)])
             t.add_row(["Balance", "%s, %s" % (str(self.balances["available"][0]), str(self.balances["available"][1]))])
             if False and bandwidth["allocated"] > 0:
                 t.add_row(["Remaining Bandwidth", "%.2f %%" % (remaining)])
@@ -1549,7 +1549,7 @@ class Account(BlockchainObject):
             :param int days: limit number of days to be included int the return value
         """
         stop = addTzInfo(datetime.utcnow()) - timedelta(days=days)
-        reward_vests = Amount("0 VESTS", steem_instance=self.steem)
+        reward_vests = Amount(0, self.steem.vests_symbol, steem_instance=self.steem)
         for reward in self.history_reverse(stop=stop, use_block_num=False, only_ops=["curation_reward"]):
             reward_vests += Amount(reward['reward'], steem_instance=self.steem)
         return self.steem.vests_to_sp(reward_vests.amount)
@@ -2245,7 +2245,7 @@ class Account(BlockchainObject):
             to = self  # powerup on the same account
         else:
             to = Account(to, steem_instance=self.steem)
-        amount = self._check_amount(amount, "STEEM")
+        amount = self._check_amount(amount, self.steem.steem_symbol)
 
         to = Account(to, steem_instance=self.steem)
 
@@ -2271,7 +2271,7 @@ class Account(BlockchainObject):
             account = self
         else:
             account = Account(account, steem_instance=self.steem)
-        amount = self._check_amount(amount, "SBD")
+        amount = self._check_amount(amount, self.steem.sbd_symbol)
         if request_id:
             request_id = int(request_id)
         else:
@@ -2391,6 +2391,7 @@ class Account(BlockchainObject):
         return self.steem.finalizeOp(op, account, "active", **kwargs)
 
     def _check_amount(self, amount, symbol):
+        print(amount)
         if isinstance(amount, (float, integer_types)):
             amount = Amount(amount, symbol, steem_instance=self.steem)
         elif isinstance(amount, string_types) and amount.replace('.', '', 1).replace(',', '', 1).isdigit():
@@ -2402,9 +2403,9 @@ class Account(BlockchainObject):
         return amount
 
     def claim_reward_balance(self,
-                             reward_steem='0 STEEM',
-                             reward_sbd='0 SBD',
-                             reward_vests='0 VESTS',
+                             reward_steem=0,
+                             reward_sbd=0,
+                             reward_vests=0,
                              account=None, **kwargs):
         """ Claim reward balances.
         By default, this will claim ``all`` outstanding balances. To bypass
@@ -2428,9 +2429,9 @@ class Account(BlockchainObject):
         # if no values were set by user, claim all outstanding balances on
         # account
 
-        reward_steem = self._check_amount(reward_steem, "STEEM")
-        reward_sbd = self._check_amount(reward_sbd, "SBD")
-        reward_vests = self._check_amount(reward_vests, "VESTS")
+        reward_steem = self._check_amount(reward_steem, self.steem.steem_symbol)
+        reward_sbd = self._check_amount(reward_sbd, self.steem.sbd_symbol)
+        reward_vests = self._check_amount(reward_vests, self.steem.vests_symbol)
 
         if reward_steem.amount == 0 and reward_sbd.amount == 0 and reward_vests.amount == 0:
             reward_steem = account.balances["rewards"][0]
@@ -2445,6 +2446,7 @@ class Account(BlockchainObject):
                 "reward_vests": reward_vests,
                 "prefix": self.steem.prefix,
             })
+        print(op)
         return self.steem.finalizeOp(op, account, "posting", **kwargs)
 
     def delegate_vesting_shares(self, to_account, vesting_shares,
@@ -2465,7 +2467,7 @@ class Account(BlockchainObject):
         to_account = Account(to_account, steem_instance=self.steem)
         if to_account is None:
             raise ValueError("You need to provide a to_account")
-        vesting_shares = self._check_amount(vesting_shares, "VESTS")
+        vesting_shares = self._check_amount(vesting_shares, self.steem.vests_symbol)
 
         op = operations.Delegate_vesting_shares(
             **{
@@ -2489,7 +2491,7 @@ class Account(BlockchainObject):
             account = self
         else:
             account = Account(account, steem_instance=self.steem)
-        amount = self._check_amount(amount, "VESTS")
+        amount = self._check_amount(amount, self.steem.vests_symbol)
 
         op = operations.Withdraw_vesting(
             **{
