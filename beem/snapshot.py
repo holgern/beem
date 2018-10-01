@@ -38,9 +38,9 @@ class AccountSnapshot(list):
     def reset(self):
         """ Resets the arrays not the stored account history
         """
-        self.own_vests = [Amount("0 VESTS", steem_instance=self.steem)]
-        self.own_steem = [Amount("0 STEEM", steem_instance=self.steem)]
-        self.own_sbd = [Amount("0 SBD", steem_instance=self.steem)]
+        self.own_vests = [Amount(0, self.steem.vests_symbol, steem_instance=self.steem)]
+        self.own_steem = [Amount(0, self.steem.steem_symbol, steem_instance=self.steem)]
+        self.own_sbd = [Amount(0, self.steem.steem_symbol, steem_instance=self.steem)]
         self.delegated_vests_in = [{}]
         self.delegated_vests_out = [{}]
         self.timestamps = [addTzInfo(datetime(1970, 1, 1, 0, 0, 0, 0))]
@@ -313,14 +313,14 @@ class AccountSnapshot(list):
             amount = Amount(op['amount'], steem_instance=self.steem)
             # print(op)
             if op['from'] == self.account["name"]:
-                if amount.symbol == "STEEM":
+                if amount.symbol == self.steem.steem_symbol:
                     self.update(ts, 0, 0, 0, amount * (-1), 0)
-                elif amount.symbol == "SBD":
+                elif amount.symbol == self.steem.sbd_symbol:
                     self.update(ts, 0, 0, 0, 0, amount * (-1))
             if op['to'] == self.account["name"]:
-                if amount.symbol == "STEEM":
+                if amount.symbol == self.steem.steem_symbol:
                     self.update(ts, 0, 0, 0, amount, 0)
-                elif amount.symbol == "SBD":
+                elif amount.symbol == self.steem.sbd_symbol:
                     self.update(ts, 0, 0, 0, 0, amount)
             # print(op, vests)
             # self.update(ts, vests, 0, 0)
@@ -330,14 +330,14 @@ class AccountSnapshot(list):
             current_pays = Amount(op["current_pays"], steem_instance=self.steem)
             open_pays = Amount(op["open_pays"], steem_instance=self.steem)
             if op["current_owner"] == self.account["name"]:
-                if current_pays.symbol == "STEEM":
+                if current_pays.symbol == self.steem.steem_symbol:
                     self.update(ts, 0, 0, 0, current_pays * (-1), open_pays)
-                elif current_pays.symbol == "SBD":
+                elif current_pays.symbol == self.steem.sbd_symbol:
                     self.update(ts, 0, 0, 0, open_pays, current_pays * (-1))
             if op["open_owner"] == self.account["name"]:
-                if current_pays.symbol == "STEEM":
+                if current_pays.symbol == self.steem.steem_symbol:
                     self.update(ts, 0, 0, 0, current_pays, open_pays * (-1))
-                elif current_pays.symbol == "SBD":
+                elif current_pays.symbol == self.steem.sbd_symbol:
                     self.update(ts, 0, 0, 0, open_pays * (-1), current_pays)
             # print(op)
             return
