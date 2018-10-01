@@ -117,15 +117,16 @@ class Witness(BlockchainObject):
 
     def feed_publish(self,
                      base,
-                     quote="1.000 STEEM",
+                     quote=None,
                      account=None):
         """ Publish a feed price as a witness.
             :param float base: USD Price of STEEM in SBD (implied price)
-            :param float quote: (optional) Quote Price. Should be 1.000, unless
+            :param float quote: (optional) Quote Price. Should be 1.000 (default), unless
             we are adjusting the feed to support the peg.
             :param str account: (optional) the source account for the transfer
             if not self["owner"]
         """
+        quote = quote if quote is not None else "1.000 %s" % (self.steem.symbol)
         if not account:
             account = self["owner"]
         if not account:
@@ -137,18 +138,18 @@ class Witness(BlockchainObject):
         elif isinstance(base, string_types):
             base = Amount(base, steem_instance=self.steem)
         else:
-            base = Amount(base, "SBD", steem_instance=self.steem)
+            base = Amount(base, self.steem.sbd_symbol, steem_instance=self.steem)
 
         if isinstance(quote, Amount):
             quote = Amount(quote, steem_instance=self.steem)
         elif isinstance(quote, string_types):
             quote = Amount(quote, steem_instance=self.steem)
         else:
-            quote = Amount(quote, "STEEM", steem_instance=self.steem)
+            quote = Amount(quote, self.steem.steem_symbol, steem_instance=self.steem)
 
-        if not base.symbol == "SBD":
+        if not base.symbol == self.steem.sbd_symbol:
             raise AssertionError()
-        if not quote.symbol == "STEEM":
+        if not quote.symbol == self.steem.steem_symbol:
             raise AssertionError()
 
         op = operations.Feed_publish(
