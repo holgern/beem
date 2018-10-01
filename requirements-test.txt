@@ -14,7 +14,7 @@ cryptography==2.3.1
 pyyaml==3.13
 mock==2.0.0
 appdirs==1.4.3
-Click==6.7
+Click==7.0
 prettytable
 pycodestyle==2.4.0
 pyflakes==2.0.0
