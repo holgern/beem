@@ -33,6 +33,7 @@ from .steemconnect import SteemConnect
 from .transactionbuilder import TransactionBuilder
 from .utils import formatTime, resolve_authorperm, derive_permlink, remove_from_dict, addTzInfo, formatToTimeStamp
 from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_100_PERCENT, STEEM_1_PERCENT, STEEM_RC_REGEN_TIME
+from collections import OrderedDict
 
 log = logging.getLogger(__name__)
 
@@ -1681,14 +1682,14 @@ class Steem(object):
         account = Account(author, steem_instance=self)
         # deal with the category and tags
         if isinstance(tags, str):
-            tags = list(set([_f for _f in (re.split("[\W_]", tags)) if _f]))
+            tags = list(OrderedDict({_f: None for _f in re.split("[\W_]", tags) if _f}))
 
         category = None
         tags = tags or json_metadata.get('tags', [])
 
         if parse_body:
             def get_urls(mdstring):
-                return list(set(re.findall('http[s]*://[^\s"><\)\(]+', mdstring)))
+                return list(OrderedDict({_f: None for _f in re.findall('http[s]*://[^\s"><\)\(]+', mdstring)}))
 
             def get_users(mdstring):
                 users = []
@@ -1702,7 +1703,6 @@ class Steem(object):
                     hashtags.append(list(t)[-1])
                 return hashtags
 
-            users = []
             image = []
             links = []
             for url in get_urls(body):
