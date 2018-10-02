@@ -33,6 +33,7 @@ from .steemconnect import SteemConnect
 from .transactionbuilder import TransactionBuilder
 from .utils import formatTime, resolve_authorperm, derive_permlink, remove_from_dict, addTzInfo, formatToTimeStamp
 from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_100_PERCENT, STEEM_1_PERCENT, STEEM_RC_REGEN_TIME
+from collections import OrderedDict
 
 log = logging.getLogger(__name__)
 
@@ -1702,7 +1703,6 @@ class Steem(object):
                     hashtags.append(list(t)[-1])
                 return hashtags
 
-            users = []
             image = []
             links = []
             for url in get_urls(body):
