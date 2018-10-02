@@ -1682,14 +1682,14 @@ class Steem(object):
         account = Account(author, steem_instance=self)
         # deal with the category and tags
         if isinstance(tags, str):
-            tags = list(set([_f for _f in (re.split("[\W_]", tags)) if _f]))
+            tags = list(OrderedDict({_f: None for _f in re.split("[\W_]", tags) if _f}))
 
         category = None
         tags = tags or json_metadata.get('tags', [])
 
         if parse_body:
             def get_urls(mdstring):
-                return list(set(re.findall('http[s]*://[^\s"><\)\(]+', mdstring)))
+                return list(OrderedDict({_f: None for _f in re.findall('http[s]*://[^\s"><\)\(]+', mdstring)}))
 
             def get_users(mdstring):
                 users = []
