@@ -27,7 +27,7 @@ default_prefix = "STM"
 
 @python_2_unicode_compatible
 class Amount(object):
-    def __init__(self, d, prefix="STM"):
+    def __init__(self, d, prefix=default_prefix):
         if isinstance(d, string_types):
             self.amount, self.symbol = d.strip().split(" ")
             self.precision = None
@@ -164,8 +164,9 @@ class WitnessProps(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
+            prefix = kwargs.get("prefix", default_prefix)
             super(WitnessProps, self).__init__(OrderedDict([
-                ('account_creation_fee', Amount(kwargs["account_creation_fee"])),
+                ('account_creation_fee', Amount(kwargs["account_creation_fee"], prefix=prefix)),
                 ('maximum_block_size', Uint32(kwargs["maximum_block_size"])),
                 ('sbd_interest_rate', Uint16(kwargs["sbd_interest_rate"])),
             ]))
@@ -178,9 +179,10 @@ class Price(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
+            prefix = kwargs.get("prefix", default_prefix)
             super(Price, self).__init__(OrderedDict([
-                ('base', Amount(kwargs["base"])),
-                ('quote', Amount(kwargs["quote"]))
+                ('base', Amount(kwargs["base"], prefix=prefix)),
+                ('quote', Amount(kwargs["quote"], prefix=prefix))
             ]))
 
 
@@ -238,10 +240,11 @@ class ExchangeRate(GrapheneObject):
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
 
+            prefix = kwargs.get("prefix", default_prefix)
             super(ExchangeRate, self).__init__(
                 OrderedDict([
-                    ('base', Amount(kwargs["base"])),
-                    ('quote', Amount(kwargs["quote"])),
+                    ('base', Amount(kwargs["base"], prefix=prefix)),
+                    ('quote', Amount(kwargs["quote"], prefix=prefix)),
                 ]))
 
 

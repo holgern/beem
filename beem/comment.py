@@ -90,7 +90,7 @@ class Comment(BlockchainObject):
         ]
         for p in sbd_amounts:
             if p in comment and isinstance(comment.get(p), (string_types, list, dict)):
-                comment[p] = Amount(comment.get(p, "0.000 SBD"), steem_instance=self.steem)
+                comment[p] = Amount(comment.get(p, "0.000 %s" % (self.steem.sbd_symbol)), steem_instance=self.steem)
 
         # turn json_metadata into python dict
         meta_str = comment.get("json_metadata", "{}")
@@ -276,7 +276,7 @@ class Comment(BlockchainObject):
     def reward(self):
         """ Return the estimated total SBD reward.
         """
-        a_zero = Amount("0 SBD", steem_instance=self.steem)
+        a_zero = Amount(0, self.steem.sbd_symbol, steem_instance=self.steem)
         total = Amount(self.get("total_payout_value", a_zero), steem_instance=self.steem)
         pending = Amount(self.get("pending_payout_value", a_zero), steem_instance=self.steem)
         return total + pending
@@ -285,7 +285,7 @@ class Comment(BlockchainObject):
         """ Return if the payout is pending (the post/comment
             is younger than 7 days)
         """
-        a_zero = Amount("0 SBD", steem_instance=self.steem)
+        a_zero = Amount(0, self.steem.sbd_symbol, steem_instance=self.steem)
         total = Amount(self.get("total_payout_value", a_zero), steem_instance=self.steem)
         post_age_days = self.time_elapsed().total_seconds() / 60 / 60 / 24
         return post_age_days < 7.0 and float(total) == 0
@@ -421,7 +421,10 @@ class Comment(BlockchainObject):
             total_payout = Amount(self["total_payout_value"], steem_instance=self.steem)
             curator_payout = Amount(self["curator_payout_value"], steem_instance=self.steem)
             author_payout = total_payout - curator_payout
-            return {'pending_rewards': False, "payout_SP": Amount("0 SBD", steem_instance=self.steem), "payout_SBD": Amount("0 SBD", steem_instance=self.steem), "total_payout_SBD": author_payout}
+            return {'pending_rewards': False,
+                    "payout_SP": Amount(0, self.steem.steem_symbol, steem_instance=self.steem),
+                    "payout_SBD": Amount(0, self.steem.sbd_symbol, steem_instance=self.steem),
+                    "total_payout_SBD": author_payout}
 
         median_price = Price(self.steem.get_current_median_history(), steem_instance=self.steem)
         beneficiaries_pct = self.get_beneficiaries_pct()
@@ -434,7 +437,7 @@ class Comment(BlockchainObject):
         author_tokens -= benefactor_tokens
 
         sbd_steem = author_tokens * self["percent_steem_dollars"] / 20000.
-        vesting_steem = median_price.as_base("STEEM") * (author_tokens - sbd_steem)
+        vesting_steem = median_price.as_base(self.steem.steem_symbol) * (author_tokens - sbd_steem)
 
         return {'pending_rewards': True, "payout_SP": vesting_steem, "payout_SBD": sbd_steem, "total_payout_SBD": author_tokens}
 
@@ -470,7 +473,7 @@ class Comment(BlockchainObject):
         pending_rewards = False
         total_vote_weight = self["total_vote_weight"]
         if not self["allow_curation_rewards"]:
-            max_rewards = Amount("0 STEEM", steem_instance=self.steem)
+            max_rewards = Amount(0, self.steem.steem_symbol, steem_instance=self.steem)
             unclaimed_rewards = max_rewards.copy()
         elif not self.is_pending():
             max_rewards = Amount(self["curator_payout_value"], steem_instance=self.steem)
@@ -482,13 +485,13 @@ class Comment(BlockchainObject):
             if pending_payout_value is None:
                 pending_payout_value = Amount(self["pending_payout_value"], steem_instance=self.steem)
             elif isinstance(pending_payout_value, (float, integer_types)):
-                pending_payout_value = Amount(pending_payout_value, "SBD", steem_instance=self.steem)
+                pending_payout_value = Amount(pending_payout_value, self.steem.sbd_symbol, steem_instance=self.steem)
             elif isinstance(pending_payout_value, str):
                 pending_payout_value = Amount(pending_payout_value, steem_instance=self.steem)
             if pending_payout_SBD:
                 max_rewards = (pending_payout_value * 0.25)
             else:
-                max_rewards = median_price.as_base("STEEM") * (pending_payout_value * 0.25)
+                max_rewards = median_price.as_base(self.steem.steem_symbol) * (pending_payout_value * 0.25)
             unclaimed_rewards = max_rewards.copy()
             pending_rewards = True
 
