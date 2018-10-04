@@ -39,8 +39,7 @@ def varintdecode(data):
     """Varint decoding."""
     shift = 0
     result = 0
-    for c in data:
-        b = ord(c)
+    for b in bytes(data):
         result |= ((b & 0x7f) << shift)
         if not (b & 0x80):
             break
@@ -216,18 +215,13 @@ class String(object):
 
 @python_2_unicode_compatible
 class Bytes(object):
-    def __init__(self, d, length=None):
+    def __init__(self, d):
         self.data = d
-        if length:
-            self.length = length
-        else:
-            self.length = len(self.data)
 
     def __bytes__(self):
         """Returns data as bytes."""
-        # FIXME constraint data to self.length
         d = unhexlify(bytes(self.data, 'utf-8'))
-        return varint(len(self.data)) + d
+        return varint(len(d)) + d
 
     def __str__(self):
         """Returns data as string."""

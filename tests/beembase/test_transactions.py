@@ -300,10 +300,10 @@ class Testcases(unittest.TestCase):
             **{
                 "owner": "alice",
                 "orderid": 492991,
-                "amount_to_sell": ["1", 3, "@@000000013"],
+                "amount_to_sell": {"amount": "1", "precision": 3, "nai": "@@000000013"},
                 "exchange_rate": {
-                    "base": ["1", 3, "@@000000013"],
-                    "quote": ["10", 3, "@@000000021"]
+                    "base": {"amount": "1", "precision": 3, "nai": "@@000000013"},
+                    "quote": {"amount": "10", "precision": 3, "nai": "@@000000021"}
                 },
                 "fill_or_kill": False,
                 "expiration": "2017-05-12T23:11:13",
@@ -878,11 +878,11 @@ class Testcases(unittest.TestCase):
             **{
                 "from": "alice",
                 "to": "bob",
-                "sbd_amount": ["1000", 3, "@@000000013"],
-                "steem_amount": ["0", 3, "@@000000021"],
+                "sbd_amount": {"amount": "1000", "precision": 3, "nai": "@@000000013"},
+                "steem_amount": {"amount": "0", "precision": 3, "nai": "@@000000021"},
                 "escrow_id": 23456789,
                 "agent": "charlie",
-                "fee": ["100", 3, "@@000000013"],
+                "fee": {"amount": "100", "precision": 3, "nai": "@@000000013"},
                 "json_meta": "{}",
                 "ratification_deadline": "2017-02-26T11:22:39",
                 "escrow_expiration": "2017-02-28T11:22:39",
@@ -920,8 +920,8 @@ class Testcases(unittest.TestCase):
                 "to": "bob",
                 "who": "charlie",
                 "escrow_id": 72526562,
-                "sbd_amount": ["5000", 3, "@@000000013"],
-                "steem_amount": ["0", 3, "@@000000021"],
+                "sbd_amount": {"amount": "5000", "precision": 3, "nai": "@@000000013"},
+                "steem_amount": {"amount": "0", "precision": 3, "nai": "@@000000021"},
                 "prefix": default_prefix,
             })
 
@@ -967,9 +967,9 @@ class Testcases(unittest.TestCase):
         self.op = operations.Claim_reward_balance(
             **{
                 "account": "alice",
-                "reward_steem": ["17", 3, "@@000000021"],
-                "reward_sbd": ["11", 3, "@@000000013"],
-                "reward_vests": ["185025103", 6, "@@000000037"],
+                "reward_steem": {"amount": "17", "precision": 3, "nai": "@@000000021"},
+                "reward_sbd": {"amount": "11", "precision": 3, "nai": "@@000000013"},
+                "reward_vests": {"amount": "185025103", "precision": 6, "nai": "@@000000037"},
                 "prefix": default_prefix,
             })
 
@@ -985,7 +985,7 @@ class Testcases(unittest.TestCase):
             **{
                 "delegator": "alice",
                 "delegatee": "bob",
-                "vesting_shares": ["94599167138276", 6, "@@000000037"],
+                "vesting_shares": {"amount": "94599167138276", "precision": 6, "nai": "@@000000037"},
                 "prefix": default_prefix,
             })
 
@@ -998,8 +998,8 @@ class Testcases(unittest.TestCase):
     def test_account_create_with_delegation(self):
         self.op = operations.Account_create_with_delegation(
             **{
-                "fee": ["3000", 3, "@@000000021"],
-                "delegation": ["0", 6, "@@000000037"],
+                "fee": {"amount": "3000", "precision": 3, "nai": "@@000000021"},
+                "delegation": {"amount": "0", "precision": 6, "nai": "@@000000037"},
                 "creator": "steemit",
                 "new_account_name": "alice",
                 "owner": {

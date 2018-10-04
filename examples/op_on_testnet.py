@@ -23,16 +23,17 @@ logging.basicConfig(level=logging.INFO)
 password = "secretPassword"
 username = "beem"
 useWallet = False
+walletpassword = "123"
 
 if __name__ == "__main__":
-    nodelist = NodeList()
-    stm = Steem(node=nodelist.get_nodes(normal=False, appbase=False, testnet=True))
+    testnet_node = "https://testnet.steem.vc"
+    stm = Steem(node=testnet_node)
     prefix = stm.prefix
     # curl --data "username=username&password=secretPassword" https://testnet.steem.vc/create
-    stm.wallet.wipe(True)
     if useWallet:
-        stm.wallet.create("123")
-        stm.wallet.unlock("123")
+        stm.wallet.wipe(True)
+        stm.wallet.create(walletpassword)
+        stm.wallet.unlock(walletpassword)
     active_key = PasswordKey(username, password, role="active", prefix=prefix)
     owner_key = PasswordKey(username, password, role="owner", prefix=prefix)
     posting_key = PasswordKey(username, password, role="posting", prefix=prefix)
@@ -51,7 +52,7 @@ if __name__ == "__main__":
         stm.wallet.addPrivateKey(memo_privkey)
         stm.wallet.addPrivateKey(posting_privkey)
     else:
-        stm = Steem(node=nodelist.get_nodes(normal=False, appbase=False, testnet=True),
+        stm = Steem(node=testnet_node,
                     wif={'active': str(active_privkey),
                          'posting': str(posting_privkey),
                          'memo': str(memo_privkey)})

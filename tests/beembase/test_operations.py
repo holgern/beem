@@ -30,7 +30,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual(transferJson, t.toJson())
         self.assertEqual(transferJson, t.__json__())
 
-        transferJson = {'from': 'test', 'to': 'test1', 'amount': ['3000', 3, '@@00000032'], 'memo': 'foobar'}
+        transferJson = {'from': 'test', 'to': 'test1', 'amount': ['3000', 3, '@@000000037'], 'memo': 'foobar'}
         t = Transfer(transferJson)
         self.assertEqual(transferJson, json.loads(str(t)))
         self.assertEqual(transferJson, t.json())

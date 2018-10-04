@@ -25,13 +25,13 @@ class Testcases(unittest.TestCase):
         self.assertEqual(a, t.__str__())
         self.assertEqual(a, str(t))
 
-        a = ["3000", 3, "@@00000032"]
-        t = Amount(a)
+        a = {"amount": "3000", "precision": 3, "nai": "@@000000037"}
+        t = Amount(a, prefix="STM")
         # self.assertEqual(str(a), t.__str__())
         self.assertEqual(a, json.loads(str(t)))
 
     def test_Operation(self):
-        a = ['1000', 3, '@@000000013']
+        a = {"amount": '1000', "precision": 3, "nai": '@@000000013'}
         j = ["transfer", {'from': 'a', 'to': 'b', 'amount': a, 'memo': 'c'}]
         o = Operation(j)
         self.assertEqual(o.json()[1], j[1])

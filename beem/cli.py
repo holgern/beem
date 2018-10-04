@@ -2012,7 +2012,7 @@ def witnesscreate(witness, pub_signing_key, maximum_block_size, account_creation
 @click.option('--new_signing_key', help='Set new signing key')
 @click.option('--url', help='Witness URL')
 def witnessproperties(witness, wif, account_creation_fee, account_subsidy_budget, account_subsidy_decay, maximum_block_size, sbd_interest_rate, new_signing_key, url):
-    """Update witness properties without pricefeed"""
+    """Update witness properties of witness WITNESS with the witness signing key WIF"""
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()

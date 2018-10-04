@@ -180,3 +180,8 @@ class RC(object):
         tx_size = self.get_tx_size(op)
         resource_count = self.get_resource_count(tx_size)
         return self.steem.get_rc_cost(resource_count)
+
+    def claim_account(self, tx_size=300):
+        """Claim account"""
+        resource_count = self.get_resource_count(tx_size, new_account_op_count=1)
+        return self.steem.get_rc_cost(resource_count)

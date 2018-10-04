@@ -273,8 +273,20 @@ class NodeList(list):
                 nl.update_nodes(weights)
         """
         steem = steem_instance or shared_steem_instance()
-        account = Account("fullnodeupdate", steem_instance=steem)
-        metadata = json.loads(account["json_metadata"])
+        metadata = None
+        account = None
+        cnt = 0
+        while metadata is None and cnt < 5:
+            cnt += 1
+            try:
+                account = Account("fullnodeupdate", steem_instance=steem)
+                metadata = json.loads(account["json_metadata"])
+            except:
+                steem.rpc.next()
+                account = None
+                metadata = None
+        if metadata is None:
+            return
         report = metadata["report"]
         failing_nodes = metadata["failing_nodes"]
         parameter = metadata["parameter"]
