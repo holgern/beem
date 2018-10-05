@@ -9,7 +9,6 @@ import json
 from beemgraphenebase import types
 from beem.amount import Amount
 from beem import Steem
-import unittest
 from beemgraphenebase.py23 import (
     py23_bytes,
     py23_chr,

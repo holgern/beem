@@ -165,10 +165,10 @@ class Account(BlockchainObject):
     def json(self):
         output = self.copy()
         parse_int = [
-            "sbd_seconds", "savings_sbd_seconds", "withdrawn", "to_withdraw"
+            "sbd_seconds", "savings_sbd_seconds",
         ]
         parse_int_without_zero = [
-            "lifetime_bandwidth", 'average_bandwidth',
+            "withdrawn", "to_withdraw", "lifetime_bandwidth", 'average_bandwidth',
         ]
         for p in parse_int:
             if p in output and isinstance(output[p], integer_types):
@@ -318,16 +318,15 @@ class Account(BlockchainObject):
         except:
             rc_mana = None
             rc_calc = None
-        vote_mana = self.get_manabar()
 
         if use_table:
             t = PrettyTable(["Key", "Value"])
             t.align = "l"
             t.add_row(["Name (rep)", self.name + " (%.2f)" % (self.rep)])
-            t.add_row(["Voting Power", "%.2f %%, " % (vote_mana["current_mana_pct"])])
+            t.add_row(["Voting Power", "%.2f %%, " % (self.get_voting_power())])
             t.add_row(["Vote Value", "%.2f $" % (self.get_voting_value_SBD())])
             t.add_row(["Last vote", "%s ago" % last_vote_time_str])
-            t.add_row(["Full in ", "%s" % (self.get_manabar_recharge_time_str(vote_mana))])
+            t.add_row(["Full in ", "%s" % (self.get_recharge_time_str())])
             t.add_row(["Steem Power", "%.2f %s" % (self.get_steem_power(), self.steem.steem_symbol)])
             t.add_row(["Balance", "%s, %s" % (str(self.balances["available"][0]), str(self.balances["available"][1]))])
             if False and bandwidth["allocated"] > 0:
@@ -355,9 +354,9 @@ class Account(BlockchainObject):
         else:
             ret = self.name + " (%.2f) \n" % (self.rep)
             ret += "--- Voting Power ---\n"
-            ret += "%.2f %%, " % (vote_mana["current_mana_pct"])
+            ret += "%.2f %%, " % (self.get_voting_power())
             ret += " VP = %.2f $\n" % (self.get_voting_value_SBD())
-            ret += "full in %s \n" % (self.get_manabar_recharge_time_str(vote_mana))
+            ret += "full in %s \n" % (self.get_recharge_time_str())
             ret += "--- Balance ---\n"
             ret += "%.2f SP, " % (self.get_steem_power())
             ret += "%s, %s\n" % (str(self.balances["available"][0]), str(self.balances["available"][1]))
@@ -865,14 +864,14 @@ class Account(BlockchainObject):
 
     @property
     def total_balances(self):
-        symbols = [self.available_balances[0]["symbol"], self.available_balances[1]["symbol"], self.available_balances[2]["symbol"]]
-        return [
-            self.get_balance(self.available_balances, symbols[0]) + self.get_balance(self.saving_balances, symbols[0]) +
-            self.get_balance(self.reward_balances, symbols[0]),
-            self.get_balance(self.available_balances, symbols[1]) + self.get_balance(self.saving_balances, symbols[1]) +
-            self.get_balance(self.reward_balances, symbols[1]),
-            self.get_balance(self.available_balances, symbols[2]) + self.get_balance(self.reward_balances, symbols[2]),
-        ]
+        symbols = []
+        for balance in self.available_balances:
+            symbols.append(balance["symbol"])
+        ret = []
+        for i in range(len(symbols)):
+            ret.append(self.get_balance(self.available_balances, symbols[i]) + self.get_balance(self.saving_balances, symbols[i]) +
+                       self.get_balance(self.reward_balances, symbols[i]))
+        return ret
 
     @property
     def balances(self):
@@ -1023,7 +1022,10 @@ class Account(BlockchainObject):
         account = self["name"]
         global_properties = self.steem.get_dynamic_global_properties()
         reserve_ratio = self.steem.get_reserve_ratio()
-        received_vesting_shares = self["received_vesting_shares"].amount
+        if "received_vesting_shares" in self:
+            received_vesting_shares = self["received_vesting_shares"].amount
+        else:
+            received_vesting_shares = 0
         vesting_shares = self["vesting_shares"].amount
         max_virtual_bandwidth = float(reserve_ratio["max_virtual_bandwidth"])
         total_vesting_shares = Amount(global_properties["total_vesting_shares"], steem_instance=self.steem).amount

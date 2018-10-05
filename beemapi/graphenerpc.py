@@ -301,13 +301,15 @@ class GrapheneRPC(object):
         """
         if props is None:
             props = self.get_config(api="database")
-        if "STEEMIT_CHAIN_ID" in props:
-            chain_id = props["STEEMIT_CHAIN_ID"]
-            network_version = props['STEEMIT_BLOCKCHAIN_VERSION']
-        elif "STEEM_CHAIN_ID" in props:
-            chain_id = props["STEEM_CHAIN_ID"]
-            network_version = props['STEEM_BLOCKCHAIN_VERSION']
-        else:
+        chain_id = None
+        network_version = None
+        for key in props:
+            if key[-8:] == "CHAIN_ID":
+                chain_id = props[key]
+            elif key[-18:] == "BLOCKCHAIN_VERSION":
+                network_version = props[key]
+
+        if chain_id is None:
             raise("Connecting to unknown network!")
         highest_version_chain = None
         for k, v in list(self.known_chains.items()):

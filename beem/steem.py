@@ -267,8 +267,12 @@ class Steem(object):
         self.data['last_refresh'] = datetime.utcnow()
         self.data["last_node"] = self.rpc.url
         self.data["dynamic_global_properties"] = self.get_dynamic_global_properties(False)
-        self.data['feed_history'] = self.get_feed_history(False)
-        self.data['get_feed_history'] = self.get_feed_history(False)
+        try:
+            self.data['feed_history'] = self.get_feed_history(False)
+            self.data['get_feed_history'] = self.get_feed_history(False)
+        except:
+            self.data['feed_history'] = None
+            self.data['get_feed_history'] = None
         self.data['hardfork_properties'] = self.get_hardfork_properties(False)
         self.data['network'] = self.get_network(False)
         self.data['witness_schedule'] = self.get_witness_schedule(False)
@@ -417,6 +421,8 @@ class Steem(object):
         """ Returns the current median history price as Price
         """
         median_price = self.get_current_median_history(use_stored_data=use_stored_data)
+        if median_price is None:
+            return None
         a = Price(
             None,
             base=Amount(median_price['base'], steem_instance=self),
@@ -427,29 +433,30 @@ class Steem(object):
 
     def get_block_interval(self, use_stored_data=True):
         """Returns the block interval in seconds"""
-        props = self.get_config(use_stored_data=use_stored_data, replace_steemit_by_steem=True)
-        if props and "STEEM_BLOCK_INTERVAL" in props:
-            block_interval = props["STEEM_BLOCK_INTERVAL"]
-        else:
-            block_interval = 3
+        props = self.get_config(use_stored_data=use_stored_data)
+        block_interval = 3
+        for key in props:
+            if key[-14:] == "BLOCK_INTERVAL":
+                block_interval = props[key]
+
         return block_interval
 
     def get_blockchain_version(self, use_stored_data=True):
         """Returns the blockchain version"""
-        props = self.get_config(use_stored_data=use_stored_data, replace_steemit_by_steem=True)
-        if props and "STEEM_BLOCKCHAIN_VERSION" in props:
-            blockchain_version = props["STEEM_BLOCKCHAIN_VERSION"]
-        else:
-            blockchain_version = '0.0.0'
+        props = self.get_config(use_stored_data=use_stored_data)
+        blockchain_version = '0.0.0'
+        for key in props:
+            if key[-18:] == "BLOCKCHAIN_VERSION":
+                blockchain_version = props[key]
         return blockchain_version
 
     def get_dust_threshold(self, use_stored_data=True):
         """Returns the vote dust threshold"""
-        props = self.get_config(use_stored_data=use_stored_data, replace_steemit_by_steem=True)
-        if props and 'STEEM_VOTE_DUST_THRESHOLD' in props:
-            dust_threshold = props['STEEM_VOTE_DUST_THRESHOLD']
-        else:
-            dust_threshold = 0
+        props = self.get_config(use_stored_data=use_stored_data)
+        dust_threshold = 0
+        for key in props:
+            if key[-20:] == "VOTE_DUST_THRESHOLD":
+                dust_threshold = props[key]
         return dust_threshold
 
     def get_resource_params(self):
@@ -508,6 +515,8 @@ class Steem(object):
 
         fund_per_share = reward_balance / (recent_claims)
         median_price = self.get_median_price(use_stored_data=use_stored_data)
+        if median_price is None:
+            return 0
         SBD_price = (median_price * Amount(1, self.steem_symbol, steem_instance=self)).amount
         return fund_per_share * SBD_price
 
@@ -765,12 +774,10 @@ class Steem(object):
         self.rpc.set_next_node_on_empty_reply(True)
         return self.rpc.get_witness_schedule(api="database")
 
-    def get_config(self, use_stored_data=True, replace_steemit_by_steem=False):
+    def get_config(self, use_stored_data=True):
         """ Returns internal chain configuration.
 
             :param bool use_stored_data: If True, the chached value is returned
-            :param bool replace_steemit_by_steem: If True, it replaces all
-                STEEMIT keys by STEEM (only useful on non appbase nodes)
         """
         if use_stored_data:
             self.refresh_data()
@@ -780,13 +787,7 @@ class Steem(object):
                 return None
             self.rpc.set_next_node_on_empty_reply(True)
             config = self.rpc.get_config(api="database")
-        if config is not None and replace_steemit_by_steem:
-            new_config = {}
-            for key in config:
-                new_config[key.replace('STEEMIT', 'STEEM')] = config[key]
-            return new_config
-        else:
-            return config
+        return config
 
     @property
     def chain_params(self):
@@ -1493,9 +1494,9 @@ class Steem(object):
             Properties:::
 
                 {
-                    "account_creation_fee": x,
-                    "maximum_block_size": x,
-                    "sbd_interest_rate": x,
+                    "account_creation_fee": "3.000 STEEM",
+                    "maximum_block_size": 65536,
+                    "sbd_interest_rate": 0,
                 }
 
         """
@@ -1510,8 +1511,8 @@ class Steem(object):
             PublicKey(signing_key, prefix=self.prefix)
         except Exception as e:
             raise e
-        if "sbd_interest_rate" in props:
-            props["sbd_interest_rate"] = Amount(props["sbd_interest_rate"], steem_instance=self)
+        if "account_creation_fee" in props:
+            props["account_creation_fee"] = Amount(props["account_creation_fee"], steem_instance=self)
         op = operations.Witness_update(
             **{
                 "owner": account["name"],

@@ -30,6 +30,7 @@ known_prefixes = [
     "VIT",
     "WKA",
     "EUR",
+    "WLS",
 ]
 
 

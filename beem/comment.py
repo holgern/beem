@@ -297,11 +297,15 @@ class Comment(BlockchainObject):
         return utc.localize(datetime.utcnow()) - self['created']
 
     def curation_penalty_compensation_SBD(self):
-        """ Returns The required post payout amount after 30 minutes
-            which will compentsate the curation penalty, if voting earlier than 30 minutes
+        """ Returns The required post payout amount after 15 minutes
+            which will compentsate the curation penalty, if voting earlier than 15 minutes
         """
         self.refresh()
-        return self.reward * 900. / ((self.time_elapsed()).total_seconds() / 60) ** 2
+        if self.steem.hardfork >= 20:
+            reverse_auction_window_seconds = STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF20
+        else:
+            reverse_auction_window_seconds = STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF6
+        return self.reward * reverse_auction_window_seconds / ((self.time_elapsed()).total_seconds() / 60) ** 2
 
     def estimate_curation_SBD(self, vote_value_SBD, estimated_value_SBD=None):
         """ Estimates curation reward
