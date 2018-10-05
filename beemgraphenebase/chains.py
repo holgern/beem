@@ -85,4 +85,14 @@ known_chains = {
             {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
         ],
     },
+        "EFTG": {
+        "chain_id": "1c15984beb16945c01cb9bc3d654b0417c650461dfe535018fe03a4fc5a36864",
+        "min_version": "0.19.6",
+        "prefix": "EUR",
+        "chain_assets": [
+            {"asset": "SBD", "symbol": "EUR", "precision": 3, "id": 0},
+            {"asset": "STEEM", "symbol": "EFTG", "precision": 3, "id": 1},
+            {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
+        ],
+    },
 }

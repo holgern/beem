@@ -29,6 +29,7 @@ known_prefixes = [
     "EOS",
     "VIT",
     "WKA",
+    "EUR",
 ]
 
 
