@@ -164,8 +164,8 @@ class Testcases(unittest.TestCase):
                                  "amount": Amount("0.01 STEEM", steem_instance=steem),
                                  "memo": '1 of 1 transaction'}))
         self.assertEqual(
-            tx["operations"][0][0],
-            "transfer"
+            tx["operations"][0]["type"],
+            "transfer_operation"
         )
         tx.appendWif(self.active_key)
         tx.sign()

@@ -435,6 +435,8 @@ class Steem(object):
         """Returns the block interval in seconds"""
         props = self.get_config(use_stored_data=use_stored_data)
         block_interval = 3
+        if props is None:
+            return block_interval
         for key in props:
             if key[-14:] == "BLOCK_INTERVAL":
                 block_interval = props[key]
@@ -445,6 +447,8 @@ class Steem(object):
         """Returns the blockchain version"""
         props = self.get_config(use_stored_data=use_stored_data)
         blockchain_version = '0.0.0'
+        if props is None:
+            return blockchain_version
         for key in props:
             if key[-18:] == "BLOCKCHAIN_VERSION":
                 blockchain_version = props[key]
@@ -454,6 +458,8 @@ class Steem(object):
         """Returns the vote dust threshold"""
         props = self.get_config(use_stored_data=use_stored_data)
         dust_threshold = 0
+        if props is None:
+            return dust_threshold
         for key in props:
             if key[-20:] == "VOTE_DUST_THRESHOLD":
                 dust_threshold = props[key]

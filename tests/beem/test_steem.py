@@ -472,7 +472,7 @@ class Testcases(unittest.TestCase):
     def test_sp_to_rshares(self):
         stm = self.bts
         rshares = stm.sp_to_rshares(stm.vests_to_sp(1e6))
-        self.assertTrue(abs(rshares - 19950000000.0) < 2)
+        self.assertTrue(abs(rshares - 20000000000.0) < 2)
 
     def test_rshares_to_vests(self):
         stm = self.bts
