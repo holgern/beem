@@ -3,11 +3,23 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+from builtins import str
 import unittest
 import json
 from beemgraphenebase import types
 from beem.amount import Amount
 from beem import Steem
+import unittest
+from beemgraphenebase.py23 import (
+    py23_bytes,
+    py23_chr,
+    bytes_types,
+    integer_types,
+    string_types,
+    text_type,
+    PY2,
+    PY3
+)
 
 
 class Testcases(unittest.TestCase):
@@ -60,98 +72,98 @@ class Testcases(unittest.TestCase):
 
     def test_uint8(self):
         u = types.Uint8(10)
-        self.assertEqual(bytes(u), b"\n")
+        self.assertEqual(py23_bytes(u), b"\n")
         self.assertEqual(str(u), "10")
 
     def test_uint16(self):
         u = types.Uint16(2**16 - 1)
-        self.assertEqual(bytes(u), b"\xff\xff")
+        self.assertEqual(py23_bytes(u), b"\xff\xff")
         self.assertEqual(str(u), str(2**16 - 1))
 
     def test_uint32(self):
         u = types.Uint32(2**32 - 1)
-        self.assertEqual(bytes(u), b"\xff\xff\xff\xff")
+        self.assertEqual(py23_bytes(u), b"\xff\xff\xff\xff")
         self.assertEqual(str(u), str(2**32 - 1))
 
     def test_uint64(self):
         u = types.Uint64(2**64 - 1)
-        self.assertEqual(bytes(u), b"\xff\xff\xff\xff\xff\xff\xff\xff")
+        self.assertEqual(py23_bytes(u), b"\xff\xff\xff\xff\xff\xff\xff\xff")
         self.assertEqual(str(u), str(2**64 - 1))
 
     def test_int64(self):
         u = types.Int64(2**63 - 1)
-        self.assertEqual(bytes(u), b"\xff\xff\xff\xff\xff\xff\xff\x7f")
+        self.assertEqual(py23_bytes(u), b"\xff\xff\xff\xff\xff\xff\xff\x7f")
         self.assertEqual(str(u), str(9223372036854775807))
 
     def test_int16(self):
         u = types.Int16(2**15 - 1)
-        self.assertEqual(bytes(u), b"\xff\x7f")
+        self.assertEqual(py23_bytes(u), b"\xff\x7f")
         self.assertEqual(str(u), str(2**15 - 1))
 
     def test_varint32(self):
         u = types.Varint32(2**32 - 1)
-        self.assertEqual(bytes(u), b"\xff\xff\xff\xff\x0f")
+        self.assertEqual(py23_bytes(u), b"\xff\xff\xff\xff\x0f")
         self.assertEqual(str(u), str(4294967295))
         u = types.Id(2**32 - 1)
-        self.assertEqual(bytes(u), b"\xff\xff\xff\xff\x0f")
+        self.assertEqual(py23_bytes(u), b"\xff\xff\xff\xff\x0f")
         self.assertEqual(str(u), str(4294967295))
 
     def test_string(self):
         u = types.String("HelloFoobar")
-        self.assertEqual(bytes(u), b"\x0bHelloFoobar")
+        self.assertEqual(py23_bytes(u), b"\x0bHelloFoobar")
         self.assertEqual(str(u), "HelloFoobar")
 
         u = types.String("\x07\x08\x09\x0a\x0b\x0c\x0d\x0e")
-        self.assertEqual(bytes(u), b"\x14u0007b\t\nu000bf\ru000e")
+        self.assertEqual(py23_bytes(u), b"\x14u0007b\t\nu000bf\ru000e")
         self.assertEqual(str(u), "\x07\x08\x09\x0a\x0b\x0c\x0d\x0e")
 
     def test_void(self):
         u = types.Void()
-        self.assertEqual(bytes(u), b"")
+        self.assertEqual(py23_bytes(u), b"")
         self.assertEqual(str(u), "")
 
     def test_array(self):
         u = types.Array([types.Uint8(10) for x in range(2)] + [11])
-        self.assertEqual(bytes(u), b'\x03\n\n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+        self.assertEqual(py23_bytes(u), b'\x03\n\n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
         self.assertEqual(str(u), "[10, 10, 11]")
         u = types.Set([types.Uint16(10) for x in range(10)])
-        self.assertEqual(bytes(u), b"\n\n\x00\n\x00\n\x00\n\x00\n\x00\n\x00\n\x00\n\x00\n\x00\n\x00")
+        self.assertEqual(py23_bytes(u), b"\n\n\x00\n\x00\n\x00\n\x00\n\x00\n\x00\n\x00\n\x00\n\x00\n\x00")
         self.assertEqual(str(u), "[10, 10, 10, 10, 10, 10, 10, 10, 10, 10]")
         u = types.Array(["Foobar"])
-        # We do not support bytes of Array containing String only!
-        # self.assertEqual(bytes(u), b'')
+        # We do not support py23_bytes of Array containing String only!
+        # self.assertEqual(py23_bytes(u), b'')
         self.assertEqual(str(u), '["Foobar"]')
 
     def test_PointInTime(self):
         u = types.PointInTime("2018-07-06T22:10:00")
-        self.assertEqual(bytes(u), b"\xb8\xe8?[")
+        self.assertEqual(py23_bytes(u), b"\xb8\xe8?[")
         self.assertEqual(str(u), "2018-07-06T22:10:00")
 
     def test_Signature(self):
         u = types.Signature(b"\x00" * 33)
-        self.assertEqual(bytes(u), b"\x00" * 33)
+        self.assertEqual(py23_bytes(u), b"\x00" * 33)
         self.assertEqual(str(u), '"000000000000000000000000000000000000000000000000000000000000000000"')
 
     def test_Bytes(self):
         u = types.Bytes("00" * 5)
-        self.assertEqual(bytes(u), b'\x05\x00\x00\x00\x00\x00')
+        self.assertEqual(py23_bytes(u), b'\x05\x00\x00\x00\x00\x00')
         self.assertEqual(str(u), "00" * 5)
 
     def test_Bool(self):
         u = types.Bool(True)
-        self.assertEqual(bytes(u), b"\x01")
+        self.assertEqual(py23_bytes(u), b"\x01")
         self.assertEqual(str(u), 'true')
         u = types.Bool(False)
-        self.assertEqual(bytes(u), b"\x00")
+        self.assertEqual(py23_bytes(u), b"\x00")
         self.assertEqual(str(u), 'false')
 
     def test_Optional(self):
         u = types.Optional(types.Uint16(10))
-        self.assertEqual(bytes(u), b"\x01\n\x00")
+        self.assertEqual(py23_bytes(u), b"\x01\n\x00")
         self.assertEqual(str(u), '10')
         self.assertFalse(u.isempty())
         u = types.Optional(None)
-        self.assertEqual(bytes(u), b"\x00")
+        self.assertEqual(py23_bytes(u), b"\x00")
         self.assertEqual(str(u), 'None')
         self.assertTrue(u.isempty())
 
@@ -161,10 +173,10 @@ class Testcases(unittest.TestCase):
                 return "Foobar"
 
         u = types.Static_variant(Tmp(10), 10)
-        self.assertEqual(bytes(u), b"\n\n\x00")
+        self.assertEqual(py23_bytes(u), b"\n\n\x00")
         self.assertEqual(str(u), '[10, "Foobar"]')
 
     def test_Map(self):
         u = types.Map([[types.Uint16(10), types.Uint16(11)]])
-        self.assertEqual(bytes(u), b"\x01\n\x00\x0b\x00")
+        self.assertEqual(py23_bytes(u), b"\x01\n\x00\x0b\x00")
         self.assertEqual(str(u), '[["10", "11"]]')

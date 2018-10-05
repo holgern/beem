@@ -17,6 +17,7 @@ from beemgraphenebase.types import (
 )
 from .objects import GrapheneObject, isArgsThisClass
 from beemgraphenebase.account import PublicKey
+from beemgraphenebase.py23 import PY2, PY3
 from .operationids import operations
 from .objects import (
     Operation,
@@ -295,8 +296,10 @@ class Witness_set_properties(GrapheneObject):
         for k in kwargs["props"]:
             if k[0] in ["key", "new_signing_key"]:
                 continue
-            if isinstance(k[1], str):
+            if isinstance(k[1], str) and PY3:
                 is_hex = re.fullmatch(r'[0-9a-fA-F]+', k[1] or '') is not None
+            elif isinstance(k[1], str) and PY2:
+                is_hex = re.match(r'[0-9a-fA-F]+', k[1] or '') is not None
             else:
                 is_hex = False
             if isinstance(k[1], int) and k[0] in ["account_subsidy_budget", "account_subsidy_decay", "maximum_block_size"]:
