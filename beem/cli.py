@@ -236,7 +236,7 @@ def set(key, value):
             except keyring.errors.PasswordDeleteError:
                 print("")
         if value == "environment":
-            print("The wallet password can be stored in the UNLOCK invironment variable to skip password prompt!")
+            print("The wallet password can be stored in the UNLOCK environment variable to skip password prompt!")
     elif key == "client_id":
         stm.config["client_id"] = value
     elif key == "hot_sign_redirect_uri":
@@ -476,7 +476,7 @@ def createwallet(wipe):
     if KEYRING_AVAILABLE and password_storage == "keyring":
         password = keyring.set_password("beem", "wallet", password)
     elif password_storage == "environment":
-        print("The new wallet password can be stored in the UNLOCK invironment variable to skip password prompt!")
+        print("The new wallet password can be stored in the UNLOCK environment variable to skip password prompt!")
     stm.wallet.create(password)
     set_shared_steem_instance(stm)
 
