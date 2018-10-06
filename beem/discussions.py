@@ -26,6 +26,8 @@ class Query(dict):
         :param str parent_author:
         :param str parent_permlink:
         :param str start_parent_author:
+        :param str before_date:
+        :param str author: Author (see Discussions_by_author_before_date)
 
         .. testcode::
 
@@ -37,7 +39,8 @@ class Query(dict):
                  filter_tags=[], select_authors=[], select_tags=[],
                  start_author=None, start_permlink=None,
                  start_tag=None, parent_author=None,
-                 parent_permlink=None, start_parent_author=None):
+                 parent_permlink=None, start_parent_author=None,
+                 before_date=None, author=None):
         self["limit"] = limit
         self["truncate_body"] = truncate_body
         self["tag"] = tag
@@ -50,6 +53,8 @@ class Query(dict):
         self["parent_author"] = parent_author
         self["parent_permlink"] = parent_permlink
         self["start_parent_author"] = start_parent_author
+        self["before_date"] = before_date
+        self["author"] = author
 
 
 class Discussions(object):
