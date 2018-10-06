@@ -1,5 +1,13 @@
 Changelog
 =========
+0.20.6
+------
+* fix issue #93 - Wrong input parameters for `Discussions_by_author_before_date` in Docstring and `get_discussions` by espoem
+* Add support for whaleshares (WLS) and Financial Transparency Gateway ()
+* Using generic asset symbols  by crokkon
+* Bug fixes for python 2.7
+* Fix for witness update
+
 0.20.5
 ------
 * fix get_effective_vesting_shares()
