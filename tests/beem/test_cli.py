@@ -346,9 +346,9 @@ class Testcases(unittest.TestCase):
     def test_follow_unfollow(self):
         runner = CliRunner()
         runner.invoke(cli, ['-o', 'set', 'nodes', str(self.nodelist.get_testnet())])
-        result = runner.invoke(cli, ['follow', 'beem1'], input="test\n")
+        result = runner.invoke(cli, ['-d', 'follow', 'beem1'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['unfollow', 'beem1'], input="test\n")
+        result = runner.invoke(cli, ['-d', 'unfollow', 'beem1'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_mute_unmute(self):
