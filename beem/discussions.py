@@ -106,6 +106,8 @@ class Discussions(object):
             start_parent_author = discussion_query["start_parent_author"]
         else:
             start_parent_author = None
+        if not discussion_query["before_date"]:
+            discussion_query["before_date"] = "1970-01-01T00:00:00"
         while (query_count < limit and found_more_than_start_entry):
             rpc_query_count = 0
             discussion_query["start_author"] = start_author
@@ -115,7 +117,11 @@ class Discussions(object):
             if discussion_type == "trending":
                 dd = Discussions_by_trending(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "author_before_date":
-                dd = Discussions_by_author_before_date(discussion_query, steem_instance=self.steem, lazy=self.lazy)
+                dd = Discussions_by_author_before_date(author=discussion_query["author"],
+                                                       start_permlink=discussion_query["start_permlink"],
+                                                       before_date=discussion_query["before_date"],
+                                                       limit=discussion_query["limit"],
+                                                       steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "payout":
                 dd = Comment_discussions_by_payout(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "post_payout":
