@@ -98,7 +98,7 @@ known_chains = {
     "WLS": {
         "chain_id": "de999ada2ff7ed3d3d580381f229b40b5a0261aec48eb830e540080817b72866",
         "min_version": "0.0.0",
-        "prefix": "",
+        "prefix": "WLS",
         "chain_assets": [
             {"asset": "STEEM", "symbol": "WLS", "precision": 3, "id": 1},
             {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
