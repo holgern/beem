@@ -213,8 +213,14 @@ class Discussions_by_trending(list):
 class Discussions_by_author_before_date(list):
     """ Get Discussions by author before date
 
-        :param beem.discussions.Query discussion_query: Defines the parameter for
-            searching posts
+        .. note:: To retrieve discussions before date, the time of creation
+                  of the discussion @author/start_permlink must be older than
+                  the specified before_date parameter.
+
+        :param str author: Defines the author *(required)*
+        :param str start_permlink: Defines the permlink of a starting discussion
+        :param str before_date: Defines the before date for query
+        :param int limit: Defines the limit of discussions
         :param beem.steem.Steem steem_instance: Steem instance
 
         .. testcode::
