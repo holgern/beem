@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 password = "secretPassword"
-username = "beem"
+username = "beem5"
 useWallet = False
 walletpassword = "123"
 
@@ -57,8 +57,12 @@ if __name__ == "__main__":
                          'posting': str(posting_privkey),
                          'memo': str(memo_privkey)})
     account = Account(username, steem_instance=stm)
-    account.disallow("beem1", permission='posting')
-    account.allow('beem1', weight=1, permission='posting', account=None)
+    if account["name"] == "beem":
+        account.disallow("beem1", permission='posting')
+        account.allow('beem1', weight=1, permission='posting', account=None)
+        account.follow("beem1")
+    elif account["name"] == "beem5":
+        account.allow('beem4', weight=2, permission='active', account=None)
     if useWallet:
         stm.wallet.getAccountFromPrivateKey(str(active_privkey))
 

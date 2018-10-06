@@ -194,9 +194,9 @@ class Testcases(unittest.TestCase):
     def test_powerdown(self):
         runner = CliRunner()
         runner.invoke(cli, ['-o', 'set', 'nodes', str(self.nodelist.get_testnet())])
-        result = runner.invoke(cli, ['powerdown', '1e3'], input="test\n")
+        result = runner.invoke(cli, ['-d', 'powerdown', '1e3'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['powerdown', '0'], input="test\n")
+        result = runner.invoke(cli, ['-d', 'powerdown', '0'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_updatememokey(self):

@@ -155,6 +155,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual(float(amount), 1.33)
         bts.nobroadcast = True
 
+    @unittest.skip
     def test_transfer_1of1(self):
         steem = self.bts
         steem.nobroadcast = False
@@ -174,6 +175,7 @@ class Testcases(unittest.TestCase):
         tx.broadcast()
         steem.nobroadcast = True
 
+    @unittest.skip
     def test_transfer_2of2_simple(self):
         # Send a 2 of 2 transaction from elf which needs beem4's cosign to send funds
         steem = self.bts
@@ -193,9 +195,10 @@ class Testcases(unittest.TestCase):
         tx.broadcast()
         steem.nobroadcast = True
 
+    @unittest.skip
     def test_transfer_2of2_wallet(self):
-        # Send a 2 of 2 transaction from elf which needs beem4's cosign to send
-        # priv key of elf and beem4 are stored in the wallet
+        # Send a 2 of 2 transaction from beem5 which needs beem4's cosign to send
+        # priv key of beem5 and beem4 are stored in the wallet
         # appendSigner fetches both keys and signs automatically with both keys.
         steem = self.bts
         steem.nobroadcast = False
@@ -213,6 +216,7 @@ class Testcases(unittest.TestCase):
         tx.broadcast()
         steem.nobroadcast = True
 
+    @unittest.skip
     def test_transfer_2of2_serialized_deserialized(self):
         # Send a 2 of 2 transaction from beem5 which needs beem4's cosign to send
         # funds but sign the transaction with beem5's key and then serialize the transaction
@@ -247,6 +251,7 @@ class Testcases(unittest.TestCase):
         new_tx.broadcast()
         steem.nobroadcast = True
 
+    @unittest.skip
     def test_transfer_2of2_offline(self):
         # Send a 2 of 2 transaction from beem5 which needs beem4's cosign to send
         # funds but sign the transaction with beem5's key and then serialize the transaction
@@ -278,6 +283,7 @@ class Testcases(unittest.TestCase):
         steem.nobroadcast = True
         steem.wallet.addPrivateKey(self.active_private_key_of_beem5)
 
+    @unittest.skip
     def test_transfer_2of2_wif(self):
         nodelist = NodeList()
         # Send a 2 of 2 transaction from elf which needs beem4's cosign to send
@@ -317,6 +323,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual(len(new_tx['signatures']), 2)
         new_tx.broadcast()
 
+    @unittest.skip
     def test_verifyAuthority(self):
         stm = self.bts
         stm.wallet.unlock("123")
@@ -556,6 +563,7 @@ class Testcases(unittest.TestCase):
         tx.sign()
         self.assertTrue(len(tx["signatures"]) > 0)
 
+    @unittest.skip
     def test_verifyAuthorityException(self):
         nodelist = NodeList()
         stm = Steem(node=nodelist.get_testnet(),
