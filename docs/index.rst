@@ -38,7 +38,7 @@ About this Library
 The purpose of *beem* is to simplify development of products and
 services that use the Steem blockchain. It comes with
 
-* it's own (bip32-encrypted) wallet
+* its own (bip32-encrypted) wallet
 * RPC interface for the Blockchain backend
 * JSON-based blockchain objects (accounts, blocks, prices, markets, etc)
 * a simple to use yet powerful API
