@@ -40,7 +40,7 @@ class AccountSnapshot(list):
         """
         self.own_vests = [Amount(0, self.steem.vests_symbol, steem_instance=self.steem)]
         self.own_steem = [Amount(0, self.steem.steem_symbol, steem_instance=self.steem)]
-        self.own_sbd = [Amount(0, self.steem.steem_symbol, steem_instance=self.steem)]
+        self.own_sbd = [Amount(0, self.steem.sbd_symbol, steem_instance=self.steem)]
         self.delegated_vests_in = [{}]
         self.delegated_vests_out = [{}]
         self.timestamps = [addTzInfo(datetime(1970, 1, 1, 0, 0, 0, 0))]

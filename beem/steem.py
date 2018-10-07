@@ -1907,6 +1907,8 @@ class Steem(object):
         for asset in self.chain_params['chain_assets']:
             if asset['id'] == asset_id:
                 return asset['symbol']
+        if asset_id < 3:
+            return None
         raise KeyError("asset ID not found in chain assets")
 
     @property
