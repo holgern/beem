@@ -151,6 +151,9 @@ class Discussions(object):
             elif discussion_type == "tags":
                 dd = Trending_tags(discussion_query, steem_instance=self.steem, lazy=self.lazy)
 
+            if not dd:
+                return
+
             for d in dd:
                 double_result = False
                 if discussion_type == "tags":
