@@ -410,7 +410,10 @@ class Account(BlockchainObject):
         current_mana = int(last_mana + diff_in_seconds * max_mana / STEEM_VOTING_MANA_REGENERATION_SECONDS)
         if current_mana > max_mana:
             current_mana = max_mana
-        current_mana_pct = current_mana / max_mana * 100
+        if max_mana > 0:
+            current_mana_pct = current_mana / max_mana * 100
+        else:
+            current_mana_pct = 0
         return {"last_mana": last_mana, "last_update_time": last_update_time,
                 "current_mana": current_mana, "max_mana": max_mana, "current_mana_pct": current_mana_pct}
 
@@ -422,7 +425,10 @@ class Account(BlockchainObject):
             if with_regeneration:
                 total_vp = manabar["current_mana_pct"]
             else:
-                total_vp = manabar["last_mana"] / manabar["max_mana"] * 100
+                if manabar["max_mana"] > 0:
+                    total_vp = manabar["last_mana"] / manabar["max_mana"] * 100
+                else:
+                    total_vp = 0
         elif "voting_power" in self:
             if with_regeneration:
                 last_vote_time = self["last_vote_time"]
