@@ -238,7 +238,10 @@ class Account(BlockchainObject):
         current_mana = int(last_mana + diff_in_seconds * max_mana / STEEM_VOTING_MANA_REGENERATION_SECONDS)
         if current_mana > max_mana:
             current_mana = max_mana
-        current_pct = current_mana / max_mana * 100
+        if max_mana > 0:
+            current_pct = current_mana / max_mana * 100
+        else:
+            current_pct = 0
         max_rc_creation_adjustment = Amount(rc_param["max_rc_creation_adjustment"], steem_instance=self.steem)
         return {"last_mana": last_mana, "last_update_time": last_update_time, "current_mana": current_mana,
                 "max_mana": max_mana, "current_pct": current_pct, "max_rc_creation_adjustment": max_rc_creation_adjustment}
