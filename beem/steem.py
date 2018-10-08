@@ -1907,14 +1907,18 @@ class Steem(object):
         for asset in self.chain_params['chain_assets']:
             if asset['id'] == asset_id:
                 return asset['symbol']
-        if asset_id < 3:
-            return None
+
         raise KeyError("asset ID not found in chain assets")
 
     @property
     def sbd_symbol(self):
         """ get the current chains symbol for SBD (e.g. "TBD" on testnet) """
-        return self._get_asset_symbol(0)
+        # some networks (e.g. whaleshares) do not have SBD
+        try:
+            symbol = self._get_asset_symbol(0)
+        except KeyError:
+            symbol = self._get_asset_symbol(1)
+        return symbol
 
     @property
     def steem_symbol(self):

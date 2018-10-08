@@ -88,13 +88,9 @@ class Comment(BlockchainObject):
             "total_pending_payout_value",
             "promoted",
         ]
-        if self.steem.sbd_symbol is not None:
-            symbol = self.steem.sbd_symbol
-        else:
-            symbol = self.steem.steem_symbol        
         for p in sbd_amounts:
-            if p in comment and isinstance(comment.get(p), (string_types, list, dict)) and symbol is not None:
-                comment[p] = Amount(comment.get(p, "0.000 %s" % (symbol)), steem_instance=self.steem)
+            if p in comment and isinstance(comment.get(p), (string_types, list, dict)):
+                comment[p] = Amount(comment.get(p, "0.000 %s" % (self.steem.sbd_symbol)), steem_instance=self.steem)
 
         # turn json_metadata into python dict
         meta_str = comment.get("json_metadata", "{}")
@@ -280,11 +276,7 @@ class Comment(BlockchainObject):
     def reward(self):
         """ Return the estimated total SBD reward.
         """
-        if self.steem.sbd_symbol is not None:
-            symbol = self.steem.sbd_symbol
-        else:
-            symbol = self.steem.steem_symbol
-        a_zero = Amount(0, symbol, steem_instance=self.steem)
+        a_zero = Amount(0, self.steem.sbd_symbol, steem_instance=self.steem)
         total = Amount(self.get("total_payout_value", a_zero), steem_instance=self.steem)
         pending = Amount(self.get("pending_payout_value", a_zero), steem_instance=self.steem)
         return total + pending
@@ -293,11 +285,7 @@ class Comment(BlockchainObject):
         """ Return if the payout is pending (the post/comment
             is younger than 7 days)
         """
-        if self.steem.sbd_symbol is not None:
-            symbol = self.steem.sbd_symbol
-        else:
-            symbol = self.steem.steem_symbol        
-        a_zero = Amount(0, symbol, steem_instance=self.steem)
+        a_zero = Amount(0, self.steem.sbd_symbol, steem_instance=self.steem)
         total = Amount(self.get("total_payout_value", a_zero), steem_instance=self.steem)
         post_age_days = self.time_elapsed().total_seconds() / 60 / 60 / 24
         return post_age_days < 7.0 and float(total) == 0

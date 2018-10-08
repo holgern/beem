@@ -11,6 +11,7 @@ import sys
 from prettytable import PrettyTable
 from datetime import datetime, timedelta
 import pytz
+import time
 import math
 import random
 import logging
@@ -42,6 +43,7 @@ from beemgraphenebase.account import PrivateKey, PublicKey, BrainKey
 from beemgraphenebase.base58 import Base58
 from beem.nodelist import NodeList
 from beem.conveyor import Conveyor
+from beem.rc import RC
 
 
 click.disable_unicode_literals_warning = True
@@ -1214,6 +1216,51 @@ def disallow(foreign_account, permission, account, threshold):
     tx = acc.disallow(foreign_account, permission=permission, threshold=threshold)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.argument('creator', nargs=1, required=True)
+@click.option('--fee', help='When fee is 0 STEEM (default) a subsidized account is claimed and can be created later with create_claimed_account', default='0 STEEM')
+@click.option('--number', '-n', help='Number of subsidized accounts to be claimed (default = 1), when fee = 0 STEEM', default=1)
+def claimaccount(creator, fee, number):
+    """Claim account for claimed account creation."""
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not creator:
+        creator = stm.config["default_account"]
+    if not unlock_wallet(stm):
+        return
+    creator = Account(creator, steem_instance=stm)
+    fee = Amount(fee, steem_instance=stm)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.claim_account(creator, fee=fee)
+        tx = stm.steemconnect.url_from_tx(tx)
+    elif float(fee) == 0:
+        rc = RC(steem_instance=stm)
+        current_costs = stm.get_rc_cost(rc.get_resource_count(tx_size=200, new_account_op_count=1))
+        current_mana = creator.get_rc_manabar()["current_mana"]
+        last_mana = current_mana
+        cnt = 0
+        print("Current costs %.2f G RC - current mana %.2f G RC" % (current_costs / 1e9, current_mana / 1e9))
+        while current_costs + 10 < current_mana and cnt < number:
+            if cnt > 0:
+                print("Current costs %.2f G RC - current mana %.2f G RC" % (current_costs / 1e9, current_mana / 1e9))
+                tx = json.dumps(tx, indent=4)
+                print(tx)
+            cnt += 1
+            tx = stm.claim_account(creator, fee=fee)
+            time.sleep(10)
+            creator.refresh()
+            current_mana = creator.get_rc_manabar()["current_mana"]
+            print("Account claimed and %.2f G RC paid." % ((last_mana - current_mana) / 1e9))
+            last_mana = current_mana
+        else:
+            print("Not enough RC for a claim!")
+    else:
+        tx = stm.claim_account(creator, fee=fee)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
