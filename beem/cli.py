@@ -1268,8 +1268,8 @@ def claimaccount(creator, fee, number):
 @cli.command()
 @click.argument('accountname', nargs=1, required=True)
 @click.option('--account', '-a', help='Account that pays the fee')
-@click.option('--fee', help='Base Fee to pay. Delegate the rest.', default='0 STEEM')
-def newaccount(accountname, account, fee):
+@click.option('--create-claimed-account', '-c', help='Instead of paying the account creation fee a subsidized account is created.', default=False)
+def newaccount(accountname, account, create_claimed_account):
     """Create a new account"""
     stm = shared_steem_instance()
     if stm.rpc is not None:
@@ -1283,7 +1283,10 @@ def newaccount(accountname, account, fee):
     if not password:
         print("You cannot chose an empty password")
         return
-    tx = stm.create_account(accountname, creator=acc, password=password, delegation_fee_steem=fee)
+    if create_claimed_account:
+        tx = stm.create_claimed_account(accountname, creator=acc, password=password)
+    else:
+        tx = stm.create_account(accountname, creator=acc, password=password)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)

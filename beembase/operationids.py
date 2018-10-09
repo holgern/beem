@@ -65,6 +65,36 @@ ops = [
 ]
 operations = {o: ops.index(o) for o in ops}
 
+ops_wls = [
+    'vote',
+    'comment',
+    'transfer',
+    'transfer_to_vesting',
+    'withdraw_vesting',
+    'account_create',
+    'account_update',
+    'account_forsale',
+    'account_buying',
+    'witness_update',
+    'account_witness_vote',
+    'account_witness_proxy',
+    'custom',
+    'delete_comment',
+    'custom_json',
+    'comment_options',
+    'set_withdraw_vesting_route',
+    'custom_binary',
+    'claim_reward_balance',
+    'author_reward',
+    'curation_reward',
+    'comment_reward',
+    'shutdown_witness',
+    'hardfork',
+    'comment_payout_update',
+    'comment_benefactor_reward',
+]
+operations_wls = {o: ops_wls.index(o) for o in ops_wls}
+
 
 def getOperationNameForId(i):
     """ Convert an operation id into the corresponding string

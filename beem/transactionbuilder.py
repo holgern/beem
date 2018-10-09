@@ -85,7 +85,7 @@ class TransactionBuilder(dict):
             appbase = not self._use_condenser_api
         else:
             appbase = False
-        return [Operation(o, appbase=appbase) for o in self.ops]
+        return [Operation(o, appbase=appbase, prefix=self.steem.prefix) for o in self.ops]
 
     def _is_signed(self):
         """Check if signatures exists"""
@@ -245,7 +245,7 @@ class TransactionBuilder(dict):
             appbase = False
         for op in self.ops:
             # otherwise, we simply wrap ops into Operations
-            ops.extend([Operation(op, appbase=appbase)])
+            ops.extend([Operation(op, appbase=appbase, prefix=self.steem.prefix)])
 
         # We no wrap everything into an actual transaction
         expiration = formatTimeFromNow(
@@ -259,7 +259,8 @@ class TransactionBuilder(dict):
             expiration=expiration,
             operations=ops,
             ref_block_num=ref_block_num,
-            custom_chains=self.steem.custom_chains
+            custom_chains=self.steem.custom_chains,
+            prefix=self.steem.prefix
         )
 
         super(TransactionBuilder, self).update(self.tx.json())
@@ -293,7 +294,7 @@ class TransactionBuilder(dict):
             operations.default_prefix = self["blockchain"]["prefix"]
 
         try:
-            signedtx = Signed_Transaction(**self.json())
+            signedtx = Signed_Transaction(**self.json(), prefix=self.steem.prefix)
             signedtx.add_custom_chains(self.steem.custom_chains)
         except:
             raise ValueError("Invalid TransactionBuilder Format")

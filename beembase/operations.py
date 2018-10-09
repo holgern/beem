@@ -168,8 +168,9 @@ class Op_wrapper(GrapheneObject):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
+        prefix = kwargs.get("prefix", default_prefix)
         super(Op_wrapper, self).__init__(OrderedDict([
-            ('op', Operation(kwargs["op"])),
+            ('op', Operation(kwargs["op"], prefix=prefix)),
         ]))
 
 

@@ -1,9 +1,17 @@
 Changelog
 =========
+0.20.7
+------
+* Fix issue #97 `get_discussions()` does not finish if discussions are empty by espoem
+* Fix issue #99 DivisionByZero Error in Account.get_rc_manabar() by crokkon
+* Add claimaccount to beempy and some improvements for steem.sbd_symbol
+* newaccount adapted for HF20 and can be used to create claimed account
+* Correct operationids for WLS
+
 0.20.6
 ------
 * fix issue #93 - Wrong input parameters for `Discussions_by_author_before_date` in Docstring and `get_discussions` by espoem
-* Add support for whaleshares (WLS) and Financial Transparency Gateway ()
+* Add support for whaleshares (WLS) and Financial Transparency Gateway (EFTG)
 * Using generic asset symbols  by crokkon
 * Bug fixes for python 2.7
 * Fix for witness update

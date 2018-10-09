@@ -20,7 +20,7 @@ from .objecttypes import object_type
 from beemgraphenebase.account import PublicKey
 from beemgraphenebase.objects import Operation as GPHOperation
 from beemgraphenebase.chains import known_chains
-from .operationids import operations
+from .operationids import operations, operations_wls
 import struct
 default_prefix = "STM"
 
@@ -104,6 +104,7 @@ class Amount(object):
 class Operation(GPHOperation):
     def __init__(self, *args, **kwargs):
         self.appbase = kwargs.pop("appbase", False)
+        self.prefix = kwargs.pop("prefix", default_prefix)
         super(Operation, self).__init__(*args, **kwargs)
 
     def _getklass(self, name):
@@ -112,13 +113,15 @@ class Operation(GPHOperation):
         return class_
 
     def operations(self):
+        if self.prefix == "WLS":
+            return operations_wls
         return operations
 
     def getOperationNameForId(self, i):
         """ Convert an operation id into the corresponding string
         """
-        for key in operations:
-            if int(operations[key]) is int(i):
+        for key in self.operations():
+            if int(self.operations()[key]) is int(i):
                 return key
         return "Unknown Operation ID %d" % i
 

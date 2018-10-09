@@ -101,10 +101,10 @@ class Account(BlockchainObject):
         else:
             if self.full:
                 account = self.steem.rpc.get_accounts(
-                    [self.identifier])
+                    [self.identifier], api="database")
             else:
                 account = self.steem.rpc.lookup_account_names(
-                    [self.identifier])
+                    [self.identifier], api="database")
         if self.steem.rpc.get_use_appbase() and "accounts" in account:
             account = account["accounts"]
         if account and isinstance(account, list) and len(account) == 1:
