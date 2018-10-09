@@ -2402,7 +2402,6 @@ class Account(BlockchainObject):
         return self.steem.finalizeOp(op, account, "active", **kwargs)
 
     def _check_amount(self, amount, symbol):
-        print(amount)
         if isinstance(amount, (float, integer_types)):
             amount = Amount(amount, symbol, steem_instance=self.steem)
         elif isinstance(amount, string_types) and amount.replace('.', '', 1).replace(',', '', 1).isdigit():
