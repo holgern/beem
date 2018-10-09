@@ -61,6 +61,8 @@ class Base58(object):
     """
     def __init__(self, data, prefix=PREFIX):
         self._prefix = prefix
+        if isinstance(data, Base58):
+            data = repr(data)
         if all(c in string.hexdigits for c in data):
             self._hex = data
         elif data[0] == "5" or data[0] == "6":

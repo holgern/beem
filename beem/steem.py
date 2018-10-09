@@ -390,7 +390,7 @@ class Steem(object):
         if self.rpc is None:
             return None
         ret = None
-        self.rpc.set_next_node_on_empty_reply(True)
+        # self.rpc.set_next_node_on_empty_reply(True)
         if self.rpc.get_use_appbase():
             ret = self.rpc.get_hardfork_properties(api="database")
         else:
