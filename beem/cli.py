@@ -882,7 +882,7 @@ def delegate(amount, to_account, account):
         amount = float(amount)
     except:
         amount = Amount(str(amount), steem_instance=stm)
-        if amount.symbol == "STEEM":
+        if amount.symbol == stm.steem_symbol:
             amount = stm.sp_to_vests(float(amount))
 
     tx = acc.delegate_vesting_shares(to_account, amount)
@@ -1222,7 +1222,7 @@ def disallow(foreign_account, permission, account, threshold):
 
 @cli.command()
 @click.argument('creator', nargs=1, required=True)
-@click.option('--fee', help='When fee is 0 STEEM (default) a subsidized account is claimed and can be created later with create_claimed_account', default='0 STEEM')
+@click.option('--fee', help='When fee is 0 (default) a subsidized account is claimed and can be created later with create_claimed_account', default=0)
 @click.option('--number', '-n', help='Number of subsidized accounts to be claimed (default = 1), when fee = 0 STEEM', default=1)
 def claimaccount(creator, fee, number):
     """Claim account for claimed account creation."""
@@ -1234,7 +1234,7 @@ def claimaccount(creator, fee, number):
     if not unlock_wallet(stm):
         return
     creator = Account(creator, steem_instance=stm)
-    fee = Amount(fee, steem_instance=stm)
+    fee = Amount("%.3f %s" % (float(fee), stm.steem_symbol), steem_instance=stm)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.claim_account(creator, fee=fee)
         tx = stm.steemconnect.url_from_tx(tx)
@@ -1268,7 +1268,7 @@ def claimaccount(creator, fee, number):
 @cli.command()
 @click.argument('accountname', nargs=1, required=True)
 @click.option('--account', '-a', help='Account that pays the fee')
-@click.option('--create-claimed-account', '-c', help='Instead of paying the account creation fee a subsidized account is created.', default=False)
+@click.option('--create-claimed-account', '-c', help='Instead of paying the account creation fee a subsidized account is created.', is_flag=True, default=False)
 def newaccount(accountname, account, create_claimed_account):
     """Create a new account"""
     stm = shared_steem_instance()
@@ -1604,9 +1604,9 @@ def tradehistory(days, hours, sbd_to_steem, limit, width, height, ascii):
     trades = m.trade_history(start=start, stop=stop, limit=limit, intervall=intervall)
     price = []
     if sbd_to_steem:
-        base_str = "STEEM"
+        base_str = stm.steem_symbol
     else:
-        base_str = "SBD"
+        base_str = stm.sbd_symbol
     for trade in trades:
         base = 0
         quote = 0
@@ -1742,13 +1742,13 @@ def buy(amount, asset, price, account, orderid):
         stm.rpc.rpcconnect()
     if account is None:
         account = stm.config["default_account"]
-    if asset == "SBD":
-        market = Market(base=Asset("STEEM"), quote=Asset("SBD"), steem_instance=stm)
+    if asset == stm.sbd_symbol:
+        market = Market(base=Asset(stm.steem_symbol), quote=Asset(stm.sbd_symbol), steem_instance=stm)
     else:
-        market = Market(base=Asset("SBD"), quote=Asset("STEEM"), steem_instance=stm)
+        market = Market(base=Asset(stm.sbd_symbol), quote=Asset(stm.steem_symbol), steem_instance=stm)
     if price is None:
         orderbook = market.orderbook(limit=1, raw_data=False)
-        if asset == "STEEM" and len(orderbook["bids"]) > 0:
+        if asset == stm.steem_symbol and len(orderbook["bids"]) > 0:
             p = Price(orderbook["bids"][0]["base"], orderbook["bids"][0]["quote"], steem_instance=stm).invert()
             p_show = p
         elif len(orderbook["asks"]) > 0:
@@ -1758,7 +1758,7 @@ def buy(amount, asset, price, account, orderid):
         if price_ok not in ["y", "ye", "yes"]:
             return
     else:
-        p = Price(float(price), u"SBD:STEEM", steem_instance=stm)
+        p = Price(float(price), u"%s:%s" % (stm.sbd_symbol, stm.steem_symbol), steem_instance=stm)
     if not unlock_wallet(stm):
         return
 
@@ -1785,15 +1785,15 @@ def sell(amount, asset, price, account, orderid):
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    if asset == "SBD":
-        market = Market(base=Asset("STEEM"), quote=Asset("SBD"), steem_instance=stm)
+    if asset == stm.sbd_symbol:
+        market = Market(base=Asset(stm.steem_symbol), quote=Asset(stm.sbd_symbol), steem_instance=stm)
     else:
-        market = Market(base=Asset("SBD"), quote=Asset("STEEM"), steem_instance=stm)
+        market = Market(base=Asset(stm.sbd_symbol), quote=Asset(stm.steem_symbol), steem_instance=stm)
     if not account:
         account = stm.config["default_account"]
     if not price:
         orderbook = market.orderbook(limit=1, raw_data=False)
-        if asset == "SBD" and len(orderbook["bids"]) > 0:
+        if asset == stm.sbd_symbol and len(orderbook["bids"]) > 0:
             p = Price(orderbook["bids"][0]["base"], orderbook["bids"][0]["quote"], steem_instance=stm).invert()
             p_show = p
         else:
@@ -1803,7 +1803,7 @@ def sell(amount, asset, price, account, orderid):
         if price_ok not in ["y", "ye", "yes"]:
             return
     else:
-        p = Price(float(price), u"SBD:STEEM", steem_instance=stm)
+        p = Price(float(price), u"%s:%s" % (stm.sbd_symbol, stm.steem_symbol), steem_instance=stm)
     if not unlock_wallet(stm):
         return
     a = Amount(float(amount), asset, steem_instance=stm)
@@ -1965,7 +1965,7 @@ def witnessupdate(witness, maximum_block_size, account_creation_fee, sbd_interes
     props = witness["props"]
     if account_creation_fee is not None:
         props["account_creation_fee"] = str(
-            Amount("%f STEEM" % float(account_creation_fee)))
+            Amount("%.3f %s" % (float(account_creation_fee), stm.steem_symbol), steem_instance=stm))
     if maximum_block_size is not None:
         props["maximum_block_size"] = int(maximum_block_size)
     if sbd_interest_rate is not None:
@@ -2037,7 +2037,7 @@ def witnesscreate(witness, pub_signing_key, maximum_block_size, account_creation
         return
     props = {
         "account_creation_fee":
-            Amount("%f STEEM" % float(account_creation_fee), steem_instance=stm),
+            Amount("%.3f %s" % (float(account_creation_fee), stm.steem_symbol), steem_instance=stm),
         "maximum_block_size":
             int(maximum_block_size),
         "sbd_interest_rate":
@@ -2070,7 +2070,7 @@ def witnessproperties(witness, wif, account_creation_fee, account_subsidy_budget
     #    return
     props = {}
     if account_creation_fee is not None:
-        props["account_creation_fee"] = Amount("%f STEEM" % float(account_creation_fee), steem_instance=stm)
+        props["account_creation_fee"] = Amount("%.3f %s" % (float(account_creation_fee), stm.steem_symbol), steem_instance=stm)
     if account_subsidy_budget is not None:
         props["account_subsidy_budget"] = int(account_subsidy_budget)
     if account_subsidy_decay is not None:
@@ -2113,27 +2113,27 @@ def witnessfeed(witness, wif, base, quote, support_peg):
     steem_usd = None
     print("Old price %.3f (base: %s, quote %s)" % (float(last_published_price), old_base, old_quote))
     if quote is None and not support_peg:
-        quote = Amount("1 STEEM", steem_instance=stm)
+        quote = Amount("1.000 %s" % stm.steem_symbol, steem_instance=stm)
     elif quote is None:
         latest_price = market.ticker()['latest']
         if steem_usd is None:
             steem_usd = market.steem_usd_implied()
-        sbd_usd = float(latest_price.as_base("SBD")) * steem_usd
-        quote = Amount(1. / sbd_usd, "STEEM", steem_instance=stm)
+        sbd_usd = float(latest_price.as_base(stm.sbd_symbol)) * steem_usd
+        quote = Amount(1. / sbd_usd, stm.steem_symbol, steem_instance=stm)
     else:
-        if str(quote[-5:]).upper() == "STEEM":
+        if str(quote[-5:]).upper() == stm.steem_symbol:
             quote = Amount(quote, steem_instance=stm)
         else:
-            quote = Amount(quote, "STEEM", steem_instance=stm)
+            quote = Amount(quote, stm.steem_symbol, steem_instance=stm)
     if base is None:
         if steem_usd is None:
             steem_usd = market.steem_usd_implied()
-        base = Amount(steem_usd, "SBD", steem_instance=stm)
+        base = Amount(steem_usd, stm.sbd_symbol, steem_instance=stm)
     else:
-        if str(quote[-3:]).upper() == "SBD":
+        if str(quote[-3:]).upper() == stm.sbd_symbol:
             base = Amount(base, steem_instance=stm)
         else:
-            base = Amount(base, "SBD", steem_instance=stm)
+            base = Amount(base, stm.sbd_symbol, steem_instance=stm)
     new_price = Price(base=base, quote=quote, steem_instance=stm)
     print("New price %.3f (base: %s, quote %s)" % (float(new_price), base, quote))
     if wif is not None:
@@ -2875,9 +2875,9 @@ def pending(accounts, only_sum, post, comment, curation, length, author, permlin
 
 @cli.command()
 @click.argument('account', nargs=1, required=False)
-@click.option('--reward_steem', help='Amount of STEEM you would like to claim', default="0 STEEM")
-@click.option('--reward_sbd', help='Amount of SBD you would like to claim', default="0 SBD")
-@click.option('--reward_vests', help='Amount of VESTS you would like to claim', default="0 VESTS")
+@click.option('--reward_steem', help='Amount of STEEM you would like to claim', default=0)
+@click.option('--reward_sbd', help='Amount of SBD you would like to claim', default=0)
+@click.option('--reward_vests', help='Amount of VESTS you would like to claim', default=0)
 @click.option('--claim_all_steem', help='Claim all STEEM, overwrites reward_steem', is_flag=True)
 @click.option('--claim_all_sbd', help='Claim all SBD, overwrites reward_sbd', is_flag=True)
 @click.option('--claim_all_vests', help='Claim all VESTS, overwrites reward_vests', is_flag=True)
