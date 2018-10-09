@@ -50,7 +50,7 @@ class Signed_Transaction(GrapheneObject):
         else:
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
-            prefix = kwargs.get("prefix", "STM")
+            prefix = kwargs.pop("prefix", "STM")
             if "extensions" not in kwargs:
                 kwargs["extensions"] = Set([])
             elif not kwargs.get("extensions"):

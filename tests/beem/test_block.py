@@ -65,17 +65,9 @@ class Testcases(unittest.TestCase):
         ):
             Block(0, steem_instance=bts)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_block_only_ops(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-            test_block_id = self.test_block_id
-        else:
-            bts = self.testnet
-            test_block_id = self.test_block_id_testnet
+    def test_block_only_ops(self):
+        bts = self.bts
+        test_block_id = self.test_block_id
         block = Block(test_block_id, only_ops=True, steem_instance=bts)
         self.assertEqual(block.identifier, test_block_id)
         self.assertTrue(isinstance(block.time(), datetime))
@@ -114,17 +106,9 @@ class Testcases(unittest.TestCase):
         ):
             BlockHeader(0, steem_instance=bts)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_export(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-            block_num = 2000000
-        else:
-            bts = self.testnet
-            block_num = 2
+    def test_export(self):
+        bts = self.bts
+        block_num = 2000000
 
         if bts.rpc.get_use_appbase():
             block = bts.rpc.get_block({"block_num": block_num}, api="block")

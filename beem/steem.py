@@ -273,12 +273,18 @@ class Steem(object):
         except:
             self.data['feed_history'] = None
             self.data['get_feed_history'] = None
-        self.data['hardfork_properties'] = self.get_hardfork_properties(False)
+        try:
+            self.data['hardfork_properties'] = self.get_hardfork_properties(False)
+        except:
+            self.data['hardfork_properties'] = None
         self.data['network'] = self.get_network(False)
         self.data['witness_schedule'] = self.get_witness_schedule(False)
         self.data['config'] = self.get_config(False)
         self.data['reward_funds'] = self.get_reward_funds(False)
-        self.data['reserve_ratio'] = self.get_reserve_ratio(False)
+        try:
+            self.data['reserve_ratio'] = self.get_reserve_ratio(False)
+        except:
+            self.data['reserve_ratio'] = None
 
     def get_dynamic_global_properties(self, use_stored_data=True):
         """ This call returns the *dynamic global properties*
@@ -350,7 +356,11 @@ class Steem(object):
         ret = None
         self.rpc.set_next_node_on_empty_reply(True)
         if self.rpc.get_use_appbase():
-            funds = self.rpc.get_reward_funds(api="database")['funds']
+            funds = self.rpc.get_reward_funds(api="database")
+            if funds is not None:
+                funds = funds['funds']
+            else:
+                return None
             if len(funds) > 0:
                 funds = funds[0]
             ret = funds
@@ -390,7 +400,7 @@ class Steem(object):
         if self.rpc is None:
             return None
         ret = None
-        # self.rpc.set_next_node_on_empty_reply(True)
+        self.rpc.set_next_node_on_empty_reply(True)
         if self.rpc.get_use_appbase():
             ret = self.rpc.get_hardfork_properties(api="database")
         else:

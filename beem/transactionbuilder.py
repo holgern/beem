@@ -120,12 +120,15 @@ class TransactionBuilder(dict):
         """
         return self
 
-    def json(self):
+    def json(self, with_prefix=False):
         """ Show the transaction as plain json
         """
         if not self._is_constructed() or self._is_require_reconstruction():
             self.constructTx()
-        return dict(self)
+        json_dict = dict(self)
+        if with_prefix:
+            json_dict["prefix"] = self.steem.prefix
+        return json_dict
 
     def appendOps(self, ops, append_to=None):
         """ Append op(s) to the transaction builder
@@ -294,7 +297,7 @@ class TransactionBuilder(dict):
             operations.default_prefix = self["blockchain"]["prefix"]
 
         try:
-            signedtx = Signed_Transaction(**self.json(), prefix=self.steem.prefix)
+            signedtx = Signed_Transaction(**self.json(with_prefix=True))
             signedtx.add_custom_chains(self.steem.custom_chains)
         except:
             raise ValueError("Invalid TransactionBuilder Format")

@@ -7,6 +7,9 @@ Changelog
 * Add claimaccount to beempy and some improvements for steem.sbd_symbol
 * newaccount adapted for HF20 and can be used to create claimed account
 * Correct operationids for WLS
+* Improve steem.refresh_data() reading
+* Set network prefix in Signed_Transaction and Operation for using the correct operationids
+* Fix test_block unit test
 
 0.20.6
 ------
