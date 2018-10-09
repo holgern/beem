@@ -52,15 +52,8 @@ class Testcases(unittest.TestCase):
         cls.start_testnet = num - 25
         cls.stop_testnet = num
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_blockchain(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-        else:
-            bts = self.testnet
+    def test_blockchain(self):
+        bts = self.bts
         b = Blockchain(steem_instance=bts)
         num = b.get_current_block_num()
         self.assertTrue(num > 0)
@@ -74,15 +67,8 @@ class Testcases(unittest.TestCase):
         timestamp = int(time.mktime(block.time().timetuple()))
         self.assertEqual(block_timestamp, timestamp)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_estimate_block_num(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-        else:
-            bts = self.testnet
+    def test_estimate_block_num(self):
+        bts = self.bts
         b = Blockchain(steem_instance=bts)
         last_block = b.get_current_block()
         num = last_block.identifier
@@ -96,15 +82,8 @@ class Testcases(unittest.TestCase):
         self.assertTrue((est_block_num - (old_block.identifier)) < 2)
         est_block_num = b.get_estimated_block_num(date, estimateForwards=True, accurate=False)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_get_all_accounts(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-        else:
-            bts = self.testnet
+    def test_get_all_accounts(self):
+        bts = self.bts
         b = Blockchain(steem_instance=bts)
         accounts = []
         limit = 200
@@ -226,15 +205,8 @@ class Testcases(unittest.TestCase):
             break
         self.assertTrue(len(ops_blocks) == 1)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_stream2(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-        else:
-            bts = self.testnet
+    def test_stream2(self):
+        bts = self.bts
         b = Blockchain(steem_instance=bts)
         stop_block = b.get_current_block_num()
         start_block = stop_block - 10
@@ -243,15 +215,8 @@ class Testcases(unittest.TestCase):
             ops_stream.append(op)
         self.assertTrue(len(ops_stream) > 0)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_wait_for_and_get_block(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-        else:
-            bts = self.testnet
+    def test_wait_for_and_get_block(self):
+        bts = self.bts
         b = Blockchain(steem_instance=bts, max_block_wait_repetition=18)
         start_num = b.get_current_block_num()
         blocknum = start_num

@@ -274,7 +274,7 @@ class Testcases(unittest.TestCase):
         runner.invoke(cli, ['-o', 'set', 'nodes', str(self.nodelist.get_testnet())])
         result = runner.invoke(cli, ['-d', 'newaccount', 'beem3'], input="test\ntest\ntest\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-d', 'newaccount', '--fee', '6 STEEM', 'beem3'], input="test\ntest\ntest\n")
+        result = runner.invoke(cli, ['-d', 'newaccount', 'beem3'], input="test\ntest\ntest\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_importaccount(self):

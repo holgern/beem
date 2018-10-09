@@ -33,12 +33,6 @@ class Testcases(unittest.TestCase):
             keys={"active": wif},
             num_retries=10
         )
-        cls.testnet = Steem(
-            node="https://testnet.steemitdev.com",
-            nobroadcast=True,
-            keys={"active": wif},
-            num_retries=10
-        )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(cls.bts)
@@ -86,7 +80,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual(len(d), 10)
 
     def test_cashout(self):
-        bts = self.testnet
+        bts = self.bts
         query = Query(limit=10)
         Discussions_by_cashout(query, steem_instance=bts)
         # self.assertEqual(len(d), 10)
