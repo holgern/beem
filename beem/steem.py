@@ -817,7 +817,11 @@ class Steem(object):
         if self.offline or self.rpc is None:
             versions = known_chains['STEEM']['min_version']
         else:
-            versions = self.get_hardfork_properties()["current_hardfork_version"]
+            hf_prop = self.get_hardfork_properties()
+            if "current_hardfork_version" in hf_prop:
+                versions = hf_prop["current_hardfork_version"]
+            else:
+                versions = self.get_blockchain_version()
         return int(versions.split('.')[1])
 
     @property
