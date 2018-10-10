@@ -1436,7 +1436,10 @@ class Steem(object):
             posting_accounts_authority.append([addaccount["name"], 1])
 
         props = self.get_chain_properties()
-        required_fee_steem = Amount(props["account_creation_fee"], steem_instance=self)
+        if self.hardfork >= 20:
+            required_fee_steem = Amount(props["account_creation_fee"], steem_instance=self)
+        else:
+            required_fee_steem = Amount(props["account_creation_fee"], steem_instance=self) * 30
         op = {
             "fee": required_fee_steem,
             "creator": creator["name"],
