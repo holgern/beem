@@ -50,7 +50,7 @@ class RC(object):
         resource_count["resource_state_bytes"] += state_bytes_count
         resource_count["resource_new_accounts"] = new_account_op_count
         if market_op_count > 0:
-            resource_count["resource_market_bytes"] = market_op_count
+            resource_count["resource_market_bytes"] = tx_size
         return resource_count
 
     def comment_dict(self, comment_dict):
