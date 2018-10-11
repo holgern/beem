@@ -520,6 +520,8 @@ class Account(BlockchainObject):
         """ Returns the account recharge time as string
 
             :param float voting_power_goal: voting power goal in percentage (default is 100)
+            :param float starting_voting_power: returns recharge time if current voting power is
+            the provided value.
 
         """
         remainingTime = self.get_recharge_timedelta(voting_power_goal=voting_power_goal, starting_voting_power=starting_voting_power)
@@ -529,6 +531,8 @@ class Account(BlockchainObject):
         """ Returns the account voting power recharge time as timedelta object
 
             :param float voting_power_goal: voting power goal in percentage (default is 100)
+            :param float starting_voting_power: returns recharge time if current voting power is
+            the provided value.
 
         """
         if starting_voting_power is None:
@@ -546,6 +550,8 @@ class Account(BlockchainObject):
         """ Returns the account voting power recharge time in minutes
 
             :param float voting_power_goal: voting power goal in percentage (default is 100)
+            :param float starting_voting_power: returns recharge time if current voting power is
+            the provided value.
 
         """
         return addTzInfo(datetime.utcnow()) + self.get_recharge_timedelta(voting_power_goal, starting_voting_power)
