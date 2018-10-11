@@ -525,13 +525,18 @@ class Account(BlockchainObject):
         remainingTime = self.get_recharge_timedelta(voting_power_goal=voting_power_goal)
         return formatTimedelta(remainingTime)
 
-    def get_recharge_timedelta(self, voting_power_goal=100):
+    def get_recharge_timedelta(self, voting_power_goal=100, starting_voting_power=None):
         """ Returns the account voting power recharge time as timedelta object
 
             :param float voting_power_goal: voting power goal in percentage (default is 100)
 
         """
-        missing_vp = voting_power_goal - self.get_voting_power()
+        if starting_voting_power is None:
+            missing_vp = voting_power_goal - self.get_voting_power()
+        elif isinstance(starting_voting_power, int) or isinstance(starting_voting_power, float):
+            missing_vp = voting_power_goal - starting_voting_power
+        else:
+            raise ValueError('starting_voting_power must be a number.')
         if missing_vp < 0:
             return 0
         recharge_seconds = missing_vp * 100 * STEEM_VOTING_MANA_REGENERATION_SECONDS / STEEM_100_PERCENT
