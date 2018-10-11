@@ -516,13 +516,13 @@ class Account(BlockchainObject):
             return None
         return ops[0]['creator']
 
-    def get_recharge_time_str(self, voting_power_goal=100):
+    def get_recharge_time_str(self, voting_power_goal=100, starting_voting_power=None):
         """ Returns the account recharge time as string
 
             :param float voting_power_goal: voting power goal in percentage (default is 100)
 
         """
-        remainingTime = self.get_recharge_timedelta(voting_power_goal=voting_power_goal)
+        remainingTime = self.get_recharge_timedelta(voting_power_goal=voting_power_goal, starting_voting_power=starting_voting_power)
         return formatTimedelta(remainingTime)
 
     def get_recharge_timedelta(self, voting_power_goal=100, starting_voting_power=None):
@@ -542,13 +542,13 @@ class Account(BlockchainObject):
         recharge_seconds = missing_vp * 100 * STEEM_VOTING_MANA_REGENERATION_SECONDS / STEEM_100_PERCENT
         return timedelta(seconds=recharge_seconds)
 
-    def get_recharge_time(self, voting_power_goal=100):
+    def get_recharge_time(self, voting_power_goal=100, starting_voting_power=None):
         """ Returns the account voting power recharge time in minutes
 
             :param float voting_power_goal: voting power goal in percentage (default is 100)
 
         """
-        return addTzInfo(datetime.utcnow()) + self.get_recharge_timedelta(voting_power_goal)
+        return addTzInfo(datetime.utcnow()) + self.get_recharge_timedelta(voting_power_goal, starting_voting_power)
 
     def get_manabar_recharge_time_str(self, manabar, recharge_pct_goal=100):
         """ Returns the account manabar recharge time as string
