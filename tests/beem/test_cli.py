@@ -145,6 +145,11 @@ class Testcases(unittest.TestCase):
         result = runner.invoke(cli, ['walletinfo'])
         self.assertEqual(result.exit_code, 0)
 
+    def test_keygen(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['keygen'])
+        self.assertEqual(result.exit_code, 0)
+
     def test_set(self):
         runner = CliRunner()
         result = runner.invoke(cli, ['-o', 'set', 'set_default_vote_weight', '100'])

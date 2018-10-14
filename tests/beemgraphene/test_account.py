@@ -157,6 +157,10 @@ class Testcases(unittest.TestCase):
                           ],
                          [b, b, b, b, b, b, b])
 
+    def test_BrainKey_suggest(self):
+        b = BrainKey()
+        self.assertTrue(len(b.suggest()) > 0)
+
     def test_BrainKey_sequences(self):
         b = BrainKey("COLORER BICORN KASBEKE FAERIE LOCHIA GOMUTI SOVKHOZ Y GERMAL AUNTIE PERFUMY TIME FEATURE GANGAN CELEMIN MATZO")
         keys = ["5Hsbn6kXio4bb7eW5bX7kTp2sdkmbzP8kGWoau46Cf7en7T1RRE",

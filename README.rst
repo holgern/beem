@@ -2,7 +2,7 @@ beem - Unofficial Python Library for Steem
 ===============================================
 
 beem is an unofficial python library for steem, which is created new from scratch from `python-bitshares`_
-The library name is derived from a beam maschine, similar to the analogy between steem and steam. beem includes `python-graphenelib`_.
+The library name is derived from a beam machine, similar to the analogy between steem and steam. beem includes `python-graphenelib`_.
 
 .. image:: https://img.shields.io/pypi/v/beem.svg
     :target: https://pypi.python.org/pypi/beem/

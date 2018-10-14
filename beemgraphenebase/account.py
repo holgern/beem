@@ -132,7 +132,10 @@ class BrainKey(object):
         if not len(dict_lines) == 49744:
             raise AssertionError()
         for j in range(0, word_count):
-            num = int.from_bytes(os.urandom(2), byteorder="little")
+            urand = os.urandom(2)
+            if isinstance(urand, str):
+                urand = py23_bytes(urand, 'ascii')
+            num = int.from_bytes(urand, byteorder="little")
             rndMult = num / 2 ** 16  # returns float between 0..1 (inclusive)
             wIdx = round(len(dict_lines) * rndMult)
             brainkey[j] = dict_lines[wIdx]
