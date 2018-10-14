@@ -516,34 +516,45 @@ class Account(BlockchainObject):
             return None
         return ops[0]['creator']
 
-    def get_recharge_time_str(self, voting_power_goal=100):
+    def get_recharge_time_str(self, voting_power_goal=100, starting_voting_power=None):
         """ Returns the account recharge time as string
 
             :param float voting_power_goal: voting power goal in percentage (default is 100)
+            :param float starting_voting_power: returns recharge time if current voting power is
+            the provided value.
 
         """
-        remainingTime = self.get_recharge_timedelta(voting_power_goal=voting_power_goal)
+        remainingTime = self.get_recharge_timedelta(voting_power_goal=voting_power_goal, starting_voting_power=starting_voting_power)
         return formatTimedelta(remainingTime)
 
-    def get_recharge_timedelta(self, voting_power_goal=100):
+    def get_recharge_timedelta(self, voting_power_goal=100, starting_voting_power=None):
         """ Returns the account voting power recharge time as timedelta object
 
             :param float voting_power_goal: voting power goal in percentage (default is 100)
+            :param float starting_voting_power: returns recharge time if current voting power is
+            the provided value.
 
         """
-        missing_vp = voting_power_goal - self.get_voting_power()
+        if starting_voting_power is None:
+            missing_vp = voting_power_goal - self.get_voting_power()
+        elif isinstance(starting_voting_power, int) or isinstance(starting_voting_power, float):
+            missing_vp = voting_power_goal - starting_voting_power
+        else:
+            raise ValueError('starting_voting_power must be a number.')
         if missing_vp < 0:
             return 0
         recharge_seconds = missing_vp * 100 * STEEM_VOTING_MANA_REGENERATION_SECONDS / STEEM_100_PERCENT
         return timedelta(seconds=recharge_seconds)
 
-    def get_recharge_time(self, voting_power_goal=100):
+    def get_recharge_time(self, voting_power_goal=100, starting_voting_power=None):
         """ Returns the account voting power recharge time in minutes
 
             :param float voting_power_goal: voting power goal in percentage (default is 100)
+            :param float starting_voting_power: returns recharge time if current voting power is
+            the provided value.
 
         """
-        return addTzInfo(datetime.utcnow()) + self.get_recharge_timedelta(voting_power_goal)
+        return addTzInfo(datetime.utcnow()) + self.get_recharge_timedelta(voting_power_goal, starting_voting_power)
 
     def get_manabar_recharge_time_str(self, manabar, recharge_pct_goal=100):
         """ Returns the account manabar recharge time as string
