@@ -11,13 +11,14 @@ import hashlib
 import sys
 import re
 import os
+import codecs
 import ecdsa
 import ctypes
 from binascii import hexlify, unhexlify
 
 from .base58 import ripemd160, Base58
 from .dictionary import words as BrainKeyDictionary
-from .py23 import py23_bytes
+from .py23 import py23_bytes, PY2
 
 
 class PasswordKey(object):
@@ -135,7 +136,10 @@ class BrainKey(object):
             urand = os.urandom(2)
             if isinstance(urand, str):
                 urand = py23_bytes(urand, 'ascii')
-            num = int.from_bytes(urand, byteorder="little")
+            if PY2:
+                num = int(codecs.encode(urand[::-1], 'hex'), 16)
+            else:
+                num = int.from_bytes(urand, byteorder="little")
             rndMult = num / 2 ** 16  # returns float between 0..1 (inclusive)
             wIdx = round(len(dict_lines) * rndMult)
             brainkey[j] = dict_lines[wIdx]
