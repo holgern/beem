@@ -1235,6 +1235,7 @@ def claimaccount(creator, fee, number):
         return
     creator = Account(creator, steem_instance=stm)
     fee = Amount("%.3f %s" % (float(fee), stm.steem_symbol), steem_instance=stm)
+    tx = None
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.claim_account(creator, fee=fee)
         tx = stm.steemconnect.url_from_tx(tx)
@@ -1245,6 +1246,7 @@ def claimaccount(creator, fee, number):
         last_mana = current_mana
         cnt = 0
         print("Current costs %.2f G RC - current mana %.2f G RC" % (current_costs / 1e9, current_mana / 1e9))
+        print("Account can claim %d accounts" % (int(current_mana / current_costs)))
         while current_costs + 10 < current_mana and cnt < number:
             if cnt > 0:
                 print("Current costs %.2f G RC - current mana %.2f G RC" % (current_costs / 1e9, current_mana / 1e9))
@@ -1257,12 +1259,13 @@ def claimaccount(creator, fee, number):
             current_mana = creator.get_rc_manabar()["current_mana"]
             print("Account claimed and %.2f G RC paid." % ((last_mana - current_mana) / 1e9))
             last_mana = current_mana
-        else:
+        if cnt == 0:
             print("Not enough RC for a claim!")
     else:
         tx = stm.claim_account(creator, fee=fee)
-    tx = json.dumps(tx, indent=4)
-    print(tx)
+    if tx is not None:
+        tx = json.dumps(tx, indent=4)
+        print(tx)
 
 
 @cli.command()
