@@ -141,7 +141,7 @@ class BrainKey(object):
             else:
                 num = int.from_bytes(urand, byteorder="little")
             rndMult = num / 2 ** 16  # returns float between 0..1 (inclusive)
-            wIdx = round(len(dict_lines) * rndMult)
+            wIdx = int(round(len(dict_lines) * rndMult))
             brainkey[j] = dict_lines[wIdx]
         return " ".join(brainkey).upper()
 
