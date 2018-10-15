@@ -2467,7 +2467,6 @@ class Account(BlockchainObject):
                 "reward_vests": reward_vests,
                 "prefix": self.steem.prefix,
             })
-        print(op)
         return self.steem.finalizeOp(op, account, "posting", **kwargs)
 
     def delegate_vesting_shares(self, to_account, vesting_shares,
