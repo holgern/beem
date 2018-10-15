@@ -1222,7 +1222,7 @@ def disallow(foreign_account, permission, account, threshold):
 
 @cli.command()
 @click.argument('creator', nargs=1, required=True)
-@click.option('--fee', help='When fee is 0 (default) a subsidized account is claimed and can be created later with create_claimed_account', default=0)
+@click.option('--fee', help='When fee is 0 (default) a subsidized account is claimed and can be created later with create_claimed_account', default=0.0)
 @click.option('--number', '-n', help='Number of subsidized accounts to be claimed (default = 1), when fee = 0 STEEM', default=1)
 def claimaccount(creator, fee, number):
     """Claim account for claimed account creation."""
