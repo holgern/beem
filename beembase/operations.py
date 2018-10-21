@@ -674,7 +674,6 @@ class Claim_reward_balance(GrapheneObject):
             OrderedDict([
                 ('account', String(kwargs["account"])),
                 ('reward_steem', Amount(kwargs["reward_steem"], prefix=prefix)),
-                ('reward_sbd', Amount(kwargs["reward_sbd"], prefix=prefix)),
                 ('reward_vests', Amount(kwargs["reward_vests"], prefix=prefix)),
             ]))
 
