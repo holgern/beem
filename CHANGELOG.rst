@@ -1,5 +1,10 @@
 Changelog
 =========
+0.20.9
+------
+* add missing scrypt to the pyinstaller
+* prepare for removed witness api in rpc nodes
+
 0.20.8
 ------
 * fix hardfork property in steem
