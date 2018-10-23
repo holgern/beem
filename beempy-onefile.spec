@@ -5,13 +5,14 @@ import glob
 import platform
 from PyInstaller.utils.hooks import exec_statement
 import websocket
+import certifi
 from os.path import join, dirname, basename
 
 block_cipher = None
 os_name = platform.system()
 binaries = []
 
-websocket_lib_path = dirname(websocket.__file__)
+websocket_lib_path = dirname(certifi.__file__)
 websocket_cacert_file_path = join(websocket_lib_path, 'cacert.pem')
 analysis_data = [
     # For websocket library to find "cacert.pem" file, it must be in websocket
