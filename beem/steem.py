@@ -193,7 +193,7 @@ class Steem(object):
 
         self.data = {'last_refresh': None, 'last_node': None, 'dynamic_global_properties': None, 'feed_history': None,
                      'get_feed_history': None, 'hardfork_properties': None,
-                     'network': None, 'witness_schedule': None, 'reserve_ratio': None,
+                     'network': None, 'witness_schedule': None,
                      'config': None, 'reward_funds': None}
         self.data_refresh_time_seconds = data_refresh_time_seconds
         # self.refresh_data()
@@ -281,10 +281,6 @@ class Steem(object):
         self.data['witness_schedule'] = self.get_witness_schedule(False)
         self.data['config'] = self.get_config(False)
         self.data['reward_funds'] = self.get_reward_funds(False)
-        try:
-            self.data['reserve_ratio'] = self.get_reserve_ratio(False)
-        except:
-            self.data['reserve_ratio'] = None
 
     def get_dynamic_global_properties(self, use_stored_data=True):
         """ This call returns the *dynamic global properties*
@@ -301,17 +297,9 @@ class Steem(object):
         self.rpc.set_next_node_on_empty_reply(True)
         return self.rpc.get_dynamic_global_properties(api="database")
 
-    def get_reserve_ratio(self, use_stored_data=True):
+    def get_reserve_ratio(self):
         """ This call returns the *reserve ratio*
-
-            :param bool use_stored_data: if True, stored data will be returned. If stored data are
-                empty or old, refresh_data() is used.
-
         """
-        if use_stored_data:
-            self.refresh_data()
-            return self.data['reserve_ratio']
-
         if self.rpc is None:
             return None
         self.rpc.set_next_node_on_empty_reply(True)

@@ -1,5 +1,14 @@
 Changelog
 =========
+0.20.8
+------
+* fix hardfork property in steem
+* Fix resource_market_bytes calculation
+* Adding additional parameter to recharge time calculations by flugschwein (PR #103)
+* fix Comment reward calculations by crokkon (PR #105)
+* Fix typo in witness update feed
+* Fix appveyor CI
+
 0.20.7
 ------
 * Fix issue #97 `get_discussions()` does not finish if discussions are empty by espoem

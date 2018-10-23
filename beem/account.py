@@ -1041,7 +1041,11 @@ class Account(BlockchainObject):
         """
         account = self["name"]
         global_properties = self.steem.get_dynamic_global_properties()
-        reserve_ratio = self.steem.get_reserve_ratio()
+        try:
+            reserve_ratio = self.steem.get_reserve_ratio()
+        except:
+            return {"used": 0,
+                    "allocated": 0}
         if "received_vesting_shares" in self:
             received_vesting_shares = self["received_vesting_shares"].amount
         else:

@@ -422,8 +422,6 @@ class Testcases(unittest.TestCase):
                     data_refresh_time_seconds=900,
                     keys={"active": wif, "owner": wif, "memo": wif})
         bts.refresh_data()
-        self.assertTrue(bts.get_reserve_ratio(use_stored_data=False) is None)
-        self.assertTrue(bts.get_reserve_ratio(use_stored_data=True) is None)
         self.assertTrue(bts.get_feed_history(use_stored_data=False) is None)
         self.assertTrue(bts.get_feed_history(use_stored_data=True) is None)
         self.assertTrue(bts.get_reward_funds(use_stored_data=False) is None)
@@ -458,7 +456,6 @@ class Testcases(unittest.TestCase):
                         data_refresh_time_seconds=900,
                         keys={"active": wif, "owner": wif, "memo": wif},
                         num_retries=10)
-        self.assertTrue(bts.get_reserve_ratio(use_stored_data=False) is not None)
         self.assertTrue(bts.get_feed_history(use_stored_data=False) is not None)
         self.assertTrue(bts.get_reward_funds(use_stored_data=False) is not None)
         self.assertTrue(bts.get_current_median_history(use_stored_data=False) is not None)
