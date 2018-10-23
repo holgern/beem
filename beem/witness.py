@@ -126,7 +126,7 @@ class Witness(BlockchainObject):
             :param str account: (optional) the source account for the transfer
             if not self["owner"]
         """
-        quote = quote if quote is not None else "1.000 %s" % (self.steem.symbol)
+        quote = quote if quote is not None else "1.000 %s" % (self.steem.steem_symbol)
         if not account:
             account = self["owner"]
         if not account:
