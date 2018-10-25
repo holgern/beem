@@ -188,7 +188,12 @@ class Witness(BlockchainObject):
 class WitnessesObject(list):
     def printAsTable(self, sort_key="votes", reverse=True, return_str=False, **kwargs):
         utc = pytz.timezone('UTC')
-        table_header = ["Name", "Votes [PV]", "Disabled", "Missed", "Feed base", "Feed quote", "Feed update", "Fee", "Size", "Interest", "Version"]
+        no_feed = False
+        if len(self) > 0 and "sbd_exchange_rate" not in self[0]:
+            table_header = ["Name", "Votes [PV]", "Disabled", "Missed", "Fee", "Size", "Version"]
+            no_feed = True
+        else:
+            table_header = ["Name", "Votes [PV]", "Disabled", "Missed", "Feed base", "Feed quote", "Feed update", "Fee", "Size", "Interest", "Version"]
         t = PrettyTable(table_header)
         t.align = "l"
         if sort_key == 'base':
@@ -208,21 +213,31 @@ class WitnessesObject(list):
         else:
             sortedList = sorted(self, key=lambda self: self[sort_key], reverse=reverse)
         for witness in sortedList:
-            td = utc.localize(datetime.utcnow()) - witness['last_sbd_exchange_update']
             disabled = ""
             if not witness.is_active:
                 disabled = "yes"
-            t.add_row([witness['owner'],
-                       str(round(int(witness['votes']) / 1e15, 2)),
-                       disabled,
-                       str(witness['total_missed']),
-                       str(Amount(witness['sbd_exchange_rate']['base'], steem_instance=self.steem)),
-                       str(Amount(witness['sbd_exchange_rate']['quote'], steem_instance=self.steem)),
-                       str(td.days) + " days " + str(td.seconds // 3600) + ":" + str((td.seconds // 60) % 60),
-                       str(witness['props']['account_creation_fee']),
-                       str(witness['props']['maximum_block_size']),
-                       str(witness['props']['sbd_interest_rate'] / 100) + " %",
-                       witness['running_version']])
+
+            if no_feed:
+                t.add_row([witness['owner'],
+                           str(round(int(witness['votes']) / 1e15, 2)),
+                           disabled,
+                           str(witness['total_missed']),
+                           str(witness['props']['account_creation_fee']),
+                           str(witness['props']['maximum_block_size']),
+                           witness['running_version']])
+            else:
+                td = utc.localize(datetime.utcnow()) - witness['last_sbd_exchange_update']
+                t.add_row([witness['owner'],
+                           str(round(int(witness['votes']) / 1e15, 2)),
+                           disabled,
+                           str(witness['total_missed']),
+                           str(Amount(witness['sbd_exchange_rate']['base'], steem_instance=self.steem)),
+                           str(Amount(witness['sbd_exchange_rate']['quote'], steem_instance=self.steem)),
+                           str(td.days) + " days " + str(td.seconds // 3600) + ":" + str((td.seconds // 60) % 60),
+                           str(witness['props']['account_creation_fee']),
+                           str(witness['props']['maximum_block_size']),
+                           str(witness['props']['sbd_interest_rate'] / 100) + " %",
+                           witness['running_version']])
         if return_str:
             return t.get_string(**kwargs)
         else:

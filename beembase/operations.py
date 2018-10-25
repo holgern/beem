@@ -670,13 +670,21 @@ class Claim_reward_balance(GrapheneObject):
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
         prefix = kwargs.get("prefix", default_prefix)
-        super(Claim_reward_balance, self).__init__(
-            OrderedDict([
-                ('account', String(kwargs["account"])),
-                ('reward_steem', Amount(kwargs["reward_steem"], prefix=prefix)),
-                ('reward_sbd', Amount(kwargs["reward_sbd"], prefix=prefix)),
-                ('reward_vests', Amount(kwargs["reward_vests"], prefix=prefix)),
-            ]))
+        if "reward_sbd" in kwargs:
+            super(Claim_reward_balance, self).__init__(
+                OrderedDict([
+                    ('account', String(kwargs["account"])),
+                    ('reward_steem', Amount(kwargs["reward_steem"], prefix=prefix)),
+                    ('reward_sbd', Amount(kwargs["reward_sbd"], prefix=prefix)),
+                    ('reward_vests', Amount(kwargs["reward_vests"], prefix=prefix)),
+                ]))
+        else:
+            super(Claim_reward_balance, self).__init__(
+                OrderedDict([
+                    ('account', String(kwargs["account"])),
+                    ('reward_steem', Amount(kwargs["reward_steem"], prefix=prefix)),
+                    ('reward_vests', Amount(kwargs["reward_vests"], prefix=prefix)),
+                ]))
 
 
 class Transfer_to_savings(GrapheneObject):

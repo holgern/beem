@@ -70,7 +70,6 @@ known_chains = {
         "min_version": "0.0.0",
         "prefix": "VIT",
         "chain_assets": [
-            {"asset": "SBD", "symbol": "VBD", "precision": 3, "id": 0},
             {"asset": "STEEM", "symbol": "VIT", "precision": 3, "id": 1},
             {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
         ],

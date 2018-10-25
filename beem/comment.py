@@ -431,21 +431,25 @@ class Comment(BlockchainObject):
                     "payout_SBD": Amount(0, self.steem.sbd_symbol, steem_instance=self.steem),
                     "total_payout_SBD": Amount(self["total_payout_value"], steem_instance=self.steem)}
 
-        median_price = Price(self.steem.get_current_median_history(), steem_instance=self.steem)
+        median_hist = self.steem.get_current_median_history()
+        if median_hist is not None:
+            median_price = Price(median_hist, steem_instance=self.steem)
         beneficiaries_pct = self.get_beneficiaries_pct()
         curation_tokens = self.reward * 0.25
         author_tokens = self.reward - curation_tokens
         curation_rewards = self.get_curation_rewards()
-        if self.steem.hardfork >= 20:
+        if self.steem.hardfork >= 20 and median_hist is not None:
             author_tokens += median_price * curation_rewards['unclaimed_rewards']
 
         benefactor_tokens = author_tokens * beneficiaries_pct / 100.
         author_tokens -= benefactor_tokens
 
-        sbd_steem = author_tokens * self["percent_steem_dollars"] / 20000.
-        vesting_steem = median_price.as_base(self.steem.steem_symbol) * (author_tokens - sbd_steem)
-
-        return {'pending_rewards': True, "payout_SP": vesting_steem, "payout_SBD": sbd_steem, "total_payout_SBD": author_tokens}
+        if median_hist is not None:
+            sbd_steem = author_tokens * self["percent_steem_dollars"] / 20000.
+            vesting_steem = median_price.as_base(self.steem.steem_symbol) * (author_tokens - sbd_steem)
+            return {'pending_rewards': True, "payout_SP": vesting_steem, "payout_SBD": sbd_steem, "total_payout_SBD": author_tokens}
+        else:
+            return {'pending_rewards': True, "total_payout": author_tokens}
 
     def get_curation_rewards(self, pending_payout_SBD=False, pending_payout_value=None):
         """ Returns the curation rewards.
@@ -475,7 +479,9 @@ class Comment(BlockchainObject):
                 }
 
         """
-        median_price = Price(self.steem.get_current_median_history(), steem_instance=self.steem)
+        median_hist = self.steem.get_current_median_history()
+        if median_hist is not None:
+            median_price = Price(median_hist, steem_instance=self.steem)
         pending_rewards = False
         total_vote_weight = self["total_vote_weight"]
         if not self["allow_curation_rewards"] or not self.is_pending():
@@ -488,7 +494,7 @@ class Comment(BlockchainObject):
                 pending_payout_value = Amount(pending_payout_value, self.steem.sbd_symbol, steem_instance=self.steem)
             elif isinstance(pending_payout_value, str):
                 pending_payout_value = Amount(pending_payout_value, steem_instance=self.steem)
-            if pending_payout_SBD:
+            if pending_payout_SBD or median_hist is None:
                 max_rewards = (pending_payout_value * 0.25)
             else:
                 max_rewards = median_price.as_base(self.steem.steem_symbol) * (pending_payout_value * 0.25)

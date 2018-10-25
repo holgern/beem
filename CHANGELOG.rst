@@ -1,5 +1,13 @@
 Changelog
 =========
+0.20.10
+-------
+* update_account_keys added for changing account keys
+* comment, witness, account classes fixed for chains without SBD
+* RC costs adapted on changes from 0.20.6
+* VIT chain fixed
+* update_account_keys function added to account
+
 0.20.9
 ------
 * add missing scrypt to the pyinstaller

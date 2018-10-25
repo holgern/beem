@@ -20,7 +20,7 @@ from .utils import formatTimeString, formatTimedelta, remove_from_dict, reputati
 from beem.amount import Amount
 from beembase import operations
 from beem.rc import RC
-from beemgraphenebase.account import PrivateKey, PublicKey
+from beemgraphenebase.account import PrivateKey, PublicKey, PasswordKey
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_1_PERCENT, STEEM_100_PERCENT, STEEM_VOTING_MANA_REGENERATION_SECONDS
 log = logging.getLogger(__name__)
@@ -2204,6 +2204,51 @@ class Account(BlockchainObject):
         })
         return self.steem.finalizeOp(op, account, "active", **kwargs)
 
+    def update_account_keys(self, new_password, account=None, **kwargs):
+        """ Updates all account keys
+
+            This method does **not** add any private keys to your
+            wallet but merely changes the memo public key.
+
+            :param str new_password: is used to derive the owner, active,
+                posting and memo key
+            :param str account: (optional) the account to allow access
+                to (defaults to ``default_account``)
+        """
+        if account is None:
+            account = self
+        else:
+            account = Account(account, steem_instance=self.steem)
+
+        key_auths = {}
+        for role in ['owner', 'active', 'posting', 'memo']:
+            pk = PasswordKey(account['name'], new_password, role=role)
+            key_auths[role] = format(pk.get_public_key(), self.steem.prefix) 
+
+        op = operations.Account_update(**{
+            "account": account["name"],
+            'owner': {
+                 'account_auths': [],
+                 'key_auths': [[key_auths['owner'], 1]],
+                 "address_auths": [],
+                 'weight_threshold': 1},
+            'active': {
+                 'account_auths': [],
+                 'key_auths': [[key_auths['active'], 1]],
+                 "address_auths": [],
+                 'weight_threshold': 1},
+            'posting': {
+                 'account_auths': account['posting']['account_auths'],
+                 'key_auths': [[key_auths['posting'], 1]],
+                 "address_auths": [],
+                 'weight_threshold': 1},
+            'memo_key': key_auths['memo'],
+            "json_metadata": account['json_metadata'],
+            "prefix": self.steem.prefix,
+        })
+
+        return self.steem.finalizeOp(op, account, "owner", **kwargs)
+
     # -------------------------------------------------------------------------
     # Simple Transfer
     # -------------------------------------------------------------------------
@@ -2459,18 +2504,29 @@ class Account(BlockchainObject):
         reward_vests = self._check_amount(reward_vests, self.steem.vests_symbol)
 
         if reward_steem.amount == 0 and reward_sbd.amount == 0 and reward_vests.amount == 0:
-            reward_steem = account.balances["rewards"][0]
-            reward_sbd = account.balances["rewards"][1]
-            reward_vests = account.balances["rewards"][2]
+            if len(account.balances["rewards"]) == 3:
+                reward_steem = account.balances["rewards"][0]
+                reward_sbd = account.balances["rewards"][1]
+                reward_vests = account.balances["rewards"][2]
+                op = operations.Claim_reward_balance(
+                    **{
+                        "account": account["name"],
+                        "reward_steem": reward_steem,
+                        "reward_sbd": reward_sbd,
+                        "reward_vests": reward_vests,
+                        "prefix": self.steem.prefix,
+                    })                
+            else:
+                reward_steem = account.balances["rewards"][0]
+                reward_vests = account.balances["rewards"][1]
+                op = operations.Claim_reward_balance(
+                    **{
+                        "account": account["name"],
+                        "reward_steem": reward_steem,
+                        "reward_vests": reward_vests,
+                        "prefix": self.steem.prefix,
+                    })
 
-        op = operations.Claim_reward_balance(
-            **{
-                "account": account["name"],
-                "reward_steem": reward_steem,
-                "reward_sbd": reward_sbd,
-                "reward_vests": reward_vests,
-                "prefix": self.steem.prefix,
-            })
         return self.steem.finalizeOp(op, account, "posting", **kwargs)
 
     def delegate_vesting_shares(self, to_account, vesting_shares,
