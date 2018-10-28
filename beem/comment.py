@@ -28,7 +28,7 @@ class Comment(BlockchainObject):
 
         :param str authorperm: identifier to post/comment in the form of
             ``@author/permlink``
-        :param steem steem_instance: Steem() instance to use when accessing a RPC
+        :param Steem steem_instance: :class:`beem.steem.Steem` instance to use when accessing a RPC
 
 
         .. code-block:: python
@@ -356,8 +356,9 @@ class Comment(BlockchainObject):
 
             :param str voter: Voter for which the vote should be returned
             :param bool raw_data: If True, the raw data are returned
-            :param float/str pending_payout_SBD: When not None this value instead of the current
+            :param pending_payout_SBD: When not None this value instead of the current
                 value is used for calculating the rewards
+            :type pending_payout_SBD: float, str
         """
         specific_vote = None
         if voter is None:
@@ -455,8 +456,9 @@ class Comment(BlockchainObject):
         """ Returns the curation rewards.
 
             :param bool pending_payout_SBD: If True, the rewards are returned in SBD and not in STEEM (default is False)
-            :param float/str pending_payout_value: When not None this value instead of the current
+            :param pending_payout_value: When not None this value instead of the current
                 value is used for calculating the rewards
+            :type pending_payout_value: float, str
 
             `pending_rewards` is True when
             the post is younger than 7 days. `unclaimed_rewards` is the
@@ -774,7 +776,7 @@ class RecentReplies(list):
         :param str author: author
         :param bool skip_own: (optional) Skip replies of the author to him/herself.
             Default: True
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param Steem steem_instance: Steem() instance to use when accesing a RPC
     """
     def __init__(self, author, skip_own=True, lazy=False, full=True, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
@@ -796,7 +798,7 @@ class RecentByPath(list):
     """ Obtain a list of votes for an account
 
         :param str account: Account name
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param Steem steem_instance: Steem() instance to use when accesing a RPC
     """
     def __init__(self, path="promoted", category=None, lazy=False, full=True, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()

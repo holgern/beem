@@ -14,10 +14,10 @@ class Signed_Transaction(GrapheneSigned_Transaction):
     """ Create a signed transaction and offer method to create the
         signature
 
-        :param num refNum: parameter ref_block_num (see ``getBlockParams``)
-        :param num refPrefix: parameter ref_block_prefix (see ``getBlockParams``)
+        :param num refNum: parameter ref_block_num (see :func:`beembase.transactions.getBlockParams`)
+        :param num refPrefix: parameter ref_block_prefix (see :func:`beembase.transactions.getBlockParams`)
         :param str expiration: expiration date
-        :param Array operations:  array of operations
+        :param array operations:  array of operations
         :param dict custom_chains: custom chain which should be added to the known chains
     """
     def __init__(self, *args, **kwargs):

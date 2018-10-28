@@ -26,7 +26,7 @@ class AccountSnapshot(list):
     """ This class allows to easily access Account history
 
         :param str account_name: Name of the account
-        :param beem.steem.Steem steem_instance: Steem
+        :param Steem steem_instance: Steem
                instance
     """
     def __init__(self, account, account_history=[], steem_instance=None):
@@ -154,10 +154,12 @@ class AccountSnapshot(list):
     def get_account_history(self, start=None, stop=None, use_block_num=True):
         """ Uses account history to fetch all related ops
 
-            :param int/datetime start: start number/date of transactions to
+            :param start: start number/date of transactions to
                 return (*optional*)
-            :param int/datetime stop: stop number/date of transactions to
+            :type start: int, datetime
+            :param stop: stop number/date of transactions to
                 return (*optional*)
+            :type stop: int, datetime
             :param bool use_block_num: if true, start and stop are block numbers,
                 otherwise virtual OP count numbers.
 
@@ -194,11 +196,14 @@ class AccountSnapshot(list):
         """ Updates the internal state arrays
 
             :param datetime timestamp: datetime of the update
-            :param Amount/float own: vests
+            :param own: vests
+            :type own: amount.Amount, float
             :param dict delegated_in: Incoming delegation
             :param dict delegated_out: Outgoing delegation
-            :param Amount/float steem: steem
-            :param Amount/float sbd: sbd
+            :param steem: steem
+            :type steem: amount.Amount, float
+            :param sbd: sbd
+            :type sbd: amount.Amount, float
 
         """
         self.timestamps.append(timestamp - timedelta(seconds=1))

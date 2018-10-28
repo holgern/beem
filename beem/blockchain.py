@@ -177,7 +177,7 @@ class Blockchain(object):
     """ This class allows to access the blockchain and read data
         from it
 
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
         :param str mode: (default) Irreversible block (``irreversible``) or
             actual head block (``head``)
         :param int max_block_wait_repetition: maximum wait repetition for next block

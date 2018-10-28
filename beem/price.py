@@ -31,9 +31,9 @@ class Price(dict):
             The price (floating) is derived as ``base/quote``
 
         :param list args: Allows to deal with different representations of a price
-        :param beem.asset.Asset base: Base asset
-        :param beem.asset.Asset quote: Quote asset
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Asset base: Base asset
+        :param Asset quote: Quote asset
+        :param Steem steem_instance: Steem instance
         :returns: All data required to represent a price
         :rtype: dict
 
@@ -418,7 +418,7 @@ class Order(Price):
         ratio of base and quote) but instead has those amounts represent the
         amounts of an actual order!
 
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
 
         .. note::
 
@@ -475,7 +475,7 @@ class FilledOrder(Price):
         ratio of base and quote) but instead has those amounts represent the
         amounts of an actually filled order!
 
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
 
         .. note:: Instances of this class come with an additional ``date`` key
                   that shows when the order has been filled!

@@ -31,7 +31,8 @@ class ImageUploader(object):
     def upload(self, image, account, image_name=None):
         """ Uploads an image
 
-            :param str/bytes image: path to the image or image in bytes representation which should be uploaded
+            :param image: path to the image or image in bytes representation which should be uploaded
+            :type image: str, bytes
             :param str account: Account which is used to upload. A posting key must be provided.
             :param str image_name: optional
 

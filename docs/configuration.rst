@@ -23,7 +23,7 @@ You can access those variables like a regular dictionary by using
 
 Keys can be added and changed like they are for regular dictionaries.
 
-If you don't want to load the :class:`beem.Steem` class, you
+If you don't want to load the :class:`beem.steem.Steem` class, you
 can load the configuration directly by using:
 
 .. code-block:: python
@@ -39,7 +39,7 @@ It is also possible to access the configuration with the commandline tool `beemp
 API node URLs
 -------------
 
-The default node URLs which will be used when  `node` is  `None` in :class:`beem.Steem` class
+The default node URLs which will be used when  `node` is  `None` in :class:`beem.steem.Steem` class
 is stored in `config["nodes"]` as string. The list can be get and set by:
 
 .. code-block:: python

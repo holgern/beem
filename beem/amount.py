@@ -28,7 +28,7 @@ class Amount(dict):
         :param list args: Allows to deal with different representations of an amount
         :param float amount: Let's create an instance with a specific amount
         :param str asset: Let's you create an instance with a specific asset (symbol)
-        :param steem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
         :returns: All data required to represent an Amount/Asset
         :rtype: dict
         :raises ValueError: if the data provided is not recognized

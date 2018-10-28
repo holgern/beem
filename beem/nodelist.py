@@ -262,7 +262,8 @@ class NodeList(list):
     def update_nodes(self, weights=None, steem_instance=None):
         """ Reads metadata from fullnodeupdate and recalculates the nodes score
 
-            :params list/dict weight: can be used to weight the different benchmarks
+            :param list/dict weight: can be used to weight the different benchmarks
+            :type weight: list, dict
 
             .. code-block:: python
 

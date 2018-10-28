@@ -258,7 +258,7 @@ class PublicKey(Address):
 
         .. note:: By default, graphene-based networks deal with **compressed**
                   public keys. If an **uncompressed** key is required, the
-                  method ``unCompressed`` can be used::
+                  method :func:`unCompressed` can be used::
 
                       PublicKey("xxxxx").unCompressed()
 
@@ -338,7 +338,7 @@ class PublicKey(Address):
 @python_2_unicode_compatible
 class PrivateKey(PublicKey):
     """ Derives the compressed and uncompressed public keys and
-        constructs two instances of ``PublicKey``:
+        constructs two instances of :class:`PublicKey`:
 
         :param str wif: Base58check-encoded wif key
         :param str prefix: Network prefix (defaults to ``STM``)
@@ -350,13 +350,13 @@ class PrivateKey(PublicKey):
         Compressed vs. Uncompressed:
 
         * ``PrivateKey("w-i-f").pubkey``:
-            Instance of ``PublicKey`` using compressed key.
+            Instance of :class:`PublicKey` using compressed key.
         * ``PrivateKey("w-i-f").pubkey.address``:
-            Instance of ``Address`` using compressed key.
+            Instance of :class:`Address` using compressed key.
         * ``PrivateKey("w-i-f").uncompressed``:
-            Instance of ``PublicKey`` using uncompressed key.
+            Instance of :class:`PublicKey` using uncompressed key.
         * ``PrivateKey("w-i-f").uncompressed.address``:
-            Instance of ``Address`` using uncompressed key.
+            Instance of :class:`Address` using uncompressed key.
 
     """
     def __init__(self, wif=None, prefix="STM"):

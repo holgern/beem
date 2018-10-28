@@ -30,9 +30,9 @@ log = logging.getLogger(__name__)
 class Market(dict):
     """ This class allows to easily access Markets on the blockchain for trading, etc.
 
-        :param beem.steem.Steem steem_instance: Steem instance
-        :param beem.asset.Asset base: Base asset
-        :param beem.asset.Asset quote: Quote asset
+        :param Steem steem_instance: Steem instance
+        :param Asset base: Base asset
+        :param Asset quote: Quote asset
         :returns: Blockchain Market
         :rtype: dictionary with overloaded methods
 
@@ -307,7 +307,7 @@ class Market(dict):
                     ]
 
             .. note:: Each bid is an instance of
-                class:`steem.price.Order` and thus carries the keys
+                :class:`beem.price.Order` and thus carries the keys
                 ``base``, ``quote`` and ``price``. From those you can
                 obtain the actual amounts for sale
 
@@ -469,7 +469,7 @@ class Market(dict):
     def accountopenorders(self, account=None, raw_data=False):
         """ Returns open Orders
 
-            :param steem.account.Account account: Account name or instance of Account to show orders for in this market
+            :param Account account: Account name or instance of Account to show orders for in this market
             :param bool raw_data: (optional) returns raw data if set True,
                 or a list of Order() instances if False (defaults to False)
         """
@@ -687,7 +687,8 @@ class Market(dict):
         """ Cancels an order you have placed in a given market. Requires
             only the "orderNumbers".
 
-            :param int/list orderNumbers: A single order number or a list of order numbers
+            :param orderNumbers: A single order number or a list of order numbers
+            :type orderNumbers: int, list
         """
         if not account:
             if "default_account" in self.steem.config:

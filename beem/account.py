@@ -30,7 +30,7 @@ class Account(BlockchainObject):
     """ This class allows to easily access Account data
 
         :param str account_name: Name of the account
-        :param beem.steem.Steem steem_instance: Steem
+        :param Steem steem_instance: Steem
                instance
         :param bool lazy: Use lazy loading
         :param bool full: Obtain all account data including orders, positions,
@@ -71,7 +71,7 @@ class Account(BlockchainObject):
         """Initialize an account
 
         :param str account: Name of the account
-        :param beem.steem.Steem steem_instance: Steem
+        :param Steem steem_instance: Steem
                instance
         :param bool lazy: Use lazy loading
         :param bool full: Obtain all account data including orders, positions,
@@ -255,7 +255,7 @@ class Account(BlockchainObject):
             :returns: Similar account names as list
             :rtype: list
 
-            This is a wrapper around ``Blockchain.get_similar_account_names()``
+            This is a wrapper around :func:`beem.blockchain.Blockchain.get_similar_account_names()`
             using the current account name as reference.
 
         """
@@ -486,7 +486,8 @@ class Account(BlockchainObject):
             If the returned number is bigger than 10000 or smaller than -10000,
             the given SBD value is too high for that account
 
-            :param str/int/Amount sbd: The amount of SBD in vote value
+            :param sbd: The amount of SBD in vote value
+            :type sbd: str, int, amount.Amount
 
         """
         if voting_power is None:
@@ -934,7 +935,8 @@ class Account(BlockchainObject):
             * "total"
 
             :param str balances: Defines the balance type
-            :param (str, dict) symbol: Can be "SBD", "STEEM" or "VESTS
+            :param symbol: Can be "SBD", "STEEM" or "VESTS
+            :type symbol: str, dict
 
             .. code-block:: python
 
@@ -1393,7 +1395,8 @@ class Account(BlockchainObject):
     def get_vote(self, comment):
         """Returns a vote if the account has already voted for comment.
 
-            :param str/Comment comment: can be a Comment object or a authorpermlink
+            :param comment: can be a Comment object or a authorpermlink
+            :type comment: str, Comment
         """
         from beem.comment import Comment
         c = Comment(comment, steem_instance=self.steem)
@@ -1405,7 +1408,8 @@ class Account(BlockchainObject):
     def has_voted(self, comment):
         """Returns if the account has already voted for comment
 
-            :param str/Comment comment: can be a Comment object or a authorpermlink
+            :param comment: can be a Comment object or a authorpermlink
+            :type comment: str, Comment
         """
         from beem.comment import Comment
         c = Comment(comment, steem_instance=self.steem)
@@ -1449,8 +1453,9 @@ class Account(BlockchainObject):
     def estimate_virtual_op_num(self, blocktime, stop_diff=0, max_count=100):
         """ Returns an estimation of an virtual operation index for a given time or blockindex
 
-            :param int/datetime blocktime: start time or start block index from which account
+            :param blocktime: start time or start block index from which account
                 operation should be fetched
+            :type blocktime: int, datetime
             :param int stop_diff: Sets the difference between last estimation and
                 new estimation at which the estimation stops. Must not be zero. (default is 1)
             :param int max_count: sets the maximum number of iterations. -1 disables this (default 100)
@@ -1608,10 +1613,12 @@ class Account(BlockchainObject):
 
             :param int index: first number of transactions to return
             :param int limit: limit number of transactions to return
-            :param int/datetime start: start number/date of transactions to
+            :param start: start number/date of transactions to
                 return (*optional*)
-            :param int/datetime stop: stop number/date of transactions to
+            :type start: int, datetime
+            :param stop: stop number/date of transactions to
                 return (*optional*)
+            :type stop: int, datetime
             :param bool use_block_num: if true, start and stop are block numbers, otherwise virtual OP count numbers.
             :param array only_ops: Limit generator by these
                 operations (*optional*)
@@ -1712,10 +1719,10 @@ class Account(BlockchainObject):
             earlist operation will be first. This call can be used in a
             ``for`` loop.
 
-            :param int/datetime start: start number/date of transactions to
-                return (*optional*)
-            :param int/datetime stop: stop number/date of transactions to
-                return (*optional*)
+            :param start: start number/date of transactions to return (*optional*)
+            :type start: int, datetime
+            :param stop: stop number/date of transactions to return (*optional*)
+            :type stop: int, datetime
             :param bool use_block_num: if true, start and stop are block numbers,
                 otherwise virtual OP count numbers.
             :param array only_ops: Limit generator by these
@@ -1874,10 +1881,12 @@ class Account(BlockchainObject):
             latest operation will be first. This call can be used in a
             ``for`` loop.
 
-            :param int/datetime start: start number/date of transactions to
+            :param start: start number/date of transactions to
                 return. If negative the virtual_op_count is added. (*optional*)
-            :param int/datetime stop: stop number/date of transactions to
+            :type start: int, datetime
+            :param stop: stop number/date of transactions to
                 return. If negative the virtual_op_count is added. (*optional*)
+            :type stop: int, datetime
             :param bool use_block_num: if true, start and stop are block numbers,
                 otherwise virtual OP count numbers.
             :param array only_ops: Limit generator by these
@@ -3100,7 +3109,7 @@ class Accounts(AccountsObject):
         :param list name_list: list of accounts to fetch
         :param int batch_limit: (optional) maximum number of accounts
             to fetch per call, defaults to 100
-        :param steem steem_instance: Steem() instance to use when
+        :param Steem steem_instance: Steem() instance to use when
             accessing a RPCcreator = Account(creator, steem_instance=self)
     """
     def __init__(self, name_list, batch_limit=100, lazy=False, full=True, steem_instance=None):

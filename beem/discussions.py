@@ -60,7 +60,7 @@ class Query(dict):
 class Discussions(object):
     """ Get Discussions
 
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
 
     """
     def __init__(self, lazy=False, steem_instance=None):
@@ -71,7 +71,8 @@ class Discussions(object):
         """ Get Discussions
 
             :param str discussion_type: Defines the used discussion query
-            :param beem.discussions.Query discussion_query:
+            :param Query discussion_query: Defines the parameter for
+                   searching posts
 
             .. testcode::
 
@@ -186,9 +187,9 @@ class Discussions(object):
 class Discussions_by_trending(list):
     """ Get Discussions by trending
 
-        :param beem.discussions.Query discussion_query: Defines the parameter for
+        :param Query discussion_query: Defines the parameter for
             searching posts
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
 
         .. testcode::
 
@@ -224,7 +225,7 @@ class Discussions_by_author_before_date(list):
         :param str start_permlink: Defines the permlink of a starting discussion
         :param str before_date: Defines the before date for query
         :param int limit: Defines the limit of discussions
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
 
         .. testcode::
 
@@ -252,9 +253,9 @@ class Discussions_by_author_before_date(list):
 class Comment_discussions_by_payout(list):
     """ Get comment_discussions_by_payout
 
-        :param beem.discussions.Query discussion_query: Defines the parameter for
+        :param Query discussion_query: Defines the parameter for
             searching posts
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
 
         .. testcode::
 
@@ -282,9 +283,9 @@ class Comment_discussions_by_payout(list):
 class Post_discussions_by_payout(list):
     """ Get post_discussions_by_payout
 
-        :param beem.discussions.Query discussion_query: Defines the parameter for
+        :param Query discussion_query: Defines the parameter for
             searching posts
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
 
         .. testcode::
 
@@ -312,9 +313,9 @@ class Post_discussions_by_payout(list):
 class Discussions_by_created(list):
     """ Get discussions_by_created
 
-        :param beem.discussions.Query discussion_query: Defines the parameter for
+        :param Query discussion_query: Defines the parameter for
             searching posts
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
 
         .. testcode::
 
@@ -342,9 +343,9 @@ class Discussions_by_created(list):
 class Discussions_by_active(list):
     """ get_discussions_by_active
 
-        :param beem.discussions.Query discussion_query: Defines the parameter
+        :param Query discussion_query: Defines the parameter
             searching posts
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param Steem steem_instance: Steem() instance to use when accesing a RPC
 
         .. testcode::
 
@@ -373,9 +374,9 @@ class Discussions_by_cashout(list):
     """ Get discussions_by_cashout. This query seems to be broken at the moment.
         The output is always empty.
 
-        :param beem.discussions.Query discussion_query: Defines the parameter
+        :param Query discussion_query: Defines the parameter
             searching posts
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
 
         .. testcode::
 
@@ -403,9 +404,9 @@ class Discussions_by_cashout(list):
 class Discussions_by_votes(list):
     """ Get discussions_by_votes
 
-        :param beem.discussions.Query discussion_query: Defines the parameter
+        :param Query discussion_query: Defines the parameter
             searching posts
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
 
         .. testcode::
 
@@ -433,9 +434,9 @@ class Discussions_by_votes(list):
 class Discussions_by_children(list):
     """ Get discussions by children
 
-        :param beem.discussions.Query discussion_query: Defines the parameter
+        :param Query discussion_query: Defines the parameter
             searching posts
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
 
         .. testcode::
 
@@ -463,9 +464,9 @@ class Discussions_by_children(list):
 class Discussions_by_hot(list):
     """ Get discussions by hot
 
-        :param beem.discussions.Query discussion_query: Defines the parameter
+        :param Query discussion_query: Defines the parameter
             searching posts
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
 
         .. testcode::
 
@@ -493,9 +494,9 @@ class Discussions_by_hot(list):
 class Discussions_by_feed(list):
     """ Get discussions by feed
 
-        :param beem.discussions.Query discussion_query: Defines the parameter
+        :param Query discussion_query: Defines the parameter
             searching posts, tag musst be set to a username
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
 
         .. testcode::
 
@@ -527,9 +528,9 @@ class Discussions_by_feed(list):
 class Discussions_by_blog(list):
     """ Get discussions by blog
 
-        :param beem.discussions.Query discussion_query: Defines the parameter
+        :param Query discussion_query: Defines the parameter
             searching posts, tag musst be set to a username
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
 
         .. testcode::
 
@@ -561,9 +562,9 @@ class Discussions_by_blog(list):
 class Discussions_by_comments(list):
     """ Get discussions by comments
 
-        :param beem.discussions.Query discussion_query: Defines the parameter
+        :param Query discussion_query: Defines the parameter
             searching posts, start_author and start_permlink must be set.
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
 
         .. testcode::
 
@@ -591,9 +592,9 @@ class Discussions_by_comments(list):
 class Discussions_by_promoted(list):
     """ Get discussions by promoted
 
-        :param beem.discussions.Query discussion_query: Defines the parameter
+        :param Query discussion_query: Defines the parameter
             searching posts
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
 
         .. testcode::
 
@@ -621,9 +622,9 @@ class Discussions_by_promoted(list):
 class Replies_by_last_update(list):
     """ Returns a list of replies by last update
 
-        :param beem.discussions.Query discussion_query: Defines the parameter
+        :param Query discussion_query: Defines the parameter
             searching posts start_parent_author and start_permlink must be set.
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
 
         .. testcode::
 
@@ -651,9 +652,9 @@ class Replies_by_last_update(list):
 class Trending_tags(list):
     """ Returns the list of trending tags.
 
-        :param beem.discussions.Query discussion_query: Defines the parameter
+        :param Query discussion_query: Defines the parameter
             searching posts, start_tag can be set.
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
 
         .. testcode::
 

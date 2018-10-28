@@ -149,12 +149,12 @@ class SteemConnect(object):
         return r.json()
 
     def set_access_token(self, access_token):
-        """ Is needed for broadcast() and me()
+        """ Is needed for :func:`broadcast` and :func:`me`
         """
         self.access_token = access_token
 
     def set_username(self, username, permission="posting"):
-        """ Set a username for the next broadcast() or me operation()
+        """ Set a username for the next :func:`broadcast` or :func:`me` operation.
             The necessary token is fetched from the wallet
         """
         if permission != "posting":

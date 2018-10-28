@@ -12,8 +12,8 @@ By creating this object different options can be set.
           ``steem_instance=`` parameter is not used, the 
           steem object is taken from get_shared_steem_instance().
 
-          ``get_shared_steem_instance()`` returns a global instance of steem.
-          It can be set by ``set_shared_steem_instance`` otherwise it is created
+          :func:`beem.instance.shared_steem_instance` returns a global instance of steem.
+          It can be set by :func:`beem.instance.set_shared_steem_instance` otherwise it is created
           on the first call.
 
 .. code-block:: python
