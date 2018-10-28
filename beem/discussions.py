@@ -227,6 +227,7 @@ class Discussions_by_author_before_date(list):
         :param beem.steem.Steem steem_instance: Steem instance
 
         .. testcode::
+
             from beem.discussions import Query, Discussions_by_author_before_date
             for h in Discussions_by_author_before_date(limit=10, author="gtg"):
                 print(h)

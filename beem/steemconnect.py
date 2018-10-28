@@ -37,6 +37,7 @@ class SteemConnect(object):
             post.upvote(voter="test")  # replace "test" with your account
 
         Examples for creating steemconnect v2 urls for broadcasting in browser:
+
         .. testoutput::
 
             from beem import Steem

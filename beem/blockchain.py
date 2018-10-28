@@ -764,6 +764,7 @@ class Blockchain(object):
     def awaitTxConfirmation(self, transaction, limit=10):
         """ Returns the transaction as seen by the blockchain after being
             included into a block
+
             :param dict transaction: transaction to wait for
             :param int limit: (optional) number of blocks to wait for the transaction (default: 10)
 

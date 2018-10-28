@@ -415,7 +415,7 @@ class Comment(BlockchainObject):
     def get_author_rewards(self):
         """ Returns the author rewards.
 
-            Example:::
+            Example::
 
                 {
                     'pending_rewards': True,
@@ -463,7 +463,7 @@ class Comment(BlockchainObject):
             amount of curation_rewards that goes to the author (self-vote or votes within
             the first 30 minutes). `active_votes` contains all voter with their curation reward.
 
-            Example:::
+            Example::
 
                 {
                     'pending_rewards': True, 'unclaimed_rewards': 0.245 STEEM,

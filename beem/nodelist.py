@@ -265,6 +265,7 @@ class NodeList(list):
             :params list/dict weight: can be used to weight the different benchmarks
 
             .. code-block:: python
+
                 from beem.nodelist import NodeList
                 nl = NodeList()
                 weights = [0, 0.1, 0.2, 1]

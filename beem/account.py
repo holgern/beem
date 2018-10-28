@@ -521,7 +521,7 @@ class Account(BlockchainObject):
 
             :param float voting_power_goal: voting power goal in percentage (default is 100)
             :param float starting_voting_power: returns recharge time if current voting power is
-            the provided value.
+                the provided value.
 
         """
         remainingTime = self.get_recharge_timedelta(voting_power_goal=voting_power_goal, starting_voting_power=starting_voting_power)
@@ -532,7 +532,7 @@ class Account(BlockchainObject):
 
             :param float voting_power_goal: voting power goal in percentage (default is 100)
             :param float starting_voting_power: returns recharge time if current voting power is
-            the provided value.
+                the provided value.
 
         """
         if starting_voting_power is None:
@@ -551,7 +551,7 @@ class Account(BlockchainObject):
 
             :param float voting_power_goal: voting power goal in percentage (default is 100)
             :param float starting_voting_power: returns recharge time if current voting power is
-            the provided value.
+                the provided value.
 
         """
         return addTzInfo(datetime.utcnow()) + self.get_recharge_timedelta(voting_power_goal, starting_voting_power)
@@ -1337,7 +1337,7 @@ class Account(BlockchainObject):
     def get_expiring_vesting_delegations(self, after=None, limit=1000, account=None):
         """ Returns the expirations for vesting delegations.
 
-            :param datetime after : expiration after (only for pre appbase nodes)
+            :param datetime after: expiration after (only for pre appbase nodes)
             :param int limit: limits number of shown entries (only for pre appbase nodes)
             :param str account: When set, a different account is used for the request (Default is object account name)
 
@@ -1622,7 +1622,8 @@ class Account(BlockchainObject):
             :param bool raw_output: if False, the output is a dict, which
                 includes all values. Otherwise, the output is list.
 
-            ... note::
+            .. note::
+
                 only_ops and exclude_ops takes an array of strings:
                 The full list of operation ID's can be found in
                 beembase.operationids.ops.
@@ -1725,7 +1726,7 @@ class Account(BlockchainObject):
             :param bool raw_output: if False, the output is a dict, which
                 includes all values. Otherwise, the output is list.
 
-            ... note::
+            .. note::
                 only_ops and exclude_ops takes an array of strings:
                 The full list of operation ID's can be found in
                 beembase.operationids.ops.
@@ -1887,7 +1888,7 @@ class Account(BlockchainObject):
             :param bool raw_output: if False, the output is a dict, which
                 includes all values. Otherwise, the output is list.
 
-            ... note::
+            .. note::
                 only_ops and exclude_ops takes an array of strings:
                 The full list of operation ID's can be found in
                 beembase.operationids.ops.
@@ -2264,7 +2265,8 @@ class Account(BlockchainObject):
                 if not ``default_account``
 
 
-            transfer example:
+            Transfer example:
+
             .. code-block:: python
 
                 from beem.account import Account

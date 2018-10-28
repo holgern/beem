@@ -197,10 +197,12 @@ class Market(dict):
 
     def orderbook(self, limit=25, raw_data=False):
         """ Returns the order book for SBD/STEEM market.
+
             :param int limit: Limit the amount of orders (default: 25)
 
             Sample output (raw_data=False):
-                .. code-block:: js
+
+                .. code-block:: none
 
                     {
                         'asks': [
@@ -222,6 +224,7 @@ class Market(dict):
                     }
 
             Sample output (raw_data=True):
+
                 .. code-block:: js
 
                     {
@@ -281,7 +284,7 @@ class Market(dict):
 
             Sample output (raw_data=False):
 
-                .. code-block:: js
+                .. code-block:: none
 
                     [
                         (2018-04-30 21:00:54+00:00) 0.267 STEEM 0.323 SBD @ 1.209738 SBD/STEEM,
@@ -417,6 +420,7 @@ class Market(dict):
             :param bool raw_data: (optional) returns raw data if set True
 
             Example:
+
                 .. code-block:: js
 
                     {

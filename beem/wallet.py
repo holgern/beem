@@ -256,12 +256,16 @@ class Wallet(object):
             return False
 
     def create(self, pwd):
-        """ Alias for newWallet()
+        """ Alias for :func:`newWallet`
+
+            :param str pwd: Passphrase for the created wallet
         """
         self.newWallet(pwd)
 
     def newWallet(self, pwd):
         """ Create a new wallet database
+
+            :param str pwd: Passphrase for the created wallet
         """
         if self.created():
             raise WalletExists("You already have created a wallet!")
@@ -602,7 +606,7 @@ class Wallet(object):
 
             Note: this returns only the first account with the given key. To
             get all accounts associated with a given public key, use
-            ``getAccountsFromPublicKey``.
+            :func:`getAccountsFromPublicKey`.
         """
         names = list(self.getAccountsFromPublicKey(pub))
         if not names:
@@ -649,6 +653,7 @@ class Wallet(object):
         """ Get key type
 
             :param beem.account.Account/dict account: Account data
+            :type account: Account, dict
             :param str pub: Public key
 
         """

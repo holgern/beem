@@ -22,7 +22,7 @@ to understand is that:
 How to Contribute
 -----------------
 
-0. Familiarize yourself with `contributing on github <https://guides.github.com/activities/contributing-to-open-source/>`
+0. Familiarize yourself with `contributing on github <https://guides.github.com/activities/contributing-to-open-source/>`_
 1. Fork or branch from the master.
 2. Create commits following the commit style
 3. Start a pull request to the master branch

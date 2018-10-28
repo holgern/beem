@@ -358,8 +358,9 @@ class Steem(object):
 
     def get_current_median_history(self, use_stored_data=True):
         """ Returns the current median price
+
             :param bool use_stored_data: if True, stored data will be returned. If stored data are
-            empty or old, refresh_data() is used.
+                                         empty or old, refresh_data() is used.
         """
         if use_stored_data:
             self.refresh_data()
@@ -379,8 +380,9 @@ class Steem(object):
 
     def get_hardfork_properties(self, use_stored_data=True):
         """ Returns Hardfork and live_time of the hardfork
+
             :param bool use_stored_data: if True, stored data will be returned. If stored data are
-            empty or old, refresh_data() is used.
+                                         empty or old, refresh_data() is used.
         """
         if use_stored_data:
             self.refresh_data()
@@ -398,8 +400,9 @@ class Steem(object):
 
     def get_network(self, use_stored_data=True):
         """ Identify the network
+
             :param bool use_stored_data: if True, stored data will be returned. If stored data are
-            empty or old, refresh_data() is used.
+                                         empty or old, refresh_data() is used.
 
             :returns: Network parameters
             :rtype: dict
@@ -573,10 +576,12 @@ class Steem(object):
 
     def sp_to_sbd(self, sp, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
         """ Obtain the resulting SBD vote value from Steem power
+
             :param number steem_power: Steem Power
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
             :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
+
             Only impactful for very big votes. Slight modification to the value calculation, as the not_broadcasted
             vote rshares decreases the reward pool.
         """
@@ -585,10 +590,12 @@ class Steem(object):
 
     def vests_to_sbd(self, vests, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
         """ Obtain the resulting SBD vote value from vests
+
             :param number vests: vesting shares
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
             :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
+
             Only impactful for very big votes. Slight modification to the value calculation, as the not_broadcasted
             vote rshares decreases the reward pool.
         """

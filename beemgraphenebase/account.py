@@ -252,7 +252,7 @@ class PublicKey(Address):
         :param str pk: Base58 encoded public key
         :param str prefix: Network prefix (defaults to ``STM``)
 
-        Example:::
+        Example::
 
            PublicKey("STM6UtYWWs3rkZGV8JA86qrgkG6tyFksgECefKE1MiH4HkLD8PFGL")
 
@@ -343,7 +343,7 @@ class PrivateKey(PublicKey):
         :param str wif: Base58check-encoded wif key
         :param str prefix: Network prefix (defaults to ``STM``)
 
-        Example:::
+        Example::
 
             PrivateKey("5HqUkGuo62BfcJU5vNhTXKJRXuUi9QSE6jp8C3uBJ2BVHtB8WSd")
 
