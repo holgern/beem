@@ -391,8 +391,8 @@ class Comment(BlockchainObject):
         """ Returns the total_payout, author_payout and the curator payout in SBD.
             When the payout is still pending, the estimated payout is given out.
 
-            Note: potential beneficiary rewards were already deducted from the
-                `author_payout` and the `total_payout`
+            .. note:: Potential beneficiary rewards were already deducted from the
+                      `author_payout` and the `total_payout`
 
             Example:::
 
@@ -723,8 +723,8 @@ class Comment(BlockchainObject):
                 Takes the form ``@author/permlink``. By default the current post
                 will be used.
 
-            Note: a post/comment can only be deleted as long as it has no
-                replies and no positive rshares on it.
+            .. note:: A post/comment can only be deleted as long as it has no
+                      replies and no positive rshares on it.
 
         """
         if not account:

@@ -2779,10 +2779,11 @@ class Account(BlockchainObject):
 
     def feed_history(self, limit=None, start_author=None, start_permlink=None,
                      account=None):
-        """ stream the feed entries of an account in reverse time order.
-                Note that RPC nodes keep a limited history of entries for the
-                user feed. Older entries may not be available via this call due
-                to these node limitations.
+        """ Stream the feed entries of an account in reverse time order.
+
+            .. note:: RPC nodes keep a limited history of entries for the
+                      user feed. Older entries may not be available via this
+                      call due to these node limitations.
 
             :param int limit: (optional) stream the latest `limit`
                 feed entries. If unset (default), all available entries
@@ -2843,10 +2844,11 @@ class Account(BlockchainObject):
                     return
 
     def blog_history(self, limit=None, start=-1, reblogs=True, account=None):
-        """ stream the blog entries done by an account in reverse time order.
-                Note that RPC nodes keep a limited history of entries for the
-                user blog. Older blog posts of an account may not be available
-                via this call due to these node limitations.
+        """ Stream the blog entries done by an account in reverse time order.
+
+            .. note:: RPC nodes keep a limited history of entries for the
+                      user blog. Older blog posts of an account may not be available
+                      via this call due to these node limitations.
 
             :param int limit: (optional) stream the latest `limit`
                 blog entries. If unset (default), all available blog
@@ -2916,11 +2918,11 @@ class Account(BlockchainObject):
 
     def comment_history(self, limit=None, start_permlink=None,
                         account=None):
-        """ stream the comments done by an account in reverse time order.
-                Note that RPC nodes keep a limited history of entries
-                for the user comments. Older comments by an account
-                may not be available via this call due to these node
-                limitations.
+        """ Stream the comments done by an account in reverse time order.
+
+            .. note:: RPC nodes keep a limited history of user comments for the
+                      user feed. Older comments may not be available via this
+                      call due to these node limitations.
 
             :param int limit: (optional) stream the latest `limit`
                 comments. If unset (default), all available comments
@@ -2976,11 +2978,12 @@ class Account(BlockchainObject):
 
     def reply_history(self, limit=None, start_author=None,
                       start_permlink=None, account=None):
-        """ stream the replies to an account in reverse time order.
-                Note that RPC nodes keep a limited history of entries
-                for the replies to an author. Older replies to an account
-                may not be available via this call due to these node
-                limitations.
+        """ Stream the replies to an account in reverse time order.
+
+            .. note:: RPC nodes keep a limited history of entries for the
+                      replies to an author. Older replies to an account may
+                      not be available via this call due to
+                      these node limitations.
 
             :param int limit: (optional) stream the latest `limit`
                 replies. If unset (default), all available replies

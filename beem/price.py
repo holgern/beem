@@ -177,7 +177,7 @@ class Price(dict):
     def as_base(self, base):
         """ Returns the price instance so that the base asset is ``base``.
 
-            Note: This makes a copy of the object!
+            .. note:: This makes a copy of the object!
 
             .. code-block:: python
 
@@ -196,7 +196,7 @@ class Price(dict):
     def as_quote(self, quote):
         """ Returns the price instance so that the quote asset is ``quote``.
 
-            Note: This makes a copy of the object!
+            .. note:: This makes a copy of the object!
 
             .. code-block:: python
 

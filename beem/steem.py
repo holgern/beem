@@ -1578,9 +1578,9 @@ class Steem(object):
             :param list required_auths: (optional) required auths
             :param list required_posting_auths: (optional) posting auths
 
-            Note: While reqired auths and required_posting_auths are both
-            optional, one of the two are needed in order to send the custom
-            json.
+            .. note:: While reqired auths and required_posting_auths are both
+                      optional, one of the two are needed in order to send the custom
+                      json.
 
             .. code-block:: python
 
