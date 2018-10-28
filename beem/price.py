@@ -35,7 +35,7 @@ class Price(dict):
         :param Asset quote: Quote asset
         :param Steem steem_instance: Steem instance
         :returns: All data required to represent a price
-        :rtype: dict
+        :rtype: dictionary
 
         Way to obtain a proper instance:
 

@@ -1030,7 +1030,7 @@ class Account(BlockchainObject):
     def get_bandwidth(self):
         """ Returns used and allocated bandwidth
 
-            :rtype: dict
+            :rtype: dictionary
 
             Sample output:
 
@@ -1283,7 +1283,7 @@ class Account(BlockchainObject):
             :param list keys: public key
             :param str account: When set, a different account is used for the request (Default is object account name)
 
-            :rtype: dict
+            :rtype: dictionary
 
             .. code-block:: python
 

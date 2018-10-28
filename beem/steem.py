@@ -407,7 +407,7 @@ class Steem(object):
                                          empty or old, refresh_data() is used.
 
             :returns: Network parameters
-            :rtype: dict
+            :rtype: dictionary
         """
         if use_stored_data:
             self.refresh_data()
