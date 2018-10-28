@@ -163,7 +163,7 @@ class SteemConnect(object):
         self.access_token = self.steem.wallet.getTokenForAccountName(username)
 
     def broadcast(self, operations, username=None):
-        """ Broadcast a operations
+        """ Broadcast an operation
 
             Sample operations:
 

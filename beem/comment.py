@@ -283,7 +283,7 @@ class Comment(BlockchainObject):
         return author + curator + pending
 
     def is_pending(self):
-        """ Return if the payout is pending (the post/comment
+        """ Returns if the payout is pending (the post/comment
             is younger than 7 days)
         """
         a_zero = Amount(0, self.steem.sbd_symbol, steem_instance=self.steem)
@@ -292,7 +292,7 @@ class Comment(BlockchainObject):
         return post_age_days < 7.0 and float(total) == 0
 
     def time_elapsed(self):
-        """Return a timedelta on how old the post is.
+        """Returns a timedelta on how old the post is.
         """
         utc = pytz.timezone('UTC')
         return utc.localize(datetime.utcnow()) - self['created']
@@ -325,7 +325,7 @@ class Comment(BlockchainObject):
         return K * vote_value_SBD * t * math.sqrt(estimated_value_SBD)
 
     def get_curation_penalty(self, vote_time=None):
-        """ If post is less than 30 minutes old, it will incur a curation
+        """ If post is less than 15 minutes old, it will incur a curation
             reward penalty.
 
             :param datetime vote_time: A vote time can be given and the curation
@@ -569,7 +569,7 @@ class Comment(BlockchainObject):
         return []
 
     def get_parent(self, children=None):
-        """ Returns the parent post width depth == 0"""
+        """ Returns the parent post with depth == 0"""
         if children is None:
             children = self
         while children["depth"] > 0:

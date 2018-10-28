@@ -57,7 +57,7 @@ beempy can also be used to set nodes:
         beempy set nodes wss://steemd.privex.io
         beempy set nodes "['wss://steemd.privex.io', 'wss://gtg.steem.house:8090']"
 
-The default nodes can be resetted to the default value. When the first node does not
+The default nodes can be reset to the default value. When the first node does not
 answer, steem should be set to the offline mode. This can be done by:
 
 .. code-block:: bash

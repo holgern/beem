@@ -377,7 +377,7 @@ class TransactionBuilder(dict):
 
             Clears itself when broadcast was not successfully.
 
-            :param int max_block_age: paramerter only used
+            :param int max_block_age: parameter only used
                 for appbase ready nodes
 
         """

@@ -916,7 +916,7 @@ class Steem(object):
                         posting permission. Neither can you use different
                         accounts for different operations!
 
-            .. note:: This uses ``beem.txbuffer`` as instance of
+            .. note:: This uses :func:`Steem.txbuffer` as instance of
                 :class:`beem.transactionbuilder.TransactionBuilder`.
                 You may want to use your own txbuffer
         """
@@ -1047,7 +1047,7 @@ class Steem(object):
     # Account related calls
     # -------------------------------------------------------------------------
     def claim_account(self, creator, fee=None, **kwargs):
-        """"Claim account for claimed account creation.
+        """ Claim account for claimed account creation.
 
             When fee is 0 STEEM a subsidized account is claimed and can be created
             later with create_claimed_account.

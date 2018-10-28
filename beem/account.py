@@ -397,7 +397,8 @@ class Account(BlockchainObject):
         return reputation_to_score(rep)
 
     def get_manabar(self):
-        """"Return manabar"""
+        """ Return manabar
+        """
         max_mana = self.get_effective_vesting_shares()
         if max_mana == 0:
             props = self.steem.get_chain_properties()
