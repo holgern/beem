@@ -1,7 +1,7 @@
 pip
 setuptools
 wheel
-future==0.16.0
+future==0.17.0
 ecdsa==0.13
 requests==2.19.1
 websocket-client==0.53.0
