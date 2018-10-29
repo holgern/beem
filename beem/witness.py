@@ -270,6 +270,38 @@ class WitnessesObject(list):
             self.__class__.__name__, str(self.identifier))
 
 
+class GetWitnesses(WitnessesObject):
+    """ Obtain a list of witnesses
+
+        :param list name_list: list of witneses to fetch
+        :param int batch_limit: (optional) maximum number of witnesses
+            to fetch per call, defaults to 100
+        :param Steem steem_instance: Steem() instance to use when
+            accessing a RPCcreator = Witness(creator, steem_instance=self)
+    """
+    def __init__(self, name_list, batch_limit=100, lazy=False, full=True, steem_instance=None):
+        self.steem = steem_instance or shared_steem_instance()
+        if not self.steem.is_connected():
+            return
+        witnesses = []
+        name_cnt = 0
+
+        while name_cnt < len(name_list):
+            self.steem.rpc.set_next_node_on_empty_reply(False)
+            if self.steem.rpc.get_use_appbase():
+                witnesses += self.steem.rpc.find_witnesses({'owners': name_list[name_cnt:batch_limit + name_cnt]}, api="database")["witnesses"]
+            else:
+                witnesses += self.steem.rpc.get_witness_by_account(name_list[name_cnt:batch_limit + name_cnt])
+            name_cnt += batch_limit
+        self.identifier = ""
+        super(GetWitnesses, self).__init__(
+            [
+                Witness(x, lazy=lazy, full=full, steem_instance=self.steem)
+                for x in witnesses
+            ]
+        )
+
+
 class Witnesses(WitnessesObject):
     """ Obtain a list of **active** witnesses and the current schedule
 
