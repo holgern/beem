@@ -26,7 +26,7 @@ class Vote(BlockchainObject):
     """ Read data about a Vote in the chain
 
         :param str authorperm: perm link to post/comment
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param Steem steem_instance: Steem() instance to use when accesing a RPC
 
         .. code-block:: python
 
@@ -333,7 +333,7 @@ class ActiveVotes(VotesObject):
     """ Obtain a list of votes for a post
 
         :param str authorperm: authorperm link
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param Steem steem_instance: Steem() instance to use when accesing a RPC
     """
     def __init__(self, authorperm, lazy=False, full=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
@@ -383,7 +383,7 @@ class AccountVotes(VotesObject):
         Lists the last 100+ votes on the given account.
 
         :param str account: Account name
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param Steem steem_instance: Steem() instance to use when accesing a RPC
     """
     def __init__(self, account, start=None, stop=None, lazy=False, full=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()

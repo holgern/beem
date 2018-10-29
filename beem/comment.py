@@ -28,7 +28,7 @@ class Comment(BlockchainObject):
 
         :param str authorperm: identifier to post/comment in the form of
             ``@author/permlink``
-        :param steem steem_instance: Steem() instance to use when accessing a RPC
+        :param Steem steem_instance: :class:`beem.steem.Steem` instance to use when accessing a RPC
 
 
         .. code-block:: python
@@ -283,7 +283,7 @@ class Comment(BlockchainObject):
         return author + curator + pending
 
     def is_pending(self):
-        """ Return if the payout is pending (the post/comment
+        """ Returns if the payout is pending (the post/comment
             is younger than 7 days)
         """
         a_zero = Amount(0, self.steem.sbd_symbol, steem_instance=self.steem)
@@ -292,7 +292,7 @@ class Comment(BlockchainObject):
         return post_age_days < 7.0 and float(total) == 0
 
     def time_elapsed(self):
-        """Return a timedelta on how old the post is.
+        """Returns a timedelta on how old the post is.
         """
         utc = pytz.timezone('UTC')
         return utc.localize(datetime.utcnow()) - self['created']
@@ -325,7 +325,7 @@ class Comment(BlockchainObject):
         return K * vote_value_SBD * t * math.sqrt(estimated_value_SBD)
 
     def get_curation_penalty(self, vote_time=None):
-        """ If post is less than 30 minutes old, it will incur a curation
+        """ If post is less than 15 minutes old, it will incur a curation
             reward penalty.
 
             :param datetime vote_time: A vote time can be given and the curation
@@ -356,8 +356,9 @@ class Comment(BlockchainObject):
 
             :param str voter: Voter for which the vote should be returned
             :param bool raw_data: If True, the raw data are returned
-            :param float/str pending_payout_SBD: When not None this value instead of the current
+            :param pending_payout_SBD: When not None this value instead of the current
                 value is used for calculating the rewards
+            :type pending_payout_SBD: float, str
         """
         specific_vote = None
         if voter is None:
@@ -390,8 +391,8 @@ class Comment(BlockchainObject):
         """ Returns the total_payout, author_payout and the curator payout in SBD.
             When the payout is still pending, the estimated payout is given out.
 
-            Note: potential beneficiary rewards were already deducted from the
-                `author_payout` and the `total_payout`
+            .. note:: Potential beneficiary rewards were already deducted from the
+                      `author_payout` and the `total_payout`
 
             Example:::
 
@@ -415,7 +416,7 @@ class Comment(BlockchainObject):
     def get_author_rewards(self):
         """ Returns the author rewards.
 
-            Example:::
+            Example::
 
                 {
                     'pending_rewards': True,
@@ -455,15 +456,16 @@ class Comment(BlockchainObject):
         """ Returns the curation rewards.
 
             :param bool pending_payout_SBD: If True, the rewards are returned in SBD and not in STEEM (default is False)
-            :param float/str pending_payout_value: When not None this value instead of the current
+            :param pending_payout_value: When not None this value instead of the current
                 value is used for calculating the rewards
+            :type pending_payout_value: float, str
 
             `pending_rewards` is True when
             the post is younger than 7 days. `unclaimed_rewards` is the
             amount of curation_rewards that goes to the author (self-vote or votes within
             the first 30 minutes). `active_votes` contains all voter with their curation reward.
 
-            Example:::
+            Example::
 
                 {
                     'pending_rewards': True, 'unclaimed_rewards': 0.245 STEEM,
@@ -567,7 +569,7 @@ class Comment(BlockchainObject):
         return []
 
     def get_parent(self, children=None):
-        """ Returns the parent post width depth == 0"""
+        """ Returns the parent post with depth == 0"""
         if children is None:
             children = self
         while children["depth"] > 0:
@@ -721,8 +723,8 @@ class Comment(BlockchainObject):
                 Takes the form ``@author/permlink``. By default the current post
                 will be used.
 
-            Note: a post/comment can only be deleted as long as it has no
-                replies and no positive rshares on it.
+            .. note:: A post/comment can only be deleted as long as it has no
+                      replies and no positive rshares on it.
 
         """
         if not account:
@@ -774,7 +776,7 @@ class RecentReplies(list):
         :param str author: author
         :param bool skip_own: (optional) Skip replies of the author to him/herself.
             Default: True
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param Steem steem_instance: Steem() instance to use when accesing a RPC
     """
     def __init__(self, author, skip_own=True, lazy=False, full=True, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
@@ -796,7 +798,7 @@ class RecentByPath(list):
     """ Obtain a list of votes for an account
 
         :param str account: Account name
-        :param steem steem_instance: Steem() instance to use when accesing a RPC
+        :param Steem steem_instance: Steem() instance to use when accesing a RPC
     """
     def __init__(self, path="promoted", category=None, lazy=False, full=True, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()

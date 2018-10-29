@@ -8,12 +8,9 @@ beem Modules
 
    beem.account
    beem.aes
-   beem.asciichart
    beem.amount
+   beem.asciichart
    beem.asset
-   beem.steem
-   beem.nodelist
-   beem.steemconnect
    beem.block
    beem.blockchain
    beem.blockchainobject
@@ -26,10 +23,13 @@ beem Modules
    beem.market
    beem.memo
    beem.message
+   beem.nodelist
    beem.notify
    beem.price
    beem.rc
    beem.snapshot
+   beem.steem
+   beem.steemconnect
    beem.storage
    beem.transactionbuilder
    beem.utils
@@ -42,11 +42,11 @@ beemapi Modules
 
 .. toctree::
 
-   beemapi.steemnoderpc
    beemapi.exceptions
-   beemapi.websocket
-   beemapi.node
    beemapi.graphenenerpc
+   beemapi.node
+   beemapi.steemnoderpc
+   beemapi.websocket
 
 beembase Modules
 -------------------

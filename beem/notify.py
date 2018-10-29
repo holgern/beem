@@ -20,7 +20,7 @@ class Notify(Events):
         blockchain.
 
         :param fnt on_block: Callback that will be called for each block received
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
 
         **Example**
 

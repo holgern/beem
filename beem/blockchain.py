@@ -177,7 +177,7 @@ class Blockchain(object):
     """ This class allows to access the blockchain and read data
         from it
 
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
         :param str mode: (default) Irreversible block (``irreversible``) or
             actual head block (``head``)
         :param int max_block_wait_repetition: maximum wait repetition for next block
@@ -764,6 +764,7 @@ class Blockchain(object):
     def awaitTxConfirmation(self, transaction, limit=10):
         """ Returns the transaction as seen by the blockchain after being
             included into a block
+
             :param dict transaction: transaction to wait for
             :param int limit: (optional) number of blocks to wait for the transaction (default: 10)
 

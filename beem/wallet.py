@@ -43,19 +43,20 @@ class Wallet(object):
         or uses a SQLite database managed by storage.py.
 
         :param SteemNodeRPC rpc: RPC connection to a Steem node
-        :param array,dict,string keys: Predefine the wif keys to shortcut the
+        :param keys: Predefine the wif keys to shortcut the
                wallet database
+        :type keys: array, dict, str
 
         Three wallet operation modes are possible:
 
         * **Wallet Database**: Here, beem loads the keys from the
           locally stored wallet SQLite database (see ``storage.py``).
-          To use this mode, simply call ``Steem()`` without the
+          To use this mode, simply call :class:`beem.steem.Steem` without the
           ``keys`` parameter
         * **Providing Keys**: Here, you can provide the keys for
           your accounts manually. All you need to do is add the wif
           keys for the accounts you want to use as a simple array
-          using the ``keys`` parameter to ``Steem()``.
+          using the ``keys`` parameter to :class:`beem.steem.Steem`.
         * **Force keys**: This more is for advanced users and
           requires that you know what you are doing. Here, the
           ``keys`` parameter is a dictionary that overwrite the
@@ -72,7 +73,7 @@ class Wallet(object):
            steem.wallet.wipe(True)
            steem.wallet.create("supersecret-passphrase")
 
-        This will raise an exception if you already have a wallet installed.
+        This will raise :class:`beem.exceptions.WalletExists` if you already have a wallet installed.
 
 
         The wallet can be unlocked for signing using
@@ -84,7 +85,7 @@ class Wallet(object):
            steem.wallet.unlock("supersecret-passphrase")
 
         A private key can be added by using the
-        :func:`steem.wallet.Wallet.addPrivateKey` method that is available
+        :func:`addPrivateKey` method that is available
         **after** unlocking the wallet with the correct passphrase:
 
         .. code-block:: python
@@ -256,12 +257,16 @@ class Wallet(object):
             return False
 
     def create(self, pwd):
-        """ Alias for newWallet()
+        """ Alias for :func:`newWallet`
+
+            :param str pwd: Passphrase for the created wallet
         """
         self.newWallet(pwd)
 
     def newWallet(self, pwd):
         """ Create a new wallet database
+
+            :param str pwd: Passphrase for the created wallet
         """
         if self.created():
             raise WalletExists("You already have created a wallet!")
@@ -602,7 +607,7 @@ class Wallet(object):
 
             Note: this returns only the first account with the given key. To
             get all accounts associated with a given public key, use
-            ``getAccountsFromPublicKey``.
+            :func:`getAccountsFromPublicKey`.
         """
         names = list(self.getAccountsFromPublicKey(pub))
         if not names:
@@ -649,6 +654,7 @@ class Wallet(object):
         """ Get key type
 
             :param beem.account.Account/dict account: Account data
+            :type account: Account, dict
             :param str pub: Public key
 
         """

@@ -47,10 +47,12 @@ class Steem(object):
             *(optional)*
         :param bool unsigned: Do **not** sign a transaction! *(optional)*
         :param bool debug: Enable Debugging *(optional)*
-        :param array,dict,string keys: Predefine the wif keys to shortcut the
+        :param keys: Predefine the wif keys to shortcut the
             wallet database *(optional)*
-        :param array,dict,string wif: Predefine the wif keys to shortcut the
+        :type keys: array, dict, string
+        :param wif: Predefine the wif keys to shortcut the
                 wallet database *(optional)*
+        :type wif: array, dict, string
         :param bool offline: Boolean to prevent connecting to network (defaults
             to ``False``) *(optional)*
         :param int expiration: Delay in seconds until transactions are supposed
@@ -358,8 +360,9 @@ class Steem(object):
 
     def get_current_median_history(self, use_stored_data=True):
         """ Returns the current median price
+
             :param bool use_stored_data: if True, stored data will be returned. If stored data are
-            empty or old, refresh_data() is used.
+                                         empty or old, refresh_data() is used.
         """
         if use_stored_data:
             self.refresh_data()
@@ -379,8 +382,9 @@ class Steem(object):
 
     def get_hardfork_properties(self, use_stored_data=True):
         """ Returns Hardfork and live_time of the hardfork
+
             :param bool use_stored_data: if True, stored data will be returned. If stored data are
-            empty or old, refresh_data() is used.
+                                         empty or old, refresh_data() is used.
         """
         if use_stored_data:
             self.refresh_data()
@@ -398,11 +402,12 @@ class Steem(object):
 
     def get_network(self, use_stored_data=True):
         """ Identify the network
+
             :param bool use_stored_data: if True, stored data will be returned. If stored data are
-            empty or old, refresh_data() is used.
+                                         empty or old, refresh_data() is used.
 
             :returns: Network parameters
-            :rtype: dict
+            :rtype: dictionary
         """
         if use_stored_data:
             self.refresh_data()
@@ -553,7 +558,7 @@ class Steem(object):
     def vests_to_sp(self, vests, timestamp=None, use_stored_data=True):
         """ Converts vests to SP
 
-            :param beem.amount.Amount vests/float vests: Vests to convert
+            :param amount.Amount vests/float vests: Vests to convert
             :param int timestamp: (Optional) Can be used to calculate
                 the conversion rate from the past
 
@@ -573,10 +578,12 @@ class Steem(object):
 
     def sp_to_sbd(self, sp, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
         """ Obtain the resulting SBD vote value from Steem power
+
             :param number steem_power: Steem Power
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
             :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
+
             Only impactful for very big votes. Slight modification to the value calculation, as the not_broadcasted
             vote rshares decreases the reward pool.
         """
@@ -585,10 +592,12 @@ class Steem(object):
 
     def vests_to_sbd(self, vests, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
         """ Obtain the resulting SBD vote value from vests
+
             :param number vests: vesting shares
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
             :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
+
             Only impactful for very big votes. Slight modification to the value calculation, as the not_broadcasted
             vote rshares decreases the reward pool.
         """
@@ -641,7 +650,8 @@ class Steem(object):
     def sbd_to_rshares(self, sbd, not_broadcasted_vote=False, use_stored_data=True):
         """ Obtain the r-shares from SBD
 
-        :param str/int/Amount sbd: SBD
+        :param sbd: SBD
+        :type sbd: str, int, amount.Amount
         :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
          Only impactful for very high amounts of SBD. Slight modification to the value calculation, as the not_broadcasted
          vote rshares decreases the reward pool.
@@ -728,7 +738,8 @@ class Steem(object):
 
             Returns the required voting percentage (100% = 10000)
 
-            :param str/int/Amount sbd: desired SBD value
+            :param sbd: desired SBD value
+            :type sbd: str, int, amount.Amount
             :param number steem_power: Steem Power
             :param number vests: vesting shares
             :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
@@ -781,7 +792,7 @@ class Steem(object):
     def get_config(self, use_stored_data=True):
         """ Returns internal chain configuration.
 
-            :param bool use_stored_data: If True, the chached value is returned
+            :param bool use_stored_data: If True, the cached value is returned
         """
         if use_stored_data:
             self.refresh_data()
@@ -885,15 +896,15 @@ class Steem(object):
             the wallet, finalizes the transaction, signs it and
             broadacasts it
 
-            :param operation ops: The operation (or list of operations) to
+            :param ops: The operation (or list of operations) to
                 broadcast
-            :param operation account: The account that authorizes the
+            :type ops: list, GrapheneObject
+            :param Account account: The account that authorizes the
                 operation
             :param string permission: The required permission for
                 signing (active, owner, posting)
-            :param object append_to: This allows to provide an instance of
-                ProposalsBuilder (see :func:`steem.new_proposal`) or
-                TransactionBuilder (see :func:`steem.new_tx()`) to specify
+            :param TransactionBuilder append_to: This allows to provide an instance of
+                TransactionBuilder (see :func:`Steem.new_tx()`) to specify
                 where to put a specific operation.
 
             .. note:: ``append_to`` is exposed to every method used in the
@@ -905,7 +916,7 @@ class Steem(object):
                         posting permission. Neither can you use different
                         accounts for different operations!
 
-            .. note:: This uses ``beem.txbuffer`` as instance of
+            .. note:: This uses :func:`Steem.txbuffer` as instance of
                 :class:`beem.transactionbuilder.TransactionBuilder`.
                 You may want to use your own txbuffer
         """
@@ -983,11 +994,11 @@ class Steem(object):
     # -------------------------------------------------------------------------
     def newWallet(self, pwd):
         """ Create a new wallet. This method is basically only calls
-            :func:`beem.wallet.create`.
+            :func:`beem.wallet.Wallet.create`.
 
             :param str pwd: Password to use for the new wallet
 
-            :raises beem.exceptions.WalletExists: if there is already a
+            :raises WalletExists: if there is already a
                 wallet created
 
         """
@@ -1015,7 +1026,8 @@ class Steem(object):
     def new_tx(self, *args, **kwargs):
         """ Let's obtain a new txbuffer
 
-            :returns int txid: id of the new txbuffer
+            :returns: id of the new txbuffer
+            :rtype: int
         """
         builder = TransactionBuilder(
             *args,
@@ -1035,7 +1047,7 @@ class Steem(object):
     # Account related calls
     # -------------------------------------------------------------------------
     def claim_account(self, creator, fee=None, **kwargs):
-        """"Claim account for claimed account creation.
+        """ Claim account for claimed account creation.
 
             When fee is 0 STEEM a subsidized account is claimed and can be created
             later with create_claimed_account.
@@ -1086,7 +1098,7 @@ class Steem(object):
         """ Create new claimed account on Steem
 
             The brainkey/password can be used to recover all generated keys
-            (see `beemgraphenebase.account` for more details.
+            (see :class:`beemgraphenebase.account` for more details.
 
             By default, this call will use ``default_account`` to
             register a new name ``account_name`` with all keys being
@@ -1287,7 +1299,7 @@ class Steem(object):
         """ Create new account on Steem
 
             The brainkey/password can be used to recover all generated keys
-            (see `beemgraphenebase.account` for more details.
+            (see :class:`beemgraphenebase.account` for more details.
 
             By default, this call will use ``default_account`` to
             register a new name ``account_name`` with all keys being
@@ -1458,7 +1470,7 @@ class Steem(object):
     def witness_set_properties(self, wif, owner, props, use_condenser_api=True):
         """ Set witness properties
 
-            :param privkey wif: Private signing key
+            :param str wif: Private signing key
             :param dict props: Properties
             :param str owner: witness account name
 
@@ -1497,7 +1509,7 @@ class Steem(object):
     def witness_update(self, signing_key, url, props, account=None, **kwargs):
         """ Creates/updates a witness
 
-            :param pubkey signing_key: Public signing key
+            :param str signing_key: Public signing key
             :param str url: URL
             :param dict props: Properties
             :param str account: (optional) witness account name
@@ -1566,9 +1578,9 @@ class Steem(object):
             :param list required_auths: (optional) required auths
             :param list required_posting_auths: (optional) posting auths
 
-            Note: While reqired auths and required_posting_auths are both
-            optional, one of the two are needed in order to send the custom
-            json.
+            .. note:: While reqired auths and required_posting_auths are both
+                      optional, one of the two are needed in order to send the custom
+                      json.
 
             .. code-block:: python
 
@@ -1625,8 +1637,9 @@ class Steem(object):
             If left empty, it will be derived from title automatically.
         :param str reply_identifier: Identifier of the parent post/comment (only
             if this post is a reply/comment).
-        :param str/dict json_metadata: JSON meta object that can be attached to
+        :param json_metadata: JSON meta object that can be attached to
             the post.
+        :type json_metadata: str, dict
         :param dict comment_options: JSON options object that can be
             attached to the post.
 
@@ -1650,10 +1663,11 @@ class Steem(object):
             `json_metadata`.
         :param str app: (Optional) Name of the app which are used for posting
             when not set, beem/<version> is used
-        :param str/list tags: (Optional) A list of tags to go with the
+        :param tags: (Optional) A list of tags to go with the
             post. This will also override the tags specified in
             `json_metadata`. The first tag will be used as a 'category'. If
             provided as a string, it should be space separated.
+        :type tags: str, list
         :param list beneficiaries: (Optional) A list of beneficiaries
             for posting reward distribution. This argument overrides
             beneficiaries as specified in `comment_options`.

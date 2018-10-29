@@ -194,8 +194,8 @@ class Key(DataDir):
             return []
 
     def getPrivateKeyForPublicKey(self, pub):
-        """ Returns the (possibly encrypted) private key that
-            corresponds to a public key
+        """Returns the (possibly encrypted) private key that
+           corresponds to a public key
 
            :param str pub: Public key
 
@@ -224,8 +224,8 @@ class Key(DataDir):
         connection.commit()
 
     def add(self, wif, pub):
-        """ Add a new public/private key pair (correspondence has to be
-            checked elsewhere!)
+        """Add a new public/private key pair (correspondence has to be
+           checked elsewhere!)
 
            :param str pub: Public key
            :param str wif: Private key
@@ -317,8 +317,8 @@ class Token(DataDir):
             return []
 
     def getTokenForPublicName(self, name):
-        """ Returns the (possibly encrypted) private token that
-            corresponds to a public name
+        """Returns the (possibly encrypted) private token that
+           corresponds to a public name
 
            :param str pub: Public name
 
@@ -347,8 +347,8 @@ class Token(DataDir):
         connection.commit()
 
     def add(self, name, token):
-        """ Add a new public/private token pair (correspondence has to be
-            checked elsewhere!)
+        """Add a new public/private token pair (correspondence has to be
+           checked elsewhere!)
 
            :param str name: Public name
            :param str token: Private token

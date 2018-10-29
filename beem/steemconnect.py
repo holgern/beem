@@ -37,6 +37,7 @@ class SteemConnect(object):
             post.upvote(voter="test")  # replace "test" with your account
 
         Examples for creating steemconnect v2 urls for broadcasting in browser:
+
         .. testoutput::
 
             from beem import Steem
@@ -148,12 +149,12 @@ class SteemConnect(object):
         return r.json()
 
     def set_access_token(self, access_token):
-        """ Is needed for broadcast() and me()
+        """ Is needed for :func:`broadcast` and :func:`me`
         """
         self.access_token = access_token
 
     def set_username(self, username, permission="posting"):
-        """ Set a username for the next broadcast() or me operation()
+        """ Set a username for the next :func:`broadcast` or :func:`me` operation.
             The necessary token is fetched from the wallet
         """
         if permission != "posting":
@@ -162,7 +163,7 @@ class SteemConnect(object):
         self.access_token = self.steem.wallet.getTokenForAccountName(username)
 
     def broadcast(self, operations, username=None):
-        """ Broadcast a operations
+        """ Broadcast an operation
 
             Sample operations:
 

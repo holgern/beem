@@ -16,7 +16,7 @@ class Block(BlockchainObject):
     """ Read a single block from the chain
 
         :param int block: block number
-        :param beem.steem.Steem steem_instance: Steem
+        :param Steem steem_instance: Steem
             instance
         :param bool lazy: Use lazy loading
         :param bool only_ops: Includes only operations, when set to True (default: False)
@@ -54,7 +54,7 @@ class Block(BlockchainObject):
         """ Initilize a block
 
             :param int block: block number
-            :param beem.steem.Steem steem_instance: Steem
+            :param Steem steem_instance: Steem
                 instance
             :param bool lazy: Use lazy loading
             :param bool only_ops: Includes only operations, when set to True (default: False)
@@ -280,7 +280,7 @@ class BlockHeader(BlockchainObject):
     """ Read a single block header from the chain
 
         :param int block: block number
-        :param beem.steem.Steem steem_instance: Steem
+        :param Steem steem_instance: Steem
             instance
         :param bool lazy: Use lazy loading
 
@@ -304,7 +304,7 @@ class BlockHeader(BlockchainObject):
         """ Initilize a block
 
             :param int block: block number
-            :param beem.steem.Steem steem_instance: Steem
+            :param Steem steem_instance: Steem
                 instance
             :param bool lazy: Use lazy loading
 

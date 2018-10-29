@@ -38,7 +38,7 @@ def set_shared_steem_instance(steem_instance):
     """ This method allows us to override default steem instance for all users of
         ``SharedInstance.instance``.
 
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Steem steem_instance: Steem instance
     """
     clear_cache()
     SharedInstance.instance = steem_instance

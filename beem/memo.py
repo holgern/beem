@@ -16,9 +16,9 @@ from .exceptions import MissingKeyError
 class Memo(object):
     """ Deals with Memos that are attached to a transfer
 
-        :param beem.account.Account from_account: Account that has sent the memo
-        :param beem.account.Account to_account: Account that has received the memo
-        :param beem.steem.Steem steem_instance: Steem instance
+        :param Account from_account: Account that has sent the memo
+        :param Account to_account: Account that has received the memo
+        :param Steem steem_instance: Steem instance
 
         A memo is encrypted with a shared secret derived from a private key of
         the sender and a public key of the receiver. Due to the underlying

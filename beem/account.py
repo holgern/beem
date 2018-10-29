@@ -30,7 +30,7 @@ class Account(BlockchainObject):
     """ This class allows to easily access Account data
 
         :param str account_name: Name of the account
-        :param beem.steem.Steem steem_instance: Steem
+        :param Steem steem_instance: Steem
                instance
         :param bool lazy: Use lazy loading
         :param bool full: Obtain all account data including orders, positions,
@@ -71,7 +71,7 @@ class Account(BlockchainObject):
         """Initialize an account
 
         :param str account: Name of the account
-        :param beem.steem.Steem steem_instance: Steem
+        :param Steem steem_instance: Steem
                instance
         :param bool lazy: Use lazy loading
         :param bool full: Obtain all account data including orders, positions,
@@ -255,7 +255,7 @@ class Account(BlockchainObject):
             :returns: Similar account names as list
             :rtype: list
 
-            This is a wrapper around ``Blockchain.get_similar_account_names()``
+            This is a wrapper around :func:`beem.blockchain.Blockchain.get_similar_account_names()`
             using the current account name as reference.
 
         """
@@ -397,7 +397,8 @@ class Account(BlockchainObject):
         return reputation_to_score(rep)
 
     def get_manabar(self):
-        """"Return manabar"""
+        """ Return manabar
+        """
         max_mana = self.get_effective_vesting_shares()
         if max_mana == 0:
             props = self.steem.get_chain_properties()
@@ -486,7 +487,8 @@ class Account(BlockchainObject):
             If the returned number is bigger than 10000 or smaller than -10000,
             the given SBD value is too high for that account
 
-            :param str/int/Amount sbd: The amount of SBD in vote value
+            :param sbd: The amount of SBD in vote value
+            :type sbd: str, int, amount.Amount
 
         """
         if voting_power is None:
@@ -521,7 +523,7 @@ class Account(BlockchainObject):
 
             :param float voting_power_goal: voting power goal in percentage (default is 100)
             :param float starting_voting_power: returns recharge time if current voting power is
-            the provided value.
+                the provided value.
 
         """
         remainingTime = self.get_recharge_timedelta(voting_power_goal=voting_power_goal, starting_voting_power=starting_voting_power)
@@ -532,7 +534,7 @@ class Account(BlockchainObject):
 
             :param float voting_power_goal: voting power goal in percentage (default is 100)
             :param float starting_voting_power: returns recharge time if current voting power is
-            the provided value.
+                the provided value.
 
         """
         if starting_voting_power is None:
@@ -551,7 +553,7 @@ class Account(BlockchainObject):
 
             :param float voting_power_goal: voting power goal in percentage (default is 100)
             :param float starting_voting_power: returns recharge time if current voting power is
-            the provided value.
+                the provided value.
 
         """
         return addTzInfo(datetime.utcnow()) + self.get_recharge_timedelta(voting_power_goal, starting_voting_power)
@@ -934,7 +936,8 @@ class Account(BlockchainObject):
             * "total"
 
             :param str balances: Defines the balance type
-            :param (str, dict) symbol: Can be "SBD", "STEEM" or "VESTS
+            :param symbol: Can be "SBD", "STEEM" or "VESTS
+            :type symbol: str, dict
 
             .. code-block:: python
 
@@ -1027,7 +1030,7 @@ class Account(BlockchainObject):
     def get_bandwidth(self):
         """ Returns used and allocated bandwidth
 
-            :rtype: dict
+            :rtype: dictionary
 
             Sample output:
 
@@ -1280,7 +1283,7 @@ class Account(BlockchainObject):
             :param list keys: public key
             :param str account: When set, a different account is used for the request (Default is object account name)
 
-            :rtype: dict
+            :rtype: dictionary
 
             .. code-block:: python
 
@@ -1337,7 +1340,7 @@ class Account(BlockchainObject):
     def get_expiring_vesting_delegations(self, after=None, limit=1000, account=None):
         """ Returns the expirations for vesting delegations.
 
-            :param datetime after : expiration after (only for pre appbase nodes)
+            :param datetime after: expiration after (only for pre appbase nodes)
             :param int limit: limits number of shown entries (only for pre appbase nodes)
             :param str account: When set, a different account is used for the request (Default is object account name)
 
@@ -1393,7 +1396,8 @@ class Account(BlockchainObject):
     def get_vote(self, comment):
         """Returns a vote if the account has already voted for comment.
 
-            :param str/Comment comment: can be a Comment object or a authorpermlink
+            :param comment: can be a Comment object or a authorpermlink
+            :type comment: str, Comment
         """
         from beem.comment import Comment
         c = Comment(comment, steem_instance=self.steem)
@@ -1405,7 +1409,8 @@ class Account(BlockchainObject):
     def has_voted(self, comment):
         """Returns if the account has already voted for comment
 
-            :param str/Comment comment: can be a Comment object or a authorpermlink
+            :param comment: can be a Comment object or a authorpermlink
+            :type comment: str, Comment
         """
         from beem.comment import Comment
         c = Comment(comment, steem_instance=self.steem)
@@ -1449,8 +1454,9 @@ class Account(BlockchainObject):
     def estimate_virtual_op_num(self, blocktime, stop_diff=0, max_count=100):
         """ Returns an estimation of an virtual operation index for a given time or blockindex
 
-            :param int/datetime blocktime: start time or start block index from which account
+            :param blocktime: start time or start block index from which account
                 operation should be fetched
+            :type blocktime: int, datetime
             :param int stop_diff: Sets the difference between last estimation and
                 new estimation at which the estimation stops. Must not be zero. (default is 1)
             :param int max_count: sets the maximum number of iterations. -1 disables this (default 100)
@@ -1608,10 +1614,12 @@ class Account(BlockchainObject):
 
             :param int index: first number of transactions to return
             :param int limit: limit number of transactions to return
-            :param int/datetime start: start number/date of transactions to
+            :param start: start number/date of transactions to
                 return (*optional*)
-            :param int/datetime stop: stop number/date of transactions to
+            :type start: int, datetime
+            :param stop: stop number/date of transactions to
                 return (*optional*)
+            :type stop: int, datetime
             :param bool use_block_num: if true, start and stop are block numbers, otherwise virtual OP count numbers.
             :param array only_ops: Limit generator by these
                 operations (*optional*)
@@ -1622,7 +1630,8 @@ class Account(BlockchainObject):
             :param bool raw_output: if False, the output is a dict, which
                 includes all values. Otherwise, the output is list.
 
-            ... note::
+            .. note::
+
                 only_ops and exclude_ops takes an array of strings:
                 The full list of operation ID's can be found in
                 beembase.operationids.ops.
@@ -1711,10 +1720,10 @@ class Account(BlockchainObject):
             earlist operation will be first. This call can be used in a
             ``for`` loop.
 
-            :param int/datetime start: start number/date of transactions to
-                return (*optional*)
-            :param int/datetime stop: stop number/date of transactions to
-                return (*optional*)
+            :param start: start number/date of transactions to return (*optional*)
+            :type start: int, datetime
+            :param stop: stop number/date of transactions to return (*optional*)
+            :type stop: int, datetime
             :param bool use_block_num: if true, start and stop are block numbers,
                 otherwise virtual OP count numbers.
             :param array only_ops: Limit generator by these
@@ -1725,7 +1734,7 @@ class Account(BlockchainObject):
             :param bool raw_output: if False, the output is a dict, which
                 includes all values. Otherwise, the output is list.
 
-            ... note::
+            .. note::
                 only_ops and exclude_ops takes an array of strings:
                 The full list of operation ID's can be found in
                 beembase.operationids.ops.
@@ -1873,10 +1882,12 @@ class Account(BlockchainObject):
             latest operation will be first. This call can be used in a
             ``for`` loop.
 
-            :param int/datetime start: start number/date of transactions to
+            :param start: start number/date of transactions to
                 return. If negative the virtual_op_count is added. (*optional*)
-            :param int/datetime stop: stop number/date of transactions to
+            :type start: int, datetime
+            :param stop: stop number/date of transactions to
                 return. If negative the virtual_op_count is added. (*optional*)
+            :type stop: int, datetime
             :param bool use_block_num: if true, start and stop are block numbers,
                 otherwise virtual OP count numbers.
             :param array only_ops: Limit generator by these
@@ -1887,7 +1898,7 @@ class Account(BlockchainObject):
             :param bool raw_output: if False, the output is a dict, which
                 includes all values. Otherwise, the output is list.
 
-            ... note::
+            .. note::
                 only_ops and exclude_ops takes an array of strings:
                 The full list of operation ID's can be found in
                 beembase.operationids.ops.
@@ -2264,7 +2275,8 @@ class Account(BlockchainObject):
                 if not ``default_account``
 
 
-            transfer example:
+            Transfer example:
+
             .. code-block:: python
 
                 from beem.account import Account
@@ -2767,10 +2779,11 @@ class Account(BlockchainObject):
 
     def feed_history(self, limit=None, start_author=None, start_permlink=None,
                      account=None):
-        """ stream the feed entries of an account in reverse time order.
-                Note that RPC nodes keep a limited history of entries for the
-                user feed. Older entries may not be available via this call due
-                to these node limitations.
+        """ Stream the feed entries of an account in reverse time order.
+
+            .. note:: RPC nodes keep a limited history of entries for the
+                      user feed. Older entries may not be available via this
+                      call due to these node limitations.
 
             :param int limit: (optional) stream the latest `limit`
                 feed entries. If unset (default), all available entries
@@ -2831,10 +2844,11 @@ class Account(BlockchainObject):
                     return
 
     def blog_history(self, limit=None, start=-1, reblogs=True, account=None):
-        """ stream the blog entries done by an account in reverse time order.
-                Note that RPC nodes keep a limited history of entries for the
-                user blog. Older blog posts of an account may not be available
-                via this call due to these node limitations.
+        """ Stream the blog entries done by an account in reverse time order.
+
+            .. note:: RPC nodes keep a limited history of entries for the
+                      user blog. Older blog posts of an account may not be available
+                      via this call due to these node limitations.
 
             :param int limit: (optional) stream the latest `limit`
                 blog entries. If unset (default), all available blog
@@ -2904,11 +2918,11 @@ class Account(BlockchainObject):
 
     def comment_history(self, limit=None, start_permlink=None,
                         account=None):
-        """ stream the comments done by an account in reverse time order.
-                Note that RPC nodes keep a limited history of entries
-                for the user comments. Older comments by an account
-                may not be available via this call due to these node
-                limitations.
+        """ Stream the comments done by an account in reverse time order.
+
+            .. note:: RPC nodes keep a limited history of user comments for the
+                      user feed. Older comments may not be available via this
+                      call due to these node limitations.
 
             :param int limit: (optional) stream the latest `limit`
                 comments. If unset (default), all available comments
@@ -2964,11 +2978,12 @@ class Account(BlockchainObject):
 
     def reply_history(self, limit=None, start_author=None,
                       start_permlink=None, account=None):
-        """ stream the replies to an account in reverse time order.
-                Note that RPC nodes keep a limited history of entries
-                for the replies to an author. Older replies to an account
-                may not be available via this call due to these node
-                limitations.
+        """ Stream the replies to an account in reverse time order.
+
+            .. note:: RPC nodes keep a limited history of entries for the
+                      replies to an author. Older replies to an account may
+                      not be available via this call due to
+                      these node limitations.
 
             :param int limit: (optional) stream the latest `limit`
                 replies. If unset (default), all available replies
@@ -3098,7 +3113,7 @@ class Accounts(AccountsObject):
         :param list name_list: list of accounts to fetch
         :param int batch_limit: (optional) maximum number of accounts
             to fetch per call, defaults to 100
-        :param steem steem_instance: Steem() instance to use when
+        :param Steem steem_instance: Steem() instance to use when
             accessing a RPCcreator = Account(creator, steem_instance=self)
     """
     def __init__(self, name_list, batch_limit=100, lazy=False, full=True, steem_instance=None):

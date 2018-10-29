@@ -100,7 +100,7 @@ class Message(object):
 
             :returns: True if the message is verified successfully
 
-            :raises: InvalidMessageSignature if the signature is not ok
+            :raises InvalidMessageSignature: if the signature is not ok
 
         """
         # Split message into its parts

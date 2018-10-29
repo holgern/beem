@@ -21,7 +21,7 @@ class AsciiChart(object):
         :param int height: Height of the plot
         :param int width: Width of the plot
         :param int offset: Offset between tick strings and y-axis (default is 3)
-        :param str placeholder: Defines how the numbers on the y-axes are formated (default is '{:8.2f} ')
+        :param str placeholder: Defines how the numbers on the y-axes are formatted (default is '{:8.2f}')
         :param str charset: sets the charset for plotting, uft8 or ascii (default: utf8)
     """
     def __init__(self, height=None, width=None, offset=3, placeholder=u'{:8.2f} ', charset=u'utf8'):

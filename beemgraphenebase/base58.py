@@ -52,7 +52,8 @@ class Base58(object):
     * ``bytes(Base58)``: Returns the raw data
     * ``str(Base58)``:   Returns the readable ``Base58CheckEncoded`` data.
     * ``repr(Base58)``:  Gives the hex representation of the data.
-    *  ``format(Base58,_format)`` Formats the instance according to ``_format``:
+    * ``format(Base58,_format)``: Formats the instance according to ``_format``
+
         * ``"btc"``: prefixed with ``0x80``. Yields a valid btc address
         * ``"wif"``: prefixed with ``0x00``. Yields a valid wif key
         * ``"bts"``: prefixed with ``BTS``

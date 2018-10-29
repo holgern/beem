@@ -114,7 +114,7 @@ You can see all available commands with ``beempy --help``
      -p, --no-wallet        Do not load the wallet
      -x, --unsigned         Nothing will be signed
      -e, --expires INTEGER  Delay in seconds until transactions are supposed to
-                            expire(defaults to 60)
+                            expire (defaults to 60)
      -v, --verbose INTEGER  Verbosity
      --version              Show the version and exit.
      --help                 Show this message and exit.

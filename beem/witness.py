@@ -23,7 +23,7 @@ class Witness(BlockchainObject):
     """ Read data about a witness in the chain
 
         :param str account_name: Name of the witness
-        :param steem steem_instance: Steem() instance to use when
+        :param Steem steem_instance: Steem instance to use when
                accesing a RPC
 
         .. code-block:: python
@@ -120,11 +120,12 @@ class Witness(BlockchainObject):
                      quote=None,
                      account=None):
         """ Publish a feed price as a witness.
+
             :param float base: USD Price of STEEM in SBD (implied price)
             :param float quote: (optional) Quote Price. Should be 1.000 (default), unless
-            we are adjusting the feed to support the peg.
+                we are adjusting the feed to support the peg.
             :param str account: (optional) the source account for the transfer
-            if not self["owner"]
+                if not self["owner"]
         """
         quote = quote if quote is not None else "1.000 %s" % (self.steem.steem_symbol)
         if not account:
@@ -166,7 +167,7 @@ class Witness(BlockchainObject):
     def update(self, signing_key, url, props, account=None):
         """ Update witness
 
-            :param pubkey signing_key: Signing key
+            :param str signing_key: Signing key
             :param str url: URL
             :param dict props: Properties
             :param str account: (optional) witness account name
@@ -272,7 +273,7 @@ class WitnessesObject(list):
 class Witnesses(WitnessesObject):
     """ Obtain a list of **active** witnesses and the current schedule
 
-        :param steem steem_instance: Steem() instance to use when
+        :param Steem steem_instance: Steem instance to use when
             accesing a RPC
 
         .. code-block:: python
@@ -312,7 +313,7 @@ class WitnessesVotedByAccount(WitnessesObject):
     """ Obtain a list of witnesses which have been voted by an account
 
         :param str account: Account name
-        :param steem steem_instance: Steem() instance to use when
+        :param Steem steem_instance: Steem instance to use when
             accesing a RPC
 
         .. code-block:: python
@@ -354,7 +355,7 @@ class WitnessesRankedByVote(WitnessesObject):
 
         :param str from_account: Witness name from which the lists starts (default = "")
         :param int limit: Limits the number of shown witnesses (default = 100)
-        :param steem steem_instance: Steem() instance to use when
+        :param Steem steem_instance: Steem instance to use when
             accesing a RPC
 
         .. code-block:: python
@@ -418,7 +419,7 @@ class ListWitnesses(WitnessesObject):
 
         :param str from_account: Witness name from which the lists starts (default = "")
         :param int limit: Limits the number of shown witnesses (default = 100)
-        :param steem steem_instance: Steem() instance to use when
+        :param Steem steem_instance: Steem instance to use when
             accesing a RPC
 
         .. code-block:: python
