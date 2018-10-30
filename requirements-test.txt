@@ -1,12 +1,12 @@
 pip
 setuptools
 wheel
-future==0.16.0
+future==0.17.0
 ecdsa==0.13
-requests==2.19.1
+requests==2.20.0
 websocket-client==0.53.0
-pytz==2018.5
-pycryptodomex==3.6.6
+pytz==2018.7
+pycryptodomex==3.7.0
 scrypt==0.8.6
 Events==0.3
 secp256k1==0.13.2
