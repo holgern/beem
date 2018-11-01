@@ -278,6 +278,14 @@ class GetWitnesses(WitnessesObject):
             to fetch per call, defaults to 100
         :param Steem steem_instance: Steem() instance to use when
             accessing a RPCcreator = Witness(creator, steem_instance=self)
+
+        .. code-block:: python
+
+            from beem.witness import GetWitnesses
+            w = GetWitnesses(["gtg", "jesta"])
+            print(w[0].json())
+            print(w[1].json())
+
     """
     def __init__(self, name_list, batch_limit=100, lazy=False, full=True, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()

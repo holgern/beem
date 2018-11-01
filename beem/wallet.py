@@ -168,12 +168,19 @@ class Wallet(object):
         if isinstance(loadkeys, dict):
             Wallet.keyMap = loadkeys
             loadkeys = list(loadkeys.values())
+        elif isinstance(loadkeys, tuple):
+            loadkeys = list(loadkeys)
         elif not isinstance(loadkeys, list):
             loadkeys = [loadkeys]
 
         for wif in loadkeys:
-            pub = self._get_pub_from_wif(wif)
-            Wallet.keys[pub] = str(wif)
+            if isinstance(wif, list):
+                for w in wif:
+                    pub = self._get_pub_from_wif(w)
+                    Wallet.keys[pub] = str(w)
+            else:
+                pub = self._get_pub_from_wif(wif)
+                Wallet.keys[pub] = str(wif)
 
     def setToken(self, loadtoken):
         """ This method is strictly only for in memory token that are

@@ -244,7 +244,7 @@ class Steem(object):
         if self.offline:
             return "<%s offline=True>" % (
                 self.__class__.__name__)
-        elif self.rpc and self.rpc.url:
+        elif self.rpc is not None and len(self.rpc.url) > 0:
             return "<%s node=%s, nobroadcast=%s>" % (
                 self.__class__.__name__, str(self.rpc.url), str(self.nobroadcast))
         else:
