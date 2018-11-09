@@ -28,4 +28,3 @@ tox
 codacy-coverage
 virtualenv
 codecov
-pyyaml
