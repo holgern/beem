@@ -7,6 +7,7 @@ Changelog
 * RC costs adapted on changes from 0.20.6
 * VIT chain fixed
 * update_account_keys function added to account
+* beempy commands for post, reply and beneficiaries added
 
 0.20.9
 ------

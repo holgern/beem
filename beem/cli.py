@@ -1628,7 +1628,7 @@ def post(body, account, title, permlink, tags, reply_identifier, community, bene
 @click.argument('body', nargs=1)
 @click.option('--account', '-a', help='Account are you posting from')
 @click.option('--title', '-t', help='Title of the post')
-def replay(authorperm, body, account, title):
+def reply(authorperm, body, account, title):
     """replies to a comment"""
     stm = shared_steem_instance()
     if stm.rpc is not None:
@@ -1641,7 +1641,11 @@ def replay(authorperm, body, account, title):
     c = Comment(authorperm, steem_instance=stm)
     if title is None:
         title = ""
-    c.rely(body, title=title, author=account)
+    tx = c.reply(body, title=title, author=account)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
+    tx = json.dumps(tx, indent=4)
+    print(tx)    
 
 
 @cli.command()
