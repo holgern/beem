@@ -1522,7 +1522,7 @@ def beneficiaries(authorperm, beneficiaries):
 @click.option('--beneficiaries', '-b', help='Post beneficiaries (komma separated, e.g. a:10%,b:20%)')
 @click.option('--no-parse-body', help='Disable parsing of links, tags and images', is_flag=True, default=False)
 def post(body, account, title, permlink, tags, reply_identifier, community, beneficiaries, no_parse_body):
-    """Set beneficaries"""
+    """broadcasts a post/comment"""
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
@@ -1579,7 +1579,7 @@ def post(body, account, title, permlink, tags, reply_identifier, community, bene
     if "community" in parameter:
         community = parameter["community"]
     if "parse_body" in parameter:
-        parse_body = parameter["parse_body"]
+        parse_body = bool(parameter["parse_body"])
     else:
         parse_body = not no_parse_body
     beneficiaries = None
