@@ -16,6 +16,7 @@ import math
 import random
 import logging
 import click
+import yaml
 import re
 from beem.instance import set_shared_steem_instance, shared_steem_instance
 from beem.amount import Amount
@@ -1473,7 +1474,9 @@ def beneficiaries(authorperm, beneficiaries):
                "allow_votes": c["allow_votes"],
                "allow_curation_rewards": c["allow_curation_rewards"]}
 
-    for w in beneficiaries[0].split(","):
+    if isinstance(beneficiaries, tuple) and len(beneficiaries) == 1:
+        beneficiaries = beneficiaries[0].split(",")
+    for w in beneficiaries:
         account_name = w.strip().split(":")[0]
         if account_name[0] == "@":
             account_name = account_name[1:]
@@ -1506,6 +1509,139 @@ def beneficiaries(authorperm, beneficiaries):
         tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
+
+
+@cli.command()
+@click.argument('body', nargs=1)
+@click.option('--account', '-a', help='Account are you posting from')
+@click.option('--title', '-t', help='Title of the post')
+@click.option('--permlink', '-p', help='Manually set the permlink (optional)')
+@click.option('--tags', help='A komma separated list of tags to go with the post.')
+@click.option('--reply_identifier', help=' Identifier of the parent post/comment, when set a comment is broadcasted')
+@click.option('--community', help=' Name of the community (optional)')
+@click.option('--beneficiaries', '-b', help='Post beneficiaries (komma separated, e.g. a:10%,b:20%)')
+@click.option('--no-parse-body', help='Disable parsing of links, tags and images', is_flag=True, default=False)
+def post(body, account, title, permlink, tags, reply_identifier, community, beneficiaries, no_parse_body):
+    """Set beneficaries"""
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+
+    if not account:
+        account = stm.config["default_account"]
+    author = account
+    if not unlock_wallet(stm):
+        return
+    with open(body) as f:
+        content = f.read()
+    parameter = {}
+    body = ""
+    if len(content.split("---")) > 1:
+        body = content.split("---")[-1]
+        docs = yaml.load_all(content.split("---")[-2])
+        
+        for doc in docs:
+            for k,v in doc.items():
+                parameter[k] = v
+    else:
+        body = content
+    if title is not None:
+        parameter["title"] = title
+    if tags is not None:
+        parameter["tags"] = tags
+    if permlink is not None:
+        parameter["permlink"] = permlink
+    if beneficiaries is not None:
+        parameter["beneficiaries"] = beneficiaries
+    if reply_identifier is not None:
+        parameter["reply_identifier"] = reply_identifier
+    tags = None
+    if "tags" in parameter:
+        tags = []
+        if len(parameter["tags"].split(",")) > len(parameter["tags"].split(" ")):
+            for tag in parameter["tags"].split(","):
+                tags.append(tag.strip())
+        else:
+            for tag in parameter["tags"].split(" "):
+                tags.append(tag.strip())
+    title = ""
+    if "title" in parameter:
+        title = parameter["title"]
+    if "author" in parameter:
+        author = parameter["author"]
+    permlink = None
+    if "permlink" in parameter:
+        permlink = parameter["permlink"]
+    reply_identifier = None
+    if "reply_identifier" in parameter:
+        reply_identifier = parameter["reply_identifier"]
+    community = None
+    if "community" in parameter:
+        community = parameter["community"]
+    if "parse_body" in parameter:
+        parse_body = parameter["parse_body"]
+    else:
+        parse_body = not no_parse_body
+    beneficiaries = None
+    if "beneficiaries" in parameter:
+        beneficiaries_list = []
+        beneficiaries_accounts = []
+        beneficiaries_sum = 0
+        for w in parameter["beneficiaries"].split(","):
+            account_name = w.strip().split(":")[0]
+            if account_name[0] == "@":
+                account_name = account_name[1:]
+            a = Account(account_name, steem_instance=stm)
+            if a["name"] in beneficiaries_accounts:
+                continue
+            if w.find(":") == -1:
+                percentage = -1
+            else:
+                percentage = w.strip().split(":")[1]
+                if "%" in percentage:
+                    percentage = percentage.strip().split("%")[0].strip()
+                percentage = float(percentage)
+                beneficiaries_sum += percentage
+            beneficiaries_list.append({"account": a["name"], "weight": int(percentage * 100)})
+            beneficiaries_accounts.append(a["name"])
+    
+        missing = 0
+        for bene in beneficiaries_list:
+            if bene["weight"] < 0:
+                missing += 1
+        index = 0
+        for bene in beneficiaries_list:
+            if bene["weight"] < 0:
+                beneficiaries_list[index]["weight"] = int((int(100 * 100) - int(beneficiaries_sum * 100)) / missing)
+            index += 1
+        beneficiaries = sorted(beneficiaries_list, key=lambda beneficiaries_list: beneficiaries_list["account"])
+    tx = stm.post(title, body, author=author, permlink=permlink, reply_identifier=reply_identifier, community=community,
+             tags=tags, beneficiaries=beneficiaries, parse_body=parse_body)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.argument('authorperm', nargs=1)
+@click.argument('body', nargs=1)
+@click.option('--account', '-a', help='Account are you posting from')
+@click.option('--title', '-t', help='Title of the post')
+def replay(authorperm, body, account, title):
+    """replies to a comment"""
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm):
+        return
+    c = Comment(authorperm, steem_instance=stm)
+    if title is None:
+        title = ""
+    c.rely(body, title=title, author=account)
 
 
 @cli.command()
