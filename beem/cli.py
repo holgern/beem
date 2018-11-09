@@ -1448,6 +1448,67 @@ def updatememokey(account, key):
 
 
 @cli.command()
+@click.argument('authorperm', nargs=1)
+@click.argument('beneficiaries', nargs=-1)
+def beneficiaries(authorperm, beneficiaries):
+    """Set beneficaries"""
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    c = Comment(authorperm, steem_instance=stm)
+    account = c["author"]
+
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm):
+        return
+    beneficiaries_list = []
+    beneficiaries_accounts = []
+    beneficiaries_sum = 0
+
+    options = {"author": c["author"],
+               "permlink": c["permlink"],
+               "max_accepted_payout": c["max_accepted_payout"],
+               "percent_steem_dollars": c["percent_steem_dollars"],
+               "allow_votes": c["allow_votes"],
+               "allow_curation_rewards": c["allow_curation_rewards"]}
+
+    for w in beneficiaries[0].split(","):
+        account_name = w.strip().split(":")[0]
+        if account_name[0] == "@":
+            account_name = account_name[1:]
+        a = Account(account_name, steem_instance=stm)
+        if a["name"] in beneficiaries_accounts:
+            continue
+        if w.find(":") == -1:
+            percentage = -1
+        else:
+            percentage = w.strip().split(":")[1]
+            if "%" in percentage:
+                percentage = percentage.strip().split("%")[0].strip()
+            percentage = float(percentage)
+            beneficiaries_sum += percentage
+        beneficiaries_list.append({"account": a["name"], "weight": int(percentage * 100)})
+        beneficiaries_accounts.append(a["name"])
+
+    missing = 0
+    for bene in beneficiaries_list:
+        if bene["weight"] < 0:
+            missing += 1
+    index = 0
+    for bene in beneficiaries_list:
+        if bene["weight"] < 0:
+            beneficiaries_list[index]["weight"] = int((int(100 * 100) - int(beneficiaries_sum * 100)) / missing)
+        index += 1
+    beneficiaries_list_sorted = sorted(beneficiaries_list, key=lambda beneficiaries_list: beneficiaries_list["account"])
+    tx = stm.comment_options(options, authorperm, beneficiaries_list_sorted, account=account)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
 @click.argument('witness', nargs=1)
 @click.option('--account', '-a', help='Your account')
 def approvewitness(witness, account):

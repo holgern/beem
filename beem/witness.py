@@ -293,14 +293,14 @@ class GetWitnesses(WitnessesObject):
             return
         witnesses = []
         name_cnt = 0
-
-        while name_cnt < len(name_list):
-            self.steem.rpc.set_next_node_on_empty_reply(False)
-            if self.steem.rpc.get_use_appbase():
+        if self.steem.rpc.get_use_appbase():
+            while name_cnt < len(name_list):
+                self.steem.rpc.set_next_node_on_empty_reply(False)
                 witnesses += self.steem.rpc.find_witnesses({'owners': name_list[name_cnt:batch_limit + name_cnt]}, api="database")["witnesses"]
-            else:
-                witnesses += self.steem.rpc.get_witness_by_account(name_list[name_cnt:batch_limit + name_cnt])
-            name_cnt += batch_limit
+                name_cnt += batch_limit
+        else:
+            for witness in name_list:
+                witnesses.append(self.steem.rpc.get_witness_by_account(witness))
         self.identifier = ""
         super(GetWitnesses, self).__init__(
             [

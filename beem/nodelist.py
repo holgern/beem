@@ -209,6 +209,20 @@ class NodeList(list):
                 "score": 10
             },
             {
+                "url": "wss://anyx.io",
+                "version": "0.20.6",
+                "type": "appbase",
+                "owner": "anyx",
+                "score": 50
+            },
+            {
+                "url": "https://anyx.io",
+                "version": "0.20.6",
+                "type": "appbase",
+                "owner": "anyx",
+                "score": 50
+            },            
+            {
                 "url": "https://rpc.curiesteem.com",
                 "version": "0.20.2",
                 "type": "appbase",
