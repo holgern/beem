@@ -1520,8 +1520,10 @@ def beneficiaries(authorperm, beneficiaries):
 @click.option('--reply_identifier', help=' Identifier of the parent post/comment, when set a comment is broadcasted')
 @click.option('--community', help=' Name of the community (optional)')
 @click.option('--beneficiaries', '-b', help='Post beneficiaries (komma separated, e.g. a:10%,b:20%)')
+@click.option('--percent-steem-dollars', '-b', help='50% SBD /50% SP is 10000 (default), 100% SP is 0')
+@click.option('--max-accepted-payout', '-b', help='Default is 1000000.000 [SBD]')
 @click.option('--no-parse-body', help='Disable parsing of links, tags and images', is_flag=True, default=False)
-def post(body, account, title, permlink, tags, reply_identifier, community, beneficiaries, no_parse_body):
+def post(body, account, title, permlink, tags, reply_identifier, community, beneficiaries, percent_steem_dollars, max_accepted_payout, no_parse_body):
     """broadcasts a post/comment"""
     stm = shared_steem_instance()
     if stm.rpc is not None:
@@ -1539,9 +1541,9 @@ def post(body, account, title, permlink, tags, reply_identifier, community, bene
     if len(content.split("---")) > 1:
         body = content.split("---")[-1]
         docs = yaml.load_all(content.split("---")[-2])
-        
+
         for doc in docs:
-            for k,v in doc.items():
+            for k, v in doc.items():
                 parameter[k] = v
     else:
         body = content
@@ -1555,6 +1557,14 @@ def post(body, account, title, permlink, tags, reply_identifier, community, bene
         parameter["beneficiaries"] = beneficiaries
     if reply_identifier is not None:
         parameter["reply_identifier"] = reply_identifier
+    if percent_steem_dollars is not None:
+        parameter["percent_steem_dollars"] = percent_steem_dollars
+    elif "percent-steem-dollars" in parameter:
+        parameter["percent_steem_dollars"] = parameter["percent-steem-dollars"]
+    if max_accepted_payout is not None:
+        parameter["max_accepted_payout"] = max_accepted_payout
+    elif "max-accepted-payout" in parameter:
+        parameter["max_accepted_payout"] = parameter["max-accepted-payout"]
     tags = None
     if "tags" in parameter:
         tags = []
@@ -1582,6 +1592,23 @@ def post(body, account, title, permlink, tags, reply_identifier, community, bene
         parse_body = bool(parameter["parse_body"])
     else:
         parse_body = not no_parse_body
+    max_accepted_payout = None
+
+    percent_steem_dollars = None
+    if "percent_steem_dollars" in parameter:
+        percent_steem_dollars = parameter["percent_steem_dollars"]
+    max_accepted_payout = None
+    if "max_accepted_payout" in parameter:
+        max_accepted_payout = parameter["max_accepted_payout"]
+    comment_options = None
+    if max_accepted_payout is not None or percent_steem_dollars is not None:
+        comment_options = {}
+    if max_accepted_payout is not None:
+        if stm.sbd_symbol not in max_accepted_payout:
+            max_accepted_payout = str(Amount(float(max_accepted_payout), stm.sbd_symbol, steem_instance=stm))
+        comment_options["max_accepted_payout"] = max_accepted_payout
+    if percent_steem_dollars is not None:
+        comment_options["percent_steem_dollars"] = percent_steem_dollars
     beneficiaries = None
     if "beneficiaries" in parameter:
         beneficiaries_list = []
@@ -1604,7 +1631,7 @@ def post(body, account, title, permlink, tags, reply_identifier, community, bene
                 beneficiaries_sum += percentage
             beneficiaries_list.append({"account": a["name"], "weight": int(percentage * 100)})
             beneficiaries_accounts.append(a["name"])
-    
+
         missing = 0
         for bene in beneficiaries_list:
             if bene["weight"] < 0:
@@ -1615,8 +1642,9 @@ def post(body, account, title, permlink, tags, reply_identifier, community, bene
                 beneficiaries_list[index]["weight"] = int((int(100 * 100) - int(beneficiaries_sum * 100)) / missing)
             index += 1
         beneficiaries = sorted(beneficiaries_list, key=lambda beneficiaries_list: beneficiaries_list["account"])
+
     tx = stm.post(title, body, author=author, permlink=permlink, reply_identifier=reply_identifier, community=community,
-             tags=tags, beneficiaries=beneficiaries, parse_body=parse_body)
+             tags=tags, comment_options=comment_options, beneficiaries=beneficiaries, parse_body=parse_body)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
@@ -1645,7 +1673,7 @@ def reply(authorperm, body, account, title):
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
-    print(tx)    
+    print(tx)
 
 
 @cli.command()
@@ -3203,8 +3231,7 @@ def info(objects):
         median_price = stm.get_current_median_history()
         steem_per_mvest = stm.get_steem_per_mvest()
         chain_props = stm.get_chain_properties()
-        price = (Amount(median_price["base"], steem_instance=stm).amount / Amount(
-            median_price["quote"], steem_instance=stm).amount)
+        price = (Amount(median_price["base"], steem_instance=stm).amount / Amount(median_price["quote"], steem_instance=stm).amount)
         for key in info:
             t.add_row([key, info[key]])
         t.add_row(["steem per mvest", steem_per_mvest])

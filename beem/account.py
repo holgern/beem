@@ -891,8 +891,10 @@ class Account(BlockchainObject):
             symbols.append(balance["symbol"])
         ret = []
         for i in range(len(symbols)):
-            ret.append(self.get_balance(self.available_balances, symbols[i]) + self.get_balance(self.saving_balances, symbols[i]) +
-                       self.get_balance(self.reward_balances, symbols[i]))
+            balance_sum = self.get_balance(self.available_balances, symbols[i])
+            balance_sum += self.get_balance(self.saving_balances, symbols[i])
+            balance_sum += self.get_balance(self.reward_balances, symbols[i])
+            ret.append(balance_sum)
         return ret
 
     @property
@@ -1449,6 +1451,8 @@ class Account(BlockchainObject):
                 ret = self.steem.rpc.get_account_history(account["name"], start, limit, api="condenser")
         else:
             ret = self.steem.rpc.get_account_history(account["name"], start, limit, api="database")
+            if len(ret) == 0 and limit == 0:
+                ret = self.steem.rpc.get_account_history(account["name"], start, limit + 1, api="database")
         return ret
 
     def estimate_virtual_op_num(self, blocktime, stop_diff=0, max_count=100):
@@ -1544,9 +1548,7 @@ class Account(BlockchainObject):
             # linear approximation between the known upper and
             # lower bounds for the first iteration
             if cnt < 1:
-                op_num = int((target_blocknum - block_lower) /
-                             (block_upper - block_lower) *
-                             (op_upper - op_lower) + op_lower)
+                op_num = int((target_blocknum - block_lower) / (block_upper - block_lower) * (op_upper - op_lower) + op_lower)
             else:
                 # divide and conquer for the following iterations
                 op_num = int((op_upper + op_lower) / 2)
@@ -2234,25 +2236,22 @@ class Account(BlockchainObject):
         key_auths = {}
         for role in ['owner', 'active', 'posting', 'memo']:
             pk = PasswordKey(account['name'], new_password, role=role)
-            key_auths[role] = format(pk.get_public_key(), self.steem.prefix) 
+            key_auths[role] = format(pk.get_public_key(), self.steem.prefix)
 
         op = operations.Account_update(**{
             "account": account["name"],
-            'owner': {
-                 'account_auths': [],
-                 'key_auths': [[key_auths['owner'], 1]],
-                 "address_auths": [],
-                 'weight_threshold': 1},
-            'active': {
-                 'account_auths': [],
-                 'key_auths': [[key_auths['active'], 1]],
-                 "address_auths": [],
-                 'weight_threshold': 1},
-            'posting': {
-                 'account_auths': account['posting']['account_auths'],
-                 'key_auths': [[key_auths['posting'], 1]],
-                 "address_auths": [],
-                 'weight_threshold': 1},
+            'owner': {'account_auths': [],
+                      'key_auths': [[key_auths['owner'], 1]],
+                      "address_auths": [],
+                      'weight_threshold': 1},
+            'active': {'account_auths': [],
+                       'key_auths': [[key_auths['active'], 1]],
+                       "address_auths": [],
+                       'weight_threshold': 1},
+            'posting': {'account_auths': account['posting']['account_auths'],
+                        'key_auths': [[key_auths['posting'], 1]],
+                        "address_auths": [],
+                        'weight_threshold': 1},
             'memo_key': key_auths['memo'],
             "json_metadata": account['json_metadata'],
             "prefix": self.steem.prefix,
@@ -2527,7 +2526,7 @@ class Account(BlockchainObject):
                         "reward_sbd": reward_sbd,
                         "reward_vests": reward_vests,
                         "prefix": self.steem.prefix,
-                    })                
+                    })
             else:
                 reward_steem = account.balances["rewards"][0]
                 reward_vests = account.balances["rewards"][1]

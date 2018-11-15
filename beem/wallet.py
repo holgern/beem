@@ -203,8 +203,7 @@ class Wallet(object):
         if not pwd:
             self.tryUnlockFromEnv()
         else:
-            if (self.masterpassword is None and
-                    config[self.MasterPassword.config_key]):
+            if (self.masterpassword is None and config[self.MasterPassword.config_key]):
                 self.masterpwd = self.MasterPassword(pwd)
                 self.masterpassword = self.masterpwd.decrypted_master
 

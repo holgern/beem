@@ -177,10 +177,7 @@ class SteemWebsocket(Events):
             # print(data)
 
             if id >= len(self.__events__):
-                log.critical(
-                    "Received an id that is out of range\n\n" +
-                    str(data)
-                )
+                log.critical("Received an id that is out of range\n\n" + str(data))
                 return
 
             # This is a "general" object change notification
@@ -241,10 +238,10 @@ class SteemWebsocket(Events):
                     on_open=self.on_open,
                 )
                 self.ws.run_forever()
-            except websocket.WebSocketException as exc:
+            except websocket.WebSocketException:
                 self.nodes.increase_error_cnt()
                 self.nodes.sleep_and_check_retries()
-            except websocket.WebSocketTimeoutException as exc:
+            except websocket.WebSocketTimeoutException:
                 self.nodes.increase_error_cnt()
                 self.nodes.sleep_and_check_retries()
             except KeyboardInterrupt:

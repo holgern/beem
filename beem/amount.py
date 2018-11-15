@@ -96,18 +96,12 @@ class Amount(dict):
             self["amount"], self["symbol"] = amount.split(" ")
             self["asset"] = Asset(self["symbol"], steem_instance=self.steem)
 
-        elif (amount and asset is None and
-                isinstance(amount, dict) and
-                "amount" in amount and
-                "asset_id" in amount):
+        elif (amount and asset is None and isinstance(amount, dict) and "amount" in amount and "asset_id" in amount):
             self["asset"] = Asset(amount["asset_id"], steem_instance=self.steem)
             self["symbol"] = self["asset"]["symbol"]
             self["amount"] = int(amount["amount"]) / 10 ** self["asset"]["precision"]
 
-        elif (amount and asset is None and
-                isinstance(amount, dict) and
-                "amount" in amount and
-                "asset" in amount):
+        elif (amount and asset is None and isinstance(amount, dict) and "amount" in amount and "asset" in amount):
             self["asset"] = Asset(amount["asset"], steem_instance=self.steem)
             self["symbol"] = self["asset"]["symbol"]
             self["amount"] = int(amount["amount"]) / 10 ** self["asset"]["precision"]

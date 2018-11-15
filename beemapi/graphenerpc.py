@@ -335,6 +335,8 @@ class GrapheneRPC(object):
             raise RPCError("Not Implemented")
         elif re.search("Bad Gateway", reply) or re.search("502", reply):
             raise RPCErrorDoRetry("Bad Gateway")
+        elif re.search("Too Many Requests", reply) or re.search("429", reply):
+            raise RPCErrorDoRetry("Too Many Requests")
         elif re.search("Service Temporarily Unavailable", reply) or re.search("Service Unavailable", reply) or re.search("503", reply):
             raise RPCErrorDoRetry("Service Temporarily Unavailable")
         elif re.search("Gateway Time-out", reply) or re.search("Gateway Timeout", reply) or re.search("504", reply):

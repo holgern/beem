@@ -221,7 +221,7 @@ class NodeList(list):
                 "type": "appbase",
                 "owner": "anyx",
                 "score": 50
-            },            
+            },
             {
                 "url": "https://rpc.curiesteem.com",
                 "version": "0.20.2",

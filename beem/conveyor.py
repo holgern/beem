@@ -75,8 +75,7 @@ class Conveyor(object):
             :param bytes nonce: random 8 bytes
 
         """
-        first = hashlib.sha256(py23_bytes(timestamp + account + method +
-                                          params, self.ENCODING))
+        first = hashlib.sha256(py23_bytes(timestamp + account + method + params, self.ENCODING))
         return self.K + first.digest() + nonce
 
     def _request(self, account, method, params, key):
