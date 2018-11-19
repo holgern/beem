@@ -162,6 +162,8 @@ class Block(BlockchainObject):
         """Returns the block number"""
         if "block_id" in self:
             return int(self['block_id'][:8], base=16)
+        elif 'block' in self:
+            return int(self['block'])
         else:
             return None
 
