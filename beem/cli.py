@@ -1242,7 +1242,7 @@ def claimaccount(creator, fee, number):
         tx = stm.steemconnect.url_from_tx(tx)
     elif float(fee) == 0:
         rc = RC(steem_instance=stm)
-        current_costs = stm.get_rc_cost(rc.get_resource_count(tx_size=200, new_account_op_count=1))
+        current_costs = rc.claim_account(tx_size=200)
         current_mana = creator.get_rc_manabar()["current_mana"]
         last_mana = current_mana
         cnt = 0
@@ -1539,12 +1539,11 @@ def post(body, account, title, permlink, tags, reply_identifier, community, bene
     parameter = {}
     body = ""
     if len(content.split("---")) > 1:
-        body = content.split("---")[-1]
-        docs = yaml.load_all(content.split("---")[-2])
-
-        for doc in docs:
-            for k, v in doc.items():
-                parameter[k] = v
+        body = content[content.find("---", 1) + 3:]
+        yaml_content = content[content.find("---") + 3:content.find("---", 1)]
+        parameter = yaml.load(yaml_content)
+        if not isinstance(parameter, dict):
+            parameter = yaml.load(yaml_content.replace(":", ": ").replace("  ", " "))
     else:
         body = content
     if title is not None:
