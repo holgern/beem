@@ -32,7 +32,7 @@ from beem.steemconnect import SteemConnect
 from beem.asset import Asset
 from beem.witness import Witness, WitnessesRankedByVote, WitnessesVotedByAccount
 from beem.blockchain import Blockchain
-from beem.utils import formatTimeString, construct_authorperm, derive_beneficiaries, derive_tags, dict_from_yaml
+from beem.utils import formatTimeString, construct_authorperm, derive_beneficiaries, derive_tags, seperate_yaml_dict_from_body
 from beem.vote import AccountVotes, ActiveVotes
 from beem import exceptions
 from beem.version import version as __version__
