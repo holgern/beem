@@ -10,6 +10,7 @@ import math
 from datetime import datetime, tzinfo, timedelta, date, time
 import pytz
 import difflib
+import yaml
 
 timeFormat = '%Y-%m-%dT%H:%M:%S'
 # https://github.com/matiasb/python-unidiff/blob/master/unidiff/constants.py#L37
@@ -288,3 +289,65 @@ def make_patch(a, b, n=3):
 
 def findall_patch_hunks(body=None):
     return RE_HUNK_HEADER.findall(body)
+
+
+def derive_beneficiaries(beneficiaries):
+    beneficiaries_list = []
+    beneficiaries_accounts = []
+    beneficiaries_sum = 0
+    if not isinstance(beneficiaries, list):
+        beneficiaries = beneficiaries.split(",")
+
+    for w in beneficiaries:
+        account_name = w.strip().split(":")[0]
+        if account_name[0] == "@":
+            account_name = account_name[1:]
+        if account_name in beneficiaries_accounts:
+            continue
+        if w.find(":") == -1:
+            percentage = -1
+        else:
+            percentage = w.strip().split(":")[1]
+            if "%" in percentage:
+                percentage = percentage.strip().split("%")[0].strip()
+            percentage = float(percentage)
+            beneficiaries_sum += percentage
+        beneficiaries_list.append({"account": account_name, "weight": int(percentage * 100)})
+        beneficiaries_accounts.append(account_name)
+
+    missing = 0
+    for bene in beneficiaries_list:
+        if bene["weight"] < 0:
+            missing += 1
+    index = 0
+    for bene in beneficiaries_list:
+        if bene["weight"] < 0:
+            beneficiaries_list[index]["weight"] = int((int(100 * 100) - int(beneficiaries_sum * 100)) / missing)
+        index += 1
+    sorted_beneficiaries = sorted(beneficiaries_list, key=lambda beneficiaries_list: beneficiaries_list["account"])
+    return sorted_beneficiaries
+
+
+def derive_tags(tags):
+    tags_list = []
+    if len(tags.split(",")) > 1:
+        for tag in tags.split(","):
+            tags_list.append(tag.strip())
+    elif len(tags.split(" ")) > 1:
+        for tag in tags.split(" "):
+            tags_list.append(tag.strip())
+    return tags_list
+
+
+def seperate_yaml_dict_from_body(content):
+    parameter = {}
+    body = ""
+    if len(content.split("---")) > 1:
+        body = content[content.find("---", 1) + 3:]
+        yaml_content = content[content.find("---") + 3:content.find("---", 1)]
+        parameter = yaml.load(yaml_content)
+        if not isinstance(parameter, dict):
+            parameter = yaml.load(yaml_content.replace(":", ": ").replace("  ", " "))
+    else:
+        body = content
+    return body, parameter

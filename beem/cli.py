@@ -32,7 +32,7 @@ from beem.steemconnect import SteemConnect
 from beem.asset import Asset
 from beem.witness import Witness, WitnessesRankedByVote, WitnessesVotedByAccount
 from beem.blockchain import Blockchain
-from beem.utils import formatTimeString, construct_authorperm
+from beem.utils import formatTimeString, construct_authorperm, derive_beneficiaries, derive_tags, dict_from_yaml
 from beem.vote import AccountVotes, ActiveVotes
 from beem import exceptions
 from beem.version import version as __version__
@@ -1463,9 +1463,6 @@ def beneficiaries(authorperm, beneficiaries):
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
         return
-    beneficiaries_list = []
-    beneficiaries_accounts = []
-    beneficiaries_sum = 0
 
     options = {"author": c["author"],
                "permlink": c["permlink"],
@@ -1476,34 +1473,9 @@ def beneficiaries(authorperm, beneficiaries):
 
     if isinstance(beneficiaries, tuple) and len(beneficiaries) == 1:
         beneficiaries = beneficiaries[0].split(",")
-    for w in beneficiaries:
-        account_name = w.strip().split(":")[0]
-        if account_name[0] == "@":
-            account_name = account_name[1:]
-        a = Account(account_name, steem_instance=stm)
-        if a["name"] in beneficiaries_accounts:
-            continue
-        if w.find(":") == -1:
-            percentage = -1
-        else:
-            percentage = w.strip().split(":")[1]
-            if "%" in percentage:
-                percentage = percentage.strip().split("%")[0].strip()
-            percentage = float(percentage)
-            beneficiaries_sum += percentage
-        beneficiaries_list.append({"account": a["name"], "weight": int(percentage * 100)})
-        beneficiaries_accounts.append(a["name"])
-
-    missing = 0
-    for bene in beneficiaries_list:
-        if bene["weight"] < 0:
-            missing += 1
-    index = 0
-    for bene in beneficiaries_list:
-        if bene["weight"] < 0:
-            beneficiaries_list[index]["weight"] = int((int(100 * 100) - int(beneficiaries_sum * 100)) / missing)
-        index += 1
-    beneficiaries_list_sorted = sorted(beneficiaries_list, key=lambda beneficiaries_list: beneficiaries_list["account"])
+    beneficiaries_list_sorted = derive_beneficiaries(beneficiaries)
+    for b in beneficiaries_list_sorted:
+        a = Account(b["account"], steem_instance=stm)    
     tx = stm.comment_options(options, authorperm, beneficiaries_list_sorted, account=account)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
@@ -1536,16 +1508,7 @@ def post(body, account, title, permlink, tags, reply_identifier, community, bene
         return
     with open(body) as f:
         content = f.read()
-    parameter = {}
-    body = ""
-    if len(content.split("---")) > 1:
-        body = content[content.find("---", 1) + 3:]
-        yaml_content = content[content.find("---") + 3:content.find("---", 1)]
-        parameter = yaml.load(yaml_content)
-        if not isinstance(parameter, dict):
-            parameter = yaml.load(yaml_content.replace(":", ": ").replace("  ", " "))
-    else:
-        body = content
+    body, parameter = seperate_yaml_dict_from_body(content)
     if title is not None:
         parameter["title"] = title
     if tags is not None:
@@ -1566,13 +1529,7 @@ def post(body, account, title, permlink, tags, reply_identifier, community, bene
         parameter["max_accepted_payout"] = parameter["max-accepted-payout"]
     tags = None
     if "tags" in parameter:
-        tags = []
-        if len(parameter["tags"].split(",")) > len(parameter["tags"].split(" ")):
-            for tag in parameter["tags"].split(","):
-                tags.append(tag.strip())
-        else:
-            for tag in parameter["tags"].split(" "):
-                tags.append(tag.strip())
+        tags = derive_tags(parameter["tags"])
     title = ""
     if "title" in parameter:
         title = parameter["title"]
@@ -1610,38 +1567,9 @@ def post(body, account, title, permlink, tags, reply_identifier, community, bene
         comment_options["percent_steem_dollars"] = percent_steem_dollars
     beneficiaries = None
     if "beneficiaries" in parameter:
-        beneficiaries_list = []
-        beneficiaries_accounts = []
-        beneficiaries_sum = 0
-        for w in parameter["beneficiaries"].split(","):
-            account_name = w.strip().split(":")[0]
-            if account_name[0] == "@":
-                account_name = account_name[1:]
-            a = Account(account_name, steem_instance=stm)
-            if a["name"] in beneficiaries_accounts:
-                continue
-            if w.find(":") == -1:
-                percentage = -1
-            else:
-                percentage = w.strip().split(":")[1]
-                if "%" in percentage:
-                    percentage = percentage.strip().split("%")[0].strip()
-                percentage = float(percentage)
-                beneficiaries_sum += percentage
-            beneficiaries_list.append({"account": a["name"], "weight": int(percentage * 100)})
-            beneficiaries_accounts.append(a["name"])
-
-        missing = 0
-        for bene in beneficiaries_list:
-            if bene["weight"] < 0:
-                missing += 1
-        index = 0
-        for bene in beneficiaries_list:
-            if bene["weight"] < 0:
-                beneficiaries_list[index]["weight"] = int((int(100 * 100) - int(beneficiaries_sum * 100)) / missing)
-            index += 1
-        beneficiaries = sorted(beneficiaries_list, key=lambda beneficiaries_list: beneficiaries_list["account"])
-
+        beneficiaries = derive_beneficiaries(parameter["beneficiaries"])
+        for b in beneficiaries:
+            a = Account(b["account"], steem_instance=stm)
     tx = stm.post(title, body, author=author, permlink=permlink, reply_identifier=reply_identifier, community=community,
              tags=tags, comment_options=comment_options, beneficiaries=beneficiaries, parse_body=parse_body)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:

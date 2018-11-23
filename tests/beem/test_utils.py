@@ -18,7 +18,10 @@ from beem.utils import (
     remove_from_dict,
     formatToTimeStamp,
     formatTimeString,
-    addTzInfo
+    addTzInfo,
+    derive_beneficiaries,
+    derive_tags,
+    seperate_yaml_dict_from_body
 )
 
 
@@ -102,3 +105,41 @@ class Testcases(unittest.TestCase):
         t = formatTimeString(t)
         t2 = addTzInfo(datetime(2018, 7, 10, 10, 8, 39))
         self.assertEqual(t, t2)
+
+    def test_derive_beneficiaries(self):
+        t = "holger80:10"
+        b = derive_beneficiaries(t)
+        self.assertEqual(b, [{"account": "holger80", "weight": 1000}])
+        t = "holger80"
+        b = derive_beneficiaries(t)
+        self.assertEqual(b, [{"account": "holger80", "weight": 10000}])
+        t = "holger80:30,beembot:40"
+        b = derive_beneficiaries(t)
+        self.assertEqual(b, [{"account": "beembot", "weight": 4000}, {"account": "holger80", "weight": 3000}])
+        t = "holger80:30,beembot"
+        b = derive_beneficiaries(t)
+        self.assertEqual(b, [{"account": "beembot", "weight": 7000}, {"account": "holger80", "weight": 3000}])
+        t = ["holger80:30", "beembot"]
+        b = derive_beneficiaries(t)
+        self.assertEqual(b, [{"account": "beembot", "weight": 7000}, {"account": "holger80", "weight": 3000}])        
+
+    def test_derive_tags(self):
+        t = "test1,test2"
+        b = derive_tags(t)
+        self.assertEqual(b, ["test1", "test2"])
+        t = "test1, test2"
+        b = derive_tags(t)
+        self.assertEqual(b, ["test1", "test2"])
+        t = "test1 test2"
+        b = derive_tags(t)
+        self.assertEqual(b, ["test1", "test2"])
+
+    def test_seperate_yaml_dict_from_body(self):
+        t = "---\npar1: data1\npar2: data2\npar3: 3\n---\n test ---"
+        body, par = seperate_yaml_dict_from_body(t)
+        self.assertEqual(par, {"par1": "data1", "par2": "data2", "par3": 3})
+        self.assertEqual(body, "\n test ---")
+        t = "---\npar1:data1\npar2:data2\npar3:3\n---\n test ---"
+        body, par = seperate_yaml_dict_from_body(t)
+        self.assertEqual(par, {"par1": "data1", "par2": "data2", "par3": 3})
+        self.assertEqual(body, "\n test ---")
