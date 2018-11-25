@@ -111,6 +111,7 @@ class Discussions(object):
             discussion_query["before_date"] = "1970-01-01T00:00:00"
         while (query_count < limit and found_more_than_start_entry):
             rpc_query_count = 0
+            dd = None
             discussion_query["start_author"] = start_author
             discussion_query["start_permlink"] = start_permlink
             discussion_query["start_tag"] = start_tag
@@ -151,7 +152,8 @@ class Discussions(object):
                 dd = Replies_by_last_update(discussion_query, steem_instance=self.steem, lazy=self.lazy)
             elif discussion_type == "tags":
                 dd = Trending_tags(discussion_query, steem_instance=self.steem, lazy=self.lazy)
-
+            else:
+                raise ValueError("Wrong discussion_type")
             if not dd:
                 return
 
