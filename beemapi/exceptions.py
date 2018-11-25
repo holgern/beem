@@ -102,3 +102,7 @@ class WorkingNodeMissing(Exception):
 
 class TimeoutException(Exception):
     pass
+
+
+class VotedBeforeWaitTimeReached(Exception):
+    pass
