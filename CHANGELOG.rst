@@ -1,5 +1,19 @@
 Changelog
 =========
+0.20.13
+-------
+* beempy post improved
+* beempy ImageUploader added
+* issues #125 and #126 fixed
+* VotedBeforeWaitTimeReached exception added
+
+0.20.12
+-------
+* pep8 formating improved
+* Too Many Requests error handled
+* different limit handling in WLS fixed for account history
+* percent-steem-dollars and max-accepted-payout added to beempy post
+
 0.20.10
 -------
 * update_account_keys added for changing account keys

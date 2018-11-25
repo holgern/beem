@@ -22,14 +22,6 @@ class Testcases(unittest.TestCase):
     def setUpClass(cls):
         nodelist = NodeList()
         nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
-        cls.bts = Steem(
-            node=nodelist.get_nodes(appbase=False),
-            nobroadcast=True,
-            bundle=False,
-            # Overwrite wallet to use this list of wifs only
-            keys={"active": wif},
-            num_retries=10
-        )
         cls.appbase = Steem(
             node=nodelist.get_nodes(appbase=True, dev=True),
             nobroadcast=True,
@@ -39,15 +31,8 @@ class Testcases(unittest.TestCase):
             num_retries=10
         )
 
-    @parameterized.expand([
-        ("non_appbase"),
-        ("appbase"),
-    ])
-    def test_constants(self, node_param):
-        if node_param == "non_appbase":
-            stm = self.bts
-        else:
-            stm = self.appbase
+    def test_constants(self):
+        stm = self.appbase
         steem_conf = stm.get_config()
         if "STEEM_100_PERCENT" in steem_conf:
             STEEM_100_PERCENT = steem_conf['STEEM_100_PERCENT']
