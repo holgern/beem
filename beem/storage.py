@@ -180,7 +180,7 @@ class Key(DataDir):
         cursor.execute(query)
         connection.commit()
 
-    def getPublicKeys(self):
+    def getPublicKeys(self, prefix="STM"):
         """ Returns the public keys stored in the database
         """
         query = ("SELECT pub from {0} ".format(self.__tablename__))
@@ -189,7 +189,11 @@ class Key(DataDir):
         try:
             cursor.execute(query)
             results = cursor.fetchall()
-            return [x[0] for x in results]
+            keys = []
+            for x in results:
+                if prefix == x[0][:len(prefix)]:
+                    keys.append(x[0])
+            return keys
         except sqlite3.OperationalError:
             return []
 

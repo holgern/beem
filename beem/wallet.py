@@ -687,7 +687,7 @@ class Wallet(object):
         """ Return all installed public keys
         """
         if self.keyStorage:
-            return self.keyStorage.getPublicKeys()
+            return self.keyStorage.getPublicKeys(prefix=self.steem.prefix)
         else:
             return list(Wallet.keys.keys())
 

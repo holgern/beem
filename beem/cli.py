@@ -661,6 +661,8 @@ def listkeys():
     """ Show stored keys
     """
     stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()    
     t = PrettyTable(["Available Key"])
     t.align = "l"
     for key in stm.wallet.getPublicKeys():
@@ -1475,7 +1477,7 @@ def beneficiaries(authorperm, beneficiaries):
         beneficiaries = beneficiaries[0].split(",")
     beneficiaries_list_sorted = derive_beneficiaries(beneficiaries)
     for b in beneficiaries_list_sorted:
-        a = Account(b["account"], steem_instance=stm)    
+        Account(b["account"], steem_instance=stm)
     tx = stm.comment_options(options, authorperm, beneficiaries_list_sorted, account=account)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
@@ -1569,9 +1571,9 @@ def post(body, account, title, permlink, tags, reply_identifier, community, bene
     if "beneficiaries" in parameter:
         beneficiaries = derive_beneficiaries(parameter["beneficiaries"])
         for b in beneficiaries:
-            a = Account(b["account"], steem_instance=stm)
+            Account(b["account"], steem_instance=stm)
     tx = stm.post(title, body, author=author, permlink=permlink, reply_identifier=reply_identifier, community=community,
-             tags=tags, comment_options=comment_options, beneficiaries=beneficiaries, parse_body=parse_body)
+                  tags=tags, comment_options=comment_options, beneficiaries=beneficiaries, parse_body=parse_body)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
@@ -3052,9 +3054,12 @@ def claimreward(account, reward_steem, reward_sbd, reward_vests, claim_all_steem
         account = stm.config["default_account"]
     acc = Account(account, steem_instance=stm)
     r = acc.balances["rewards"]
-    if r[0].amount + r[1].amount + r[2].amount == 0:
+    if len(r) == 3 and r[0].amount + r[1].amount + r[2].amount == 0:
         print("Nothing to claim.")
         return
+    elif len(r) == 2 and r[0].amount + r[1].amount:
+        print("Nothing to claim.")
+        return    
     if not unlock_wallet(stm):
         return
     if claim_all_steem:
