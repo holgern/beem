@@ -44,6 +44,7 @@ from beemgraphenebase.account import PrivateKey, PublicKey, BrainKey
 from beemgraphenebase.base58 import Base58
 from beem.nodelist import NodeList
 from beem.conveyor import Conveyor
+from beem.imageuploader import ImageUploader
 from beem.rc import RC
 
 
@@ -1483,6 +1484,27 @@ def beneficiaries(authorperm, beneficiaries):
         tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
+
+
+@cli.command()
+@click.argument('image', nargs=1)
+@click.option('--account', '-a', help='Account name')
+@click.option('--image-name', '-n', help='Image name')
+def uploadimage(image, account, image_name):
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not account:
+        account = stm.config["default_account"]
+    author = account
+    if not unlock_wallet(stm):
+        return
+    iu = ImageUploader(steem_instance=stm)
+    tx = iu.upload(image, account, image_name)
+    if image_name is None:
+        print("![](%s)" % tx["url"])
+    else:
+        print("![%s](%s)" % (image_name, tx["url"]))
 
 
 @cli.command()
