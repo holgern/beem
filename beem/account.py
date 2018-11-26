@@ -501,8 +501,8 @@ class Account(BlockchainObject):
         elif isinstance(sbd, string_types):
             sbd = Amount(sbd, steem_instance=self.steem)
         else:
-            sbd = Amount(sbd, 'SBD', steem_instance=self.steem)
-        if sbd['symbol'] != 'SBD':
+            sbd = Amount(sbd, self.steem.sbd_symbol, steem_instance=self.steem)
+        if sbd['symbol'] != self.steem.sbd_symbol:
             raise AssertionError('Should input SBD, not any other asset!')
 
         vote_pct = self.steem.rshares_to_vote_pct(self.steem.sbd_to_rshares(sbd, not_broadcasted_vote=not_broadcasted_vote), voting_power=voting_power * 100, steem_power=steem_power)
@@ -2380,7 +2380,7 @@ class Account(BlockchainObject):
                 if not ``default_account``
 
         """
-        if asset not in ['STEEM', 'SBD']:
+        if asset not in [self.steem.steem_symbol, self.steem.sbd_symbol]:
             raise AssertionError()
 
         if account is None:
@@ -2424,7 +2424,7 @@ class Account(BlockchainObject):
                 if not ``default_account``
 
         """
-        if asset not in ['STEEM', 'SBD']:
+        if asset not in [self.steem.steem_symbol, self.steem.sbd_symbol]:
             raise AssertionError()
 
         if account is None:
