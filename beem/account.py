@@ -1143,8 +1143,8 @@ class Account(BlockchainObject):
         """ Returns the vesting delegations by an account.
 
             :param str account: When set, a different account is used for the request (Default is object account name)
-            :param str start_account: Only used in pre-appbase nodes
-            :param int limit: Only used in pre-appbase nodes
+            :param str start_account: delegatee to start with, leave empty to start from the first by name
+            :param int limit: maximum number of results to return
             :rtype: list
 
             .. code-block:: python
@@ -1163,7 +1163,10 @@ class Account(BlockchainObject):
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.find_vesting_delegations({'account': account}, api="database")['delegations']
+            delegations = self.steem.rpc.list_vesting_delegations(
+                {'start': [account, start_account], 'limit': limit,
+                 'order': 'by_delegation'}, api="database")['delegations']
+            return [d for d in delegations if d['delegator'] == account]
         else:
             return self.steem.rpc.get_vesting_delegations(account, start_account, limit)
 
