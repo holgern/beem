@@ -913,7 +913,7 @@ class Blockchain(object):
             return self.steem.rpc.lookup_accounts(name, limit)
 
     def find_rc_accounts(self, name):
-        """ Returns limit similar accounts with name as list
+        """ Returns the RC parameters of one or more accounts.
 
         :param str name: account name to search rc params for (can also be a list of accounts)
         :returns: RC params
