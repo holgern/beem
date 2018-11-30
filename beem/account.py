@@ -2262,6 +2262,35 @@ class Account(BlockchainObject):
 
         return self.steem.finalizeOp(op, account, "owner", **kwargs)
 
+    def change_recovery_account(self, new_recovery_account,
+                                account=None, **kwargs):
+        """Request a change of the recovery account.
+
+        .. note:: It takes 30 days until the change applies. Another
+            request within this time restarts the 30 day period.
+            Setting the current recovery account again cancels any
+            pending change request.
+
+        :param str new_recovery_account: account name of the new
+            recovery account
+        :param str account: (optional) the account to change the
+            recovery account for (defaults to ``default_account``)
+
+        """
+        if account is None:
+            account = self
+        else:
+            account = Account(account, steem_instance=self.steem)
+        # Account() lookup to make sure the new account is valid
+        new_rec_acc = Account(new_recovery_account,
+                              steem_instance=self.steem)
+        op = operations.Change_recovery_account(**{
+            'account_to_recover': account['name'],
+            'new_recovery_account': new_rec_acc['name'],
+            'extensions': []
+        })
+        return self.steem.finalizeOp(op, account, "owner", **kwargs)
+
     # -------------------------------------------------------------------------
     # Simple Transfer
     # -------------------------------------------------------------------------

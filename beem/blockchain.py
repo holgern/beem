@@ -913,7 +913,7 @@ class Blockchain(object):
             return self.steem.rpc.lookup_accounts(name, limit)
 
     def find_rc_accounts(self, name):
-        """ Returns limit similar accounts with name as list
+        """ Returns the RC parameters of one or more accounts.
 
         :param str name: account name to search rc params for (can also be a list of accounts)
         :returns: RC params
@@ -939,3 +939,68 @@ class Blockchain(object):
             account = self.steem.rpc.find_rc_accounts({'accounts': [name]}, api="rc")
             if bool(account):
                 return account["rc_accounts"][0]
+
+    def list_change_recovery_account_requests(
+            self, start="", limit=1000, order="by_account"):
+        """ List pending `change_recovery_account` requests.
+
+        :param str/list start: Start the listing from this entry.
+            Leave empty to start from the beginning. If `order` is set
+            to `by_account`, `start` has to be an account name. If
+            `order` is set to `by_effective_date`, `start` has to be a
+            list of [effective_on, account_to_recover],
+            e.g. `start=['2018-12-18T01:46:24', 'bott']`.
+        :param int limit: maximum number of results to return (default
+            and maximum: 1000).
+        :param str order: valid values are "by_account" (default) or
+            "by_effective_date".
+        :returns: list of `change_recovery_account` requests.
+        :rtype: list
+
+        .. code-block:: python
+
+            >>> from beem.blockchain import Blockchain
+            >>> blockchain = Blockchain()
+            >>> blockchain.list_change_recovery_account_requests(limit=1)
+            [{'id': 511, 'account_to_recover': 'bott',
+            'recovery_account': 'bott', 'effective_on':
+            '2018-12-18T01:46:24'}]
+
+        """
+        if not self.steem.is_connected():
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
+        requests = self.steem.rpc.list_change_recovery_account_requests(
+            {'start': start, 'limit': limit, 'order': order}, api="database")
+        if bool(requests):
+            return requests['requests']
+
+    def find_change_recovery_account_requests(self, accounts):
+        """ Find pending `change_recovery_account` requests for one or more
+        specific accounts.
+
+        :param str/list accounts: account name or list of account
+            names to find `change_recovery_account` requests for.
+        :returns: list of `change_recovery_account` requests for the
+            given account(s).
+        :rtype: list
+
+        .. code-block:: python
+
+            >>> from beem.blockchain import Blockchain
+            >>> blockchain = Blockchain()
+            >>> blockchain.find_change_recovery_account_requests('bott')
+            [{'id': 511, 'account_to_recover': 'bott',
+            'recovery_account': 'bott', 'effective_on':
+            '2018-12-18T01:46:24'}
+
+        """
+        if not self.steem.is_connected():
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(False)
+        if isinstance(accounts, str):
+            accounts = [accounts]
+        requests = self.steem.rpc.find_change_recovery_account_requests(
+            {'accounts': accounts}, api="database")
+        if bool(requests):
+            return requests['requests']
