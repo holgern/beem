@@ -168,11 +168,17 @@ class WitnessProps(GrapheneObject):
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
             prefix = kwargs.get("prefix", default_prefix)
-            super(WitnessProps, self).__init__(OrderedDict([
-                ('account_creation_fee', Amount(kwargs["account_creation_fee"], prefix=prefix)),
-                ('maximum_block_size', Uint32(kwargs["maximum_block_size"])),
-                ('sbd_interest_rate', Uint16(kwargs["sbd_interest_rate"])),
-            ]))
+            if "sbd_interest_rate" in kwargs:
+                super(WitnessProps, self).__init__(OrderedDict([
+                    ('account_creation_fee', Amount(kwargs["account_creation_fee"], prefix=prefix)),
+                    ('maximum_block_size', Uint32(kwargs["maximum_block_size"])),
+                    ('sbd_interest_rate', Uint16(kwargs["sbd_interest_rate"])),
+                ]))
+            else:
+                super(WitnessProps, self).__init__(OrderedDict([
+                    ('account_creation_fee', Amount(kwargs["account_creation_fee"], prefix=prefix)),
+                    ('maximum_block_size', Uint32(kwargs["maximum_block_size"])),
+                ]))
 
 
 class Price(GrapheneObject):
