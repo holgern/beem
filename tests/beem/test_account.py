@@ -37,15 +37,6 @@ class Testcases(unittest.TestCase):
             keys={"active": wif},
             num_retries=10
         )
-        cls.testnet = Steem(
-            node="https://testnet.steemitdev.com",
-            nobroadcast=True,
-            bundle=False,
-            unsigned=True,
-            # Overwrite wallet to use this list of wifs only
-            keys={"active": wif},
-            num_retries=10
-        )
         cls.account = Account("beembot", full=True, steem_instance=cls.bts)
         set_shared_steem_instance(cls.bts)
 
@@ -495,9 +486,11 @@ class Testcases(unittest.TestCase):
     def test_blog_history(self):
         account = Account("holger80", steem_instance=self.bts)
         posts = []
-        for p in account.blog_history(limit=1):
+        for p in account.blog_history(limit=5):
+            if p["author"] != account["name"]:
+                continue
             posts.append(p)
-        self.assertEqual(len(posts), 1)
+        self.assertTrue(len(posts) >= 1)
         self.assertEqual(posts[0]["author"], account["name"])
         self.assertTrue(posts[0].is_main_post())
         self.assertTrue(posts[0].depth == 0)

@@ -962,9 +962,7 @@ class Blockchain(object):
             >>> from beem.blockchain import Blockchain
             >>> blockchain = Blockchain()
             >>> blockchain.list_change_recovery_account_requests(limit=1)
-            [{'id': 511, 'account_to_recover': 'bott',
-            'recovery_account': 'bott', 'effective_on':
-            '2018-12-18T01:46:24'}]
+            [{'id': 511, 'account_to_recover': 'bott', 'recovery_account': 'bott', 'effective_on': '2018-12-18T01:46:24'}]
 
         """
         if not self.steem.is_connected():
@@ -990,9 +988,7 @@ class Blockchain(object):
             >>> from beem.blockchain import Blockchain
             >>> blockchain = Blockchain()
             >>> blockchain.find_change_recovery_account_requests('bott')
-            [{'id': 511, 'account_to_recover': 'bott',
-            'recovery_account': 'bott', 'effective_on':
-            '2018-12-18T01:46:24'}
+            [{'id': 511, 'account_to_recover': 'bott', 'recovery_account': 'bott', 'effective_on': '2018-12-18T01:46:24'}]
 
         """
         if not self.steem.is_connected():

@@ -43,12 +43,7 @@ class Testcases(unittest.TestCase):
             num_retries=10
             # Overwrite wallet to use this list of wifs only
         )
-        cls.testnet = Steem(
-            node="https://testnet.steemitdev.com",
-            nobroadcast=True,
-            bundle=True,
-            num_retries=10
-        )
+
         cls.stm.set_default_account("test")
         set_shared_steem_instance(cls.stm)
         # self.stm.newWallet("TestingOneTwoThree")
@@ -64,15 +59,8 @@ class Testcases(unittest.TestCase):
         stm = shared_steem_instance()
         stm.config.recover_with_latest_backup()
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_set_default_account(self, node_param):
-        if node_param == "normal":
-            stm = self.stm
-        elif node_param == "testnet":
-            stm = self.testnet
-        stm.set_default_account("test")
+    def test_set_default_account(self):
+        stm = self.stm
+        stm.set_default_account("beembot")
 
-        self.assertEqual(stm.config["default_account"], "test")
+        self.assertEqual(stm.config["default_account"], "beembot")

@@ -26,30 +26,15 @@ class Testcases(unittest.TestCase):
             keys={"active": wif},
             num_retries=10
         )
-        cls.testnet = Steem(
-            node="https://testnet.steemitdev.com",
-            nobroadcast=True,
-            keys={"active": wif},
-            num_retries=10
-        )
         cls.test_block_id = 19273700
-        cls.test_block_id_testnet = 10000
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(cls.bts)
         cls.bts.set_default_account("test")
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_block(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-            test_block_id = self.test_block_id
-        else:
-            bts = self.testnet
-            test_block_id = self.test_block_id_testnet
+    def test_block(self):
+        bts = self.bts
+        test_block_id = self.test_block_id
         block = Block(test_block_id, steem_instance=bts)
         self.assertEqual(block.identifier, test_block_id)
         self.assertTrue(isinstance(block.time(), datetime))
@@ -83,17 +68,9 @@ class Testcases(unittest.TestCase):
         ):
             Block(0, steem_instance=bts)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_block_header(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-            test_block_id = self.test_block_id
-        else:
-            bts = self.testnet
-            test_block_id = self.test_block_id_testnet
+    def test_block_header(self):
+        bts = self.bts
+        test_block_id = self.test_block_id
         block = BlockHeader(test_block_id, steem_instance=bts)
         self.assertEqual(block.identifier, test_block_id)
         self.assertTrue(isinstance(block.time(), datetime))

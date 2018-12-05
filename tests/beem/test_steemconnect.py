@@ -39,15 +39,8 @@ class Testcases(unittest.TestCase):
             unsigned=True,
             data_refresh_time_seconds=900,
             num_retries=10)
-        cls.testnet = Steem(
-            node="https://testnet.steemitdev.com",
-            nobroadcast=True,
-            unsigned=True,
-            data_refresh_time_seconds=900,
-            num_retries=10)
 
         cls.account = Account("test", full=True, steem_instance=cls.bts)
-        cls.account_testnet = Account("test", full=True, steem_instance=cls.testnet)
 
     def test_transfer(self):
         bts = self.bts
@@ -68,15 +61,8 @@ class Testcases(unittest.TestCase):
         self.assertEqual(len(url_parts), 4)
         self.assertEqual(len(list(set(url_parts).intersection(set(url_test_parts)))), 4)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_login_url(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-        elif node_param == "testnet":
-            bts = self.testnet
+    def test_login_url(self):
+        bts = self.bts
         sc2 = SteemConnect(steem_instance=bts)
         url = sc2.get_login_url("localhost", scope="login,vote")
         url_test = 'https://steemconnect.com/oauth2/authorize?client_id=None&redirect_uri=localhost&scope=login,vote'

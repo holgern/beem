@@ -16,8 +16,8 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         nodelist = NodeList()
-        stm = Steem(node=nodelist.get_testnet(), nobroadcast=True,
-                    num_retries=10, expiration=120, keys=wif)
+        stm = Steem(node=nodelist.get_nodes(), nobroadcast=True,
+                    num_retries=10, expiration=120)
         set_shared_steem_instance(stm)
 
     def test_healthcheck(self):
@@ -25,16 +25,6 @@ class Testcases(unittest.TestCase):
         self.assertTrue('version' in health)
         self.assertTrue('ok' in health)
         self.assertTrue('date' in health)
-
-    def test_get_user_data(self):
-        c = Conveyor()
-        userdata = c.get_user_data('beem')
-        self.assertTrue('jsonrpc' in userdata)
-        self.assertTrue('error' in userdata)
-        self.assertTrue('code' in userdata['error'])
-        # error 401 -> unauthorized, but proper format
-        self.assertTrue(userdata['error']['code'] == 401)
-
 
 if __name__ == "__main__":
     unittest.main()

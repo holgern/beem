@@ -40,28 +40,11 @@ class Testcases(unittest.TestCase):
             data_refresh_time_seconds=900,
             keys={"active": wif, "owner": wif, "memo": wif},
             num_retries=10)
-        cls.testnet = Steem(
-            node="https://testnet.steemitdev.com",
-            nobroadcast=True,
-            unsigned=True,
-            data_refresh_time_seconds=900,
-            keys={"active": wif, "owner": wif, "memo": wif},
-            num_retries=10)
-
         cls.account = Account("test", full=True, steem_instance=cls.bts)
-        cls.account_testnet = Account("test", full=True, steem_instance=cls.testnet)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_transfer(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-            acc = self.account
-        elif node_param == "testnet":
-            bts = self.testnet
-            acc = self.account_testnet
+    def test_transfer(self):
+        bts = self.bts
+        acc = self.account
         acc.steem.txbuffer.clear()
         tx = acc.transfer(
             "test", 1.33, "SBD", memo="Foobar", account="test1")
@@ -197,26 +180,12 @@ class Testcases(unittest.TestCase):
             op["creator"],
             "test")
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_connect(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-        elif node_param == "testnet":
-            bts = self.testnet
+    def test_connect(self):
+        bts = self.bts
         bts.connect()
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_info(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-        elif node_param == "testnet":
-            bts = self.testnet
+    def test_info(self):
+        bts = self.bts
         info = bts.info()
         for key in ['current_witness',
                     'head_block_id',
@@ -244,19 +213,10 @@ class Testcases(unittest.TestCase):
         self.assertEqual(len(ops1), 2)
         self.assertEqual(len(ops2), 1)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_weight_threshold(self, node_param):
-        if node_param == "normal":
+    def test_weight_threshold(self):
             bts = self.bts
             pkey1 = 'STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n'
             pkey2 = 'STM7GM9YXcsoAJAgKbqW2oVj7bnNXFNL4pk9NugqKWPmuhoEDbkDv'
-        elif node_param == "testnet":
-            bts = self.testnet
-            pkey1 = 'TST55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n'
-            pkey2 = 'TST7GM9YXcsoAJAgKbqW2oVj7bnNXFNL4pk9NugqKWPmuhoEDbkDv'
 
         auth = {'account_auths': [['test', 1]],
                 'extensions': [],
@@ -275,21 +235,12 @@ class Testcases(unittest.TestCase):
         with self.assertRaises(ValueError):
             bts._test_weights_treshold(auth)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_allow(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-            acc = self.account
-            prefix = "STM"
-            wif = "STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n"
-        elif node_param == "testnet":
-            bts = self.testnet
-            acc = self.account_testnet
-            prefix = "TST"
-            wif = "TST55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n"
+    def test_allow(self):
+        bts = self.bts
+        acc = self.account
+        prefix = "STM"
+        wif = "STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n"
+
         self.assertIn(bts.prefix, prefix)
         tx = acc.allow(
             wif,
@@ -348,15 +299,8 @@ class Testcases(unittest.TestCase):
             op["memo_key"],
             pkey)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_approvewitness(self, node_param):
-        if node_param == "normal":
-            w = self.account
-        elif node_param == "testnet":
-            w = self.account_testnet
+    def test_approvewitness(self):
+        w = self.account
         w.steem.txbuffer.clear()
         tx = w.approvewitness("test1")
         self.assertEqual(
@@ -439,23 +383,12 @@ class Testcases(unittest.TestCase):
         self.assertEqual(bts.get_block_interval(), 3)
         self.assertEqual(bts.get_blockchain_version(), '0.0.0')
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_properties(self, node_param):
-        if node_param == "normal":
-            bts = Steem(node=self.nodelist.get_nodes(),
-                        nobroadcast=True,
-                        data_refresh_time_seconds=900,
-                        keys={"active": wif, "owner": wif, "memo": wif},
-                        num_retries=10)
-        elif node_param == "testnet":
-            bts = Steem(node="https://testnet.steemitdev.com",
-                        nobroadcast=True,
-                        data_refresh_time_seconds=900,
-                        keys={"active": wif, "owner": wif, "memo": wif},
-                        num_retries=10)
+    def test_properties(self):
+        bts = Steem(node=self.nodelist.get_nodes(),
+                    nobroadcast=True,
+                    data_refresh_time_seconds=900,
+                    keys={"active": wif, "owner": wif, "memo": wif},
+                    num_retries=10)
         self.assertTrue(bts.get_feed_history(use_stored_data=False) is not None)
         self.assertTrue(bts.get_reward_funds(use_stored_data=False) is not None)
         self.assertTrue(bts.get_current_median_history(use_stored_data=False) is not None)

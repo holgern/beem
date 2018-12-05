@@ -37,20 +37,9 @@ class Testcases(unittest.TestCase):
         cls.start = num - 25
         cls.stop = num
 
-        cls.testnet = Steem(
-            node="https://testnet.steemitdev.com",
-            nobroadcast=True,
-            keys={"active": wif},
-            num_retries=10
-        )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(cls.bts)
-        cls.bts.set_default_account("test")
-        b = Blockchain(steem_instance=cls.testnet)
-        num = b.get_current_block_num()
-        cls.start_testnet = num - 25
-        cls.stop_testnet = num
 
     def test_blockchain(self):
         bts = self.bts
@@ -92,15 +81,8 @@ class Testcases(unittest.TestCase):
         self.assertEqual(len(accounts), limit)
         self.assertEqual(len(set(accounts)), limit)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_awaitTX(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-        else:
-            bts = self.testnet
+    def test_awaitTX(self):
+        bts = self.bts
         b = Blockchain(steem_instance=bts)
         trans = {'ref_block_num': 3855, 'ref_block_prefix': 1730859721,
                  'expiration': '2018-03-09T06:21:06', 'operations': [],
