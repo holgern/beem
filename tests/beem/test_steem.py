@@ -214,9 +214,9 @@ class Testcases(unittest.TestCase):
         self.assertEqual(len(ops2), 1)
 
     def test_weight_threshold(self):
-            bts = self.bts
-            pkey1 = 'STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n'
-            pkey2 = 'STM7GM9YXcsoAJAgKbqW2oVj7bnNXFNL4pk9NugqKWPmuhoEDbkDv'
+        bts = self.bts
+        pkey1 = 'STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n'
+        pkey2 = 'STM7GM9YXcsoAJAgKbqW2oVj7bnNXFNL4pk9NugqKWPmuhoEDbkDv'
 
         auth = {'account_auths': [['test', 1]],
                 'extensions': [],
