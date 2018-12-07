@@ -30,12 +30,6 @@ class Testcases(unittest.TestCase):
             keys={"active": wif},
             num_retries=10
         )
-        cls.testnet = Steem(
-            node="https://testnet.steemitdev.com",
-            nobroadcast=True,
-            keys={"active": wif},
-            num_retries=10
-        )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(cls.bts)
@@ -95,15 +89,8 @@ class Testcases(unittest.TestCase):
         self.assertTrue(vote.rep is not None)
         self.assertTrue(vote.time is not None)
 
-    @parameterized.expand([
-        ("normal"),
-        ("testnet"),
-    ])
-    def test_keyerror(self, node_param):
-        if node_param == "normal":
-            bts = self.bts
-        else:
-            bts = self.testnet
+    def test_keyerror(self):
+        bts = self.bts
         with self.assertRaises(
             exceptions.VoteDoesNotExistsException
         ):

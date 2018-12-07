@@ -37,7 +37,7 @@ class Testcases(unittest.TestCase):
             keys={"active": wif},
             num_retries=10
         )
-        cls.account = Account("beembot", full=True, steem_instance=cls.bts)
+        cls.account = Account("beembot", steem_instance=cls.bts)
         set_shared_steem_instance(cls.bts)
 
     def test_account(self):
@@ -405,7 +405,7 @@ class Testcases(unittest.TestCase):
             op["from"])
 
     def test_json_export(self):
-        account = self.account
+        account = Account("beembot", steem_instance=self.bts)
         if account.steem.rpc.get_use_appbase():
             content = self.bts.rpc.find_accounts({'accounts': [account["name"]]}, api="database")["accounts"][0]
         else:

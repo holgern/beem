@@ -1,5 +1,13 @@
 Changelog
 =========
+0.20.14
+-------
+* unit tests fixed
+* Account: support for retrieving all delegations (thanks to crookon, PR #129)
+* Change recovery account / list recovery account change requests (thanks to crokkon, PR #130)
+* Exclude sbd_interest_rate, as it is not present on the VIT blockchain (thanks to svitx, PR #132)
+* connect for beempy createwallet (thanks to crokkon, PR #133)
+
 0.20.13
 -------
 * beempy post improved
