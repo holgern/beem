@@ -462,6 +462,8 @@ def createwallet(wipe):
     """ Create new wallet with a new password
     """
     stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
     if stm.wallet.created() and not wipe:
         wipe_answer = click.prompt("'Do you want to wipe your wallet? Are your sure? This is IRREVERSIBLE! If you dont have a backup you may lose access to your account! [y/n]",
                                    default="n")
