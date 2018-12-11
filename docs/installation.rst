@@ -8,7 +8,7 @@ For Debian and Ubuntu, please ensure that the following packages are installed:
         
 .. code:: bash
 
-    sudo apt-get install build-essential libssl-dev python-dev
+    sudo apt-get install build-essential libssl-dev python-dev curl
 
 For Fedora and RHEL-derivatives, please ensure that the following packages are installed:
 
@@ -28,13 +28,23 @@ For Termux on Android, please install the following packages:
 
     pkg install clang openssl-dev python-dev
 
-Signing and Verify can be fasten (200 %) by installing cryptography:
+Install pip (https://pip.pypa.io/en/stable/installing/):
+
+.. code:: bash
+
+   curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+   
+   python get-pip.py
+
+Signing and Verify can be fasten (200 %) by installing cryptography. Install cryptography with pip:
 
 .. code:: bash
 
     pip install -U cryptography
     
-Install beem by pip::
+Install beem with pip:
+
+.. code:: bash
 
     pip install -U beem
 
