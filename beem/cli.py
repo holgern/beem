@@ -665,7 +665,7 @@ def listkeys():
     """
     stm = shared_steem_instance()
     if stm.rpc is not None:
-        stm.rpc.rpcconnect()    
+        stm.rpc.rpcconnect()
     t = PrettyTable(["Available Key"])
     t.align = "l"
     for key in stm.wallet.getPublicKeys():
@@ -3083,7 +3083,7 @@ def claimreward(account, reward_steem, reward_sbd, reward_vests, claim_all_steem
         return
     elif len(r) == 2 and r[0].amount + r[1].amount:
         print("Nothing to claim.")
-        return    
+        return
     if not unlock_wallet(stm):
         return
     if claim_all_steem:
@@ -3118,9 +3118,9 @@ def verify(blocknumber, trx, use_api):
         block = Block(blocknumber, steem_instance=stm)
         if trx is not None:
             i = int(trx)
-            trxs = [block.transactions[int(trx)]]
+            trxs = [block.json_transactions[int(trx)]]
         else:
-            trxs = block.transactions
+            trxs = block.json_transactions
     except Exception:
         trxs = [b.get_transaction(blocknumber)]
         blocknumber = trxs[0]["block_num"]
