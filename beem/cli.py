@@ -1671,8 +1671,10 @@ def disapprovewitness(witness, account):
 
 @cli.command()
 @click.option('--file', '-i', help='Load transaction from file. If "-", read from stdin (defaults to "-")')
-@click.option('--outfile', '-o', help='Load transaction from file. If "-", read from stdin (defaults to "-")')
-def sign(file, outfile):
+@click.option('--outfile', '-o', help='Save transaction to file. If "-", write to stdout (defaults to "-")')
+@click.option('--pubkey', help='(Partially) sign the transaction with a defined key')
+@click.option('--no-reconstruct', help="Dont't reconstruct the provided transaction", is_flag=True, default=False)
+def sign(file, outfile, pubkey, no_reconstruct):
     """Sign a provided transaction with available and required keys"""
     stm = shared_steem_instance()
     if stm.rpc is not None:
@@ -1690,7 +1692,11 @@ def sign(file, outfile):
     else:
         tx = click.get_text_stream('stdin')
     tx = ast.literal_eval(tx)
-    tx = stm.sign(tx)
+    if pubkey:
+        wifs = stm.wallet.getPrivateKeyForPublicKey(pubkey)
+    else:
+        wifs = []
+    tx = stm.sign(tx, wifs=wifs, reconstruct_tx=(not no_reconstruct))
     tx = json.dumps(tx, indent=4)
     if outfile and outfile != "-":
         with open(outfile, 'w') as fp:

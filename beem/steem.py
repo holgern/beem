@@ -950,7 +950,7 @@ class Steem(object):
             self.txbuffer.sign()
             return self.txbuffer.broadcast()
 
-    def sign(self, tx=None, wifs=[]):
+    def sign(self, tx=None, wifs=[], reconstruct_tx=True):
         """ Sign a provided transaction with the provided key(s)
 
             :param dict tx: The transaction to be signed and returned
@@ -958,14 +958,19 @@ class Steem(object):
                 a transaction. If not present, the keys will be loaded
                 from the wallet as defined in "missing_signatures" key
                 of the transactions.
+            :param bool recontruct_tx: update `expiration`, `ref_block_num`
+                and `ref_block_prefix` with current values. Set to `False`
+                for signing multi-sig transactions.
+
         """
         if tx:
             txbuffer = TransactionBuilder(tx, steem_instance=self)
         else:
             txbuffer = self.txbuffer
         txbuffer.appendWif(wifs)
-        txbuffer.appendMissingSignatures()
-        txbuffer.sign()
+        if not wifs:
+            txbuffer.appendMissingSignatures()
+        txbuffer.sign(reconstruct_tx=reconstruct_tx)
         return txbuffer.json()
 
     def broadcast(self, tx=None):
