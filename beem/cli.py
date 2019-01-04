@@ -1670,23 +1670,33 @@ def disapprovewitness(witness, account):
 
 
 @cli.command()
-@click.option('--file', help='Load transaction from file. If "-", read from stdin (defaults to "-")')
-def sign(file):
+@click.option('--file', '-i', help='Load transaction from file. If "-", read from stdin (defaults to "-")')
+@click.option('--outfile', '-o', help='Load transaction from file. If "-", read from stdin (defaults to "-")')
+def sign(file, outfile):
     """Sign a provided transaction with available and required keys"""
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
+    if not unlock_wallet(stm):
+        return
     if file and file != "-":
         if not os.path.isfile(file):
             raise Exception("File %s does not exist!" % file)
         with open(file) as fp:
             tx = fp.read()
+        if tx.find('\0') > 0:
+            with open(file, encoding='utf-16') as fp:
+                tx = fp.read()
     else:
         tx = click.get_text_stream('stdin')
     tx = ast.literal_eval(tx)
     tx = stm.sign(tx)
     tx = json.dumps(tx, indent=4)
-    print(tx)
+    if outfile and outfile != "-":
+        with open(outfile, 'w') as fp:
+            fp.write(tx)
+    else:
+        print(tx)
 
 
 @cli.command()
@@ -1701,6 +1711,9 @@ def broadcast(file):
             raise Exception("File %s does not exist!" % file)
         with open(file) as fp:
             tx = fp.read()
+        if tx.find('\0') > 0:
+            with open(file, encoding='utf-16') as fp:
+                tx = fp.read()
     else:
         tx = click.get_text_stream('stdin')
     tx = ast.literal_eval(tx)

@@ -122,7 +122,7 @@ class NodeList(list):
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "themarkymark",
-                "score": 20
+                "score": -20
             },
             {
                 "url": "wss://gtg.steem.house:8090",
@@ -213,7 +213,7 @@ class NodeList(list):
                 "version": "0.20.6",
                 "type": "appbase",
                 "owner": "anyx",
-                "score": 50
+                "score": -10
             },
             {
                 "url": "https://anyx.io",
@@ -227,14 +227,14 @@ class NodeList(list):
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "curie",
-                "score": -10
+                "score": 50
             },
             {
                 "url": "wss://rpc.curiesteem.com",
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "curie",
-                "score": 50
+                "score": -10
             },
             {
                 "url": "wss://testnet.steem.vc",
