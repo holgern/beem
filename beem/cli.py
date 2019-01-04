@@ -493,6 +493,8 @@ def walletinfo(test_unlock):
     """ Show info about wallet
     """
     stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()    
     t = PrettyTable(["Key", "Value"])
     t.align = "l"
     t.add_row(["created", stm.wallet.created()])
@@ -1690,7 +1692,7 @@ def sign(file, outfile):
     else:
         tx = click.get_text_stream('stdin')
     tx = ast.literal_eval(tx)
-    tx = stm.sign(tx)
+    tx = stm.sign(tx, reconstruct_tx=False)
     tx = json.dumps(tx, indent=4)
     if outfile and outfile != "-":
         with open(outfile, 'w') as fp:

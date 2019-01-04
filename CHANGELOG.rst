@@ -1,5 +1,18 @@
 Changelog
 =========
+0.20.16
+-------
+* Fix beempy walletinfo and sign
+
+0.20.15
+-------
+* Improve file reading for beempy sign and broadcast
+* add option to write file for beempy sign
+* Disable not working nodes
+* add missing prefix to comment_options op (by crokkon)
+* fix beempy verify --use-api (by crokkon)
+* Update installation.rst (by Nick Foster)
+
 0.20.14
 -------
 * unit tests fixed
