@@ -1896,6 +1896,7 @@ class Steem(object):
                 options.get("extensions", []),
                 "beneficiaries":
                 options.get("beneficiaries", []),
+                "prefix": self.prefix,
             })
         return comment_op
 
