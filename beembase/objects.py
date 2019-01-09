@@ -47,7 +47,7 @@ class Amount(object):
                         self.asset = asset["asset"]
             if self.precision is None:
                 raise Exception("Asset unknown")
-            self.amount = int(float(self.amount) * 10 ** self.precision)
+            self.amount = round(float(self.amount) * 10 ** self.precision)
 
             self.str_repr = '{:.{}f} {}'.format((float(self.amount) / 10 ** self.precision), self.precision, self.symbol)
         elif isinstance(d, list):
@@ -84,7 +84,7 @@ class Amount(object):
             self.symbol = d.symbol
             self.asset = d.asset["asset"]
             self.precision = d.asset["precision"]
-            self.amount = int(float(self.amount) * 10 ** self.precision)
+            self.amount = round(float(self.amount) * 10 ** self.precision)
             self.str_repr = str(d)
             # self.str_repr = json.dumps((d.json()))
             # self.str_repr = '{:.{}f} {}'.format((float(self.amount) / 10 ** self.precision), self.precision, self.asset)
