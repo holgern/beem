@@ -5,10 +5,10 @@ sudo: false
 
 matrix:
   include:
-    - os: linux
-      python: 3.6
-      env:
-        - TOXENV=pylint
+    #- os: linux
+    #  python: 3.6
+    #  env:
+    #    - TOXENV=pylint
     - os: linux
       python: 3.6
       env:
@@ -17,10 +17,10 @@ matrix:
     #  python: 3.6
     #  env:
     #    - TOXENV=bandit
-    - os: linux
-      python: 3.6
-      env:
-        - TOXENV=readme
+    #- os: linux
+    #  python: 3.6
+    #  env:
+    #    - TOXENV=readme
     - os: linux
       python: 2.7
       env:
