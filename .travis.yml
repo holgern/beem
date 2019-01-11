@@ -63,10 +63,16 @@ before_install:
 
 script:
  - tox
+  - sed -i 's/filename="/filename=".\//g' coverage.xml
+  - ( which sonar-scanner && sonar-scanner || true )
 
 after_success:
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then bash util/package-osx.sh; fi
  - if [[ "$BUILD_LINUX" == "yes" ]]; then bash util/package-linux.sh; fi
  - coveralls
-  # - codecov 
+ - codecov 
   # - python-codacy-coverage -r coverage.xml
+
+addons:
+  sonarcloud:
+    organization: holgern-github
