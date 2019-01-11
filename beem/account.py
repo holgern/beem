@@ -1410,9 +1410,30 @@ class Account(BlockchainObject):
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.get_account_votes(account, api="condenser")
+            vote_list = self.steem.rpc.get_account_votes(account, api="condenser")
         else:
-            return self.steem.rpc.get_account_votes(account)
+            vote_list = self.steem.rpc.get_account_votes(account)
+        if isinstance(vote_list, dict) and "error" in vote_list:
+            start_author = ""
+            start_permlink = ""
+            vote_list = []
+            finished = False
+            while not finished:
+                ret = self.steem.rpc.list_votes({"start": [account, start_author, start_permlink], "limit": 1000, "order": "by_voter_comment"}, api="database")["votes"]
+                if start_author != "":
+                    if len(ret) == 0:
+                        finished = True                     
+                    ret = ret[1:]
+                for vote in ret:
+                    if vote["voter"] != account:
+                        finished = True
+                        continue
+                    vote_list.append(vote)
+                    start_author = vote["author"]
+                    start_permlink = vote["permlink"]
+            return vote_list
+        else:
+            return vote_list
 
     def get_vote(self, comment):
         """Returns a vote if the account has already voted for comment.
