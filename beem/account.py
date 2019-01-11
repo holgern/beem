@@ -47,7 +47,9 @@ class Account(BlockchainObject):
         .. code-block:: python
 
             >>> from beem.account import Account
-            >>> account = Account("gtg")
+            >>> from beem import Steem
+            >>> stm = Steem("https://steemd.minnowsupportproject.org")
+            >>> account = Account("gtg", steem_instance=stm)
             >>> print(account)
             <Account gtg>
             >>> print(account.balances) # doctest: +SKIP
@@ -607,7 +609,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("steemit")
+                >>> from beem import Steem
+                >>> stm = Steem("https://steemd.minnowsupportproject.org")
+                >>> account = Account("steemit", steem_instance=stm)
                 >>> account.get_feed(0, 1, raw_data=True)
                 []
 
@@ -661,7 +665,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("steemit")
+                >>> from beem import Steem
+                >>> stm = Steem("https://steemd.minnowsupportproject.org")
+                >>> account = Account("steemit", steem_instance=stm)
                 >>> account.get_feed_entries(0, 1)
                 []
 
@@ -682,7 +688,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("steemit")
+                >>> from beem import Steem
+                >>> stm = Steem("https://steemd.minnowsupportproject.org")
+                >>> account = Account("steemit", steem_instance=stm)
                 >>> entry = account.get_blog_entries(0, 1, raw_data=True)[0]
                 >>> print("%s - %s - %s - %s" % (entry["author"], entry["permlink"], entry["blog"], entry["reblog_on"]))
                 steemit - firstpost - steemit - 1970-01-01T00:00:00
@@ -704,7 +712,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("steemit")
+                >>> from beem import Steem
+                >>> stm = Steem("https://steemd.minnowsupportproject.org")
+                >>> account = Account("steemit", steem_instance=stm)
                 >>> account.get_blog(0, 1)
                 [<Comment @steemit/firstpost>]
 
@@ -753,7 +763,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("steemit")
+                >>> from beem import Steem
+                >>> stm = Steem("https://steemd.minnowsupportproject.org")
+                >>> account = Account("steemit", steem_instance=stm)
                 >>> account.get_blog_authors()
                 []
 
@@ -1325,7 +1337,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
+                >>> from beem import Steem
+                >>> stm = Steem("https://steemd.minnowsupportproject.org")
+                >>> account = Account("beem.app", steem_instance=stm)
                 >>> account.get_tags_used_by_author()
                 []
 
@@ -1381,7 +1395,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
+                >>> from beem import Steem
+                >>> stm = Steem("https://steemd.minnowsupportproject.org")
+                >>> account = Account("beem.app", steem_instance=stm)
                 >>> account.get_account_votes()
                 []
 

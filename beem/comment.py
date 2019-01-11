@@ -33,13 +33,15 @@ class Comment(BlockchainObject):
 
         .. code-block:: python
 
-           >>> from beem.comment import Comment
-           >>> from beem.account import Account
-           >>> acc = Account("gtg")
-           >>> authorperm = acc.get_blog(limit=1)[0]["authorperm"]
-           >>> c = Comment(authorperm)
-           >>> postdate = c["created"]
-           >>> postdate_str = c.json()["created"]
+        >>> from beem.comment import Comment
+        >>> from beem.account import Account
+        >>> from beem import Steem
+        >>> stm = Steem("https://steemd.minnowsupportproject.org")
+        >>> acc = Account("gtg", steem_instance=stm)
+        >>> authorperm = acc.get_blog(limit=1)[0]["authorperm"]
+        >>> c = Comment(authorperm)
+        >>> postdate = c["created"]
+        >>> postdate_str = c.json()["created"]
 
     """
     type_id = 8

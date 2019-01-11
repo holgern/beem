@@ -152,20 +152,20 @@ class Testcases(unittest.TestCase):
 
     def test_upvote(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-ds', 'upvote', '@test/abcd'], input="test\n")
+        result = runner.invoke(cli, ['-ds', 'upvote', '@steemit/firstpost'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-ds', 'upvote', '@test/abcd', '100'], input="test\n")
+        result = runner.invoke(cli, ['-ds', 'upvote', '@steemit/firstpost', '100'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-ds', 'upvote', '--weight', '100', '@test/abcd'], input="test\n")
+        result = runner.invoke(cli, ['-ds', 'upvote', '--weight', '100', '@steemit/firstpost'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_downvote(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-ds', 'downvote', '@test/abcd'], input="test\n")
+        result = runner.invoke(cli, ['-ds', 'downvote', '@steemit/firstpost'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-ds', 'downvote', '@test/abcd', '100'], input="test\n")
+        result = runner.invoke(cli, ['-ds', 'downvote', '@steemit/firstpost', '100'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-ds', 'downvote', '--weight', '100', '@test/abcd'], input="test\n")
+        result = runner.invoke(cli, ['-ds', 'downvote', '--weight', '100', '@steemit/firstpost'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_transfer(self):
@@ -319,21 +319,21 @@ class Testcases(unittest.TestCase):
 
     def test_resteem(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-ds', 'resteem', '@test/abcde'], input="test\n")
+        result = runner.invoke(cli, ['-ds', 'resteem', '@steemit/firstposte'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_follow_unfollow(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-ds', 'follow', 'beem1'], input="test\n")
+        result = runner.invoke(cli, ['-ds', 'follow', 'beempy'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-ds', 'unfollow', 'beem1'], input="test\n")
+        result = runner.invoke(cli, ['-ds', 'unfollow', 'beempy'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_mute_unmute(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-ds', 'mute', 'beem1'], input="test\n")
+        result = runner.invoke(cli, ['-ds', 'mute', 'beempy'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-ds', 'unfollow', 'beem1'], input="test\n")
+        result = runner.invoke(cli, ['-ds', 'unfollow', 'beempy'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_witnesscreate(self):
