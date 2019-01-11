@@ -63,8 +63,8 @@ before_install:
 
 script:
  - tox
-  - sed -i 's/filename="/filename=".\//g' coverage.xml
-  - ( which sonar-scanner && sonar-scanner || true )
+ - sed -i 's/filename="/filename=".\//g' coverage.xml
+ - ( which sonar-scanner && sonar-scanner || true )
 
 after_success:
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then bash util/package-osx.sh; fi
