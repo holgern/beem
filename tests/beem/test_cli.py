@@ -95,7 +95,7 @@ class Testcases(unittest.TestCase):
         runner = CliRunner()
         result = runner.invoke(cli, ['delkey', '--confirm', pub_key], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['addkey'], input="test\n" + wif + "\n")
+        result = runner.invoke(cli, ['addkey'], input="test\n" + posting_key + "\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_listkeys(self):
@@ -319,21 +319,21 @@ class Testcases(unittest.TestCase):
 
     def test_resteem(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-ds', 'resteem', '@steemit/firstposte'], input="test\n")
+        result = runner.invoke(cli, ['-dso', 'resteem', '@steemit/firstposte'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_follow_unfollow(self):
         runner = CliRunner()
         result = runner.invoke(cli, ['-ds', 'follow', 'beempy'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-ds', 'unfollow', 'beempy'], input="test\n")
+        result = runner.invoke(cli, ['-dso', 'unfollow', 'beempy'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_mute_unmute(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-ds', 'mute', 'beempy'], input="test\n")
+        result = runner.invoke(cli, ['-dso', 'mute', 'beempy'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-ds', 'unfollow', 'beempy'], input="test\n")
+        result = runner.invoke(cli, ['-dso', 'unfollow', 'beempy'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_witnesscreate(self):
@@ -346,9 +346,9 @@ class Testcases(unittest.TestCase):
 
     def test_profile(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['setprofile', 'url', 'https://google.de'], input="test\n")
+        result = runner.invoke(cli, ['-ds', 'setprofile', 'url', 'https://google.de'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['delprofile', 'url'], input="test\n")
+        result = runner.invoke(cli, ['-ds', 'delprofile', 'url'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_claimreward(self):

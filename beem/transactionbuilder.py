@@ -163,7 +163,7 @@ class TransactionBuilder(dict):
         required_treshold = account[permission]["weight_threshold"]
         if self.steem.wallet.locked():
             raise WalletLocked()
-        if self.steem.use_sc2:
+        if self.steem.use_sc2 and self.steem.steemconnect is not None:
             self.steem.steemconnect.set_username(account["name"], permission)
             return
 

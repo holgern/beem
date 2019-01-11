@@ -63,14 +63,14 @@ before_install:
 
 script:
  - tox
- - if [[ "$TOXENV" == "py36short" ]]; then sed -i 's/filename="/filename=".\//g' coverage.xml; fi
- - if [[ "$TOXENV" == "py36short" ]]; then ( which sonar-scanner && sonar-scanner || true ); fi
+ - sed -i 's/filename="/filename=".\//g' coverage.xml
+ - ( which sonar-scanner && sonar-scanner || true )
 
 after_success:
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then bash util/package-osx.sh; fi
  - if [[ "$BUILD_LINUX" == "yes" ]]; then bash util/package-linux.sh; fi
  - coveralls
- - if [[ "$TOXENV" == "py36short" ]]; then codecov; fi
+ - codecov 
   # - python-codacy-coverage -r coverage.xml
 
 addons:
