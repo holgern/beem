@@ -952,6 +952,8 @@ def changewalletpassphrase():
     """ Change wallet password
     """
     stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()    
     if not unlock_wallet(stm):
         return
     newpassword = None
