@@ -31,7 +31,9 @@ class Vote(BlockchainObject):
         .. code-block:: python
 
            >>> from beem.vote import Vote
-           >>> v = Vote("@gtg/steem-pressure-4-need-for-speed|gandalf")
+           >>> from beem import Steem
+           >>> stm = Steem("https://steemd.minnowsupportproject.org")
+           >>> v = Vote("@gtg/steem-pressure-4-need-for-speed|gandalf", steem_instance=stm)
 
     """
     type_id = 11

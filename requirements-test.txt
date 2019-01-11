@@ -23,6 +23,7 @@ pytest
 pytest-mock
 pytest-cov
 coverage
+mock
 parameterized
 tox
 codacy-coverage
