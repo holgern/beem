@@ -1,5 +1,11 @@
 Changelog
 =========
+0.20.17
+-------
+* Fix transfer rounding error, which prevent transfering of e.g. 1.013 STEEM.
+* get_account_votes works again with api.steemit.com
+* Use secp256k1prp as better replacement for secp256k1
+
 0.20.16
 -------
 * Fix beempy walletinfo and sign

@@ -107,6 +107,12 @@ Signing and Verify can be fasten (200 %) by installing cryptography:
 
     pip install -U cryptography
 
+or:
+
+.. code:: bash
+
+    pip install -U secp256k1prp
+
 Install or update beem by pip::
 
     pip install -U beem

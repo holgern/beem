@@ -10,7 +10,7 @@ pycryptodomex==3.7.2
 scrypt==0.8.6
 Events==0.3
 cryptography==2.4.2
-pyyaml==3.13
+pyyaml>=4.2b1
 mock==2.0.0
 appdirs==1.4.3
 Click==7.0

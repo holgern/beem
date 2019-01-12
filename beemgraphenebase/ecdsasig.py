@@ -22,16 +22,21 @@ CRYPTOGRAPHY_AVAILABLE = False
 GMPY2_MODULE = False
 if not SECP256K1_MODULE:
     try:
-        import secp256k1
+        import secp256k1prp as secp256k1
         SECP256K1_MODULE = "secp256k1"
         SECP256K1_AVAILABLE = True
-    except ImportError:
+    except:
         try:
-            import cryptography
-            SECP256K1_MODULE = "cryptography"
-            CRYPTOGRAPHY_AVAILABLE = True
+            import secp256k1
+            SECP256K1_MODULE = "secp256k1"
+            SECP256K1_AVAILABLE = True
         except ImportError:
-            SECP256K1_MODULE = "ecdsa"
+            try:
+                import cryptography
+                SECP256K1_MODULE = "cryptography"
+                CRYPTOGRAPHY_AVAILABLE = True
+            except ImportError:
+                SECP256K1_MODULE = "ecdsa"
 
     try:
         from cryptography.hazmat.backends import default_backend
