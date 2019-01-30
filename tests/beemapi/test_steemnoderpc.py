@@ -32,21 +32,21 @@ class Testcases(unittest.TestCase):
     def setUpClass(cls):
         nodelist = NodeList()
         nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=3))
-        cls.nodes = nodelist.get_nodes(https=False, appbase=True)
-        cls.nodes_https = nodelist.get_nodes(wss=False, appbase=True)
-        cls.nodes_appbase = nodelist.get_nodes(normal=False)
-        cls.test_list = nodelist.get_nodes()
+        cls.nodes = nodelist.get_nodes()
+        if "https://api.steemit.com" in cls.nodes:
+            cls.nodes.remove("https://api.steemit.com")
+        cls.nodes_steemit = ["https://api.steemit.com"]
 
         cls.appbase = Steem(
-            node=cls.nodes_appbase,
+            node=cls.nodes,
             nobroadcast=True,
             keys={"active": wif, "owner": wif, "memo": wif},
             num_retries=10
         )
-        cls.rpc = SteemNodeRPC(urls=cls.test_list)
+        cls.rpc = SteemNodeRPC(urls=cls.nodes_steemit)
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
-        set_shared_steem_instance(cls.appbase)
+        set_shared_steem_instance(cls.nodes_steemit)
         cls.appbase.set_default_account("test")
 
     def get_reply(self, msg):
@@ -70,16 +70,16 @@ class Testcases(unittest.TestCase):
 
     def test_connect_test_node(self):
         rpc = self.rpc
-        self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
+        self.assertIn(rpc.url, self.nodes + self.nodes_steemit)
         rpc.rpcclose()
         rpc.rpcconnect()
-        self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
+        self.assertIn(rpc.url, self.nodes + self.nodes_steemit)
 
     def test_connect_test_node2(self):
         rpc = self.rpc
-        self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
+        self.assertIn(rpc.url, self.nodes + self.nodes_steemit)
         rpc.next()
-        self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
+        self.assertIn(rpc.url, self.nodes + self.nodes_steemit)
 
     def test_connect_test_str_list(self):
         str_list = ""
@@ -87,9 +87,9 @@ class Testcases(unittest.TestCase):
             str_list += node + ";"
         str_list = str_list[:-1]
         rpc = SteemNodeRPC(urls=str_list)
-        self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
+        self.assertIn(rpc.url, self.nodes + self.nodes_steemit)
         rpc.next()
-        self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
+        self.assertIn(rpc.url, self.nodes + self.nodes_steemit)
 
     def test_connect_test_str_list2(self):
         str_list = ""
@@ -97,9 +97,9 @@ class Testcases(unittest.TestCase):
             str_list += node + ","
         str_list = str_list[:-1]
         rpc = SteemNodeRPC(urls=str_list)
-        self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
+        self.assertIn(rpc.url, self.nodes + self.nodes_steemit)
         rpc.next()
-        self.assertIn(rpc.url, self.nodes + self.nodes_appbase + self.nodes_https)
+        self.assertIn(rpc.url, self.nodes + self.nodes_steemit)
 
     def test_server_error(self):
         rpc = self.rpc
@@ -178,7 +178,7 @@ class Testcases(unittest.TestCase):
             SteemNodeRPC(urls=nodes, num_retries=0, num_retries_call=0, timeout=1)
 
     def test_error_handling(self):
-        rpc = SteemNodeRPC(urls=self.nodes_appbase, num_retries=2, num_retries_call=3)
+        rpc = SteemNodeRPC(urls=self.nodes_steemit, num_retries=2, num_retries_call=3)
         with self.assertRaises(
             exceptions.NoMethodWithName
         ):
@@ -189,7 +189,7 @@ class Testcases(unittest.TestCase):
             rpc.get_accounts("test")
 
     def test_error_handling_appbase(self):
-        rpc = SteemNodeRPC(urls=self.nodes_appbase, num_retries=2, num_retries_call=3)
+        rpc = SteemNodeRPC(urls=self.nodes_steemit, num_retries=2, num_retries_call=3)
         with self.assertRaises(
             exceptions.NoMethodWithName
         ):

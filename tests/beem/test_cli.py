@@ -267,7 +267,7 @@ class Testcases(unittest.TestCase):
     @unittest.skip
     def test_importaccount(self):
         runner = CliRunner()
-        runner.invoke(cli, ['-o', 'set', 'nodes', str(self.nodelist.get_nodes())])
+        runner.invoke(cli, ['-o', 'set', 'nodes', str(self.node_list)])
         result = runner.invoke(cli, ['importaccount', '--roles', '["owner", "active", "posting", "memo"]', 'beem2'], input="test\numybjvCafrt8LdoCjEimQiQ4\n")
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['delkey', '--confirm', 'STX7mLs2hns87f7kbf3o2HBqNoEaXiTeeU89eVF6iUCrMQJFzBsPo'], input="test\n")
@@ -369,10 +369,10 @@ class Testcases(unittest.TestCase):
 
     def test_nextnode(self):
         runner = CliRunner()
-        runner.invoke(cli, ['-o', 'set', 'nodes', self.nodelist.get_nodes()])
+        runner.invoke(cli, ['-o', 'set', 'nodes', self.node_list])
         result = runner.invoke(cli, ['-o', 'nextnode'])
         self.assertEqual(result.exit_code, 0)
-        runner.invoke(cli, ['-o', 'set', 'nodes', str(self.nodelist.get_nodes())])
+        runner.invoke(cli, ['-o', 'set', 'nodes', str(self.node_list)])
 
     def test_pingnode(self):
         runner = CliRunner()
@@ -383,21 +383,21 @@ class Testcases(unittest.TestCase):
 
     def test_updatenodes(self):
         runner = CliRunner()
-        runner.invoke(cli, ['-o', 'set', 'nodes', self.nodelist.get_nodes()])
+        runner.invoke(cli, ['-o', 'set', 'nodes', self.node_list])
         result = runner.invoke(cli, ['updatenodes', '--test'])
         self.assertEqual(result.exit_code, 0)
-        runner.invoke(cli, ['-o', 'set', 'nodes', str(self.nodelist.get_nodes())])
+        runner.invoke(cli, ['-o', 'set', 'nodes', str(self.node_list)])
 
     def test_currentnode(self):
         runner = CliRunner()
-        runner.invoke(cli, ['-o', 'set', 'nodes', self.nodelist.get_nodes()])
+        runner.invoke(cli, ['-o', 'set', 'nodes', self.node_list])
         result = runner.invoke(cli, ['currentnode'])
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['currentnode', '--url'])
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['currentnode', '--version'])
         self.assertEqual(result.exit_code, 0)
-        runner.invoke(cli, ['-o', 'set', 'nodes', str(self.nodelist.get_nodes())])
+        runner.invoke(cli, ['-o', 'set', 'nodes', str(self.node_list)])
 
     def test_ticker(self):
         runner = CliRunner()
