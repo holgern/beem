@@ -9,14 +9,14 @@ pytz==2018.9
 pycryptodomex==3.7.3
 scrypt==0.8.6
 Events==0.3
-cryptography==2.4.2
+cryptography==2.5
 pyyaml>=4.2b1
 mock==2.0.0
 appdirs==1.4.3
 Click==7.0
 prettytable
 pycodestyle==2.4.0
-pyflakes==2.0.0
+pyflakes==2.1.0
 pylibscrypt==1.7.1
 six==1.12.0
 pytest
