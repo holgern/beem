@@ -84,6 +84,16 @@ known_chains = {
             {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
         ],
     },
+    "EFTGAPPBASE": {
+        "chain_id": "1c15984beb16945c01cb9bc3d654b0417c650461dfe535018fe03a4fc5a36864",
+        "min_version": "0.19.12",
+        "prefix": "EUR",
+        "chain_assets": [
+            {"asset": "@@000000013", "symbol": "EUR", "precision": 3, "id": 0},
+            {"asset": "@@000000021", "symbol": "EFTG", "precision": 3, "id": 1},
+            {"asset": "@@000000037", "symbol": "VESTS", "precision": 6, "id": 2}
+        ],
+    },
     "EFTG": {
         "chain_id": "1c15984beb16945c01cb9bc3d654b0417c650461dfe535018fe03a4fc5a36864",
         "min_version": "0.19.6",
