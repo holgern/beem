@@ -27,9 +27,12 @@ pub_key = "STX52xMqKegLk4tdpNcUXU9Rw5DtdM9fxf3f12Gp55v1UjLX3ELZf"
 class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.nodelist = NodeList()
-        cls.nodelist.update_nodes()
-        cls.nodelist.update_nodes(steem_instance=Steem(node=cls.nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
+        nodelist = NodeList()
+        nodelist.update_nodes()
+        nodelist.update_nodes(steem_instance=Steem(node=cls.nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
+        cls.node_list = nodelist.get_nodes()
+        if "https://api.steemit.com" in cls.node_list:
+            cls.node_list.remove("https://api.steemit.com")         
         # stm = shared_steem_instance()
         # stm.config.refreshBackup()
         runner = CliRunner()
@@ -39,7 +42,7 @@ class Testcases(unittest.TestCase):
         result = runner.invoke(cli, ['-o', 'set', 'default_account', 'beem'])
         if result.exit_code != 0:
             raise AssertionError(str(result))
-        result = runner.invoke(cli, ['-o', 'set', 'nodes', str(cls.nodelist.get_nodes())])
+        result = runner.invoke(cli, ['-o', 'set', 'nodes', str(cls.node_list)])
         if result.exit_code != 0:
             raise AssertionError(str(result))
         result = runner.invoke(cli, ['createwallet', '--wipe'], input="test\ntest\n")

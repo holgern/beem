@@ -23,8 +23,8 @@ class Testcases(unittest.TestCase):
             nobroadcast=True,
             num_retries=10
         )
-        cls.testnet = Steem(
-            node="https://testnet.steemitdev.com",
+        cls.steemit = Steem(
+            node="https://api.steemit.com",
             nobroadcast=True,
             num_retries=10
         )
@@ -32,13 +32,13 @@ class Testcases(unittest.TestCase):
 
     @parameterized.expand([
         ("normal"),
-        ("testnet"),
+        ("steemit"),
     ])
     def test_assert(self, node_param):
         if node_param == "normal":
             stm = self.bts
         else:
-            stm = self.testnet
+            stm = self.steemit
         with self.assertRaises(AssetDoesNotExistsException):
             Asset("FOObarNonExisting", full=False, steem_instance=stm)
 
@@ -60,8 +60,15 @@ class Testcases(unittest.TestCase):
         self.assertEqual(asset.precision, precision)
         self.assertEqual(asset.asset, asset_str)
 
-    def test_assert_equal(self):
-        stm = self.bts
+    @parameterized.expand([
+        ("normal"),
+        ("steemit"),
+    ])
+    def test_assert_equal(self, node_param):
+        if node_param == "normal":
+            stm = self.bts
+        else:
+            stm = self.steemit
         asset1 = Asset("SBD", full=False, steem_instance=stm)
         asset2 = Asset("SBD", full=False, steem_instance=stm)
         self.assertTrue(asset1 == asset2)

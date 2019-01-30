@@ -15,13 +15,15 @@ class Testcases(unittest.TestCase):
         nodelist = NodeList()
         nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
         b1 = Steem(
-            node=nodelist.get_testnet(testnet=False, testnetdev=True),
+            node="https://api.steemit.com",
             nobroadcast=True,
             num_retries=10
         )
-
+        node_list = nodelist.get_nodes()
+        if "https://api.steemit.com" in node_list:
+            node_list.remove("https://api.steemit.com")
         b2 = Steem(
-            node=nodelist.get_nodes(),
+            node=node_list,
             nobroadcast=True,
             num_retries=10
         )

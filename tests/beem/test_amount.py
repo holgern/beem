@@ -22,8 +22,8 @@ class Testcases(unittest.TestCase):
             nobroadcast=True,
             num_retries=10
         )
-        cls.testnet = Steem(
-            node="https://testnet.steemitdev.com",
+        cls.steemit = Steem(
+            node="https://api.steemit.com",
             nobroadcast=True,
             use_condenser=False,
             num_retries=10
