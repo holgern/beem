@@ -854,9 +854,13 @@ class Account(BlockchainObject):
             if self.steem.rpc.get_use_appbase():
                 query = {'account': self.name, 'start': last_user, 'type': what, 'limit': limit}
                 if direction == "follower":
-                    followers = self.steem.rpc.get_followers(query, api='follow')['followers']
+                    followers = self.steem.rpc.get_followers(query, api='follow')
+                    if isinstance(followers, dict) and 'followers' in followers:
+                        followers = followers['followers']
                 elif direction == "following":
-                    followers = self.steem.rpc.get_following(query, api='follow')['following']
+                    followers = self.steem.rpc.get_following(query, api='follow')
+                    if isinstance(followers, dict) and 'following' in followers:
+                        followers = followers['following']         
             else:
                 if direction == "follower":
                     followers = self.steem.rpc.get_followers(self.name, last_user, what, limit, api='follow')
