@@ -32,9 +32,9 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.nodelist = NodeList()
-        cls.nodelist.update_nodes(steem_instance=Steem(node=cls.nodelist.get_nodes(exclude_limited=False), num_retries=10))
+        cls.nodelist.update_nodes(steem_instance=Steem(node=cls.nodelist.get_nodes(), num_retries=10))
         cls.bts = Steem(
-            node=cls.nodelist.get_nodes(exclude_limited=True),
+            node=cls.nodelist.get_nodes(),
             nobroadcast=True,
             unsigned=True,
             data_refresh_time_seconds=900,
@@ -87,7 +87,8 @@ class Testcases(unittest.TestCase):
             additional_active_keys=[format(key5.pubkey, core_unit)],
             additional_posting_keys=[format(key5.pubkey, core_unit)],
             additional_owner_accounts=["test1"],  # 1.2.0
-            additional_active_accounts=["test1"],
+            additional_active_accounts=["test2"],
+            additional_posting_accounts=["test3"],
             storekeys=False,
         )
         self.assertEqual(
@@ -103,7 +104,7 @@ class Testcases(unittest.TestCase):
             format(key5.pubkey, core_unit),
             [x[0] for x in op[role]["key_auths"]])
         self.assertIn(
-            "test1",
+            "test2",
             [x[0] for x in op[role]["account_auths"]])
         role = "posting"
         self.assertIn(
@@ -113,7 +114,7 @@ class Testcases(unittest.TestCase):
             format(key5.pubkey, core_unit),
             [x[0] for x in op[role]["key_auths"]])
         self.assertIn(
-            "test1",
+            "test3",
             [x[0] for x in op[role]["account_auths"]])
         role = "owner"
         self.assertIn(

@@ -1456,7 +1456,7 @@ class Steem(object):
                        'key_auths': active_key_authority,
                        "address_auths": [],
                        'weight_threshold': 1},
-            'posting': {'account_auths': active_accounts_authority,
+            'posting': {'account_auths': posting_accounts_authority,
                         'key_auths': posting_key_authority,
                         "address_auths": [],
                         'weight_threshold': 1},
