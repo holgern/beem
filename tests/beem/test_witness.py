@@ -18,17 +18,16 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
+        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(exclude_limited=False), num_retries=10))
         cls.bts = Steem(
-            node=nodelist.get_nodes(),
+            node=nodelist.get_nodes(exclude_limited=True),
             nobroadcast=True,
             unsigned=True,
             keys={"active": wif},
             num_retries=10
         )
-        cls.testnet = Steem(
-            # node="https://testnet.timcliff.com",
-            node=nodelist.get_nodes(),
+        cls.steemit = Steem(
+            node="https://api.steemit.com",
             nobroadcast=True,
             unsigned=True,
             keys={"active": wif},
@@ -41,13 +40,13 @@ class Testcases(unittest.TestCase):
 
     @parameterized.expand([
         ("normal"),
-        ("testnet"),
+        ("steemit"),
     ])
     def test_feed_publish(self, node_param):
         if node_param == "normal":
             bts = self.bts
         else:
-            bts = self.testnet
+            bts = self.steemit
         bts.txbuffer.clear()
         w = Witness("gtg", steem_instance=bts)
         tx = w.feed_publish("4 SBD", "1 STEEM")
@@ -62,13 +61,13 @@ class Testcases(unittest.TestCase):
 
     @parameterized.expand([
         ("normal"),
-        ("testnet"),
+        ("steemit"),
     ])
     def test_update(self, node_param):
         if node_param == "normal":
             bts = self.bts
         else:
-            bts = self.testnet
+            bts = self.steemit
         bts.txbuffer.clear()
         w = Witness("gtg", steem_instance=bts)
         props = {"account_creation_fee": "0.1 STEEM",
@@ -83,13 +82,13 @@ class Testcases(unittest.TestCase):
 
     @parameterized.expand([
         ("normal"),
-        ("testnet"),
+        ("steemit"),
     ])
     def test_witnesses(self, node_param):
         if node_param == "normal":
             bts = self.bts
         else:
-            bts = self.testnet
+            bts = self.steemit
         w = Witnesses(steem_instance=bts)
         w.printAsTable()
         self.assertTrue(len(w) > 0)
@@ -97,13 +96,13 @@ class Testcases(unittest.TestCase):
 
     @parameterized.expand([
         ("normal"),
-        ("testnet"),
+        ("steemit"),
     ])
     def test_WitnessesVotedByAccount(self, node_param):
         if node_param == "normal":
             bts = self.bts
         else:
-            bts = self.testnet
+            bts = self.steemit
         w = WitnessesVotedByAccount("gtg", steem_instance=bts)
         w.printAsTable()
         self.assertTrue(len(w) > 0)
@@ -111,13 +110,13 @@ class Testcases(unittest.TestCase):
 
     @parameterized.expand([
         ("normal"),
-        ("testnet"),
+        ("steemit"),
     ])
     def test_WitnessesRankedByVote(self, node_param):
         if node_param == "normal":
             bts = self.bts
         else:
-            bts = self.testnet
+            bts = self.steemit
         w = WitnessesRankedByVote(steem_instance=bts)
         w.printAsTable()
         self.assertTrue(len(w) > 0)
@@ -125,13 +124,13 @@ class Testcases(unittest.TestCase):
 
     @parameterized.expand([
         ("normal"),
-        ("testnet"),
+        ("steemit"),
     ])
     def test_export(self, node_param):
         if node_param == "normal":
             bts = self.bts
         else:
-            bts = self.testnet
+            bts = self.steemit
         owner = "gtg"
         if bts.rpc.get_use_appbase():
             witness = bts.rpc.find_witnesses({'owners': [owner]}, api="database")['witnesses']

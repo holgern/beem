@@ -15,7 +15,7 @@ class Testcases(unittest.TestCase):
     def setUpClass(cls):
         nodelist = NodeList()
         cls.bts = Steem(
-            node=nodelist.get_nodes(),
+            node=nodelist.get_nodes(exclude_limited=False),
             nobroadcast=True,
             num_retries=10
         )
@@ -23,14 +23,14 @@ class Testcases(unittest.TestCase):
 
     def test_get_nodes(self):
         nodelist = NodeList()
-        all_nodes = nodelist.get_nodes(normal=True, appbase=True, dev=True, testnet=True, testnetdev=True)
+        all_nodes = nodelist.get_nodes(exclude_limited=False, dev=True, testnet=True, testnetdev=True)
         self.assertEqual(len(nodelist) - 13, len(all_nodes))
         https_nodes = nodelist.get_nodes(wss=False)
         self.assertEqual(https_nodes[0][:5], 'https')
 
     def test_nodes_update(self):
         nodelist = NodeList()
-        all_nodes = nodelist.get_nodes(normal=True, appbase=True, dev=True, testnet=True)
+        all_nodes = nodelist.get_nodes(exclude_limited=False, dev=True, testnet=True)
         nodelist.update_nodes(steem_instance=self.bts)
         nodes = nodelist.get_nodes()
         self.assertIn(nodes[0], all_nodes)

@@ -27,10 +27,9 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
-        node_list = nodelist.get_nodes()
-        if "https://api.steemit.com" in node_list:
-            node_list.remove("https://api.steemit.com")        
+        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(exclude_limited=False), num_retries=10))
+        node_list = nodelist.get_nodes(exclude_limited=True)
+      
         cls.bts = Steem(
             node=node_list,
             nobroadcast=True,

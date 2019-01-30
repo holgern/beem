@@ -33,10 +33,10 @@ class Testcases(unittest.TestCase):
         stm = shared_steem_instance()
         stm.config.refreshBackup()
         nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
+        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(exclude_limited=False), num_retries=10))
 
         cls.stm = Steem(
-            node=nodelist.get_nodes(),
+            node=nodelist.get_nodes(exclude_limited=True),
             nobroadcast=True,
             # We want to bundle many operations into a single transaction
             bundle=True,

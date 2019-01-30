@@ -29,7 +29,7 @@ class NodeList(list):
             {
                 "url": "https://api.steemit.com",
                 "version": "0.20.2",
-                "type": "appbase",
+                "type": "appbase-limited",
                 "owner": "steemit",
                 "score": 100
             },
@@ -237,6 +237,13 @@ class NodeList(list):
                 "score": -10
             },
             {
+                "url": "https://rpc.usesteem.com",
+                "version": "0.20.8",
+                "type": "appbase",
+                "owner": "themarkymark",
+                "score": 50
+            },            
+            {
                 "url": "wss://testnet.steem.vc",
                 "version": "0.19.2",
                 "type": "testnet",
@@ -361,15 +368,16 @@ class NodeList(list):
             new_nodes.append(new_node)
         super(NodeList, self).__init__(new_nodes)
 
-    def get_nodes(self, normal=True, appbase=True, dev=False, testnet=False, testnetdev=False, wss=True, https=True, not_working=False):
+    def get_nodes(self, exclude_limited=True, dev=False, testnet=False, testnetdev=False, wss=True, https=True, not_working=False, normal=True, appbase=True):
         """ Returns nodes as list
 
-            :param bool normal: when True, nodes with version 0.19.5 are included
-            :param bool appbase: when True, nodes with version 0.19.11 are included
+            :param bool exclude_limited: When True, limited nodes are excluded
             :param bool dev: when True, dev nodes with version 0.19.11 are included
             :param bool testnet: when True, testnet nodes are included
             :param bool testnetdev: When True, testnet-dev nodes are included
             :param bool not_working: When True, all nodes including not working ones will be returned
+            :param bool normal: deprecated
+            :param bool appbase: deprecated
 
         """
         node_list = []
@@ -384,6 +392,8 @@ class NodeList(list):
             node_type_list.append("testnet")
         if testnetdev:
             node_type_list.append("testnet-dev")
+        if not exclude_limited:
+            node_type_list.append("appbase-limited")
         for node in self:
             if node["type"] in node_type_list and (node["score"] >= 0 or not_working):
                 if not https and node["url"][:5] == 'https':

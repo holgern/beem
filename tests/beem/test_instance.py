@@ -39,13 +39,13 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.nodelist = NodeList()
-        cls.nodelist.update_nodes(steem_instance=Steem(node=cls.nodelist.get_nodes(normal=True, appbase=True), num_retries=10))
+        cls.nodelist.update_nodes(steem_instance=Steem(node=cls.nodelist.get_nodes(exclude_limited=False), num_retries=10))
         stm = Steem(node=cls.nodelist.get_nodes())
         stm.config.refreshBackup()
         stm.set_default_nodes(["xyz"])
         del stm
 
-        cls.urls = cls.nodelist.get_nodes()
+        cls.urls = cls.nodelist.get_nodes(exclude_limited=True)
         cls.bts = Steem(
             node=cls.urls,
             nobroadcast=True,
