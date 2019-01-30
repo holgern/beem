@@ -38,14 +38,14 @@ class NodeList(list):
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "steemit",
-                "score": 100
+                "score": -10
             },
             {
                 "url": "wss://steemd-appbase.steemit.com",
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "steemit",
-                "score": 100
+                "score": -10
             },
             {
                 "url": "wss://appbasetest.timcliff.com",
