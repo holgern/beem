@@ -70,6 +70,8 @@ class Testcases(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        raise unittest.SkipTest()
         stm = self.bts
         stm.nobroadcast = True
         stm.wallet.wipe(True)
@@ -91,7 +93,6 @@ class Testcases(unittest.TestCase):
         stm = shared_steem_instance()
         stm.config.recover_with_latest_backup()
 
-    @unittest.skip
     def test_wallet_keys(self):
         stm = self.bts
         stm.wallet.unlock("123")
@@ -112,7 +113,6 @@ class Testcases(unittest.TestCase):
         priv_key = stm.wallet.getKeyForAccount("beem5", "active")
         self.assertEqual(str(priv_key), self.active_private_key_of_beem5)
 
-    @unittest.skip
     def test_transfer(self):
         bts = self.bts
         bts.nobroadcast = False
@@ -135,7 +135,6 @@ class Testcases(unittest.TestCase):
         self.assertEqual(float(amount), 1.33)
         bts.nobroadcast = True
 
-    @unittest.skip
     def test_transfer_memo(self):
         bts = self.bts
         bts.nobroadcast = False
@@ -160,7 +159,6 @@ class Testcases(unittest.TestCase):
         self.assertEqual(float(amount), 1.33)
         bts.nobroadcast = True
 
-    @unittest.skip
     def test_transfer_1of1(self):
         steem = self.bts
         steem.nobroadcast = False
@@ -180,7 +178,6 @@ class Testcases(unittest.TestCase):
         tx.broadcast()
         steem.nobroadcast = True
 
-    @unittest.skip
     def test_transfer_2of2_simple(self):
         # Send a 2 of 2 transaction from elf which needs beem4's cosign to send funds
         steem = self.bts
@@ -200,7 +197,7 @@ class Testcases(unittest.TestCase):
         tx.broadcast()
         steem.nobroadcast = True
 
-    @unittest.skip
+    
     def test_transfer_2of2_wallet(self):
         # Send a 2 of 2 transaction from beem5 which needs beem4's cosign to send
         # priv key of beem5 and beem4 are stored in the wallet
@@ -221,7 +218,6 @@ class Testcases(unittest.TestCase):
         tx.broadcast()
         steem.nobroadcast = True
 
-    @unittest.skip
     def test_transfer_2of2_serialized_deserialized(self):
         # Send a 2 of 2 transaction from beem5 which needs beem4's cosign to send
         # funds but sign the transaction with beem5's key and then serialize the transaction
@@ -256,7 +252,6 @@ class Testcases(unittest.TestCase):
         new_tx.broadcast()
         steem.nobroadcast = True
 
-    @unittest.skip
     def test_transfer_2of2_offline(self):
         # Send a 2 of 2 transaction from beem5 which needs beem4's cosign to send
         # funds but sign the transaction with beem5's key and then serialize the transaction
@@ -288,7 +283,7 @@ class Testcases(unittest.TestCase):
         steem.nobroadcast = True
         steem.wallet.addPrivateKey(self.active_private_key_of_beem5)
 
-    @unittest.skip
+    
     def test_transfer_2of2_wif(self):
         nodelist = NodeList()
         # Send a 2 of 2 transaction from elf which needs beem4's cosign to send
@@ -328,7 +323,6 @@ class Testcases(unittest.TestCase):
         self.assertEqual(len(new_tx['signatures']), 2)
         new_tx.broadcast()
 
-    @unittest.skip
     def test_verifyAuthority(self):
         stm = self.bts
         stm.wallet.unlock("123")
@@ -344,7 +338,6 @@ class Testcases(unittest.TestCase):
         tx.verify_authority()
         self.assertTrue(len(tx["signatures"]) > 0)
 
-    @unittest.skip
     def test_create_account(self):
         bts = self.bts
         name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
@@ -395,18 +388,15 @@ class Testcases(unittest.TestCase):
             op["creator"],
             "beem")
 
-    @unittest.skip
     def test_connect(self):
         nodelist = NodeList()
         self.bts.connect(node=self.nodes)
         bts = self.bts
         self.assertEqual(bts.prefix, "STX")
 
-    @unittest.skip
     def test_set_default_account(self):
         self.bts.set_default_account("beem")
 
-    @unittest.skip
     def test_info(self):
         info = self.bts.info()
         for key in ['current_witness',
@@ -419,7 +409,6 @@ class Testcases(unittest.TestCase):
                     'time']:
             self.assertTrue(key in info)
 
-    @unittest.skip
     def test_finalizeOps(self):
         bts = self.bts
         tx1 = bts.new_tx()
@@ -436,7 +425,6 @@ class Testcases(unittest.TestCase):
         self.assertEqual(len(ops1), 2)
         self.assertEqual(len(ops2), 1)
 
-    @unittest.skip
     def test_weight_threshold(self):
         bts = self.bts
         auth = {'account_auths': [['test', 1]],
@@ -456,7 +444,6 @@ class Testcases(unittest.TestCase):
         with self.assertRaises(ValueError):
             bts._test_weights_treshold(auth)
 
-    @unittest.skip
     def test_allow(self):
         bts = self.bts
         self.assertIn(bts.prefix, "STX")
@@ -480,7 +467,6 @@ class Testcases(unittest.TestCase):
             op["active"]["key_auths"])
         self.assertEqual(op["active"]["weight_threshold"], 1)
 
-    @unittest.skip
     def test_disallow(self):
         bts = self.bts
         acc = Account("beem", steem_instance=bts)
@@ -503,7 +489,6 @@ class Testcases(unittest.TestCase):
                 permission="active"
             )
 
-    @unittest.skip
     def test_update_memo_key(self):
         bts = self.bts
         bts.wallet.unlock("123")
@@ -519,7 +504,6 @@ class Testcases(unittest.TestCase):
             op["memo_key"],
             "STX55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n")
 
-    @unittest.skip
     def test_approvewitness(self):
         bts = self.bts
         w = Account("beem", steem_instance=bts)
@@ -533,7 +517,6 @@ class Testcases(unittest.TestCase):
             "beem1",
             op["witness"])
 
-    @unittest.skip
     def test_appendWif(self):
         nodelist = NodeList()
         stm = Steem(node=self.nodes,
@@ -557,7 +540,6 @@ class Testcases(unittest.TestCase):
         tx.sign()
         self.assertTrue(len(tx["signatures"]) > 0)
 
-    @unittest.skip
     def test_appendSigner(self):
         nodelist = NodeList()
         stm = Steem(node=self.nodes,
@@ -580,7 +562,6 @@ class Testcases(unittest.TestCase):
         tx.sign()
         self.assertTrue(len(tx["signatures"]) > 0)
 
-    @unittest.skip
     def test_verifyAuthorityException(self):
         nodelist = NodeList()
         stm = Steem(node=self.nodes,
@@ -604,7 +585,6 @@ class Testcases(unittest.TestCase):
             tx.verify_authority()
         self.assertTrue(len(tx["signatures"]) > 0)
 
-    @unittest.skip
     def test_Transfer_broadcast(self):
         nodelist = NodeList()
         stm = Steem(node=self.nodes,
@@ -622,7 +602,6 @@ class Testcases(unittest.TestCase):
         tx.sign()
         tx.broadcast()
 
-    @unittest.skip
     def test_TransactionConstructor(self):
         stm = self.bts
         opTransfer = Transfer(**{"from": "beem",
@@ -642,7 +621,7 @@ class Testcases(unittest.TestCase):
         tx.sign()
         self.assertTrue(len(tx["signatures"]) > 0)
 
-    @unittest.skip
+    
     def test_follow_active_key(self):
         nodelist = NodeList()
         stm = Steem(node=self.nodes,
@@ -653,7 +632,6 @@ class Testcases(unittest.TestCase):
         account = Account("beem", steem_instance=stm)
         account.follow("beem1")
 
-    @unittest.skip
     def test_follow_posting_key(self):
         nodelist = NodeList()
         stm = Steem(node=self.nodes,
