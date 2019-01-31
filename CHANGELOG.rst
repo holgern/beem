@@ -1,5 +1,15 @@
 Changelog
 =========
+0.20.18
+-------
+* get_blog, get_followers and get_following works with api.steemit.com (issue #146)
+* beempy newaccount - possible to provide owen, posting, active, and memo pub_key to create a new account
+* https://rpc.usesteem.com added to nodelist
+* NodeList.get_nodes() has a new parameter exclude_limited. When True (default value), api.steemit.com is not returned as node.
+* PR #150: fix empty block handling (by crokkon)
+* PR #151: Add support for EFTG appbase chain (by pablomat)
+* PR #153: fix issue with adding posting auth to new accounts (by netuoso)
+
 0.20.17
 -------
 * Fix transfer rounding error, which prevent transfering of e.g. 1.013 STEEM.

@@ -1281,8 +1281,12 @@ def claimaccount(creator, fee, number):
 @cli.command()
 @click.argument('accountname', nargs=1, required=True)
 @click.option('--account', '-a', help='Account that pays the fee')
+@click.option('--owner', help='Main owner key - when not given, a passphrase is used to create keys.')
+@click.option('--active', help='Active key - when not given, a passphrase is used to create keys.')
+@click.option('--memo', help='Memo key - when not given, a passphrase is used to create keys.')
+@click.option('--posting', help='posting key - when not given, a passphrase is used to create keys.')
 @click.option('--create-claimed-account', '-c', help='Instead of paying the account creation fee a subsidized account is created.', is_flag=True, default=False)
-def newaccount(accountname, account, create_claimed_account):
+def newaccount(accountname, account, owner, active, memo, posting, create_claimed_account):
     """Create a new account"""
     stm = shared_steem_instance()
     if stm.rpc is not None:
@@ -1292,14 +1296,20 @@ def newaccount(accountname, account, create_claimed_account):
     if not unlock_wallet(stm):
         return
     acc = Account(account, steem_instance=stm)
-    password = click.prompt("New Account Passphrase", confirmation_prompt=True, hide_input=True)
-    if not password:
-        print("You cannot chose an empty password")
-        return
-    if create_claimed_account:
-        tx = stm.create_claimed_account(accountname, creator=acc, password=password)
+    if owner is None or active is None or memo is None or posting is None:
+        password = click.prompt("Keys were not given - Passphrase is used to create keys\n New Account Passphrase", confirmation_prompt=True, hide_input=True)
+        if not password:
+            print("You cannot chose an empty password")
+            return
+        if create_claimed_account:
+            tx = stm.create_claimed_account(accountname, creator=acc, password=password)
+        else:
+            tx = stm.create_account(accountname, creator=acc, password=password)
     else:
-        tx = stm.create_account(accountname, creator=acc, password=password)
+        if create_claimed_account:
+            tx = stm.create_claimed_account(accountname, creator=acc, owner_key=owner, active_key=active, memo_key=memo, posting_key=posting)
+        else:
+            tx = stm.create_account(accountname, creator=acc, owner_key=owner, active_key=active, memo_key=memo, posting_key=posting)        
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
