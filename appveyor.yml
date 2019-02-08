@@ -47,7 +47,7 @@ install:
 - cmd: conda config --add channels wheeler-microfluidics
 - cmd: conda update -q conda
 - cmd: conda info -a
-- cmd: conda install --yes conda-build setuptools pip pytest-pylint parameterized cryptography
+- cmd: conda install --yes conda-build setuptools pip pytest-pylint parameterized cryptography secp256k1prp
 - cmd: conda install --yes pycryptodomex scrypt pyyaml pytest pytest-mock coverage mock appdirs pylibscrypt
 - cmd: conda install --yes ecdsa requests future websocket-client pytz six Click events prettytable pyinstaller
 
