@@ -129,7 +129,7 @@ class Comment(BlockchainObject):
                 ]
                 for p in parse_int:
                     if p in vote and isinstance(vote.get(p), string_types):
-                        vote[p] = int(vote.get(p, "0"))
+                        vote[p] = vote.get(p, "0")
                 new_active_votes.append(vote)
             comment["active_votes"] = new_active_votes
         return comment
