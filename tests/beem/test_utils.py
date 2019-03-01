@@ -68,6 +68,8 @@ class Testcases(unittest.TestCase):
         self.assertEqual(derive_permlink("Hello World"), "hello-world")
         self.assertEqual(derive_permlink("aAf_0.12"), "aaf-0-12")
         self.assertEqual(derive_permlink("[](){}"), "")
+        self.assertEqual(len(derive_permlink("", parent_permlink=256 * "a")), 256)
+        self.assertEqual(len(derive_permlink("", parent_permlink=256 * "a", parent_author="test")), 256)
 
     def test_patch(self):
         self.assertEqual(make_patch("aa", "ab"), '@@ -1 +1 @@\n-aa\n+ab\n')

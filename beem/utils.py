@@ -109,18 +109,18 @@ def sanitize_permlink(permlink):
     return permlink
 
 
-def derive_permlink(title, parent_permlink=None, parent_author=None):
+def derive_permlink(title, parent_permlink=None, parent_author=None, max_permlink_length=256):
     permlink = ""
 
     if parent_permlink and parent_author:
         permlink += "re-"
         permlink += parent_author.replace("@", "")
         permlink += "-"
-        permlink += parent_permlink
+        permlink += parent_permlink[:(max_permlink_length - 20 - len(parent_author.replace("@", "")) - 1)]
         permlink += "-" + formatTime(timenow.time()) + "z"
     elif parent_permlink:
         permlink += "re-"
-        permlink += parent_permlink
+        permlink += parent_permlink[:(max_permlink_length - 20)]
         permlink += "-" + formatTime(timenow.time()) + "z"
     else:
         permlink += title
