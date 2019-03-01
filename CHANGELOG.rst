@@ -1,5 +1,12 @@
 Changelog
 =========
+0.20.19
+-------
+* Fix pyinstaller for windows
+* Improve derive_permlink and allow replies of comments with permlink lenght > 235
+* Broadcast custom_json with active authority
+* Add new beempy command customjson
+
 0.20.18
 -------
 * get_blog, get_followers and get_following works with api.steemit.com (issue #146)

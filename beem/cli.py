@@ -3128,6 +3128,66 @@ def claimreward(account, reward_steem, reward_sbd, reward_vests, claim_all_steem
 
 
 @cli.command()
+@click.argument('jsonid', nargs=1)
+@click.argument('json_data', nargs=-1)
+@click.option('--account', '-a', help='The account which broadcasts the custom_json')
+@click.option('--active', '-t', help='When set, the active key is used for broadcasting', is_flag=True, default=False)
+def customjson(jsonid, json_data, account, active):
+    """Broadcasts a custom json
+    
+        First parameter is the cusom json id, the second field is a json file or a json key value combination
+        e.g. beempy customjson -a holger80 dw-heist username holger80 amount 100
+    """
+    if jsonid is None:
+        print("First argument must be the custom_json id")
+    if json_data is None:
+        print("Second argument must be the json_data, can be a string or a file name.")
+    if isinstance(json_data, tuple) and len(json_data) > 1:
+        data = {}
+        key = None
+        for j in json_data:
+            if key is None:
+                key = j
+            else:
+                data[key] = j
+                key = None
+        if key is not None:
+            print("Value is missing for key: %s" % key)
+            return
+    else:
+        try:
+            with open(json_data[0], 'r') as f:
+                data = json.load(f)            
+        except:
+            print("%s is not a valid file or json field" % json_data)
+            return
+    for d in data:
+        if isinstance(data[d], str) and data[d][0] == "{" and data[d][-1] == "}":
+            field = {}
+            for keyvalue in data[d][1:-1].split(","):
+                key = keyvalue.split(":")[0].strip()
+                value = keyvalue.split(":")[1].strip()
+                if jsonid == "ssc-mainnet1" and key == "quantity":
+                    value = float(value)
+                field[key] = value
+            data[d] = field
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm):
+        return
+    acc = Account(account, steem_instance=stm)
+    if active:
+        tx = stm.custom_json(jsonid, data, required_auths=[account])
+    else:
+        tx = stm.custom_json(jsonid, data, required_posting_auths=[account])
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
 @click.argument('blocknumber', nargs=1, required=False)
 @click.option('--trx', '-t', help='Show only one transaction number', default=None)
 @click.option('--use-api', '-u', help='Uses the get_potential_signatures api call', is_flag=True, default=False)
