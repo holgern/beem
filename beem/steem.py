@@ -1604,7 +1604,10 @@ class Steem(object):
                 "id": id,
                 "prefix": self.prefix,
             })
-        return self.finalizeOp(op, account, "posting", **kwargs)
+        if len(required_auths) > 0:
+            return self.finalizeOp(op, account, "active", **kwargs)
+        else:
+            return self.finalizeOp(op, account, "posting", **kwargs)
 
     def post(self,
              title,

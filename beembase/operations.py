@@ -394,7 +394,7 @@ class Custom_json(GrapheneObject):
             kwargs = args[0]
         if "json" in kwargs and kwargs["json"]:
             if (isinstance(kwargs["json"], dict) or isinstance(kwargs["json"], list)):
-                js = json.dumps(kwargs["json"])
+                js = json.dumps(kwargs["json"], separators=(',',':'))
             else:
                 js = kwargs["json"]
 
