@@ -304,6 +304,8 @@ class TransactionBuilder(dict):
             raise ValueError("Invalid TransactionBuilder Format")
 
         if not any(self.wifs):
+            # if no key found in the wallet, give a chance to enter it manually for a one-time use
+            print("The required private key can't be found in the wallet.")
             wif = getpass.getpass("Private key to sign: ")
             if wif == '':
                 raise MissingKeyError
