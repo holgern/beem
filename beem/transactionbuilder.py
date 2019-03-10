@@ -22,6 +22,7 @@ from .exceptions import (
     OfflineHasNoRPCException
 )
 from beem.instance import shared_steem_instance
+import getpass
 log = logging.getLogger(__name__)
 
 
@@ -303,7 +304,11 @@ class TransactionBuilder(dict):
             raise ValueError("Invalid TransactionBuilder Format")
 
         if not any(self.wifs):
-            raise MissingKeyError
+            wif = getpass.getpass("Private key to sign: ")
+            if wif == '':
+                raise MissingKeyError
+            else:
+                self.wifs.add(wif)
 
         signedtx.sign(self.wifs, chain=self.steem.chain_params)
         self["signatures"].extend(signedtx.json().get("signatures"))
