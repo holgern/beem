@@ -872,9 +872,9 @@ def powerdown(amount, account):
 @cli.command()
 @click.argument('amount', nargs=1)
 @click.argument('to_account', nargs=1)
-@click.option('--account', '-a', help='Powerup from this account')
+@click.option('--account', '-a', help='Delegate from this account')
 def delegate(amount, to_account, account):
-    """Delegate (start delegate VESTS to another account)
+    """Delegate (start delegating VESTS to another account)
 
         amount is in VESTS / Steem
     """
