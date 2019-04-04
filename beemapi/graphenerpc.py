@@ -93,7 +93,7 @@ class GrapheneRPC(object):
     :param str urls: Either a single Websocket/Http URL, or a list of URLs
     :param str user: Username for Authentication
     :param str password: Password for Authentication
-    :param int num_retries: Try x times to num_retries to a node on disconnect, -1 for indefinitely
+    :param int num_retries: Try x times to num_retries to a node on disconnect, -1 for indefinitely (default is 100)
     :param int num_retries_call: Repeat num_retries_call times a rpc call on node error (default is 5)
     :param int timeout: Timeout setting for https nodes (default is 60)
     :param bool autoconnect: When set to false, connection is performed on the first rpc call (default is True)
@@ -130,7 +130,7 @@ class GrapheneRPC(object):
         self.current_rpc = self.rpc_methods["ws"]
         self._request_id = 0
         self.timeout = kwargs.get('timeout', 60)
-        num_retries = kwargs.get("num_retries", -1)
+        num_retries = kwargs.get("num_retries", 100)
         num_retries_call = kwargs.get("num_retries_call", 5)
         self.use_condenser = kwargs.get("use_condenser", False)
         self.disable_chain_detection = kwargs.get("disable_chain_detection", False)

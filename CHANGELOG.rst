@@ -1,5 +1,12 @@
 Changelog
 =========
+0.20.20
+-------
+* Fix typo (PR #161)
+* Add feature request #162 - one-time private keys can be used in beempy
+* set num_retries to a default of 100, in order to prevent crashing when a wrong node is set
+* Improve all generator functions in account
+
 0.20.19
 -------
 * Fix pyinstaller for windows
