@@ -46,7 +46,7 @@ class Asset(BlockchainObject):
         self.chain_params = self.steem.get_network()
         if self.chain_params is None:
             from beemgraphenebase.chains import known_chains
-            self.chain_params = known_chains["STEEM"]
+            self.chain_params = known_chains["STEEMAPPBASE"]
         self["asset"] = ""
         found_asset = False
         for asset in self.chain_params["chain_assets"]:
