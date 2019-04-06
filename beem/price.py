@@ -14,6 +14,7 @@ from .amount import Amount
 from .asset import Asset
 from .utils import formatTimeString
 from .utils import parse_time, assets_from_string
+from decimal import Decimal
 
 
 @python_2_unicode_compatible
@@ -245,7 +246,7 @@ class Price(dict):
         )
 
     def __float__(self):
-        return self["price"]
+        return float(self["price"])
 
     def _check_other(self, other):
         if not other["base"]["symbol"] == self["base"]["symbol"]:

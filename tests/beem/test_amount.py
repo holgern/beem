@@ -10,6 +10,7 @@ from beem.amount import Amount
 from beem.asset import Asset
 from beem.nodelist import NodeList
 from beem.instance import set_shared_steem_instance, SharedInstance
+from decimal import Decimal
 
 
 class Testcases(unittest.TestCase):
@@ -38,7 +39,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual(float(ret), float(amount))
         self.assertEqual(ret["symbol"], symbol)
         self.assertIsInstance(ret["asset"], dict)
-        self.assertIsInstance(ret["amount"], float)
+        self.assertIsInstance(ret["amount"], Decimal)
 
     def test_init(self):
         stm = self.bts
@@ -78,6 +79,9 @@ class Testcases(unittest.TestCase):
         # keyword inits
         amount = Amount(amount=1.3, asset=Asset("SBD", steem_instance=stm), steem_instance=stm)
         self.dotest(amount, 1.3, symbol)
+        
+        amount = Amount(amount=1.3001, asset=Asset("SBD", steem_instance=stm), steem_instance=stm)
+        self.dotest(amount, 1.3, symbol)        
 
         # keyword inits
         amount = Amount(amount=1.3, asset=dict(Asset("SBD", steem_instance=stm)), steem_instance=stm)
@@ -152,6 +156,8 @@ class Testcases(unittest.TestCase):
         self.dotest(a2, 3, self.symbol)
         a2 += 5
         self.dotest(a2, 8, self.symbol)
+        a2 += Decimal(2)
+        self.dotest(a2, 10, self.symbol)        
         with self.assertRaises(Exception):
             a1 += Amount(1, asset=self.asset2)
 
@@ -250,6 +256,7 @@ class Testcases(unittest.TestCase):
         self.assertTrue(a1 >= a2)
         self.assertTrue(a1 <= 1)
         self.assertTrue(a1 >= 1)
+        self.assertTrue(a1 == 1.0001)
 
     def test_ne(self):
         a1 = Amount(1, self.symbol)
