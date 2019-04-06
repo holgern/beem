@@ -10,7 +10,7 @@ from fractions import Fraction
 from beem.instance import shared_steem_instance
 from .exceptions import InvalidAssetException
 from .account import Account
-from .amount import Amount
+from .amount import Amount, quantize
 from .asset import Asset
 from .utils import formatTimeString
 from .utils import parse_time, assets_from_string
@@ -137,7 +137,7 @@ class Price(dict):
             self["quote"] = quote
             self["base"] = base
 
-        elif ((isinstance(price, float) or isinstance(price, integer_types)) and
+        elif ((isinstance(price, float) or isinstance(price, integer_types) or isinstance(price, Decimal)) and
                 isinstance(base, string_types)):
             import re
             base_symbol, quote_symbol = assets_from_string(base)

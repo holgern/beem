@@ -1639,7 +1639,7 @@ class Account(BlockchainObject):
         reward_vests = Amount(0, self.steem.vests_symbol, steem_instance=self.steem)
         for reward in self.history_reverse(stop=stop, use_block_num=False, only_ops=["curation_reward"]):
             reward_vests += Amount(reward['reward'], steem_instance=self.steem)
-        return self.steem.vests_to_sp(reward_vests.amount)
+        return self.steem.vests_to_sp(float(reward_vests))
 
     def curation_stats(self):
         """Returns the curation reward of the last 24h and 7d and the average
@@ -3155,7 +3155,7 @@ class AccountsObject(list):
         no_post = 0
         for f in self:
             rep.append(f.rep)
-            own_mvest.append(f.balances["available"][2].amount / 1e6)
+            own_mvest.append(float(f.balances["available"][2]) / 1e6)
             eff_sp.append(f.get_steem_power())
             last_vote = addTzInfo(datetime.utcnow()) - (f["last_vote_time"])
             if last_vote.days >= 365:

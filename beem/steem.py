@@ -519,14 +519,14 @@ class Steem(object):
         """ Returns the current rshares to SBD ratio
         """
         reward_fund = self.get_reward_funds(use_stored_data=use_stored_data)
-        reward_balance = Amount(reward_fund["reward_balance"], steem_instance=self).amount
+        reward_balance = float(Amount(reward_fund["reward_balance"], steem_instance=self))
         recent_claims = float(reward_fund["recent_claims"]) + not_broadcasted_vote_rshares
 
         fund_per_share = reward_balance / (recent_claims)
         median_price = self.get_median_price(use_stored_data=use_stored_data)
         if median_price is None:
             return 0
-        SBD_price = (median_price * Amount(1, self.steem_symbol, steem_instance=self)).amount
+        SBD_price = (median_price *float(Amount(1, self.steem_symbol, steem_instance=self)))
         return fund_per_share * SBD_price
 
     def get_steem_per_mvest(self, time_stamp=None, use_stored_data=True):
@@ -554,8 +554,8 @@ class Steem(object):
         global_properties = self.get_dynamic_global_properties(use_stored_data=use_stored_data)
 
         return (
-            Amount(global_properties['total_vesting_fund_steem'], steem_instance=self).amount /
-            (Amount(global_properties['total_vesting_shares'], steem_instance=self).amount / 1e6)
+            float(Amount(global_properties['total_vesting_fund_steem'], steem_instance=self)) /
+            (float(Amount(global_properties['total_vesting_shares'], steem_instance=self)) / 1e6)
         )
 
     def vests_to_sp(self, vests, timestamp=None, use_stored_data=True):
@@ -567,8 +567,8 @@ class Steem(object):
 
         """
         if isinstance(vests, Amount):
-            vests = vests.amount
-        return vests / 1e6 * self.get_steem_per_mvest(timestamp, use_stored_data=use_stored_data)
+            vests = float(vests)
+        return float(vests) / 1e6 * self.get_steem_per_mvest(timestamp, use_stored_data=use_stored_data)
 
     def sp_to_vests(self, sp, timestamp=None, use_stored_data=True):
         """ Converts SP to vests
@@ -671,7 +671,7 @@ class Steem(object):
 
         # If the vote was already broadcasted we can assume the blockchain values to be true
         if not not_broadcasted_vote:
-            return int(sbd.amount / self.get_sbd_per_rshares(use_stored_data=use_stored_data))
+            return int(float(sbd) / self.get_sbd_per_rshares(use_stored_data=use_stored_data))
 
         # If the vote wasn't broadcasted (yet), we have to calculate the rshares while considering
         # the change our vote is causing to the recent_claims. This is more important for really
@@ -692,7 +692,7 @@ class Steem(object):
         # (balance / (claims + newShares)) * price = amount / newShares
         # Now we resolve for newShares resulting in:
         # newShares = claims * amount / (balance * price - amount)
-        rshares = recent_claims * sbd.amount / ((reward_balance.amount * float(median_price)) - sbd.amount)
+        rshares = recent_claims * float(sbd) / ((float(reward_balance) * float(median_price)) - float(sbd))
         return int(rshares)
 
     def rshares_to_vote_pct(self, rshares, steem_power=None, vests=None, voting_power=STEEM_100_PERCENT, use_stored_data=True):
