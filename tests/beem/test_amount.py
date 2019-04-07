@@ -81,7 +81,10 @@ class Testcases(unittest.TestCase):
         self.dotest(amount, 1.3, symbol)
         
         amount = Amount(amount=1.3001, asset=Asset("SBD", steem_instance=stm), steem_instance=stm)
-        self.dotest(amount, 1.3, symbol)        
+        self.dotest(amount, 1.3001, symbol)        
+
+        amount = Amount(amount=1.3001, asset=Asset("SBD", steem_instance=stm), fixed_point_arithmetic=True, steem_instance=stm)
+        self.dotest(amount, 1.3, symbol)   
 
         # keyword inits
         amount = Amount(amount=1.3, asset=dict(Asset("SBD", steem_instance=stm)), steem_instance=stm)
@@ -135,8 +138,8 @@ class Testcases(unittest.TestCase):
 
     def test_int(self):
         self.assertEqual(
-            int(Amount("1", self.symbol)),
-            1000)
+            int(Amount("0.9999", self.symbol)),
+            999)
 
     def test_float(self):
         self.assertEqual(
