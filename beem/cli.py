@@ -1786,7 +1786,7 @@ def pricehistory(width, height, ascii):
     for h in price_history:
         base = Amount(h["base"], steem_instance=stm)
         quote = Amount(h["quote"], steem_instance=stm)
-        price.append(base.amount / quote.amount)
+        price.append(float(base.amount / quote.amount))
     if ascii:
         charset = u'ascii'
     else:
