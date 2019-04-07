@@ -6,6 +6,9 @@ Changelog
 * Add feature request #162 - one-time private keys can be used in beempy
 * set num_retries to a default of 100, in order to prevent crashing when a wrong node is set
 * Improve all generator functions in account
+* Fix issue #171 - Account.get_balance function shows summed value of liquid balance and unclaimed reward (thanks to @sourovafrin)
+* Use Decimal class to store the amount in the Amount class
+* Add option fixed_point_arithmetic to Amount, which will activate fixed-point arithmetic with the defined asset precision
 
 0.20.19
 -------

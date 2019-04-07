@@ -198,10 +198,14 @@ class Amount(dict):
         )
 
     def __float__(self):
-        return float(quantize(self["amount"], self["asset"]["precision"]))
+        if self.fixed_point_arithmetic:
+            return float(quantize(self["amount"], self["asset"]["precision"]))
+        else:
+            return float(self["amount"])
 
     def __int__(self):
-        return int(self["amount"] * 10 ** self["asset"]["precision"])
+        amount = quantize(self["amount"], self["asset"]["precision"])
+        return int(amount * 10 ** self["asset"]["precision"])
 
     def __add__(self, other):
         a = self.copy()

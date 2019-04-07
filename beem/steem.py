@@ -526,7 +526,7 @@ class Steem(object):
         median_price = self.get_median_price(use_stored_data=use_stored_data)
         if median_price is None:
             return 0
-        SBD_price = (median_price *float(Amount(1, self.steem_symbol, steem_instance=self)))
+        SBD_price = float(median_price * (Amount(1, self.steem_symbol, steem_instance=self)))
         return fund_per_share * SBD_price
 
     def get_steem_per_mvest(self, time_stamp=None, use_stored_data=True):
