@@ -985,13 +985,14 @@ class Account(BlockchainObject):
                 balances = self.total_balances
             else:
                 return
-        from .amount import Amount
+        
         if isinstance(symbol, dict) and "symbol" in symbol:
             symbol = symbol["symbol"]
 
         for b in balances:
             if b["symbol"] == symbol:
                 return b
+        from .amount import Amount
         return Amount(0, symbol, steem_instance=self.steem)
 
     def interest(self):

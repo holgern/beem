@@ -36,6 +36,8 @@ class Amount(dict):
         :param list args: Allows to deal with different representations of an amount
         :param float amount: Let's create an instance with a specific amount
         :param str asset: Let's you create an instance with a specific asset (symbol)
+        :param boolean fixed_point_arithmetic: when set to True, all operation are fixed
+            point operations and the amount is always be rounded down to the precision
         :param Steem steem_instance: Steem instance
         :returns: All data required to represent an Amount/Asset
         :rtype: dict
@@ -77,9 +79,10 @@ class Amount(dict):
             2.000 STEEM
 
     """
-    def __init__(self, amount, asset=None, new_appbase_format=True, steem_instance=None):
+    def __init__(self, amount, asset=None, fixed_point_arithmetic=False, new_appbase_format=True, steem_instance=None):
         self["asset"] = {}
         self.new_appbase_format = new_appbase_format
+        self.fixed_point_arithmetic = fixed_point_arithmetic
         self.steem = steem_instance or shared_steem_instance()
         if amount and asset is None and isinstance(amount, Amount):
             # Copy Asset object
@@ -140,7 +143,10 @@ class Amount(dict):
             self["symbol"] = asset
         else:
             raise ValueError
-        self["amount"] = quantize(self["amount"], self["asset"]["precision"])
+        if self.fixed_point_arithmetic:
+            self["amount"] = quantize(self["amount"], self["asset"]["precision"])
+        else:
+            self["amount"] = Decimal(self["amount"])
 
     def copy(self):
         """ Copy the instance and make sure not to use a reference
@@ -184,14 +190,15 @@ class Amount(dict):
             return str(self)
 
     def __str__(self):
+        amount = quantize(self["amount"], self["asset"]["precision"])
         return "{:.{prec}f} {}".format(
-            self["amount"],
+            amount,
             self["symbol"],
             prec=self["asset"]["precision"]
         )
 
     def __float__(self):
-        return float(self["amount"])
+        return float(quantize(self["amount"], self["asset"]["precision"]))
 
     def __int__(self):
         return int(self["amount"] * 10 ** self["asset"]["precision"])
@@ -202,7 +209,9 @@ class Amount(dict):
             check_asset(other["asset"], self["asset"])
             a["amount"] += other["amount"]
         else:
-            a["amount"] += quantize(other, self["asset"]["precision"])
+            a["amount"] += Decimal(other)
+        if self.fixed_point_arithmetic:
+            a["amount"] = quantize(a["amount"], self["asset"]["precision"])
         return a
 
     def __sub__(self, other):
@@ -211,36 +220,57 @@ class Amount(dict):
             check_asset(other["asset"], self["asset"])
             a["amount"] -= other["amount"]
         else:
-            a["amount"] -= quantize(other, self["asset"]["precision"])
+            a["amount"] -= Decimal(other)
+        if self.fixed_point_arithmetic:
+            a["amount"] = quantize(a["amount"], self["asset"]["precision"])
         return a
 
     def __mul__(self, other):
+        from .price import Price
         a = self.copy()
         if isinstance(other, Amount):
             check_asset(other["asset"], self["asset"])
             a["amount"] *= other["amount"]
+        elif isinstance(other, Price):
+            if not self["asset"] == other["quote"]["asset"]:
+                raise AssertionError()
+            a = self.copy() * other["price"]
+            a["asset"] = other["base"]["asset"].copy()
+            a["symbol"] = other["base"]["asset"]["symbol"]
         else:
-            a["amount"] *= quantize(other, self["asset"]["precision"])
+            a["amount"] *= Decimal(other)
+        if self.fixed_point_arithmetic:
+            a["amount"] = quantize(a["amount"], self["asset"]["precision"])
         return a
 
     def __floordiv__(self, other):
         a = self.copy()
         if isinstance(other, Amount):
             check_asset(other["asset"], self["asset"])
-            from .price import Price
             return Price(self, other, steem_instance=self.steem)
         else:
-            a["amount"] //= quantize(other, self["asset"]["precision"])
+            a["amount"] //= Decimal(other)
+        if self.fixed_point_arithmetic:
+            a["amount"] = quantize(a["amount"], self["asset"]["precision"])
         return a
 
     def __div__(self, other):
+        from .price import Price
         a = self.copy()
         if isinstance(other, Amount):
             check_asset(other["asset"], self["asset"])
-            from .price import Price
             return Price(self, other, steem_instance=self.steem)
+        elif isinstance(other, Price):
+            if not self["asset"] == other["base"]["asset"]:
+                raise AssertionError()
+            a =self.copy()
+            a["amount"] =  a["amount"] / other["price"]
+            a["asset"] = other["quote"]["asset"].copy()
+            a["symbol"] = other["quote"]["asset"]["symbol"]            
         else:
-            a["amount"] /= quantize(other, self["asset"]["precision"])
+            a["amount"] /= Decimal(other)
+        if self.fixed_point_arithmetic:
+            a["amount"] = quantize(a["amount"], self["asset"]["precision"])
         return a
 
     def __mod__(self, other):
@@ -249,7 +279,9 @@ class Amount(dict):
             check_asset(other["asset"], self["asset"])
             a["amount"] %= other["amount"]
         else:
-            a["amount"] %= quantize(other, self["asset"]["precision"])
+            a["amount"] %= Decimal(other)
+        if self.fixed_point_arithmetic:
+            a["amount"] = quantize(a["amount"], self["asset"]["precision"])
         return a
 
     def __pow__(self, other):
@@ -258,7 +290,9 @@ class Amount(dict):
             check_asset(other["asset"], self["asset"])
             a["amount"] **= other["amount"]
         else:
-            a["amount"] **= quantize(other, self["asset"]["precision"])
+            a["amount"] **= Decimal(other)
+        if self.fixed_point_arithmetic:
+            a["amount"] = quantize(a["amount"], self["asset"]["precision"])
         return a
 
     def __iadd__(self, other):
@@ -266,7 +300,9 @@ class Amount(dict):
             check_asset(other["asset"], self["asset"])
             self["amount"] += other["amount"]
         else:
-            self["amount"] += quantize(other, self["asset"]["precision"])
+            self["amount"] += Decimal(other)
+        if self.fixed_point_arithmetic:
+            self["amount"] = quantize(self["amount"], self["asset"]["precision"])
         return self
 
     def __isub__(self, other):
@@ -274,7 +310,9 @@ class Amount(dict):
             check_asset(other["asset"], self["asset"])
             self["amount"] -= other["amount"]
         else:
-            self["amount"] -= quantize(other, self["asset"]["precision"])
+            self["amount"] -= Decimal(other)
+        if self.fixed_point_arithmetic:
+            self["amount"] = quantize(self["amount"], self["asset"]["precision"])
         return self
 
     def __imul__(self, other):
@@ -282,7 +320,9 @@ class Amount(dict):
             check_asset(other["asset"], self["asset"])
             self["amount"] *= other["amount"]
         else:
-            self["amount"] *= quantize(other, self["asset"]["precision"])
+            self["amount"] *= Decimal(other)
+        
+        self["amount"] = quantize(self["amount"], self["asset"]["precision"])
         return self
 
     def __idiv__(self, other):
@@ -290,14 +330,17 @@ class Amount(dict):
             check_asset(other["asset"], self["asset"])
             return self["amount"] / other["amount"]
         else:
-            self["amount"] /= quantize(other, self["asset"]["precision"])
-            return self
+            self["amount"] /= Decimal(other)
+        if self.fixed_point_arithmetic:
+            self["amount"] = quantize(self["amount"], self["asset"]["precision"])
+        return self
 
     def __ifloordiv__(self, other):
         if isinstance(other, Amount):
             self["amount"] //= other["amount"]
         else:
-            self["amount"] //= quantize(other, self["asset"]["precision"])
+            self["amount"] //= Decimal(other)
+        self["amount"] = quantize(self["amount"], self["asset"]["precision"])
         return self
 
     def __imod__(self, other):
@@ -305,57 +348,67 @@ class Amount(dict):
             check_asset(other["asset"], self["asset"])
             self["amount"] %= other["amount"]
         else:
-            self["amount"] %= quantize(other, self["asset"]["precision"])
+            self["amount"] %= Decimal(other)
+        if self.fixed_point_arithmetic:
+            self["amount"] = quantize(self["amount"], self["asset"]["precision"])
         return self
 
     def __ipow__(self, other):
         if isinstance(other, Amount):
             self["amount"] **= other
         else:
-            self["amount"] **= quantize(other, self["asset"]["precision"])
+            self["amount"] **= Decimal(other)
+        if self.fixed_point_arithmetic:
+            self["amount"] = quantize(self["amount"], self["asset"]["precision"])
         return self
 
     def __lt__(self, other):
+        quant_amount = quantize(self["amount"], self["asset"]["precision"])
         if isinstance(other, Amount):
             check_asset(other["asset"], self["asset"])
-            return self["amount"] < other["amount"]
+            return quant_amount < quantize(other["amount"], self["asset"]["precision"])
         else:
-            return self["amount"] < quantize((other or 0), self["asset"]["precision"])
+            return quant_amount < quantize((other or 0), self["asset"]["precision"])
 
     def __le__(self, other):
+        quant_amount = quantize(self["amount"], self["asset"]["precision"])
         if isinstance(other, Amount):
             check_asset(other["asset"], self["asset"])
-            return self["amount"] <= other["amount"]
+            return quant_amount <= quantize(other["amount"], self["asset"]["precision"])
         else:
-            return self["amount"] <= quantize((other or 0), self["asset"]["precision"])
+            return quant_amount <= quantize((other or 0), self["asset"]["precision"])
 
     def __eq__(self, other):
+        quant_amount = quantize(self["amount"], self["asset"]["precision"])
         if isinstance(other, Amount):
             check_asset(other["asset"], self["asset"])
-            return self["amount"] == other["amount"]
+            return quant_amount == quantize(other["amount"], self["asset"]["precision"])
         else:
-            return self["amount"] == quantize((other or 0), self["asset"]["precision"])
+            return quant_amount == quantize((other or 0), self["asset"]["precision"])
 
     def __ne__(self, other):
+        quant_amount = quantize(self["amount"], self["asset"]["precision"])
         if isinstance(other, Amount):
             check_asset(other["asset"], self["asset"])
-            return self["amount"] != other["amount"]
+            return self["amount"] != quantize(other["amount"], self["asset"]["precision"])
         else:
-            return self["amount"] != quantize((other or 0), self["asset"]["precision"])
+            return quant_amount != quantize((other or 0), self["asset"]["precision"])
 
     def __ge__(self, other):
+        quant_amount = quantize(self["amount"], self["asset"]["precision"])
         if isinstance(other, Amount):
             check_asset(other["asset"], self["asset"])
-            return self["amount"] >= other["amount"]
+            return self["amount"] >= quantize(other["amount"], self["asset"]["precision"])
         else:
-            return self["amount"] >= quantize((other or 0), self["asset"]["precision"])
+            return quant_amount >= quantize((other or 0), self["asset"]["precision"])
 
     def __gt__(self, other):
+        quant_amount = quantize(self["amount"], self["asset"]["precision"])
         if isinstance(other, Amount):
             check_asset(other["asset"], self["asset"])
-            return self["amount"] > other["amount"]
+            return quant_amount > quantize(other["amount"], self["asset"]["precision"])
         else:
-            return self["amount"] > quantize((other or 0), self["asset"]["precision"])
+            return quant_amount > quantize((other or 0), self["asset"]["precision"])
 
     __repr__ = __str__
     __truediv__ = __div__
