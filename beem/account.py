@@ -917,8 +917,8 @@ class Account(BlockchainObject):
         ret = []
         for i in range(len(symbols)):
             balance_sum = self.get_balance(self.available_balances, symbols[i])
-            balance_sum += self.get_balance(self.saving_balances, symbols[i])
-            balance_sum += self.get_balance(self.reward_balances, symbols[i])
+            balance_sum = balance_sum + self.get_balance(self.saving_balances, symbols[i])
+            balance_sum = balance_sum + self.get_balance(self.reward_balances, symbols[i])
             ret.append(balance_sum)
         return ret
 
