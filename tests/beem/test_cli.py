@@ -231,7 +231,7 @@ class Testcases(unittest.TestCase):
         runner = CliRunner()
         result = runner.invoke(cli, ['-ds', 'allow', '--account', 'beembot', '--permission', 'posting', 'beempy'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-ds', 'disallow', '--account', 'beembot', '--permission', 'posting', 'rewarding'], input="test\n")
+        result = runner.invoke(cli, ['-ds', 'disallow', '--account', 'holger80', '--permission', 'posting', 'rewarding'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_witnesses(self):
