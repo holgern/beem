@@ -1699,7 +1699,7 @@ class Account(BlockchainObject):
         # self.steem.rpc.set_next_node_on_empty_reply(True)
         txs = self._get_account_history(start=index, limit=limit)
         if txs is None:
-            return iter(())
+            return
         start = addTzInfo(start)
         stop = addTzInfo(stop)
 
@@ -1724,15 +1724,15 @@ class Account(BlockchainObject):
             if stop is not None and isinstance(stop, (datetime, date, time)):
                 timediff = stop - formatTimeString(event["timestamp"])
                 if timediff.total_seconds() * float(order) < 0:
-                    return iter(())
+                    return
             elif stop is not None and use_block_num and order == 1 and event['block'] > stop:
-                return iter(())
+                return
             elif stop is not None and use_block_num and order == -1 and event['block'] < stop:
-                return iter(())
+                return
             elif stop is not None and not use_block_num and order == 1 and item_index > stop:
-                return iter(())
+                return
             elif stop is not None and not use_block_num and order == -1 and item_index < stop:
-                return iter(())
+                return
 
             if isinstance(event['op'], list):
                 op_type, op = event['op']
@@ -1848,7 +1848,7 @@ class Account(BlockchainObject):
         _limit = batch_size
         max_index = self.virtual_op_count()
         if not max_index:
-            return iter(())
+            return
         start = addTzInfo(start)
         stop = addTzInfo(stop)
         if start is not None and not use_block_num and not isinstance(start, (datetime, date, time)):
@@ -1884,7 +1884,7 @@ class Account(BlockchainObject):
             first = start_index + _limit
         last_round = False
         if _limit < 0:
-            return iter(())
+            return
         while True:
             # RPC call
             for item in self.get_account_history(first, _limit, start=None, stop=None, order=1, raw_output=raw_output):
@@ -1910,11 +1910,11 @@ class Account(BlockchainObject):
                     timediff = stop - formatTimeString(timestamp)
                     if timediff.total_seconds() < 0:
                         first = max_index + _limit
-                        return iter(())
+                        return
                 elif stop is not None and use_block_num and block_num > stop:
-                    return iter(())
+                    return
                 elif stop is not None and not use_block_num and item_index > stop:
-                    return iter(())
+                    return
                 if exclude_ops and op_type in exclude_ops:
                     continue
                 if not only_ops or op_type in only_ops:
@@ -2014,7 +2014,7 @@ class Account(BlockchainObject):
         start = addTzInfo(start)
         stop = addTzInfo(stop)
         if not first or not batch_size:
-            return iter(())
+            return
         if start is not None and isinstance(start, int) and start < 0 and not use_block_num:
             start += first
         elif start is not None and isinstance(start, int) and not use_block_num:
@@ -2071,13 +2071,13 @@ class Account(BlockchainObject):
                     timediff = stop - formatTimeString(timestamp)
                     if timediff.total_seconds() > 0:
                         first = 0
-                        return iter(())
+                        return
                 elif stop is not None and use_block_num and block_num < stop:
                     first = 0
-                    return iter(())
+                    return
                 elif stop is not None and not use_block_num and item_index < stop:
                     first = 0
-                    return iter(())
+                    return
                 if exclude_ops and op_type in exclude_ops:
                     continue
                 if not only_ops or op_type in only_ops:
@@ -2914,7 +2914,7 @@ class Account(BlockchainObject):
                           tag=account['name'])
             results = Discussions_by_feed(query, steem_instance=self.steem)
             if len(results) == 0 or (start_permlink and len(results) == 1):
-                return iter(())
+                return
             if feed_count > 0 and start_permlink:
                 results = results[1:]  # strip duplicates from previous iteration
             for entry in results:
@@ -2923,7 +2923,7 @@ class Account(BlockchainObject):
                 start_permlink = entry['permlink']
                 start_author = entry['author']
                 if feed_count == limit:
-                    return iter(())
+                    return
 
     def blog_history(self, limit=None, start=-1, reblogs=True, account=None):
         """ Stream the blog entries done by an account in reverse time order.
@@ -2984,7 +2984,7 @@ class Account(BlockchainObject):
                 results = Discussions_by_blog(query,
                                               steem_instance=self.steem)
             if len(results) == 0 or (start_permlink and len(results) == 1):
-                return iter(())
+                return
             if start_permlink:
                 results = results[1:]  # strip duplicates from previous iteration
             for post in results:
@@ -2996,7 +2996,7 @@ class Account(BlockchainObject):
                 start_permlink = post['permlink']
                 start_author = post['author']
                 if post_count == limit:
-                    return iter(())
+                    return
 
     def comment_history(self, limit=None, start_permlink=None,
                         account=None):
@@ -3046,7 +3046,7 @@ class Account(BlockchainObject):
             results = Discussions_by_comments(query,
                                               steem_instance=self.steem)
             if len(results) == 0 or (start_permlink and len(results) == 1):
-                return iter(())
+                return
             if comment_count > 0 and start_permlink:
                 results = results[1:]  # strip duplicates from previous iteration
             for comment in results:
@@ -3056,7 +3056,7 @@ class Account(BlockchainObject):
                 yield comment
                 start_permlink = comment['permlink']
                 if comment_count == limit:
-                    return iter(())
+                    return
 
     def reply_history(self, limit=None, start_author=None,
                       start_permlink=None, account=None):
@@ -3119,7 +3119,7 @@ class Account(BlockchainObject):
             results = Replies_by_last_update(query,
                                              steem_instance=self.steem)
             if len(results) == 0 or (start_permlink and len(results) == 1):
-                return iter(())
+                return
             if reply_count > 0 and start_permlink:
                 results = results[1:]  # strip duplicates from previous iteration
             for reply in results:
@@ -3130,7 +3130,7 @@ class Account(BlockchainObject):
                 start_author = reply['author']
                 start_permlink = reply['permlink']
                 if reply_count == limit:
-                    return iter(())
+                    return
 
 
 class AccountsObject(list):
