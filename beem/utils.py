@@ -109,23 +109,30 @@ def sanitize_permlink(permlink):
     return permlink
 
 
-def derive_permlink(title, parent_permlink=None, parent_author=None, max_permlink_length=256):
-    permlink = ""
+def derive_permlink(title, parent_permlink=None, parent_author=None,
+                    max_permlink_length=256):
+    """Derive a permlink from a comment title (for root level
+    comments) or the parent permlink and optionally the parent
+    author (for replies).
 
+    """
+    suffix = "-" + formatTime(datetime.utcnow()) + "z"
     if parent_permlink and parent_author:
-        permlink += "re-"
-        permlink += parent_author.replace("@", "")
-        permlink += "-"
-        permlink += parent_permlink[:(max_permlink_length - 20 - len(parent_author.replace("@", "")) - 1)]
-        permlink += "-" + formatTime(timenow.time()) + "z"
+        prefix = "re-" + sanitize_permlink(parent_author) + "-"
+        rem_chars = max_permlink_length - len(suffix) - len(prefix)
+        body = sanitize_permlink(parent_permlink)[:rem_chars]
+        return prefix + body + suffix
     elif parent_permlink:
-        permlink += "re-"
-        permlink += parent_permlink[:(max_permlink_length - 20)]
-        permlink += "-" + formatTime(timenow.time()) + "z"
+        prefix = "re-"
+        rem_chars = max_permlink_length - len(suffix) - len(prefix)
+        body = sanitize_permlink(parent_permlink)[:rem_chars]
+        return prefix + body + suffix
     else:
-        permlink += title
-
-    return sanitize_permlink(permlink)
+        rem_chars = max_permlink_length - len(suffix)
+        body = sanitize_permlink(title)[:rem_chars]
+        if len(body) == 0:  # empty title or title consisted of only special chars
+            return suffix[1:]  # use timestamp only, strip leading "-"
+        return body + suffix
 
 
 def resolve_authorperm(identifier):

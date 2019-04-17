@@ -31,7 +31,7 @@ from .exceptions import (
 from .wallet import Wallet
 from .steemconnect import SteemConnect
 from .transactionbuilder import TransactionBuilder
-from .utils import formatTime, resolve_authorperm, derive_permlink, remove_from_dict, addTzInfo, formatToTimeStamp
+from .utils import formatTime, resolve_authorperm, derive_permlink, sanitize_permlink, remove_from_dict, addTzInfo, formatToTimeStamp
 from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_100_PERCENT, STEEM_1_PERCENT, STEEM_RC_REGEN_TIME
 
 log = logging.getLogger(__name__)
@@ -1775,7 +1775,7 @@ class Steem(object):
             if not permlink:
                 permlink = derive_permlink(title, parent_permlink)
         elif category:
-            parent_permlink = derive_permlink(category)
+            parent_permlink = sanitize_permlink(category)
             parent_author = ""
             if not permlink:
                 permlink = derive_permlink(title)
