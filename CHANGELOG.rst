@@ -1,5 +1,11 @@
 Changelog
 =========
+0.20.21
+-------
+* Fix float entered in Amount will be reduced by 0.001 due to rounding issues
+* fix Amount.amount and added Amount.amount_decimal
+* Prevent that wrong reputation in a Comment API answer break the Comment object
+
 0.20.20
 -------
 * Fix typo (PR #161)

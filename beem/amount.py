@@ -117,30 +117,45 @@ class Amount(dict):
             self["symbol"] = self["asset"]["symbol"]
             self["amount"] = Decimal(amount["amount"]) / Decimal(10 ** self["asset"]["precision"])
 
+
+
+        elif isinstance(amount, (float)) and asset and isinstance(asset, Asset):
+            self["amount"] = str(amount)
+            self["asset"] = asset
+            self["symbol"] = self["asset"]["symbol"]
+
+        elif isinstance(amount, (integer_types,  Decimal)) and asset and isinstance(asset, Asset):
+            self["amount"] = amount
+            self["asset"] = asset
+            self["symbol"] = self["asset"]["symbol"]
+            
+        elif isinstance(amount, (float)) and asset and isinstance(asset, dict):
+            self["amount"] = str(amount)
+            self["asset"] = asset
+            self["symbol"] = self["asset"]["symbol"]
+
+        elif isinstance(amount, (integer_types, Decimal)) and asset and isinstance(asset, dict):
+            self["amount"] = amount
+            self["asset"] = asset
+            self["symbol"] = self["asset"]["symbol"]            
+
+        elif isinstance(amount, (float)) and asset and isinstance(asset, string_types):
+            self["amount"] = str(amount)
+            self["asset"] = Asset(asset, steem_instance=self.steem)
+            self["symbol"] = asset
+
+        elif isinstance(amount, (integer_types, Decimal)) and asset and isinstance(asset, string_types):
+            self["amount"] = amount
+            self["asset"] = Asset(asset, steem_instance=self.steem)
+            self["symbol"] = asset  
         elif amount and asset and isinstance(asset, Asset):
             self["amount"] = amount
             self["symbol"] = asset["symbol"]
             self["asset"] = asset
-
         elif amount and asset and isinstance(asset, string_types):
             self["amount"] = amount
             self["asset"] = Asset(asset, steem_instance=self.steem)
-            self["symbol"] = self["asset"]["symbol"]
-
-        elif isinstance(amount, (integer_types, float, Decimal)) and asset and isinstance(asset, Asset):
-            self["amount"] = amount
-            self["asset"] = asset
-            self["symbol"] = self["asset"]["symbol"]
-
-        elif isinstance(amount, (integer_types, float, Decimal)) and asset and isinstance(asset, dict):
-            self["amount"] = amount
-            self["asset"] = asset
-            self["symbol"] = self["asset"]["symbol"]
-
-        elif isinstance(amount, (integer_types, float, Decimal)) and asset and isinstance(asset, string_types):
-            self["amount"] = amount
-            self["asset"] = Asset(asset, steem_instance=self.steem)
-            self["symbol"] = asset
+            self["symbol"] = self["asset"]["symbol"]            
         else:
             raise ValueError
         if self.fixed_point_arithmetic:
@@ -155,11 +170,18 @@ class Amount(dict):
             amount=self["amount"],
             asset=self["asset"].copy(),
             new_appbase_format=self.new_appbase_format,
+            fixed_point_arithmetic=self.fixed_point_arithmetic,
             steem_instance=self.steem)
 
     @property
     def amount(self):
         """ Returns the amount as float
+        """
+        return float(self["amount"])
+
+    @property
+    def amount_decimal(self):
+        """ Returns the amount as decimal
         """
         return self["amount"]
 

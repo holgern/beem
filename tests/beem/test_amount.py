@@ -140,11 +140,36 @@ class Testcases(unittest.TestCase):
         self.assertEqual(
             int(Amount("0.9999", self.symbol)),
             999)
+        self.assertEqual(
+            int(Amount(0.151, self.symbol)),
+            151)
+        self.assertEqual(
+            int(Amount(round(0.1509,3), self.symbol)),
+            151)
+        self.assertEqual(
+            int(Amount(round(0.1509,3), self.asset)),
+            151)            
+        self.assertEqual(
+            int(Amount(int(1), self.symbol)),
+            1000)      
+        self.assertEqual(
+            int(Amount(amount=round(0.1509,3), asset=Asset("SBD"))),
+            151)
+
+    def test_dict(self):
+        self.assertEqual(int(Amount({'amount': '150', 'nai': '@@000000021', 'precision': 3})), 150)
+        
 
     def test_float(self):
         self.assertEqual(
             float(Amount("1", self.symbol)),
             1.00000)
+        self.assertEqual(
+            float(Amount(0.151, self.symbol)),
+            0.151)
+        self.assertEqual(
+            float(Amount(round(0.1509, 3), self.symbol)),
+            0.151)            
 
     def test_plus(self):
         a1 = Amount(1, self.symbol)
