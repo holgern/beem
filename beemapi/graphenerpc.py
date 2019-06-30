@@ -459,6 +459,8 @@ class GrapheneRPC(object):
             api_name = get_api_name(self.is_appbase_ready(), *args, **kwargs)
             if self.is_appbase_ready() and self.use_condenser:
                 api_name = "condenser_api"
+            if (api_name == None):
+                api_name = 'database_api'
 
             # let's be able to define the num_retries per query
             stored_num_retries_call = self.nodes.num_retries_call
