@@ -73,8 +73,8 @@ ops_wls = [
     'withdraw_vesting',
     'account_create',
     'account_update',
-    'account_forsale',
-    'account_buying',
+    'account_action',
+    'social_action',
     'witness_update',
     'account_witness_vote',
     'account_witness_proxy',
@@ -85,6 +85,8 @@ ops_wls = [
     'set_withdraw_vesting_route',
     'custom_binary',
     'claim_reward_balance',
+    'friend_action',
+    'pod_action',
     'author_reward',
     'curation_reward',
     'comment_reward',
@@ -92,6 +94,8 @@ ops_wls = [
     'hardfork',
     'comment_payout_update',
     'comment_benefactor_reward',
+    'devfund',
+    'pod_virtual'
 ]
 operations_wls = {o: ops_wls.index(o) for o in ops_wls}
 
