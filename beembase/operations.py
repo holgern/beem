@@ -829,3 +829,38 @@ class Decline_voting_rights(GrapheneObject):
                 ('account', String(kwargs["account"])),
                 ('decline', Bool(kwargs["decline"])),
             ]))
+
+
+class Social_action(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if isArgsThisClass(self, args):
+            self.data = args[0].data
+        else:
+            if len(args) == 1 and len(kwargs) == 0:
+                kwargs = args[0]
+
+            # handle action
+            action = kwargs.get('action')
+            if action == None:
+                action_obj = kwargs.get('social_action_comment_create')
+                action_id = 0
+                if action_obj and type(action_obj) == dict:
+                    action_id = 0
+                else:
+                    action_obj = kwargs.get('social_action_comment_update')
+                    if action_obj and type(action_obj) == dict:
+                        action_id = 1
+                    else:
+                        action_obj = kwargs.get('social_action_comment_delete')
+                        if action_obj and type(action_obj) == dict:
+                            action_id = 2
+                stat_var = [action_id, action_obj]
+                action = SocialActionVariant(stat_var)
+            else:
+                action = SocialActionVariant([action[0], action[1]])
+
+            super(Social_action, self).__init__(
+                OrderedDict([
+                    ('account', String(kwargs["account"])),
+                    ('action', action),
+                ]))
