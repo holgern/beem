@@ -156,17 +156,11 @@ class Testcases(unittest.TestCase):
         runner = CliRunner()
         result = runner.invoke(cli, ['-ds', 'upvote', '@steemit/firstpost'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-ds', 'upvote', '@steemit/firstpost', '100'], input="test\n")
-        self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['-ds', 'upvote', '--weight', '100', '@steemit/firstpost'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_downvote(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-ds', 'downvote', '@steemit/firstpost'], input="test\n")
-        self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-ds', 'downvote', '@steemit/firstpost', '100'], input="test\n")
-        self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['-ds', 'downvote', '--weight', '100', '@steemit/firstpost'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
