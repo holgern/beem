@@ -602,7 +602,7 @@ class Comment(BlockchainObject):
                 raise VotingInvalidOnArchivedPost
         return self.vote(weight, account=voter)
 
-    def downvote(self, weight=-100, voter=None):
+    def downvote(self, weight=100, voter=None):
         """ Downvote the post
 
             :param float weight: (optional) Weight for posting (-100.0 -
@@ -614,7 +614,7 @@ class Comment(BlockchainObject):
         if last_payout is not None:
             if formatToTimeStamp(last_payout) > 0:
                 raise VotingInvalidOnArchivedPost
-        return self.vote(weight, account=voter)
+        return self.vote(-weight, account=voter)
 
     def vote(self, weight, account=None, identifier=None, **kwargs):
         """ Vote for a post

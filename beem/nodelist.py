@@ -31,7 +31,7 @@ class NodeList(list):
                 "version": "0.20.2",
                 "type": "appbase-limited",
                 "owner": "steemit",
-                "score": 100
+                "score": 50
             },
             {
                 "url": "https://steemd-appbase.steemit.com",
@@ -66,42 +66,42 @@ class NodeList(list):
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "gtg",
-                "score": 90
+                "score": 10
             },
             {
                 "url": "https://api.steemitdev.com",
                 "version": "0.19.11",
                 "type": "appbase-dev",
                 "owner": "steemit",
-                "score": 100
+                "score": 10
             },
             {
                 "url": "https://api.steemitstage.com",
                 "version": "0.19.11",
                 "type": "appbase-dev",
                 "owner": "steemit",
-                "score": 110
+                "score": 10
             },
             {
                 "url": "wss://rpc.steemviz.com",
                 "version": "0.19.12",
                 "type": "appbase",
                 "owner": "ausbitbank",
-                "score": 10
+                "score": -10
             },
             {
                 "url": "https://rpc.steemviz.com",
                 "version": "0.19.12",
                 "type": "appbase",
                 "owner": "ausbitbank",
-                "score": 100
+                "score": -10
             },
             {
                 "url": "wss://steemd.privex.io",
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "privex",
-                "score": 50
+                "score": -10
             },
             {
                 "url": "https://steemd.privex.io",
@@ -129,14 +129,14 @@ class NodeList(list):
                 "version": "0.19.12",
                 "type": "appbase",
                 "owner": "gtg",
-                "score": 75
+                "score": -10
             },
             {
                 "url": "https://gtg.steem.house:8090",
                 "version": "0.19.12",
                 "type": "appbase",
                 "owner": "gtg",
-                "score": 80
+                "score": -10
             },
             {
                 "url": "wss://steemd.pevo.science",
@@ -164,7 +164,7 @@ class NodeList(list):
                 "version": "0.19.12",
                 "type": "appbase",
                 "owner": "netuoso",
-                "score": 20
+                "score": -10
             },
             {
                 "url": "wss://seed.bitcoiner.me",
@@ -206,7 +206,7 @@ class NodeList(list):
                 "version": "0.19.12",
                 "type": "appbase",
                 "owner": "followbtcnews",
-                "score": 10
+                "score": 100
             },
             {
                 "url": "wss://anyx.io",
@@ -220,14 +220,21 @@ class NodeList(list):
                 "version": "0.20.6",
                 "type": "appbase",
                 "owner": "anyx",
-                "score": 50
+                "score": 80
             },
+            {
+                "url": "http://anyx.io",
+                "version": "0.20.6",
+                "type": "appbase",
+                "owner": "anyx",
+                "score": 50
+            },            
             {
                 "url": "https://rpc.curiesteem.com",
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "curie",
-                "score": 50
+                "score": -10
             },
             {
                 "url": "wss://rpc.curiesteem.com",
@@ -241,7 +248,7 @@ class NodeList(list):
                 "version": "0.20.8",
                 "type": "appbase",
                 "owner": "themarkymark",
-                "score": 50
+                "score": 90
             },            
             {
                 "url": "wss://testnet.steem.vc",
