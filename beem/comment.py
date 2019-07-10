@@ -599,6 +599,8 @@ class Comment(BlockchainObject):
             :param str voter: (optional) Voting account
 
         """
+        if weight < 0:
+            raise ValueError("Weight must be >= 0.")
         last_payout = self.get('last_payout', None)
         if last_payout is not None:
             if formatToTimeStamp(last_payout) > 0:
@@ -613,6 +615,8 @@ class Comment(BlockchainObject):
             :param str voter: (optional) Voting account
 
         """
+        if weight < 0:
+            raise ValueError("Weight must be >= 0.")        
         last_payout = self.get('last_payout', None)
         if last_payout is not None:
             if formatToTimeStamp(last_payout) > 0:

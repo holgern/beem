@@ -134,12 +134,13 @@ class Testcases(unittest.TestCase):
         tx = c.upvote(weight=99.9, voter="test")
         op = tx["operations"][0][1]
         self.assertEqual(op["weight"], 9990)
+        
         c.steem.txbuffer.clear()
-        tx = c.downvote(weight=-150, voter="test")
+        tx = c.downvote(weight=150, voter="test")
         op = tx["operations"][0][1]
         self.assertEqual(op["weight"], -10000)
         c.steem.txbuffer.clear()
-        tx = c.downvote(weight=-99.9, voter="test")
+        tx = c.downvote(weight=99.9, voter="test")
         op = tx["operations"][0][1]
         self.assertEqual(op["weight"], -9990)
 
