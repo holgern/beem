@@ -720,10 +720,9 @@ def listaccounts():
 
 @cli.command()
 @click.argument('post', nargs=1)
-@click.argument('vote_weight', nargs=1, required=False)
 @click.option('--weight', '-w', help='Vote weight (from 0.1 to 100.0)')
 @click.option('--account', '-a', help='Voter account name')
-def upvote(post, vote_weight, account, weight):
+def upvote(post, account, weight):
     """Upvote a post/comment
 
         POST is @author/permlink
@@ -731,18 +730,17 @@ def upvote(post, vote_weight, account, weight):
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    if not weight and vote_weight:
-        weight = vote_weight
-        if not weight.replace('.', '', 1).isdigit():
-            raise ValueError("vote_weight must be a float!")
-        else:
-            weight = float(weight)
-            if weight > 100:
-                raise ValueError("Maximum vote weight is 100.0!")
-            elif weight < -100:
-                raise ValueError("Minimum vote weight is -100.0!")
-    elif not weight and not vote_weight:
-        weight = stm.config["default_vote_weight"]
+    if not weight:
+        weight = stm.config["default_vote_weight"]        
+    elif not weight.replace('.', '', 1).isdigit():
+        raise ValueError("vote_weight must be a float!")
+    else:
+        weight = float(weight)
+        if weight > 100:
+            raise ValueError("Maximum vote weight is 100.0!")
+        elif weight < -100:
+            raise ValueError("Minimum vote weight is -100.0!")
+
     if not account:
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
@@ -761,10 +759,9 @@ def upvote(post, vote_weight, account, weight):
 
 @cli.command()
 @click.argument('post', nargs=1)
-@click.argument('vote_weight', nargs=1, required=False)
 @click.option('--account', '-a', help='Voter account name')
-@click.option('--weight', '-w', default=100.0, help='Vote weight (from 0.1 to 100.0)')
-def downvote(post, vote_weight, account, weight):
+@click.option('--weight', '-w', default=100, help='Downvote weight (from 0.1 to 100.0)')
+def downvote(post, account, weight):
     """Downvote a post/comment
 
         POST is @author/permlink
@@ -772,18 +769,15 @@ def downvote(post, vote_weight, account, weight):
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    if not weight and vote_weight:
-        weight = vote_weight
-        if not weight.replace('.', '', 1).isdigit():
-            raise ValueError("vote_weight must be a float!")
-        else:
-            weight = float(weight)
-            if weight > 100:
-                raise ValueError("Maximum vote weight is 100.0!")
-            elif weight < -100:
-                raise ValueError("Minimum vote weight is -100.0!")
-    elif not weight and not vote_weight:
-        weight = stm.config["default_vote_weight"]
+    if not weight.replace('.', '', 1).isdigit():
+        raise ValueError("vote_weight must be a float!")
+    else:
+        weight = float(weight)
+        if weight > 100:
+            raise ValueError("Maximum vote weight is 100.0!")
+        elif weight < -100:
+            raise ValueError("Minimum vote weight is -100.0!")
+    
     if not account:
         account = stm.config["default_account"]
     if not unlock_wallet(stm):

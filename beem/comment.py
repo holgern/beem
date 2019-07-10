@@ -145,7 +145,10 @@ class Comment(BlockchainObject):
         [author, permlink] = resolve_authorperm(self.identifier)
         self.steem.rpc.set_next_node_on_empty_reply(True)
         if self.steem.rpc.get_use_appbase():
-            content = self.steem.rpc.get_discussion({'author': author, 'permlink': permlink}, api="tags")
+            try:
+                content = self.steem.rpc.get_discussion({'author': author, 'permlink': permlink}, api="tags")
+            except:
+                content = self.steem.rpc.get_content(author, permlink)
         else:
             content = self.steem.rpc.get_content(author, permlink)
         if not content or not content['author'] or not content['permlink']:
@@ -627,33 +630,10 @@ class Comment(BlockchainObject):
                 form ``@author/permlink``.
 
         """
-        if not account:
-            if "default_account" in self.steem.config:
-                account = self.steem.config["default_account"]
-        if not account:
-            raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self.steem)
         if not identifier:
-            post_author = self["author"]
-            post_permlink = self["permlink"]
-        else:
-            [post_author, post_permlink] = resolve_authorperm(identifier)
+            identifier = construct_authorperm(self["author"], self["permlink"])
 
-        vote_weight = int(float(weight) * STEEM_1_PERCENT)
-        if vote_weight > STEEM_100_PERCENT:
-            vote_weight = STEEM_100_PERCENT
-        if vote_weight < -STEEM_100_PERCENT:
-            vote_weight = -STEEM_100_PERCENT
-
-        op = operations.Vote(
-            **{
-                "voter": account["name"],
-                "author": post_author,
-                "permlink": post_permlink,
-                "weight": vote_weight
-            })
-
-        return self.steem.finalizeOp(op, account, "posting", **kwargs)
+        return self.steem.vote(weight, identifier, account=account)
 
     def edit(self, body, meta=None, replace=False):
         """ Edit an existing post

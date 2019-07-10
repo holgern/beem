@@ -131,12 +131,12 @@ class Testcases(unittest.TestCase):
     def test_promoted(self):
         bts = self.bts
         query = Query()
-        query["limit"] = 10
+        query["limit"] = 1
         query["tag"] = "steemit"
         d = Discussions_by_promoted(query, steem_instance=bts)
         discussions = Discussions(steem_instance=bts)
         d2 = []
         for dd in discussions.get_discussions("promoted", query, limit=10):
             d2.append(dd)
-        self.assertEqual(len(d), 10)
-        self.assertEqual(len(d2), 10)
+        self.assertEqual(len(d), 1)
+        self.assertEqual(len(d2), 1)

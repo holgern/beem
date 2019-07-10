@@ -1817,6 +1817,42 @@ class Steem(object):
 
         return self.finalizeOp(ops, account, "posting", **kwargs)
 
+    def vote(self, weight, identifier, account=None, **kwargs):
+        """ Vote for a post
+
+            :param float weight: Voting weight. Range: -100.0 - +100.0.
+            :param str identifier: Identifier for the post to vote. Takes the
+                form ``@author/permlink``.
+            :param str account: (optional) Account to use for voting. If
+                ``account`` is not defined, the ``default_account`` will be used
+                or a ValueError will be raised
+
+        """
+        if not account:
+            if "default_account" in self.config:
+                account = self.config["default_account"]
+        if not account:
+            raise ValueError("You need to provide an account")
+        account = Account(account, steem_instance=self)
+
+        [post_author, post_permlink] = resolve_authorperm(identifier)
+
+        vote_weight = int(float(weight) * STEEM_1_PERCENT)
+        if vote_weight > STEEM_100_PERCENT:
+            vote_weight = STEEM_100_PERCENT
+        if vote_weight < -STEEM_100_PERCENT:
+            vote_weight = -STEEM_100_PERCENT
+
+        op = operations.Vote(
+            **{
+                "voter": account["name"],
+                "author": post_author,
+                "permlink": post_permlink,
+                "weight": vote_weight
+            })
+
+        return self.finalizeOp(op, account, "posting", **kwargs)
+
     def comment_options(self, options, identifier, beneficiaries=[],
                         account=None, **kwargs):
         """ Set the comment options
