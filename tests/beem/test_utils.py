@@ -65,11 +65,16 @@ class Testcases(unittest.TestCase):
         self.assertEqual(sanitize_permlink("[](){}|"), "")
 
     def test_derivePermlink(self):
-        self.assertEqual(derive_permlink("Hello World"), "hello-world")
-        self.assertEqual(derive_permlink("aAf_0.12"), "aaf-0-12")
-        self.assertEqual(derive_permlink("[](){}"), "")
+        self.assertTrue(derive_permlink("Hello World").startswith("hello-world"))
+        self.assertTrue(derive_permlink("aAf_0.12").startswith("aaf-0-12"))
+        title = "[](){}"
+        permlink = derive_permlink(title)
+        self.assertFalse(permlink.startswith("-"))
+        for char in title:
+            self.assertFalse(char in permlink)
         self.assertEqual(len(derive_permlink("", parent_permlink=256 * "a")), 256)
         self.assertEqual(len(derive_permlink("", parent_permlink=256 * "a", parent_author="test")), 256)
+        self.assertEqual(len(derive_permlink("a" * 1024)), 256)
 
     def test_patch(self):
         self.assertEqual(make_patch("aa", "ab"), '@@ -1 +1 @@\n-aa\n+ab\n')
@@ -123,7 +128,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual(b, [{"account": "beembot", "weight": 7000}, {"account": "holger80", "weight": 3000}])
         t = ["holger80:30", "beembot"]
         b = derive_beneficiaries(t)
-        self.assertEqual(b, [{"account": "beembot", "weight": 7000}, {"account": "holger80", "weight": 3000}])        
+        self.assertEqual(b, [{"account": "beembot", "weight": 7000}, {"account": "holger80", "weight": 3000}])
 
     def test_derive_tags(self):
         t = "test1,test2"

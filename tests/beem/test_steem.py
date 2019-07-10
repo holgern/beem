@@ -326,7 +326,7 @@ class Testcases(unittest.TestCase):
         op = tx["operations"][0][1]
         self.assertEqual(op["body"], "body")
         self.assertEqual(op["title"], "title")
-        self.assertEqual(op["permlink"], "title")
+        self.assertTrue(op["permlink"].startswith("title"))
         self.assertEqual(op["parent_author"], "")
         self.assertEqual(op["parent_permlink"], "a")
         json_metadata = json.loads(op["json_metadata"])
