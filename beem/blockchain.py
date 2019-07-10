@@ -310,6 +310,16 @@ class Blockchain(object):
 
             .. note:: The block number returned depends on the ``mode`` used
                       when instantiating from this class.
+
+            .. code-block:: python
+        
+                >>> from beem.blockchain import Blockchain
+                >>> from datetime import datetime
+                >>> blockchain = Blockchain()
+                >>> block_num = blockchain.get_estimated_block_num(datetime(2019, 6, 18, 5 ,8, 27))
+                >>> block_num == 33898184
+                True
+
         """
         last_block = self.get_current_block()
         date = addTzInfo(date)
@@ -328,9 +338,17 @@ class Blockchain(object):
             if block_number > last_block.identifier:
                 block_number = last_block.identifier
             block_time_diff = timedelta(seconds=10)
+            
+            last_block_time_diff_seconds = 10
+            second_last_block_time_diff_seconds = 10
+            
             while block_time_diff.total_seconds() > self.block_interval or block_time_diff.total_seconds() < -self.block_interval:
                 block = Block(block_number, steem_instance=self.steem)
+                second_last_block_time_diff_seconds = last_block_time_diff_seconds
+                last_block_time_diff_seconds = block_time_diff.total_seconds()
                 block_time_diff = date - block.time()
+                if second_last_block_time_diff_seconds == block_time_diff.total_seconds() and second_last_block_time_diff_seconds < 10:
+                    return int(block_number)
                 delta = block_time_diff.total_seconds() // self.block_interval
                 if delta == 0 and block_time_diff.total_seconds() < 0:
                     delta = -1

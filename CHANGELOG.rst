@@ -1,5 +1,14 @@
 Changelog
 =========
+0.20.22
+-------
+* Fix #195 - comment.downvote(100) will now downvote with 100%, negative numbers are not allowed anymore
+* comment.upvote(), negative numbers are not allowed anymore
+* Fix #193 - steem.vote() was added, so that voting is possible without tags_api
+* PR #181 - improve permlink derivation by crokkon
+* PR #192 - fixes compatibility issues with WhaleShares HF2 / v2.5 by alexpmorris
+* Fix bug for get_estimated_block_num when a block is skipped
+
 0.20.21
 -------
 * Fix float entered in Amount will be reduced by 0.001 due to rounding issues
