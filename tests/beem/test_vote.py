@@ -117,6 +117,6 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         utc = pytz.timezone('UTC')
         limit_time = utc.localize(datetime.utcnow()) - timedelta(days=7)
-        votes = AccountVotes(self.author, start=limit_time, steem_instance=bts)
+        votes = AccountVotes(self.voter, start=limit_time, steem_instance=bts)
         self.assertTrue(len(votes) > 0)
         self.assertTrue(isinstance(votes[0], Vote))
