@@ -732,14 +732,12 @@ def upvote(post, account, weight):
         stm.rpc.rpcconnect()
     if not weight:
         weight = stm.config["default_vote_weight"]        
-    elif not weight.replace('.', '', 1).isdigit():
-        raise ValueError("vote_weight must be a float!")
     else:
         weight = float(weight)
         if weight > 100:
             raise ValueError("Maximum vote weight is 100.0!")
-        elif weight < -100:
-            raise ValueError("Minimum vote weight is -100.0!")
+        elif weight < 0:
+            raise ValueError("Minimum vote weight is 0!")
 
     if not account:
         account = stm.config["default_account"]
@@ -769,14 +767,12 @@ def downvote(post, account, weight):
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    if not weight.replace('.', '', 1).isdigit():
-        raise ValueError("vote_weight must be a float!")
-    else:
-        weight = float(weight)
-        if weight > 100:
-            raise ValueError("Maximum vote weight is 100.0!")
-        elif weight < -100:
-            raise ValueError("Minimum vote weight is -100.0!")
+
+    weight = float(weight)
+    if weight > 100:
+        raise ValueError("Maximum downvote weight is 100.0!")
+    elif weight < 0:
+        raise ValueError("Minimum downvote weight is 0!")
     
     if not account:
         account = stm.config["default_account"]
