@@ -118,8 +118,9 @@ class SteemNodeRPC(GrapheneRPC):
         elif re.search("Could not find API", msg):
             if self._check_api_name(msg):
                 if self.nodes.working_nodes_count > 1 and self.nodes.num_retries  > -1:
+                    self.nodes.disable_node()
                     self._switch_to_next_node(msg, "ApiNotSupported")
-                    doRetry = False
+                    doRetry = True
                 else:
                     raise exceptions.ApiNotSupported(msg)
             else:
@@ -151,8 +152,9 @@ class SteemNodeRPC(GrapheneRPC):
             raise exceptions.UnhandledRPCError("Use Operation(op, appbase=True) to prevent error: " + msg)
         elif re.search("Client returned invalid format. Expected JSON!", msg):
             if self.nodes.working_nodes_count > 1  and self.nodes.num_retries  > -1:
+                self.nodes.disable_node()
                 self._switch_to_next_node(msg)
-                doRetry = False
+                doRetry = True
             else:
                 raise exceptions.UnhandledRPCError(msg)
         elif msg:

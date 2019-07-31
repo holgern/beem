@@ -120,6 +120,11 @@ class Nodes(list):
     def num_retries_call_reached(self):
         return self.error_cnt_call >= self.num_retries_call
 
+    def disable_node(self):
+        """Disable current node"""
+        if self.node is not None and self.num_retries_call >= 0:
+            self.node.error_cnt_call = self.num_retries_call
+
     def increase_error_cnt(self):
         """Increase node error count for current node"""
         if self.node is not None:
