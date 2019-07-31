@@ -311,7 +311,7 @@ class Account(BlockchainObject):
             self.refresh()
             self.steem.refresh_data(True)
         bandwidth = self.get_bandwidth()
-        if bandwidth["allocated"] > 0:
+        if bandwidth is not None and bandwidth["allocated"] is not None and bandwidth["allocated"] > 0:
             remaining = 100 - bandwidth["used"] / bandwidth["allocated"] * 100
             used_kb = bandwidth["used"] / 1024
             allocated_mb = bandwidth["allocated"] / 1024 / 1024
@@ -334,7 +334,7 @@ class Account(BlockchainObject):
             t.add_row(["Full in ", "%s" % (self.get_recharge_time_str())])
             t.add_row(["Steem Power", "%.2f %s" % (self.get_steem_power(), self.steem.steem_symbol)])
             t.add_row(["Balance", "%s, %s" % (str(self.balances["available"][0]), str(self.balances["available"][1]))])
-            if False and bandwidth["allocated"] > 0:
+            if False and bandwidth is not None and bandwidth["allocated"] is not None and bandwidth["allocated"] > 0:
                 t.add_row(["Remaining Bandwidth", "%.2f %%" % (remaining)])
                 t.add_row(["used/allocated Bandwidth", "(%.0f kb of %.0f mb)" % (used_kb, allocated_mb)])
             if rc_mana is not None:
@@ -868,9 +868,9 @@ class Account(BlockchainObject):
                     followers = self.steem.rpc.get_following(self.name, last_user, what, limit, api='follow')
             if cnt == 0:
                 followers_list = followers
-            elif len(followers) > 1:
+            elif followers is not None and len(followers) > 1:
                 followers_list += followers[1:]
-            if len(followers) >= limit:
+            if followers is not None and len(followers) >= limit:
                 last_user = followers[-1][direction]
                 limit_reached = True
                 cnt += 1
@@ -1082,6 +1082,9 @@ class Account(BlockchainObject):
         else:
             received_vesting_shares = 0
         vesting_shares = self["vesting_shares"].amount
+        if reserve_ratio is None or reserve_ratio["max_virtual_bandwidth"] is None:
+            return {"used": None,
+                    "allocated": None}            
         max_virtual_bandwidth = float(reserve_ratio["max_virtual_bandwidth"])
         total_vesting_shares = Amount(global_properties["total_vesting_shares"], steem_instance=self.steem).amount
         allocated_bandwidth = (max_virtual_bandwidth * (vesting_shares + received_vesting_shares) / total_vesting_shares)
