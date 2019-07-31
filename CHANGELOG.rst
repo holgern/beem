@@ -1,5 +1,13 @@
 Changelog
 =========
+0.20.23
+-------
+* Switch to next node, when current node has the necesary api not enabled
+* handle Client returned invalid format. Expected JSON! and switch to next node
+* More checks added
+* get_estimated_block_num is faster and uses BlockHeader
+* exclude_limited=False is default now for get_nodes
+
 0.20.22
 -------
 * Fix #195 - comment.downvote(100) will now downvote with 100%, negative numbers are not allowed anymore
