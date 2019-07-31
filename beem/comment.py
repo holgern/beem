@@ -36,7 +36,7 @@ class Comment(BlockchainObject):
         >>> from beem.comment import Comment
         >>> from beem.account import Account
         >>> from beem import Steem
-        >>> stm = Steem("https://steemd.minnowsupportproject.org")
+        >>> stm = Steem()
         >>> acc = Account("gtg", steem_instance=stm)
         >>> authorperm = acc.get_blog(limit=1)[0]["authorperm"]
         >>> c = Comment(authorperm)

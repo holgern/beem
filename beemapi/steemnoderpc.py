@@ -117,8 +117,11 @@ class SteemNodeRPC(GrapheneRPC):
             raise exceptions.NoMethodWithName(msg)
         elif re.search("Could not find API", msg):
             if self._check_api_name(msg):
-                # self._switch_to_next_node(msg, "ApiNotSupported")
-                raise exceptions.ApiNotSupported(msg)
+                if self.nodes.working_nodes_count > 1 and self.num_retries > -1:
+                    self._switch_to_next_node(msg, "ApiNotSupported")
+                    doRetry = True
+                else:
+                    raise exceptions.ApiNotSupported(msg)
             else:
                 raise exceptions.NoApiWithName(msg)
         elif re.search("irrelevant signature included", msg):
@@ -146,9 +149,12 @@ class SteemNodeRPC(GrapheneRPC):
             raise exceptions.UnkownKey(msg)
         elif re.search("Assert Exception:v.is_object(): Input data have to treated as object", msg):
             raise exceptions.UnhandledRPCError("Use Operation(op, appbase=True) to prevent error: " + msg)
-        # elif re.search("Client returned invalid format. Expected JSON!", msg):
-        #     self._switch_to_next_node(msg)
-        #    doRetry = True
+        elif re.search("Client returned invalid format. Expected JSON!", msg):
+            if self.nodes.working_nodes_count > 1  and self.num_retries > -1:
+                self._switch_to_next_node(msg)
+                doRetry = True
+            else:
+                raise exceptions.UnhandledRPCError(msg)
         elif msg:
             raise exceptions.UnhandledRPCError(msg)
         else:

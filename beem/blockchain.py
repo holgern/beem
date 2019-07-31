@@ -17,7 +17,7 @@ from time import sleep
 import logging
 from datetime import datetime, timedelta
 from .utils import formatTimeString, addTzInfo
-from .block import Block
+from .block import Block, BlockHeader
 from beemapi.node import Nodes
 from beemapi.steemnoderpc import SteemNodeRPC
 from .exceptions import BatchedCallsNotSupported, BlockDoesNotExistsException, BlockWaitTimeExceeded, OfflineHasNoRPCException
@@ -325,7 +325,7 @@ class Blockchain(object):
         date = addTzInfo(date)
         if estimateForwards:
             block_offset = 10
-            first_block = Block(block_offset, steem_instance=self.steem)
+            first_block = BlockHeader(block_offset, steem_instance=self.steem)
             time_diff = date - first_block.time()
             block_number = math.floor(time_diff.total_seconds() / self.block_interval + block_offset)
         else:
@@ -343,7 +343,7 @@ class Blockchain(object):
             second_last_block_time_diff_seconds = 10
             
             while block_time_diff.total_seconds() > self.block_interval or block_time_diff.total_seconds() < -self.block_interval:
-                block = Block(block_number, steem_instance=self.steem)
+                block = BlockHeader(block_number, steem_instance=self.steem)
                 second_last_block_time_diff_seconds = last_block_time_diff_seconds
                 last_block_time_diff_seconds = block_time_diff.total_seconds()
                 block_time_diff = date - block.time()

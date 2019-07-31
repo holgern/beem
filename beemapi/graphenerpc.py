@@ -414,7 +414,7 @@ class GrapheneRPC(object):
 
         ret = {}
         try:
-            ret = json.loads(reply, strict=False)
+            ret = json.loads(reply, strict=False, encoding="utf-8")
         except ValueError:
             self._check_for_server_error(reply)
 

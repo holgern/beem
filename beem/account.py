@@ -48,7 +48,7 @@ class Account(BlockchainObject):
 
             >>> from beem.account import Account
             >>> from beem import Steem
-            >>> stm = Steem("https://steemd.minnowsupportproject.org")
+            >>> stm = Steem()
             >>> account = Account("gtg", steem_instance=stm)
             >>> print(account)
             <Account gtg>
@@ -610,7 +610,7 @@ class Account(BlockchainObject):
 
                 >>> from beem.account import Account
                 >>> from beem import Steem
-                >>> stm = Steem("https://steemd.minnowsupportproject.org")
+                >>> stm = Steem()
                 >>> account = Account("steemit", steem_instance=stm)
                 >>> account.get_feed(0, 1, raw_data=True)
                 []
@@ -666,7 +666,7 @@ class Account(BlockchainObject):
 
                 >>> from beem.account import Account
                 >>> from beem import Steem
-                >>> stm = Steem("https://steemd.minnowsupportproject.org")
+                >>> stm = Steem()
                 >>> account = Account("steemit", steem_instance=stm)
                 >>> account.get_feed_entries(0, 1)
                 []
@@ -689,7 +689,7 @@ class Account(BlockchainObject):
 
                 >>> from beem.account import Account
                 >>> from beem import Steem
-                >>> stm = Steem("https://steemd.minnowsupportproject.org")
+                >>> stm = Steem()
                 >>> account = Account("steemit", steem_instance=stm)
                 >>> entry = account.get_blog_entries(0, 1, raw_data=True)[0]
                 >>> print("%s - %s - %s - %s" % (entry["author"], entry["permlink"], entry["blog"], entry["reblog_on"]))
@@ -713,7 +713,7 @@ class Account(BlockchainObject):
 
                 >>> from beem.account import Account
                 >>> from beem import Steem
-                >>> stm = Steem("https://steemd.minnowsupportproject.org")
+                >>> stm = Steem()
                 >>> account = Account("steemit", steem_instance=stm)
                 >>> account.get_blog(0, 1)
                 [<Comment @steemit/firstpost>]
@@ -773,7 +773,7 @@ class Account(BlockchainObject):
 
                 >>> from beem.account import Account
                 >>> from beem import Steem
-                >>> stm = Steem("https://steemd.minnowsupportproject.org")
+                >>> stm = Steem()
                 >>> account = Account("steemit", steem_instance=stm)
                 >>> account.get_blog_authors()
                 []
@@ -1352,7 +1352,7 @@ class Account(BlockchainObject):
 
                 >>> from beem.account import Account
                 >>> from beem import Steem
-                >>> stm = Steem("https://steemd.minnowsupportproject.org")
+                >>> stm = Steem()
                 >>> account = Account("beem.app", steem_instance=stm)
                 >>> account.get_tags_used_by_author()
                 []
@@ -1410,7 +1410,7 @@ class Account(BlockchainObject):
 
                 >>> from beem.account import Account
                 >>> from beem import Steem
-                >>> stm = Steem("https://steemd.minnowsupportproject.org")
+                >>> stm = Steem()
                 >>> account = Account("beem.app", steem_instance=stm)
                 >>> account.get_account_votes()
                 []

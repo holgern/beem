@@ -375,7 +375,7 @@ class NodeList(list):
             new_nodes.append(new_node)
         super(NodeList, self).__init__(new_nodes)
 
-    def get_nodes(self, exclude_limited=True, dev=False, testnet=False, testnetdev=False, wss=True, https=True, not_working=False, normal=True, appbase=True):
+    def get_nodes(self, exclude_limited=False, dev=False, testnet=False, testnetdev=False, wss=True, https=True, not_working=False, normal=True, appbase=True):
         """ Returns nodes as list
 
             :param bool exclude_limited: When True, limited nodes are excluded

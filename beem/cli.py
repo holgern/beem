@@ -431,7 +431,7 @@ def updatenodes(show, test, only_https, only_wss, only_appbase, only_non_appbase
     t.align = "l"
     nodelist = NodeList()
     nodelist.update_nodes(steem_instance=stm)
-    nodes = nodelist.get_nodes(normal=not only_appbase, appbase=not only_non_appbase, wss=not only_https, https=not only_wss)
+    nodes = nodelist.get_nodes(exclude_limited=False, normal=not only_appbase, appbase=not only_non_appbase, wss=not only_https, https=not only_wss)
     if show or test:
         sorted_nodes = sorted(nodelist, key=lambda node: node["score"], reverse=True)
         for node in sorted_nodes:

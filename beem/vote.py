@@ -32,7 +32,7 @@ class Vote(BlockchainObject):
 
            >>> from beem.vote import Vote
            >>> from beem import Steem
-           >>> stm = Steem("https://steemd.minnowsupportproject.org")
+           >>> stm = Steem()
            >>> v = Vote("@gtg/steem-pressure-4-need-for-speed|gandalf", steem_instance=stm)
 
     """
