@@ -271,10 +271,9 @@ class Steem(object):
         self.data["dynamic_global_properties"] = self.get_dynamic_global_properties(False)
         try:
             self.data['feed_history'] = self.get_feed_history(False)
-            self.data['get_feed_history'] = self.get_feed_history(False)
         except:
             self.data['feed_history'] = None
-            self.data['get_feed_history'] = None
+        self.data['get_feed_history'] = self.data['feed_history']
         try:
             self.data['hardfork_properties'] = self.get_hardfork_properties(False)
         except:
