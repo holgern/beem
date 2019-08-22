@@ -588,7 +588,9 @@ class Comment(BlockchainObject):
             return None
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
-            content_replies = self.steem.rpc.get_content_replies({'author': post_author, 'permlink': post_permlink}, api="tags")['discussions']
+            content_replies = self.steem.rpc.get_content_replies({'author': post_author, 'permlink': post_permlink}, api="tags")
+            if 'discussions' in content_replies:
+                content_replies = content_replies['discussions']
         else:
             content_replies = self.steem.rpc.get_content_replies(post_author, post_permlink, api="tags")
         if raw_data:

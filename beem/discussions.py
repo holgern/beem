@@ -546,7 +546,9 @@ class Discussions_by_blog(list):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
-            posts = self.steem.rpc.get_discussions_by_blog(discussion_query, api="tags")['discussions']
+            posts = self.steem.rpc.get_discussions_by_blog(discussion_query, api="tags")
+            if 'discussions' in posts:
+                posts = posts['discussions']  # inconsistent format across node types
         else:
             # limit = discussion_query["limit"]
             # account = discussion_query["tag"]
@@ -580,7 +582,9 @@ class Discussions_by_comments(list):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
-            posts = self.steem.rpc.get_discussions_by_comments(discussion_query, api="tags")['discussions']
+            posts = self.steem.rpc.get_discussions_by_comments(discussion_query, api="tags")
+            if 'discussions' in posts:
+                posts = posts['discussions']  # inconsistent format across node types
         else:
             posts = self.steem.rpc.get_discussions_by_comments(discussion_query)
         super(Discussions_by_comments, self).__init__(
@@ -640,9 +644,12 @@ class Replies_by_last_update(list):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
-            posts = self.steem.rpc.get_replies_by_last_update(discussion_query, api="tags")['discussions']
+            posts = self.steem.rpc.get_replies_by_last_update(discussion_query, api="tags")
+            if 'discussions' in posts:
+                posts = posts['discussions']
         else:
             posts = self.steem.rpc.get_replies_by_last_update(discussion_query["start_parent_author"], discussion_query["start_permlink"], discussion_query["limit"])
+
         super(Replies_by_last_update, self).__init__(
             [
                 Comment(x, lazy=lazy, steem_instance=self.steem)
