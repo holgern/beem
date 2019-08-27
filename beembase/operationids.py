@@ -47,6 +47,10 @@ ops = [
     'delegate_vesting_shares',
     'account_create_with_delegation',
     'witness_set_properties',
+    'account_update2',
+    'create_proposal',
+    'update_proposal_votes',
+    'remove_proposal',    
     'fill_convert_request',
     'author_reward',
     'curation_reward',
@@ -62,6 +66,12 @@ ops = [
     'comment_payout_update',
     'return_vesting_delegation',
     'comment_benefactor_reward',
+    'return_vesting_delegation',
+    'comment_benefactor_reward',
+    'producer_reward',
+    'clear_null_account_balance',
+    'proposal_pay',
+    'sps_fund'
 ]
 operations = {o: ops.index(o) for o in ops}
 

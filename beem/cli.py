@@ -754,6 +754,33 @@ def upvote(post, account, weight):
     tx = json.dumps(tx, indent=4)
     print(tx)
 
+@cli.command()
+@click.argument('post', nargs=1)
+@click.option('--account', '-a', help='Voter account name')
+def delete(post, account):
+    """delete a post/comment
+
+        POST is @author/permlink
+    """
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm):
+        return
+    try:
+        post = Comment(post, steem_instance=stm)
+        tx = post.delete(account=account)
+        if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+            tx = stm.steemconnect.url_from_tx(tx)
+    except exceptions.VotingInvalidOnArchivedPost:
+        print("Could not delete post.")
+        tx = {}
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
 
 @cli.command()
 @click.argument('post', nargs=1)

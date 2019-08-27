@@ -2208,6 +2208,30 @@ class Account(BlockchainObject):
             })
         return self.steem.finalizeOp(op, account, "active", **kwargs)
 
+    def update_account_jsonmetadata(self, metadata, account=None, **kwargs):
+        """ Update an account's profile in json_metadata using the posting key
+
+            :param dict metadata: The new metadata to use
+            :param str account: (optional) the account to allow access
+                to (defaults to ``default_account``)
+
+        """
+        if account is None:
+            account = self
+        else:
+            account = Account(account, steem_instance=self.steem)
+        if isinstance(metadata, dict):
+            metadata = json.dumps(metadata)
+        elif not isinstance(metadata, str):
+            raise ValueError("Profile must be a dict or string!")
+        op = operations.Account_update(
+            **{
+                "account": account["name"],
+                "posting_json_metadata": metadata,
+                "prefix": self.steem.prefix,
+            })
+        return self.steem.finalizeOp(op, account, "posting", **kwargs)
+
     # -------------------------------------------------------------------------
     #  Approval and Disapproval of witnesses
     # -------------------------------------------------------------------------

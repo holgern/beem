@@ -1550,6 +1550,33 @@ class Steem(object):
             })
         return self.finalizeOp(op, account, "active", **kwargs)
 
+    def update_proposal_votes(self, proposal_ids, approve, account=None, **kwargs):
+        """ Update proposal votes
+
+            :param list proposal_ids: list of proposal ids
+            :param bool approve: True/False
+            :param str account: (optional) witness account name
+
+
+        """
+        if not account and config["default_account"]:
+            account = config["default_account"]
+        if not account:
+            raise ValueError("You need to provide an account")
+
+        account = Account(account, steem_instance=self)
+        if not isinstance(proposal_ids, list):
+            proposal_ids = [proposal_ids]
+
+        op = operations.Update_proposal_votes(
+            **{
+                "voter": account["name"],
+                "proposal_ids": proposal_ids,
+                "approve": approve,
+                "prefix": self.prefix,
+            })
+        return self.finalizeOp(op, account, "active", **kwargs)
+
     def _test_weights_treshold(self, authority):
         """ This method raises an error if the threshold of an authority cannot
             be reached by the weights.

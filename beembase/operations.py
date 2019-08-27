@@ -278,6 +278,123 @@ class Account_update(GrapheneObject):
         ]))
 
 
+class Account_update2(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        prefix = kwargs.get("prefix", default_prefix)
+
+        if "owner" in kwargs:
+            owner = Optional(Permission(kwargs["owner"], prefix=prefix))
+        else:
+            owner = Optional(None)
+
+        if "active" in kwargs:
+            active = Optional(Permission(kwargs["active"], prefix=prefix))
+        else:
+            active = Optional(None)
+
+        if "posting" in kwargs:
+            posting = Optional(Permission(kwargs["posting"], prefix=prefix))
+        else:
+            posting = Optional(None)
+            
+    
+        if "memo_key" in kwargs:
+            memo_key = Optional(Permission(kwargs["memo_key"], prefix=prefix))
+        else:
+            memo_key = Optional(None)        
+
+        meta = ""
+        if "json_metadata" in kwargs and kwargs["json_metadata"]:
+            if isinstance(kwargs["json_metadata"], dict):
+                meta = json.dumps(kwargs["json_metadata"])
+            else:
+                meta = kwargs["json_metadata"]
+        posting_meta = ""
+        if "posting_json_metadata" in kwargs and kwargs["posting_json_metadata"]:
+            if isinstance(kwargs["posting_json_metadata"], dict):
+                posting_meta = json.dumps(kwargs["posting_json_metadata"])
+            else:
+                posting_meta = kwargs["posting_json_metadata"]        
+
+        super(Account_update2, self).__init__(OrderedDict([
+            ('account', String(kwargs["account"])),
+            ('owner', owner),
+            ('active', active),
+            ('posting', posting),
+            ('memo_key', memo_key),
+            ('json_metadata', String(meta)),
+            ('posting_json_metadata', String(posting_meta)),
+        ]))
+
+
+
+class Create_proposal(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        prefix = kwargs.get("prefix", default_prefix)
+        extensions = Array([])
+
+        super(Create_proposal, self).__init__(
+            OrderedDict([
+                ('creator', String(kwargs["creator"])),
+                ('receiver', String(kwargs["receiver"])),
+                ('start_date', PointInTime(kwargs["start_date"])),
+                ('end_date', PointInTime(kwargs["end_date"])),
+                ('daily_pay', Amount(kwargs["daily_pay"], prefix=prefix)),
+                ('subject', String(kwargs["subject"])),
+                ('permlink', String(kwargs["permlink"])),
+                ('extensions', extensions)
+            ]))
+
+
+class Update_proposal_votes(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        prefix = kwargs.get("prefix", default_prefix)
+        extensions = Array([])
+        proposal_ids = []
+        for e in kwargs["proposal_ids"]:
+            proposal_ids.append(Uint64(e))
+
+        super(Update_proposal_votes, self).__init__(
+            OrderedDict([
+                ('voter', String(kwargs["voter"])),
+                ('proposal_ids', Array(proposal_ids)),          
+                ('approve', Bool(kwargs["approve"])),
+                ('extensions', extensions)
+            ]))
+
+
+class Remove_proposal(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        prefix = kwargs.get("prefix", default_prefix)
+        extensions = Array([])
+        proposal_ids = []
+        for e in kwargs["proposal_ids"]:
+            proposal_ids.append(Uint64(e))        
+
+        super(Remove_proposal, self).__init__(
+            OrderedDict([
+                ('proposal_owner', String(kwargs["voter"])),
+                ('proposal_ids', Array(proposal_ids)),
+                ('extensions', extensions)
+            ]))
+
+
 class Witness_set_properties(GrapheneObject):
     def __init__(self, *args, **kwargs):
         if check_for_class(self, args):
