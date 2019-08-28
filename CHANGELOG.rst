@@ -1,5 +1,18 @@
 Changelog
 =========
+0.21.0
+------
+* First release for HF21
+* get_downvoting_power added to account
+* get_downvote_manabar added to account
+* add options use_tags_api to use database api to get comments
+* fix get_similar_account_names
+* add more try expect to fail back to condenser api
+* operations for account_update2, create_proposal, update_proposal_votes and remove_proposal were added
+* update_proposal_votes was added to steem
+* update_account_jsonmetadata was added to account
+* new beempy delete were added
+
 0.20.23
 -------
 * Switch to next node, when current node has the necesary api not enabled

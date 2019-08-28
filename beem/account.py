@@ -581,7 +581,7 @@ class Account(BlockchainObject):
         remainingTime = self.get_recharge_timedelta(voting_power_goal=voting_power_goal, starting_voting_power=starting_voting_power)
         return formatTimedelta(remainingTime)
 
-    def get_recharge_timedelta(self, voting_power_goal=100, starting_voting_power=None, upvote=True):
+    def get_recharge_timedelta(self, voting_power_goal=100, starting_voting_power=None):
         """ Returns the account voting power recharge time as timedelta object
 
             :param float voting_power_goal: voting power goal in percentage (default is 100)
