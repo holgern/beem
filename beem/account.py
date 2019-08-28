@@ -364,7 +364,7 @@ class Account(BlockchainObject):
             ret += " %.2f $\n" % (self.get_voting_value_SBD())
             ret += "full in %s \n" % (self.get_recharge_time_str())
             ret += "--- Downvoting Power ---\n"
-            ret += "%.2f %% \n" % (self.get_downvoting_power())            
+            ret += "%.2f %% \n" % (self.get_downvoting_power())
             ret += "--- Balance ---\n"
             ret += "%.2f SP, " % (self.get_steem_power())
             ret += "%s, %s\n" % (str(self.balances["available"][0]), str(self.balances["available"][1]))
@@ -478,10 +478,10 @@ class Account(BlockchainObject):
 
     def get_downvoting_power(self, with_regeneration=True):
         """ Returns the account downvoting power in the range of 0-100%
-        """        
-        if not "downvote_manabar" in self:
+        """
+        if "downvote_manabar" not in self:
             return 0
-        
+
         manabar = self.get_downvote_manabar()
         if with_regeneration:
             total_down_vp = manabar["current_mana_pct"]
@@ -493,7 +493,7 @@ class Account(BlockchainObject):
         if total_down_vp > 100:
             return 100
         if total_down_vp < 0:
-            return 0                
+            return 0
         return total_down_vp
 
     def get_vests(self, only_own_vests=False):
@@ -795,7 +795,7 @@ class Account(BlockchainObject):
                 elif raw_data:
                     ret = self.steem.rpc.get_blog({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')
                     if isinstance(ret, dict) and "blog" in ret:
-                        ret = ret["blog"]            
+                        ret = ret["blog"]
                     return [
                         c for c in ret
                     ]
@@ -809,18 +809,18 @@ class Account(BlockchainObject):
                     ]
             except:
                 success = False
-        
+
         if not self.steem.rpc.get_use_appbase() or not success:
             if raw_data and short_entries:
                 return [
                     c for c in self.steem.rpc.get_blog_entries(account, start_entry_id, limit, api='follow')
                 ]
-    
+
             elif raw_data:
                 return [
                     c for c in self.steem.rpc.get_blog(account, start_entry_id, limit, api='follow')
                 ]
-              
+
             else:
                 from .comment import Comment
                 return [
@@ -928,7 +928,7 @@ class Account(BlockchainObject):
                 elif direction == "following":
                     followers = self.steem.rpc.get_following(query, api='follow')
                     if isinstance(followers, dict) and 'following' in followers:
-                        followers = followers['following']         
+                        followers = followers['following']
             else:
                 if direction == "follower":
                     followers = self.steem.rpc.get_followers(self.name, last_user, what, limit, api='follow')
@@ -1053,7 +1053,7 @@ class Account(BlockchainObject):
                 balances = self.total_balances
             else:
                 return
-        
+
         if isinstance(symbol, dict) and "symbol" in symbol:
             symbol = symbol["symbol"]
 
@@ -1152,7 +1152,7 @@ class Account(BlockchainObject):
         vesting_shares = self["vesting_shares"].amount
         if reserve_ratio is None or reserve_ratio["max_virtual_bandwidth"] is None:
             return {"used": None,
-                    "allocated": None}            
+                    "allocated": None}
         max_virtual_bandwidth = float(reserve_ratio["max_virtual_bandwidth"])
         total_vesting_shares = Amount(global_properties["total_vesting_shares"], steem_instance=self.steem).amount
         allocated_bandwidth = (max_virtual_bandwidth * (vesting_shares + received_vesting_shares) / total_vesting_shares)
@@ -1510,7 +1510,7 @@ class Account(BlockchainObject):
                 ret = self.steem.rpc.list_votes({"start": [account, start_author, start_permlink], "limit": 1000, "order": "by_voter_comment"}, api="database")["votes"]
                 if start_author != "":
                     if len(ret) == 0:
-                        finished = True                     
+                        finished = True
                     ret = ret[1:]
                 for vote in ret:
                     if vote["voter"] != account:

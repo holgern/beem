@@ -83,7 +83,7 @@ class Price(dict):
     ):
 
         self.steem = steem_instance or shared_steem_instance()
-        if price is "":
+        if price == "":
             price = None
         if (price is not None and isinstance(price, string_types) and not base and not quote):
             import re

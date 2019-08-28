@@ -31,6 +31,7 @@ from .objects import (
     Beneficiaries,
     Beneficiary,
     CommentOptionExtensions,
+    SocialActionVariant
 )
 
 default_prefix = "STM"
@@ -38,8 +39,8 @@ default_prefix = "STM"
 
 def check_for_class(self, args):
     if isArgsThisClass(self, args):
-            self.data = args[0].data
-            return True
+        self.data = args[0].data
+        return True
     else:
         return False
 
@@ -300,8 +301,7 @@ class Account_update2(GrapheneObject):
             posting = Optional(Permission(kwargs["posting"], prefix=prefix))
         else:
             posting = Optional(None)
-            
-    
+
         if "memo_key" in kwargs:
             memo_key = Optional(Permission(kwargs["memo_key"], prefix=prefix))
         else:
@@ -360,7 +360,6 @@ class Update_proposal_votes(GrapheneObject):
             return
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
-        prefix = kwargs.get("prefix", default_prefix)
         extensions = Array([])
         proposal_ids = []
         for e in kwargs["proposal_ids"]:
@@ -958,7 +957,7 @@ class Social_action(GrapheneObject):
 
             # handle action
             action = kwargs.get('action')
-            if action == None:
+            if action is None:
                 action_obj = kwargs.get('social_action_comment_create')
                 action_id = 0
                 if action_obj and type(action_obj) == dict:

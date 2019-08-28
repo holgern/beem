@@ -152,7 +152,7 @@ class Comment(BlockchainObject):
                 if self.use_tags_api:
                     content = self.steem.rpc.get_discussion({'author': author, 'permlink': permlink}, api="tags")
                 else:
-                    content =self.steem.rpc.list_comments({"start":[author, permlink], "limit":1, "order":"by_permlink"}, api="database")
+                    content =self.steem.rpc.list_comments({"start": [author, permlink], "limit": 1, "order": "by_permlink"}, api="database")
                 if content is not None and "comments" in content:
                     content =content["comments"]
                 if isinstance(content, list) and len(content) >0:

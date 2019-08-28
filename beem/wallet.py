@@ -110,7 +110,7 @@ class Wallet(object):
     # Manually provided keys
     keys = {}  # struct with pubkey as key and wif as value
     token = {}
-    keyMap = {}  # type:wif pairs to force certain keys
+    keyMap = {}  # wif pairs to force certain keys
 
     def __init__(self, steem_instance=None, *args, **kwargs):
         self.steem = steem_instance or shared_steem_instance()

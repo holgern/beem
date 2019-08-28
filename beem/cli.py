@@ -1537,7 +1537,6 @@ def uploadimage(image, account, image_name):
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
-    author = account
     if not unlock_wallet(stm):
         return
     iu = ImageUploader(steem_instance=stm)
@@ -2540,7 +2539,7 @@ def curation(authorperm, account, limit, min_vote, max_vote, min_performance, ma
         stm.rpc.rpcconnect()
     if authorperm is None:
         authorperm = 'all'
-    if account is None and authorperm is not 'all':
+    if account is None and authorperm != 'all':
         show_all_voter = True
     else:
         show_all_voter = False
