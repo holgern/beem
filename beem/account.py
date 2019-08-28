@@ -99,7 +99,7 @@ class Account(BlockchainObject):
             return
         self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
         if self.steem.rpc.get_use_appbase():
-                account = self.steem.rpc.find_accounts({'accounts': [self.identifier]}, api="database")
+            account = self.steem.rpc.find_accounts({'accounts': [self.identifier]}, api="database")
         else:
             if self.full:
                 account = self.steem.rpc.get_accounts(
@@ -391,9 +391,12 @@ class Account(BlockchainObject):
             return None
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
-            rep = self.steem.rpc.get_account_reputations({'account_lower_bound': self["name"], 'limit': 1}, api="follow")['reputations']
-            if len(rep) > 0:
-                rep = int(rep[0]['reputation'])
+            try:
+                rep = self.steem.rpc.get_account_reputations({'account_lower_bound': self["name"], 'limit': 1}, api="follow")['reputations']
+                if len(rep) > 0:
+                    rep = int(rep[0]['reputation'])
+            except:
+                rep = int(self['reputation'])
         else:
             rep = int(self['reputation'])
         return reputation_to_score(rep)
@@ -623,32 +626,38 @@ class Account(BlockchainObject):
         if not self.steem.is_connected():
             return None
         self.steem.rpc.set_next_node_on_empty_reply(False)
-        if raw_data and short_entries and self.steem.rpc.get_use_appbase():
-            return [
-                c for c in self.steem.rpc.get_feed_entries({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
-            ]
-        elif raw_data and short_entries and not self.steem.rpc.get_use_appbase():
-            return [
-                c for c in self.steem.rpc.get_feed_entries(account, start_entry_id, limit, api='follow')
-            ]
-        elif raw_data and self.steem.rpc.get_use_appbase():
-            return [
-                c for c in self.steem.rpc.get_feed({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
-            ]
-        elif raw_data and not self.steem.rpc.get_use_appbase():
-            return [
-                c for c in self.steem.rpc.get_feed(account, start_entry_id, limit, api='follow')
-            ]
-        elif not raw_data and self.steem.rpc.get_use_appbase():
-            from .comment import Comment
-            return [
-                Comment(c['comment'], steem_instance=self.steem) for c in self.steem.rpc.get_feed({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
-            ]
-        else:
-            from .comment import Comment
-            return [
-                Comment(c['comment'], steem_instance=self.steem) for c in self.steem.rpc.get_feed(account, start_entry_id, limit, api='follow')
-            ]
+        success = True
+        if self.steem.rpc.get_use_appbase():
+            try:
+                if raw_data and short_entries:
+                    return [
+                        c for c in self.steem.rpc.get_feed_entries({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
+                    ]
+                elif raw_data:
+                    return [
+                        c for c in self.steem.rpc.get_feed({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
+                    ]
+                elif not raw_data:
+                    from .comment import Comment
+                    return [
+                        Comment(c['comment'], steem_instance=self.steem) for c in self.steem.rpc.get_feed({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
+                    ]
+            except:
+                success = False
+        if not self.steem.rpc.get_use_appbase() or not success:
+            if raw_data and short_entries:
+                return [
+                    c for c in self.steem.rpc.get_feed_entries(account, start_entry_id, limit, api='follow')
+                ]
+            elif raw_data:
+                return [
+                    c for c in self.steem.rpc.get_feed(account, start_entry_id, limit, api='follow')
+                ]
+            else:
+                from .comment import Comment
+                return [
+                    Comment(c['comment'], steem_instance=self.steem) for c in self.steem.rpc.get_feed(account, start_entry_id, limit, api='follow')
+                ]
 
     def get_feed_entries(self, start_entry_id=0, limit=100, raw_data=True,
                          account=None):
@@ -726,41 +735,50 @@ class Account(BlockchainObject):
         if not self.steem.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
-        if raw_data and short_entries and self.steem.rpc.get_use_appbase():
-            ret = self.steem.rpc.get_blog_entries({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')
-            if isinstance(ret, dict) and "blog" in ret:
-                ret = ret["blog"]
-            return [
-                c for c in ret
-            ]
-        elif raw_data and short_entries and not self.steem.rpc.get_use_appbase():
-            return [
-                c for c in self.steem.rpc.get_blog_entries(account, start_entry_id, limit, api='follow')
-            ]
-        elif raw_data and self.steem.rpc.get_use_appbase():
-            ret = self.steem.rpc.get_blog({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')
-            if isinstance(ret, dict) and "blog" in ret:
-                ret = ret["blog"]            
-            return [
-                c for c in ret
-            ]
-        elif raw_data and not self.steem.rpc.get_use_appbase():
-            return [
-                c for c in self.steem.rpc.get_blog(account, start_entry_id, limit, api='follow')
-            ]
-        elif not raw_data and self.steem.rpc.get_use_appbase():
-            from .comment import Comment
-            ret = self.steem.rpc.get_blog({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')
-            if isinstance(ret, dict) and "blog" in ret:
-                ret = ret["blog"]
-            return [
-                Comment(c["comment"], steem_instance=self.steem) for c in ret
-            ]                
-        else:
-            from .comment import Comment
-            return [
-                Comment(c["comment"], steem_instance=self.steem) for c in self.steem.rpc.get_blog(account, start_entry_id, limit, api='follow')
-            ]
+        success = True
+        if self.steem.rpc.get_use_appbase():
+            try:
+                if raw_data and short_entries:
+                    ret = self.steem.rpc.get_blog_entries({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')
+                    if isinstance(ret, dict) and "blog" in ret:
+                        ret = ret["blog"]
+                    return [
+                        c for c in ret
+                    ]
+                elif raw_data:
+                    ret = self.steem.rpc.get_blog({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')
+                    if isinstance(ret, dict) and "blog" in ret:
+                        ret = ret["blog"]            
+                    return [
+                        c for c in ret
+                    ]
+                elif not raw_data:
+                    from .comment import Comment
+                    ret = self.steem.rpc.get_blog({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')
+                    if isinstance(ret, dict) and "blog" in ret:
+                        ret = ret["blog"]
+                    return [
+                        Comment(c["comment"], steem_instance=self.steem) for c in ret
+                    ]
+            except:
+                success = False
+        
+        if not self.steem.rpc.get_use_appbase() or not success:
+            if raw_data and short_entries:
+                return [
+                    c for c in self.steem.rpc.get_blog_entries(account, start_entry_id, limit, api='follow')
+                ]
+    
+            elif raw_data:
+                return [
+                    c for c in self.steem.rpc.get_blog(account, start_entry_id, limit, api='follow')
+                ]
+              
+            else:
+                from .comment import Comment
+                return [
+                    Comment(c["comment"], steem_instance=self.steem) for c in self.steem.rpc.get_blog(account, start_entry_id, limit, api='follow')
+                ]
 
     def get_blog_authors(self, account=None):
         """ Returns a list of authors that have had their content reblogged on a given blog account
@@ -787,7 +805,10 @@ class Account(BlockchainObject):
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.get_blog_authors({'blog_account': account}, api='follow')['blog_authors']
+            try:
+                return self.steem.rpc.get_blog_authors({'blog_account': account}, api='follow')['blog_authors']
+            except:
+                return self.steem.rpc.get_blog_authors(account, api='follow')
         else:
             return self.steem.rpc.get_blog_authors(account, api='follow')
 

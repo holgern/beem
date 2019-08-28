@@ -98,7 +98,10 @@ class Vote(BlockchainObject):
         try:
             self.steem.rpc.set_next_node_on_empty_reply(True)
             if self.steem.rpc.get_use_appbase():
-                votes = self.steem.rpc.get_active_votes({'author': author, 'permlink': permlink}, api="tags")['votes']
+                try:
+                    votes = self.steem.rpc.get_active_votes({'author': author, 'permlink': permlink}, api="tags")['votes']
+                except:
+                    votes = self.steem.rpc.get_active_votes(author, permlink, api="database_api")
             else:
                 votes = self.steem.rpc.get_active_votes(author, permlink, api="database_api")
         except UnkownKey:
@@ -348,9 +351,13 @@ class ActiveVotes(VotesObject):
                 votes = authorperm["active_votes"]
             elif self.steem.rpc.get_use_appbase():
                 self.steem.rpc.set_next_node_on_empty_reply(True)
-                votes = self.steem.rpc.get_active_votes({'author': authorperm["author"],
-                                                         'permlink': authorperm["permlink"]},
-                                                        api="tags")['votes']
+                try:
+                    
+                    votes = self.steem.rpc.get_active_votes({'author': authorperm["author"],
+                                                             'permlink': authorperm["permlink"]},
+                                                            api="tags")['votes']
+                except:
+                    votes = self.steem.rpc.get_active_votes(authorperm["author"], authorperm["permlink"])
             else:
                 votes = self.steem.rpc.get_active_votes(authorperm["author"], authorperm["permlink"])
             authorperm = authorperm["authorperm"]

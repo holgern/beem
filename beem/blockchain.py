@@ -924,7 +924,7 @@ class Blockchain(object):
             return None
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
-            account = self.steem.rpc.list_accounts({'start': name, 'limit': limit}, api="database")
+            account = self.steem.rpc.list_accounts({'start': name, 'limit': limit, 'order': 'by_name'}, api="database")
             if bool(account):
                 return account["accounts"]
         else:

@@ -28,6 +28,7 @@ class Comment(BlockchainObject):
 
         :param str authorperm: identifier to post/comment in the form of
             ``@author/permlink``
+        :param boolean use_tags_api: when set to False, list_comments from the database_api is used
         :param Steem steem_instance: :class:`beem.steem.Steem` instance to use when accessing a RPC
 
 
@@ -49,12 +50,14 @@ class Comment(BlockchainObject):
     def __init__(
         self,
         authorperm,
+        use_tags_api=True,
         full=True,
         lazy=False,
         steem_instance=None
     ):
         self.full = full
         self.lazy = lazy
+        self.use_tags_api = use_tags_api
         self.steem = steem_instance or shared_steem_instance()
         if isinstance(authorperm, string_types) and authorperm != "":
             [author, permlink] = resolve_authorperm(authorperm)
@@ -146,7 +149,14 @@ class Comment(BlockchainObject):
         self.steem.rpc.set_next_node_on_empty_reply(True)
         if self.steem.rpc.get_use_appbase():
             try:
-                content = self.steem.rpc.get_discussion({'author': author, 'permlink': permlink}, api="tags")
+                if self.use_tags_api:
+                    content = self.steem.rpc.get_discussion({'author': author, 'permlink': permlink}, api="tags")
+                else:
+                    content =self.steem.rpc.list_comments({"start":[author, permlink], "limit":1, "order":"by_permlink"}, api="database")
+                if content is not None and "comments" in content:
+                    content =content["comments"]
+                if isinstance(content, list) and len(content) >0:
+                    content =content[0]
             except:
                 content = self.steem.rpc.get_content(author, permlink)
         else:
@@ -373,9 +383,15 @@ class Comment(BlockchainObject):
             voter = Account(self["author"], steem_instance=self.steem)
         else:
             voter = Account(voter, steem_instance=self.steem)
-        for vote in self["active_votes"]:
-            if voter["name"] == vote["voter"]:
-                specific_vote = vote
+        if "active_votes" in self:
+            for vote in self["active_votes"]:
+                if voter["name"] == vote["voter"]:
+                    specific_vote = vote
+        else:
+            active_votes = self.get_votes()
+            for vote in active_votes:
+                if voter["name"] == vote["voter"]:
+                    specific_vote = vote 
         if specific_vote is not None and (raw_data or not self.is_pending()):
             return specific_vote
         elif specific_vote is not None:
@@ -512,7 +528,11 @@ class Comment(BlockchainObject):
             pending_rewards = True
 
         active_votes = {}
-        for vote in self["active_votes"]:
+        if "active_votes" in self:
+            active_votes_list = self["active_votes"]
+        else:
+            active_votes_list = self.get_votes()
+        for vote in active_votes_list:
             if total_vote_weight > 0:
                 claim = max_rewards * int(vote["weight"]) / total_vote_weight
             else:
@@ -586,7 +606,7 @@ class Comment(BlockchainObject):
 
     def get_votes(self, raw_data=False):
         """Returns all votes as ActiveVotes object"""
-        if raw_data:
+        if raw_data and "active_votes" in self:
             return self["active_votes"]
         from .vote import ActiveVotes
         return ActiveVotes(self, lazy=False, steem_instance=self.steem)
