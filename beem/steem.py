@@ -305,15 +305,18 @@ class Steem(object):
         if self.rpc is None:
             return None
         self.rpc.set_next_node_on_empty_reply(True)
-        if self.rpc.get_use_appbase():
-            return self.rpc.get_reserve_ratio(api="witness")
-        else:
-            props = self.get_dynamic_global_properties()
-            # conf = self.get_config()
+
+        props = self.get_dynamic_global_properties()
+        # conf = self.get_config()
+        try:
             reserve_ratio = {'id': 0, 'average_block_size': props['average_block_size'],
                              'current_reserve_ratio': props['current_reserve_ratio'],
                              'max_virtual_bandwidth': props['max_virtual_bandwidth']}
-            return reserve_ratio
+        except:
+            reserve_ratio = {'id': 0, 'average_block_size': None,
+                             'current_reserve_ratio': None,
+                             'max_virtual_bandwidth': None}            
+        return reserve_ratio
 
     def get_feed_history(self, use_stored_data=True):
         """ Returns the feed_history
