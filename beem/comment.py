@@ -19,7 +19,7 @@ from .blockchainobject import BlockchainObject
 from .exceptions import ContentDoesNotExistsException, VotingInvalidOnArchivedPost
 from beembase import operations
 from beemgraphenebase.py23 import py23_bytes, bytes_types, integer_types, string_types, text_type
-from beem.constants import STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF6, STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF20, STEEM_100_PERCENT, STEEM_1_PERCENT
+from beem.constants import STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF6, STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF20, STEEM_100_PERCENT, STEEM_1_PERCENT, STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF21
 log = logging.getLogger(__name__)
 
 
@@ -320,7 +320,9 @@ class Comment(BlockchainObject):
             which will compentsate the curation penalty, if voting earlier than 15 minutes
         """
         self.refresh()
-        if self.steem.hardfork >= 20:
+        if self.steem.hardfork >= 21:
+            reverse_auction_window_seconds = STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF21
+        elif self.steem.hardfork >= 20:
             reverse_auction_window_seconds = STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF20
         else:
             reverse_auction_window_seconds = STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF6
@@ -361,7 +363,9 @@ class Comment(BlockchainObject):
             elapsed_seconds = (vote_time - self["created"]).total_seconds()
         else:
             raise ValueError("vote_time must be a string or a datetime")
-        if self.steem.hardfork >= 20:
+        if self.steem.hardfork >= 21:
+            reward = (elapsed_seconds / STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF21)
+        elif self.steem.hardfork >= 20:
             reward = (elapsed_seconds / STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF20)
         else:
             reward = (elapsed_seconds / STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF6)
@@ -509,13 +513,25 @@ class Comment(BlockchainObject):
         if median_hist is not None:
             median_price = Price(median_hist, steem_instance=self.steem)
         pending_rewards = False
-        total_vote_weight = self["total_vote_weight"]
+        if "active_votes" in self:
+            active_votes_list = self["active_votes"]
+        else:
+            active_votes_list = self.get_votes()
+        if "total_vote_weight" in self:
+            total_vote_weight = self["total_vote_weight"]
+        else:
+            total_vote_weight = 0
+            for vote in active_votes_list:
+                total_vote_weight += vote["weight"]
+            
         if not self["allow_curation_rewards"] or not self.is_pending():
             max_rewards = Amount(0, self.steem.steem_symbol, steem_instance=self.steem)
             unclaimed_rewards = max_rewards.copy()
         else:
-            if pending_payout_value is None:
+            if pending_payout_value is None and "pending_payout_value" in self:
                 pending_payout_value = Amount(self["pending_payout_value"], steem_instance=self.steem)
+            elif pending_payout_value is None:
+                pending_payout_value = 0
             elif isinstance(pending_payout_value, (float, integer_types)):
                 pending_payout_value = Amount(pending_payout_value, self.steem.sbd_symbol, steem_instance=self.steem)
             elif isinstance(pending_payout_value, str):
@@ -528,10 +544,7 @@ class Comment(BlockchainObject):
             pending_rewards = True
 
         active_votes = {}
-        if "active_votes" in self:
-            active_votes_list = self["active_votes"]
-        else:
-            active_votes_list = self.get_votes()
+
         for vote in active_votes_list:
             if total_vote_weight > 0:
                 claim = max_rewards * int(vote["weight"]) / total_vote_weight

@@ -214,7 +214,7 @@ class GrapheneRPC(object):
                     self.session = shared_session_instance()
                     self.current_rpc = self.rpc_methods["jsonrpc"]
                     self.headers = {'User-Agent': 'beem v%s' % (beem_version),
-                                    'content-type': 'application/json'}
+                                    'content-type': 'application/json; charset=utf-8'}
             try:
                 if self.ws:
                     self.ws.connect(self.url)
@@ -282,7 +282,7 @@ class GrapheneRPC(object):
                                          timeout=self.timeout)
         if response.status_code == 401:
             raise UnauthorizedError
-        return response.text
+        return response
 
     def ws_send(self, payload):
         if self.ws is None:
@@ -372,6 +372,7 @@ class GrapheneRPC(object):
         if self.url is None:
             raise RPCConnection("RPC is not connected!")
         reply = {}
+        response = None
         while True:
             self.nodes.increase_error_cnt_call()
             try:
@@ -379,7 +380,8 @@ class GrapheneRPC(object):
                    self.current_rpc == self.rpc_methods['wsappbase']:
                     reply = self.ws_send(json.dumps(payload, ensure_ascii=False).encode('utf8'))
                 else:
-                    reply = self.request_send(json.dumps(payload, ensure_ascii=False).encode('utf8'))
+                    response = self.request_send(json.dumps(payload, ensure_ascii=False).encode('utf8'))
+                    reply = response.text
                 if not bool(reply):
                     try:
                         self.nodes.sleep_and_check_retries("Empty Reply", call_retry=True)
@@ -414,7 +416,10 @@ class GrapheneRPC(object):
 
         ret = {}
         try:
-            ret = json.loads(reply, strict=False, encoding="utf-8")
+            if response is None:
+                ret = json.loads(reply, strict=False, encoding="utf-8")
+            else:
+                ret = response.json()
         except ValueError:
             self._check_for_server_error(reply)
 

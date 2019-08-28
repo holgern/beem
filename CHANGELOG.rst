@@ -1,5 +1,11 @@
 Changelog
 =========
+0.21.1
+------
+* Fix non ascii text handling on some nodes
+* Add STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF21 constant
+* Fix get_curation_rewards
+
 0.21.0
 ------
 * First release for HF21
