@@ -104,6 +104,16 @@ known_chains = {
             {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
         ],
     },
+    "PULSAR": {
+        "chain_id": "07c687c01f134adaf217a9b9367d1cef679c3c020167fdd25ee8c403f687528e",
+        "min_version": "0.101.0",
+        "prefix": "EUR",
+        "chain_assets": [
+            {"asset": "@@000000013", "symbol": "EUR", "precision": 3, "id": 0},
+            {"asset": "@@000000021", "symbol": "PULSE", "precision": 3, "id": 1},
+            {"asset": "@@000000037", "symbol": "VESTS", "precision": 6, "id": 2}
+        ],
+    },
     "WLS": {
         "chain_id": "de999ada2ff7ed3d3d580381f229b40b5a0261aec48eb830e540080817b72866",
         "min_version": "0.0.0",
