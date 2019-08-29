@@ -648,7 +648,7 @@ class Replies_by_last_update(list):
             if 'discussions' in posts:
                 posts = posts['discussions']
         else:
-            posts = self.steem.rpc.get_replies_by_last_update(discussion_query["start_parent_author"], discussion_query["start_permlink"], discussion_query["limit"])
+            posts = self.steem.rpc.get_replies_by_last_update(discussion_query["start_author"], discussion_query["start_permlink"], discussion_query["limit"])
 
         super(Replies_by_last_update, self).__init__(
             [

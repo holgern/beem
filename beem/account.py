@@ -3068,19 +3068,12 @@ class Account(BlockchainObject):
             query_limit = 100
             if limit is not None and reblogs:
                 query_limit = min(limit - post_count + 1, query_limit)
-            if not start_permlink:
-                # first iteration uses `get_blog`
-                results = self.get_blog(start_entry_id=start,
-                                        account=account,
-                                        limit=query_limit)
-            else:
-                # all following iterations use `get_discussions_by_blog`
-                from .discussions import Query, Discussions_by_blog
-                query = Query(start_author=start_author,
-                              start_permlink=start_permlink,
-                              limit=query_limit, tag=account['name'])
-                results = Discussions_by_blog(query,
-                                              steem_instance=self.steem)
+
+            from .discussions import Discussions_by_blog
+            query = {'start_author': start_author,
+                     'start_permlink':start_permlink,
+                     'limit': query_limit, 'tag': account['name']}
+            results = Discussions_by_blog(query, steem_instance=self.steem)
             if len(results) == 0 or (start_permlink and len(results) == 1):
                 return
             if start_permlink:
@@ -3137,10 +3130,10 @@ class Account(BlockchainObject):
             query_limit = 100
             if limit is not None:
                 query_limit = min(limit - comment_count + 1, query_limit)
-            from .discussions import Query, Discussions_by_comments
-            query = Query(start_author=account['name'],
-                          start_permlink=start_permlink,
-                          limit=query_limit, tag=account['name'])
+            from .discussions import Discussions_by_comments
+            query = {'start_author': account['name'],
+                     'start_permlink': start_permlink, 'limit':
+                     query_limit}
             results = Discussions_by_comments(query,
                                               steem_instance=self.steem)
             if len(results) == 0 or (start_permlink and len(results) == 1):
@@ -3210,10 +3203,11 @@ class Account(BlockchainObject):
             query_limit = 100
             if limit is not None:
                 query_limit = min(limit - reply_count + 1, query_limit)
-            from .discussions import Query, Replies_by_last_update
-            query = Query(start_parent_author=start_author,
-                          start_permlink=start_permlink,
-                          limit=query_limit)
+            from .discussions import Replies_by_last_update
+
+            query = {'start_author': start_author,
+                     'start_permlink': start_permlink, 'limit':
+                     query_limit}
             results = Replies_by_last_update(query,
                                              steem_instance=self.steem)
             if len(results) == 0 or (start_permlink and len(results) == 1):
