@@ -350,12 +350,12 @@ class AccountSnapshot(list):
         elif op['type'] == "transfer_to_vesting":
             steem = Amount(op['amount'], steem_instance=self.steem)
             vests = self.steem.sp_to_vests(steem.amount, timestamp=ts)
-            if op['from'] == self.account["name"]:
-                self.update(ts, vests, 0, 0, steem * (-1), 0)
-            else:
-                self.update(ts, vests, 0, 0, 0, 0)
-            # print(op)
-            # print(op, vests)
+            if op['from'] == self.account["name"] and op['to'] == self.account["name"]:
+                self.update(ts, vests, 0, 0, steem * (-1), 0)  # power up from and to given account
+            elif op['from'] != self.account["name"] and op['to'] == self.account["name"]:
+                self.update(ts, vests, 0, 0, 0, 0)  # power up from another account
+            else:  # op['from'] == self.account["name"] and op['to'] != self.account["name"]
+                self.update(ts, 0, 0, 0, steem * (-1), 0)  # power up to another account
             return
 
         elif op['type'] == "fill_vesting_withdraw":
