@@ -249,7 +249,7 @@ class AccountSnapshot(list):
 
             :param array only_ops: Limit generator by these
                 operations (*optional*)
-            :param array exclude_ops: Exclude thse operations from
+            :param array exclude_ops: Exclude these operations from
                 generator (*optional*)
 
         """
