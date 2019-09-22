@@ -125,6 +125,12 @@ class SteemNodeRPC(GrapheneRPC):
                     raise exceptions.ApiNotSupported(msg)
             else:
                 raise exceptions.NoApiWithName(msg)
+        elif re.search("follow_api_plugin not enabled", msg):
+            if self.nodes.working_nodes_count > 1 and self.nodes.num_retries > -1:
+                self._switch_to_next_node(str(e))
+                doRetry = True
+            else:
+                raise exceptions.FollowApiNotEnabled(msg)
         elif re.search("irrelevant signature included", msg):
             raise exceptions.UnnecessarySignatureDetected(msg)
         elif re.search("WinError", msg):

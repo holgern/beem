@@ -76,6 +76,10 @@ class NoApiWithName(RPCError):
     pass
 
 
+class FollowApiNotEnabled(RPCError):
+    pass
+
+
 class ApiNotSupported(RPCError):
     pass
 
