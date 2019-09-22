@@ -451,7 +451,7 @@ class Testcases(unittest.TestCase):
             h_all_raw.append(h)
         last_block = h_all_raw[0]["block"]
         i = 1
-        for op in h_all_raw[1:]:
+        for op in h_all_raw[1:5]:
             new_block = op["block"]
             block_num = last_block + int((new_block - last_block) / 2)
             op_num = account.estimate_virtual_op_num(block_num, stop_diff=0.1, max_count=100)
