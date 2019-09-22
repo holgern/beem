@@ -283,12 +283,18 @@ class Comment(BlockchainObject):
     def is_main_post(self):
         """ Returns True if main post, and False if this is a comment (reply).
         """
-        return self['depth'] == 0
+        if 'depth' in self:
+            return self['depth'] == 0
+        else:
+            return self["parent_author"] == ''
 
     def is_comment(self):
         """ Returns True if post is a comment
         """
-        return self['depth'] > 0
+        if 'depth' in self:
+            return self['depth'] > 0
+        else:
+            return self["parent_author"] != ''
 
     @property
     def reward(self):

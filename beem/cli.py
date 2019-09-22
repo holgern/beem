@@ -1657,10 +1657,10 @@ def reply(authorperm, body, account, title):
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
         return
-    c = Comment(authorperm, steem_instance=stm)
+    
     if title is None:
         title = ""
-    tx = c.reply(body, title=title, author=account)
+    tx = stm.post(title, body, json_metadata=None, author=account, reply_identifier=authorperm)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
