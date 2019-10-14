@@ -5,7 +5,7 @@ future==0.18.0
 ecdsa==0.13.3
 requests==2.22.0
 websocket-client==0.56.0
-pytz==2019.2
+pytz==2019.3
 pycryptodomex==3.9.0
 scrypt==0.8.13
 Events==0.3
