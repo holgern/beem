@@ -9,7 +9,7 @@ pytz==2019.3
 pycryptodomex==3.9.0
 scrypt==0.8.13
 Events==0.3
-cryptography==2.7
+cryptography==2.8
 pyyaml>=4.2b1
 mock==3.0.5
 appdirs==1.4.3
