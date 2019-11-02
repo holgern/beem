@@ -2,7 +2,7 @@ pip
 setuptools
 wheel
 future==0.17.1
-ecdsa==0.13.2
+ecdsa==0.13.3
 requests==2.22.0
 websocket-client==0.56.0
 pytz==2019.2
