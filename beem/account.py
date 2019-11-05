@@ -29,7 +29,7 @@ log = logging.getLogger(__name__)
 class Account(BlockchainObject):
     """ This class allows to easily access Account data
 
-        :param str account_name: Name of the account
+        :param str account: Name of the account
         :param Steem steem_instance: Steem
                instance
         :param bool lazy: Use lazy loading
