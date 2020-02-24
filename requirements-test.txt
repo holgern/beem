@@ -3,7 +3,7 @@ setuptools
 wheel
 future==0.18.2
 ecdsa==0.15
-requests==2.22.0
+requests==2.23.0
 websocket-client==0.56.0
 pytz==2019.2
 pycryptodomex==3.9.0
