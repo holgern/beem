@@ -1,5 +1,12 @@
 Changelog
 =========
+0.22.0
+------
+* Add HIVE chain
+* improve hive chain detection
+* add hive option to nodes in Nodelist
+* new is_hive property of steem object
+
 0.21.1
 ------
 * Fix non ascii text handling on some nodes
