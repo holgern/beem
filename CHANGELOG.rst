@@ -1,5 +1,13 @@
 Changelog
 =========
+0.22.2
+------
+* Add two new hive api nodes
+
+0.22.1
+------
+* Fix get_nodes defaults
+
 0.22.0
 ------
 * Add HIVE chain
