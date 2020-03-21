@@ -303,14 +303,18 @@ class GrapheneRPC(object):
             props = self.get_config(api="database")
         chain_id = None
         network_version = None
+        is_hive = False
         for key in props:
             if key[-8:] == "CHAIN_ID":
                 chain_id = props[key]
+                is_hive = key[:4] == "HIVE"
             elif key[-18:] == "BLOCKCHAIN_VERSION":
                 network_version = props[key]
 
         if chain_id is None:
             raise("Connecting to unknown network!")
+        if is_hive:
+            return self.known_chains["HIVE"]
         highest_version_chain = None
         for k, v in list(self.known_chains.items()):
             if v["chain_id"] == chain_id and self.version_string_to_int(v["min_version"]) <= self.version_string_to_int(network_version):

@@ -293,6 +293,7 @@ def nextnode(results):
         t.add_row(["Node-Url", node[0]])
     if not offline:
         t.add_row(["Version", stm.get_blockchain_version()])
+        t.add_row(["HIVE", stm.is_hive])
     else:
         t.add_row(["Version", "steempy is in offline mode..."])
     print(t)
@@ -397,6 +398,7 @@ def currentnode(version, url):
         t.add_row(["Node-Url", node[0]])
     if not offline:
         t.add_row(["Version", stm.get_blockchain_version()])
+        t.add_row(["HIVE", stm.is_hive])
     else:
         t.add_row(["Version", "steempy is in offline mode..."])
     print(t)
@@ -406,6 +408,9 @@ def currentnode(version, url):
 @click.option(
     '--show', '-s', is_flag=True, default=False,
     help="Prints the updated nodes")
+@click.option(
+    '--hive', '-t', is_flag=True, default=False,
+    help="Use only HIVE nodes, when set to true.")
 @click.option(
     '--test', '-t', is_flag=True, default=False,
     help="Do change the node list, only print the newest nodes setup.")
@@ -421,7 +426,7 @@ def currentnode(version, url):
 @click.option(
     '--only-non-appbase', '-n', is_flag=True, default=False,
     help="Use only non-appbase nodes")
-def updatenodes(show, test, only_https, only_wss, only_appbase, only_non_appbase):
+def updatenodes(show, hive, test, only_https, only_wss, only_appbase, only_non_appbase):
     """ Update the nodelist from @fullnodeupdate
     """
     stm = shared_steem_instance()
@@ -431,7 +436,7 @@ def updatenodes(show, test, only_https, only_wss, only_appbase, only_non_appbase
     t.align = "l"
     nodelist = NodeList()
     nodelist.update_nodes(steem_instance=stm)
-    nodes = nodelist.get_nodes(exclude_limited=False, normal=not only_appbase, appbase=not only_non_appbase, wss=not only_https, https=not only_wss)
+    nodes = nodelist.get_nodes(hive=hive, exclude_limited=False, normal=not only_appbase, appbase=not only_non_appbase, wss=not only_https, https=not only_wss)
     if show or test:
         sorted_nodes = sorted(nodelist, key=lambda node: node["score"], reverse=True)
         for node in sorted_nodes:

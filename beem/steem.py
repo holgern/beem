@@ -828,6 +828,10 @@ class Steem(object):
     def prefix(self):
         return self.chain_params["prefix"]
 
+    @property
+    def is_hive(self):
+        return 'HIVE_CHAIN_ID' in self.get_config()
+
     def set_default_account(self, account):
         """ Set the default account to be used
         """
