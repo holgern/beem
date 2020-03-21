@@ -2397,6 +2397,8 @@ def witness(witness):
     config = stm.get_config()
     if "VIRTUAL_SCHEDULE_LAP_LENGTH2" in config:
         lap_length = int(config["VIRTUAL_SCHEDULE_LAP_LENGTH2"])
+    elif "HIVE_VIRTUAL_SCHEDULE_LAP_LENGTH2" in config:
+        lap_length = int(config["HIVE_VIRTUAL_SCHEDULE_LAP_LENGTH2"])
     else:
         lap_length = int(config["STEEM_VIRTUAL_SCHEDULE_LAP_LENGTH2"])
     rank = 0
