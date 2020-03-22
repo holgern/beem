@@ -18,7 +18,6 @@ from beem.nodelist import NodeList
 from beembase.signedtransactions import Signed_Transaction
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-nodes_appbase = ["https://api.steemitstage.com", "https://api.steem.house", "https://api.steemit.com"]
 
 
 class Testcases(unittest.TestCase):

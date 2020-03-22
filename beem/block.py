@@ -131,7 +131,11 @@ class Block(BlockchainObject):
         if self.only_ops or self.only_virtual_ops:
             if self.steem.rpc.get_use_appbase():
                 try:
-                    ops = self.steem.rpc.get_ops_in_block({"block_num": self.identifier, 'only_virtual': self.only_virtual_ops}, api="account_history")["ops"]
+                    ops_ops = self.steem.rpc.get_ops_in_block({"block_num": self.identifier, 'only_virtual': self.only_virtual_ops}, api="account_history")
+                    if ops_ops is None:
+                        ops = None
+                    else:
+                        ops = ops["ops"]
                 except ApiNotSupported:
                     ops = self.steem.rpc.get_ops_in_block(self.identifier, self.only_virtual_ops, api="condenser")
             else:
