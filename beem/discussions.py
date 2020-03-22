@@ -649,7 +649,8 @@ class Replies_by_last_update(list):
                 posts = posts['discussions']
         else:
             posts = self.steem.rpc.get_replies_by_last_update(discussion_query["start_author"], discussion_query["start_permlink"], discussion_query["limit"])
-
+        if posts is None:
+            posts = []
         super(Replies_by_last_update, self).__init__(
             [
                 Comment(x, lazy=lazy, steem_instance=self.steem)

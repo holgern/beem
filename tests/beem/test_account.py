@@ -27,8 +27,9 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(exclude_limited=False), num_retries=10))
-        node_list = nodelist.get_nodes(hive=False)
+        nodes = nodelist.get_nodes(hive=True, exclude_limited=False)
+        nodelist.update_nodes(steem_instance=Steem(node=nodes, num_retries=10))
+        node_list = nodelist.get_nodes(hive=True)
       
         cls.bts = Steem(
             node=node_list,
@@ -54,7 +55,7 @@ class Testcases(unittest.TestCase):
         # symbol = asset["symbol"]
         self.assertEqual(account.name, "beembot")
         self.assertEqual(account["name"], account.name)
-        self.assertIsInstance(account.get_balance("available", "SBD"), Amount)
+        self.assertIsInstance(account.get_balance("available", "HBD"), Amount)
         account.print_info()
         # self.assertIsInstance(account.balance({"symbol": symbol}), Amount)
         self.assertIsInstance(account.available_balances, list)
@@ -296,7 +297,7 @@ class Testcases(unittest.TestCase):
     def test_MissingKeyError(self):
         w = self.account
         w.steem.txbuffer.clear()
-        tx = w.convert("1 SBD")
+        tx = w.convert("1 HBD")
         with self.assertRaises(
             exceptions.MissingKeyError
         ):
@@ -357,7 +358,7 @@ class Testcases(unittest.TestCase):
     def test_transfer_from_savings(self):
         w = self.account
         w.steem.txbuffer.clear()
-        tx = w.transfer_from_savings(1, "STEEM", "")
+        tx = w.transfer_from_savings(1, "HIVE", "")
         self.assertEqual(
             (tx["operations"][0][0]),
             "transfer_from_savings"
@@ -370,7 +371,7 @@ class Testcases(unittest.TestCase):
     def test_transfer_to_savings(self):
         w = self.account
         w.steem.txbuffer.clear()
-        tx = w.transfer_to_savings(1, "STEEM", "")
+        tx = w.transfer_to_savings(1, "HIVE", "")
         self.assertEqual(
             (tx["operations"][0][0]),
             "transfer_to_savings"
@@ -383,7 +384,7 @@ class Testcases(unittest.TestCase):
     def test_convert(self):
         w = self.account
         w.steem.txbuffer.clear()
-        tx = w.convert("1 SBD")
+        tx = w.convert("1 HBD")
         self.assertEqual(
             (tx["operations"][0][0]),
             "convert"
@@ -396,7 +397,7 @@ class Testcases(unittest.TestCase):
     def test_transfer_to_vesting(self):
         w = self.account
         w.steem.txbuffer.clear()
-        tx = w.transfer_to_vesting("1 STEEM")
+        tx = w.transfer_to_vesting("1 HIVE")
         self.assertEqual(
             (tx["operations"][0][0]),
             "transfer_to_vesting"

@@ -95,7 +95,10 @@ class Comment(BlockchainObject):
         ]
         for p in sbd_amounts:
             if p in comment and isinstance(comment.get(p), (string_types, list, dict)):
-                comment[p] = Amount(comment.get(p, "0.000 %s" % (self.steem.sbd_symbol)), steem_instance=self.steem)
+                value = comment.get(p, "0.000 %s" % (self.steem.sbd_symbol))
+                if value.split(" ")[1] !=self.steem.sbd_symbol:
+                    value = value.split(" ")[0] + " " + self.steem.sbd_symbol
+                comment[p] = Amount(value, steem_instance=self.steem)
 
         # turn json_metadata into python dict
         meta_str = comment.get("json_metadata", "{}")
