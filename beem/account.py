@@ -48,7 +48,7 @@ class Account(BlockchainObject):
 
             >>> from beem.account import Account
             >>> from beem import Steem
-            >>> stm = Steem()
+            >>> stm = Steem("https://api.steemit.com")
             >>> account = Account("gtg", steem_instance=stm)
             >>> print(account)
             <Account gtg>
@@ -660,7 +660,7 @@ class Account(BlockchainObject):
 
                 >>> from beem.account import Account
                 >>> from beem import Steem
-                >>> stm = Steem()
+                >>> stm = Steem("https://api.steemit.com")
                 >>> account = Account("steemit", steem_instance=stm)
                 >>> account.get_feed(0, 1, raw_data=True)
                 []
@@ -722,7 +722,7 @@ class Account(BlockchainObject):
 
                 >>> from beem.account import Account
                 >>> from beem import Steem
-                >>> stm = Steem()
+                >>> stm = Steem("https://api.steemit.com")
                 >>> account = Account("steemit", steem_instance=stm)
                 >>> account.get_feed_entries(0, 1)
                 []
@@ -769,7 +769,7 @@ class Account(BlockchainObject):
 
                 >>> from beem.account import Account
                 >>> from beem import Steem
-                >>> stm = Steem()
+                >>> stm = Steem("https://api.steemit.com")
                 >>> account = Account("steemit", steem_instance=stm)
                 >>> account.get_blog(0, 1)
                 [<Comment @steemit/firstpost>]
@@ -838,7 +838,7 @@ class Account(BlockchainObject):
 
                 >>> from beem.account import Account
                 >>> from beem import Steem
-                >>> stm = Steem()
+                >>> stm = Steem("https://api.steemit.com")
                 >>> account = Account("steemit", steem_instance=stm)
                 >>> account.get_blog_authors()
                 []
@@ -1037,7 +1037,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
+                >>> from beem import Steem
+                >>> stm = Steem("https://api.steemit.com")
+                >>> account = Account("beem.app", steem_instance=stm)
                 >>> account.get_balance("rewards", "SBD")
                 0.000 SBD
 
@@ -1195,7 +1197,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
+                >>> from beem import Steem
+                >>> stm = Steem("https://api.steemit.com")
+                >>> account = Account("beem.app", steem_instance=stm)
                 >>> account.get_owner_history()
                 []
 
@@ -1222,7 +1226,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
+                >>> from beem import Steem
+                >>> stm = Steem("https://api.steemit.com")
+                >>> account = Account("beem.app", steem_instance=stm)
                 >>> account.get_conversion_requests()
                 []
 
@@ -1250,7 +1256,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
+                >>> from beem import Steem
+                >>> stm = Steem("https://api.steemit.com")
+                >>> account = Account("beem.app", steem_instance=stm)
                 >>> account.get_vesting_delegations()
                 []
 
@@ -1280,7 +1288,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
+                >>> from beem import Steem
+                >>> stm = Steem("https://api.steemit.com")
+                >>> account = Account("beem.app", steem_instance=stm)
                 >>> account.get_withdraw_routes()
                 []
 
@@ -1308,7 +1318,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
+                >>> from beem import Steem
+                >>> stm = Steem("https://api.steemit.com")
+                >>> account = Account("beem.app", steem_instance=stm)
                 >>> account.get_savings_withdrawals()
                 []
 
@@ -1337,7 +1349,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
+                >>> from beem import Steem
+                >>> stm = Steem("https://api.steemit.com")
+                >>> account = Account("beem.app", steem_instance=stm)
                 >>> account.get_recovery_request()
                 []
 
@@ -1365,7 +1379,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
+                >>> from beem import Steem
+                >>> stm = Steem("https://api.steemit.com")
+                >>> account = Account("beem.app", steem_instance=stm)
                 >>> account.get_escrow(1234)
                 []
 
@@ -1393,7 +1409,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("steemit")
+                >>> from beem import Steem
+                >>> stm = Steem("https://api.steemit.com")
+                >>> account = Account("steemit", steem_instance=stm)
                 >>> print(account.verify_account_authority(["STM7Q2rLBqzPzFeteQZewv9Lu3NLE69fZoLeL6YK59t7UmssCBNTU"])["valid"])
                 False
 
@@ -1426,7 +1444,7 @@ class Account(BlockchainObject):
 
                 >>> from beem.account import Account
                 >>> from beem import Steem
-                >>> stm = Steem()
+                >>> stm = Steem("https://api.steemit.com", condenser=True)
                 >>> account = Account("beem.app", steem_instance=stm)
                 >>> account.get_tags_used_by_author()
                 []
@@ -1456,7 +1474,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
+                >>> from beem import Steem
+                >>> stm = Steem("https://api.steemit.com")
+                >>> account = Account("beem.app", steem_instance=stm)
                 >>> account.get_expiring_vesting_delegations()
                 []
 
@@ -1484,7 +1504,7 @@ class Account(BlockchainObject):
 
                 >>> from beem.account import Account
                 >>> from beem import Steem
-                >>> stm = Steem()
+                >>> stm = Steem("https://api.steemit.com")
                 >>> account = Account("beem.app", steem_instance=stm)
                 >>> account.get_account_votes()
                 []
@@ -2984,7 +3004,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 from beem.account import Account
-                acc = Account("ned")
+                from beem import Steem
+                stm = Steem("https://api.steemit.com")
+                acc = Account("ned", steem_instance=stm)
                 for reply in acc.feed_history(limit=10):
                     print(reply)
 
@@ -3047,7 +3069,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 from beem.account import Account
-                acc = Account("steemitblog")
+                from beem import Steem
+                stm = Steem("https://api.steemit.com")
+                acc = Account("steemitblog", steem_instance=stm)
                 for post in acc.blog_history(limit=10):
                     print(post)
 
@@ -3111,7 +3135,9 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 from beem.account import Account
-                acc = Account("ned")
+                from beem import Steem
+                stm = Steem("https://api.steemit.com")
+                acc = Account("ned", steem_instance=stm)
                 for comment in acc.comment_history(limit=10):
                     print(comment)
 

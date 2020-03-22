@@ -914,7 +914,9 @@ class Blockchain(object):
         .. code-block:: python
 
             >>> from beem.blockchain import Blockchain
-            >>> blockchain = Blockchain()
+            >>> from beem import Steem
+            >>> stm = Steem("https://api.steemit.com")
+            >>> blockchain = Blockchain(steem_instance=stm)
             >>> ret = blockchain.get_similar_account_names("test", limit=5)
             >>> len(ret) == 5
             True
@@ -940,7 +942,9 @@ class Blockchain(object):
         .. code-block:: python
 
             >>> from beem.blockchain import Blockchain
-            >>> blockchain = Blockchain()
+            >>> from beem import Steem
+            >>> stm = Steem("https://api.steemit.com")
+            >>> blockchain = Blockchain(steem_instance=stm)
             >>> ret = blockchain.find_rc_accounts(["test"])
             >>> len(ret) == 1
             True
@@ -978,7 +982,9 @@ class Blockchain(object):
         .. code-block:: python
 
             >>> from beem.blockchain import Blockchain
-            >>> blockchain = Blockchain()
+            >>> from beem import Steem
+            >>> stm = Steem("https://api.steemit.com")
+            >>> blockchain = Blockchain(steem_instance=stm)
             >>> ret = blockchain.list_change_recovery_account_requests(limit=1)
 
         """
@@ -1003,7 +1009,9 @@ class Blockchain(object):
         .. code-block:: python
 
             >>> from beem.blockchain import Blockchain
-            >>> blockchain = Blockchain()
+            >>> from beem import Steem
+            >>> stm = Steem("https://api.steemit.com")
+            >>> blockchain = Blockchain(steem_instance=stm)
             >>> ret = blockchain.find_change_recovery_account_requests('bott')
 
         """

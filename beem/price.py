@@ -67,9 +67,11 @@ class Price(dict):
         .. code-block:: python
 
             >>> from beem.price import Price
-            >>> Price("0.3314 SBD/STEEM") * 2
+            >>> from beem import Steem
+            >>> stm = Steem("https://api.steemit.com")
+            >>> Price("0.3314 SBD/STEEM", steem_instance=stm) * 2
             0.662804 SBD/STEEM
-            >>> Price(0.3314, "SBD", "STEEM")
+            >>> Price(0.3314, "SBD", "STEEM", steem_instance=stm)
             0.331402 SBD/STEEM
 
     """
@@ -183,7 +185,9 @@ class Price(dict):
             .. code-block:: python
 
                 >>> from beem.price import Price
-                >>> Price("0.3314 SBD/STEEM").as_base("STEEM")
+                >>> from beem import Steem
+                >>> stm = Steem("https://api.steemit.com")
+                >>> Price("0.3314 SBD/STEEM", steem_instance=stm).as_base("STEEM")
                 3.017483 STEEM/SBD
 
         """
@@ -202,7 +206,9 @@ class Price(dict):
             .. code-block:: python
 
                 >>> from beem.price import Price
-                >>> Price("0.3314 SBD/STEEM").as_quote("SBD")
+                >>> from beem import Steem
+                >>> stm = Steem("https://api.steemit.com")
+                >>> Price("0.3314 SBD/STEEM", steem_instance=stm).as_quote("SBD")
                 3.017483 STEEM/SBD
 
         """
@@ -219,7 +225,9 @@ class Price(dict):
             .. code-block:: python
 
                 >>> from beem.price import Price
-                >>> Price("0.3314 SBD/STEEM").invert()
+                >>> from beem import Steem
+                >>> stm = Steem("https://api.steemit.com")
+                >>> Price("0.3314 SBD/STEEM", steem_instance=stm).invert()
                 3.017483 STEEM/SBD
 
         """
