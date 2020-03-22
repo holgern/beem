@@ -1,6 +1,6 @@
 Changelog
 =========
-0.22.2
+0.22.3
 ------
 * Add two new hive api nodes
 

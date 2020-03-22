@@ -317,6 +317,22 @@ class NodeList(list):
                 "owner": "steemit",
                 "hive": False,
                 "score": 5
+            },
+            {
+                "url": "https://api.hivekings.com",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "drakos",
+                "hive": True,
+                "score": 50
+            },
+            {
+                "url": "https://api.hive.blog",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "hive",
+                "hive": True,
+                "score": 20
             }]
         super(NodeList, self).__init__(nodes)
 
@@ -408,7 +424,7 @@ class NodeList(list):
             new_nodes.append(new_node)
         super(NodeList, self).__init__(new_nodes)
 
-    def get_nodes(self, hive=True, exclude_limited=False, dev=False, testnet=False, testnetdev=False, wss=True, https=True, not_working=False, normal=True, appbase=True):
+    def get_nodes(self, hive=False, exclude_limited=False, dev=False, testnet=False, testnetdev=False, wss=True, https=True, not_working=False, normal=True, appbase=True):
         """ Returns nodes as list
 
             :param bool hive: When True, only HIVE nodes will be returned
