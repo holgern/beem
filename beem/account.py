@@ -856,7 +856,7 @@ class Account(BlockchainObject):
                 >>> from beem.nodelist import NodeList
                 >>> nodelist = NodeList()
                 >>> nodelist.update_nodes()
-                >>> stm = Steem(node=nodelist.get_nodes(hive=True))
+                >>> stm = Steem(node=nodelist.get_nodes(hive=False))
                 >>> account = Account("steemit", steem_instance=stm)
                 >>> account.get_blog_authors()
                 []

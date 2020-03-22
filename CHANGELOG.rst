@@ -1,5 +1,9 @@
 Changelog
 =========
+0.22.4
+------
+* fix AttributeError: 'PointJacobi' object has no attribute '_Point__x'
+
 0.22.3
 ------
 * Add two new hive api nodes
