@@ -48,7 +48,11 @@ class Amount(object):
             if self.precision is None:
                 raise Exception("Asset unknown")
             self.amount = round(float(self.amount) * 10 ** self.precision)
-
+            # Workaround to allow transfers in HIVE
+            if self.symbol == "HBD":
+                self.symbol = "SBD"
+            elif self.symbol == "HIVE":
+                self.symbol = "STEEM"
             self.str_repr = '{:.{}f} {}'.format((float(self.amount) / 10 ** self.precision), self.precision, self.symbol)
         elif isinstance(d, list):
             self.amount = d[0]
