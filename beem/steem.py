@@ -830,6 +830,9 @@ class Steem(object):
 
     @property
     def is_hive(self):
+        config = self.get_config()
+        if config is None:
+            return False
         return 'HIVE_CHAIN_ID' in self.get_config()
 
     def set_default_account(self, account):
