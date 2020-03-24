@@ -409,7 +409,7 @@ def currentnode(version, url):
     '--show', '-s', is_flag=True, default=False,
     help="Prints the updated nodes")
 @click.option(
-    '--hive', '-t', is_flag=True, default=False,
+    '--hive', '-h', is_flag=True, default=False,
     help="Use only HIVE nodes, when set to true.")
 @click.option(
     '--test', '-t', is_flag=True, default=False,
@@ -852,7 +852,7 @@ def transfer(to, amount, asset, memo, account):
 @click.option('--account', '-a', help='Powerup from this account')
 @click.option('--to', help='Powerup this account', default=None)
 def powerup(amount, account, to):
-    """Power up (vest STEEM as STEEM POWER)"""
+    """Power up (vest STEEM/HIVE as STEEM/HIVE POWER)"""
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
@@ -935,7 +935,7 @@ def delegate(amount, to_account, account):
 @click.option('--percentage', default=100, help='The percent of the withdraw to go to the "to" account')
 @click.option('--account', '-a', help='Powerup from this account')
 @click.option('--auto_vest', help='Set to true if the from account should receive the VESTS as'
-              'VESTS, or false if it should receive them as STEEM.', is_flag=True)
+              'VESTS, or false if it should receive them as STEEM/HIVE.', is_flag=True)
 def powerdownroute(to, percentage, account, auto_vest):
     """Setup a powerdown route"""
     stm = shared_steem_instance()
@@ -957,7 +957,7 @@ def powerdownroute(to, percentage, account, auto_vest):
 @click.argument('amount', nargs=1)
 @click.option('--account', '-a', help='Powerup from this account')
 def convert(amount, account):
-    """Convert STEEMDollars to Steem (takes a week to settle)"""
+    """Convert SBD/HBD to Steem/Hive (takes a week to settle)"""
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
@@ -1779,7 +1779,7 @@ def ticker(sbd_to_steem):
     ticker = market.ticker()
     for key in ticker:
         if key in ["highest_bid", "latest", "lowest_ask"] and sbd_to_steem:
-            t.add_row([key, str(ticker[key].as_base("SBD"))])
+            t.add_row([key, str(ticker[key].as_base(stm.sbd_symbol))])
         elif key in "percent_change" and sbd_to_steem:
             t.add_row([key, "%.2f %%" % -ticker[key]])
         elif key in "percent_change":
@@ -1813,7 +1813,7 @@ def pricehistory(width, height, ascii):
     else:
         charset = u'utf8'
     chart = AsciiChart(height=height, width=width, offset=4, placeholder='{:6.2f} $', charset=charset)
-    print("\n            Price history for STEEM (median price %4.2f $)\n" % (float(current_base) / float(current_quote)))
+    print("\n            Price history for %s (median price %4.2f $)\n" % (stm.steem_symbol, float(current_base) / float(current_quote)))
 
     chart.adapt_on_series(price)
     chart.new_chart()
@@ -1861,9 +1861,11 @@ def tradehistory(days, hours, sbd_to_steem, limit, width, height, ascii):
         charset = u'utf8'
     chart = AsciiChart(height=height, width=width, offset=3, placeholder='{:6.2f} ', charset=charset)
     if sbd_to_steem:
-        print("\n     Trade history %s - %s \n\nSBD/STEEM" % (formatTimeString(start), formatTimeString(stop)))
+        print("\n     Trade history %s - %s \n\n%s/%s" % (formatTimeString(start), formatTimeString(stop),
+                                                          stm.sbd_symbol, stm.steem_symbol))
     else:
-        print("\n     Trade history %s - %s \n\nSTEEM/SBD" % (formatTimeString(start), formatTimeString(stop)))
+        print("\n     Trade history %s - %s \n\n%s/%s" % (formatTimeString(start), formatTimeString(stop),
+                                                          stm.steem_symbol, stm.sbd_symbol))
     chart.adapt_on_series(price)
     chart.new_chart()
     chart.add_axis()
@@ -1886,7 +1888,7 @@ def orderbook(chart, limit, show_date, width, height, ascii):
     market = Market(steem_instance=stm)
     orderbook = market.orderbook(limit=limit, raw_data=False)
     if not show_date:
-        header = ["Asks Sum SBD", "Sell Orders", "Bids Sum SBD", "Buy Orders"]
+        header = ["Asks Sum " + stm.sbd_symbol, "Sell Orders", "Bids Sum " + stm.sbd_symbol, "Buy Orders"]
     else:
         header = ["Asks date", "Sell Orders", "Bids date", "Buy Orders"]
     t = PrettyTable(header, hrules=0)
@@ -1902,13 +1904,13 @@ def orderbook(chart, limit, show_date, width, height, ascii):
     n = 0
     for order in orderbook["asks"]:
         asks.append(order)
-        sum_asks += float(order.as_base("SBD")["base"])
+        sum_asks += float(order.as_base(stm.sbd_symbol)["base"])
         sumsum_asks.append(sum_asks)
     if n < len(asks):
         n = len(asks)
     for order in orderbook["bids"]:
         bids.append(order)
-        sum_bids += float(order.as_base("SBD")["base"])
+        sum_bids += float(order.as_base(stm.sbd_symbol)["base"])
         sumsum_bids.append(sum_bids)
     if n < len(bids):
         n = len(bids)
@@ -1974,9 +1976,9 @@ def orderbook(chart, limit, show_date, width, height, ascii):
 @click.option('--account', '-a', help='Buy with this account (defaults to "default_account")')
 @click.option('--orderid', help='Set an orderid')
 def buy(amount, asset, price, account, orderid):
-    """Buy STEEM or SBD from the internal market
+    """Buy STEEM/HIVE or SBD/HBD from the internal market
 
-        Limit buy price denoted in (SBD per STEEM)
+        Limit buy price denoted in (SBD per STEEM or HBD per HIVE)
     """
     stm = shared_steem_instance()
     if stm.rpc is not None:
@@ -2019,9 +2021,9 @@ def buy(amount, asset, price, account, orderid):
 @click.option('--account', '-a', help='Sell with this account (defaults to "default_account")')
 @click.option('--orderid', help='Set an orderid')
 def sell(amount, asset, price, account, orderid):
-    """Sell STEEM or SBD from the internal market
+    """Sell STEEM/HIVE or SBD/HBD from the internal market
 
-        Limit sell price denoted in (SBD per STEEM)
+        Limit sell price denoted in (SBD per STEEM) or (HBD per HIVE)
     """
     stm = shared_steem_instance()
     if stm.rpc is not None:
@@ -2352,24 +2354,35 @@ def witnessfeed(witness, wif, base, quote, support_peg):
     old_quote = witness["sbd_exchange_rate"]["quote"]
     last_published_price = Price(witness["sbd_exchange_rate"], steem_instance=stm)
     steem_usd = None
+    hive_usd = None
     print("Old price %.3f (base: %s, quote %s)" % (float(last_published_price), old_base, old_quote))
     if quote is None and not support_peg:
         quote = Amount("1.000 %s" % stm.steem_symbol, steem_instance=stm)
-    elif quote is None:
+    elif quote is None and not stm.is_hive:
         latest_price = market.ticker()['latest']
         if steem_usd is None:
             steem_usd = market.steem_usd_implied()
         sbd_usd = float(latest_price.as_base(stm.sbd_symbol)) * steem_usd
         quote = Amount(1. / sbd_usd, stm.steem_symbol, steem_instance=stm)
+    elif quote is None and stm.is_hive:
+        latest_price = market.ticker()['latest']
+        if hive_usd is None:
+            hive_usd = market.hive_usd_implied()
+        hbd_usd = float(latest_price.as_base(stm.sbd_symbol)) * hive_usd
+        quote = Amount(1. / hbd_usd, stm.steem_symbol, steem_instance=stm)        
     else:
         if str(quote[-5:]).upper() == stm.steem_symbol:
             quote = Amount(quote, steem_instance=stm)
         else:
             quote = Amount(quote, stm.steem_symbol, steem_instance=stm)
-    if base is None:
+    if base is None and not stm.is_hive:
         if steem_usd is None:
             steem_usd = market.steem_usd_implied()
         base = Amount(steem_usd, stm.sbd_symbol, steem_instance=stm)
+    elif base is None and stm.is_hive:
+        if hive_usd is None:
+            hive_usd = market.hive_usd_implied()
+        base = Amount(hive_usd, stm.sbd_symbol, steem_instance=stm)        
     else:
         if str(quote[-3:]).upper() == stm.sbd_symbol:
             base = Amount(base, steem_instance=stm)

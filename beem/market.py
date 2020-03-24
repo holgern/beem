@@ -83,8 +83,8 @@ class Market(dict):
             base = Asset(base, steem_instance=self.steem)
             super(Market, self).__init__({"base": base, "quote": quote})
         elif base is None and quote is None:
-            quote = Asset("SBD", steem_instance=self.steem)
-            base = Asset("STEEM", steem_instance=self.steem)
+            quote = Asset(self.steem.sbd_symbol, steem_instance=self.steem)
+            base = Asset(self.steem.steem_symbol, steem_instance=self.steem)
             super(Market, self).__init__({"base": base, "quote": quote})
         else:
             raise ValueError("Unknown Market config")
@@ -725,11 +725,12 @@ class Market(dict):
         prices = {}
         responses = []
         urls = [
-            "https://api.bitfinex.com/v1/pubticker/BTCUSD",
-            "https://api.gdax.com/products/BTC-USD/ticker",
-            "https://api.kraken.com/0/public/Ticker?pair=XBTUSD",
-            "https://www.okcoin.com/api/v1/ticker.do?symbol=btc_usd",
-            "https://www.bitstamp.net/api/v2/ticker/btcusd/",
+            #"https://api.bitfinex.com/v1/pubticker/BTCUSD",
+            #"https://api.gdax.com/products/BTC-USD/ticker",
+            #"https://api.kraken.com/0/public/Ticker?pair=XBTUSD",
+            #"https://www.okcoin.com/api/v1/ticker.do?symbol=btc_usd",
+            #"https://www.bitstamp.net/api/v2/ticker/btcusd/",
+            "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_vol=true",
         ]
         try:
             responses = list(requests.get(u, timeout=30) for u in urls)
@@ -764,6 +765,11 @@ class Market(dict):
                     prices['bitstamp'] = {
                         'price': float(data['last']),
                         'volume': float(data['volume'])}
+                elif "coingecko" in r.url:
+                    data = r.json()["bitcoin"]
+                    prices['coingecko'] = {
+                        'price': float(data['usd']),
+                        'volume': float(data['usd_24h_vol'])}                       
             except KeyError as e:
                 log.info(str(e))
 
@@ -787,10 +793,11 @@ class Market(dict):
         responses = []
         urls = [
             # "https://poloniex.com/public?command=returnTicker",
-            "https://bittrex.com/api/v1.1/public/getmarketsummary?market=BTC-STEEM",
-            "https://api.binance.com/api/v1/ticker/24hr",
-            "https://api.huobi.pro/market/history/kline?period=1day&size=1&symbol=steembtc",
-            "https://crix-api.upbit.com/v1/crix/trades/ticks?code=CRIX.UPBIT.BTC-STEEM&count=1",
+            # "https://bittrex.com/api/v1.1/public/getmarketsummary?market=BTC-STEEM",
+            # "https://api.binance.com/api/v1/ticker/24hr",
+            # "https://api.huobi.pro/market/history/kline?period=1day&size=1&symbol=steembtc",
+            # "https://crix-api.upbit.com/v1/crix/trades/ticks?code=CRIX.UPBIT.BTC-STEEM&count=1",
+            "https://api.coingecko.com/api/v3/simple/price?ids=steem&vs_currencies=btc&include_24hr_vol=true",
         ]
         headers = {'Content-type': 'application/x-www-form-urlencoded',
                    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36'}
@@ -826,6 +833,11 @@ class Market(dict):
                     prices['upbit'] = {
                         'price': float(data['tradePrice']),
                         'volume': float(data['tradeVolume'])}
+                elif "coingecko" in r.url:
+                    data = r.json()["steem"]
+                    prices['coingecko'] = {
+                        'price': float(data['btc']),
+                        'volume': float(data['btc_24h_vol'])}                     
             except KeyError as e:
                 log.info(str(e))
 
@@ -839,3 +851,75 @@ class Market(dict):
     def steem_usd_implied(self):
         """Returns the current STEEM/USD market price"""
         return self.steem_btc_ticker() * self.btc_usd_ticker()
+
+    @staticmethod
+    def hive_btc_ticker():
+        """ Returns the HIVE/BTC price from bittrex and upbit. The mean price is
+            weighted by the exchange volume.
+        """
+        prices = {}
+        responses = []
+        urls = [
+            # "https://bittrex.com/api/v1.1/public/getmarketsummary?market=BTC-HIVE",
+            # "https://api.binance.com/api/v1/ticker/24hr",
+            # "https://api.probit.com/api/exchange/v1/ticker?market_ids=HIVE-USDT",
+            "https://api.coingecko.com/api/v3/simple/price?ids=hive&vs_currencies=btc&include_24hr_vol=true",
+        ]
+        headers = {'Content-type': 'application/x-www-form-urlencoded',
+                   'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36'}
+        try:
+            responses = list(requests.get(u, headers=headers, timeout=30) for u in urls)
+        except Exception as e:
+            log.debug(str(e))
+
+        for r in [x for x in responses
+                  if hasattr(x, "status_code") and x.status_code == 200 and x.json()]:
+            try:
+                if "poloniex" in r.url:
+                    data = r.json()["BTC_HIVE"]
+                    prices['poloniex'] = {
+                        'price': float(data['last']),
+                        'volume': float(data['baseVolume'])}
+                elif "bittrex" in r.url:
+                    data = r.json()["result"][0]
+                    price = (data['Bid'] + data['Ask']) / 2
+                    prices['bittrex'] = {'price': price, 'volume': data['BaseVolume']}
+                elif "binance" in r.url:
+                    data = [x for x in r.json() if x['symbol'] == 'HIVEBTC'][0]
+                    prices['binance'] = {
+                        'price': float(data['lastPrice']),
+                        'volume': float(data['quoteVolume'])}
+                elif "huobi" in r.url:
+                    data = r.json()["data"][-1]
+                    prices['huobi'] = {
+                        'price': float(data['close']),
+                        'volume': float(data['vol'])}
+                elif "upbit" in r.url:
+                    data = r.json()[-1]
+                    prices['upbit'] = {
+                        'price': float(data['tradePrice']),
+                        'volume': float(data['tradeVolume'])}
+                elif "probit" in r.url:
+                    data = r.json()["data"]
+                    prices['huobi'] = {
+                        'price': float(data['last']),
+                        'volume': float(data['base_volume'])}
+                elif "coingecko" in r.url:
+                    data = r.json()["hive"]
+                    prices['coingecko'] = {
+                        'price': float(data['btc']),
+                        'volume': float(data['btc_24h_vol'])}                    
+            except KeyError as e:
+                log.info(str(e))
+
+        if len(prices) == 0:
+            raise RuntimeError("Obtaining HIVE/BTC prices has failed from all sources.")
+
+        return Market._weighted_average(
+            [x['price'] for x in prices.values()],
+            [x['volume'] for x in prices.values()])
+
+    def hive_usd_implied(self):
+        """Returns the current HIVE/USD market price"""
+        return self.hive_btc_ticker() * self.btc_usd_ticker()
+

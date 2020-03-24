@@ -1,5 +1,11 @@
 Changelog
 =========
+0.22.6
+------
+* Add hive_btc_ticker and hive_usd_ticker
+* use coingecko API
+* add HIVE/HBD to all marker operation in beempy
+
 0.22.5
 ------
 * Add workaround to allow transfers of HIVE/HBD in HIVE (operation need to use STEEM/SBD internally)
