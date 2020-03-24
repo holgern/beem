@@ -86,8 +86,8 @@ def prompt_callback(ctx, param, value):
 
 
 def asset_callback(ctx, param, value):
-    if value not in ["STEEM", "SBD"]:
-        print("Please STEEM or SBD as asset!")
+    if value not in ["STEEM", "SBD", "HIVE", "HBD"]:
+        print("Please STEEM/HIVE or SBD/HBD as asset!")
         ctx.abort()
     else:
         return value
@@ -829,7 +829,7 @@ def downvote(post, account, weight):
 @click.argument('memo', nargs=1, required=False)
 @click.option('--account', '-a', help='Transfer from this account')
 def transfer(to, amount, asset, memo, account):
-    """Transfer SBD/STEEM"""
+    """Transfer SBD/HD STEEM/HIVE"""
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()

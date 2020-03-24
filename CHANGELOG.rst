@@ -1,5 +1,9 @@
 Changelog
 =========
+0.22.5
+------
+* Add workaround to allow transfers of HIVE/HBD in HIVE (operation need to use STEEM/SBD internally)
+
 0.22.4
 ------
 * fix AttributeError: 'PointJacobi' object has no attribute '_Point__x'
