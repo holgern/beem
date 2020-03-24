@@ -1,5 +1,9 @@
 Changelog
 =========
+0.22.8
+------
+* Allow to use HIVE/HBD also in operations
+
 0.22.7
 ------
 * Fix HIVE/HBD symbols in operations
