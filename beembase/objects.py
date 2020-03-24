@@ -82,6 +82,11 @@ class Amount(object):
         else:
             self.amount = d.amount
             self.symbol = d.symbol
+            # Workaround to allow transfers in HIVE
+            if self.symbol == "HBD":
+                self.symbol = "SBD"
+            elif self.symbol == "HIVE":
+                self.symbol = "STEEM"              
             self.asset = d.asset["asset"]
             self.precision = d.asset["precision"]
             self.amount = round(float(self.amount) * 10 ** self.precision)
@@ -91,6 +96,11 @@ class Amount(object):
 
     def __bytes__(self):
         # padding
+        # Workaround to allow transfers in HIVE
+        if self.symbol == "HBD":
+            self.symbol = "SBD"
+        elif self.symbol == "HIVE":
+            self.symbol = "STEEM"        
         symbol = self.symbol + "\x00" * (7 - len(self.symbol))
         return (struct.pack("<q", int(self.amount)) + struct.pack("<b", self.precision) +
                 py23_bytes(symbol, "ascii"))

@@ -1,5 +1,9 @@
 Changelog
 =========
+0.22.7
+------
+* Fix HIVE/HBD symbols in operations
+
 0.22.6
 ------
 * Add hive_btc_ticker and hive_usd_ticker
