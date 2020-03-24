@@ -211,9 +211,16 @@ class Amount(dict):
 
     def __str__(self):
         amount = quantize(self["amount"], self["asset"]["precision"])
+        symbol = self["symbol"]
+        if self.steem.is_hive:
+            # Workaround to allow transfers in HIVE
+            if symbol == "HBD":
+                symbol = "SBD"
+            elif symbol == "HIVE":
+                symbol = "STEEM"
         return "{:.{prec}f} {}".format(
             amount,
-            self["symbol"],
+            symbol,
             prec=self["asset"]["precision"]
         )
 
