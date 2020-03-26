@@ -95,8 +95,8 @@ class Comment(BlockchainObject):
         ]
         for p in sbd_amounts:
             if p in comment and isinstance(comment.get(p), (string_types, list, dict)):
-                value = str(comment.get(p, "0.000 %s" % (self.steem.sbd_symbol)))
-                if value.split(" ")[1] !=self.steem.sbd_symbol:
+                value = comment.get(p, "0.000 %s" % (self.steem.sbd_symbol))
+                if isinstance(value, str) and value.split(" ")[1] !=self.steem.sbd_symbol:
                     value = value.split(" ")[0] + " " + self.steem.sbd_symbol
                 comment[p] = Amount(value, steem_instance=self.steem)
 
