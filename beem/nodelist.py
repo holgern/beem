@@ -67,6 +67,14 @@ class NodeList(list):
                 "score": -10
             },
             {
+                "url": "https://api.justyy.com",
+                "version": "0.20.2",
+                "type": "appbase",
+                "owner": "justyy",
+                "hive": False,
+                "score": 20
+            },
+            {
                 "url": "https://api.steem.house",
                 "version": "0.20.2",
                 "type": "hive",

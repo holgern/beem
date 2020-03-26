@@ -1,5 +1,10 @@
 Changelog
 =========
+0.22.9
+------
+* add steem node
+* fix 'dict' object has no attribute 'split
+
 0.22.8
 ------
 * Allow to use HIVE/HBD also in operations
