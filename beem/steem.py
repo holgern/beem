@@ -314,7 +314,7 @@ class Steem(object):
         except:
             reserve_ratio = {'id': 0, 'average_block_size': None,
                              'current_reserve_ratio': None,
-                             'max_virtual_bandwidth': None}            
+                             'max_virtual_bandwidth': None}
         return reserve_ratio
 
     def get_feed_history(self, use_stored_data=True):
@@ -482,9 +482,9 @@ class Steem(object):
         """Returns the RC costs based on the resource_count"""
         pools = self.get_resource_pool()
         params = self.get_resource_params()
-        config = self.get_config()
         dyn_param = self.get_dynamic_global_properties()
-        rc_regen = int(Amount(dyn_param["total_vesting_shares"], steem_instance=self)) / (STEEM_RC_REGEN_TIME / config["STEEM_BLOCK_INTERVAL"])
+        rc_regen = int(Amount(dyn_param["total_vesting_shares"], steem_instance=self)) / \
+            (STEEM_RC_REGEN_TIME / self.get_block_interval())
         total_cost = 0
         if rc_regen == 0:
             return total_cost
