@@ -20,6 +20,10 @@ def is_network_appbase_ready(props):
         return False
     elif "STEEM_BLOCKCHAIN_VERSION" in props:
         return True
+    elif "HIVE_BLOCKCHAIN_VERSION" in props:
+        return True
+    else:
+        return False
 
 
 def get_query(appbase, request_id, api_name, name, args):
