@@ -1,5 +1,9 @@
 Changelog
 =========
+0.22.10
+-------
+* HIVE nodes are now also detected as appbase ready (thanks to @crokkon)
+
 0.22.9
 ------
 * add steem node
