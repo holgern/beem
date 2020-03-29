@@ -410,7 +410,7 @@ class Testcases(unittest.TestCase):
         account_name = "fullnodeupdate"
         result = runner.invoke(cli, ['pending', account_name])
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['pending', '--post', '--comment', '--curation', account_name])
+        result = runner.invoke(cli, ['pending', '--post', '--comment', account_name])
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['pending', '--post', '--comment', '--curation', '--permlink', '--days', '1', account_name])
         self.assertEqual(result.exit_code, 0)

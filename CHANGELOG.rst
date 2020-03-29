@@ -8,6 +8,7 @@ Changelog
 * Fix several unit tests
 * Fix deprecated collections import
 * Fix more HIVE/HBD symbols in beempy for HIVE
+* Add information about HIVE in the documentation
 
 0.22.10
 -------

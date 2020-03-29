@@ -21,8 +21,8 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(exclude_limited=False), num_retries=10))
-        node_list = nodelist.get_nodes(exclude_limited=True)
+        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(hive=True), num_retries=10))
+        node_list = nodelist.get_nodes(hive=True)
 
         cls.bts = Steem(
             node=node_list,
@@ -39,8 +39,8 @@ class Testcases(unittest.TestCase):
             keys={"active": wif},
             num_retries=10
         )
-        acc = Account("holger80", steem_instance=cls.bts)
-        comment = acc.get_feed(limit=20)[-1]
+        acc = Account("fullnodeupdate", steem_instance=cls.bts)
+        comment = Comment(acc.get_blog_entries(limit=5)[-1], steem_instance=cls.bts)
         cls.authorperm = comment.authorperm
         [author, permlink] = resolve_authorperm(cls.authorperm)
         cls.author = author

@@ -1,9 +1,50 @@
 Quickstart
 ==========
 
+Hive/Steem blockchain
+---------------------
+
+Nodes for using beem with the Hive blockchain can be set by the command line tool with:
+
+.. code-block:: bash
+
+   beempy updatenodes --hive
+
+Nodes for the Steem blockchain are set with
+
+.. code-block:: bash
+
+   beempy updatenodes
+
+
+Hive nodes can be set in a python script with
+
+.. code-block:: python
+
+   from beem import Steem
+   from beem.nodelist import NodeList
+   nodelist = NodeList()
+   nodelist.update_nodes()
+   nodes = nodelist.get_nodes(hive=True)
+   hive = Steem(node=nodes)
+   print(hive.is_hive)
+
+Steem nodes can be set in a python script with
+
+.. code-block:: python
+
+   from beem import Steem
+   from beem.nodelist import NodeList
+   nodelist = NodeList()
+   nodelist.update_nodes()
+   nodes = nodelist.get_nodes(hive=False)
+   hive = Steem(node=nodes)
+   print(hive.is_hive)
+
+
 Steem
 -----
-The steem object is the connection to the Steem blockchain.
+The steem object is the connection to the Steem/Hive blockchain.
 By creating this object different options can be set.
 
 .. note:: All init methods of beem classes can be given

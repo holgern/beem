@@ -35,11 +35,12 @@ class Testcases(unittest.TestCase):
         set_shared_steem_instance(cls.bts)
         cls.bts.set_default_account("test")
 
-        acc = Account("holger80", steem_instance=cls.bts)
+        acc = Account("fullnodeupdate", steem_instance=cls.bts)
         n_votes = 0
         index = 0
+        entries = acc.get_blog_entries(limit=30)[::-1]
         while n_votes == 0:
-            comment = acc.get_feed(limit=30)[::-1][index]
+            comment = Comment(entries[index], steem_instance=cls.bts)
             votes = comment.get_votes()
             n_votes = len(votes)
             index += 1

@@ -17,18 +17,18 @@
 Welcome to beem's documentation!
 ================================
 
-Steem is a blockchain-based rewards platform for publishers to monetize 
+Steem/Hive is a blockchain-based rewards platform for publishers to monetize 
 content and grow community.
 
 It is based on *Graphene* (tm), a blockchain technology stack (i.e.
 software) that allows for fast transactions and ascalable blockchain
-solution. In case of Steem, it comes with decentralized publishing of
+solution. In case of Steem/Hive, it comes with decentralized publishing of
 content.
 
 The beem library has been designed to allow developers to easily
 access its routines and make use of the network without dealing with all
 the related blockchain technology and cryptography. This library can be
-used to do anything that is allowed according to the Steem
+used to do anything that is allowed according to the Steem/Hive
 blockchain protocol.
 
 
