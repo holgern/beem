@@ -29,8 +29,8 @@ class Testcases(unittest.TestCase):
     def setUpClass(cls):
         nodelist = NodeList()
         nodelist.update_nodes()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(exclude_limited=False), num_retries=10))
-        cls.node_list = nodelist.get_nodes(exclude_limited=True)
+        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(hive=True), num_retries=10))
+        cls.node_list = nodelist.get_nodes(hive=True)
        
         # stm = shared_steem_instance()
         # stm.config.refreshBackup()
@@ -165,8 +165,9 @@ class Testcases(unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
 
     def test_transfer(self):
+        stm = shared_steem_instance()
         runner = CliRunner()
-        result = runner.invoke(cli, ['-ds', 'transfer', 'beembot', '1', 'SBD', 'test'], input="test\n")
+        result = runner.invoke(cli, ['-ds', 'transfer', 'beembot', '1', stm.sbd_symbol, 'test'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_powerdownroute(self):
@@ -282,25 +283,27 @@ class Testcases(unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
 
     def test_buy(self):
+        stm = shared_steem_instance()
         runner = CliRunner()
-        result = runner.invoke(cli, ['-ds', '-x', 'buy', '1', 'STEEM', '2.2'], input="test\n")
+        result = runner.invoke(cli, ['-ds', '-x', 'buy', '1', stm.steem_symbol, '2.2'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-ds', '-x', 'buy', '1', 'STEEM'], input="y\ntest\n")
+        result = runner.invoke(cli, ['-ds', '-x', 'buy', '1', stm.steem_symbol], input="y\ntest\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-ds', '-x', 'buy', '1', 'SBD', '2.2'], input="test\n")
+        result = runner.invoke(cli, ['-ds', '-x', 'buy', '1', stm.sbd_symbol, '2.2'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-ds', '-x', 'buy', '1', 'SBD'], input="y\ntest\n")
+        result = runner.invoke(cli, ['-ds', '-x', 'buy', '1', stm.sbd_symbol], input="y\ntest\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_sell(self):
+        stm = shared_steem_instance()
         runner = CliRunner()
-        result = runner.invoke(cli, ['-ds', '-x', 'sell', '1', 'STEEM', '2.2'], input="test\n")
+        result = runner.invoke(cli, ['-ds', '-x', 'sell', '1', stm.steem_symbol, '2.2'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-ds', '-x', 'sell', '1', 'SBD', '2.2'], input="test\n")
+        result = runner.invoke(cli, ['-ds', '-x', 'sell', '1', stm.sbd_symbol, '2.2'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-ds', '-x', 'sell', '1', 'STEEM'], input="y\ntest\n")
+        result = runner.invoke(cli, ['-ds', '-x', 'sell', '1', stm.steem_symbol], input="y\ntest\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-ds', '-x', 'sell', '1', 'SBD'], input="y\ntest\n")
+        result = runner.invoke(cli, ['-ds', '-x', 'sell', '1', stm.sbd_symbol], input="y\ntest\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_cancel(self):

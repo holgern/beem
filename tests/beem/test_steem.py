@@ -32,9 +32,9 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.nodelist = NodeList()
-        cls.nodelist.update_nodes(steem_instance=Steem(node=cls.nodelist.get_nodes(exclude_limited=False), num_retries=10))
+        cls.nodelist.update_nodes(steem_instance=Steem(node=cls.nodelist.get_nodes(hive=True), num_retries=10))
         cls.bts = Steem(
-            node=cls.nodelist.get_nodes(exclude_limited=True),
+            node=cls.nodelist.get_nodes(hive=True),
             nobroadcast=True,
             unsigned=True,
             data_refresh_time_seconds=900,
@@ -47,7 +47,7 @@ class Testcases(unittest.TestCase):
         acc = self.account
         acc.steem.txbuffer.clear()
         tx = acc.transfer(
-            "test", 1.33, "SBD", memo="Foobar", account="test1")
+            "test", 1.33, acc.steem.sbd_symbol, memo="Foobar", account="test1")
         self.assertEqual(
             tx["operations"][0][0],
             "transfer"
@@ -204,9 +204,9 @@ class Testcases(unittest.TestCase):
         tx1 = bts.new_tx()
         tx2 = bts.new_tx()
 
-        acc.transfer("test1", 1, "STEEM", append_to=tx1)
-        acc.transfer("test1", 2, "STEEM", append_to=tx2)
-        acc.transfer("test1", 3, "STEEM", append_to=tx1)
+        acc.transfer("test1", 1, bts.steem_symbol, append_to=tx1)
+        acc.transfer("test1", 2, bts.steem_symbol, append_to=tx2)
+        acc.transfer("test1", 3, bts.steem_symbol, append_to=tx1)
         tx1 = tx1.json()
         tx2 = tx2.json()
         ops1 = tx1["operations"]

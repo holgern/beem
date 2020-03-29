@@ -5,6 +5,9 @@ Changelog
 * Fix asset check in Amount and Price
 * Fix get_curation_rewards for comments
 * Fix empty return in _get_account_history
+* Fix several unit tests
+* Fix deprecated collections import
+* Fix more HIVE/HBD symbols in beempy for HIVE
 
 0.22.10
 -------

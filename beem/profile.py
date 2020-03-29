@@ -5,7 +5,10 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import logging
 import json
-import collections
+try:
+    from collections.abc import Mapping  # noqa
+except ImportError:
+    from collections import Mapping  # noqa
 
 
 class DotDict(dict):
@@ -53,7 +56,7 @@ class Profile(DotDict):
 
     def update(self, u):
         for k, v in u.items():
-            if isinstance(v, collections.Mapping):
+            if isinstance(v, Mapping):
                 self.setdefault(k, {}).update(v)
             else:
                 self[k] = u[k]

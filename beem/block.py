@@ -135,7 +135,7 @@ class Block(BlockchainObject):
                     if ops_ops is None:
                         ops = None
                     else:
-                        ops = ops["ops"]
+                        ops = ops_ops["ops"]
                 except ApiNotSupported:
                     ops = self.steem.rpc.get_ops_in_block(self.identifier, self.only_virtual_ops, api="condenser")
             else:

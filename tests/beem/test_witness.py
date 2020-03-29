@@ -18,9 +18,9 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(exclude_limited=False), num_retries=10))
+        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(hive=True), num_retries=10))
         cls.bts = Steem(
-            node=nodelist.get_nodes(exclude_limited=True),
+            node=nodelist.get_nodes(hive=True),
             nobroadcast=True,
             unsigned=True,
             keys={"active": wif},
@@ -49,7 +49,7 @@ class Testcases(unittest.TestCase):
             bts = self.steemit
         bts.txbuffer.clear()
         w = Witness("gtg", steem_instance=bts)
-        tx = w.feed_publish("4 SBD", "1 STEEM")
+        tx = w.feed_publish("4 %s" % bts.sbd_symbol, "1 %s" % bts.steem_symbol)
         self.assertEqual(
             (tx["operations"][0][0]),
             "feed_publish"
@@ -70,7 +70,7 @@ class Testcases(unittest.TestCase):
             bts = self.steemit
         bts.txbuffer.clear()
         w = Witness("gtg", steem_instance=bts)
-        props = {"account_creation_fee": "0.1 STEEM",
+        props = {"account_creation_fee": "0.1 %s" % bts.steem_symbol,
                  "maximum_block_size": 32000,
                  "sbd_interest_rate": 0}
         tx = w.update(wif, "", props)
@@ -96,7 +96,6 @@ class Testcases(unittest.TestCase):
 
     @parameterized.expand([
         ("normal"),
-        ("steemit"),
     ])
     def test_WitnessesVotedByAccount(self, node_param):
         if node_param == "normal":

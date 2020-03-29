@@ -1030,7 +1030,7 @@ def balance(account):
     for name in account:
         a = Account(name, steem_instance=stm)
         print("\n@%s" % a.name)
-        t = PrettyTable(["Account", "STEEM", "SBD", "VESTS"])
+        t = PrettyTable(["Account", stm.steem_symbol, stm.sbd_symbol, "VESTS"])
         t.align = "r"
         t.add_row([
             'Available',
@@ -1084,7 +1084,7 @@ def interest(account):
             i["last_payment"],
             "in %s" % (i["next_payment_duration"]),
             "%.1f%%" % i["interest_rate"],
-            "%.3f %s" % (i["interest"], "SBD"),
+            "%.3f %s" % (i["interest"], stm.sbd_symbol),
         ])
     print(t)
 
@@ -2684,8 +2684,8 @@ def curation(authorperm, account, limit, min_vote, max_vote, min_performance, ma
                 if not found_voter:
                     found_voter = True
                 t.add_row(new_row + voter + ["%.1f min" % row[1],
-                                             "%.3f SBD" % float(row[2]),
-                                             "%.3f SBD" % float(row[3]),
+                                             "%.3f %s" % (float(row[2]), stm.sbd_symbol),
+                                             "%.3f %s" % (float(row[3]), stm.sbd_symbol),
                                              "%.3f SP" % (row[4]),
                                              "%.1f %%" % (row[5])])
                 if len(authorperm_list) == 1:
@@ -2700,20 +2700,20 @@ def curation(authorperm, account, limit, min_vote, max_vote, min_performance, ma
             sum_line[-1] = "High. vote"
 
             t.add_row(sum_line + ["%.1f min" % highest_vote[1],
-                                  "%.3f SBD" % float(highest_vote[2]),
-                                  "%.3f SBD" % float(highest_vote[3]),
+                                  "%.3f %s" % (float(highest_vote[2]), stm.sbd_symbol),
+                                  "%.3f %s" % (float(highest_vote[3]), stm.sbd_symbol),
                                   "%.3f SP" % (highest_vote[4]),
                                   "%.1f %%" % (highest_vote[5])])
             sum_line[-1] = "High. Cur."
             t.add_row(sum_line + ["%.1f min" % max_curation[1],
-                                  "%.3f SBD" % float(max_curation[2]),
-                                  "%.3f SBD" % float(max_curation[3]),
+                                  "%.3f %s" % (float(max_curation[2]), stm.sbd_symbol),
+                                  "%.3f %s" % (float(max_curation[3]), stm.sbd_symbol),
                                   "%.3f SP" % (max_curation[4]),
                                   "%.1f %%" % (max_curation[5])])
             sum_line[-1] = "Sum"
             t.add_row(sum_line + ["-",
-                                  "%.3f SBD" % (sum_curation[0]),
-                                  "%.3f SBD" % (sum_curation[1]),
+                                  "%.3f %s" % (sum_curation[0], stm.sbd_symbol),
+                                  "%.3f %s" % (sum_curation[1], stm.sbd_symbol),
                                   "%.3f SP" % (sum_curation[2]),
                                   "%.2f %%" % curation_sum_percentage])
             if all_posts or export:
@@ -2764,17 +2764,17 @@ def rewards(accounts, only_sum, post, comment, curation, length, author, permlin
         m = Market(steem_instance=stm)
         latest = m.ticker()["latest"]
         if author and permlink:
-            t = PrettyTable(["Author", "Permlink", "Payout", "SBD", "SP + STEEM", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Author", "Permlink", "Payout", stm.sbd_symbol, "SP + STEEM", "Liquid USD", "Invested USD"])
         elif author and title:
-                t = PrettyTable(["Author", "Title", "Payout", "SBD", "SP + STEEM", "Liquid USD", "Invested USD"])
+                t = PrettyTable(["Author", "Title", "Payout", stm.sbd_symbol, "SP + STEEM", "Liquid USD", "Invested USD"])
         elif author:
-            t = PrettyTable(["Author", "Payout", "SBD", "SP + STEEM", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Author", "Payout", stm.sbd_symbol, "SP + STEEM", "Liquid USD", "Invested USD"])
         elif not author and permlink:
-            t = PrettyTable(["Permlink", "Payout", "SBD", "SP + STEEM", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Permlink", "Payout", stm.sbd_symbol, "SP + STEEM", "Liquid USD", "Invested USD"])
         elif not author and title:
-            t = PrettyTable(["Title", "Payout", "SBD", "SP + STEEM", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Title", "Payout", stm.sbd_symbol, "SP + STEEM", "Liquid USD", "Invested USD"])
         else:
-            t = PrettyTable(["Received", "SBD", "SP + STEEM", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Received", stm.sbd_symbol, "SP + STEEM", "Liquid USD", "Invested USD"])
         t.align = "l"
         rows = []
         start_op = account.estimate_virtual_op_num(limit_time)
@@ -2886,14 +2886,14 @@ def rewards(accounts, only_sum, post, comment, curation, length, author, permlin
             t.add_row(["Sum",
                        "-",
                        "-",
-                       "%.2f SBD" % (sum_reward[0]),
+                       "%.2f %s" % (sum_reward[0], stm.sbd_symbol),
                        "%.2f SP" % (sum_reward[1] + sum_reward[2]),
                        "%.2f $" % (sum_reward[3]),
                        "%.2f $" % (sum_reward[4])])
         elif not author and not (permlink or title):
             t.add_row(["", "", "", "", ""])
             t.add_row(["Sum",
-                       "%.2f SBD" % (sum_reward[0]),
+                       "%.2f %s" % (sum_reward[0], stm.sbd_symbol),
                        "%.2f SP" % (sum_reward[1] + sum_reward[2]),
                        "%.2f $" % (sum_reward[2]),
                        "%.2f $" % (sum_reward[3])])
@@ -2901,7 +2901,7 @@ def rewards(accounts, only_sum, post, comment, curation, length, author, permlin
             t.add_row(["", "", "", "", "", ""])
             t.add_row(["Sum",
                        "-",
-                       "%.2f SBD" % (sum_reward[0]),
+                       "%.2f %s" % (sum_reward[0], stm.sbd_symbol),
                        "%.2f SP" % (sum_reward[1] + sum_reward[2]),
                        "%.2f $" % (sum_reward[3]),
                        "%.2f $" % (sum_reward[4])])
@@ -2951,6 +2951,9 @@ def pending(accounts, only_sum, post, comment, curation, length, author, permlin
         days = 1
     if days > 7:
         days = 7
+    sp_symbol = "SP"
+    if stm.is_hive:
+        sp_symbol = "HP"
 
     utc = pytz.timezone('UTC')
     limit_time = utc.localize(datetime.utcnow()) - timedelta(days=days)
@@ -2961,17 +2964,17 @@ def pending(accounts, only_sum, post, comment, curation, length, author, permlin
         m = Market(steem_instance=stm)
         latest = m.ticker()["latest"]
         if author and permlink:
-            t = PrettyTable(["Author", "Permlink", "Cashout", "SBD", "SP", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Author", "Permlink", "Cashout", stm.sbd_symbol, sp_symbol, "Liquid USD", "Invested USD"])
         elif author and title:
-            t = PrettyTable(["Author", "Title", "Cashout", "SBD", "SP", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Author", "Title", "Cashout", stm.sbd_symbol, sp_symbol, "Liquid USD", "Invested USD"])
         elif author:
-            t = PrettyTable(["Author", "Cashout", "SBD", "SP", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Author", "Cashout", stm.sbd_symbol, sp_symbol, "Liquid USD", "Invested USD"])
         elif not author and permlink:
-            t = PrettyTable(["Permlink", "Cashout", "SBD", "SP", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Permlink", "Cashout", stm.sbd_symbol, sp_symbol, "Liquid USD", "Invested USD"])
         elif not author and title:
-            t = PrettyTable(["Title", "Cashout", "SBD", "SP", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Title", "Cashout", stm.sbd_symbol, sp_symbol, "Liquid USD", "Invested USD"])
         else:
-            t = PrettyTable(["Cashout", "SBD", "SP", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Cashout", stm.sbd_symbol, sp_symbol, "Liquid USD", "Invested USD"])
         t.align = "l"
         rows = []
         c_list = {}
@@ -3090,23 +3093,23 @@ def pending(accounts, only_sum, post, comment, curation, length, author, permlin
             t.add_row(["Sum",
                        "-",
                        "-",
-                       "%.2f SBD" % (sum_reward[0]),
-                       "%.2f SP" % (sum_reward[1]),
+                       "%.2f %s" % (sum_reward[0], stm.sbd_symbol),
+                       "%.2f %s" % (sum_reward[1], sp_symbol),
                        "%.2f $" % (sum_reward[2]),
                        "%.2f $" % (sum_reward[3])])
         elif not author and not (permlink or title):
             t.add_row(["", "", "", "", ""])
             t.add_row(["Sum",
-                       "%.2f SBD" % (sum_reward[0]),
-                       "%.2f SP" % (sum_reward[1]),
+                       "%.2f %s" % (sum_reward[0], stm.sbd_symbol),
+                       "%.2f %s" % (sum_reward[1], sp_symbol),
                        "%.2f $" % (sum_reward[2]),
                        "%.2f $" % (sum_reward[3])])
         else:
             t.add_row(["", "", "", "", "", ""])
             t.add_row(["Sum",
                        "-",
-                       "%.2f SBD" % (sum_reward[0]),
-                       "%.2f SP" % (sum_reward[1]),
+                       "%.2f %s" % (sum_reward[0], stm.sbd_symbol),
+                       "%.2f %s" % (sum_reward[1], sp_symbol),
                        "%.2f $" % (sum_reward[2]),
                        "%.2f $" % (sum_reward[3])])
         message = "\nShowing pending "
@@ -3131,11 +3134,11 @@ def pending(accounts, only_sum, post, comment, curation, length, author, permlin
 
 @cli.command()
 @click.argument('account', nargs=1, required=False)
-@click.option('--reward_steem', help='Amount of STEEM you would like to claim', default=0)
-@click.option('--reward_sbd', help='Amount of SBD you would like to claim', default=0)
+@click.option('--reward_steem', help='Amount of STEEM/HIVE you would like to claim', default=0)
+@click.option('--reward_sbd', help='Amount of SBD/HBD you would like to claim', default=0)
 @click.option('--reward_vests', help='Amount of VESTS you would like to claim', default=0)
-@click.option('--claim_all_steem', help='Claim all STEEM, overwrites reward_steem', is_flag=True)
-@click.option('--claim_all_sbd', help='Claim all SBD, overwrites reward_sbd', is_flag=True)
+@click.option('--claim_all_steem', help='Claim all STEEM/HIVE, overwrites reward_steem', is_flag=True)
+@click.option('--claim_all_sbd', help='Claim all SBD/HBD, overwrites reward_sbd', is_flag=True)
 @click.option('--claim_all_vests', help='Claim all VESTS, overwrites reward_vests', is_flag=True)
 def claimreward(account, reward_steem, reward_sbd, reward_vests, claim_all_steem, claim_all_sbd, claim_all_vests):
     """Claim reward balances
@@ -3320,10 +3323,13 @@ def info(objects):
         chain_props = stm.get_chain_properties()
         price = (Amount(median_price["base"], steem_instance=stm).amount / Amount(median_price["quote"], steem_instance=stm).amount)
         for key in info:
-            t.add_row([key, info[key]])
-        t.add_row(["steem per mvest", steem_per_mvest])
+            if isinstance(info[key], dict) and 'amount' in info[key]:
+                t.add_row([key, str(Amount(info[key], steem_instance=stm))])
+            else:
+                t.add_row([key, info[key]])
+        t.add_row(["%s per mvest" % stm.steem_symbol, steem_per_mvest])
         t.add_row(["internal price", price])
-        t.add_row(["account_creation_fee", chain_props["account_creation_fee"]])
+        t.add_row(["account_creation_fee", str(Amount(chain_props["account_creation_fee"], steem_instance=stm))])
         print(t.get_string(sortby="Key"))
         # Block
     for obj in objects:

@@ -754,7 +754,10 @@ class Account(BlockchainObject):
 
                 >>> from beem.account import Account
                 >>> from beem import Steem
-                >>> stm = Steem()
+                >>> from beem.nodelist import NodeList
+                >>> nodelist = NodeList()
+                >>> nodelist.update_nodes()
+                >>> stm = Steem(node=nodelist.get_nodes(hive=True))
                 >>> account = Account("steemit", steem_instance=stm)
                 >>> entry = account.get_blog_entries(0, 1, raw_data=True)[0]
                 >>> print("%s - %s - %s - %s" % (entry["author"], entry["permlink"], entry["blog"], entry["reblog_on"]))
@@ -1484,18 +1487,6 @@ class Account(BlockchainObject):
             :param str account: When set, a different account is used for the request (Default is object account name)
 
             :rtype: list
-
-            .. code-block:: python
-
-                >>> from beem.account import Account
-                >>> from beem import Steem
-                >>> from beem.nodelist import NodeList
-                >>> nodelist = NodeList()
-                >>> nodelist.update_nodes()
-                >>> stm = Steem(node=nodelist.get_nodes(hive=True), condenser=True)
-                >>> account = Account("beem.app", steem_instance=stm)
-                >>> account.get_tags_used_by_author()
-                []
 
         """
         if account is None:

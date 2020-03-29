@@ -108,9 +108,10 @@ class Vote(BlockchainObject):
             raise VoteDoesNotExistsException(self.identifier)
 
         vote = None
-        for x in votes:
-            if x["voter"] == voter:
-                vote = x
+        if votes is not None:
+            for x in votes:
+                if x["voter"] == voter:
+                    vote = x
         if not vote:
             raise VoteDoesNotExistsException(self.identifier)
         vote = self._parse_json_data(vote)
