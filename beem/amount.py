@@ -11,9 +11,9 @@ from beem.asset import Asset
 from decimal import Decimal, ROUND_DOWN
 
 
-def check_asset(other, self):
+def check_asset(other, self, stm):
     if isinstance(other, dict) and "asset" in other and isinstance(self, dict) and "asset" in self:
-        if not other["asset"] == self["asset"]:
+        if not Asset(other["asset"], steem_instance=stm) == Asset(self["asset"], steem_instance=stm):
             raise AssertionError()
     else:
         if not other == self:
@@ -231,7 +231,7 @@ class Amount(dict):
     def __add__(self, other):
         a = self.copy()
         if isinstance(other, Amount):
-            check_asset(other["asset"], self["asset"])
+            check_asset(other["asset"], self["asset"], self.steem)
             a["amount"] += other["amount"]
         else:
             a["amount"] += Decimal(other)
@@ -242,7 +242,7 @@ class Amount(dict):
     def __sub__(self, other):
         a = self.copy()
         if isinstance(other, Amount):
-            check_asset(other["asset"], self["asset"])
+            check_asset(other["asset"], self["asset"], self.steem)
             a["amount"] -= other["amount"]
         else:
             a["amount"] -= Decimal(other)
@@ -254,7 +254,7 @@ class Amount(dict):
         from .price import Price
         a = self.copy()
         if isinstance(other, Amount):
-            check_asset(other["asset"], self["asset"])
+            check_asset(other["asset"], self["asset"], self.steem)
             a["amount"] *= other["amount"]
         elif isinstance(other, Price):
             if not self["asset"] == other["quote"]["asset"]:
@@ -272,7 +272,7 @@ class Amount(dict):
         a = self.copy()
         if isinstance(other, Amount):
             from .price import Price
-            check_asset(other["asset"], self["asset"])
+            check_asset(other["asset"], self["asset"], self.steem)
             return Price(self, other, steem_instance=self.steem)
         else:
             a["amount"] //= Decimal(other)
@@ -284,7 +284,7 @@ class Amount(dict):
         from .price import Price
         a = self.copy()
         if isinstance(other, Amount):
-            check_asset(other["asset"], self["asset"])
+            check_asset(other["asset"], self["asset"], self.steem)
             return Price(self, other, steem_instance=self.steem)
         elif isinstance(other, Price):
             if not self["asset"] == other["base"]["asset"]:
@@ -302,7 +302,7 @@ class Amount(dict):
     def __mod__(self, other):
         a = self.copy()
         if isinstance(other, Amount):
-            check_asset(other["asset"], self["asset"])
+            check_asset(other["asset"], self["asset"], self.steem)
             a["amount"] %= other["amount"]
         else:
             a["amount"] %= Decimal(other)
@@ -313,7 +313,7 @@ class Amount(dict):
     def __pow__(self, other):
         a = self.copy()
         if isinstance(other, Amount):
-            check_asset(other["asset"], self["asset"])
+            check_asset(other["asset"], self["asset"], self.steem)
             a["amount"] **= other["amount"]
         else:
             a["amount"] **= Decimal(other)
@@ -323,7 +323,7 @@ class Amount(dict):
 
     def __iadd__(self, other):
         if isinstance(other, Amount):
-            check_asset(other["asset"], self["asset"])
+            check_asset(other["asset"], self["asset"], self.steem)
             self["amount"] += other["amount"]
         else:
             self["amount"] += Decimal(other)
@@ -333,7 +333,7 @@ class Amount(dict):
 
     def __isub__(self, other):
         if isinstance(other, Amount):
-            check_asset(other["asset"], self["asset"])
+            check_asset(other["asset"], self["asset"], self.steem)
             self["amount"] -= other["amount"]
         else:
             self["amount"] -= Decimal(other)
@@ -343,7 +343,7 @@ class Amount(dict):
 
     def __imul__(self, other):
         if isinstance(other, Amount):
-            check_asset(other["asset"], self["asset"])
+            check_asset(other["asset"], self["asset"], self.steem)
             self["amount"] *= other["amount"]
         else:
             self["amount"] *= Decimal(other)
@@ -353,7 +353,7 @@ class Amount(dict):
 
     def __idiv__(self, other):
         if isinstance(other, Amount):
-            check_asset(other["asset"], self["asset"])
+            check_asset(other["asset"], self["asset"], self.steem)
             return self["amount"] / other["amount"]
         else:
             self["amount"] /= Decimal(other)
@@ -371,7 +371,7 @@ class Amount(dict):
 
     def __imod__(self, other):
         if isinstance(other, Amount):
-            check_asset(other["asset"], self["asset"])
+            check_asset(other["asset"], self["asset"], self.steem)
             self["amount"] %= other["amount"]
         else:
             self["amount"] %= Decimal(other)
@@ -391,7 +391,7 @@ class Amount(dict):
     def __lt__(self, other):
         quant_amount = quantize(self["amount"], self["asset"]["precision"])
         if isinstance(other, Amount):
-            check_asset(other["asset"], self["asset"])
+            check_asset(other["asset"], self["asset"], self.steem)
             return quant_amount < quantize(other["amount"], self["asset"]["precision"])
         else:
             return quant_amount < quantize((other or 0), self["asset"]["precision"])
@@ -399,7 +399,7 @@ class Amount(dict):
     def __le__(self, other):
         quant_amount = quantize(self["amount"], self["asset"]["precision"])
         if isinstance(other, Amount):
-            check_asset(other["asset"], self["asset"])
+            check_asset(other["asset"], self["asset"], self.steem)
             return quant_amount <= quantize(other["amount"], self["asset"]["precision"])
         else:
             return quant_amount <= quantize((other or 0), self["asset"]["precision"])
@@ -407,7 +407,7 @@ class Amount(dict):
     def __eq__(self, other):
         quant_amount = quantize(self["amount"], self["asset"]["precision"])
         if isinstance(other, Amount):
-            check_asset(other["asset"], self["asset"])
+            check_asset(other["asset"], self["asset"], self.steem)
             return quant_amount == quantize(other["amount"], self["asset"]["precision"])
         else:
             return quant_amount == quantize((other or 0), self["asset"]["precision"])
@@ -415,7 +415,7 @@ class Amount(dict):
     def __ne__(self, other):
         quant_amount = quantize(self["amount"], self["asset"]["precision"])
         if isinstance(other, Amount):
-            check_asset(other["asset"], self["asset"])
+            check_asset(other["asset"], self["asset"], self.steem)
             return self["amount"] != quantize(other["amount"], self["asset"]["precision"])
         else:
             return quant_amount != quantize((other or 0), self["asset"]["precision"])
@@ -423,7 +423,7 @@ class Amount(dict):
     def __ge__(self, other):
         quant_amount = quantize(self["amount"], self["asset"]["precision"])
         if isinstance(other, Amount):
-            check_asset(other["asset"], self["asset"])
+            check_asset(other["asset"], self["asset"], self.steem)
             return self["amount"] >= quantize(other["amount"], self["asset"]["precision"])
         else:
             return quant_amount >= quantize((other or 0), self["asset"]["precision"])
@@ -431,7 +431,7 @@ class Amount(dict):
     def __gt__(self, other):
         quant_amount = quantize(self["amount"], self["asset"]["precision"])
         if isinstance(other, Amount):
-            check_asset(other["asset"], self["asset"])
+            check_asset(other["asset"], self["asset"], self.steem)
             return quant_amount > quantize(other["amount"], self["asset"]["precision"])
         else:
             return quant_amount > quantize((other or 0), self["asset"]["precision"])

@@ -17,6 +17,15 @@ from .utils import parse_time, assets_from_string
 from decimal import Decimal
 
 
+def check_asset(other, self, stm):
+    if isinstance(other, dict) and "asset" in other and isinstance(self, dict) and "asset" in self:
+        if not Asset(other["asset"], steem_instance=stm) == Asset(self["asset"], steem_instance=stm):
+            raise AssertionError()
+    else:
+        if not other == self:
+            raise AssertionError()
+
+
 @python_2_unicode_compatible
 class Price(dict):
     """ This class deals with all sorts of prices of any pair of assets to
@@ -297,8 +306,7 @@ class Price(dict):
             else:
                 raise ValueError("Wrong rotation of prices")
         elif isinstance(other, Amount):
-            if not other["asset"] == self["quote"]["asset"]:
-                raise AssertionError()
+            check_asset(other["asset"], self["quote"]["asset"], self.steem)
             a = other.copy() * self["price"]
             a["asset"] = self["base"]["asset"].copy()
             a["symbol"] = self["base"]["asset"]["symbol"]
@@ -336,8 +344,7 @@ class Price(dict):
                 steem_instance=self.steem
             )
         elif isinstance(other, Amount):
-            if not other["asset"] == self["quote"]["asset"]:
-                raise AssertionError()
+            check_asset(other["asset"], self["quote"]["asset"], self.steem)
             a = other.copy() / self["price"]
             a["asset"] = self["base"]["asset"].copy()
             a["symbol"] = self["base"]["asset"]["symbol"]

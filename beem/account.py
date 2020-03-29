@@ -1648,12 +1648,14 @@ class Account(BlockchainObject):
         self.steem.rpc.set_next_node_on_empty_reply(False)
         if self.steem.rpc.get_use_appbase():
             try:
-                ret = self.steem.rpc.get_account_history({'account': account["name"], 'start': start, 'limit': limit}, api="account_history")['history']
+                ret = self.steem.rpc.get_account_history({'account': account["name"], 'start': start, 'limit': limit}, api="account_history")
+                if ret is not None:
+                    ret = ret["history"]
             except ApiNotSupported:
                 ret = self.steem.rpc.get_account_history(account["name"], start, limit, api="condenser")
         else:
             ret = self.steem.rpc.get_account_history(account["name"], start, limit, api="database")
-            if len(ret) == 0 and limit == 0:
+            if ret is None or (len(ret) == 0 and limit == 0):
                 ret = self.steem.rpc.get_account_history(account["name"], start, limit + 1, api="database")
         return ret
 

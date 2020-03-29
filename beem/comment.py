@@ -14,7 +14,7 @@ from .instance import shared_steem_instance
 from .account import Account
 from .amount import Amount
 from .price import Price
-from .utils import resolve_authorperm, construct_authorperm, derive_permlink, remove_from_dict, make_patch, formatTimeString, formatToTimeStamp
+from .utils import resolve_authorperm, construct_authorperm, construct_authorpermvoter, derive_permlink, remove_from_dict, make_patch, formatTimeString, formatToTimeStamp
 from .blockchainobject import BlockchainObject
 from .exceptions import ContentDoesNotExistsException, VotingInvalidOnArchivedPost
 from beembase import operations
@@ -526,14 +526,23 @@ class Comment(BlockchainObject):
             active_votes_list = self["active_votes"]
         else:
             active_votes_list = self.get_votes()
+        
         if "total_vote_weight" in self:
             total_vote_weight = self["total_vote_weight"]
-        else:
-            total_vote_weight = 0
-            for vote in active_votes_list:
-                total_vote_weight += vote["weight"]
+        active_votes_json_list = []
+        for vote in active_votes_list:
+            if "weight" not in vote:
+                from beem.vote import Vote
+                v = Vote(construct_authorpermvoter(self["author"], self["permlink"], vote["voter"]), steem_instance=self.steem)
+                active_votes_json_list.append(v.json())
+            else:
+                active_votes_json_list.append(vote.json())
+        
+        total_vote_weight = 0
+        for vote in active_votes_json_list:
+            total_vote_weight += vote["weight"]
             
-        if not self["allow_curation_rewards"] or not self.is_pending():
+        if not self.is_pending():
             max_rewards = Amount(0, self.steem.steem_symbol, steem_instance=self.steem)
             unclaimed_rewards = max_rewards.copy()
         else:
@@ -554,7 +563,7 @@ class Comment(BlockchainObject):
 
         active_votes = {}
 
-        for vote in active_votes_list:
+        for vote in active_votes_json_list:
             if total_vote_weight > 0:
                 claim = max_rewards * int(vote["weight"]) / total_vote_weight
             else:

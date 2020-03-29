@@ -1,5 +1,11 @@
 Changelog
 =========
+0.22.11
+-------
+* Fix asset check in Amount and Price
+* Fix get_curation_rewards for comments
+* Fix empty return in _get_account_history
+
 0.22.10
 -------
 * HIVE nodes are now also detected as appbase ready (thanks to @crokkon)
