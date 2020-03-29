@@ -236,9 +236,9 @@ class Testcases(unittest.TestCase):
 
     def test_votes(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['votes', '--direction', 'out', 'test'])
+        result = runner.invoke(cli, ['votes', '--direction', 'out', 'fullnodeupdate'])
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['votes', '--direction', 'in', 'test'])
+        result = runner.invoke(cli, ['votes', '--direction', 'in', 'fullnodeupdate'])
         self.assertEqual(result.exit_code, 0)
 
     def test_approvewitness(self):
@@ -380,7 +380,7 @@ class Testcases(unittest.TestCase):
     def test_updatenodes(self):
         runner = CliRunner()
         runner.invoke(cli, ['-o', 'set', 'nodes', self.node_list])
-        result = runner.invoke(cli, ['updatenodes', '--test'])
+        result = runner.invoke(cli, ['updatenodes', '--hive', '--test'])
         self.assertEqual(result.exit_code, 0)
         runner.invoke(cli, ['-o', 'set', 'nodes', str(self.node_list)])
 
@@ -407,32 +407,34 @@ class Testcases(unittest.TestCase):
 
     def test_pending(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['pending', 'holger80'])
+        account_name = "fullnodeupodate"
+        result = runner.invoke(cli, ['pending', account_name])
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['pending', '--post', '--comment', '--curation', 'holger80'])
+        result = runner.invoke(cli, ['pending', '--post', '--comment', '--curation', account_name])
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['pending', '--post', '--comment', '--curation', '--permlink', '--days', '1', 'holger80'])
+        result = runner.invoke(cli, ['pending', '--post', '--comment', '--curation', '--permlink', '--days', '1', account_name])
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['pending', '--post', '--comment', '--curation', '--author', '--days', '1', 'holger80'])
+        result = runner.invoke(cli, ['pending', '--post', '--comment', '--curation', '--author', '--days', '1', account_name])
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['pending', '--post', '--comment', '--curation', '--author', '--title', '--days', '1', 'holger80'])
+        result = runner.invoke(cli, ['pending', '--post', '--comment', '--curation', '--author', '--title', '--days', '1', account_name])
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['pending', '--post', '--comment', '--curation', '--author', '--permlink', '--length', '30', '--days', '1', 'holger80'])
+        result = runner.invoke(cli, ['pending', '--post', '--comment', '--curation', '--author', '--permlink', '--length', '30', '--days', '1', account_name])
         self.assertEqual(result.exit_code, 0)
 
     def test_rewards(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['rewards', 'holger80'])
+        account_name = "fullnodeupodate"
+        result = runner.invoke(cli, ['rewards', account_name])
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', 'holger80'])
+        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', account_name])
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', '--permlink', 'holger80'])
+        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', '--permlink', account_name])
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', '--author', 'holger80'])
+        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', '--author', account_name])
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', '--author', '--title', 'holger80'])
+        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', '--author', '--title', account_name])
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', '--author', '--permlink', '--length', '30', 'holger80'])
+        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', '--author', '--permlink', '--length', '30', account_name])
         self.assertEqual(result.exit_code, 0)
 
     def test_curation(self):
