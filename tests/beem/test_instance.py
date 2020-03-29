@@ -52,12 +52,12 @@ class Testcases(unittest.TestCase):
             num_retries=10
         )
         set_shared_steem_instance(cls.bts)
-        acc = Account("holger80", steem_instance=cls.bts)
-        comment = acc.get_blog(limit=20)[-1]
+        acc = Account("fullnodeupdate", steem_instance=cls.bts)
+        comment = Comment(acc.get_blog_entries(limit=20)[-1], steem_instance=cls.bts)
         cls.authorperm = comment.authorperm
-        votes = acc.get_account_votes()
+        votes = comment.get_votes()
         last_vote = votes[-1]
-        cls.authorpermvoter = '@' + last_vote['authorperm'] + '|' + acc["name"]
+        cls.authorpermvoter = '@' + comment['authorperm'] + '|' + last_vote["voter"]
 
     @classmethod
     def tearDownClass(cls):

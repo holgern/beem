@@ -1,5 +1,9 @@
 Changelog
 =========
+0.22.12
+-------
+* Add hive node
+
 0.22.11
 -------
 * Fix asset check in Amount and Price

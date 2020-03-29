@@ -35,52 +35,12 @@ class NodeList(list):
                 "score": 50
             },
             {
-                "url": "https://steemd-appbase.steemit.com",
-                "version": "0.20.2",
-                "type": "appbase",
-                "owner": "steemit",
-                "hive": False,
-                "score": -10
-            },
-            {
-                "url": "wss://steemd-appbase.steemit.com",
-                "version": "0.20.2",
-                "type": "appbase",
-                "owner": "steemit",
-                "hive": False,
-                "score": -10
-            },
-            {
-                "url": "wss://appbasetest.timcliff.com",
-                "version": "0.19.11",
-                "type": "appbase",
-                "owner": "timcliff",
-                "hive": False,
-                "score": -10
-            },
-            {
-                "url": "https://appbasetest.timcliff.com",
-                "version": "0.20.2",
-                "type": "appbase",
-                "owner": "timcliff",
-                "hive": False,
-                "score": -10
-            },
-            {
                 "url": "https://api.justyy.com",
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "justyy",
                 "hive": False,
                 "score": 20
-            },
-            {
-                "url": "https://api.steem.house",
-                "version": "0.20.2",
-                "type": "hive",
-                "owner": "gtg",
-                "hive": False,
-                "score": 10
             },
             {
                 "url": "https://api.steemitdev.com",
@@ -99,25 +59,11 @@ class NodeList(list):
                 "score": 10
             },
             {
-                "url": "wss://rpc.steemviz.com",
-                "version": "0.19.12",
-                "type": "hive",
-                "owner": "ausbitbank",
-                "score": -10
-            },
-            {
-                "url": "https://rpc.steemviz.com",
-                "version": "0.19.12",
-                "type": "appbase",
-                "owner": "ausbitbank",
-                "hive": False,
-                "score": -10
-            },
-            {
                 "url": "wss://steemd.privex.io",
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "privex",
+                "hive": False,
                 "score": -10
             },
             {
@@ -133,6 +79,7 @@ class NodeList(list):
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "themarkymark",
+                "hive": False,
                 "score": -10
             },
             {
@@ -142,85 +89,6 @@ class NodeList(list):
                 "owner": "themarkymark",
                 "hive": False,
                 "score": -20
-            },
-            {
-                "url": "wss://gtg.steem.house:8090",
-                "version": "0.19.12",
-                "type": "appbase",
-                "owner": "gtg",
-                "hive": False,
-                "score": -10
-            },
-            {
-                "url": "https://gtg.steem.house:8090",
-                "version": "0.19.12",
-                "type": "appbase",
-                "owner": "gtg",
-                "hive": False,
-                "score": -10
-            },
-            {
-                "url": "wss://steemd.pevo.science",
-                "version": "0.19.2",
-                "type": "normal",
-                "owner": "pharesim",
-                "hive": False,
-                "score": -10
-            },
-            {
-                "url": "https://steemd.pevo.science",
-                "version": "0.19.6",
-                "type": "normal",
-                "owner": "pharesim",
-                "hive": False,
-                "score": -10
-            },
-            {
-                "url": "wss://rpc.steemliberator.com",
-                "version": "0.19.12",
-                "type": "appbase",
-                "owner": "netuoso",
-                "score": -10
-            },
-            {
-                "url": "https://rpc.steemliberator.com",
-                "version": "0.19.12",
-                "type": "appbase",
-                "owner": "netuoso",
-                "hive": False,
-                "score": -10
-            },
-            {
-                "url": "wss://seed.bitcoiner.me",
-                "version": "0.19.6",
-                "type": "normal",
-                "owner": "bitcoiner",
-                "hive": False,
-                "score": -10
-            },
-            {
-                "url": "https://seed.bitcoiner.me",
-                "version": "0.19.6",
-                "type": "normal",
-                "owner": "bitcoiner",
-                "hive": False,
-                "score": -10
-            },
-            {
-                "url": "wss://steemd.steemgigs.org",
-                "version": "0.19.6",
-                "type": "normal",
-                "owner": "steemgigs",
-                "hive": False,
-                "score": -10
-            },
-            {
-                "url": "https://steemd.steemgigs.org",
-                "version": "0.19.6",
-                "type": "normal",
-                "owner": "steemgigs",
-                "hive": False,
-                "score": -10
             },
             {
                 "url": "wss://steemd.minnowsupportproject.org",
@@ -243,7 +111,7 @@ class NodeList(list):
                 "version": "0.20.6",
                 "type": "appbase",
                 "owner": "anyx",
-                "hive": False,
+                "hive": True,
                 "score": -10
             },
             {
@@ -261,30 +129,6 @@ class NodeList(list):
                 "owner": "anyx",
                 "hive": True,
                 "score": 50
-            },            
-            {
-                "url": "https://rpc.curiesteem.com",
-                "version": "0.20.2",
-                "type": "appbase",
-                "owner": "curie",
-                "hive": False,
-                "score": -10
-            },
-            {
-                "url": "wss://rpc.curiesteem.com",
-                "version": "0.20.2",
-                "type": "appbase",
-                "owner": "curie",
-                "hive": False,
-                "score": -10
-            },
-            {
-                "url": "https://rpc.usesteem.com",
-                "version": "0.20.8",
-                "type": "appbase",
-                "owner": "themarkymark",
-                "hive": False,
-                "score": 90
             },            
             {
                 "url": "wss://testnet.steem.vc",
@@ -336,6 +180,14 @@ class NodeList(list):
             },
             {
                 "url": "https://api.hive.blog",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "hive",
+                "hive": True,
+                "score": 50
+            },
+            {
+                "url": "https://api.openhive.network",
                 "version": "0.23.0",
                 "type": "appbase",
                 "owner": "hive",
