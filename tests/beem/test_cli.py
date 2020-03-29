@@ -407,7 +407,7 @@ class Testcases(unittest.TestCase):
 
     def test_pending(self):
         runner = CliRunner()
-        account_name = "fullnodeupodate"
+        account_name = "fullnodeupdate"
         result = runner.invoke(cli, ['pending', account_name])
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['pending', '--post', '--comment', '--curation', account_name])
@@ -423,7 +423,7 @@ class Testcases(unittest.TestCase):
 
     def test_rewards(self):
         runner = CliRunner()
-        account_name = "fullnodeupodate"
+        account_name = "fullnodeupdate"
         result = runner.invoke(cli, ['rewards', account_name])
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', account_name])

@@ -39,13 +39,13 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.nodelist = NodeList()
-        cls.nodelist.update_nodes(steem_instance=Steem(node=cls.nodelist.get_nodes(exclude_limited=False), num_retries=10))
-        stm = Steem(node=cls.nodelist.get_nodes())
+        cls.nodelist.update_nodes(steem_instance=Steem(node=cls.nodelist.get_nodes(hive=True), num_retries=10))
+        stm = Steem(node=cls.nodelist.get_nodes(hive=True))
         stm.config.refreshBackup()
         stm.set_default_nodes(["xyz"])
         del stm
 
-        cls.urls = cls.nodelist.get_nodes(exclude_limited=True)
+        cls.urls = cls.nodelist.get_nodes(hive=True)
         cls.bts = Steem(
             node=cls.urls,
             nobroadcast=True,
@@ -97,21 +97,21 @@ class Testcases(unittest.TestCase):
         if node_param == "instance":
             stm = Steem(node="https://abc.d", autoconnect=False, num_retries=1)
             set_shared_steem_instance(self.bts)
-            o = Amount("1 SBD")
+            o = Amount("1 %s" % self.bts.sbd_symbol)
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
                 RPCConnection
             ):
-                Amount("1 SBD", steem_instance=stm)
+                Amount("1 %s" % self.bts.sbd_symbol, steem_instance=stm)
         else:
             set_shared_steem_instance(Steem(node="https://abc.d", autoconnect=False, num_retries=1))
             stm = self.bts
-            o = Amount("1 SBD", steem_instance=stm)
+            o = Amount("1 %s" % self.bts.sbd_symbol, steem_instance=stm)
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
                 RPCConnection
             ):
-                Amount("1 SBD")
+                Amount("1 %s" % self.bts.sbd_symbol)
 
     @parameterized.expand([
         ("instance"),
@@ -212,21 +212,21 @@ class Testcases(unittest.TestCase):
     def test_price(self, node_param):
         if node_param == "instance":
             set_shared_steem_instance(self.bts)
-            o = Price(10.0, "STEEM/SBD")
+            o = Price(10.0, "%s/%s" % (self.bts.steem_symbol, self.bts.sbd_symbol))
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
                 RPCConnection
             ):
-                Price(10.0, "STEEM/SBD", steem_instance=Steem(node="https://abc.d", autoconnect=False, num_retries=1))
+                Price(10.0, "%s/%s" % (self.bts.steem_symbol, self.bts.sbd_symbol), steem_instance=Steem(node="https://abc.d", autoconnect=False, num_retries=1))
         else:
             set_shared_steem_instance(Steem(node="https://abc.d", autoconnect=False, num_retries=1))
             stm = self.bts
-            o = Price(10.0, "STEEM/SBD", steem_instance=stm)
+            o = Price(10.0, "%s/%s" % (self.bts.steem_symbol, self.bts.sbd_symbol), steem_instance=stm)
             self.assertIn(o.steem.rpc.url, self.urls)
             with self.assertRaises(
                 RPCConnection
             ):
-                Price(10.0, "STEEM/SBD")
+                Price(10.0, "%s/%s" % (self.bts.steem_symbol, self.bts.sbd_symbol))
 
     @parameterized.expand([
         ("instance"),
