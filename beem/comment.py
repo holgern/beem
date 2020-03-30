@@ -522,18 +522,14 @@ class Comment(BlockchainObject):
         if median_hist is not None:
             median_price = Price(median_hist, steem_instance=self.steem)
         pending_rewards = False
-        if "active_votes" in self:
-            active_votes_list = self["active_votes"]
-        else:
-            active_votes_list = self.get_votes()
+        active_votes_list = self.get_votes()
         
         if "total_vote_weight" in self:
             total_vote_weight = self["total_vote_weight"]
         active_votes_json_list = []
         for vote in active_votes_list:
             if "weight" not in vote:
-                from beem.vote import Vote
-                v = Vote(construct_authorpermvoter(self["author"], self["permlink"], vote["voter"]), steem_instance=self.steem)
+                vote.refresh()
                 active_votes_json_list.append(v.json())
             else:
                 active_votes_json_list.append(vote.json())

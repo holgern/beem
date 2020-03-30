@@ -347,6 +347,7 @@ class ActiveVotes(VotesObject):
         if not self.steem.is_connected():
             return None
         self.steem.rpc.set_next_node_on_empty_reply(False)
+
         if isinstance(authorperm, Comment):
             if 'active_votes' in authorperm and len(authorperm["active_votes"]) > 0:
                 votes = authorperm["active_votes"]
@@ -366,9 +367,12 @@ class ActiveVotes(VotesObject):
             [author, permlink] = resolve_authorperm(authorperm)
             if self.steem.rpc.get_use_appbase():
                 self.steem.rpc.set_next_node_on_empty_reply(True)
-                votes = self.steem.rpc.get_active_votes({'author': author,
-                                                         'permlink': permlink},
-                                                        api="tags")['votes']
+                try:
+                    votes = self.steem.rpc.get_active_votes({'author': author,
+                                                             'permlink': permlink},
+                                                            api="tags")['votes']
+                except:
+                    votes = self.steem.rpc.get_active_votes(author, permlink)                
             else:
                 votes = self.steem.rpc.get_active_votes(author, permlink)
         elif isinstance(authorperm, list):
