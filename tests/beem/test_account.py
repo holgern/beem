@@ -245,33 +245,20 @@ class Testcases(unittest.TestCase):
         for h in account.history_reverse(use_block_num=False, stop=-15, raw_output=True):
             h_all_raw.append(h)
         h_list = []
-        for h in account.history(start=h_all_raw[-1][1]["block"], stop=h_all_raw[-11 + zero_element][1]["block"], use_block_num=True, batch_size=10, raw_output=True):
+        for h in account.history(start=h_all_raw[-1][1]["block"], stop=h_all_raw[0][1]["block"], use_block_num=True, batch_size=10, raw_output=True):
             h_list.append(h)
         # self.assertEqual(h_list[0][0], zero_element)
-        self.assertEqual(h_list[-1][0], 10)
+        self.assertEqual(h_list[-1][0], h_all_raw[0][0])
         self.assertEqual(h_list[0][1]['block'], h_all_raw[-1][1]['block'])
-        self.assertEqual(h_list[-1][1]['block'], h_all_raw[-11 + zero_element][1]['block'])
+        self.assertEqual(h_list[-1][1]['block'], h_all_raw[0][1]['block'])
         h_list = []
-        for h in account.history_reverse(start=h_all_raw[-11 + zero_element][1]["block"], stop=h_all_raw[-1][1]["block"], use_block_num=True, batch_size=10, raw_output=True):
+        for h in account.history_reverse(start=h_all_raw[0][1]["block"], stop=h_all_raw[-1][1]["block"], use_block_num=True, batch_size=10, raw_output=True):
             h_list.append(h)
-        self.assertEqual(h_list[0][0], 10)
-        self.assertEqual(h_list[-1][0], zero_element)
-        self.assertEqual(h_list[0][1]['block'], h_all_raw[-11 + zero_element][1]['block'])
+        # self.assertEqual(h_list[0][0], 10)
+        
+        self.assertEqual(h_list[0][0], h_all_raw[0][0])
+        self.assertEqual(h_list[0][1]['block'], h_all_raw[0][1]['block'])
         self.assertEqual(h_list[-1][1]['block'], h_all_raw[-1][1]['block'])
-        h_list = []
-        for h in account.get_account_history(10, 10, use_block_num=True, start=h_all_raw[-2 + zero_element][1]["block"], stop=h_all_raw[-10 + zero_element][1]["block"], order=1, raw_output=True):
-            h_list.append(h)
-        self.assertEqual(h_list[0][0], 1)
-        self.assertEqual(h_list[-1][0], 9)
-        self.assertEqual(h_list[0][1]['block'], h_all_raw[-2 + zero_element][1]['block'])
-        self.assertEqual(h_list[-1][1]['block'], h_all_raw[-10 + zero_element][1]['block'])
-        h_list = []
-        for h in account.get_account_history(10, 10, use_block_num=True, start=h_all_raw[-10 + zero_element][1]["block"], stop=h_all_raw[-2 + zero_element][1]["block"], order=-1, raw_output=True):
-            h_list.append(h)
-        self.assertEqual(h_list[0][0], 9)
-        self.assertEqual(h_list[-1][0], 1)
-        self.assertEqual(h_list[0][1]['block'], h_all_raw[-10 + zero_element][1]['block'])
-        self.assertEqual(h_list[-1][1]['block'], h_all_raw[-2 + zero_element][1]['block'])
 
     def test_account_props(self):
         account = self.account

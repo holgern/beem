@@ -57,7 +57,7 @@ class Testcases(unittest.TestCase):
         cls.authorperm = comment.authorperm
         votes = comment.get_votes()
         last_vote = votes[-1]
-        cls.authorpermvoter = '@' + comment['authorperm'] + '|' + last_vote["voter"]
+        cls.authorpermvoter = comment['authorperm'] + '|' + last_vote["voter"]
 
     @classmethod
     def tearDownClass(cls):
