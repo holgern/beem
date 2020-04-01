@@ -240,11 +240,14 @@ class Testcases(unittest.TestCase):
     def test_history_block_num(self):
         stm = self.bts
         zero_element = 0
-        account = Account("fullnodeupdate", steem_instance=stm)
+        account = Account("beembot", steem_instance=stm)
         h_all_raw = []
         for h in account.history_reverse(use_block_num=False, stop=-15, raw_output=True):
             h_all_raw.append(h)
         h_list = []
+        self.assertTrue(len(h_all_raw) > 0)
+        self.assertTrue(len(h_all_raw[0]) > 1)
+        self.assertTrue("block" in h_all_raw[0][1])
         for h in account.history(start=h_all_raw[-1][1]["block"], stop=h_all_raw[0][1]["block"], use_block_num=True, batch_size=10, raw_output=True):
             h_list.append(h)
         # self.assertEqual(h_list[0][0], zero_element)

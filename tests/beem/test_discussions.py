@@ -48,22 +48,22 @@ class Testcases(unittest.TestCase):
         d = Discussions_by_trending(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
-    def test_comment_payout(self):
-        bts = self.bts
-        query = Query()
-        query["limit"] = 10
-        # query["tag"] = "fullnodeupdate"
-        d = Comment_discussions_by_payout(query, steem_instance=bts)
-        self.assertEqual(len(d), 10)
+    #def test_comment_payout(self):
+    #    bts = self.bts
+    #    query = Query()
+    #    query["limit"] = 10
+    #    # query["tag"] = "fullnodeupdate"
+    #    d = Comment_discussions_by_payout(query, steem_instance=bts)
+    #    self.assertEqual(len(d), 10)
 
-    def test_post_payout(self):
-        bts = self.bts
+    #def test_post_payout(self):
+    #    bts = self.bts
 
-        query = Query()
-        query["limit"] = 10
-        # query["tag"] = "fullnodeupdate"
-        d = Post_discussions_by_payout(query, steem_instance=bts)
-        self.assertEqual(len(d), 10)
+    #    query = Query()
+    #    query["limit"] = 10
+    #    # query["tag"] = "fullnodeupdate"
+    #    d = Post_discussions_by_payout(query, steem_instance=bts)
+    #    self.assertEqual(len(d), 10)
 
     def test_created(self):
         bts = self.bts
