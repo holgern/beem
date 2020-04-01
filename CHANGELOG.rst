@@ -3,6 +3,12 @@ Changelog
 0.22.12
 -------
 * Add hive node
+* get_feed uses now discussion_by_feed
+* get_account_votes has been fixed
+* ActiveVotes has been fixed
+* Discussions has been fixed
+* raw_data parameter added to all discussions
+* beempy curation, beempy votes and beempy pending has been fixed
 
 0.22.11
 -------

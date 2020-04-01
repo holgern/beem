@@ -2937,7 +2937,7 @@ def rewards(accounts, only_sum, post, comment, curation, length, author, permlin
 @click.option('--author', '-a', help='Show the author for each entry', is_flag=True, default=False)
 @click.option('--permlink', '-e', help='Show the permlink for each entry', is_flag=True, default=False)
 @click.option('--title', '-t', help='Show the title for each entry', is_flag=True, default=False)
-@click.option('--days', '-d', default=7., help="Limit shown rewards by this amount of days (default: 7), max is 7 days.")
+@click.option('--days', '-d', default=1., help="Limit shown rewards by this amount of days (default: 1), max is 7 days.")
 def pending(accounts, only_sum, post, comment, curation, length, author, permlink, title, days):
     """ Lists pending rewards
     """
@@ -3029,7 +3029,8 @@ def pending(accounts, only_sum, post, comment, curation, length, author, permlin
         if curation:
             votes = AccountVotes(account, start=limit_time, steem_instance=stm)
             for vote in votes:
-                c = Comment(vote["authorperm"], steem_instance=stm)
+                authorperm = construct_authorperm(vote["author"], vote["permlink"])
+                c = Comment(authorperm, steem_instance=stm)
                 rewards = c.get_curation_rewards()
                 if not rewards["pending_rewards"]:
                     continue

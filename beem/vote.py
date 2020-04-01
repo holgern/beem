@@ -367,7 +367,7 @@ class ActiveVotes(VotesObject):
         elif isinstance(authorperm, string_types):
             [author, permlink] = resolve_authorperm(authorperm)
             if self.steem.rpc.get_use_appbase():
-                self.steem.rpc.set_next_node_on_empty_reply(True)
+                self.steem.rpc.set_next_node_on_empty_reply(False)
                 try:
                     votes = self.steem.rpc.get_active_votes(author, permlink, api="condenser")
                 except:

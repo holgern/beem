@@ -638,7 +638,8 @@ class Comment(BlockchainObject):
         if raw_data and "active_votes" in self:
             return self["active_votes"]
         from .vote import ActiveVotes
-        return ActiveVotes(self["authorperm"], lazy=False, steem_instance=self.steem)
+        authorperm = construct_authorperm(self["author"], self["permlink"])
+        return ActiveVotes(authorperm, lazy=False, steem_instance=self.steem)
 
     def upvote(self, weight=+100, voter=None):
         """ Upvote the post
