@@ -73,7 +73,7 @@ Advantages over the official steem-python library
 
 Installation
 ============
-The minimal working python version is 2.7.x. or 3.4.x
+The minimal working python version is 2.7.x. or 3.5.x
 
 beem can be installed parallel to python-steem.
 
