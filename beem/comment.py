@@ -542,8 +542,11 @@ class Comment(BlockchainObject):
             total_vote_weight += vote["weight"]
             
         if not self.is_pending():
-            max_rewards = Amount(0, self.steem.steem_symbol, steem_instance=self.steem)
-            unclaimed_rewards = max_rewards.copy()
+            if pending_payout_SBD or median_hist is None:
+                max_rewards = Amount(self["curator_payout_value"], steem_instance=self.steem)
+            else:
+                max_rewards = median_price.as_base(self.steem.steem_symbol) * Amount(self["curator_payout_value"], steem_instance=self.steem)
+            unclaimed_rewards = Amount(0, self.steem.steem_symbol, steem_instance=self.steem)
         else:
             if pending_payout_value is None and "pending_payout_value" in self:
                 pending_payout_value = Amount(self["pending_payout_value"], steem_instance=self.steem)

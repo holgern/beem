@@ -2559,6 +2559,9 @@ def curation(authorperm, account, limit, min_vote, max_vote, min_performance, ma
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
+    SP_symbol = "SP"
+    if stm.is_hive:
+        SP_symbol = "HP"
     if authorperm is None:
         authorperm = 'all'
     if account is None and authorperm != 'all':
@@ -2690,7 +2693,7 @@ def curation(authorperm, account, limit, min_vote, max_vote, min_performance, ma
                 t.add_row(new_row + voter + ["%.1f min" % row[1],
                                              "%.3f %s" % (float(row[2]), stm.sbd_symbol),
                                              "%.3f %s" % (float(row[3]), stm.sbd_symbol),
-                                             "%.3f SP" % (row[4]),
+                                             "%.3f %s" % (row[4], SP_symbol),
                                              "%.1f %%" % (row[5])])
                 if len(authorperm_list) == 1:
                     new_row = new_row2
