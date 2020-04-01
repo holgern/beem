@@ -61,6 +61,8 @@ class Testcases(unittest.TestCase):
     def tearDownClass(cls):
         stm = shared_steem_instance()
         stm.config.recover_with_latest_backup()
+        runner = CliRunner()
+        result = runner.invoke(cli, ['updatenodes', '--hive'])
 
     def test_balance(self):
         runner = CliRunner()

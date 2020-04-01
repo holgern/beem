@@ -2615,17 +2615,19 @@ def curation(authorperm, account, limit, min_vote, max_vote, min_performance, ma
         sum_curation = [0, 0, 0, 0]
         max_curation = [0, 0, 0, 0, 0, 0]
         highest_vote = [0, 0, 0, 0, 0, 0]
-        for vote in comment["active_votes"]:
+        for vote in comment.get_votes():
+            vote_time = vote["time"]
+            
             vote_SBD = stm.rshares_to_sbd(int(vote["rshares"]))
             curation_SBD = curation_rewards_SBD["active_votes"][vote["voter"]]
             curation_SP = curation_rewards_SP["active_votes"][vote["voter"]]
             if vote_SBD > 0:
-                penalty = ((comment.get_curation_penalty(vote_time=vote["time"])) * vote_SBD)
+                penalty = ((comment.get_curation_penalty(vote_time=vote_time)) * vote_SBD)
                 performance = (float(curation_SBD) / vote_SBD * 100)
             else:
                 performance = 0
                 penalty = 0
-            vote_befor_min = (((vote["time"]) - comment["created"]).total_seconds() / 60)
+            vote_befor_min = (((vote_time) - comment["created"]).total_seconds() / 60)
             sum_curation[0] += vote_SBD
             sum_curation[1] += penalty
             sum_curation[2] += float(curation_SP)

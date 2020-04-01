@@ -130,6 +130,8 @@ class Vote(BlockchainObject):
             vote["time"] = formatTimeString(vote.get("time", "1970-01-01T00:00:00"))
         elif "timestamp" in vote and isinstance(vote.get("timestamp"), string_types) and vote.get("timestamp") != '':
             vote["time"] = formatTimeString(vote.get("timestamp", "1970-01-01T00:00:00"))
+        elif "last_update" in vote and isinstance(vote.get("last_update"), string_types) and vote.get("last_update") != '':
+            vote["last_update"] = formatTimeString(vote.get("last_update", "1970-01-01T00:00:00"))        
         else:
             vote["time"] = formatTimeString("1970-01-01T00:00:00")
         return vote
@@ -232,7 +234,7 @@ class VotesObject(list):
 
     def printAsTable(self, voter=None, votee=None, start=None, stop=None, start_percent=None, stop_percent=None, sort_key="time", reverse=True, allow_refresh=True, return_str=False, **kwargs):
         utc = pytz.timezone('UTC')
-        table_header = ["Voter", "Votee", "SBD", "Time", "Rshares", "Percent", "Weight"]
+        table_header = ["Voter", "Votee", "SBD/HBD", "Time", "Rshares", "Percent", "Weight"]
         t = PrettyTable(table_header)
         t.align = "l"
         start = addTzInfo(start)
@@ -349,17 +351,16 @@ class ActiveVotes(VotesObject):
         self.steem.rpc.set_next_node_on_empty_reply(False)
 
         if isinstance(authorperm, Comment):
-            if 'active_votes' in authorperm and len(authorperm["active_votes"]) > 0:
-                votes = authorperm["active_votes"]
-            elif self.steem.rpc.get_use_appbase():
-                self.steem.rpc.set_next_node_on_empty_reply(True)
+            # if 'active_votes' in authorperm and len(authorperm["active_votes"]) > 0:
+            #    votes = authorperm["active_votes"]
+            if self.steem.rpc.get_use_appbase():
+                self.steem.rpc.set_next_node_on_empty_reply(False)
                 try:
-                    
+                    votes = self.steem.rpc.get_active_votes(authorperm["author"], authorperm["permlink"], api="condenser")
+                except:
                     votes = self.steem.rpc.get_active_votes({'author': authorperm["author"],
                                                              'permlink': authorperm["permlink"]},
                                                             api="tags")['votes']
-                except:
-                    votes = self.steem.rpc.get_active_votes(authorperm["author"], authorperm["permlink"])
             else:
                 votes = self.steem.rpc.get_active_votes(authorperm["author"], authorperm["permlink"])
             authorperm = authorperm["authorperm"]
@@ -368,11 +369,11 @@ class ActiveVotes(VotesObject):
             if self.steem.rpc.get_use_appbase():
                 self.steem.rpc.set_next_node_on_empty_reply(True)
                 try:
+                    votes = self.steem.rpc.get_active_votes(author, permlink, api="condenser")
+                except:
                     votes = self.steem.rpc.get_active_votes({'author': author,
                                                              'permlink': permlink},
                                                             api="tags")['votes']
-                except:
-                    votes = self.steem.rpc.get_active_votes(author, permlink)                
             else:
                 votes = self.steem.rpc.get_active_votes(author, permlink)
         elif isinstance(authorperm, list):
@@ -399,7 +400,7 @@ class AccountVotes(VotesObject):
         :param str account: Account name
         :param Steem steem_instance: Steem() instance to use when accesing a RPC
     """
-    def __init__(self, account, start=None, stop=None, lazy=False, full=False, steem_instance=None):
+    def __init__(self, account, start=None, stop=None, raw_data=False, lazy=False, full=False, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         start = addTzInfo(start)
         stop = addTzInfo(stop)
@@ -411,6 +412,10 @@ class AccountVotes(VotesObject):
             votes = []
         for x in votes:
             time = x.get("time", "")
+            if time == "":
+                time = x.get("last_update", "")
+                if time != "":
+                    x["time"] = time
             if time != "" and isinstance(time, string_types):
                 d_time = formatTimeString(time)
             elif isinstance(time, datetime):
@@ -418,6 +423,9 @@ class AccountVotes(VotesObject):
             else:
                 d_time = addTzInfo(datetime(1970, 1, 1, 0, 0, 0))
             if (start is None or d_time >= start) and (stop is None or d_time <= stop):
-                vote_list.append(Vote(x, authorperm=account["name"], lazy=lazy, full=full, steem_instance=self.steem))
+                if not raw_data:
+                    vote_list.append(Vote(x, authorperm=account["name"], lazy=lazy, full=full, steem_instance=self.steem))
+                else:
+                    vote_list.append(x)
 
         super(AccountVotes, self).__init__(vote_list)

@@ -678,39 +678,16 @@ class Account(BlockchainObject):
             account = account["name"]
         if not self.steem.is_connected():
             return None
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        success = True
-        if self.steem.rpc.get_use_appbase():
-            try:
-                if raw_data and short_entries:
-                    return [
-                        c for c in self.steem.rpc.get_feed_entries({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
-                    ]
-                elif raw_data:
-                    return [
-                        c for c in self.steem.rpc.get_feed({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
-                    ]
-                elif not raw_data:
-                    from .comment import Comment
-                    return [
-                        Comment(c['comment'], steem_instance=self.steem) for c in self.steem.rpc.get_feed({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
-                    ]
-            except:
-                success = False
-        if not self.steem.rpc.get_use_appbase() or not success:
-            if raw_data and short_entries:
-                return [
-                    c for c in self.steem.rpc.get_feed_entries(account, start_entry_id, limit, api='follow')
-                ]
-            elif raw_data:
-                return [
-                    c for c in self.steem.rpc.get_feed(account, start_entry_id, limit, api='follow')
-                ]
-            else:
-                from .comment import Comment
-                return [
-                    Comment(c['comment'], steem_instance=self.steem) for c in self.steem.rpc.get_feed(account, start_entry_id, limit, api='follow')
-                ]
+        from beem.discussions import Discussions, Query
+        d = Discussions(steem_instance=self.steem)
+        if short_entries:
+            truncate_body = 1
+        else:
+            truncate_body = 0
+        q = Query(limit=limit, tag=account, truncate_body=truncate_body)
+        return [
+            c for c in d.get_discussions("feed", q, limit=limit, raw_data=raw_data)
+        ]
 
     def get_feed_entries(self, start_entry_id=0, limit=100, raw_data=True,
                          account=None):
@@ -760,8 +737,8 @@ class Account(BlockchainObject):
                 >>> stm = Steem(node=nodelist.get_nodes(hive=True))
                 >>> account = Account("steemit", steem_instance=stm)
                 >>> entry = account.get_blog_entries(0, 1, raw_data=True)[0]
-                >>> print("%s - %s - %s - %s" % (entry["author"], entry["permlink"], entry["blog"], entry["reblog_on"]))
-                steemit - firstpost - steemit - 1970-01-01T00:00:00
+                >>> print("%s - %s - %s" % (entry["author"], entry["permlink"], entry["blog"]))
+                steemit - firstpost - steemit
 
         """
         return self.get_blog(start_entry_id=start_entry_id, limit=limit, raw_data=raw_data, short_entries=True, account=account)
@@ -1548,10 +1525,9 @@ class Account(BlockchainObject):
                 >>> from beem.nodelist import NodeList
                 >>> nodelist = NodeList()
                 >>> nodelist.update_nodes()
-                >>> stm = Steem(node=nodelist.get_nodes(hive=False))
+                >>> stm = Steem(node=nodelist.get_nodes(hive=False), use_condenser=True)
                 >>> account = Account("beem.app", steem_instance=stm)
-                >>> account.get_account_votes()
-                []
+                >>> account.get_account_votes()  # doctest: +SKIP
 
         """
         if account is None:
@@ -1560,32 +1536,33 @@ class Account(BlockchainObject):
             account = account["name"]
         if not self.steem.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            vote_list = self.steem.rpc.get_account_votes(account, api="condenser")
-        else:
-            vote_list = self.steem.rpc.get_account_votes(account)
-        if isinstance(vote_list, dict) and "error" in vote_list:
-            start_author = ""
-            start_permlink = ""
-            vote_list = []
-            finished = False
-            while not finished:
-                ret = self.steem.rpc.list_votes({"start": [account, start_author, start_permlink], "limit": 1000, "order": "by_voter_comment"}, api="database")["votes"]
-                if start_author != "":
-                    if len(ret) == 0:
-                        finished = True
-                    ret = ret[1:]
-                for vote in ret:
-                    if vote["voter"] != account:
-                        finished = True
-                        continue
-                    vote_list.append(vote)
-                    start_author = vote["author"]
-                    start_permlink = vote["permlink"]
-            return vote_list
-        else:
-            return vote_list
+        # self.steem.rpc.set_next_node_on_empty_reply(False)
+        # if self.steem.rpc.get_use_appbase():
+        #     vote_list = self.steem.rpc.get_account_votes(account, api="condenser")
+        # else:
+        #    vote_list = self.steem.rpc.get_account_votes(account)
+        # if isinstance(vote_list, dict) and "error" in vote_list:
+        self.steem.rpc.set_next_node_on_empty_reply(True)
+        start_author = ""
+        start_permlink = ""
+        vote_list = []
+        finished = False
+        while not finished:
+            ret = self.steem.rpc.list_votes({"start": [account, start_author, start_permlink], "limit": 1000, "order": "by_voter_comment"}, api="database")["votes"]
+            if start_author != "":
+                if len(ret) == 0:
+                    finished = True
+                ret = ret[1:]
+            for vote in ret:
+                if vote["voter"] != account:
+                    finished = True
+                    continue
+                vote_list.append(vote)
+                start_author = vote["author"]
+                start_permlink = vote["permlink"]
+        return vote_list
+        # else:
+        #     return vote_list
 
     def get_vote(self, comment):
         """Returns a vote if the account has already voted for comment.

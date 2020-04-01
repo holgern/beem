@@ -30,7 +30,7 @@ class Testcases(unittest.TestCase):
       
         cls.bts = Steem(
             node=node_list,
-            use_condenser=True,
+            use_condenser=False,
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10
@@ -44,7 +44,7 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         query = Query()
         query["limit"] = 10
-        query["tag"] = "steemit"
+        # query["tag"] = "fullnodeupdate"
         d = Discussions_by_trending(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
@@ -52,7 +52,7 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         query = Query()
         query["limit"] = 10
-        query["tag"] = "steemit"
+        # query["tag"] = "fullnodeupdate"
         d = Comment_discussions_by_payout(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
@@ -61,7 +61,7 @@ class Testcases(unittest.TestCase):
 
         query = Query()
         query["limit"] = 10
-        query["tag"] = "steemit"
+        # query["tag"] = "fullnodeupdate"
         d = Post_discussions_by_payout(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
@@ -69,7 +69,7 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         query = Query()
         query["limit"] = 10
-        query["tag"] = "steemit"
+        query["tag"] = "fullnodeupdate"
         d = Discussions_by_created(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
@@ -77,7 +77,7 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         query = Query()
         query["limit"] = 10
-        query["tag"] = "steemit"
+        query["tag"] = "fullnodeupdate"
         d = Discussions_by_active(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
@@ -91,7 +91,7 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         query = Query()
         query["limit"] = 10
-        query["tag"] = "steemit"
+        query["tag"] = "fullnodeupdate"
         d = Discussions_by_votes(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
@@ -99,7 +99,7 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         query = Query()
         query["limit"] = 10
-        query["tag"] = "steemit"
+        query["tag"] = "holger80"
         d = Discussions_by_children(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
@@ -107,7 +107,7 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         query = Query()
         query["limit"] = 10
-        query["tag"] = "gtg"
+        query["tag"] = "holger80"
         d = Discussions_by_feed(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
@@ -115,7 +115,7 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         query = Query()
         query["limit"] = 10
-        query["tag"] = "gtg"
+        query["tag"] = "fullnodeupdate"
         d = Discussions_by_blog(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
@@ -123,8 +123,8 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         query = Query()
         query["limit"] = 10
-        query["filter_tags"] = ["gtg"]
-        query["start_author"] = "gtg"
+        query["filter_tags"] = ["fullnodeupdate"]
+        query["start_author"] = "fullnodeupdate"
         d = Discussions_by_comments(query, steem_instance=bts)
         self.assertEqual(len(d), 10)
 
@@ -132,7 +132,7 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         query = Query()
         query["limit"] = 1
-        query["tag"] = "steemit"
+        # query["tag"] = "fullnodeupdate"
         d = Discussions_by_promoted(query, steem_instance=bts)
         discussions = Discussions(steem_instance=bts)
         d2 = []

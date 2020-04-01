@@ -530,7 +530,7 @@ class Comment(BlockchainObject):
         for vote in active_votes_list:
             if "weight" not in vote:
                 vote.refresh()
-                active_votes_json_list.append(v.json())
+                active_votes_json_list.append(vote.json())
             else:
                 active_votes_json_list.append(vote.json())
         
@@ -638,7 +638,7 @@ class Comment(BlockchainObject):
         if raw_data and "active_votes" in self:
             return self["active_votes"]
         from .vote import ActiveVotes
-        return ActiveVotes(self, lazy=False, steem_instance=self.steem)
+        return ActiveVotes(self["authorperm"], lazy=False, steem_instance=self.steem)
 
     def upvote(self, weight=+100, voter=None):
         """ Upvote the post
