@@ -2537,8 +2537,8 @@ def votes(account, direction, outgoing, incoming, days, export):
 @click.option('--limit', '-m', help='Show only the first minutes')
 @click.option('--min-vote', '-v', help='Show only votes higher than the given value')
 @click.option('--max-vote', '-w', help='Show only votes lower than the given value')
-@click.option('--min-performance', '-x', help='Show only votes with performance higher than the given value')
-@click.option('--max-performance', '-y', help='Show only votes with performance lower than the given value')
+@click.option('--min-performance', '-x', help='Show only votes with performance higher than the given value in HBD/SBD')
+@click.option('--max-performance', '-y', help='Show only votes with performance lower than the given value in HBD/SBD')
 @click.option('--payout', default=None, help="Show the curation for a potential payout in SBD as float")
 @click.option('--export', '-e', default=None, help="Export results to HTML-file")
 @click.option('--short', '-s', is_flag=True, default=False, help="Show only Curation without sum")
@@ -2643,10 +2643,8 @@ def curation(authorperm, account, limit, min_vote, max_vote, min_performance, ma
                    penalty,
                    float(curation_SP),
                    performance]
-            if row[-1] > max_curation[-1]:
-                max_curation = row
-            if row[2] > highest_vote[2]:
-                highest_vote = row
+            
+
             rows.append(row)
         sortedList = sorted(rows, key=lambda row: (row[1]), reverse=False)
         new_row = []
@@ -2683,6 +2681,10 @@ def curation(authorperm, account, limit, min_vote, max_vote, min_performance, ma
                 continue
             if max_performance is not None and float(row[5]) > float(max_performance):
                 continue
+            if row[-1] > max_curation[-1]:
+                max_curation = row
+            if row[2] > highest_vote[2]:
+                highest_vote = row            
             if show_all_voter or account == row[0]:
                 if not all_posts:
                     voter = [row[0]]
@@ -2709,19 +2711,19 @@ def curation(authorperm, account, limit, min_vote, max_vote, min_performance, ma
             t.add_row(sum_line + ["%.1f min" % highest_vote[1],
                                   "%.3f %s" % (float(highest_vote[2]), stm.sbd_symbol),
                                   "%.3f %s" % (float(highest_vote[3]), stm.sbd_symbol),
-                                  "%.3f SP" % (highest_vote[4]),
+                                  "%.3f %s" % (highest_vote[4], SP_symbol),
                                   "%.1f %%" % (highest_vote[5])])
             sum_line[-1] = "High. Cur."
             t.add_row(sum_line + ["%.1f min" % max_curation[1],
                                   "%.3f %s" % (float(max_curation[2]), stm.sbd_symbol),
                                   "%.3f %s" % (float(max_curation[3]), stm.sbd_symbol),
-                                  "%.3f SP" % (max_curation[4]),
+                                  "%.3f %s" % (max_curation[4], SP_symbol),
                                   "%.1f %%" % (max_curation[5])])
             sum_line[-1] = "Sum"
             t.add_row(sum_line + ["-",
                                   "%.3f %s" % (sum_curation[0], stm.sbd_symbol),
                                   "%.3f %s" % (sum_curation[1], stm.sbd_symbol),
-                                  "%.3f SP" % (sum_curation[2]),
+                                  "%.3f %s" % (sum_curation[2], SP_symbol),
                                   "%.2f %%" % curation_sum_percentage])
             if all_posts or export:
                 t.add_row(new_row2 + voter2 + ["-", "-", "-", "-", "-"])
