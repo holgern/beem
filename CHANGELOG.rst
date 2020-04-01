@@ -9,6 +9,8 @@ Changelog
 * Discussions has been fixed
 * raw_data parameter added to all discussions
 * beempy curation, beempy votes and beempy pending has been fixed
+* Votes table improved
+* fix curation and author reward calculation
 
 0.22.11
 -------

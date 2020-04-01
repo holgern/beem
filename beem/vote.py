@@ -259,12 +259,15 @@ class VotesObject(list):
             if (start is None or d_time >= start) and (stop is None or d_time <= stop) and\
                 (start_percent is None or percent >= start_percent) and (stop_percent is None or percent <= stop_percent) and\
                 (voter is None or vote["voter"] == voter) and (votee is None or vote.votee == votee):
+                percent = vote.get('percent', '')
+                if percent == '':
+                    percent = vote.get('vote_percent', '')
                 t.add_row([vote['voter'],
                            vote.votee,
                            str(round(vote.sbd, 2)).ljust(5) + "$",
                            timestr,
                            vote.get("rshares", ""),
-                           str(vote.get('percent', '')),
+                           str(percent),
                            str(vote['weight'])])
 
         if return_str:
@@ -282,6 +285,8 @@ class VotesObject(list):
                 start = None
                 stop = None
             percent = vote.get('percent', '')
+            if percent == '':
+                percent = vote.get('vote_percent', '') 
             if percent == '':
                 start_percent = None
                 stop_percent = None

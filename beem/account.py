@@ -1513,7 +1513,7 @@ class Account(BlockchainObject):
         else:
             return self.steem.rpc.get_expiring_vesting_delegations(account, formatTimeString(after), limit)
 
-    def get_account_votes(self, account=None):
+    def get_account_votes(self, account=None, start_author="", start_permlink=""):
         """ Returns all votes that the account has done
 
             :rtype: list
@@ -1543,8 +1543,6 @@ class Account(BlockchainObject):
         #    vote_list = self.steem.rpc.get_account_votes(account)
         # if isinstance(vote_list, dict) and "error" in vote_list:
         self.steem.rpc.set_next_node_on_empty_reply(True)
-        start_author = ""
-        start_permlink = ""
         vote_list = []
         finished = False
         while not finished:

@@ -354,7 +354,7 @@ class Comment(BlockchainObject):
         return K * vote_value_SBD * t * math.sqrt(estimated_value_SBD)
 
     def get_curation_penalty(self, vote_time=None):
-        """ If post is less than 15 minutes old, it will incur a curation
+        """ If post is less than 5 minutes old, it will incur a curation
             reward penalty.
 
             :param datetime vote_time: A vote time can be given and the curation
@@ -453,6 +453,8 @@ class Comment(BlockchainObject):
     def get_author_rewards(self):
         """ Returns the author rewards.
 
+            
+            
             Example::
 
                 {
@@ -468,12 +470,12 @@ class Comment(BlockchainObject):
                     "payout_SP": Amount(0, self.steem.steem_symbol, steem_instance=self.steem),
                     "payout_SBD": Amount(0, self.steem.sbd_symbol, steem_instance=self.steem),
                     "total_payout_SBD": Amount(self["total_payout_value"], steem_instance=self.steem)}
-
+        author_reward_factor = 0.5
         median_hist = self.steem.get_current_median_history()
         if median_hist is not None:
             median_price = Price(median_hist, steem_instance=self.steem)
         beneficiaries_pct = self.get_beneficiaries_pct()
-        curation_tokens = self.reward * 0.25
+        curation_tokens = self.reward * author_reward_factor
         author_tokens = self.reward - curation_tokens
         curation_rewards = self.get_curation_rewards()
         if self.steem.hardfork >= 20 and median_hist is not None:
@@ -490,7 +492,7 @@ class Comment(BlockchainObject):
             return {'pending_rewards': True, "total_payout": author_tokens}
 
     def get_curation_rewards(self, pending_payout_SBD=False, pending_payout_value=None):
-        """ Returns the curation rewards.
+        """ Returns the curation rewards. The split between creator/curator is currently 50%/50%.
 
             :param bool pending_payout_SBD: If True, the rewards are returned in SBD and not in STEEM (default is False)
             :param pending_payout_value: When not None this value instead of the current
@@ -523,6 +525,7 @@ class Comment(BlockchainObject):
             median_price = Price(median_hist, steem_instance=self.steem)
         pending_rewards = False
         active_votes_list = self.get_votes()
+        curator_reward_factor = 0.5
         
         if "total_vote_weight" in self:
             total_vote_weight = self["total_vote_weight"]
@@ -551,9 +554,9 @@ class Comment(BlockchainObject):
             elif isinstance(pending_payout_value, str):
                 pending_payout_value = Amount(pending_payout_value, steem_instance=self.steem)
             if pending_payout_SBD or median_hist is None:
-                max_rewards = (pending_payout_value * 0.25)
+                max_rewards = (pending_payout_value * curator_reward_factor)
             else:
-                max_rewards = median_price.as_base(self.steem.steem_symbol) * (pending_payout_value * 0.25)
+                max_rewards = median_price.as_base(self.steem.steem_symbol) * (pending_payout_value * curator_reward_factor)
             unclaimed_rewards = max_rewards.copy()
             pending_rewards = True
 

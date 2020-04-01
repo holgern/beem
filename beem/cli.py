@@ -33,7 +33,7 @@ from beem.asset import Asset
 from beem.witness import Witness, WitnessesRankedByVote, WitnessesVotedByAccount
 from beem.blockchain import Blockchain
 from beem.utils import formatTimeString, construct_authorperm, derive_beneficiaries, derive_tags, seperate_yaml_dict_from_body
-from beem.vote import AccountVotes, ActiveVotes
+from beem.vote import AccountVotes, ActiveVotes, Vote
 from beem import exceptions
 from beem.version import version as __version__
 from beem.asciichart import AsciiChart
@@ -2516,7 +2516,9 @@ def votes(account, direction, outgoing, incoming, days, export):
         account = Account(account, steem_instance=stm)
         votes_list = []
         for v in account.history(start=limit_time, only_ops=["vote"]):
-            votes_list.append(v)
+            vote = Vote(v, steem_instance=stm)
+            vote.refresh()
+            votes_list.append(vote)
         votes = ActiveVotes(votes_list, steem_instance=stm)
         in_votes_str = votes.printAsTable(votee=account["name"], return_str=True)
     if export:
@@ -2567,13 +2569,13 @@ def curation(authorperm, account, limit, min_vote, max_vote, min_performance, ma
         if not account:
             account = stm.config["default_account"]
         utc = pytz.timezone('UTC')
-        limit_time = utc.localize(datetime.utcnow()) - timedelta(days=days)
+        limit_time = utc.localize(datetime.utcnow()) - timedelta(days=7)
         votes = AccountVotes(account, start=limit_time, steem_instance=stm)
-        authorperm_list = [Comment(vote.authorperm, steem_instance=stm) for vote in votes]
+        authorperm_list = [vote.authorperm for vote in votes]
         if authorperm.isdigit():
             if len(authorperm_list) < int(authorperm):
                 raise ValueError("Authorperm id must be lower than %d" % (len(authorperm_list) + 1))
-            authorperm_list = [authorperm_list[int(authorperm) - 1]["authorperm"]]
+            authorperm_list = [authorperm_list[int(authorperm) - 1]]
             all_posts = False
         else:
             all_posts = True
@@ -2937,8 +2939,9 @@ def rewards(accounts, only_sum, post, comment, curation, length, author, permlin
 @click.option('--author', '-a', help='Show the author for each entry', is_flag=True, default=False)
 @click.option('--permlink', '-e', help='Show the permlink for each entry', is_flag=True, default=False)
 @click.option('--title', '-t', help='Show the title for each entry', is_flag=True, default=False)
-@click.option('--days', '-d', default=1., help="Limit shown rewards by this amount of days (default: 1), max is 7 days.")
-def pending(accounts, only_sum, post, comment, curation, length, author, permlink, title, days):
+@click.option('--days', '-d', default=7., help="Limit shown rewards by this amount of days (default: 7), max is 7 days.")
+@click.option('--from', '-f', '_from', default=0., help="Start day from which on rewards are shown (default: 0), max is 7 days.")
+def pending(accounts, only_sum, post, comment, curation, length, author, permlink, title, days, _from):
     """ Lists pending rewards
     """
     stm = shared_steem_instance()
@@ -2953,12 +2956,20 @@ def pending(accounts, only_sum, post, comment, curation, length, author, permlin
         days = 1
     if days > 7:
         days = 7
+    if _from < 0:
+        _from = 0
+    if _from > 7:
+        _from = 7
+    if _from + days > 7:
+        days = 7 - _from
     sp_symbol = "SP"
     if stm.is_hive:
         sp_symbol = "HP"
 
     utc = pytz.timezone('UTC')
-    limit_time = utc.localize(datetime.utcnow()) - timedelta(days=days)
+    max_limit_time = utc.localize(datetime.utcnow()) - timedelta(days=7)
+    limit_time = utc.localize(datetime.utcnow()) - timedelta(days=_from + days)
+    start_time = utc.localize(datetime.utcnow()) - timedelta(days=_from)
     for account in accounts:
         sum_reward = [0, 0, 0, 0]
         account = Account(account, steem_instance=stm)
@@ -2981,10 +2992,11 @@ def pending(accounts, only_sum, post, comment, curation, length, author, permlin
         rows = []
         c_list = {}
         start_op = account.estimate_virtual_op_num(limit_time)
+        stop_op = account.estimate_virtual_op_num(start_time)
         if start_op > 0:
             start_op -= 1
-        progress_length = (account.virtual_op_count() - start_op) / 1000
-        with click.progressbar(map(Comment, account.history(start=start_op, use_block_num=False, only_ops=["comment"])), length=progress_length) as comment_hist:
+        progress_length = (stop_op - start_op) / 1000
+        with click.progressbar(map(Comment, account.history(start=start_op, stop=stop_op, use_block_num=False, only_ops=["comment"])), length=progress_length) as comment_hist:
             for v in comment_hist:
                 try:
                     v.refresh()
@@ -3021,20 +3033,20 @@ def pending(accounts, only_sum, post, comment, curation, length, author, permlin
                         permlink_row = v.permlink
                 rows.append([v["author"],
                              permlink_row,
-                             ((v["created"] - limit_time).total_seconds() / 60 / 60 / 24),
+                             ((v["created"] - max_limit_time).total_seconds() / 60 / 60 / 24),
                              (payout_SBD),
                              (payout_SP),
                              (liquid_USD),
                              (invested_USD)])
         if curation:
-            votes = AccountVotes(account, start=limit_time, steem_instance=stm)
+            votes = AccountVotes(account, start=limit_time, stop=start_time, steem_instance=stm)
             for vote in votes:
                 authorperm = construct_authorperm(vote["author"], vote["permlink"])
                 c = Comment(authorperm, steem_instance=stm)
                 rewards = c.get_curation_rewards()
                 if not rewards["pending_rewards"]:
                     continue
-                days_to_payout = ((c["created"] - limit_time).total_seconds() / 60 / 60 / 24)
+                days_to_payout = ((c["created"] - max_limit_time).total_seconds() / 60 / 60 / 24)
                 if days_to_payout < 0:
                     continue
                 payout_SP = rewards["active_votes"][account["name"]]
