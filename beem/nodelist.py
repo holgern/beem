@@ -75,44 +75,12 @@ class NodeList(list):
                 "score": 50
             },
             {
-                "url": "wss://rpc.buildteam.io",
-                "version": "0.20.2",
-                "type": "appbase",
-                "owner": "themarkymark",
-                "hive": False,
-                "score": -10
-            },
-            {
-                "url": "https://rpc.buildteam.io",
-                "version": "0.20.2",
-                "type": "appbase",
-                "owner": "themarkymark",
-                "hive": False,
-                "score": -20
-            },
-            {
-                "url": "wss://steemd.minnowsupportproject.org",
-                "version": "0.19.11",
-                "type": "appbase",
-                "owner": "followbtcnews",
-                "hive": False,
-                "score": -10
-            },
-            {
                 "url": "https://steemd.minnowsupportproject.org",
                 "version": "0.19.12",
                 "type": "appbase",
                 "owner": "followbtcnews",
                 "hive": False,
                 "score": 100
-            },
-            {
-                "url": "wss://anyx.io",
-                "version": "0.20.6",
-                "type": "appbase",
-                "owner": "anyx",
-                "hive": True,
-                "score": -10
             },
             {
                 "url": "https://anyx.io",
@@ -190,9 +158,41 @@ class NodeList(list):
                 "url": "https://api.openhive.network",
                 "version": "0.23.0",
                 "type": "appbase",
-                "owner": "hive",
+                "owner": "",
                 "hive": True,
                 "score": 20
+            },
+            {
+                "url": "https://techcoderx.com",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "techcoderx",
+                "hive": True,
+                "score": 10
+            },
+            {
+                "url": "https://steem.61bts.com",
+                "version": "0.22.5",
+                "type": "appbase",
+                "owner": "",
+                "hive": False,
+                "score": 10
+            },
+            {
+                "url": "https://steem.bts.tw",
+                "version": "0.22.5",
+                "type": "appbase",
+                "owner": "",
+                "hive": False,
+                "score": 10
+            },
+            {
+                "url": "https://rpc.esteem.app",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "good-karma",
+                "hive": True,
+                "score": 10
             }]
         super(NodeList, self).__init__(nodes)
 
