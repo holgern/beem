@@ -1209,6 +1209,62 @@ def muting(account):
 
 @cli.command()
 @click.argument('account', nargs=1, required=False)
+@click.option('--limit', '-l', help='Limits shown notifications')
+@click.option('--all', '-a', help='Show all notifications (when not set, only unread are shown)', is_flag=True, default=False)
+@click.option('--mark_as_read', '-m', help='Broadcast a mark all as read custom json', is_flag=True, default=False)
+@click.option('--replies', '-r', help='Show only replies', is_flag=True, default=False)
+@click.option('--mentions', '-t', help='Show only mentions', is_flag=True, default=False)
+@click.option('--follows', '-f', help='Show only follows', is_flag=True, default=False)
+@click.option('--votes', '-v', help='Show only upvotes', is_flag=True, default=False)
+@click.option('--reblogs', '-b', help='Show only reblogs', is_flag=True, default=False)
+def notifications(account, limit, all, mark_as_read, replies, mentions, follows, votes, reblogs):
+    """ Show notifications of an account
+    """
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not account:
+        if "default_account" in stm.config:
+            account = stm.config["default_account"]
+    if mark_as_read and not unlock_wallet(stm):
+        return    
+    if not replies and not mentions and not follows and not votes and not reblogs:
+        show_all = True
+    else:
+        show_all = False
+    account = Account(account, steem_instance=stm)
+    t = PrettyTable(["Date", "Type", "Message"], hrules=0)
+    t.align = "r"
+    last_read = None
+    if limit is not None:
+        limit = int(limit)
+    for note in account.get_notifications(only_unread=not all, limit=limit)[::-1]:
+        if not show_all:
+            if note["type"] == "reblog" and not reblogs:
+                continue
+            elif note["type"] == "reply" and not replies:
+                continue
+            elif note["type"] == "reply_comment" and not replies:
+                continue            
+            elif note["type"] == "mention" and not mentions:
+                continue
+            elif note["type"] == "follow" and not follows:
+                continue
+            elif note["type"] == "vote" and not votes:
+                continue            
+        t.add_row([
+            note["date"],
+            note["type"],
+            note["msg"],
+        ])
+        last_read = note["date"]
+    print(t)
+    if mark_as_read:
+        account.mark_notifications_as_read(last_read=last_read)
+
+
+@cli.command()
+@click.argument('account', nargs=1, required=False)
 def permissions(account):
     """ Show permissions of an account
     """

@@ -822,6 +822,54 @@ class Account(BlockchainObject):
                     Comment(c["comment"], steem_instance=self.steem) for c in blog_list
                 ]
 
+    def get_notifications(self, only_unread=True, limit=None, account=None):
+        """ Returns account notifications
+
+            :param bool only_unread: When True, only unread notfications are shown
+            :param int limit: When set, the number of shown notifications is limited
+            :param str account: (optional) the account to broadcast
+                to (defaults to ``default_account``) 
+        """
+        if account is None:
+            account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]
+        if not self.steem.is_connected():
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
+        self.steem.rpc.set_next_node_on_empty_reply(False)
+        if only_unread:
+            unread_notes = self.steem.rpc.unread_notifications({'account': account}, api='bridge')
+            if limit is None or limit > unread_notes["unread"]:
+                limit = unread_notes["unread"]
+        if limit is None or limit == 0:
+            return []
+        return self.steem.rpc.account_notifications({'account': account, 'limit': limit}, api='bridge')
+
+    def mark_notifications_as_read(self, last_read=None, account=None):
+        """ Broadcast a mark all notification as read custom_json
+
+            :param str last_read: When set, this datestring is used to set the mark as read date
+            :param str account: (optional) the account to broadcast
+                to (defaults to ``default_account``)
+
+        """
+        if account is None:
+            account = self["name"]
+        if not account:
+            raise ValueError("You need to provide an account")
+        if last_read is None:
+            last_notification = self.get_notifications(only_unread=False, limit=1, account=account)
+            if len(last_notification) == 0:
+                raise ValueError("Notification list is empty")
+            last_read = last_notification[0]["date"]
+        json_body = [
+            'setLastRead', {
+                'date': last_read,
+            }
+        ]
+        return self.steem.custom_json(
+            "notify", json_body, required_posting_auths=[account])
+
     def get_blog_authors(self, account=None):
         """ Returns a list of authors that have had their content reblogged on a given blog account
 

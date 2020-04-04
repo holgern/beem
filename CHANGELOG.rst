@@ -6,6 +6,9 @@ Changelog
 * api link to steemconnect has been fixed
 * change recovery account added to beempy
 * hive node has been added
+* add account get_notifications and mark_notifications_as_read
+* beempy notifications has been added
+* bridge api support added
 
 0.22.12
 -------

@@ -27,6 +27,8 @@ class ImageUploader(object):
         self.challenge = challenge
         self.base_url = base_url
         self.steem = steem_instance or shared_steem_instance()
+        if self.steem.is_hive and base_url == "https://steemitimages.com":
+            base_url = "https://images.hive.blog"
 
     def upload(self, image, account, image_name=None):
         """ Uploads an image

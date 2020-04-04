@@ -77,7 +77,7 @@ def get_api_name(appbase, *args, **kwargs):
     else:
         # Sepcify the api to talk to
         if ("api" in kwargs) and len(kwargs["api"]) > 0:
-            if kwargs["api"] not in ["jsonrpc", "hive"]:
+            if kwargs["api"] not in ["jsonrpc", "hive", "bridge"]:
                 api_name = kwargs["api"].replace("_api", "") + "_api"
             else:
                 api_name = kwargs["api"]

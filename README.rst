@@ -99,7 +99,7 @@ For Termux on Android, please install the following packages:
 
 .. code:: bash
 
-    pkg install clang openssl-dev python-dev
+    pkg install clang openssl python
 
 Signing and Verify can be fasten (200 %) by installing cryptography:
 
