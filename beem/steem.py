@@ -30,6 +30,7 @@ from .exceptions import (
 )
 from .wallet import Wallet
 from .steemconnect import SteemConnect
+from .hivesigner import HiveSigner
 from .transactionbuilder import TransactionBuilder
 from .utils import formatTime, resolve_authorperm, derive_permlink, sanitize_permlink, remove_from_dict, addTzInfo, formatToTimeStamp
 from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_100_PERCENT, STEEM_1_PERCENT, STEEM_RC_REGEN_TIME
@@ -206,7 +207,7 @@ class Steem(object):
         self.wallet = Wallet(steem_instance=self, **kwargs)
 
         # set steemconnect
-        if self.steemconnect is not None and not isinstance(self.steemconnect, SteemConnect):
+        if self.steemconnect is not None and not isinstance(self.steemconnect, (SteemConnect, HiveSigner)):
             raise ValueError("steemconnect musst be SteemConnect object")
         if self.steemconnect is None and self.use_sc2:
             self.steemconnect = SteemConnect(steem_instance=self, **kwargs)

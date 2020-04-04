@@ -17,8 +17,8 @@ from beem.instance import shared_steem_instance
 from beem.amount import Amount
 
 
-class SteemConnect(object):
-    """ SteemConnect
+class HiveSigner(object):
+    """ HiveSigner
 
         :param str scope: comma separated string with scopes
             login,offline,vote,comment,delete_comment,comment_options,custom_json,claim_reward_balance
@@ -28,51 +28,51 @@ class SteemConnect(object):
 
             # Run the login_app in examples and login with a account
             from beem import Steem
-            from beem.steemconnect import SteemConnect
+            from beem.HiveSigner import HiveSigner
             from beem.comment import Comment
-            sc2 = SteemConnect(client_id="beem.app")
-            steem = Steem(steemconnect=sc2)
+            hs = HiveSigner(client_id="beem.app")
+            steem = Steem(HiveSigner=hs)
             steem.wallet.unlock("supersecret-passphrase")
             post = Comment("author/permlink", steem_instance=steem)
             post.upvote(voter="test")  # replace "test" with your account
 
-        Examples for creating steemconnect v2 urls for broadcasting in browser:
+        Examples for creating HiveSigner urls for broadcasting in browser:
 
         .. testoutput::
 
             from beem import Steem
             from beem.account import Account
-            from beem.steemconnect import SteemConnect
+            from beem.HiveSigner import HiveSigner
             from pprint import pprint
             steem = Steem(nobroadcast=True, unsigned=True)
-            sc2 = SteemConnect(steem_instance=steem)
+            hs = HiveSigner(steem_instance=steem)
             acc = Account("test", steem_instance=steem)
-            pprint(sc2.url_from_tx(acc.transfer("test1", 1, "STEEM", "test")))
+            pprint(hs.url_from_tx(acc.transfer("test1", 1, "HIVE", "test")))
 
         .. testcode::
 
-            'https://steemconnect.com/sign/transfer?from=test&to=test1&amount=1.000+STEEM&memo=test'
+            'https://hivesigner.com/sign/transfer?from=test&to=test1&amount=1.000+HIVE&memo=test'
 
         .. testoutput::
 
             from beem import Steem
             from beem.transactionbuilder import TransactionBuilder
             from beembase import operations
-            from beem.steemconnect import SteemConnect
+            from beem.HiveSigner import HiveSigner
             from pprint import pprint
             stm = Steem(nobroadcast=True, unsigned=True)
-            sc2 = SteemConnect(steem_instance=stm)
+            hs = HiveSigner(steem_instance=stm)
             tx = TransactionBuilder(steem_instance=stm)
             op = operations.Transfer(**{"from": 'test',
                                         "to": 'test1',
-                                        "amount": '1.000 STEEM',
+                                        "amount": '1.000 HIVE',
                                         "memo": 'test'})
             tx.appendOps(op)
-            pprint(sc2.url_from_tx(tx.json()))
+            pprint(hs.url_from_tx(tx.json()))
 
         .. testcode::
 
-            'https://steemconnect.com/sign/transfer?from=test&to=test1&amount=1.000+STEEM&memo=test'
+            'https://hivesigner.com/sign/transfer?from=test&to=test1&amount=1.000+HIVE&memo=test'
 
     """
 
@@ -83,17 +83,17 @@ class SteemConnect(object):
         self.hot_sign_redirect_uri = kwargs.get("hot_sign_redirect_uri", config["hot_sign_redirect_uri"])
         if self.hot_sign_redirect_uri == "":
             self.hot_sign_redirect_uri = None
-        self.client_id = kwargs.get("client_id", config["sc2_client_id"])
+        self.client_id = kwargs.get("client_id", config["hs_client_id"])
         self.scope = kwargs.get("scope", "login")
-        self.oauth_base_url = kwargs.get("oauth_base_url", config["oauth_base_url"])
-        self.sc2_api_url = kwargs.get("sc2_api_url", config["sc2_api_url"])
+        self.hs_oauth_base_url = kwargs.get("hs_oauth_base_url", config["hs_oauth_base_url"])
+        self.hs_api_url = kwargs.get("hs_api_url", config["hs_api_url"])
 
     @property
     def headers(self):
         return {'Authorization': self.access_token}
 
     def get_login_url(self, redirect_uri, **kwargs):
-        """ Returns a login url for receiving token from steemconnect
+        """ Returns a login url for receiving token from HiveSigner
         """
         client_id = kwargs.get("client_id", self.client_id)
         scope = kwargs.get("scope", self.scope)
@@ -109,11 +109,11 @@ class SteemConnect(object):
             })
         if PY2:
             return urljoin(
-                self.oauth_base_url,
+                self.hs_oauth_base_url,
                 "authorize?" + urlencode(params).replace('%2C', ','))
         else:
             return urljoin(
-                self.oauth_base_url,
+                self.hs_oauth_base_url,
                 "authorize?" + urlencode(params, safe=","))
 
     def get_access_token(self, code):
@@ -125,26 +125,26 @@ class SteemConnect(object):
         }
 
         r = requests.post(
-            urljoin(self.sc2_api_url, "oauth2/token/"),
+            urljoin(self.hs_api_url, "oauth2/token/"),
             data=post_data
         )
 
         return r.json()
 
     def me(self, username=None):
-        """ Calls the me function from steemconnect
+        """ Calls the me function from HiveSigner
 
         .. code-block:: python
 
-            from beem.steemconnect import SteemConnect
-            sc2 = SteemConnect()
-            sc2.steem.wallet.unlock("supersecret-passphrase")
-            sc2.me(username="test")
+            from beem.HiveSigner import HiveSigner
+            hs = HiveSigner()
+            hs.steem.wallet.unlock("supersecret-passphrase")
+            hs.me(username="test")
 
         """
         if username:
             self.set_username(username)
-        url = urljoin(self.sc2_api_url, "me/")
+        url = urljoin(self.hs_api_url, "me/")
         r = requests.post(url, headers=self.headers)
         return r.json()
 
@@ -181,7 +181,7 @@ class SteemConnect(object):
                 ]
 
         """
-        url = urljoin(self.sc2_api_url, "broadcast/")
+        url = urljoin(self.hs_api_url, "broadcast/")
         data = {
             "operations": operations,
         }
@@ -209,7 +209,7 @@ class SteemConnect(object):
         }
 
         r = requests.post(
-            urljoin(self.sc2_api_url, "oauth2/token/"),
+            urljoin(self.hs_api_url, "oauth2/token/"),
             data=post_data,
         )
 
@@ -221,7 +221,7 @@ class SteemConnect(object):
         }
 
         r = requests.post(
-            urljoin(self.sc2_api_url, "oauth2/token/revoke"),
+            urljoin(self.hs_api_url, "oauth2/token/revoke"),
             data=post_data
         )
 
@@ -232,7 +232,7 @@ class SteemConnect(object):
             "user_metadata": metadata,
         }
         r = requests.put(
-            urljoin(self.sc2_api_url, "me/"),
+            urljoin(self.hs_api_url, "me/"),
             data=put_data, headers=self.headers)
 
         return r.json()
@@ -282,8 +282,7 @@ class SteemConnect(object):
         if not isinstance(operation, str) or not isinstance(params, dict):
             raise ValueError("Invalid Request.")
 
-        base_url = self.sc2_api_url.replace("https://api.", "https://").replace("/api", "")
-        
+        base_url = self.hs_api_url.replace("https://api.", "https://").replace("/api", "")
         if redirect_uri == "":
             redirect_uri = None
 

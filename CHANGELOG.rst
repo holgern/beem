@@ -1,5 +1,12 @@
 Changelog
 =========
+0.22.13
+-------
+* HiveSigner support added
+* api link to steemconnect has been fixed
+* change recovery account added to beempy
+* hive node has been added
+
 0.22.12
 -------
 * Add hive node

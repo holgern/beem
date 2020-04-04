@@ -23,5 +23,7 @@ __all__ = [
     "profile",
     "nodelist",
     "imageuploader",
-    "snapshot"
+    "snapshot",
+    "steemconnect",
+    "hivesigner"
 ]

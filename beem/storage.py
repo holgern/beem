@@ -409,9 +409,13 @@ class Configuration(DataDir):
         "rpcuser": "",
         "order-expiration": 7 * 24 * 60 * 60,
         "client_id": "",
+        "sc2_client_id": None,
+        "hs_client_id": None,
         "hot_sign_redirect_uri": None,
         "sc2_api_url": "https://api.steemconnect.com/api/",
-        "oauth_base_url": "https://api.steemconnect.com/oauth2/"}
+        "oauth_base_url": "https://api.steemconnect.com/oauth2/",
+        "hs_api_url": "https://hivesigner.com/api/",
+        "hs_oauth_base_url": "https://hivesigner.com/oauth2/"}
 
     def __init__(self):
         super(Configuration, self).__init__()

@@ -29,6 +29,7 @@ from beem.block import Block
 from beem.profile import Profile
 from beem.wallet import Wallet
 from beem.steemconnect import SteemConnect
+from beem.hivesigner import HiveSigner
 from beem.asset import Asset
 from beem.witness import Witness, WitnessesRankedByVote, WitnessesVotedByAccount
 from beem.blockchain import Blockchain
@@ -163,16 +164,20 @@ def node_answer_time(node):
 @click.option(
     '--unsigned', '-x', is_flag=True, default=False, help="Nothing will be signed")
 @click.option(
-    '--create-link', '-l', is_flag=True, default=False, help="Creates steemconnect links from all broadcast operations")
+    '--create-link', '-l', is_flag=True, default=False, help="Creates steemconnect/hivesigner links from all broadcast operations")
 @click.option(
-    '--steemconnect', '-s', is_flag=True, default=False, help="Uses a steemconnect token to broadcast (only broadcast operation with posting permission)")
+    '--steem', '-s', is_flag=True, default=False, help="Connect to the Steem blockchain")
+@click.option(
+    '--hive', '-h', is_flag=True, default=False, help="Connect to the Hive blockchain")
+@click.option(
+    '--token', '-t', is_flag=True, default=False, help="Uses a hivesigner/steemconnect token to broadcast (only broadcast operation with posting permission)")
 @click.option(
     '--expires', '-e', default=30,
     help='Delay in seconds until transactions are supposed to expire(defaults to 60)')
 @click.option(
     '--verbose', '-v', default=3, help='Verbosity')
 @click.version_option(version=__version__)
-def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steemconnect, expires, verbose):
+def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hive, token, expires, verbose):
 
     # Logging
     log = logging.getLogger(__name__)
@@ -185,10 +190,14 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steemconn
     ch.setLevel(getattr(logging, verbosity.upper()))
     ch.setFormatter(formatter)
     log.addHandler(ch)
+    
     if create_link:
-        sc2 = SteemConnect()
         no_broadcast = True
         unsigned = True
+        if hive:
+            sc2 = HiveSigner()
+        else:
+            sc2 = SteemConnect()
     else:
         sc2 = None
     debug = verbose > 0
@@ -198,7 +207,7 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steemconn
         offline=offline,
         nowallet=no_wallet,
         unsigned=unsigned,
-        use_sc2=steemconnect,
+        use_sc2=token,
         expiration=expires,
         steemconnect=sc2,
         debug=debug,
@@ -207,6 +216,7 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steemconn
         timeout=15,
         autoconnect=False
     )
+        
     set_shared_steem_instance(stm)
 
     pass
@@ -947,6 +957,42 @@ def powerdownroute(to, percentage, account, auto_vest):
         return
     acc = Account(account, steem_instance=stm)
     tx = acc.set_withdraw_vesting_route(to, percentage, auto_vest=auto_vest)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+@cli.command()
+@click.argument('new_recovery_account', nargs=1)
+@click.option('--account', '-a', help='Change the recovery account from this account')
+def changerecovery(new_recovery_account, account):
+    """Changes the recovery account with the owner key (needs 30 days to be active)"""
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not account:
+        account = stm.config["default_account"]
+    #if not unlock_wallet(stm):
+    #    return
+    new_recovery_account = Account(new_recovery_account, steem_instance=stm)
+    account = Account(account, steem_instance=stm)
+    op = operations.Change_recovery_account(**{
+        'account_to_recover': account['name'],
+        'new_recovery_account': new_recovery_account['name'],
+        'extensions': []
+    })
+
+    tb = TransactionBuilder(steem_instance=stm)
+    tb.appendOps([op])
+    if stm.unsigned:
+        tb.addSigningInformation(account["name"], "owner")
+        tx = tb
+    else:
+        key = click.prompt('Owner key for %s' % account["name"], confirmation_prompt=False, hide_input=True)
+        owner_key = PrivateKey(wif=key)
+        tb.appendWif(str(owner_key))
+        tb.sign()
+        tx = tb.broadcast()
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)

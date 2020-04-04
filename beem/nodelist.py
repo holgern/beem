@@ -158,7 +158,7 @@ class NodeList(list):
                 "url": "https://api.openhive.network",
                 "version": "0.23.0",
                 "type": "appbase",
-                "owner": "",
+                "owner": "gtg",
                 "hive": True,
                 "score": 20
             },
@@ -191,6 +191,14 @@ class NodeList(list):
                 "version": "0.23.0",
                 "type": "appbase",
                 "owner": "good-karma",
+                "hive": True,
+                "score": 10
+            },
+            {
+                "url": "https://hived.privex.io",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "someguy123",
                 "hive": True,
                 "score": 10
             }]
