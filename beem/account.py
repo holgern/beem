@@ -822,11 +822,11 @@ class Account(BlockchainObject):
                     Comment(c["comment"], steem_instance=self.steem) for c in blog_list
                 ]
 
-    def get_notifications(self, only_unread=True, limit=None, account=None):
+    def get_notifications(self, only_unread=True, limit=100, account=None):
         """ Returns account notifications
 
             :param bool only_unread: When True, only unread notfications are shown
-            :param int limit: When set, the number of shown notifications is limited
+            :param int limit: When set, the number of shown notifications is limited (max limit = 100)
             :param str account: (optional) the account to broadcast
                 to (defaults to ``default_account``) 
         """
@@ -843,6 +843,8 @@ class Account(BlockchainObject):
                 limit = unread_notes["unread"]
         if limit is None or limit == 0:
             return []
+        if limit > 100:
+            limit = 100
         return self.steem.rpc.account_notifications({'account': account, 'limit': limit}, api='bridge')
 
     def mark_notifications_as_read(self, last_read=None, account=None):

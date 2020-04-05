@@ -512,3 +512,8 @@ class Testcases(unittest.TestCase):
         stm = self.bts
         account = Account("holger80", steem_instance=stm)
         assert len(account.get_account_posts()) > 0
+
+    def test_notifications(self):
+        stm = self.bts
+        account = Account("gtg", steem_instance=stm)
+        assert isinstance(account.get_notifications(), list)
