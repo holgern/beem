@@ -309,7 +309,7 @@ class Steem(object):
                 self.data['hardfork_properties'] = None
         elif property == "witness_schedule":
             if self.data['last_refresh_witness_schedule'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
-                if (datetime.utcnow() - self.data['last_refresh_witness_schedule']).total_seconds() < self.data_refresh_time_seconds:
+                if (datetime.utcnow() - self.data['last_refresh_witness_schedule']).total_seconds() < 3:
                     return
             self.data['last_refresh_witness_schedule'] = datetime.utcnow()
             self.data['last_refresh'] = datetime.utcnow()
@@ -949,7 +949,7 @@ class Steem(object):
     def set_default_vote_weight(self, vote_weight):
         """ Set the default vote weight to be used
         """
-        config["default_vote_weight"] = vote_weight
+        self.config["default_vote_weight"] = vote_weight
 
     def finalizeOp(self, ops, account, permission, **kwargs):
         """ This method obtains the required private keys if present in
@@ -1122,8 +1122,8 @@ class Steem(object):
             :param str fee: when set to 0 STEEM (default), claim account is paid by RC
         """
         fee = fee if fee is not None else "0 %s" % (self.steem_symbol)
-        if not creator and config["default_account"]:
-            creator = config["default_account"]
+        if not creator and self.config["default_account"]:
+            creator = self.config["default_account"]
         if not creator:
             raise ValueError(
                 "Not creator account given. Define it with " +
