@@ -9,6 +9,10 @@ Changelog
 * add account get_notifications and mark_notifications_as_read
 * beempy notifications has been added
 * bridge api support added
+* config storage improved and add get_default_config_storage, get_default_key_storage and get_default_token_storage
+* list_all_subscriptions and get_account_posts added
+* image upload url fixed for HIVE
+* reduce number of performed api calls on Steem object creation
 
 0.22.12
 -------

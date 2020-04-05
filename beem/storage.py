@@ -85,7 +85,9 @@ class DataDir(object):
             os.path.basename(self.storageDatabase) +
             datetime.utcnow().strftime("-" + timeformat))
         self.sqlite3_copy(self.sqlDataBaseFile, backup_file)
-        configStorage["lastBackup"] = datetime.utcnow().strftime(timeformat)
+        config = get_default_config_storage()
+        config["lastBackup"] = datetime.utcnow().strftime(timeformat)
+        del config
 
     def sqlite3_copy(self, src, dst):
         """Copy sql file from src to dst"""
@@ -122,14 +124,15 @@ class DataDir(object):
         if newest_backup_file is not None:
             self.sqlite3_copy(newest_backup_file, self.sqlDataBaseFile)
 
-    def clean_data(self):
+    def clean_data(self, backupdir="backups"):
         """ Delete files older than 70 days
         """
         if self.sqlDataBaseFile == ":memory:":
             return
         log.info("Cleaning up old backups")
-        for filename in os.listdir(self.data_dir):
-            backup_file = os.path.join(self.data_dir, filename)
+        backupdir = os.path.join(self.data_dir, backupdir)
+        for filename in os.listdir(backupdir):
+            backup_file = os.path.join(backupdir, filename)
             if os.stat(backup_file).st_ctime < (time.time() - 70 * 86400):
                 if os.path.isfile(backup_file):
                     os.remove(backup_file)
@@ -140,7 +143,7 @@ class DataDir(object):
         """
         backupdir = os.path.join(self.data_dir, "backups")
         self.sqlite3_backup(backupdir)
-        self.clean_data()
+        self.clean_data(backupdir)
 
 
 class Key(DataDir):
@@ -454,14 +457,14 @@ class Configuration(DataDir):
     def checkBackup(self):
         """ Backup the SQL database every 7 days
         """
-        if ("lastBackup" not in configStorage or
-                configStorage["lastBackup"] == ""):
+        if ("lastBackup" not in self.config or
+                self.config["lastBackup"] == ""):
             print("No backup has been created yet!")
             self.refreshBackup()
         try:
             if (
                 datetime.utcnow() -
-                datetime.strptime(configStorage["lastBackup"],
+                datetime.strptime(self.config["lastBackup"],
                                   timeformat)
             ).days > 7:
                 print("Backups older than 7 days!")
@@ -595,7 +598,8 @@ class MasterPassword(object):
             :param str password: Password to use for en-/de-cryption
         """
         self.password = password
-        if self.config_key not in configStorage:
+        self.config = get_default_config_storage()
+        if self.config_key not in self.config:
             self.newMaster()
             self.saveEncrytpedMaster()
         else:
@@ -605,7 +609,7 @@ class MasterPassword(object):
         """ Decrypt the encrypted masterpassword
         """
         aes = AESCipher(self.password)
-        checksum, encrypted_master = configStorage[self.config_key].split("$")
+        checksum, encrypted_master = self.config[self.config_key].split("$")
         try:
             decrypted_master = aes.decrypt(encrypted_master)
         except:
@@ -618,14 +622,14 @@ class MasterPassword(object):
         """ Store the encrypted master password in the configuration
             store
         """
-        configStorage[self.config_key] = self.getEncryptedMaster()
+        self.config[self.config_key] = self.getEncryptedMaster()
 
     def newMaster(self):
         """ Generate a new random masterpassword
         """
         # make sure to not overwrite an existing key
-        if (self.config_key in configStorage and
-                configStorage[self.config_key]):
+        if (self.config_key in self.config and
+                self.config[self.config_key]):
             return
         self.decrypted_master = hexlify(os.urandom(32)).decode("ascii")
 
@@ -661,24 +665,32 @@ class MasterPassword(object):
             )
             return
         else:
-            configStorage.delete(MasterPassword.config_key)
+            config = get_default_config_storage()
+            config.delete(MasterPassword.config_key)
 
 
-# Create keyStorage
-keyStorage = Key()
-tokenStorage = Token()
-configStorage = Configuration()
+def get_default_config_storage():
+    configStorage = Configuration()
+    # Create Tables if database is brand new
+    if not configStorage.exists_table():
+        configStorage.create_table()
+    return configStorage
 
-# Create Tables if database is brand new
-if not configStorage.exists_table():
-    configStorage.create_table()
 
-newKeyStorage = False
-if not keyStorage.exists_table():
-    newKeyStorage = True
-    keyStorage.create_table()
+def get_default_key_storage():
+    keyStorage = Key()
+    
+    newKeyStorage = False
+    if not keyStorage.exists_table():
+        newKeyStorage = True
+        keyStorage.create_table()
+    return keyStorage
 
-newTokenStorage = False
-if not tokenStorage.exists_table():
-    newTokenStorage = True
-    tokenStorage.create_table()
+
+def get_default_token_storage():
+    tokenStorage = Token()
+    newTokenStorage = False
+    if not tokenStorage.exists_table():
+        newTokenStorage = True
+        tokenStorage.create_table()
+    return tokenStorage

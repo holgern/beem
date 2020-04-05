@@ -24,7 +24,7 @@ from .exceptions import (
 )
 from beemapi.exceptions import NoAccessApi
 from beemgraphenebase.py23 import py23_bytes
-from .storage import configStorage as config
+from .storage import get_default_config_storage, get_default_key_storage, get_default_token_storage
 try:
     import keyring
     if not isinstance(keyring.get_keyring(), keyring.backends.fail.Keyring):
@@ -125,11 +125,10 @@ class Wallet(object):
             """ If no keys are provided manually we load the SQLite
                 keyStorage
             """
-            from .storage import (keyStorage,
-                                  MasterPassword)
+            from .storage import MasterPassword
             self.MasterPassword = MasterPassword
             master_password_set = True
-            self.keyStorage = keyStorage
+            self.keyStorage = get_default_key_storage()
 
         if "token" in kwargs:
             self.setToken(kwargs["token"])
@@ -137,11 +136,10 @@ class Wallet(object):
             """ If no keys are provided manually we load the SQLite
                 keyStorage
             """
-            from .storage import tokenStorage
             if not master_password_set:
                 from .storage import MasterPassword
                 self.MasterPassword = MasterPassword
-            self.tokenStorage = tokenStorage
+            self.tokenStorage = get_default_token_storage()
 
     @property
     def prefix(self):
@@ -149,7 +147,7 @@ class Wallet(object):
             prefix = self.steem.prefix
         else:
             # If not connected, load prefix from config
-            prefix = config["prefix"]
+            prefix = self.steem.config["prefix"]
         return prefix or "STM"   # default prefix is STM
 
     @property
@@ -203,7 +201,7 @@ class Wallet(object):
         if not pwd:
             self.tryUnlockFromEnv()
         else:
-            if (self.masterpassword is None and config[self.MasterPassword.config_key]):
+            if (self.masterpassword is None and self.steem.config[self.MasterPassword.config_key]):
                 self.masterpwd = self.MasterPassword(pwd)
                 self.masterpassword = self.masterpwd.decrypted_master
 
@@ -256,7 +254,7 @@ class Wallet(object):
         if len(self.getPublicKeys()):
             # Already keys installed
             return True
-        elif self.MasterPassword.config_key in config:
+        elif self.MasterPassword.config_key in self.steem.config:
             # no keys but a master password
             return True
         else:
@@ -292,10 +290,10 @@ class Wallet(object):
             return
         else:
             from .storage import (
-                keyStorage,
-                tokenStorage,
                 MasterPassword
             )
+            keyStorage = get_default_key_storage()
+            tokenStorage = get_default_token_storage()
             MasterPassword.wipe(sure)
             keyStorage.wipe(sure)
             tokenStorage.wipe(sure)

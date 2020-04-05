@@ -466,7 +466,7 @@ class GrapheneRPC(object):
         def method(*args, **kwargs):
 
             api_name = get_api_name(self.is_appbase_ready(), *args, **kwargs)
-            if self.is_appbase_ready() and self.use_condenser:
+            if self.is_appbase_ready() and self.use_condenser and api_name != "bridge":
                 api_name = "condenser_api"
             if (api_name is None):
                 api_name = 'database_api'
@@ -475,7 +475,7 @@ class GrapheneRPC(object):
             stored_num_retries_call = self.nodes.num_retries_call
             self.nodes.num_retries_call = kwargs.get("num_retries_call", stored_num_retries_call)
             add_to_queue = kwargs.get("add_to_queue", False)
-            query = get_query(self.is_appbase_ready() and not self.use_condenser, self.get_request_id(), api_name, name, args)
+            query = get_query(self.is_appbase_ready() and not self.use_condenser or api_name == "bridge", self.get_request_id(), api_name, name, args)
             if add_to_queue:
                 self.rpc_queue.append(query)
                 self.nodes.num_retries_call = stored_num_retries_call

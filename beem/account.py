@@ -992,6 +992,38 @@ class Account(BlockchainObject):
 
         return followers_list
 
+    def list_all_subscriptions(self, account=None):
+        """Returns all subscriptions"""
+        if account is None:
+            account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]        
+        if not self.steem.is_connected():
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
+        self.steem.rpc.set_next_node_on_empty_reply(True)
+        return self.steem.rpc.list_all_subscriptions({'account': account}, api='bridge')
+
+    def get_account_posts(self, sort="feed", account=None, observer=None, raw_data=False):
+        """Returns account feed"""
+        if account is None:
+            account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]
+        if observer is None:
+            observer = account
+        if not self.steem.is_connected():
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
+        self.steem.rpc.set_next_node_on_empty_reply(True)
+        posts = self.steem.rpc.get_account_posts({'sort': sort, 'account': account,
+                                                  'observer': observer}, api='bridge')
+        if raw_data:
+            return posts
+        comments = []
+        from .comment import Comment
+        for post in posts:
+            comments.append(Comment(post, steem_instance=self.steem))
+        return comments
+
     @property
     def available_balances(self):
         """ List balances of an account. This call returns instances of

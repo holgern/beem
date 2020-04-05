@@ -12,7 +12,7 @@ from beemgraphenebase.account import PublicKey
 from beem.instance import shared_steem_instance
 from beem.account import Account
 from .exceptions import InvalidMessageSignature
-from .storage import configStorage as config
+from .storage import get_default_config_storage
 
 
 log = logging.getLogger(__name__)
@@ -59,6 +59,7 @@ class Message(object):
             :returns: the signed message encapsulated in a known format
 
         """
+        config = get_default_config_storage()
         if not account:
             if "default_account" in config:
                 account = config["default_account"]

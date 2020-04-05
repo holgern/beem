@@ -22,7 +22,7 @@ from beemgraphenebase.chains import known_chains
 from .account import Account
 from .amount import Amount
 from .price import Price
-from .storage import configStorage as config
+from .storage import get_default_config_storage
 from .version import version as beem_version
 from .exceptions import (
     AccountExistsException,
@@ -186,7 +186,7 @@ class Steem(object):
         self.custom_chains = kwargs.get("custom_chains", {})
 
         # Store config for access through other Classes
-        self.config = config
+        self.config = get_default_config_storage()
 
         if not self.offline:
             self.connect(node=node,
@@ -194,10 +194,22 @@ class Steem(object):
                          rpcpassword=rpcpassword,
                          **kwargs)
 
-        self.data = {'last_refresh': None, 'last_node': None, 'dynamic_global_properties': None, 'feed_history': None,
-                     'get_feed_history': None, 'hardfork_properties': None,
-                     'network': None, 'witness_schedule': None,
-                     'config': None, 'reward_funds': None}
+        self.data = {'last_refresh': None, 'last_node': None,
+                     'last_refresh_dynamic_global_properties': None,
+                     'dynamic_global_properties': None,
+                     'feed_history': None,
+                     'get_feed_history': None,
+                     'last_refresh_feed_history': None,
+                     'hardfork_properties': None,
+                     'last_refresh_hardfork_properties': None,
+                     'network': None,
+                     'last_refresh_network': None,
+                     'witness_schedule': None,
+                     'last_refresh_witness_schedule': None,
+                     'config': None,
+                     'last_refresh_config': None,
+                     'reward_funds': None,
+                     'last_refresh_reward_funds': None}
         self.data_refresh_time_seconds = data_refresh_time_seconds
         # self.refresh_data()
 
@@ -229,11 +241,11 @@ class Steem(object):
             if not bool(node):
                 raise ValueError("A Steem node needs to be provided!")
 
-        if not rpcuser and "rpcuser" in config:
-            rpcuser = config["rpcuser"]
+        if not rpcuser and "rpcuser" in self.config:
+            rpcuser = self.config["rpcuser"]
 
-        if not rpcpassword and "rpcpassword" in config:
-            rpcpassword = config["rpcpassword"]
+        if not rpcpassword and "rpcpassword" in self.config:
+            rpcpassword = self.config["rpcpassword"]
 
         self.rpc = SteemNodeRPC(node, rpcuser, rpcpassword, **kwargs)
 
@@ -252,7 +264,7 @@ class Steem(object):
             return "<%s, nobroadcast=%s>" % (
                 self.__class__.__name__, str(self.nobroadcast))
 
-    def refresh_data(self, force_refresh=False, data_refresh_time_seconds=None):
+    def refresh_data(self, property, force_refresh=False, data_refresh_time_seconds=None):
         """ Read and stores steem blockchain parameters
             If the last data refresh is older than data_refresh_time_seconds, data will be refreshed
 
@@ -264,25 +276,64 @@ class Steem(object):
             return
         if data_refresh_time_seconds is not None:
             self.data_refresh_time_seconds = data_refresh_time_seconds
-        if self.data['last_refresh'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
-            if (datetime.utcnow() - self.data['last_refresh']).total_seconds() < self.data_refresh_time_seconds:
-                return
-        self.data['last_refresh'] = datetime.utcnow()
-        self.data["last_node"] = self.rpc.url
-        self.data["dynamic_global_properties"] = self.get_dynamic_global_properties(False)
-        try:
-            self.data['feed_history'] = self.get_feed_history(False)
-        except:
-            self.data['feed_history'] = None
-        self.data['get_feed_history'] = self.data['feed_history']
-        try:
-            self.data['hardfork_properties'] = self.get_hardfork_properties(False)
-        except:
-            self.data['hardfork_properties'] = None
-        self.data['network'] = self.get_network(False)
-        self.data['witness_schedule'] = self.get_witness_schedule(False)
-        self.data['config'] = self.get_config(False)
-        self.data['reward_funds'] = self.get_reward_funds(False)
+        if property == "dynamic_global_properties":
+            if self.data['last_refresh_dynamic_global_properties'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
+                if (datetime.utcnow() - self.data['last_refresh_dynamic_global_properties']).total_seconds() < self.data_refresh_time_seconds:
+                    return
+            self.data["dynamic_global_properties"] = self.get_dynamic_global_properties(False)
+            self.data['last_refresh_dynamic_global_properties'] = datetime.utcnow()
+            self.data['last_refresh'] = datetime.utcnow()
+            self.data["last_node"] = self.rpc.url            
+        elif property == "feed_history":
+            if self.data['last_refresh_feed_history'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
+                if (datetime.utcnow() - self.data['last_refresh_feed_history']).total_seconds() < self.data_refresh_time_seconds:
+                    return
+            self.data['last_refresh_feed_history'] = datetime.utcnow()
+            self.data['last_refresh'] = datetime.utcnow()
+            self.data["last_node"] = self.rpc.url             
+            try:
+                self.data['feed_history'] = self.get_feed_history(False)
+            except:
+                self.data['feed_history'] = None
+            self.data['get_feed_history'] = self.data['feed_history']
+        elif property == "hardfork_properties":
+            if self.data['last_refresh_hardfork_properties'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
+                if (datetime.utcnow() - self.data['last_refresh_hardfork_properties']).total_seconds() < self.data_refresh_time_seconds:
+                    return
+            self.data['last_refresh_hardfork_properties'] = datetime.utcnow()
+            self.data['last_refresh'] = datetime.utcnow()
+            self.data["last_node"] = self.rpc.url             
+            try:
+                self.data['hardfork_properties'] = self.get_hardfork_properties(False)
+            except:
+                self.data['hardfork_properties'] = None
+        elif property == "witness_schedule":
+            if self.data['last_refresh_witness_schedule'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
+                if (datetime.utcnow() - self.data['last_refresh_witness_schedule']).total_seconds() < self.data_refresh_time_seconds:
+                    return
+            self.data['last_refresh_witness_schedule'] = datetime.utcnow()
+            self.data['last_refresh'] = datetime.utcnow()
+            self.data["last_node"] = self.rpc.url             
+            self.data['witness_schedule'] = self.get_witness_schedule(False)
+        elif property == "config":
+            if self.data['last_refresh_config'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
+                if (datetime.utcnow() - self.data['last_refresh_config']).total_seconds() < self.data_refresh_time_seconds:
+                    return
+            self.data['last_refresh_config'] = datetime.utcnow()
+            self.data['last_refresh'] = datetime.utcnow()
+            self.data["last_node"] = self.rpc.url             
+            self.data['config'] = self.get_config(False)
+            self.data['network'] = self.get_network(False, config=self.data['config'])
+        elif property == "reward_funds":
+            if self.data['last_refresh_reward_funds'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
+                if (datetime.utcnow() - self.data['last_refresh_reward_funds']).total_seconds() < self.data_refresh_time_seconds:
+                    return
+            self.data['last_refresh_reward_funds'] = datetime.utcnow()
+            self.data['last_refresh'] = datetime.utcnow()
+            self.data["last_node"] = self.rpc.url             
+            self.data['reward_funds'] = self.get_reward_funds(False)
+        else:
+            raise ValueError("%s is not unkown" % str(property))
 
     def get_dynamic_global_properties(self, use_stored_data=True):
         """ This call returns the *dynamic global properties*
@@ -292,7 +343,7 @@ class Steem(object):
 
         """
         if use_stored_data:
-            self.refresh_data()
+            self.refresh_data('dynamic_global_properties')
             return self.data['dynamic_global_properties']
         if self.rpc is None:
             return None
@@ -326,7 +377,7 @@ class Steem(object):
 
         """
         if use_stored_data:
-            self.refresh_data()
+            self.refresh_data('feed_history')
             return self.data['feed_history']
         if self.rpc is None:
             return None
@@ -341,7 +392,7 @@ class Steem(object):
 
         """
         if use_stored_data:
-            self.refresh_data()
+            self.refresh_data('reward_funds')
             return self.data['reward_funds']
 
         if self.rpc is None:
@@ -368,7 +419,7 @@ class Steem(object):
                                          empty or old, refresh_data() is used.
         """
         if use_stored_data:
-            self.refresh_data()
+            self.refresh_data('feed_history')
             if self.data['get_feed_history']:
                 return self.data['get_feed_history']['current_median_history']
             else:
@@ -390,7 +441,7 @@ class Steem(object):
                                          empty or old, refresh_data() is used.
         """
         if use_stored_data:
-            self.refresh_data()
+            self.refresh_data('hardfork_properties')
             return self.data['hardfork_properties']
         if self.rpc is None:
             return None
@@ -403,7 +454,7 @@ class Steem(object):
 
         return ret
 
-    def get_network(self, use_stored_data=True):
+    def get_network(self, use_stored_data=True, config=None):
         """ Identify the network
 
             :param bool use_stored_data: if True, stored data will be returned. If stored data are
@@ -413,13 +464,13 @@ class Steem(object):
             :rtype: dictionary
         """
         if use_stored_data:
-            self.refresh_data()
+            self.refresh_data('config')
             return self.data['network']
 
         if self.rpc is None:
             return None
         try:
-            return self.rpc.get_network()
+            return self.rpc.get_network(props=config)
         except:
             return known_chains["STEEMAPPBASE"]
 
@@ -773,7 +824,7 @@ class Steem(object):
 
         """
         if use_stored_data:
-            self.refresh_data()
+            self.refresh_data('witness_schedule')
             return self.data['witness_schedule']['median_props']
         else:
             return self.get_witness_schedule(use_stored_data)['median_props']
@@ -783,7 +834,7 @@ class Steem(object):
 
         """
         if use_stored_data:
-            self.refresh_data()
+            self.refresh_data('witness_schedule')
             return self.data['witness_schedule']
 
         if self.rpc is None:
@@ -797,7 +848,7 @@ class Steem(object):
             :param bool use_stored_data: If True, the cached value is returned
         """
         if use_stored_data:
-            self.refresh_data()
+            self.refresh_data('config')
             config = self.data['config']
         else:
             if self.rpc is None:
@@ -840,7 +891,7 @@ class Steem(object):
         """ Set the default account to be used
         """
         Account(account, steem_instance=self)
-        config["default_account"] = account
+        self.config["default_account"] = account
 
     def set_password_storage(self, password_storage):
         """ Set the password storage mode.
@@ -857,7 +908,7 @@ class Steem(object):
                 "keyring" or "environment"
 
         """
-        config["password_storage"] = password_storage
+        self.config["password_storage"] = password_storage
 
     def set_default_nodes(self, nodes):
         """ Set the default nodes to be used
@@ -865,18 +916,18 @@ class Steem(object):
         if bool(nodes):
             if isinstance(nodes, list):
                 nodes = str(nodes)
-            config["node"] = nodes
+            self.config["node"] = nodes
         else:
-            config.delete("node")
+            self.config.delete("node")
 
     def get_default_nodes(self):
         """Returns the default nodes"""
-        if "node" in config:
-            nodes = config["node"]
+        if "node" in self.config:
+            nodes = self.config["node"]
         elif "nodes" in config:
-            nodes = config["nodes"]
-        elif "default_nodes" in config and bool(config["default_nodes"]):
-            nodes = config["default_nodes"]
+            nodes = self.config["nodes"]
+        elif "default_nodes" in self.config and bool(self.config["default_nodes"]):
+            nodes = self.config["default_nodes"]
         else:
             nodes = []
         if isinstance(nodes, str) and nodes[0] == '[' and nodes[-1] == ']':
@@ -1168,8 +1219,8 @@ class Steem(object):
 
         """
         fee = fee if fee is not None else "0 %s" % (self.steem_symbol)
-        if not creator and config["default_account"]:
-            creator = config["default_account"]
+        if not creator and self.config["default_account"]:
+            creator = self.config["default_account"]
         if not creator:
             raise ValueError(
                 "Not creator account given. Define it with " +
@@ -1364,8 +1415,8 @@ class Steem(object):
                 the blockchain
 
         """
-        if not creator and config["default_account"]:
-            creator = config["default_account"]
+        if not creator and self.config["default_account"]:
+            creator = self.config["default_account"]
         if not creator:
             raise ValueError(
                 "Not creator account given. Define it with " +
@@ -1536,8 +1587,8 @@ class Steem(object):
                 }
 
         """
-        if not account and config["default_account"]:
-            account = config["default_account"]
+        if not account and self.config["default_account"]:
+            account = self.config["default_account"]
         if not account:
             raise ValueError("You need to provide an account")
 
@@ -1569,8 +1620,8 @@ class Steem(object):
 
 
         """
-        if not account and config["default_account"]:
-            account = config["default_account"]
+        if not account and self.config["default_account"]:
+            account = self.config["default_account"]
         if not account:
             raise ValueError("You need to provide an account")
 
@@ -1745,8 +1796,8 @@ class Steem(object):
         elif 'app' not in json_metadata:
             json_metadata.update({'app': 'beem/%s' % (beem_version)})
 
-        if not author and config["default_account"]:
-            author = config["default_account"]
+        if not author and self.config["default_account"]:
+            author = self.config["default_account"]
         if not author:
             raise ValueError("You need to provide an account")
         account = Account(author, steem_instance=self)
@@ -1912,8 +1963,8 @@ class Steem(object):
                 }
 
         """
-        if not account and config["default_account"]:
-            account = config["default_account"]
+        if not account and self.config["default_account"]:
+            account = self.config["default_account"]
         if not account:
             raise ValueError("You need to provide an account")
         account = Account(account, steem_instance=self)

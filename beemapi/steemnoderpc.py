@@ -185,7 +185,7 @@ class SteemNodeRPC(GrapheneRPC):
                       'database_api', 'market_history_api',
                       'block_api', 'account_by_key_api', 'chain_api',
                       'follow_api', 'condenser_api', 'debug_node_api',
-                      'witness_api', 'test_api',
+                      'witness_api', 'test_api', 'bridge',
                       'network_broadcast_api']
         for api in known_apis:
             if re.search(error_start + " " + api, msg):

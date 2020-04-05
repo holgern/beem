@@ -283,6 +283,7 @@ class Testcases(unittest.TestCase):
         count = account.get_follow_count()
         self.assertEqual(count['follower_count'], len(followers))
         self.assertEqual(count['following_count'], len(following))
+        
 
     def test_MissingKeyError(self):
         w = self.account
@@ -501,3 +502,13 @@ class Testcases(unittest.TestCase):
         account = self.account
         for vote_pwr in range(5, 100, 5):
             self.assertTrue(9900 <= account.get_vote_pct_for_SBD(account.get_voting_value_SBD(voting_power=vote_pwr), voting_power=vote_pwr) <= 11000)
+
+    def test_list_subscriptions(self):
+        stm = self.bts
+        account = Account("holger80", steem_instance=stm)
+        assert len(account.list_all_subscriptions()) > 0
+
+    def test_account_feeds(self):
+        stm = self.bts
+        account = Account("holger80", steem_instance=stm)
+        assert len(account.get_account_posts()) > 0

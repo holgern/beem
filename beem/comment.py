@@ -840,17 +840,19 @@ class RecentReplies(list):
 
 
 class RecentByPath(list):
-    """ Obtain a list of votes for an account
+    """ Obtain a list of posts recent by path
 
         :param str account: Account name
         :param Steem steem_instance: Steem() instance to use when accesing a RPC
     """
-    def __init__(self, path="promoted", category=None, lazy=False, full=True, steem_instance=None):
+    def __init__(self, path="trending", category=None, lazy=False, full=True, steem_instance=None):
         self.steem = steem_instance or shared_steem_instance()
         if not self.steem.is_connected():
             return None
         self.steem.rpc.set_next_node_on_empty_reply(True)
         state = self.steem.rpc.get_state("/" + path)
+        if state == '' or state is None or len(state["discussion_idx"]) == 0:
+            return None
         replies = state["discussion_idx"][''].get(path, [])
         comments = []
         for reply in replies:
@@ -858,3 +860,21 @@ class RecentByPath(list):
             if category is None or (category is not None and post["category"] == category):
                 comments.append(Comment(post, lazy=lazy, full=full, steem_instance=self.steem))
         super(RecentByPath, self).__init__(comments)
+
+
+class RankedPosts(list):
+    """ Obtain a list of ranked posts
+
+        :param str account: Account name
+        :param Steem steem_instance: Steem() instance to use when accesing a RPC
+    """
+    def __init__(self, sort="trending", tag="", observer="", lazy=False, full=True, steem_instance=None):
+        self.steem = steem_instance or shared_steem_instance()
+        if not self.steem.is_connected():
+            return None
+        self.steem.rpc.set_next_node_on_empty_reply(True)
+        posts = self.steem.rpc.get_ranked_posts({"sort": sort, "tag": tag, "observer": observer}, api="bridge")
+        comments = []
+        for post in posts:
+            comments.append(Comment(post, lazy=lazy, full=full, steem_instance=self.steem))
+        super(RankedPosts, self).__init__(comments)

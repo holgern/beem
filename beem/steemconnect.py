@@ -11,7 +11,7 @@ except ImportError:
     from urlparse import urlparse, urljoin
     from urllib import urlencode
 import requests
-from .storage import configStorage as config
+from .storage import get_default_config_storage
 from six import PY2
 from beem.instance import shared_steem_instance
 from beem.amount import Amount
@@ -78,6 +78,7 @@ class SteemConnect(object):
 
     def __init__(self, steem_instance=None, *args, **kwargs):
         self.steem = steem_instance or shared_steem_instance()
+        config = self.steem.config
         self.access_token = None
         self.get_refresh_token = kwargs.get("get_refresh_token", False)
         self.hot_sign_redirect_uri = kwargs.get("hot_sign_redirect_uri", config["hot_sign_redirect_uri"])

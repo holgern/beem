@@ -7,7 +7,7 @@ import unittest
 from parameterized import parameterized
 from pprint import pprint
 from beem import Steem, exceptions
-from beem.comment import Comment, RecentReplies, RecentByPath
+from beem.comment import Comment, RecentReplies, RecentByPath, RankedPosts
 from beem.vote import Vote
 from beem.account import Account
 from beem.instance import set_shared_steem_instance
@@ -232,12 +232,16 @@ class Testcases(unittest.TestCase):
 
     def test_recent_replies(self):
         bts = self.bts
-        r = RecentReplies(self.author, skip_own=True, steem_instance=bts)
-        self.assertTrue(len(r) > 0)
-        self.assertTrue(r[0] is not None)
+        r = RecentReplies("fullnodeupdate", skip_own=True, steem_instance=bts)
+        self.assertTrue(len(r) >= 0)
 
     def test_recent_by_path(self):
         bts = self.bts
-        r = RecentByPath(path="hot", steem_instance=bts)
+        r = RecentByPath(path="trending", steem_instance=bts)
+        self.assertTrue(len(r) >= 0)
+
+    def test_ranked_posts(self):
+        bts = self.bts
+        r = RankedPosts(sort="trending", steem_instance=bts)
         self.assertTrue(len(r) > 0)
         self.assertTrue(r[0] is not None)
