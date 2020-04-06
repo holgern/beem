@@ -366,7 +366,7 @@ class Testcases(unittest.TestCase):
 
     def test_power(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['power'])
+        result = runner.invoke(cli, ['power', 'holger80'])
         self.assertEqual(result.exit_code, 0)
 
     def test_nextnode(self):

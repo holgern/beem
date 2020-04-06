@@ -356,9 +356,9 @@ def seperate_yaml_dict_from_body(content):
     if len(content.split("---")) > 1:
         body = content[content.find("---", 1) + 3 :]
         yaml_content = content[content.find("---") + 3 : content.find("---", 1)]
-        parameter = yaml.load(yaml_content)
+        parameter = yaml.load(yaml_content, Loader=yaml.FullLoader)
         if not isinstance(parameter, dict):
-            parameter = yaml.load(yaml_content.replace(":", ": ").replace("  ", " "))
+            parameter = yaml.load(yaml_content.replace(":", ": ").replace("  ", " "), Loader=yaml.FullLoader)
     else:
         body = content
     return body, parameter
