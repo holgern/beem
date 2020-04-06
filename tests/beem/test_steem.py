@@ -4,7 +4,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import range
 from builtins import super
-import mock
 import string
 import unittest
 from parameterized import parameterized

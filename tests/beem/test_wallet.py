@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 from builtins import super
 import unittest
 from parameterized import parameterized
-import mock
 from pprint import pprint
 from beem import Steem, exceptions
 from beem.account import Account

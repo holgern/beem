@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 from builtins import str
 from builtins import super
 import unittest
-import mock
 import pytz
 from datetime import datetime, timedelta
 from parameterized import parameterized
