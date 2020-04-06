@@ -10,6 +10,7 @@ import json
 import sys
 from prettytable import PrettyTable
 from datetime import datetime, timedelta
+import calendar
 import pytz
 import time
 import math
@@ -1253,7 +1254,7 @@ def notifications(account, limit, all, mark_as_read, replies, mentions, follows,
             elif note["type"] == "vote" and not votes:
                 continue            
         t.add_row([
-            note["date"],
+            str(datetime.fromtimestamp(calendar.timegm(note["date"].timetuple()))),
             note["type"],
             note["msg"],
         ])

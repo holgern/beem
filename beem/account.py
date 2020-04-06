@@ -822,13 +822,14 @@ class Account(BlockchainObject):
                     Comment(c["comment"], steem_instance=self.steem) for c in blog_list
                 ]
 
-    def get_notifications(self, only_unread=True, limit=100, account=None):
+    def get_notifications(self, only_unread=True, limit=100, raw_data=False, account=None):
         """ Returns account notifications
 
             :param bool only_unread: When True, only unread notfications are shown
             :param int limit: When set, the number of shown notifications is limited (max limit = 100)
-            :param str account: (optional) the account to broadcast
-                to (defaults to ``default_account``) 
+            :param bool raw_data: When True, the raw data from the api call is returned.
+            :param str account: (optional) the account for which the notification should be received
+                to (defaults to ``default_account``)
         """
         if account is None:
             account = self["name"]
@@ -845,13 +846,20 @@ class Account(BlockchainObject):
             return []
         if limit > 100:
             limit = 100
-        return self.steem.rpc.account_notifications({'account': account, 'limit': limit}, api='bridge')
+        notifications = self.steem.rpc.account_notifications({'account': account, 'limit': limit}, api='bridge')
+        if raw_data:
+            return notifications
+        ret = []
+        for note in notifications:
+            note["date"] = formatTimeString(note["date"])
+            ret.append(note)
+        return ret
 
     def mark_notifications_as_read(self, last_read=None, account=None):
         """ Broadcast a mark all notification as read custom_json
 
             :param str last_read: When set, this datestring is used to set the mark as read date
-            :param str account: (optional) the account to broadcast
+            :param str account: (optional) the account to broadcast the custom_json
                 to (defaults to ``default_account``)
 
         """
@@ -864,6 +872,8 @@ class Account(BlockchainObject):
             if len(last_notification) == 0:
                 raise ValueError("Notification list is empty")
             last_read = last_notification[0]["date"]
+        if isinstance(last_read, datetime):
+            last_read = formatTimeString(last_read)
         json_body = [
             'setLastRead', {
                 'date': last_read,
