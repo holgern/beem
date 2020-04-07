@@ -14,6 +14,7 @@ pyyaml>=4.2b1
 mock==4.0.2
 appdirs==1.4.3
 Click==7.1.1
+click_shell>=2.0
 prettytable
 pycodestyle==2.5.0
 pyflakes==2.1.1

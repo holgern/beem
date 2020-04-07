@@ -1,5 +1,10 @@
 Changelog
 =========
+0.22.14
+-------
+* add click_shell to turn beempy into a shell utility with autocompletion
+* new click_shell added as requirements
+
 0.22.13
 -------
 * HiveSigner support added

@@ -17,6 +17,7 @@ import math
 import random
 import logging
 import click
+from click_shell import shell
 import yaml
 import re
 from beem.instance import set_shared_steem_instance, shared_steem_instance
@@ -152,8 +153,8 @@ def node_answer_time(node):
         rpc_answer_time = float("inf")
     return rpc_answer_time
 
-
-@click.group(chain=True)
+@shell(prompt='beempy> ', intro='Starting beempy... (use help to list all commands)', chain=True)
+# @click.group(chain=True)
 @click.option(
     '--node', '-n', default="", help="URL for public Steem API (e.g. https://api.steemit.com)")
 @click.option(
