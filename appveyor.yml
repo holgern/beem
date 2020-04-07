@@ -79,7 +79,7 @@ after_test:
 #- ps: 7z a -m0=LZMA2 -mx9 $env:BUILD .\dist\beempy
 - ps: 7z a $env:BUILD .\dist\beempy
 - ps: 7z a $env:BUILD2 .\dist\beempy.exe
-- cmd: "C:/Program Files (x86)/NSIS/makensis.exe" pyinstaller\windows_installer.nsi
+- cmd: makensis.exe /V4 pyinstaller\windows_installer.nsi
 - ps copy /Y pyinstaller/BeempySetup.exe $env:BUILD3
 
 - ps: | # generate sha256 hashes
