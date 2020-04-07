@@ -65,8 +65,8 @@ test_script:
 
 after_test:
  # If tests are successful, create binary packages for the project.
-- cmd: pyinstaller beempy-onedir.spec
-- cmd: pyinstaller beempy-onefile.spec
+- cmd: pyinstaller pyinstaller\beempy-onedir.spec
+- cmd: pyinstaller pyinstaller\beempy-onefile.spec
 
 # package artifacts
 - cmd: copy /Y C:\OpenSSL-v111-Win64\bin\libcrypto-1_1-x64.dll dist\beempy
