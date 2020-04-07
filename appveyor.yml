@@ -24,11 +24,13 @@ install:
     if ($env:APPVEYOR_PULL_REQUEST_NUMBER) {
         $env:BUILD = "beempy-{0}-{1}-{2}_win64.zip" -f $env:COMM_TAG, $env:COMM_HASH, $env:COMM_PY
         $env:BUILD2 = "beempy-onefile-{0}-{1}-{2}_win64.zip" -f $env:COMM_TAG, $env:COMM_HASH, $env:COMM_PY
+        $env:BUILD3 = "BeempySetup-{0}-{1}-{2}.exe" -f $env:COMM_TAG, $env:COMM_HASH, $env:COMM_PY
         $env:AVVER = "{0}-{1}" -f $env:COMM_TAG.TrimStart("v"), $env:COMM_HASH
     }
     else {
         $env:BUILD = "beempy-{0}-{1}-{2}-{3}_win64.zip" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH, $env:COMM_PY
         $env:BUILD2 = "beempy-onefile-{0}-{1}-{2}-{3}_win64.zip" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH, $env:COMM_PY
+        $env:BUILD3 = "BeempySetup-{0}-{1}-{2}-{3}.exe" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH, $env:COMM_PY
         $env:AVVER = "{0}-{1}" -f $env:COMM_TAG.TrimStart("v"), $env:COMM_COUNT
     }
 
@@ -77,13 +79,16 @@ after_test:
 #- ps: 7z a -m0=LZMA2 -mx9 $env:BUILD .\dist\beempy
 - ps: 7z a $env:BUILD .\dist\beempy
 - ps: 7z a $env:BUILD2 .\dist\beempy.exe
-- cmd: makensisw.exe pyinstaller\windows_installer.nsi
+- cmd: makensisw.exe  /V3 pyinstaller\windows_installer.nsi
+- ps copy /Y pyinstaller/BeempySetup.exe $env:BUILD3
 
 - ps: | # generate sha256 hashes
     (get-filehash $env:BUILD -algorithm SHA256).Hash | out-file ("{0}.sha256" -f $env:BUILD) -encoding ascii
     type ("{0}.sha256" -f $env:BUILD)
     (get-filehash $env:BUILD2 -algorithm SHA256).Hash | out-file ("{0}.sha256" -f $env:BUILD2) -encoding ascii
     type ("{0}.sha256" -f $env:BUILD2)
+    (get-filehash $env:BUILD3 -algorithm SHA256).Hash | out-file ("{0}.sha256" -f $env:BUILD3) -encoding ascii
+    type ("{0}.sha256" -f $env:BUILD3)
     
 #(get-filehash beempy.zip -algorithm SHA256).Hash | out-file "beempy.zip.sha256" -encoding ascii 
 
@@ -97,8 +102,10 @@ artifacts:
   name: beempy onefile
 - path: $(BUILD2).sha256
   name: beempy onefile sha256 hash
-- path: BeempySetup.exe
+- path: p$(BUILD3)
   name: beempy installer
+- path: $(BUILD3).sha256
+  name: beempy setup sha256 hash
 #- path: beempy.zip
 #  name: beempy_zip
 #- path: beempy.zip.sha256
