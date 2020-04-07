@@ -22,7 +22,7 @@ analysis_data = [
 ]
 
 
-a = Analysis(['beem/cli.py'],
+a = Analysis(['../beem/cli.py'],
              pathex=['beem'],
              binaries=binaries,
              datas=analysis_data,

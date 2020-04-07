@@ -69,14 +69,14 @@ after_test:
 - cmd: pyinstaller pyinstaller\beempy-onefile.spec
 
 # package artifacts
-- cmd: copy /Y C:\OpenSSL-v111-Win64\bin\libcrypto-1_1-x64.dll dist\beempy
-- cmd: copy /Y C:\OpenSSL-v111-Win64\bin\libssl-1_1-x64.dll dist\beempy
-- cmd: copy /Y C:\OpenSSL-Win64\bin\ssleay32.dll dist\beempy
-- cmd: copy /Y C:\OpenSSL-Win64\bin\libeay32.dll dist\beempy
+- cmd: copy /Y C:\OpenSSL-v111-Win64\bin\libcrypto-1_1-x64.dll pyinstaller\dist\beempy
+- cmd: copy /Y C:\OpenSSL-v111-Win64\bin\libssl-1_1-x64.dll pyinstaller\dist\beempy
+- cmd: copy /Y C:\OpenSSL-Win64\bin\ssleay32.dll pyinstaller\dist\beempy
+- cmd: copy /Y C:\OpenSSL-Win64\bin\libeay32.dll pyinstaller\dist\beempy
 # - cmd: 7z a -­mx9 beempy.zip %APPVEYOR_BUILD_FOLDER%\dist\beempy
 #- ps: 7z a -m0=LZMA2 -mx9 $env:BUILD .\dist\beempy
-- ps: 7z a $env:BUILD .\dist\beempy
-- ps: 7z a $env:BUILD2 .\dist\beempy.exe
+- ps: 7z a $env:BUILD .\pyinstaller\dist\beempy
+- ps: 7z a $env:BUILD2 .\pyinstaller\dist\beempy.exe
 
 - ps: | # generate sha256 hashes
     (get-filehash $env:BUILD -algorithm SHA256).Hash | out-file ("{0}.sha256" -f $env:BUILD) -encoding ascii

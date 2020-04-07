@@ -21,7 +21,7 @@ analysis_data = [
     (websocket_cacert_file_path, join('.', basename(websocket_lib_path)))
 ]
 
-a = Analysis(['beem/cli.py'],
+a = Analysis(['../beem/cli.py'],
              pathex=['beem'],
              binaries=binaries,
              datas=analysis_data,
