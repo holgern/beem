@@ -9,10 +9,10 @@ environment:
     WITH_COMPILER: "cmd /E:ON /V:ON /C .\\appveyor\\run_with_compiler.cmd"
 
   matrix:
-    - PYTHON: "C:\\Python37-x64"
+    - PYTHON: "C:\\Python38-x64"
       PYTHON_ARCH: "64"
-      MINICONDA: C:\Miniconda37-x64
-      COMM_PY: "py37"
+      MINICONDA: C:\Miniconda38-x64
+      COMM_PY: "py38"
 
       
 install:
@@ -50,7 +50,7 @@ install:
 - cmd: conda update -q conda
 - cmd: conda info -a
 - cmd: conda install --yes conda-build setuptools pip parameterized cryptography
-- cmd: conda install --yes pycryptodomex pyyaml pytest pytest-mock coverage mock appdirs pylibscrypt
+- cmd: conda install --yes pycryptodomex pyyaml pytest pytest-mock coverage mock appdirs pylibscrypt pywin32
 - cmd: pip install scrypt -U
 - cmd: conda install --yes ecdsa requests future websocket-client pytz six Click events prettytable pyinstaller click-shell
 
