@@ -97,15 +97,15 @@ artifacts:
 - path: $(BUILD)
   name: beempy
 - path: $(BUILD).sha256
-  name: beempy sha256 hash
+  name: beempy_sha256
 - path: $(BUILD2)
-  name: beempy onefile
+  name: beempy_onefile
 - path: $(BUILD2).sha256
-  name: beempy onefile sha256 hash
+  name: beempy_onefile_sha256
 - path: $(BUILD3)
-  name: beempy installer
+  name: beempy_installer
 - path: $(BUILD3).sha256
-  name: beempy setup sha256 hash
+  name: beempy_installer_sha256
 #- path: beempy.zip
 #  name: beempy_zip
 #- path: beempy.zip.sha256
@@ -114,3 +114,17 @@ artifacts:
 on_finish: 
 - ps: | # update appveyor build version, done last to prevent webhook breakage
     update-appveyorbuild -version $env:AVVER
+
+deploy:
+  provider: GitHub
+  auth_token:
+    secure: H6iG8N9jE/dZ8hp6PlSwjttNZ7j1pyvKSH0B8SgM9Iw4mmrjbR+VCxp8ZbehOqgo
+  artifact: beempy, beempy_sha256, beempy_onefile, beempy_onefile_sha256, beempy_installer, beempy_installer_sha256
+  draft: true
+  prerelease: true
+  description: "standalone executable of beempy for windows"
+#  tag: $(APPVEYOR_REPO_TAG_NAME) # will not work until tag is pushed
+  on:
+#    configuration: Release    # Debug contains non-redist MS DLLs
+    APPVEYOR_REPO_TAG: true   # deploy on tag push only
+    branch: master   # release from master branch only
