@@ -852,9 +852,12 @@ class Replies_by_last_update(list):
         self.steem = steem_instance or shared_steem_instance()
         self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase() and use_appbase)
         if self.steem.rpc.get_use_appbase() and use_appbase:
-            posts = self.steem.rpc.get_replies_by_last_update(discussion_query, api="tags")
-            if 'discussions' in posts:
-                posts = posts['discussions']
+            try:
+                posts = self.steem.rpc.get_replies_by_last_update(discussion_query, api="tags")
+                if 'discussions' in posts:
+                    posts = posts['discussions']
+            except:
+                posts = self.steem.rpc.get_replies_by_last_update(discussion_query["start_author"], discussion_query["start_permlink"], discussion_query["limit"])
         else:
             posts = self.steem.rpc.get_replies_by_last_update(discussion_query["start_author"], discussion_query["start_permlink"], discussion_query["limit"])
         if posts is None:

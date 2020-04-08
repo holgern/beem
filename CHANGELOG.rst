@@ -4,6 +4,8 @@ Changelog
 -------
 * add click_shell to turn beempy into a shell utility with autocompletion
 * new click_shell added as requirements
+* Installer added for beempy on windows
+* Add get_hive_nodes and get_steem_nodes functions to NodeList
 
 0.22.13
 -------

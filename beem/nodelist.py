@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 class NodeList(list):
-    """ Returns a node list
+    """ Returns HIVE/STEEM nodes as list
 
         .. code-block:: python
 
@@ -41,22 +41,6 @@ class NodeList(list):
                 "owner": "justyy",
                 "hive": False,
                 "score": 20
-            },
-            {
-                "url": "https://api.steemitdev.com",
-                "version": "0.19.11",
-                "type": "appbase-dev",
-                "owner": "steemit",
-                "hive": False,
-                "score": 10
-            },
-            {
-                "url": "https://api.steemitstage.com",
-                "version": "0.19.11",
-                "type": "appbase-dev",
-                "owner": "steemit",
-                "hive": False,
-                "score": 10
             },
             {
                 "url": "wss://steemd.privex.io",
@@ -127,14 +111,6 @@ class NodeList(list):
                 "version": "0.19.2",
                 "type": "testnet",
                 "owner": "almost-digital",
-                "hive": False,
-                "score": 5
-            },
-            {
-                "url": "https://testnet.steemitdev.com",
-                "version": "0.21.0",
-                "type": "testnet-dev",
-                "owner": "steemit",
                 "hive": False,
                 "score": 5
             },
@@ -323,6 +299,44 @@ class NodeList(list):
             if node["type"] in node_type_list and (node["score"] >= 0 or not_working):
                 if hive != node["hive"]:
                     continue
+                if not https and node["url"][:5] == 'https':
+                    continue
+                if not wss and node["url"][:3] == 'wss':
+                    continue
+                node_list.append(node)
+
+        return [node["url"] for node in sorted(node_list, key=lambda self: self['score'], reverse=True)]
+
+    def get_hive_nodes(self, not_working=False, wss=True, https=True):
+        """ Returns hive only nodes as list
+
+            :param bool not_working: When True, all nodes including not working ones will be returned
+
+        """
+        node_list = []
+        node_type_list = []
+
+        for node in self:
+            if node["hive"] and (node["score"] >= 0 or not_working):
+                if not https and node["url"][:5] == 'https':
+                    continue
+                if not wss and node["url"][:3] == 'wss':
+                    continue
+                node_list.append(node)
+
+        return [node["url"] for node in sorted(node_list, key=lambda self: self['score'], reverse=True)]
+
+    def get_steem_nodes(self, not_working=False, wss=True, https=True):
+        """ Returns steem only nodes as list
+
+            :param bool not_working: When True, all nodes including not working ones will be returned
+
+        """
+        node_list = []
+        node_type_list = []
+
+        for node in self:
+            if not node["hive"] and (node["score"] >= 0 or not_working):
                 if not https and node["url"][:5] == 'https':
                     continue
                 if not wss and node["url"][:3] == 'wss':
