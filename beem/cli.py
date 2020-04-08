@@ -101,8 +101,10 @@ def prompt_flag_callback(ctx, param, value):
         ctx.abort()
 
 
-def unlock_wallet(stm, password=None):
+def unlock_wallet(stm, password=None, allow_wif=True):
     if stm.unsigned and stm.nobroadcast:
+        return True
+    if not stm.wallet.locked():
         return True
     password_storage = stm.config["password_storage"]
     if not password and KEYRING_AVAILABLE and password_storage == "keyring":
@@ -112,7 +114,10 @@ def unlock_wallet(stm, password=None):
     if bool(password):
         stm.wallet.unlock(password)
     else:
-        password = click.prompt("Password to unlock wallet or posting/active wif", confirmation_prompt=False, hide_input=True)
+        if allow_wif:
+            password = click.prompt("Password to unlock wallet or posting/active wif", confirmation_prompt=False, hide_input=True)
+        else:
+            password = click.prompt("Password to unlock wallet", confirmation_prompt=False, hide_input=True)
         try:
             stm.wallet.unlock(password)
         except:
@@ -121,7 +126,10 @@ def unlock_wallet(stm, password=None):
                 print("Wif accepted!")
                 return True                
             except:
-                raise exceptions.WrongMasterPasswordException("entered password is not a valid password/wif")
+                if allow_wif:
+                    raise exceptions.WrongMasterPasswordException("entered password is not a valid password/wif")
+                else:
+                    raise exceptions.WrongMasterPasswordException("entered password is not a valid password")
 
     if stm.wallet.locked():
         if password_storage == "keyring" or password_storage == "environment":
@@ -513,13 +521,19 @@ def createwallet(wipe):
 
 
 @cli.command()
-@click.option('--test-unlock', is_flag=True, default=False, help='test if unlock is sucessful')
-def walletinfo(test_unlock):
+@click.option('--unlock', '-u', is_flag=True, default=False, help='Unlock wallet')
+@click.option('--lock', '-l', is_flag=True, default=False, help='Lock wallet')
+def walletinfo(unlock, lock):
     """ Show info about wallet
     """
     stm = shared_steem_instance()
     if stm.rpc is not None:
-        stm.rpc.rpcconnect()    
+        stm.rpc.rpcconnect()
+    if lock:
+        stm.wallet.lock()
+    elif unlock:
+        unlock_wallet(stm, allow_wif=False)
+      
     t = PrettyTable(["Key", "Value"])
     t.align = "l"
     t.add_row(["created", stm.wallet.created()])
@@ -537,8 +551,10 @@ def walletinfo(test_unlock):
         t.add_row(["keyring installed", "yes"])
     else:
         t.add_row(["keyring installed", "no"])
-    if test_unlock:
-        if unlock_wallet(stm):
+
+        
+    if unlock:
+        if unlock_wallet(stm, allow_wif=False):
             t.add_row(["Wallet unlock", "successful"])
         else:
             t.add_row(["Wallet unlock", "not working"])
@@ -595,7 +611,7 @@ def addkey(unsafe_import_key):
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    if not unlock_wallet(stm):
+    if not unlock_wallet(stm, allow_wif=False):
         return
     if not unsafe_import_key:
         unsafe_import_key = click.prompt("Enter private key", confirmation_prompt=False, hide_input=True)
@@ -618,7 +634,7 @@ def delkey(confirm, pub):
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    if not unlock_wallet(stm):
+    if not unlock_wallet(stm, allow_wif=False):
         return
     stm.wallet.removePrivateKeyFromPublicKey(pub)
     set_shared_steem_instance(stm)
@@ -1032,7 +1048,7 @@ def changewalletpassphrase():
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()    
-    if not unlock_wallet(stm):
+    if not unlock_wallet(stm, allow_wif=False):
         return
     newpassword = None
     newpassword = click.prompt("New wallet password", confirmation_prompt=True, hide_input=True)
@@ -2207,9 +2223,9 @@ def openorders(account):
 
 @cli.command()
 @click.argument('identifier', nargs=1)
-@click.option('--account', '-a', help='Resteem as this user')
-def resteem(identifier, account):
-    """Resteem an existing post"""
+@click.option('--account', '-a', help='Reblog as this user')
+def reblog(identifier, account):
+    """Reblog an existing post"""
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()

@@ -6,6 +6,8 @@ Changelog
 * new click_shell added as requirements
 * Installer added for beempy on windows
 * Add get_hive_nodes and get_steem_nodes functions to NodeList
+* beempy command resteem renamed to reblog
+* When using in shell mode, beempy walletinfo --unlock can be used to unlock the wallet and walletinfo --lock to unlock it again
 
 0.22.13
 -------
