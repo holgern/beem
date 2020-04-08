@@ -1,5 +1,10 @@
 Changelog
 =========
+0.23.0
+------
+* set hive as default for default_chain
+* get_nodes return hive nodes by default
+
 0.22.14
 -------
 * add click_shell to turn beempy into a shell utility with autocompletion

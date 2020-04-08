@@ -9,10 +9,10 @@ environment:
     WITH_COMPILER: "cmd /E:ON /V:ON /C .\\appveyor\\run_with_compiler.cmd"
 
   matrix:
-    - PYTHON: "C:\\Python36-x64"
+    - PYTHON: "C:\\Python37-x64"
       PYTHON_ARCH: "64"
-      MINICONDA: C:\Miniconda36-x64
-      COMM_PY: "py36"
+      MINICONDA: C:\Miniconda37-x64
+      COMM_PY: "py37"
 
       
 install:

@@ -169,6 +169,14 @@ class NodeList(list):
                 "owner": "someguy123",
                 "hive": True,
                 "score": 10
+            },
+            {
+                "url": "https://api.pharesim.me",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "pharesim",
+                "hive": True,
+                "score": 10                
             }]
         super(NodeList, self).__init__(nodes)
 
@@ -260,7 +268,7 @@ class NodeList(list):
             new_nodes.append(new_node)
         super(NodeList, self).__init__(new_nodes)
 
-    def get_nodes(self, hive=False, exclude_limited=False, dev=False, testnet=False, testnetdev=False, wss=True, https=True, not_working=False, normal=True, appbase=True):
+    def get_nodes(self, hive=True, exclude_limited=False, dev=False, testnet=False, testnetdev=False, wss=True, https=True, not_working=False, normal=True, appbase=True):
         """ Returns nodes as list
 
             :param bool hive: When True, only HIVE nodes will be returned

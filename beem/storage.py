@@ -404,7 +404,7 @@ class Configuration(DataDir):
 
     #: Default configuration
     nodelist = NodeList()
-    blockchain = "steem" # will be changed to hive in the next release
+    blockchain = "hive"
     if blockchain == "hive":
         nodes = nodelist.get_hive_nodes(testnet=False)
     elif blockchain == "steem":
