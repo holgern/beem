@@ -194,22 +194,7 @@ class Steem(object):
                          rpcpassword=rpcpassword,
                          **kwargs)
 
-        self.data = {'last_refresh': None, 'last_node': None,
-                     'last_refresh_dynamic_global_properties': None,
-                     'dynamic_global_properties': None,
-                     'feed_history': None,
-                     'get_feed_history': None,
-                     'last_refresh_feed_history': None,
-                     'hardfork_properties': None,
-                     'last_refresh_hardfork_properties': None,
-                     'network': None,
-                     'last_refresh_network': None,
-                     'witness_schedule': None,
-                     'last_refresh_witness_schedule': None,
-                     'config': None,
-                     'last_refresh_config': None,
-                     'reward_funds': None,
-                     'last_refresh_reward_funds': None}
+        self.clear_data()
         self.data_refresh_time_seconds = data_refresh_time_seconds
         # self.refresh_data()
 
@@ -263,6 +248,25 @@ class Steem(object):
         else:
             return "<%s, nobroadcast=%s>" % (
                 self.__class__.__name__, str(self.nobroadcast))
+
+    def clear_data(self):
+        """ Clears all stored blockchain parameters"""
+        self.data = {'last_refresh': None, 'last_node': None,
+                     'last_refresh_dynamic_global_properties': None,
+                     'dynamic_global_properties': None,
+                     'feed_history': None,
+                     'get_feed_history': None,
+                     'last_refresh_feed_history': None,
+                     'hardfork_properties': None,
+                     'last_refresh_hardfork_properties': None,
+                     'network': None,
+                     'last_refresh_network': None,
+                     'witness_schedule': None,
+                     'last_refresh_witness_schedule': None,
+                     'config': None,
+                     'last_refresh_config': None,
+                     'reward_funds': None,
+                     'last_refresh_reward_funds': None}        
 
     def refresh_data(self, property, force_refresh=False, data_refresh_time_seconds=None):
         """ Read and stores steem blockchain parameters
@@ -510,6 +514,17 @@ class Steem(object):
             if key[-18:] == "BLOCKCHAIN_VERSION":
                 blockchain_version = props[key]
         return blockchain_version
+
+    def get_blockchain_name(self, use_stored_data=True):
+        """Returns the blockchain version"""
+        props = self.get_config(use_stored_data=use_stored_data)
+        blockchain_name = ''
+        if props is None:
+            return blockchain_version
+        for key in props:
+            if key[-18:] == "BLOCKCHAIN_VERSION":
+                blockchain_name = key.split("_")[0].lower()
+        return blockchain_name
 
     def get_dust_threshold(self, use_stored_data=True):
         """Returns the vote dust threshold"""
@@ -892,6 +907,29 @@ class Steem(object):
         """
         Account(account, steem_instance=self)
         self.config["default_account"] = account
+
+    def switch_blockchain(self, blockchain, update_nodes=False):
+        """ Switches the connected blockchain. Can be either hive or steem.
+
+            :param str blockchain: can be "hive" or "steem"
+            :param bool update_nodes: When true, the nodes are updated, using
+                NodeList.update_nodes()
+        """
+        assert blockchain in ["hive", "steem"]
+        if blockchain == self.config["default_chain"] and not update_nodes:
+            return
+        from beem.nodelist import NodeList
+        nodelist = NodeList()
+        if update_nodes:
+            nodelist.update_nodes()
+        if blockchain == "hive":
+            self.set_default_nodes(nodelist.get_hive_nodes())
+        else:
+            self.set_default_nodes(nodelist.get_steem_nodes())
+        self.config["default_chain"] = blockchain
+        if not self.offline:
+            self.connect(node="")
+        
 
     def set_password_storage(self, password_storage):
         """ Set the password storage mode.

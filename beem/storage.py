@@ -404,9 +404,16 @@ class Configuration(DataDir):
 
     #: Default configuration
     nodelist = NodeList()
-    nodes = nodelist.get_nodes(normal=True, appbase=True, dev=False, testnet=False)
+    blockchain = "steem" # will be changed to hive in the next release
+    if blockchain == "hive":
+        nodes = nodelist.get_hive_nodes(testnet=False)
+    elif blockchain == "steem":
+        nodes = nodelist.get_steem_nodes(testnet=False)
+    else:
+        nodes = []
     config_defaults = {
         "node": nodes,
+        "default_chain": blockchain,
         "password_storage": "environment",
         "rpcpassword": "",
         "rpcuser": "",

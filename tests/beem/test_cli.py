@@ -322,9 +322,9 @@ class Testcases(unittest.TestCase):
         result = runner.invoke(cli, ['openorders'])
         self.assertEqual(result.exit_code, 0)
 
-    def test_resteem(self):
+    def test_reblog(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dto', 'resteem', '@steemit/firstposte'], input="test\n")
+        result = runner.invoke(cli, ['-dto', 'reblog', '@steemit/firstpost'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_follow_unfollow(self):

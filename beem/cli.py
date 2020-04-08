@@ -257,6 +257,8 @@ def set(key, value):
             stm.set_default_nodes(value)
         else:
             stm.set_default_nodes("")
+    elif key == "default_chain":
+        stm.config["default_chain"] = value
     elif key == "password_storage":
         stm.config["password_storage"] = value
         if KEYRING_AVAILABLE and value == "keyring":
@@ -418,7 +420,7 @@ def currentnode(version, url):
         t.add_row(["Node-Url", node[0]])
     if not offline:
         t.add_row(["Version", stm.get_blockchain_version()])
-        t.add_row(["HIVE", stm.is_hive])
+        t.add_row(["Chain", stm.get_blockchain_name()])
     else:
         t.add_row(["Version", "steempy is in offline mode..."])
     print(t)
@@ -430,7 +432,10 @@ def currentnode(version, url):
     help="Prints the updated nodes")
 @click.option(
     '--hive', '-h', is_flag=True, default=False,
-    help="Use only HIVE nodes, when set to true.")
+    help="Switch to HIVE blockchain, when set to true.")
+@click.option(
+    '--steem', '-e', is_flag=True, default=False,
+    help="Switch to STEEM nodes, when set to true.")
 @click.option(
     '--test', '-t', is_flag=True, default=False,
     help="Do change the node list, only print the newest nodes setup.")
@@ -440,23 +445,37 @@ def currentnode(version, url):
 @click.option(
     '--only-wss', '-w', is_flag=True, default=False,
     help="Use only websocket nodes.")
-@click.option(
-    '--only-appbase', '-a', is_flag=True, default=False,
-    help="Use only appbase nodes")
-@click.option(
-    '--only-non-appbase', '-n', is_flag=True, default=False,
-    help="Use only non-appbase nodes")
-def updatenodes(show, hive, test, only_https, only_wss, only_appbase, only_non_appbase):
+def updatenodes(show, hive, steem, test, only_https, only_wss):
     """ Update the nodelist from @fullnodeupdate
     """
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
+    if steem and hive:
+        print("hive and steem cannot be active both")
+        return
     t = PrettyTable(["node", "Version", "score"])
     t.align = "l"
+    if steem:
+        blockchain = "steem"
+    elif hive:
+        blockchain = "hive"
+    else:
+        blockchain = stm.config["default_chain"]
     nodelist = NodeList()
     nodelist.update_nodes(steem_instance=stm)
-    nodes = nodelist.get_nodes(hive=hive, exclude_limited=False, normal=not only_appbase, appbase=not only_non_appbase, wss=not only_https, https=not only_wss)
+    if hive:
+        nodes = nodelist.get_hive_nodes(wss=not only_https, https=not only_wss)
+        if stm.config["default_chain"] == "steem":
+            stm.config["default_chain"] = "hive"
+    elif steem:
+        nodes = nodelist.get_steem_nodes(wss=not only_https, https=not only_wss)
+        if stm.config["default_chain"] == "hive":
+            stm.config["default_chain"] = "steem"    
+    elif stm.config["default_chain"] == "steem":
+        nodes = nodelist.get_steem_nodes(wss=not only_https, https=not only_wss)
+    else:
+        nodes = nodelist.get_hive_nodes(wss=not only_https, https=not only_wss)
     if show or test:
         sorted_nodes = sorted(nodelist, key=lambda node: node["score"], reverse=True)
         for node in sorted_nodes:
@@ -480,7 +499,9 @@ def config():
         if key in availableConfigurationKeys and key != "nodes" and key != "node":
             t.add_row([key, stm.config[key]])
     node = stm.get_default_nodes()
+    blockchain = stm.config["default_chain"]
     nodes = json.dumps(node, indent=4)
+    t.add_row(["default_chain", blockchain])
     t.add_row(["nodes", nodes])
     if "password_storage" not in availableConfigurationKeys:
         t.add_row(["password_storage", stm.config["password_storage"]])

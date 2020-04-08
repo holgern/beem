@@ -8,6 +8,11 @@ Changelog
 * Add get_hive_nodes and get_steem_nodes functions to NodeList
 * beempy command resteem renamed to reblog
 * When using in shell mode, beempy walletinfo --unlock can be used to unlock the wallet and walletinfo --lock to unlock it again
+* Add get_blockchain_name to Steem, returns either steem or hive
+* Add switch_blockchain to Steem, can be used to switch between hive and steem
+* Storage has now a new config "default_chain", can be either hive or steem
+* updatenode --hive switches to hive and use hive nodes
+* updatenode --steem switches to steem and use steem nodes
 
 0.22.13
 -------

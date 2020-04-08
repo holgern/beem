@@ -15,7 +15,7 @@ class Testcases(unittest.TestCase):
     def setUpClass(cls):
         nodelist = NodeList()
         cls.bts = Steem(
-            node=nodelist.get_nodes(exclude_limited=False),
+            node=nodelist.get_nodes(),
             nobroadcast=True,
             num_retries=10
         )
@@ -27,6 +27,22 @@ class Testcases(unittest.TestCase):
         self.assertEqual(len(nodelist) - 9, len(all_nodes))
         https_nodes = nodelist.get_nodes(wss=False)
         self.assertEqual(https_nodes[0][:5], 'https')
+
+    def test_hive_nodes(self):
+        nodelist = NodeList()
+        nodelist.update_nodes()
+        hive_nodes = nodelist.get_hive_nodes()
+        for node in hive_nodes:
+            blockchainobject = Steem(node=node)
+            assert blockchainobject.is_hive
+
+    def test_steem_nodes(self):
+        nodelist = NodeList()
+        nodelist.update_nodes()
+        steem_nodes = nodelist.get_steem_nodes()
+        for node in steem_nodes:
+            blockchainobject = Steem(node=node)
+            assert not blockchainobject.is_hive
 
     def test_nodes_update(self):
         nodelist = NodeList()

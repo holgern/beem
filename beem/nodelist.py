@@ -51,14 +51,6 @@ class NodeList(list):
                 "score": -10
             },
             {
-                "url": "https://steemd.privex.io",
-                "version": "0.20.2",
-                "type": "appbase",
-                "owner": "privex",
-                "hive": False,
-                "score": 50
-            },
-            {
                 "url": "https://steemd.minnowsupportproject.org",
                 "version": "0.19.12",
                 "type": "appbase",
@@ -307,17 +299,22 @@ class NodeList(list):
 
         return [node["url"] for node in sorted(node_list, key=lambda self: self['score'], reverse=True)]
 
-    def get_hive_nodes(self, not_working=False, wss=True, https=True):
+    def get_hive_nodes(self, testnet=False, not_working=False, wss=True, https=True):
         """ Returns hive only nodes as list
 
+            :param bool testnet: when True, testnet nodes are included
             :param bool not_working: When True, all nodes including not working ones will be returned
 
         """
         node_list = []
         node_type_list = []
-
+      
         for node in self:
-            if node["hive"] and (node["score"] >= 0 or not_working):
+            if not node["hive"]:
+                continue
+            if (node["score"] < 0 and not not_working):
+                continue
+            if (testnet and node["type"] == "testnet") or (not testnet and node["type"] != "testnet"):
                 if not https and node["url"][:5] == 'https':
                     continue
                 if not wss and node["url"][:3] == 'wss':
@@ -326,9 +323,10 @@ class NodeList(list):
 
         return [node["url"] for node in sorted(node_list, key=lambda self: self['score'], reverse=True)]
 
-    def get_steem_nodes(self, not_working=False, wss=True, https=True):
+    def get_steem_nodes(self, testnet=False, not_working=False, wss=True, https=True):
         """ Returns steem only nodes as list
 
+            :param bool testnet: when True, testnet nodes are included
             :param bool not_working: When True, all nodes including not working ones will be returned
 
         """
@@ -336,7 +334,11 @@ class NodeList(list):
         node_type_list = []
 
         for node in self:
-            if not node["hive"] and (node["score"] >= 0 or not_working):
+            if node["hive"]:
+                continue
+            if (node["score"] < 0 and not not_working):
+                continue
+            if (testnet and node["type"] == "testnet") or (not testnet and node["type"] != "testnet"):            
                 if not https and node["url"][:5] == 'https':
                     continue
                 if not wss and node["url"][:3] == 'wss':
