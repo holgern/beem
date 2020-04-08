@@ -388,6 +388,14 @@ class Testcases(unittest.TestCase):
         runner.invoke(cli, ['-o', 'set', 'nodes', self.node_list])
         result = runner.invoke(cli, ['updatenodes', '--hive', '--test'])
         self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['updatenodes', '--steem'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['updatenodes'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['updatenodes', '--hive'])
+        self.assertEqual(result.exit_code, 0)        
+        result = runner.invoke(cli, ['updatenodes'])
+        self.assertEqual(result.exit_code, 0)        
         runner.invoke(cli, ['-o', 'set', 'nodes', str(self.node_list)])
 
     def test_currentnode(self):

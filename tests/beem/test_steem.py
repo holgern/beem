@@ -455,3 +455,10 @@ class Testcases(unittest.TestCase):
             exceptions.MissingKeyError
         ):
             bts.broadcast(tx=tx)
+
+    def test_switch_blockchain(self):
+        bts = self.bts
+        bts.switch_blockchain("steem", update_nodes=True)
+        assert not bts.is_hive
+        bts.switch_blockchain("hive", update_nodes=True)
+        assert bts.is_hive        
