@@ -24,13 +24,13 @@ install:
     if ($env:APPVEYOR_PULL_REQUEST_NUMBER) {
         $env:BUILD = "beempy-{0}-{1}-{2}_win64.zip" -f $env:COMM_TAG, $env:COMM_HASH, $env:COMM_PY
         $env:BUILD2 = "beempy-onefile-{0}-{1}-{2}_win64.zip" -f $env:COMM_TAG, $env:COMM_HASH, $env:COMM_PY
-        $env:BUILD3 = "BeempySetup-{0}-{1}-{2}.exe" -f $env:COMM_TAG, $env:COMM_HASH, $env:COMM_PY
+        $env:BUILD3 = "BeempySetup-{0}-{1}-{2}_win64.exe" -f $env:COMM_TAG, $env:COMM_HASH, $env:COMM_PY
         $env:AVVER = "{0}-{1}" -f $env:COMM_TAG.TrimStart("v"), $env:COMM_HASH
     }
     else {
         $env:BUILD = "beempy-{0}-{1}-{2}-{3}_win64.zip" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH, $env:COMM_PY
         $env:BUILD2 = "beempy-onefile-{0}-{1}-{2}-{3}_win64.zip" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH, $env:COMM_PY
-        $env:BUILD3 = "BeempySetup-{0}-{1}-{2}-{3}.exe" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH, $env:COMM_PY
+        $env:BUILD3 = "BeempySetup-{0}-{1}-{2}-{3}_win64.exe" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH, $env:COMM_PY
         $env:AVVER = "{0}-{1}" -f $env:COMM_TAG.TrimStart("v"), $env:COMM_COUNT
     }
 
@@ -102,7 +102,7 @@ artifacts:
   name: beempy onefile
 - path: $(BUILD2).sha256
   name: beempy onefile sha256 hash
-- path: p$(BUILD3)
+- path: $(BUILD3)
   name: beempy installer
 - path: $(BUILD3).sha256
   name: beempy setup sha256 hash
