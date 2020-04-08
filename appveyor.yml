@@ -118,12 +118,12 @@ on_finish:
 deploy:
   provider: GitHub
   auth_token:
-    secure: H6iG8N9jE/dZ8hp6PlSwjttNZ7j1pyvKSH0B8SgM9Iw4mmrjbR+VCxp8ZbehOqgo
+    secure: 0/vpfUG++7riJDu6Zc0smoTJJJm1t9/qiOzY/IR5vtaFNZNVYmRbEt8jS8LxpnFW
   artifact: beempy, beempy_sha256, beempy_onefile, beempy_onefile_sha256, beempy_installer, beempy_installer_sha256
   draft: true
   prerelease: true
   description: "standalone executable of beempy for windows"
-#  tag: $(APPVEYOR_REPO_TAG_NAME) # will not work until tag is pushed
+  tag: $(APPVEYOR_REPO_TAG_NAME) # will not work until tag is pushed
   on:
 #    configuration: Release    # Debug contains non-redist MS DLLs
     APPVEYOR_REPO_TAG: true   # deploy on tag push only
