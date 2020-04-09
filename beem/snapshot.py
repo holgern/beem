@@ -450,7 +450,8 @@ class AccountSnapshot(list):
                             'limit_order_create', 'account_update',
                             'account_witness_proxy', 'limit_order_cancel', 'comment_options',
                             'delete_comment', 'interest', 'recover_account', 'pow',
-                            'fill_convert_request', 'convert', 'request_account_recovery']:
+                            'fill_convert_request', 'convert', 'request_account_recovery',
+                            'update_proposal_votes']:
             return
 
         # if "vests" in str(op).lower():
