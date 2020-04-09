@@ -189,7 +189,7 @@ class AccountSnapshot(list):
             self.in_vote_rep.append(int(v["reputation"]))
             self.in_vote_rshares.append(int(v["rshares"]))
         except:
-            print("Could not found: %s" % v)
+            print("Could not find: %s" % v)
             return
 
     def update(self, timestamp, own, delegated_in=None, delegated_out=None, steem=0, sbd=0):
