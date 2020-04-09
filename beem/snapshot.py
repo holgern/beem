@@ -439,6 +439,12 @@ class AccountSnapshot(list):
                 self.update_in_vote(ts, weight, op)
             return
 
+        elif op['type'] == 'hardfork_hive':
+            vests = Amount(op['vests_converted'])
+            hbd = Amount(op['steem_transferred'])
+            hive = Amount(op['sbd_transferred'])
+            self.update(ts, vests * (-1), 0, 0, hive * (-1), hbd * (-1))
+
         elif op['type'] in ['comment', 'feed_publish', 'shutdown_witness',
                             'account_witness_vote', 'witness_update', 'custom_json',
                             'limit_order_create', 'account_update',
