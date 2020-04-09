@@ -238,7 +238,7 @@ class AccountSnapshot(list):
             elif delegated_out['amount'] != 0:
                 # new or updated non-zero delegation
                 new_deleg[delegated_out['account']] = delegated_out['amount']
-
+                # TODO
                 # skip undelegations here, wait for 'return_vesting_delegation'
                 # del new_deleg[delegated_out['account']]
 
@@ -261,7 +261,6 @@ class AccountSnapshot(list):
             ts = parse_time(op['timestamp'])
             if start_timestamp is not None and start_timestamp > ts:
                 continue
-            # print(op)
             if op['type'] in exclude_ops:
                 continue
             if len(only_ops) > 0 and op['type'] not in only_ops:
@@ -276,7 +275,6 @@ class AccountSnapshot(list):
         if op['type'] == "account_create":
             fee_steem = Amount(op['fee'], steem_instance=self.steem).amount
             fee_vests = self.steem.sp_to_vests(Amount(op['fee'], steem_instance=self.steem).amount, timestamp=ts)
-            # print(fee_vests)
             if op['new_account_name'] == self.account["name"]:
                 self.update(ts, fee_vests, 0, 0)
                 return
@@ -304,7 +302,6 @@ class AccountSnapshot(list):
 
         elif op['type'] == "delegate_vesting_shares":
             vests = Amount(op['vesting_shares'], steem_instance=self.steem)
-            # print(op)
             if op['delegator'] == self.account["name"]:
                 delegation = {'account': op['delegatee'], 'amount': vests}
                 self.update(ts, 0, 0, delegation)
@@ -316,7 +313,6 @@ class AccountSnapshot(list):
 
         elif op['type'] == "transfer":
             amount = Amount(op['amount'], steem_instance=self.steem)
-            # print(op)
             if op['from'] == self.account["name"]:
                 if amount.symbol == self.steem.steem_symbol:
                     self.update(ts, 0, 0, 0, amount * (-1), 0)
@@ -327,8 +323,6 @@ class AccountSnapshot(list):
                     self.update(ts, 0, 0, 0, amount, 0)
                 elif amount.symbol == self.steem.sbd_symbol:
                     self.update(ts, 0, 0, 0, 0, amount)
-            # print(op, vests)
-            # self.update(ts, vests, 0, 0)
             return
 
         elif op['type'] == "fill_order":
@@ -344,7 +338,6 @@ class AccountSnapshot(list):
                     self.update(ts, 0, 0, 0, current_pays, open_pays * (-1))
                 elif current_pays.symbol == self.steem.sbd_symbol:
                     self.update(ts, 0, 0, 0, open_pays * (-1), current_pays)
-            # print(op)
             return
 
         elif op['type'] == "transfer_to_vesting":
@@ -359,7 +352,6 @@ class AccountSnapshot(list):
             return
 
         elif op['type'] == "fill_vesting_withdraw":
-            # print(op)
             vests = Amount(op['withdrawn'], steem_instance=self.steem)
             self.update(ts, vests * (-1), 0, 0)
             return
@@ -388,7 +380,6 @@ class AccountSnapshot(list):
 
         elif op['type'] == "author_reward":
             if "author_reward" in only_ops or enable_rewards:
-                # print(op)
                 vests = Amount(op['vesting_payout'], steem_instance=self.steem)
                 steem = Amount(op['steem_payout'], steem_instance=self.steem)
                 sbd = Amount(op['sbd_payout'], steem_instance=self.steem)
@@ -453,11 +444,6 @@ class AccountSnapshot(list):
                             'fill_convert_request', 'convert', 'request_account_recovery',
                             'update_proposal_votes']:
             return
-
-        # if "vests" in str(op).lower():
-        #     print(op)
-        # else:
-        # print(op)
 
     def build_sp_arrays(self):
         """ Builds the own_sp and eff_sp array"""
