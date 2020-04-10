@@ -552,6 +552,9 @@ class AccountSnapshot(list):
 
                 self.vp_timestamp.append(ts)
 
+        self.vp.append(self.account.get_voting_power() / 100)
+        self.downvote_vp(self.account.get_downvoting_power() / 100)
+
     def build_curation_arrays(self, end_date=None, sum_days=7):
         """ Build curation arrays"""
         self.curation_per_1000_SP_timestamp = []
