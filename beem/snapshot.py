@@ -487,6 +487,7 @@ class AccountSnapshot(list):
         self.downvote_vp = [STEEM_100_PERCENT]
 
         for (ts, weight) in zip(self.out_vote_timestamp, self.out_vote_weight):
+            regenerated_vp = 0
             if ts > HF_21 and weight < 0:
                 self.downvote_vp.append(self.downvote_vp[-1])
                 if self.downvote_vp[-1] < STEEM_100_PERCENT:
@@ -497,13 +498,15 @@ class AccountSnapshot(list):
                     self.downvote_vp[-1] = STEEM_100_PERCENT
                     recharge_time = self.account.get_manabar_recharge_timedelta({"current_mana_pct": self.downvote_vp[-2] / 100})
                     # Add full downvote VP once fully charged
-                    self.downvote_vp_timestamp.append(self.vp_timestamp[-1] + recharge_time)
-                    self.downvote_vp.append(STEEM_100_PERCENT)
-                    # Add full downvote VP just before new Vote
-                    self.downvote_vp_timestamp.append(ts-timedelta(seconds=1))
+                    self.downvote_vp_timestamp.append(self.downvote_vp_timestamp[-1] + recharge_time)
                     self.downvote_vp.append(STEEM_100_PERCENT)
 
+                # Add charged downvote VP just before new Vote
+                self.downvote_vp_timestamp.append(ts-timedelta(seconds=1))
+                self.downvote_vp.append(min([STEEM_100_PERCENT, self.downvote_vp[-1] + regenerated_vp]))
+
                 self.downvote_vp[-1] -= self.steem._calc_resulting_vote(STEEM_100_PERCENT, weight) * 4
+                # Downvote mana pool is 1/4th of the upvote mana pool, so it gets drained 4 times as quick
                 if self.downvote_vp[-1] < 0:
                     # There's most likely a better solution to this that what I did here
                     self.vp.append(self.vp[-1])
@@ -520,14 +523,16 @@ class AccountSnapshot(list):
                         # Add full VP once fully charged
                         self.vp_timestamp.append(self.vp_timestamp[-1] + recharge_time)
                         self.vp.append(STEEM_100_PERCENT)
-                        # Add full VP just before new Vote
+                    if self.vp[-1] == STEEM_100_PERCENT and ts - self.vp_timestamp[-1] > timedelta(seconds=1):
+                        # Add charged VP just before new Vote
                         self.vp_timestamp.append(ts-timedelta(seconds=1))
-                        self.vp.append(STEEM_100_PERCENT)
+                        self.vp.append(min([STEEM_100_PERCENT, self.vp[-1] + regenerated_vp]))
                     self.vp[-1] += self.downvote_vp[-1] / 4
                     if self.vp[-1] < 0:
                         self.vp[-1] = 0
 
                     self.vp_timestamp.append(ts)
+                    self.downvote_vp[-1] = 0
                 self.downvote_vp_timestamp.append(ts)
 
             else:
@@ -543,17 +548,20 @@ class AccountSnapshot(list):
                     # Add full VP once fully charged
                     self.vp_timestamp.append(self.vp_timestamp[-1] + recharge_time)
                     self.vp.append(STEEM_100_PERCENT)
-                    # Add full VP just before new Vote
+                if self.vp[-1] == STEEM_100_PERCENT and ts - self.vp_timestamp[-1] > timedelta(seconds=1):
+                    # Add charged VP just before new Vote
                     self.vp_timestamp.append(ts - timedelta(seconds=1))
-                    self.vp.append(STEEM_100_PERCENT)
+                    self.vp.append(min([STEEM_100_PERCENT, self.vp[-1] + regenerated_vp]))
                 self.vp[-1] -= self.steem._calc_resulting_vote(self.vp[-1], weight)
                 if self.vp[-1] < 0:
                     self.vp[-1] = 0
 
                 self.vp_timestamp.append(ts)
 
-        self.vp.append(self.account.get_voting_power() / 100)
-        self.downvote_vp(self.account.get_downvoting_power() / 100)
+        self.vp.append(self.account.get_voting_power() * 100)
+        self.downvote_vp.append(self.account.get_downvoting_power() * 100)
+        self.downvote_vp_timestamp.append(datetime.utcnow())
+        self.vp_timestamp.append(datetime.utcnow())
 
     def build_curation_arrays(self, end_date=None, sum_days=7):
         """ Build curation arrays"""
