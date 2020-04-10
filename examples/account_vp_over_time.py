@@ -25,9 +25,12 @@ if __name__ == "__main__":
     acc_snapshot.build_vp_arrays()
     timestamps = acc_snapshot.vp_timestamp
     vp = acc_snapshot.vp
+    downvote_timestamps = acc_snapshot.downvote_vp_timestamp
+    downvote_vp = acc_snapshot.downvote_vp
     plt.figure(figsize=(12, 6))
     opts = {'linestyle': '-', 'marker': '.'}
     plt.plot_date(timestamps, vp, label="Voting power", **opts)
+    plt.plot_date(downvote_timestamps, downvote_vp, label='Downvote Power', **opts)
     plt.grid()
     plt.legend()
     plt.title("Voting power over time - @%s" % (account))
