@@ -61,6 +61,8 @@ class AccountSnapshot(list):
         self.in_vote_rshares = []
         self.vp = []
         self.vp_timestamp = []
+        self.downvote_vp = []
+        self.downvote_vp_timestamp = []
         self.rep = []
         self.rep_timestamp = []
 
@@ -477,20 +479,67 @@ class AccountSnapshot(list):
         """ Build vote power arrays"""
         self.vp_timestamp = [self.timestamps[1]]
         self.vp = [STEEM_100_PERCENT]
+        HF_21 = datetime(2019, 8, 27, 15, tzinfo=pytz.utc)
+        if self.timestamps[1] > HF_21:
+            self.downvote_vp_timestamp = [self.timestamps[1]]
+        else:
+            self.downvote_vp_timestamp = [HF_21]
+        self.downvote_vp = [STEEM_100_PERCENT]
+
         for (ts, weight) in zip(self.out_vote_timestamp, self.out_vote_weight):
-            self.vp.append(self.vp[-1])
+            if ts > HF_21 and weight < 0:
+                self.downvote_vp.append(self.downvote_vp[-1])
+                if self.downvote_vp[-1] < STEEM_100_PERCENT:
+                    regenerated_vp = ((ts - self.downvote_vp_timestamp[-1]).total_seconds()) * STEEM_100_PERCENT / STEEM_VOTE_REGENERATION_SECONDS
+                    self.downvote_vp[-1] += int(regenerated_vp)
 
-            if self.vp[-1] < STEEM_100_PERCENT:
-                regenerated_vp = ((ts - self.vp_timestamp[-1]).total_seconds()) * STEEM_100_PERCENT / STEEM_VOTE_REGENERATION_SECONDS
-                self.vp[-1] += int(regenerated_vp)
+                if self.downvote_vp[-1] > STEEM_100_PERCENT:
+                    self.downvote_vp[-1] = STEEM_100_PERCENT
+                    recharge_time = self.account.get_manabar_recharge_timedelta({"current_mana_pct": self.downvote_vp[-2] / 100})
+                    self.downvote_vp_timestamp.append(self.vp_timestamp[-1] + recharge_time)
+                    self.downvote_vp.append(STEEM_100_PERCENT)
 
-            if self.vp[-1] > STEEM_100_PERCENT:
-                self.vp[-1] = STEEM_100_PERCENT
-            self.vp[-1] -= self.steem._calc_resulting_vote(self.vp[-1], weight)
-            if self.vp[-1] < 0:
-                self.vp[-1] = 0
+                self.downvote_vp[-1] -= self.steem._calc_resulting_vote(STEEM_100_PERCENT, weight) * 4
+                if self.downvote_vp[-1] < 0:
+                    # There's most likely a better solution to this that what I did here
+                    self.vp.append(self.vp[-1])
 
-            self.vp_timestamp.append(ts)
+                    if self.vp[-1] < STEEM_100_PERCENT:
+                        regenerated_vp = ((ts - self.vp_timestamp[
+                            -1]).total_seconds()) * STEEM_100_PERCENT / STEEM_VOTE_REGENERATION_SECONDS
+                        self.vp[-1] += int(regenerated_vp)
+
+                    if self.vp[-1] > STEEM_100_PERCENT:
+                        self.vp[-1] = STEEM_100_PERCENT
+                        recharge_time = self.account.get_manabar_recharge_timedelta(
+                            {"current_mana_pct": self.vp[-2] / 100})
+                        self.vp_timestamp.append(self.vp_timestamp[-1] + recharge_time)
+                        self.vp.append(STEEM_100_PERCENT)
+                    self.vp[-1] += self.downvote_vp[-1] / 4
+                    if self.vp[-1] < 0:
+                        self.vp[-1] = 0
+
+                    self.vp_timestamp.append(ts)
+                self.downvote_vp_timestamp.append(ts)
+
+
+            else:
+                self.vp.append(self.vp[-1])
+
+                if self.vp[-1] < STEEM_100_PERCENT:
+                    regenerated_vp = ((ts - self.vp_timestamp[-1]).total_seconds()) * STEEM_100_PERCENT / STEEM_VOTE_REGENERATION_SECONDS
+                    self.vp[-1] += int(regenerated_vp)
+
+                if self.vp[-1] > STEEM_100_PERCENT:
+                    self.vp[-1] = STEEM_100_PERCENT
+                    recharge_time = self.account.get_manabar_recharge_timedelta({"current_mana_pct": self.vp[-2] / 100})
+                    self.vp_timestamp.append(self.vp_timestamp[-1] + recharge_time)
+                    self.vp.append(STEEM_100_PERCENT)
+                self.vp[-1] -= self.steem._calc_resulting_vote(self.vp[-1], weight)
+                if self.vp[-1] < 0:
+                    self.vp[-1] = 0
+
+                self.vp_timestamp.append(ts)
 
     def build_curation_arrays(self, end_date=None, sum_days=7):
         """ Build curation arrays"""
