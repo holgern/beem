@@ -520,7 +520,7 @@ class Steem(object):
         props = self.get_config(use_stored_data=use_stored_data)
         blockchain_name = ''
         if props is None:
-            return blockchain_version
+            return blockchain_name
         for key in props:
             if key[-18:] == "BLOCKCHAIN_VERSION":
                 blockchain_name = key.split("_")[0].lower()

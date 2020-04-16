@@ -1,4 +1,4 @@
-beem - Unofficial Python Library for Steem and HIVE
+beem - Unofficial Python Library for HIVE and STEEM
 ===================================================
 
 beem is an unofficial python library for steem and HIVE, which is created new from scratch from `python-bitshares`_
@@ -53,8 +53,8 @@ You may find help in the  `beem-discord-channel`_. The discord channel can also 
 
 A complete library documentation is available at  `beem.readthedocs.io`_.
 
-Advantages over the official steem-python library
-=================================================
+About beem
+==========
 
 * High unit test coverage
 * Support for websocket nodes
@@ -62,7 +62,7 @@ Advantages over the official steem-python library
 * Node error handling and automatic node switching
 * Usage of pycryptodomex instead of the outdated pycrypto
 * Complete documentation of beempy and all classes including all functions
-* steemconnect integration
+* hivesigner/steemconnect integration
 * Works on read-only systems
 * Own BlockchainObject class with cache
 * Contains all broadcast operations

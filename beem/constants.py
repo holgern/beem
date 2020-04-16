@@ -30,6 +30,10 @@ RC_DEFAULT_EXEC_COST = 100000
 STATE_COMMENT_VOTE_BYTE_SIZE = 525
 STEEM_RC_REGEN_TIME = 60 * 60 * 24 * 5
 
+CURVE_CONSTANT = 2000000000000
+CURVE_CONSTANT_X4 = 4 * CURVE_CONSTANT
+SQUARED_CURVE_CONSTANT = CURVE_CONSTANT * CURVE_CONSTANT
+
 state_object_size_info = {'authority_base_size': 4 * STATE_BYTES_SCALE,
                           'authority_account_member_size': 18 * STATE_BYTES_SCALE,
                           'authority_key_member_size': 35 * STATE_BYTES_SCALE,

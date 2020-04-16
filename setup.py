@@ -67,7 +67,7 @@ if __name__ == '__main__':
     setup(
         name='beem',
         version=VERSION,
-        description='Unofficial Python library for STEEM',
+        description='Unofficial Python library for HIVE and STEEM',
         long_description=get_long_description(),
         download_url='https://github.com/holgern/beem/tarball/' + VERSION,
         author='Holger Nahrstaedt',
@@ -75,7 +75,7 @@ if __name__ == '__main__':
         maintainer='Holger Nahrstaedt',
         maintainer_email='holger@nahrstaedt.de',
         url='http://www.github.com/holgern/beem',
-        keywords=['steem', 'library', 'api', 'rpc'],
+        keywords=['hive', 'steem', 'library', 'api', 'rpc'],
         packages=[
             "beem",
             "beemapi",

@@ -18,7 +18,6 @@ from beemgraphenebase.types import (
 from .objects import GrapheneObject, isArgsThisClass
 from beemgraphenebase.account import PublicKey
 from beemgraphenebase.py23 import PY2, PY3
-from .operationids import operations
 from .objects import (
     Operation,
     Memo,
