@@ -558,6 +558,17 @@ class AccountSnapshot(list):
 
                 self.vp_timestamp.append(ts)
 
+        if self.account.get_voting_power() == 100:
+            self.vp.append(10000)
+            recharge_time = self.account.get_manabar_recharge_timedelta({"current_mana_pct": self.vp[-2] / 100})
+            self.vp_timestamp.append(self.vp_timestamp[-1] + recharge_time)
+
+        if self.account.get_downvoting_power() == 100:
+            self.downvote_vp.append(10000)
+            recharge_time = self.account.get_manabar_recharge_timedelta(
+                {"current_mana_pct": self.downvote_vp[-2] / 100})
+            self.downvote_vp_timestamp.append(self.vp_timestamp[-1] + recharge_time)
+
         self.vp.append(self.account.get_voting_power() * 100)
         self.downvote_vp.append(self.account.get_downvoting_power() * 100)
         self.downvote_vp_timestamp.append(datetime.utcnow())
