@@ -5,7 +5,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import logging
 from events import Events
-from beemapi.websocket import SteemWebsocket
+from beemapi.websocket import NodeWebsocket
 from beem.instance import shared_blockchain_instance
 from beem.blockchain import Blockchain
 from beem.price import Order, FilledOrder
@@ -66,7 +66,7 @@ class Notify(Events):
             self.on_block += on_block
 
         # Open the websocket
-        self.websocket = SteemWebsocket(
+        self.websocket = NodeWebsocket(
             urls=self.blockchain.rpc.nodes,
             user=self.blockchain.rpc.user,
             password=self.blockchain.rpc.password,

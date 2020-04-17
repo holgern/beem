@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 # logging.basicConfig(level=logging.DEBUG)
 
 
-class SteemWebsocket(Events):
+class NodeWebsocket(Events):
     """ Create a websocket connection and request push notifications
 
         :param str urls: Either a single Websocket URL, or a list of URLs
@@ -42,7 +42,7 @@ class SteemWebsocket(Events):
 
         .. code-block:: python
 
-            ws = SteemWebsocket(
+            ws = NodeWebsocket(
                 "wss://gtg.steem.house:8090",
             )
             ws.on_block += print

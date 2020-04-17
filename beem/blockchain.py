@@ -19,7 +19,6 @@ from datetime import datetime, timedelta
 from .utils import formatTimeString, addTzInfo
 from .block import Block, BlockHeader
 from beemapi.node import Nodes
-from beemapi.steemnoderpc import SteemNodeRPC
 from .exceptions import BatchedCallsNotSupported, BlockDoesNotExistsException, BlockWaitTimeExceeded, OfflineHasNoRPCException
 from beemapi.exceptions import NumRetriesReached
 from beemgraphenebase.py23 import py23_bytes

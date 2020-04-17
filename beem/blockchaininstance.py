@@ -14,7 +14,7 @@ import ast
 import time
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from datetime import datetime, timedelta, date
-from beemapi.steemnoderpc import SteemNodeRPC
+from beemapi.noderpc import NodeRPC
 from beemapi.exceptions import NoAccessApi, NoApiWithName
 from beemgraphenebase.account import PrivateKey, PublicKey
 from beembase import transactions, operations
@@ -240,7 +240,7 @@ class BlockChainInstance(object):
         if not rpcpassword and "rpcpassword" in self.config:
             rpcpassword = self.config["rpcpassword"]
 
-        self.rpc = SteemNodeRPC(node, rpcuser, rpcpassword, **kwargs)
+        self.rpc = NodeRPC(node, rpcuser, rpcpassword, **kwargs)
 
     def is_connected(self):
         """Returns if rpc is connected"""

@@ -1651,7 +1651,7 @@ class Account(BlockchainObject):
                 >>> from beem.nodelist import NodeList
                 >>> nodelist = NodeList()
                 >>> nodelist.update_nodes()
-                >>> stm = Hive(node=nodelist.get_nodes(hive=False), use_condenser=True)
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
                 >>> account = Account("beem.app", blockchain_instance=stm)
                 >>> account.get_account_votes()  # doctest: +SKIP
 

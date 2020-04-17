@@ -5,6 +5,13 @@ Changelog
 * set hive as default for default_chain
 * get_nodes return hive nodes by default
 * Prepared for Hive HF 24
+* steem object in all classes is replaced by blockchain
+* Hive class has been added
+* Hive and Steem are now BlockChainInstance classes
+* Each class has now blockchain_instance parameter (steem_instance is stil available)
+* shared_blockchain_instance and set_shared_blockchain_instance can be used for Hive() and Steem() instances
+* token_symbol, backed_token_symbol and vest_token_symbol
+* Rename SteemWebsocket to NodeWebsocket and SteemNodeRPC to NodeRPC
 
 0.22.14
 -------
