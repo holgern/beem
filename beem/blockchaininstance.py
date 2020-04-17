@@ -600,11 +600,11 @@ class BlockChainInstance(object):
         used_power = int((used_power + max_vote_denom - 1) / max_vote_denom)
         return used_power
 
-    def _calc_vote_claim(self, effective_vote_shares, post_rshares):
+    def _calc_vote_claim(self, effective_vote_rshares, post_rshares):
         post_rshares_normalized = post_rshares + CURVE_CONSTANT
-        post_rshares_after_vote_normalized = post_rshares + effective_vote_shares + CURVE_CONSTANT
+        post_rshares_after_vote_normalized = post_rshares + effective_vote_rshares + CURVE_CONSTANT
         post_rshares_curve = (post_rshares_normalized * post_rshares_normalized - SQUARED_CURVE_CONSTANT) / (post_rshares + CURVE_CONSTANT_X4)
-        post_rshares_curve_after_vote = (post_rshares_after_vote_normalized * post_rshares_after_vote_normalized - SQUARED_CURVE_CONSTANT) / (post_rshares + effective_vote_shares + CURVE_CONSTANT_X4)
+        post_rshares_curve_after_vote = (post_rshares_after_vote_normalized * post_rshares_after_vote_normalized - SQUARED_CURVE_CONSTANT) / (post_rshares + effective_vote_rshares + CURVE_CONSTANT_X4)
         vote_claim = post_rshares_curve_after_vote - post_rshares_curve
         return vote_claim
 
