@@ -18,7 +18,6 @@ from beem.account import Account
 from beem.vote import Vote
 from beem.instance import shared_blockchain_instance
 from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_1_PERCENT, STEEM_100_PERCENT
-from beem import Steem, Hive
 
 log = logging.getLogger(__name__)
 
@@ -152,6 +151,7 @@ class AccountSnapshot(list):
         sbd = self.own_sbd[index]
         sum_in = sum([din[key].amount for key in din])
         sum_out = sum([dout[key].amount for key in dout])
+        from beem import Steem
         if isinstance(self.blockchain, Steem):
             sp_in = self.blockchain.vests_to_sp(sum_in, timestamp=ts)
             sp_out = self.blockchain.vests_to_sp(sum_out, timestamp=ts)
@@ -297,6 +297,7 @@ class AccountSnapshot(list):
 
         elif op['type'] == "account_create_with_delegation":
             fee_steem = Amount(op['fee'], blockchain_instance=self.blockchain).amount
+            from beem import Steem
             if isinstance(self.blockchain, Steem):
                 fee_vests = self.blockchain.sp_to_vests(Amount(op['fee'], blockchain_instance=self.blockchain).amount, timestamp=ts)
             else:
@@ -358,6 +359,7 @@ class AccountSnapshot(list):
 
         elif op['type'] == "transfer_to_vesting":
             steem = Amount(op['amount'], blockchain_instance=self.blockchain)
+            from beem import Steem
             if isinstance(self.blockchain, Steem):
                 vests = self.blockchain.sp_to_vests(steem.amount, timestamp=ts)
             else:
@@ -473,6 +475,7 @@ class AccountSnapshot(list):
                                         self.delegated_vests_out):
             sum_in = sum([din[key].amount for key in din])
             sum_out = sum([dout[key].amount for key in dout])
+            from beem import Steem
             if isinstance(self.blockchain, Steem):
                 sp_in = self.blockchain.vests_to_sp(sum_in, timestamp=ts)
                 sp_out = self.blockchain.vests_to_sp(sum_out, timestamp=ts)
@@ -611,6 +614,7 @@ class AccountSnapshot(list):
         for (ts, vests) in zip(self.reward_timestamps, self.curation_rewards):
             if vests == 0:
                 continue
+            from beem import Steem
             if isinstance(self.blockchain, Steem):
                 sp = self.blockchain.vests_to_sp(vests, timestamp=ts)
             else:

@@ -49,11 +49,11 @@ class Account(BlockchainObject):
         .. code-block:: python
 
             >>> from beem.account import Account
-            >>> from beem import Steem
+            >>> from beem import Hive
             >>> from beem.nodelist import NodeList
             >>> nodelist = NodeList()
             >>> nodelist.update_nodes()
-            >>> stm = Steem(node=nodelist.get_nodes(hive=True))
+            >>> stm = Hive(node=nodelist.get_hive_nodes())
             >>> account = Account("gtg", blockchain_instance=stm)
             >>> print(account)
             <Account gtg>
@@ -304,6 +304,12 @@ class Account(BlockchainObject):
         return self.get_steem_power()
 
     @property
+    def hp(self):
+        """ Returns the accounts Hive Power
+        """
+        return self.get_steem_power()
+
+    @property
     def vp(self):
         """ Returns the account voting power in the range of 0-100%
         """
@@ -421,8 +427,13 @@ class Account(BlockchainObject):
         max_mana = self.get_effective_vesting_shares()
         if max_mana == 0:
             props = self.blockchain.get_chain_properties()
-            required_fee_steem = Amount(props["account_creation_fee"], blockchain_instance=self.blockchain)
-            max_mana = int(self.blockchain.sp_to_vests(required_fee_steem))
+            from beem import Steem
+            if isinstance(self.blockchain, Steem):
+                required_fee_steem = Amount(props["account_creation_fee"], blockchain_instance=self.blockchain)
+                max_mana = int(self.blockchain.sp_to_vests(required_fee_steem))
+            else:
+                required_fee_hive = Amount(props["account_creation_fee"], blockchain_instance=self.blockchain)
+                max_mana = int(self.blockchain.hp_to_vests(required_fee_hive))
         last_mana = int(self["voting_manabar"]["current_mana"])
         last_update_time = self["voting_manabar"]["last_update_time"]
         last_update = datetime.utcfromtimestamp(last_update_time)
@@ -445,8 +456,13 @@ class Account(BlockchainObject):
         max_mana = self.get_effective_vesting_shares() / 4
         if max_mana == 0:
             props = self.blockchain.get_chain_properties()
-            required_fee_steem = Amount(props["account_creation_fee"], blockchain_instance=self.blockchain)
-            max_mana = int(self.blockchain.sp_to_vests(required_fee_steem) / 4)
+            from beem import Steem
+            if isinstance(self.blockchain, Steem):
+                required_fee_steem = Amount(props["account_creation_fee"], blockchain_instance=self.blockchain)
+                max_mana = int(self.blockchain.sp_to_vests(required_fee_steem) / 4)
+            else:
+                required_fee_hive = Amount(props["account_creation_fee"], blockchain_instance=self.blockchain)
+                max_mana = int(self.blockchain.hp_to_vests(required_fee_hive) / 4)                
         last_mana = int(self["downvote_manabar"]["current_mana"])
         last_update_time = self["downvote_manabar"]["last_update_time"]
         last_update = datetime.utcfromtimestamp(last_update_time)
@@ -529,7 +545,17 @@ class Account(BlockchainObject):
     def get_steem_power(self, onlyOwnSP=False):
         """ Returns the account steem power
         """
-        return self.blockchain.vests_to_sp(self.get_vests(only_own_vests=onlyOwnSP))
+        from beem import Steem
+        if isinstance(self.blockchain, Steem):
+            return self.blockchain.vests_to_sp(self.get_vests(only_own_vests=onlyOwnSP))
+        else:
+            return self.get_hive_power(onlyOwnSP=onlyOwnSP)
+
+    def get_hive_power(self, onlyOwnSP=False):
+        """ Returns the account steem power
+        """
+        return self.blockchain.vests_to_hp(self.get_vests(only_own_vests=onlyOwnSP))
+
 
     def get_voting_value_SBD(self, voting_weight=100, voting_power=None, steem_power=None, not_broadcasted_vote=True):
         """ Returns the account voting value in SBD
@@ -670,11 +696,11 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
+                >>> from beem import Hive
                 >>> from beem.nodelist import NodeList
                 >>> nodelist = NodeList()
                 >>> nodelist.update_nodes()
-                >>> stm = Steem(node=nodelist.get_nodes(hive=True))
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
                 >>> account = Account("steemit", blockchain_instance=stm)
                 >>> account.get_feed(0, 1, raw_data=True)
                 []
@@ -712,11 +738,11 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
+                >>> from beem import Hive
                 >>> from beem.nodelist import NodeList
                 >>> nodelist = NodeList()
                 >>> nodelist.update_nodes()
-                >>> stm = Steem(node=nodelist.get_nodes(hive=True))
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
                 >>> account = Account("steemit", blockchain_instance=stm)
                 >>> account.get_feed_entries(0, 1)
                 []
@@ -738,11 +764,11 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
+                >>> from beem import Hive
                 >>> from beem.nodelist import NodeList
                 >>> nodelist = NodeList()
                 >>> nodelist.update_nodes()
-                >>> stm = Steem(node=nodelist.get_nodes(hive=True))
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
                 >>> account = Account("steemit", blockchain_instance=stm)
                 >>> entry = account.get_blog_entries(0, 1, raw_data=True)[0]
                 >>> print("%s - %s - %s" % (entry["author"], entry["permlink"], entry["blog"]))
@@ -765,11 +791,11 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
+                >>> from beem import Hive
                 >>> from beem.nodelist import NodeList
                 >>> nodelist = NodeList()
                 >>> nodelist.update_nodes()
-                >>> stm = Steem(node=nodelist.get_nodes(hive=True))
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
                 >>> account = Account("steemit", blockchain_instance=stm)
                 >>> account.get_blog(0, 1)
                 [<Comment @steemit/firstpost>]
@@ -900,12 +926,12 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
+                >>> from beem import Hive
                 >>> from beem.nodelist import NodeList
                 >>> nodelist = NodeList()
                 >>> nodelist.update_nodes()
-                >>> stm = Steem(node=nodelist.get_nodes(hive=True))
-                >>> account = Account("steemit", blockchain_instance=stm)
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
+                >>> account = Account("gtg", blockchain_instance=stm)
                 >>> account.get_blog_authors() # doctest: +SKIP
 
         """
@@ -1134,11 +1160,11 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
+                >>> from beem import Hive
                 >>> from beem.nodelist import NodeList
                 >>> nodelist = NodeList()
                 >>> nodelist.update_nodes()
-                >>> stm = Steem(node=nodelist.get_nodes(hive=True))
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
                 >>> account = Account("beem.app", blockchain_instance=stm)
                 >>> account.get_balance("rewards", "HBD")
                 0.000 HBD
@@ -1297,11 +1323,11 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
+                >>> from beem import Hive
                 >>> from beem.nodelist import NodeList
                 >>> nodelist = NodeList()
                 >>> nodelist.update_nodes()
-                >>> stm = Steem(node=nodelist.get_nodes(hive=True))
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
                 >>> account = Account("beem.app", blockchain_instance=stm)
                 >>> account.get_owner_history()
                 []
@@ -1329,11 +1355,11 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
+                >>> from beem import Hive
                 >>> from beem.nodelist import NodeList
                 >>> nodelist = NodeList()
                 >>> nodelist.update_nodes()
-                >>> stm = Steem(node=nodelist.get_nodes(hive=True))
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
                 >>> account = Account("beem.app", blockchain_instance=stm)
                 >>> account.get_conversion_requests()
                 []
@@ -1362,11 +1388,11 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
+                >>> from beem import Hive
                 >>> from beem.nodelist import NodeList
                 >>> nodelist = NodeList()
                 >>> nodelist.update_nodes()
-                >>> stm = Steem(node=nodelist.get_nodes(hive=True))
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
                 >>> account = Account("beem.app", blockchain_instance=stm)
                 >>> account.get_vesting_delegations()
                 []
@@ -1397,11 +1423,11 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
+                >>> from beem import Hive
                 >>> from beem.nodelist import NodeList
                 >>> nodelist = NodeList()
                 >>> nodelist.update_nodes()
-                >>> stm = Steem(node=nodelist.get_nodes(hive=True))
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
                 >>> account = Account("beem.app", blockchain_instance=stm)
                 >>> account.get_withdraw_routes()
                 []
@@ -1430,11 +1456,11 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
+                >>> from beem import Hive
                 >>> from beem.nodelist import NodeList
                 >>> nodelist = NodeList()
                 >>> nodelist.update_nodes()
-                >>> stm = Steem(node=nodelist.get_nodes(hive=True))
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
                 >>> account = Account("beem.app", blockchain_instance=stm)
                 >>> account.get_savings_withdrawals()
                 []
@@ -1464,11 +1490,11 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
+                >>> from beem import Hive
                 >>> from beem.nodelist import NodeList
                 >>> nodelist = NodeList()
                 >>> nodelist.update_nodes()
-                >>> stm = Steem(node=nodelist.get_nodes(hive=True))
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
                 >>> account = Account("beem.app", blockchain_instance=stm)
                 >>> account.get_recovery_request()
                 []
@@ -1497,11 +1523,11 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
+                >>> from beem import Hive
                 >>> from beem.nodelist import NodeList
                 >>> nodelist = NodeList()
                 >>> nodelist.update_nodes()
-                >>> stm = Steem(node=nodelist.get_nodes(hive=True))
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
                 >>> account = Account("beem.app", blockchain_instance=stm)
                 >>> account.get_escrow(1234)
                 []
@@ -1530,11 +1556,11 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
+                >>> from beem import Hive
                 >>> from beem.nodelist import NodeList
                 >>> nodelist = NodeList()
                 >>> nodelist.update_nodes()
-                >>> stm = Steem(node=nodelist.get_nodes(hive=True))
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
                 >>> account = Account("steemit", blockchain_instance=stm)
                 >>> print(account.verify_account_authority(["STM7Q2rLBqzPzFeteQZewv9Lu3NLE69fZoLeL6YK59t7UmssCBNTU"])["valid"])
                 False
@@ -1589,11 +1615,11 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
+                >>> from beem import Hive
                 >>> from beem.nodelist import NodeList
                 >>> nodelist = NodeList()
                 >>> nodelist.update_nodes()
-                >>> stm = Steem(node=nodelist.get_nodes(hive=True))
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
                 >>> account = Account("beem.app", blockchain_instance=stm)
                 >>> account.get_expiring_vesting_delegations()
                 []
@@ -1621,11 +1647,11 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
+                >>> from beem import Hive
                 >>> from beem.nodelist import NodeList
                 >>> nodelist = NodeList()
                 >>> nodelist.update_nodes()
-                >>> stm = Steem(node=nodelist.get_nodes(hive=False), use_condenser=True)
+                >>> stm = Hive(node=nodelist.get_nodes(hive=False), use_condenser=True)
                 >>> account = Account("beem.app", blockchain_instance=stm)
                 >>> account.get_account_votes()  # doctest: +SKIP
 
@@ -1852,10 +1878,14 @@ class Account(BlockchainObject):
             :param int days: limit number of days to be included int the return value
         """
         stop = addTzInfo(datetime.utcnow()) - timedelta(days=days)
-        reward_vests = Amount(0, self.blockchain.vests_token_symbol, blockchain_instance=self.blockchain)
+        reward_vests = Amount(0, self.blockchain.vest_token_symbol, blockchain_instance=self.blockchain)
         for reward in self.history_reverse(stop=stop, use_block_num=False, only_ops=["curation_reward"]):
             reward_vests += Amount(reward['reward'], blockchain_instance=self.blockchain)
-        return self.blockchain.vests_to_sp(float(reward_vests))
+        from beem import Steem
+        if isinstance(self.blockchain, Steem):
+            return self.blockchain.vests_to_sp(float(reward_vests))
+        else:
+            return self.blockchain.vests_to_hp(float(reward_vests))
 
     def curation_stats(self):
         """Returns the curation reward of the last 24h and 7d and the average
@@ -2834,7 +2864,7 @@ class Account(BlockchainObject):
 
         reward_steem = self._check_amount(reward_steem, self.blockchain.token_symbol)
         reward_sbd = self._check_amount(reward_sbd, self.blockchain.backed_token_symbol)
-        reward_vests = self._check_amount(reward_vests, self.blockchain.vests_token_symbol)
+        reward_vests = self._check_amount(reward_vests, self.blockchain.vest_token_symbol)
 
         if reward_steem.amount == 0 and reward_sbd.amount == 0 and reward_vests.amount == 0:
             if len(account.balances["rewards"]) == 3:
@@ -2880,7 +2910,7 @@ class Account(BlockchainObject):
         to_account = Account(to_account, blockchain_instance=self.blockchain)
         if to_account is None:
             raise ValueError("You need to provide a to_account")
-        vesting_shares = self._check_amount(vesting_shares, self.blockchain.vests_token_symbol)
+        vesting_shares = self._check_amount(vesting_shares, self.blockchain.vest_token_symbol)
 
         op = operations.Delegate_vesting_shares(
             **{
@@ -2904,7 +2934,7 @@ class Account(BlockchainObject):
             account = self
         else:
             account = Account(account, blockchain_instance=self.blockchain)
-        amount = self._check_amount(amount, self.blockchain.vests_token_symbol)
+        amount = self._check_amount(amount, self.blockchain.vest_token_symbol)
 
         op = operations.Withdraw_vesting(
             **{
@@ -3129,7 +3159,7 @@ class Account(BlockchainObject):
                 from beem.nodelist import NodeList
                 nodelist = NodeList()
                 nodelist.update_nodes()
-                stm = Steem(node=nodelist.get_nodes(hive=True))
+                stm = Steem(node=nodelist.get_hive_nodes())
                 acc = Account("ned", blockchain_instance=stm)
                 for reply in acc.feed_history(limit=10):
                     print(reply)
@@ -3197,7 +3227,7 @@ class Account(BlockchainObject):
                 from beem.nodelist import NodeList
                 nodelist = NodeList()
                 nodelist.update_nodes()
-                stm = Steem(node=nodelist.get_nodes(hive=True))
+                stm = Steem(node=nodelist.get_hive_nodes())
                 acc = Account("steemitblog", blockchain_instance=stm)
                 for post in acc.blog_history(limit=10):
                     print(post)
@@ -3266,7 +3296,7 @@ class Account(BlockchainObject):
                 from beem.nodelist import NodeList
                 nodelist = NodeList()
                 nodelist.update_nodes()
-                stm = Steem(node=nodelist.get_nodes(hive=True))
+                stm = Steem(node=nodelist.get_hive_nodes())
                 acc = Account("ned", blockchain_instance=stm)
                 for comment in acc.comment_history(limit=10):
                     print(comment)

@@ -2024,7 +2024,8 @@ def pricehistory(width, height, ascii):
     chart.adapt_on_series(price)
     chart.new_chart()
     chart.add_axis()
-    chart._draw_h_line(chart._map_y(float(current_base) / float(current_quote)), 1, int(chart.n / chart.skip), line=chart.char_set["curve_hl_dot"])
+    if (float(current_base) / float(current_quote)) <= max(price):
+        chart._draw_h_line(chart._map_y(float(current_base) / float(current_quote)), 1, int(chart.n / chart.skip), line=chart.char_set["curve_hl_dot"])
     chart.add_curve(price)
     print(str(chart))
 
