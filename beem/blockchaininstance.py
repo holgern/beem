@@ -33,7 +33,8 @@ from .steemconnect import SteemConnect
 from .hivesigner import HiveSigner
 from .transactionbuilder import TransactionBuilder
 from .utils import formatTime, resolve_authorperm, derive_permlink, sanitize_permlink, remove_from_dict, addTzInfo, formatToTimeStamp
-from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_100_PERCENT, STEEM_1_PERCENT, STEEM_RC_REGEN_TIME
+from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_100_PERCENT, STEEM_1_PERCENT, STEEM_RC_REGEN_TIME, CURVE_CONSTANT, \
+     CURVE_CONSTANT_X4, SQUARED_CURVE_CONSTANT
 
 log = logging.getLogger(__name__)
 
@@ -598,6 +599,14 @@ class BlockChainInstance(object):
         max_vote_denom = self._max_vote_denom(use_stored_data=use_stored_data)
         used_power = int((used_power + max_vote_denom - 1) / max_vote_denom)
         return used_power
+
+    def _calc_vote_claim(self, effective_vote_shares, post_rshares):
+        post_rshares_normalized = post_rshares + CURVE_CONSTANT
+        post_rshares_after_vote_normalized = post_rshares + effective_vote_shares + CURVE_CONSTANT
+        post_rshares_curve = (post_rshares_normalized * post_rshares_normalized - SQUARED_CURVE_CONSTANT) / (post_rshares + CURVE_CONSTANT_X4)
+        post_rshares_curve_after_vote = (post_rshares_after_vote_normalized * post_rshares_after_vote_normalized - SQUARED_CURVE_CONSTANT) / (post_rshares + effective_vote_shares + CURVE_CONSTANT_X4)
+        vote_claim = post_rshares_curve_after_vote - post_rshares_curve
+        return vote_claim
 
     def vests_to_rshares(self, vests, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, subtract_dust_threshold=True, use_stored_data=True):
         """ Obtain the r-shares from vests

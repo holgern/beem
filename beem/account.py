@@ -557,7 +557,7 @@ class Account(BlockchainObject):
         return self.blockchain.vests_to_hp(self.get_vests(only_own_vests=onlyOwnSP))
 
 
-    def get_voting_value_SBD(self, voting_weight=100, voting_power=None, steem_power=None, not_broadcasted_vote=True):
+    def get_voting_value_SBD(self, post_rshares=0, voting_weight=100, voting_power=None, steem_power=None, not_broadcasted_vote=True):
         """ Returns the account voting value in SBD
         """
         if voting_power is None:
@@ -566,9 +566,24 @@ class Account(BlockchainObject):
             sp = self.get_steem_power()
         else:
             sp = steem_power
+        from beem import Steem
+        if isinstance(self.blockchain, Steem):
+            voteValue = self.blockchain.sp_to_sbd(sp, post_rshares=post_rshares, voting_power=voting_power * 100, vote_pct=voting_weight * 100, not_broadcasted_vote=not_broadcasted_vote)
+        else:
+            voteValue = self.blockchain.hp_to_hbd(sp, post_rshares=post_rshares, voting_power=voting_power * 100, vote_pct=voting_weight * 100, not_broadcasted_vote=not_broadcasted_vote)
+        return voteValue
 
-        VoteValue = self.blockchain.sp_to_sbd(sp, voting_power=voting_power * 100, vote_pct=voting_weight * 100, not_broadcasted_vote=not_broadcasted_vote)
-        return VoteValue
+    def get_voting_value_HBD(self, post_rshares=0, voting_weight=100, voting_power=None, hive_power=None, not_broadcasted_vote=True):
+        """ Returns the account voting value in HBD
+        """
+        if voting_power is None:
+            voting_power = self.get_voting_power()
+        if hive_power is None:
+            hp = self.get_hive_power()
+        else:
+            hp = hive_power
+        voteValue = self.blockchain.hp_to_hbd(hp, post_rshares=post_rshares, voting_power=voting_power * 100, vote_pct=voting_weight * 100, not_broadcasted_vote=not_broadcasted_vote)
+        return voteValue
 
     def get_vote_pct_for_SBD(self, sbd, voting_power=None, steem_power=None, not_broadcasted_vote=True):
         """ Returns the voting percentage needed to have a vote worth a given number of SBD.
@@ -593,8 +608,11 @@ class Account(BlockchainObject):
             sbd = Amount(sbd, self.blockchain.backed_token_symbol, blockchain_instance=self.blockchain)
         if sbd['symbol'] != self.blockchain.backed_token_symbol:
             raise AssertionError('Should input SBD, not any other asset!')
-
-        vote_pct = self.blockchain.rshares_to_vote_pct(self.blockchain.sbd_to_rshares(sbd, not_broadcasted_vote=not_broadcasted_vote), voting_power=voting_power * 100, steem_power=steem_power)
+        from beem import Steem
+        if isinstance(self.blockchain, Steem):
+            vote_pct = self.blockchain.rshares_to_vote_pct(self.blockchain.sbd_to_rshares(sbd, not_broadcasted_vote=not_broadcasted_vote), voting_power=voting_power * 100, steem_power=steem_power)
+        else:
+            vote_pct = self.blockchain.rshares_to_vote_pct(self.blockchain.hbd_to_rshares(sbd, not_broadcasted_vote=not_broadcasted_vote), voting_power=voting_power * 100, hive_power=steem_power)
         return vote_pct
 
     def get_creator(self):

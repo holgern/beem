@@ -224,10 +224,11 @@ class Hive(BlockChainInstance):
         """
         return hp * 1e6 / self.get_hive_per_mvest(timestamp, use_stored_data=use_stored_data)
 
-    def hp_to_hbd(self, hp, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
+    def hp_to_hbd(self, hp, post_rshares=0, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
         """ Obtain the resulting HBD vote value from Hive power
 
             :param number hive_power: Hive Power
+            :param int post_rshares: rshares of post which is voted
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
             :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
@@ -236,12 +237,13 @@ class Hive(BlockChainInstance):
             vote rshares decreases the reward pool.
         """
         vesting_shares = int(self.hp_to_vests(hp, use_stored_data=use_stored_data))
-        return self.vests_to_hbd(vesting_shares, voting_power=voting_power, vote_pct=vote_pct, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)
+        return self.vests_to_hbd(vesting_shares, post_rshares=post_rshares, voting_power=voting_power, vote_pct=vote_pct, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)
 
-    def vests_to_hbd(self, vests, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
+    def vests_to_hbd(self, vests, post_rshares=0, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
         """ Obtain the resulting HBD vote value from vests
 
             :param number vests: vesting shares
+            :param int post_rshares: rshares of post which is voted
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
             :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
@@ -249,25 +251,28 @@ class Hive(BlockChainInstance):
             Only impactful for very big votes. Slight modification to the value calculation, as the not_broadcasted
             vote rshares decreases the reward pool.
         """
-        vote_rshares = self.vests_to_rshares(vests, voting_power=voting_power, vote_pct=vote_pct)
+        vote_rshares = self.vests_to_rshares(vests, post_rshares=post_rshares, voting_power=voting_power, vote_pct=vote_pct)       
         return self.rshares_to_hbd(vote_rshares, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)
 
-    def hp_to_rshares(self, hive_power, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, use_stored_data=True):
+    def hp_to_rshares(self, hive_power, post_rshares=0, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, use_stored_data=True):
         """ Obtain the r-shares from Hive power
 
             :param number hive_power: Hive Power
+            :param int post_rshares: rshares of post which is voted
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
 
         """
         # calculate our account voting shares (from vests)
         vesting_shares = int(self.hp_to_vests(hive_power, use_stored_data=use_stored_data))
-        return self.vests_to_rshares(vesting_shares, voting_power=voting_power, vote_pct=vote_pct, use_stored_data=use_stored_data)
+        rshares = self.vests_to_rshares(vesting_shares, post_rshares=post_rshares, voting_power=voting_power, vote_pct=vote_pct, use_stored_data=use_stored_data)
+        return rshares
 
-    def vests_to_rshares(self, vests, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, subtract_dust_threshold=True, use_stored_data=True):
+    def vests_to_rshares(self, vests, post_rshares=0, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, subtract_dust_threshold=True, use_stored_data=True):
         """ Obtain the r-shares from vests
 
             :param number vests: vesting shares
+            :param int post_rshares: rshares of post which is voted
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
 
@@ -278,7 +283,8 @@ class Hive(BlockChainInstance):
         if subtract_dust_threshold:
             if abs(rshares) <= self.get_dust_threshold(use_stored_data=use_stored_data):
                 return 0
-            rshares -= math.copysign(self.get_dust_threshold(use_stored_data=use_stored_data), vote_pct)
+            rshares -= math.copysign(self.get_dust_threshold(use_stored_data=use_stored_data), vote_pct)     
+        rshares = self._calc_vote_claim(rshares, post_rshares)
         return rshares
 
     def hbd_to_rshares(self, hbd, not_broadcasted_vote=False, use_stored_data=True):

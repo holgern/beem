@@ -222,10 +222,11 @@ class Steem(BlockChainInstance):
         """
         return sp * 1e6 / self.get_steem_per_mvest(timestamp, use_stored_data=use_stored_data)
 
-    def sp_to_sbd(self, sp, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
+    def sp_to_sbd(self, sp, post_rshares=0, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
         """ Obtain the resulting SBD vote value from Steem power
 
             :param number steem_power: Steem Power
+            :param int post_rshares: rshares of post which is voted
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
             :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
@@ -234,12 +235,13 @@ class Steem(BlockChainInstance):
             vote rshares decreases the reward pool.
         """
         vesting_shares = int(self.sp_to_vests(sp, use_stored_data=use_stored_data))
-        return self.vests_to_sbd(vesting_shares, voting_power=voting_power, vote_pct=vote_pct, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)
+        return self.vests_to_sbd(vesting_shares, post_rshares=post_rshares, voting_power=voting_power, vote_pct=vote_pct, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)
 
-    def vests_to_sbd(self, vests, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
+    def vests_to_sbd(self, vests, post_rshares=0, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
         """ Obtain the resulting SBD vote value from vests
 
             :param number vests: vesting shares
+            :param int post_rshares: rshares of post which is voted
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
             :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
@@ -247,7 +249,7 @@ class Steem(BlockChainInstance):
             Only impactful for very big votes. Slight modification to the value calculation, as the not_broadcasted
             vote rshares decreases the reward pool.
         """
-        vote_rshares = self.vests_to_rshares(vests, voting_power=voting_power, vote_pct=vote_pct)
+        vote_rshares = self.vests_to_rshares(vests, post_rshares=post_rshares, voting_power=voting_power, vote_pct=vote_pct)
         return self.rshares_to_sbd(vote_rshares, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)
 
     def _max_vote_denom(self, use_stored_data=True):
@@ -264,22 +266,24 @@ class Steem(BlockChainInstance):
         used_power = int((used_power + max_vote_denom - 1) / max_vote_denom)
         return used_power
 
-    def sp_to_rshares(self, steem_power, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, use_stored_data=True):
+    def sp_to_rshares(self, steem_power, post_rshares=0, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, use_stored_data=True):
         """ Obtain the r-shares from Steem power
 
             :param number steem_power: Steem Power
+            :param int post_rshares: rshares of post which is voted
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
 
         """
         # calculate our account voting shares (from vests)
         vesting_shares = int(self.sp_to_vests(steem_power, use_stored_data=use_stored_data))
-        return self.vests_to_rshares(vesting_shares, voting_power=voting_power, vote_pct=vote_pct, use_stored_data=use_stored_data)
+        return self.vests_to_rshares(vesting_shares, post_rshares=post_rshares, voting_power=voting_power, vote_pct=vote_pct, use_stored_data=use_stored_data)
 
-    def vests_to_rshares(self, vests, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, subtract_dust_threshold=True, use_stored_data=True):
+    def vests_to_rshares(self, vests, post_rshares=0, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, subtract_dust_threshold=True, use_stored_data=True):
         """ Obtain the r-shares from vests
 
             :param number vests: vesting shares
+            :param int post_rshares: rshares of post which is voted
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
 
@@ -290,7 +294,8 @@ class Steem(BlockChainInstance):
         if subtract_dust_threshold:
             if abs(rshares) <= self.get_dust_threshold(use_stored_data=use_stored_data):
                 return 0
-            rshares -= math.copysign(self.get_dust_threshold(use_stored_data=use_stored_data), vote_pct)
+            rshares -= math.copysign(self.get_dust_threshold(use_stored_data=use_stored_data), vote_pct)      
+        rshares = self._calc_vote_claim(rshares, post_rshares)        
         return rshares
 
     def sbd_to_rshares(self, sbd, not_broadcasted_vote=False, use_stored_data=True):
