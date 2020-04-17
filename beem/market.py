@@ -8,7 +8,7 @@ import random
 import pytz
 import logging
 from datetime import datetime, timedelta
-from beem.instance import shared_steem_instance
+from beem.instance import shared_blockchain_instance
 from .utils import (
     formatTimeFromNow, formatTime, formatTimeString, assets_from_string, parse_time, addTzInfo)
 from .asset import Asset
@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 class Market(dict):
     """ This class allows to easily access Markets on the blockchain for trading, etc.
 
-        :param Steem steem_instance: Steem instance
+        :param Steem blockchain_instance: Steem instance
         :param Asset base: Base asset
         :param Asset quote: Quote asset
         :returns: Blockchain Market
@@ -62,29 +62,35 @@ class Market(dict):
         self,
         base=None,
         quote=None,
-        steem_instance=None,
+        blockchain_instance=None,
+        **kwargs
     ):
         """
         Init Market
 
-            :param beem.steem.Steem steem_instance: Steem instance
+            :param beem.steem.Steem blockchain_instance: Steem instance
             :param beem.asset.Asset base: Base asset
             :param beem.asset.Asset quote: Quote asset
         """
-        self.steem = steem_instance or shared_steem_instance()
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]        
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
 
         if quote is None and isinstance(base, str):
             quote_symbol, base_symbol = assets_from_string(base)
-            quote = Asset(quote_symbol, steem_instance=self.steem)
-            base = Asset(base_symbol, steem_instance=self.steem)
+            quote = Asset(quote_symbol, blockchain_instance=self.blockchain)
+            base = Asset(base_symbol, blockchain_instance=self.blockchain)
             super(Market, self).__init__({"base": base, "quote": quote})
         elif base and quote:
-            quote = Asset(quote, steem_instance=self.steem)
-            base = Asset(base, steem_instance=self.steem)
+            quote = Asset(quote, blockchain_instance=self.blockchain)
+            base = Asset(base, blockchain_instance=self.blockchain)
             super(Market, self).__init__({"base": base, "quote": quote})
         elif base is None and quote is None:
-            quote = Asset(self.steem.sbd_symbol, steem_instance=self.steem)
-            base = Asset(self.steem.steem_symbol, steem_instance=self.steem)
+            quote = Asset(self.blockchain.backed_token_symbol, blockchain_instance=self.blockchain)
+            base = Asset(self.blockchain.token_symbol, blockchain_instance=self.blockchain)
             super(Market, self).__init__({"base": base, "quote": quote})
         else:
             raise ValueError("Unknown Market config")
@@ -143,8 +149,8 @@ class Market(dict):
         """
         data = {}
         # Core Exchange rate
-        self.steem.rpc.set_next_node_on_empty_reply(True)
-        ticker = self.steem.rpc.get_ticker(api="market_history")
+        self.blockchain.rpc.set_next_node_on_empty_reply(True)
+        ticker = self.blockchain.rpc.get_ticker(api="market_history")
 
         if raw_data:
             return ticker
@@ -153,23 +159,23 @@ class Market(dict):
             ticker["highest_bid"],
             base=self["base"],
             quote=self["quote"],
-            steem_instance=self.steem
+            blockchain_instance=self.blockchain
         )
         data["latest"] = Price(
             ticker["latest"],
             quote=self["quote"],
             base=self["base"],
-            steem_instance=self.steem
+            blockchain_instance=self.blockchain
         )
         data["lowest_ask"] = Price(
             ticker["lowest_ask"],
             base=self["base"],
             quote=self["quote"],
-            steem_instance=self.steem
+            blockchain_instance=self.blockchain
         )
         data["percent_change"] = float(ticker["percent_change"])
-        data["sbd_volume"] = Amount(ticker["sbd_volume"], steem_instance=self.steem)
-        data["steem_volume"] = Amount(ticker["steem_volume"], steem_instance=self.steem)
+        data["sbd_volume"] = Amount(ticker["sbd_volume"], blockchain_instance=self.blockchain)
+        data["steem_volume"] = Amount(ticker["steem_volume"], blockchain_instance=self.blockchain)
 
         return data
 
@@ -186,13 +192,13 @@ class Market(dict):
                 }
 
         """
-        self.steem.rpc.set_next_node_on_empty_reply(True)
-        volume = self.steem.rpc.get_volume(api="market_history")
+        self.blockchain.rpc.set_next_node_on_empty_reply(True)
+        volume = self.blockchain.rpc.get_volume(api="market_history")
         if raw_data:
             return volume
         return {
-            self["base"]["symbol"]: Amount(volume["sbd_volume"], steem_instance=self.steem),
-            self["quote"]["symbol"]: Amount(volume["steem_volume"], steem_instance=self.steem)
+            self["base"]["symbol"]: Amount(volume["sbd_volume"], blockchain_instance=self.blockchain),
+            self["quote"]["symbol"]: Amount(volume["steem_volume"], blockchain_instance=self.blockchain)
         }
 
     def orderbook(self, limit=25, raw_data=False):
@@ -254,21 +260,21 @@ class Market(dict):
                 obtain the actual amounts for sale
 
         """
-        self.steem.rpc.set_next_node_on_empty_reply(True)
-        if self.steem.rpc.get_use_appbase():
-            orders = self.steem.rpc.get_order_book({'limit': limit}, api="market_history")
+        self.blockchain.rpc.set_next_node_on_empty_reply(True)
+        if self.blockchain.rpc.get_use_appbase():
+            orders = self.blockchain.rpc.get_order_book({'limit': limit}, api="market_history")
         else:
-            orders = self.steem.rpc.get_order_book(limit, api='database_api')
+            orders = self.blockchain.rpc.get_order_book(limit, api='database_api')
         if raw_data:
             return orders
         asks = list([Order(
-            Amount(x["order_price"]["quote"], steem_instance=self.steem),
-            Amount(x["order_price"]["base"], steem_instance=self.steem),
-            steem_instance=self.steem) for x in orders["asks"]])
+            Amount(x["order_price"]["quote"], blockchain_instance=self.blockchain),
+            Amount(x["order_price"]["base"], blockchain_instance=self.blockchain),
+            blockchain_instance=self.blockchain) for x in orders["asks"]])
         bids = list([Order(
-            Amount(x["order_price"]["quote"], steem_instance=self.steem),
-            Amount(x["order_price"]["base"], steem_instance=self.steem),
-            steem_instance=self.steem).invert() for x in orders["bids"]])
+            Amount(x["order_price"]["quote"], blockchain_instance=self.blockchain),
+            Amount(x["order_price"]["base"], blockchain_instance=self.blockchain),
+            blockchain_instance=self.blockchain).invert() for x in orders["bids"]])
         asks_date = list([formatTimeString(x["created"]) for x in orders["asks"]])
         bids_date = list([formatTimeString(x["created"]) for x in orders["bids"]])
         data = {"asks": asks, "bids": bids, "asks_date": asks_date, "bids_date": bids_date}
@@ -312,14 +318,14 @@ class Market(dict):
                 obtain the actual amounts for sale
 
         """
-        self.steem.rpc.set_next_node_on_empty_reply(limit > 0)
-        if self.steem.rpc.get_use_appbase():
-            orders = self.steem.rpc.get_recent_trades({'limit': limit}, api="market_history")['trades']
+        self.blockchain.rpc.set_next_node_on_empty_reply(limit > 0)
+        if self.blockchain.rpc.get_use_appbase():
+            orders = self.blockchain.rpc.get_recent_trades({'limit': limit}, api="market_history")['trades']
         else:
-            orders = self.steem.rpc.get_recent_trades(limit, api="market_history")
+            orders = self.blockchain.rpc.get_recent_trades(limit, api="market_history")
         if raw_data:
             return orders
-        filled_order = list([FilledOrder(x, steem_instance=self.steem) for x in orders])
+        filled_order = list([FilledOrder(x, blockchain_instance=self.blockchain) for x in orders])
         return filled_order
 
     def trade_history(self, start=None, stop=None, intervall=None, limit=25, raw_data=False):
@@ -385,25 +391,25 @@ class Market(dict):
             start = stop - timedelta(hours=24)
         start = addTzInfo(start)
         stop = addTzInfo(stop)
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            orders = self.steem.rpc.get_trade_history({'start': formatTimeString(start),
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase():
+            orders = self.blockchain.rpc.get_trade_history({'start': formatTimeString(start),
                                                        'end': formatTimeString(stop),
                                                        'limit': limit}, api="market_history")['trades']
         else:
-            orders = self.steem.rpc.get_trade_history(
+            orders = self.blockchain.rpc.get_trade_history(
                 formatTimeString(start),
                 formatTimeString(stop),
                 limit, api="market_history")
         if raw_data:
             return orders
-        filled_order = list([FilledOrder(x, steem_instance=self.steem) for x in orders])
+        filled_order = list([FilledOrder(x, blockchain_instance=self.blockchain) for x in orders])
         return filled_order
 
     def market_history_buckets(self):
-        self.steem.rpc.set_next_node_on_empty_reply(True)
-        ret = self.steem.rpc.get_market_history_buckets(api="market_history")
-        if self.steem.rpc.get_use_appbase():
+        self.blockchain.rpc.set_next_node_on_empty_reply(True)
+        ret = self.blockchain.rpc.get_market_history_buckets(api="market_history")
+        if self.blockchain.rpc.get_use_appbase():
             return ret['bucket_sizes']
         else:
             return ret
@@ -446,13 +452,13 @@ class Market(dict):
         else:
             if bucket_seconds not in buckets:
                 raise ValueError("You need select the bucket_seconds from " + str(buckets))
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            history = self.steem.rpc.get_market_history({'bucket_seconds': bucket_seconds,
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase():
+            history = self.blockchain.rpc.get_market_history({'bucket_seconds': bucket_seconds,
                                                          'start': formatTimeFromNow(-start_age - end_age),
                                                          'end': formatTimeFromNow(-end_age)}, api="market_history")['buckets']
         else:
-            history = self.steem.rpc.get_market_history(
+            history = self.blockchain.rpc.get_market_history(
                 bucket_seconds,
                 formatTimeFromNow(-start_age - end_age),
                 formatTimeFromNow(-end_age),
@@ -474,29 +480,29 @@ class Market(dict):
                 or a list of Order() instances if False (defaults to False)
         """
         if not account:
-            if "default_account" in self.steem.config:
-                account = self.steem.config["default_account"]
+            if "default_account" in self.blockchain.config:
+                account = self.blockchain.config["default_account"]
         if not account:
             raise ValueError("You need to provide an account")
-        account = Account(account, full=True, steem_instance=self.steem)
+        account = Account(account, full=True, blockchain_instance=self.blockchain)
 
         r = []
         # orders = account["limit_orders"]
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             return None
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            orders = self.steem.rpc.find_limit_orders({'account': account["name"]}, api="database")['orders']
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase():
+            orders = self.blockchain.rpc.find_limit_orders({'account': account["name"]}, api="database")['orders']
         else:
-            orders = self.steem.rpc.get_open_orders(account["name"])
+            orders = self.blockchain.rpc.get_open_orders(account["name"])
         if raw_data:
             return orders
         for o in orders:
             order = {}
             order["order"] = Order(
-                Amount(o["sell_price"]["base"], steem_instance=self.steem),
-                Amount(o["sell_price"]["quote"], steem_instance=self.steem),
-                steem_instance=self.steem
+                Amount(o["sell_price"]["base"], blockchain_instance=self.blockchain),
+                Amount(o["sell_price"]["quote"], blockchain_instance=self.blockchain),
+                blockchain_instance=self.blockchain
             )
             order["orderid"] = o["orderid"]
             order["created"] = formatTimeString(o["created"])
@@ -548,26 +554,26 @@ class Market(dict):
                     * If an order on the market exists that sells SBD for cheaper, you will end up with more than 10 SBD
         """
         if not expiration:
-            expiration = self.steem.config["order-expiration"]
+            expiration = self.blockchain.config["order-expiration"]
         if not account:
-            if "default_account" in self.steem.config:
-                account = self.steem.config["default_account"]
+            if "default_account" in self.blockchain.config:
+                account = self.blockchain.config["default_account"]
         if not account:
             raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self.steem)
+        account = Account(account, blockchain_instance=self.blockchain)
 
         if isinstance(price, Price):
             price = price.as_base(self["base"]["symbol"])
 
         if isinstance(amount, Amount):
-            amount = Amount(amount, steem_instance=self.steem)
+            amount = Amount(amount, blockchain_instance=self.blockchain)
             if not amount["asset"]["symbol"] == self["quote"]["symbol"]:
                 raise AssertionError("Price: {} does not match amount: {}".format(
                     str(price), str(amount)))
         elif isinstance(amount, str):
-            amount = Amount(amount, steem_instance=self.steem)
+            amount = Amount(amount, blockchain_instance=self.blockchain)
         else:
-            amount = Amount(amount, self["quote"]["symbol"], steem_instance=self.steem)
+            amount = Amount(amount, self["quote"]["symbol"], blockchain_instance=self.blockchain)
 
         order = operations.Limit_order_create(**{
             "owner": account["name"],
@@ -575,28 +581,28 @@ class Market(dict):
             "amount_to_sell": Amount(
                 float(amount) * float(price),
                 self["base"]["symbol"],
-                steem_instance=self.steem
+                blockchain_instance=self.blockchain
             ),
             "min_to_receive": Amount(
                 float(amount),
                 self["quote"]["symbol"],
-                steem_instance=self.steem
+                blockchain_instance=self.blockchain
             ),
             "expiration": formatTimeFromNow(expiration),
             "fill_or_kill": killfill,
-            "prefix": self.steem.prefix,
+            "prefix": self.blockchain.prefix,
         })
 
         if returnOrderId:
             # Make blocking broadcasts
-            prevblocking = self.steem.blocking
-            self.steem.blocking = returnOrderId
+            prevblocking = self.blockchain.blocking
+            self.blockchain.blocking = returnOrderId
 
-        tx = self.steem.finalizeOp(order, account["name"], "active")
+        tx = self.blockchain.finalizeOp(order, account["name"], "active")
 
         if returnOrderId:
             tx["orderid"] = tx["operation_results"][0][1]
-            self.steem.blocking = prevblocking
+            self.blockchain.blocking = prevblocking
 
         return tx
 
@@ -633,25 +639,25 @@ class Market(dict):
                 That way you can multiply prices with `1.05` to get a +5%.
         """
         if not expiration:
-            expiration = self.steem.config["order-expiration"]
+            expiration = self.blockchain.config["order-expiration"]
         if not account:
-            if "default_account" in self.steem.config:
-                account = self.steem.config["default_account"]
+            if "default_account" in self.blockchain.config:
+                account = self.blockchain.config["default_account"]
         if not account:
             raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self.steem)
+        account = Account(account, blockchain_instance=self.blockchain)
         if isinstance(price, Price):
             price = price.as_base(self["base"]["symbol"])
 
         if isinstance(amount, Amount):
-            amount = Amount(amount, steem_instance=self.steem)
+            amount = Amount(amount, blockchain_instance=self.blockchain)
             if not amount["asset"]["symbol"] == self["quote"]["symbol"]:
                 raise AssertionError("Price: {} does not match amount: {}".format(
                     str(price), str(amount)))
         elif isinstance(amount, str):
-            amount = Amount(amount, steem_instance=self.steem)
+            amount = Amount(amount, blockchain_instance=self.blockchain)
         else:
-            amount = Amount(amount, self["quote"]["symbol"], steem_instance=self.steem)
+            amount = Amount(amount, self["quote"]["symbol"], blockchain_instance=self.blockchain)
 
         order = operations.Limit_order_create(**{
             "owner": account["name"],
@@ -659,27 +665,27 @@ class Market(dict):
             "amount_to_sell": Amount(
                 float(amount),
                 self["quote"]["symbol"],
-                steem_instance=self.steem
+                blockchain_instance=self.blockchain
             ),
             "min_to_receive": Amount(
                 float(amount) * float(price),
                 self["base"]["symbol"],
-                steem_instance=self.steem
+                blockchain_instance=self.blockchain
             ),
             "expiration": formatTimeFromNow(expiration),
             "fill_or_kill": killfill,
-            "prefix": self.steem.prefix,
+            "prefix": self.blockchain.prefix,
         })
         if returnOrderId:
             # Make blocking broadcasts
-            prevblocking = self.steem.blocking
-            self.steem.blocking = returnOrderId
+            prevblocking = self.blockchain.blocking
+            self.blockchain.blocking = returnOrderId
 
-        tx = self.steem.finalizeOp(order, account["name"], "active")
+        tx = self.blockchain.finalizeOp(order, account["name"], "active")
 
         if returnOrderId:
             tx["orderid"] = tx["operation_results"][0][1]
-            self.steem.blocking = prevblocking
+            self.blockchain.blocking = prevblocking
 
         return tx
 
@@ -691,11 +697,11 @@ class Market(dict):
             :type orderNumbers: int, list
         """
         if not account:
-            if "default_account" in self.steem.config:
-                account = self.steem.config["default_account"]
+            if "default_account" in self.blockchain.config:
+                account = self.blockchain.config["default_account"]
         if not account:
             raise ValueError("You need to provide an account")
-        account = Account(account, full=False, steem_instance=self.steem)
+        account = Account(account, full=False, blockchain_instance=self.blockchain)
 
         if not isinstance(orderNumbers, (list, set, tuple)):
             orderNumbers = {orderNumbers}
@@ -706,8 +712,8 @@ class Market(dict):
                 operations.Limit_order_cancel(**{
                     "owner": account["name"],
                     "orderid": order,
-                    "prefix": self.steem.prefix}))
-        return self.steem.finalizeOp(op, account["name"], "active", **kwargs)
+                    "prefix": self.blockchain.prefix}))
+        return self.blockchain.finalizeOp(op, account["name"], "active", **kwargs)
 
     @staticmethod
     def _weighted_average(values, weights):

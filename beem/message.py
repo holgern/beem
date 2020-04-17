@@ -9,7 +9,7 @@ import logging
 from binascii import hexlify, unhexlify
 from beemgraphenebase.ecdsasig import verify_message, sign_message
 from beemgraphenebase.account import PublicKey
-from beem.instance import shared_steem_instance
+from beem.instance import shared_blockchain_instance
 from beem.account import Account
 from .exceptions import InvalidMessageSignature
 from .storage import get_default_config_storage
@@ -46,8 +46,13 @@ timestamp={meta[timestamp]}
 
 class Message(object):
 
-    def __init__(self, message, steem_instance=None):
-        self.steem = steem_instance or shared_steem_instance()
+    def __init__(self, message, blockchain_instance=None, **kwargs):
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]        
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
         self.message = message
 
     def sign(self, account=None, **kwargs):
@@ -67,8 +72,8 @@ class Message(object):
             raise ValueError("You need to provide an account")
 
         # Data for message
-        account = Account(account, steem_instance=self.steem)
-        info = self.steem.info()
+        account = Account(account, blockchain_instance=self.blockchain)
+        info = self.blockchain.info()
         meta = dict(
             timestamp=info["time"],
             block=info["head_block_number"],
@@ -76,7 +81,7 @@ class Message(object):
             account=account["name"])
 
         # wif key
-        wif = self.steem.wallet.getPrivateKeyForPublicKey(
+        wif = self.blockchain.wallet.getPrivateKeyForPublicKey(
             account["memo_key"]
         )
 
@@ -129,7 +134,7 @@ class Message(object):
         # Load account from blockchain
         account = Account(
             meta.get("account"),
-            steem_instance=self.steem)
+            blockchain_instance=self.blockchain)
 
         # Test if memo key is the same as on the blockchain
         if not account["memo_key"] == meta["memokey"]:
@@ -149,7 +154,7 @@ class Message(object):
 
         # Verify pubky
         pk = PublicKey(hexlify(pubkey).decode("ascii"))
-        if format(pk, self.steem.prefix) != meta["memokey"]:
+        if format(pk, self.blockchain.prefix) != meta["memokey"]:
             raise InvalidMessageSignature
 
         return True

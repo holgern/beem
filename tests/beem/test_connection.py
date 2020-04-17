@@ -39,4 +39,4 @@ class Testcases(unittest.TestCase):
         )
         set_shared_steem_instance(b2)
         bts = Account("beem")
-        self.assertEqual(bts.steem.prefix, "STM")
+        self.assertEqual(bts.blockchain.prefix, "STM")

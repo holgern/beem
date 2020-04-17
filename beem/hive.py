@@ -32,14 +32,15 @@ from .wallet import Wallet
 from .steemconnect import SteemConnect
 from .hivesigner import HiveSigner
 from .transactionbuilder import TransactionBuilder
+from beem.blockchaininstance import BlockChainInstance
 from .utils import formatTime, resolve_authorperm, derive_permlink, sanitize_permlink, remove_from_dict, addTzInfo, formatToTimeStamp
 from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_100_PERCENT, STEEM_1_PERCENT, STEEM_RC_REGEN_TIME
-from beem.blockchaininstance import BlockChainInstance
+
 log = logging.getLogger(__name__)
 
 
-class Steem(BlockChainInstance):
-    """ Connect to the Steem network.
+class Hive(BlockChainInstance):
+    """ Connect to the Hive network.
 
         :param str node: Node to connect to *(optional)*
         :param str rpcuser: RPC user *(optional)*
@@ -120,7 +121,7 @@ class Steem(BlockChainInstance):
 
             from beem import Steem
             stm = Steem(node=["https://mytstnet.com"], custom_chains={"MYTESTNET":
-                {'chain_assets': [{'asset': 'SBD', 'id': 0, 'precision': 3, 'symbol': 'SBD'},
+                {'chain_assets': [{'asset': 'HBD', 'id': 0, 'precision': 3, 'symbol': 'HBD'},
                                   {'asset': 'STEEM', 'id': 1, 'precision': 3, 'symbol': 'STEEM'},
                                   {'asset': 'VESTS', 'id': 2, 'precision': 6, 'symbol': 'VESTS'}],
                  'chain_id': '79276aea5d4877d9a25892eaa01b0adf019d3e5cb12a97478df3298ccdd01674',
@@ -129,7 +130,7 @@ class Steem(BlockChainInstance):
                 }
             )
 
-    """
+    """    
 
     def get_network(self, use_stored_data=True, config=None):
         """ Identify the network
@@ -149,17 +150,18 @@ class Steem(BlockChainInstance):
         try:
             return self.rpc.get_network(props=config)
         except:
-            return known_chains["STEEMAPPBASE"]
+            return known_chains["HIVE"]
 
-    def rshares_to_sbd(self, rshares, not_broadcasted_vote=False, use_stored_data=True):
-        """ Calculates the current SBD value of a vote
+
+    def rshares_to_hbd(self, rshares, not_broadcasted_vote=False, use_stored_data=True):
+        """ Calculates the current HBD value of a vote
         """
-        payout = float(rshares) * self.get_sbd_per_rshares(use_stored_data=use_stored_data,
+        payout = float(rshares) * self.get_hbd_per_rshares(use_stored_data=use_stored_data,
                                                            not_broadcasted_vote_rshares=rshares if not_broadcasted_vote else 0)
         return payout
 
-    def get_sbd_per_rshares(self, not_broadcasted_vote_rshares=0, use_stored_data=True):
-        """ Returns the current rshares to SBD ratio
+    def get_hbd_per_rshares(self, not_broadcasted_vote_rshares=0, use_stored_data=True):
+        """ Returns the current rshares to HBD ratio
         """
         reward_fund = self.get_reward_funds(use_stored_data=use_stored_data)
         reward_balance = float(Amount(reward_fund["reward_balance"], blockchain_instance=self))
@@ -169,14 +171,14 @@ class Steem(BlockChainInstance):
         median_price = self.get_median_price(use_stored_data=use_stored_data)
         if median_price is None:
             return 0
-        SBD_price = float(median_price * (Amount(1, self.steem_symbol, blockchain_instance=self)))
-        return fund_per_share * SBD_price
+        HBD_price = float(median_price * (Amount(1, self.hive_symbol, blockchain_instance=self)))
+        return fund_per_share * HBD_price
 
-    def get_steem_per_mvest(self, time_stamp=None, use_stored_data=True):
-        """ Returns the MVEST to STEEM ratio
+    def get_hive_per_mvest(self, time_stamp=None, use_stored_data=True):
+        """ Returns the MVEST to HIVE ratio
 
             :param int time_stamp: (optional) if set, return an estimated
-                STEEM per MVEST ratio for the given time stamp. If unset the
+                HIVE per MVEST ratio for the given time stamp. If unset the
                 current ratio is returned (default). (can also be a datetime object)
         """
         if self.offline and time_stamp is None:
@@ -201,8 +203,8 @@ class Steem(BlockChainInstance):
             (float(Amount(global_properties['total_vesting_shares'], blockchain_instance=self)) / 1e6)
         )
 
-    def vests_to_sp(self, vests, timestamp=None, use_stored_data=True):
-        """ Converts vests to SP
+    def vests_to_hp(self, vests, timestamp=None, use_stored_data=True):
+        """ Converts vests to HP
 
             :param amount.Amount vests/float vests: Vests to convert
             :param int timestamp: (Optional) Can be used to calculate
@@ -211,21 +213,21 @@ class Steem(BlockChainInstance):
         """
         if isinstance(vests, Amount):
             vests = float(vests)
-        return float(vests) / 1e6 * self.get_steem_per_mvest(timestamp, use_stored_data=use_stored_data)
+        return float(vests) / 1e6 * self.get_hive_per_mvest(timestamp, use_stored_data=use_stored_data)
 
-    def sp_to_vests(self, sp, timestamp=None, use_stored_data=True):
-        """ Converts SP to vests
+    def hp_to_vests(self, hp, timestamp=None, use_stored_data=True):
+        """ Converts HP to vests
 
-            :param float sp: Steem power to convert
+            :param float hp: Hive power to convert
             :param datetime timestamp: (Optional) Can be used to calculate
                 the conversion rate from the past
         """
-        return sp * 1e6 / self.get_steem_per_mvest(timestamp, use_stored_data=use_stored_data)
+        return hp * 1e6 / self.get_hive_per_mvest(timestamp, use_stored_data=use_stored_data)
 
-    def sp_to_sbd(self, sp, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
-        """ Obtain the resulting SBD vote value from Steem power
+    def hp_to_hbd(self, hp, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
+        """ Obtain the resulting HBD vote value from Hive power
 
-            :param number steem_power: Steem Power
+            :param number hive_power: Steem Power
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
             :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
@@ -233,11 +235,11 @@ class Steem(BlockChainInstance):
             Only impactful for very big votes. Slight modification to the value calculation, as the not_broadcasted
             vote rshares decreases the reward pool.
         """
-        vesting_shares = int(self.sp_to_vests(sp, use_stored_data=use_stored_data))
-        return self.vests_to_sbd(vesting_shares, voting_power=voting_power, vote_pct=vote_pct, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)
+        vesting_shares = int(self.hp_to_vests(hp, use_stored_data=use_stored_data))
+        return self.vests_to_hbd(vesting_shares, voting_power=voting_power, vote_pct=vote_pct, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)
 
-    def vests_to_sbd(self, vests, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
-        """ Obtain the resulting SBD vote value from vests
+    def vests_to_hbd(self, vests, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
+        """ Obtain the resulting HBD vote value from vests
 
             :param number vests: vesting shares
             :param int voting_power: voting power (100% = 10000)
@@ -248,32 +250,18 @@ class Steem(BlockChainInstance):
             vote rshares decreases the reward pool.
         """
         vote_rshares = self.vests_to_rshares(vests, voting_power=voting_power, vote_pct=vote_pct)
-        return self.rshares_to_sbd(vote_rshares, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)
+        return self.rshares_to_hbd(vote_rshares, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)
 
-    def _max_vote_denom(self, use_stored_data=True):
-        # get props
-        global_properties = self.get_dynamic_global_properties(use_stored_data=use_stored_data)
-        vote_power_reserve_rate = global_properties['vote_power_reserve_rate']
-        max_vote_denom = vote_power_reserve_rate * STEEM_VOTE_REGENERATION_SECONDS
-        return max_vote_denom
+    def hp_to_rshares(self, hive_power, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, use_stored_data=True):
+        """ Obtain the r-shares from Hive power
 
-    def _calc_resulting_vote(self, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, use_stored_data=True):
-        # determine voting power used
-        used_power = int((voting_power * abs(vote_pct)) / STEEM_100_PERCENT * (60 * 60 * 24))
-        max_vote_denom = self._max_vote_denom(use_stored_data=use_stored_data)
-        used_power = int((used_power + max_vote_denom - 1) / max_vote_denom)
-        return used_power
-
-    def sp_to_rshares(self, steem_power, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, use_stored_data=True):
-        """ Obtain the r-shares from Steem power
-
-            :param number steem_power: Steem Power
+            :param number hive_power: Steem Power
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
 
         """
         # calculate our account voting shares (from vests)
-        vesting_shares = int(self.sp_to_vests(steem_power, use_stored_data=use_stored_data))
+        vesting_shares = int(self.hp_to_vests(hive_power, use_stored_data=use_stored_data))
         return self.vests_to_rshares(vesting_shares, voting_power=voting_power, vote_pct=vote_pct, use_stored_data=use_stored_data)
 
     def vests_to_rshares(self, vests, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, subtract_dust_threshold=True, use_stored_data=True):
@@ -293,28 +281,28 @@ class Steem(BlockChainInstance):
             rshares -= math.copysign(self.get_dust_threshold(use_stored_data=use_stored_data), vote_pct)
         return rshares
 
-    def sbd_to_rshares(self, sbd, not_broadcasted_vote=False, use_stored_data=True):
-        """ Obtain the r-shares from SBD
+    def hbd_to_rshares(self, hbd, not_broadcasted_vote=False, use_stored_data=True):
+        """ Obtain the r-shares from HBD
 
-        :param sbd: SBD
-        :type sbd: str, int, amount.Amount
+        :param hbd: HBD
+        :type hbd: str, int, amount.Amount
         :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
-         Only impactful for very high amounts of SBD. Slight modification to the value calculation, as the not_broadcasted
+         Only impactful for very high amounts of HBD. Slight modification to the value calculation, as the not_broadcasted
          vote rshares decreases the reward pool.
 
         """
-        if isinstance(sbd, Amount):
-            sbd = Amount(sbd, blockchain_instance=self)
-        elif isinstance(sbd, string_types):
-            sbd = Amount(sbd, blockchain_instance=self)
+        if isinstance(hbd, Amount):
+            hbd = Amount(hbd, blockchain_instance=self)
+        elif isinstance(hbd, string_types):
+            hbd = Amount(hbd, blockchain_instance=self)
         else:
-            sbd = Amount(sbd, self.sbd_symbol, blockchain_instance=self)
-        if sbd['symbol'] != self.sbd_symbol:
-            raise AssertionError('Should input SBD, not any other asset!')
+            hbd = Amount(hbd, self.hbd_symbol, blockchain_instance=self)
+        if hbd['symbol'] != self.hbd_symbol:
+            raise AssertionError('Should input HBD, not any other asset!')
 
         # If the vote was already broadcasted we can assume the blockchain values to be true
         if not not_broadcasted_vote:
-            return int(float(sbd) / self.get_sbd_per_rshares(use_stored_data=use_stored_data))
+            return int(float(hbd) / self.get_hbd_per_rshares(use_stored_data=use_stored_data))
 
         # If the vote wasn't broadcasted (yet), we have to calculate the rshares while considering
         # the change our vote is causing to the recent_claims. This is more important for really
@@ -323,9 +311,9 @@ class Steem(BlockChainInstance):
         median_price = self.get_median_price(use_stored_data=use_stored_data)
         recent_claims = int(reward_fund["recent_claims"])
         reward_balance = Amount(reward_fund["reward_balance"], blockchain_instance=self)
-        reward_pool_sbd = median_price * reward_balance
-        if sbd > reward_pool_sbd:
-            raise ValueError('Provided more SBD than available in the reward pool.')
+        reward_pool_hbd = median_price * reward_balance
+        if hbd > reward_pool_hbd:
+            raise ValueError('Provided more HBD than available in the reward pool.')
 
         # This is the formula we can use to determine the "true" rshares.
         # We get this formula by some math magic using the previous used formulas
@@ -335,30 +323,30 @@ class Steem(BlockChainInstance):
         # (balance / (claims + newShares)) * price = amount / newShares
         # Now we resolve for newShares resulting in:
         # newShares = claims * amount / (balance * price - amount)
-        rshares = recent_claims * float(sbd) / ((float(reward_balance) * float(median_price)) - float(sbd))
+        rshares = recent_claims * float(hbd) / ((float(reward_balance) * float(median_price)) - float(hbd))
         return int(rshares)
 
-    def rshares_to_vote_pct(self, rshares, steem_power=None, vests=None, voting_power=STEEM_100_PERCENT, use_stored_data=True):
+    def rshares_to_vote_pct(self, rshares, hive_power=None, vests=None, voting_power=STEEM_100_PERCENT, use_stored_data=True):
         """ Obtain the voting percentage for a desired rshares value
-            for a given Steem Power or vesting shares and voting_power
-            Give either steem_power or vests, not both.
+            for a given Hive Power or vesting shares and voting_power
+            Give either hive_power or vests, not both.
             When the output is greater than 10000 or less than -10000,
             the given absolute rshares are too high
 
             Returns the required voting percentage (100% = 10000)
 
             :param number rshares: desired rshares value
-            :param number steem_power: Steem Power
+            :param number hive_power: Hive Power
             :param number vests: vesting shares
             :param int voting_power: voting power (100% = 10000)
 
         """
-        if steem_power is None and vests is None:
-            raise ValueError("Either steem_power or vests has to be set!")
-        if steem_power is not None and vests is not None:
-            raise ValueError("Either steem_power or vests has to be set. Not both!")
-        if steem_power is not None:
-            vests = int(self.sp_to_vests(steem_power, use_stored_data=use_stored_data) * 1e6)
+        if hive_power is None and vests is None:
+            raise ValueError("Either hive_power or vests has to be set!")
+        if hive_power is not None and vests is not None:
+            raise ValueError("Either hive_power or vests has to be set. Not both!")
+        if hive_power is not None:
+            vests = int(self.hp_to_vests(hive_power, use_stored_data=use_stored_data) * 1e6)
 
         if self.hardfork >= 20:
             rshares += math.copysign(self.get_dust_threshold(use_stored_data=use_stored_data), rshares)
@@ -371,46 +359,46 @@ class Steem(BlockChainInstance):
         vote_pct = used_power * STEEM_100_PERCENT / (60 * 60 * 24) / voting_power
         return int(math.copysign(vote_pct, rshares))
 
-    def sbd_to_vote_pct(self, sbd, steem_power=None, vests=None, voting_power=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
-        """ Obtain the voting percentage for a desired SBD value
+    def hbd_to_vote_pct(self, hbd, hive_power=None, vests=None, voting_power=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
+        """ Obtain the voting percentage for a desired HBD value
             for a given Steem Power or vesting shares and voting power
             Give either Steem Power or vests, not both.
             When the output is greater than 10000 or smaller than -10000,
-            the SBD value is too high.
+            the HBD value is too high.
 
             Returns the required voting percentage (100% = 10000)
 
-            :param sbd: desired SBD value
-            :type sbd: str, int, amount.Amount
-            :param number steem_power: Steem Power
+            :param hbd: desired HBD value
+            :type hbd: str, int, amount.Amount
+            :param number hive_power: Steem Power
             :param number vests: vesting shares
             :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
-             Only impactful for very high amounts of SBD. Slight modification to the value calculation, as the not_broadcasted
+             Only impactful for very high amounts of HBD. Slight modification to the value calculation, as the not_broadcasted
              vote rshares decreases the reward pool.
 
         """
-        if isinstance(sbd, Amount):
-            sbd = Amount(sbd, blockchain_instance=self)
-        elif isinstance(sbd, string_types):
-            sbd = Amount(sbd, blockchain_instance=self)
+        if isinstance(hbd, Amount):
+            hbd = Amount(hbd, blockchain_instance=self)
+        elif isinstance(hbd, string_types):
+            hbd = Amount(hbd, blockchain_instance=self)
         else:
-            sbd = Amount(sbd, self.sbd_symbol, blockchain_instance=self)
-        if sbd['symbol'] != self.sbd_symbol:
+            hbd = Amount(hbd, self.hbd_symbol, blockchain_instance=self)
+        if hbd['symbol'] != self.hbd_symbol:
             raise AssertionError()
-        rshares = self.sbd_to_rshares(sbd, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)
-        return self.rshares_to_vote_pct(rshares, steem_power=steem_power, vests=vests, voting_power=voting_power, use_stored_data=use_stored_data)
+        rshares = self.hbd_to_rshares(hbd, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)
+        return self.rshares_to_vote_pct(rshares, hive_power=hive_power, vests=vests, voting_power=voting_power, use_stored_data=use_stored_data)
 
     @property
     def chain_params(self):
         if self.offline or self.rpc is None:
-            return known_chains["STEEMAPPBASE"]
+            return known_chains["HIVE"]
         else:
             return self.get_network()
 
     @property
     def hardfork(self):
         if self.offline or self.rpc is None:
-            versions = known_chains['STEEMAPPBASE']['min_version']
+            versions = known_chains['HIVE']['min_version']
         else:
             hf_prop = self.get_hardfork_properties()
             if "current_hardfork_version" in hf_prop:
@@ -420,28 +408,23 @@ class Steem(BlockChainInstance):
         return int(versions.split('.')[1])
 
     @property
-    def is_steem(self):
+    def is_hive(self):
         config = self.get_config()
         if config is None:
             return True
-        return 'STEEM_CHAIN_ID' in self.get_config()
+        return 'HIVE_CHAIN_ID' in self.get_config()
 
     @property
-    def sbd_symbol(self):
-        """ get the current chains symbol for SBD (e.g. "TBD" on testnet) """
-        # some networks (e.g. whaleshares) do not have SBD
-        try:
-            symbol = self._get_asset_symbol(0)
-        except KeyError:
-            symbol = self._get_asset_symbol(1)
-        return symbol
+    def hbd_symbol(self):
+        """ get the current chains symbol for HBD (e.g. "TBD" on testnet) """
+        return self.backed_token_symbol
 
     @property
-    def steem_symbol(self):
+    def hive_symbol(self):
         """ get the current chains symbol for STEEM (e.g. "TESTS" on testnet) """
-        return self._get_asset_symbol(1)
+        return self.token_symbol
 
     @property
     def vests_symbol(self):
         """ get the current chains symbol for VESTS """
-        return self._get_asset_symbol(2)
+        return self.vests_token_symbol

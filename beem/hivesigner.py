@@ -13,7 +13,7 @@ except ImportError:
 import requests
 from .storage import get_default_config_storage
 from six import PY2
-from beem.instance import shared_steem_instance
+from beem.instance import shared_blockchain_instance
 from beem.amount import Amount
 
 
@@ -33,7 +33,7 @@ class HiveSigner(object):
             hs = HiveSigner(client_id="beem.app")
             steem = Steem(HiveSigner=hs)
             steem.wallet.unlock("supersecret-passphrase")
-            post = Comment("author/permlink", steem_instance=steem)
+            post = Comment("author/permlink", blockchain_instance=steem)
             post.upvote(voter="test")  # replace "test" with your account
 
         Examples for creating HiveSigner urls for broadcasting in browser:
@@ -45,8 +45,8 @@ class HiveSigner(object):
             from beem.HiveSigner import HiveSigner
             from pprint import pprint
             steem = Steem(nobroadcast=True, unsigned=True)
-            hs = HiveSigner(steem_instance=steem)
-            acc = Account("test", steem_instance=steem)
+            hs = HiveSigner(blockchain_instance=steem)
+            acc = Account("test", blockchain_instance=steem)
             pprint(hs.url_from_tx(acc.transfer("test1", 1, "HIVE", "test")))
 
         .. testcode::
@@ -61,8 +61,8 @@ class HiveSigner(object):
             from beem.HiveSigner import HiveSigner
             from pprint import pprint
             stm = Steem(nobroadcast=True, unsigned=True)
-            hs = HiveSigner(steem_instance=stm)
-            tx = TransactionBuilder(steem_instance=stm)
+            hs = HiveSigner(blockchain_instance=stm)
+            tx = TransactionBuilder(blockchain_instance=stm)
             op = operations.Transfer(**{"from": 'test',
                                         "to": 'test1',
                                         "amount": '1.000 HIVE',
@@ -76,10 +76,15 @@ class HiveSigner(object):
 
     """
 
-    def __init__(self, steem_instance=None, *args, **kwargs):
-        self.steem = steem_instance or shared_steem_instance()
+    def __init__(self, blockchain_instance=None, *args, **kwargs):
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]        
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
         self.access_token = None
-        config = self.steem.config
+        config = self.blockchain.config
         self.get_refresh_token = kwargs.get("get_refresh_token", False)
         self.hot_sign_redirect_uri = kwargs.get("hot_sign_redirect_uri", config["hot_sign_redirect_uri"])
         if self.hot_sign_redirect_uri == "":
@@ -122,7 +127,7 @@ class HiveSigner(object):
             "grant_type": "authorization_code",
             "code": code,
             "client_id": self.client_id,
-            "client_secret": self.steem.wallet.getTokenForAccountName(self.client_id),
+            "client_secret": self.blockchain.wallet.getTokenForAccountName(self.client_id),
         }
 
         r = requests.post(
@@ -161,7 +166,7 @@ class HiveSigner(object):
         if permission != "posting":
             self.access_token = None
             return
-        self.access_token = self.steem.wallet.getTokenForAccountName(username)
+        self.access_token = self.blockchain.wallet.getTokenForAccountName(username)
 
     def broadcast(self, operations, username=None):
         """ Broadcast an operation
@@ -205,7 +210,7 @@ class HiveSigner(object):
             "grant_type": "refresh_token",
             "refresh_token": code,
             "client_id": self.client_id,
-            "client_secret": self.steem.wallet.getTokenForAccountName(self.client_id),
+            "client_secret": self.blockchain.wallet.getTokenForAccountName(self.client_id),
             "scope": scope,
         }
 
@@ -257,7 +262,7 @@ class HiveSigner(object):
                 value = params[key]
                 if isinstance(value, list) and len(value) == 3:
                     try:
-                        amount = Amount(value, steem_instance=self.steem)
+                        amount = Amount(value, blockchain_instance=self.blockchain)
                         params[key] = str(amount)
                     except:
                         amount = None

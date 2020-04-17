@@ -20,9 +20,9 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(hive=True), num_retries=10))
+        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_hive_nodes(), num_retries=10))
         cls.bts = Steem(
-            node=nodelist.get_nodes(hive=True),
+            node=nodelist.get_hive_nodes(),
             nobroadcast=True,
             timeout=30,
             num_retries=30,

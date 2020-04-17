@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from builtins import str
 from future.utils import python_2_unicode_compatible
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
-from beem.instance import shared_steem_instance
+from beem.instance import shared_blockchain_instance
 from datetime import datetime, timedelta
 import json
 import threading
@@ -104,11 +104,16 @@ class BlockchainObject(dict):
         lazy=False,
         use_cache=True,
         id_item=None,
-        steem_instance=None,
+        blockchain_instance=None,
         *args,
         **kwargs
     ):
-        self.steem = steem_instance or shared_steem_instance()
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]      
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
         self.cached = False
         self.identifier = None
 

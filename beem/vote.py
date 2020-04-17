@@ -11,7 +11,7 @@ import logging
 from prettytable import PrettyTable
 from datetime import datetime, date
 from beemgraphenebase.py23 import integer_types, string_types, text_type
-from .instance import shared_steem_instance
+from .instance import shared_blockchain_instance
 from .account import Account
 from .exceptions import VoteDoesNotExistsException
 from .utils import resolve_authorperm, resolve_authorpermvoter, construct_authorpermvoter, construct_authorperm, formatTimeString, addTzInfo, reputation_to_score
@@ -44,11 +44,17 @@ class Vote(BlockchainObject):
         authorperm=None,
         full=False,
         lazy=False,
-        steem_instance=None
+        blockchain_instance=None,
+        **kwargs
     ):
         self.full = full
         self.lazy = lazy
-        self.steem = steem_instance or shared_steem_instance()
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]        
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
         if isinstance(voter, string_types) and authorperm is not None:
             [author, permlink] = resolve_authorperm(authorperm)
             self["voter"] = voter
@@ -86,24 +92,24 @@ class Vote(BlockchainObject):
             id_item="authorpermvoter",
             lazy=lazy,
             full=full,
-            steem_instance=steem_instance
+            blockchain_instance=blockchain_instance
         )
 
     def refresh(self):
         if self.identifier is None:
             return
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             return
         [author, permlink, voter] = resolve_authorpermvoter(self.identifier)
         try:
-            self.steem.rpc.set_next_node_on_empty_reply(True)
-            if self.steem.rpc.get_use_appbase():
+            self.blockchain.rpc.set_next_node_on_empty_reply(True)
+            if self.blockchain.rpc.get_use_appbase():
                 try:
-                    votes = self.steem.rpc.get_active_votes({'author': author, 'permlink': permlink}, api="tags")['votes']
+                    votes = self.blockchain.rpc.get_active_votes({'author': author, 'permlink': permlink}, api="tags")['votes']
                 except:
-                    votes = self.steem.rpc.get_active_votes(author, permlink, api="database_api")
+                    votes = self.blockchain.rpc.get_active_votes(author, permlink, api="database_api")
             else:
-                votes = self.steem.rpc.get_active_votes(author, permlink, api="database_api")
+                votes = self.blockchain.rpc.get_active_votes(author, permlink, api="database_api")
         except UnkownKey:
             raise VoteDoesNotExistsException(self.identifier)
 
@@ -116,7 +122,7 @@ class Vote(BlockchainObject):
             raise VoteDoesNotExistsException(self.identifier)
         vote = self._parse_json_data(vote)
         vote["authorpermvoter"] = construct_authorpermvoter(author, permlink, voter)
-        super(Vote, self).__init__(vote, id_item="authorpermvoter", lazy=self.lazy, full=self.full, steem_instance=self.steem)
+        super(Vote, self).__init__(vote, id_item="authorpermvoter", lazy=self.lazy, full=self.full, blockchain_instance=self.blockchain)
 
     def _parse_json_data(self, vote):
         parse_int = [
@@ -193,7 +199,7 @@ class Vote(BlockchainObject):
 
     @property
     def sbd(self):
-        return self.steem.rshares_to_sbd(int(self.get("rshares", 0)))
+        return self.blockchain.rshares_to_sbd(int(self.get("rshares", 0)))
 
     @property
     def rshares(self):
@@ -348,39 +354,44 @@ class ActiveVotes(VotesObject):
         :param str authorperm: authorperm link
         :param Steem steem_instance: Steem() instance to use when accesing a RPC
     """
-    def __init__(self, authorperm, lazy=False, full=False, steem_instance=None):
-        self.steem = steem_instance or shared_steem_instance()
+    def __init__(self, authorperm, lazy=False, full=False, blockchain_instance=None, **kwargs):
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]        
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
         votes = None
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             return None
-        self.steem.rpc.set_next_node_on_empty_reply(False)
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
 
         if isinstance(authorperm, Comment):
             # if 'active_votes' in authorperm and len(authorperm["active_votes"]) > 0:
             #    votes = authorperm["active_votes"]
-            if self.steem.rpc.get_use_appbase():
-                self.steem.rpc.set_next_node_on_empty_reply(False)
+            if self.blockchain.rpc.get_use_appbase():
+                self.blockchain.rpc.set_next_node_on_empty_reply(False)
                 try:
-                    votes = self.steem.rpc.get_active_votes(authorperm["author"], authorperm["permlink"], api="condenser")
+                    votes = self.blockchain.rpc.get_active_votes(authorperm["author"], authorperm["permlink"], api="condenser")
                 except:
-                    votes = self.steem.rpc.get_active_votes({'author': authorperm["author"],
+                    votes = self.blockchain.rpc.get_active_votes({'author': authorperm["author"],
                                                              'permlink': authorperm["permlink"]},
                                                             api="tags")['votes']
             else:
-                votes = self.steem.rpc.get_active_votes(authorperm["author"], authorperm["permlink"])
+                votes = self.blockchain.rpc.get_active_votes(authorperm["author"], authorperm["permlink"])
             authorperm = authorperm["authorperm"]
         elif isinstance(authorperm, string_types):
             [author, permlink] = resolve_authorperm(authorperm)
-            if self.steem.rpc.get_use_appbase():
-                self.steem.rpc.set_next_node_on_empty_reply(False)
+            if self.blockchain.rpc.get_use_appbase():
+                self.blockchain.rpc.set_next_node_on_empty_reply(False)
                 try:
-                    votes = self.steem.rpc.get_active_votes(author, permlink, api="condenser")
+                    votes = self.blockchain.rpc.get_active_votes(author, permlink, api="condenser")
                 except:
-                    votes = self.steem.rpc.get_active_votes({'author': author,
+                    votes = self.blockchain.rpc.get_active_votes({'author': author,
                                                              'permlink': permlink},
                                                             api="tags")['votes']
             else:
-                votes = self.steem.rpc.get_active_votes(author, permlink)
+                votes = self.blockchain.rpc.get_active_votes(author, permlink)
         elif isinstance(authorperm, list):
             votes = authorperm
             authorperm = None
@@ -392,7 +403,7 @@ class ActiveVotes(VotesObject):
         self.identifier = authorperm
         super(ActiveVotes, self).__init__(
             [
-                Vote(x, authorperm=authorperm, lazy=lazy, full=full, steem_instance=self.steem)
+                Vote(x, authorperm=authorperm, lazy=lazy, full=full, blockchain_instance=self.blockchain)
                 for x in votes
             ]
         )
@@ -405,11 +416,16 @@ class AccountVotes(VotesObject):
         :param str account: Account name
         :param Steem steem_instance: Steem() instance to use when accesing a RPC
     """
-    def __init__(self, account, start=None, stop=None, raw_data=False, lazy=False, full=False, steem_instance=None):
-        self.steem = steem_instance or shared_steem_instance()
+    def __init__(self, account, start=None, stop=None, raw_data=False, lazy=False, full=False, blockchain_instance=None, **kwargs):
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]        
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
         start = addTzInfo(start)
         stop = addTzInfo(stop)
-        account = Account(account, steem_instance=self.steem)
+        account = Account(account, blockchain_instance=self.blockchain)
         votes = account.get_account_votes()
         self.identifier = account["name"]
         vote_list = []
@@ -429,7 +445,7 @@ class AccountVotes(VotesObject):
                 d_time = addTzInfo(datetime(1970, 1, 1, 0, 0, 0))
             if (start is None or d_time >= start) and (stop is None or d_time <= stop):
                 if not raw_data:
-                    vote_list.append(Vote(x, authorperm=account["name"], lazy=lazy, full=full, steem_instance=self.steem))
+                    vote_list.append(Vote(x, authorperm=account["name"], lazy=lazy, full=full, blockchain_instance=self.blockchain))
                 else:
                     vote_list.append(x)
 

@@ -9,7 +9,7 @@ import os
 import hashlib
 from beemgraphenebase import bip38
 from beemgraphenebase.account import PrivateKey
-from beem.instance import shared_steem_instance
+from beem.instance import shared_blockchain_instance
 from .account import Account
 from .aes import AESCipher
 from .exceptions import (
@@ -112,8 +112,13 @@ class Wallet(object):
     token = {}
     keyMap = {}  # wif pairs to force certain keys
 
-    def __init__(self, steem_instance=None, *args, **kwargs):
-        self.steem = steem_instance or shared_steem_instance()
+    def __init__(self, blockchain_instance=None, *args, **kwargs):
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]        
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
 
         # Compatibility after name change from wif->keys
         if "wif" in kwargs and "keys" not in kwargs:
@@ -143,18 +148,18 @@ class Wallet(object):
 
     @property
     def prefix(self):
-        if self.steem.is_connected():
-            prefix = self.steem.prefix
+        if self.blockchain.is_connected():
+            prefix = self.blockchain.prefix
         else:
             # If not connected, load prefix from config
-            prefix = self.steem.config["prefix"]
+            prefix = self.blockchain.config["prefix"]
         return prefix or "STM"   # default prefix is STM
 
     @property
     def rpc(self):
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        return self.steem.rpc
+        return self.blockchain.rpc
 
     def setKeys(self, loadkeys):
         """ This method is strictly only for in memory keys that are
@@ -201,14 +206,14 @@ class Wallet(object):
         if not pwd:
             self.tryUnlockFromEnv()
         else:
-            if (self.masterpassword is None and self.steem.config[self.MasterPassword.config_key]):
+            if (self.masterpassword is None and self.blockchain.config[self.MasterPassword.config_key]):
                 self.masterpwd = self.MasterPassword(pwd)
                 self.masterpassword = self.masterpwd.decrypted_master
 
     def tryUnlockFromEnv(self):
         """ Try to fetch the unlock password from UNLOCK environment variable and keyring when no password is given.
         """
-        password_storage = self.steem.config["password_storage"]
+        password_storage = self.blockchain.config["password_storage"]
         if password_storage == "environment" and "UNLOCK" in os.environ:
             log.debug("Trying to use environmental variable to unlock wallet")
             pwd = os.environ.get("UNLOCK")
@@ -254,7 +259,7 @@ class Wallet(object):
         if len(self.getPublicKeys()):
             # Already keys installed
             return True
-        elif self.MasterPassword.config_key in self.steem.config:
+        elif self.MasterPassword.config_key in self.blockchain.config:
             # no keys but a master password
             return True
         else:
@@ -593,13 +598,13 @@ class Wallet(object):
 
             :param str pub: Public key
         """
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            names = self.steem.rpc.get_key_references({'keys': [pub]}, api="account_by_key")["accounts"]
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase():
+            names = self.blockchain.rpc.get_key_references({'keys': [pub]}, api="account_by_key")["accounts"]
         else:
-            names = self.steem.rpc.get_key_references([pub], api="account_by_key")
+            names = self.blockchain.rpc.get_key_references([pub], api="account_by_key")
         for name in names:
             for i in name:
                 yield i
@@ -627,7 +632,7 @@ class Wallet(object):
         """
         for name in self.getAccountsFromPublicKey(pub):
             try:
-                account = Account(name, steem_instance=self.steem)
+                account = Account(name, blockchain_instance=self.blockchain)
             except AccountDoesNotExistsException:
                 continue
             yield {"name": account["name"],
@@ -646,7 +651,7 @@ class Wallet(object):
             return {"name": None, "type": None, "pubkey": pub}
         else:
             try:
-                account = Account(name, steem_instance=self.steem)
+                account = Account(name, blockchain_instance=self.blockchain)
             except:
                 return
             return {"name": account["name"],
@@ -685,7 +690,7 @@ class Wallet(object):
         """ Return all installed public keys
         """
         if self.keyStorage:
-            return self.keyStorage.getPublicKeys(prefix=self.steem.prefix)
+            return self.keyStorage.getPublicKeys(prefix=self.blockchain.prefix)
         else:
             return list(Wallet.keys.keys())
 

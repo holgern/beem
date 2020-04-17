@@ -286,7 +286,7 @@ class Testcases(unittest.TestCase):
 
     def test_MissingKeyError(self):
         w = self.account
-        w.steem.txbuffer.clear()
+        w.blockchain.txbuffer.clear()
         tx = w.convert("1 HBD")
         with self.assertRaises(
             exceptions.MissingKeyError
@@ -295,7 +295,7 @@ class Testcases(unittest.TestCase):
 
     def test_withdraw_vesting(self):
         w = self.account
-        w.steem.txbuffer.clear()
+        w.blockchain.txbuffer.clear()
         tx = w.withdraw_vesting("100 VESTS")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -308,7 +308,7 @@ class Testcases(unittest.TestCase):
 
     def test_delegate_vesting_shares(self):
         w = self.account
-        w.steem.txbuffer.clear()
+        w.blockchain.txbuffer.clear()
         tx = w.delegate_vesting_shares("test1", "100 VESTS")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -321,7 +321,7 @@ class Testcases(unittest.TestCase):
 
     def test_claim_reward_balance(self):
         w = self.account
-        w.steem.txbuffer.clear()
+        w.blockchain.txbuffer.clear()
         tx = w.claim_reward_balance()
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -334,7 +334,7 @@ class Testcases(unittest.TestCase):
 
     def test_cancel_transfer_from_savings(self):
         w = self.account
-        w.steem.txbuffer.clear()
+        w.blockchain.txbuffer.clear()
         tx = w.cancel_transfer_from_savings(0)
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -347,7 +347,7 @@ class Testcases(unittest.TestCase):
 
     def test_transfer_from_savings(self):
         w = self.account
-        w.steem.txbuffer.clear()
+        w.blockchain.txbuffer.clear()
         tx = w.transfer_from_savings(1, "HIVE", "")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -360,7 +360,7 @@ class Testcases(unittest.TestCase):
 
     def test_transfer_to_savings(self):
         w = self.account
-        w.steem.txbuffer.clear()
+        w.blockchain.txbuffer.clear()
         tx = w.transfer_to_savings(1, "HIVE", "")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -373,7 +373,7 @@ class Testcases(unittest.TestCase):
 
     def test_convert(self):
         w = self.account
-        w.steem.txbuffer.clear()
+        w.blockchain.txbuffer.clear()
         tx = w.convert("1 HBD")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -386,7 +386,7 @@ class Testcases(unittest.TestCase):
 
     def test_transfer_to_vesting(self):
         w = self.account
-        w.steem.txbuffer.clear()
+        w.blockchain.txbuffer.clear()
         tx = w.transfer_to_vesting("1 HIVE")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -399,7 +399,7 @@ class Testcases(unittest.TestCase):
 
     def test_json_export(self):
         account = Account("beembot", steem_instance=self.bts)
-        if account.steem.rpc.get_use_appbase():
+        if account.blockchain.rpc.get_use_appbase():
             content = self.bts.rpc.find_accounts({'accounts': [account["name"]]}, api="database")["accounts"][0]
         else:
             content = self.bts.rpc.get_accounts([account["name"]])[0]

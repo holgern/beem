@@ -10,7 +10,7 @@ import logging
 import pytz
 import math
 from datetime import datetime, date, time
-from .instance import shared_steem_instance
+from .instance import shared_blockchain_instance
 from .account import Account
 from .amount import Amount
 from .price import Price
@@ -29,7 +29,7 @@ class Comment(BlockchainObject):
         :param str authorperm: identifier to post/comment in the form of
             ``@author/permlink``
         :param boolean use_tags_api: when set to False, list_comments from the database_api is used
-        :param Steem steem_instance: :class:`beem.steem.Steem` instance to use when accessing a RPC
+        :param Steem blockchain_instance: :class:`beem.steem.Steem` instance to use when accessing a RPC
 
 
         .. code-block:: python
@@ -38,7 +38,7 @@ class Comment(BlockchainObject):
         >>> from beem.account import Account
         >>> from beem import Steem
         >>> stm = Steem()
-        >>> acc = Account("gtg", steem_instance=stm)
+        >>> acc = Account("gtg", blockchain_instance=stm)
         >>> authorperm = acc.get_blog(limit=1)[0]["authorperm"]
         >>> c = Comment(authorperm)
         >>> postdate = c["created"]
@@ -53,12 +53,18 @@ class Comment(BlockchainObject):
         use_tags_api=True,
         full=True,
         lazy=False,
-        steem_instance=None
+        blockchain_instance=None,
+        **kwargs
     ):
         self.full = full
         self.lazy = lazy
         self.use_tags_api = use_tags_api
-        self.steem = steem_instance or shared_steem_instance()
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]        
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
         if isinstance(authorperm, string_types) and authorperm != "":
             [author, permlink] = resolve_authorperm(authorperm)
             self["id"] = 0
@@ -73,7 +79,7 @@ class Comment(BlockchainObject):
             id_item="authorperm",
             lazy=lazy,
             full=full,
-            steem_instance=steem_instance
+            blockchain_instance=blockchain_instance
         )
 
     def _parse_json_data(self, comment):
@@ -95,10 +101,10 @@ class Comment(BlockchainObject):
         ]
         for p in sbd_amounts:
             if p in comment and isinstance(comment.get(p), (string_types, list, dict)):
-                value = comment.get(p, "0.000 %s" % (self.steem.sbd_symbol))
-                if isinstance(value, str) and value.split(" ")[1] !=self.steem.sbd_symbol:
-                    value = value.split(" ")[0] + " " + self.steem.sbd_symbol
-                comment[p] = Amount(value, steem_instance=self.steem)
+                value = comment.get(p, "0.000 %s" % (self.blockchain.backed_token_symbol))
+                if isinstance(value, str) and value.split(" ")[1] !=self.blockchain.backed_token_symbol:
+                    value = value.split(" ")[0] + " " + self.blockchain.backed_token_symbol
+                comment[p] = Amount(value, blockchain_instance=self.blockchain)
 
         # turn json_metadata into python dict
         meta_str = comment.get("json_metadata", "{}")
@@ -146,29 +152,29 @@ class Comment(BlockchainObject):
     def refresh(self):
         if self.identifier == "":
             return
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             return
         [author, permlink] = resolve_authorperm(self.identifier)
-        self.steem.rpc.set_next_node_on_empty_reply(True)
-        if self.steem.rpc.get_use_appbase():
+        self.blockchain.rpc.set_next_node_on_empty_reply(True)
+        if self.blockchain.rpc.get_use_appbase():
             try:
                 if self.use_tags_api:
-                    content = self.steem.rpc.get_discussion({'author': author, 'permlink': permlink}, api="tags")
+                    content = self.blockchain.rpc.get_discussion({'author': author, 'permlink': permlink}, api="tags")
                 else:
-                    content =self.steem.rpc.list_comments({"start": [author, permlink], "limit": 1, "order": "by_permlink"}, api="database")
+                    content =self.blockchain.rpc.list_comments({"start": [author, permlink], "limit": 1, "order": "by_permlink"}, api="database")
                 if content is not None and "comments" in content:
                     content =content["comments"]
                 if isinstance(content, list) and len(content) >0:
                     content =content[0]
             except:
-                content = self.steem.rpc.get_content(author, permlink)
+                content = self.blockchain.rpc.get_content(author, permlink)
         else:
-            content = self.steem.rpc.get_content(author, permlink)
+            content = self.blockchain.rpc.get_content(author, permlink)
         if not content or not content['author'] or not content['permlink']:
             raise ContentDoesNotExistsException(self.identifier)
         content = self._parse_json_data(content)
         content["authorperm"] = construct_authorperm(content['author'], content['permlink'])
-        super(Comment, self).__init__(content, id_item="authorperm", lazy=self.lazy, full=self.full, steem_instance=self.steem)
+        super(Comment, self).__init__(content, id_item="authorperm", lazy=self.lazy, full=self.full, blockchain_instance=self.blockchain)
 
     def json(self):
         output = self.copy()
@@ -303,18 +309,18 @@ class Comment(BlockchainObject):
     def reward(self):
         """ Return the estimated total SBD reward.
         """
-        a_zero = Amount(0, self.steem.sbd_symbol, steem_instance=self.steem)
-        author = Amount(self.get("total_payout_value", a_zero), steem_instance=self.steem)
-        curator = Amount(self.get("curator_payout_value", a_zero), steem_instance=self.steem)
-        pending = Amount(self.get("pending_payout_value", a_zero), steem_instance=self.steem)
+        a_zero = Amount(0, self.blockchain.backed_token_symbol, blockchain_instance=self.blockchain)
+        author = Amount(self.get("total_payout_value", a_zero), blockchain_instance=self.blockchain)
+        curator = Amount(self.get("curator_payout_value", a_zero), blockchain_instance=self.blockchain)
+        pending = Amount(self.get("pending_payout_value", a_zero), blockchain_instance=self.blockchain)
         return author + curator + pending
 
     def is_pending(self):
         """ Returns if the payout is pending (the post/comment
             is younger than 7 days)
         """
-        a_zero = Amount(0, self.steem.sbd_symbol, steem_instance=self.steem)
-        total = Amount(self.get("total_payout_value", a_zero), steem_instance=self.steem)
+        a_zero = Amount(0, self.blockchain.backed_token_symbol, blockchain_instance=self.blockchain)
+        total = Amount(self.get("total_payout_value", a_zero), blockchain_instance=self.blockchain)
         post_age_days = self.time_elapsed().total_seconds() / 60 / 60 / 24
         return post_age_days < 7.0 and float(total) == 0
 
@@ -329,9 +335,9 @@ class Comment(BlockchainObject):
             which will compentsate the curation penalty, if voting earlier than 15 minutes
         """
         self.refresh()
-        if self.steem.hardfork >= 21:
+        if self.blockchain.hardfork >= 21:
             reverse_auction_window_seconds = STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF21
-        elif self.steem.hardfork >= 20:
+        elif self.blockchain.hardfork >= 20:
             reverse_auction_window_seconds = STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF20
         else:
             reverse_auction_window_seconds = STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF6
@@ -372,9 +378,9 @@ class Comment(BlockchainObject):
             elapsed_seconds = (vote_time - self["created"]).total_seconds()
         else:
             raise ValueError("vote_time must be a string or a datetime")
-        if self.steem.hardfork >= 21:
+        if self.blockchain.hardfork >= 21:
             reward = (elapsed_seconds / STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF21)
-        elif self.steem.hardfork >= 20:
+        elif self.blockchain.hardfork >= 20:
             reward = (elapsed_seconds / STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF20)
         else:
             reward = (elapsed_seconds / STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF6)
@@ -393,9 +399,9 @@ class Comment(BlockchainObject):
         """
         specific_vote = None
         if voter is None:
-            voter = Account(self["author"], steem_instance=self.steem)
+            voter = Account(self["author"], blockchain_instance=self.blockchain)
         else:
-            voter = Account(voter, steem_instance=self.steem)
+            voter = Account(voter, blockchain_instance=self.blockchain)
         if "active_votes" in self:
             for vote in self["active_votes"]:
                 if voter["name"] == vote["voter"]:
@@ -441,12 +447,12 @@ class Comment(BlockchainObject):
 
         """
         if self.is_pending():
-            total_payout = Amount(self["pending_payout_value"], steem_instance=self.steem)
+            total_payout = Amount(self["pending_payout_value"], blockchain_instance=self.blockchain)
             author_payout = self.get_author_rewards()["total_payout_SBD"]
             curator_payout = total_payout - author_payout
         else:
-            author_payout = Amount(self["total_payout_value"], steem_instance=self.steem)
-            curator_payout = Amount(self["curator_payout_value"], steem_instance=self.steem)
+            author_payout = Amount(self["total_payout_value"], blockchain_instance=self.blockchain)
+            curator_payout = Amount(self["curator_payout_value"], blockchain_instance=self.blockchain)
             total_payout = author_payout + curator_payout
         return {"total_payout": total_payout, "author_payout": author_payout, "curator_payout": curator_payout}
 
@@ -467,18 +473,18 @@ class Comment(BlockchainObject):
         """
         if not self.is_pending():
             return {'pending_rewards': False,
-                    "payout_SP": Amount(0, self.steem.steem_symbol, steem_instance=self.steem),
-                    "payout_SBD": Amount(0, self.steem.sbd_symbol, steem_instance=self.steem),
-                    "total_payout_SBD": Amount(self["total_payout_value"], steem_instance=self.steem)}
+                    "payout_SP": Amount(0, self.blockchain.token_symbol, blockchain_instance=self.blockchain),
+                    "payout_SBD": Amount(0, self.blockchain.backed_token_symbol, blockchain_instance=self.blockchain),
+                    "total_payout_SBD": Amount(self["total_payout_value"], blockchain_instance=self.blockchain)}
         author_reward_factor = 0.5
-        median_hist = self.steem.get_current_median_history()
+        median_hist = self.blockchain.get_current_median_history()
         if median_hist is not None:
-            median_price = Price(median_hist, steem_instance=self.steem)
+            median_price = Price(median_hist, blockchain_instance=self.blockchain)
         beneficiaries_pct = self.get_beneficiaries_pct()
         curation_tokens = self.reward * author_reward_factor
         author_tokens = self.reward - curation_tokens
         curation_rewards = self.get_curation_rewards()
-        if self.steem.hardfork >= 20 and median_hist is not None:
+        if self.blockchain.hardfork >= 20 and median_hist is not None:
             author_tokens += median_price * curation_rewards['unclaimed_rewards']
 
         benefactor_tokens = author_tokens * beneficiaries_pct / 100.
@@ -486,7 +492,7 @@ class Comment(BlockchainObject):
 
         if median_hist is not None:
             sbd_steem = author_tokens * self["percent_steem_dollars"] / 20000.
-            vesting_steem = median_price.as_base(self.steem.steem_symbol) * (author_tokens - sbd_steem)
+            vesting_steem = median_price.as_base(self.blockchain.token_symbol) * (author_tokens - sbd_steem)
             return {'pending_rewards': True, "payout_SP": vesting_steem, "payout_SBD": sbd_steem, "total_payout_SBD": author_tokens}
         else:
             return {'pending_rewards': True, "total_payout": author_tokens}
@@ -520,9 +526,9 @@ class Comment(BlockchainObject):
                 }
 
         """
-        median_hist = self.steem.get_current_median_history()
+        median_hist = self.blockchain.get_current_median_history()
         if median_hist is not None:
-            median_price = Price(median_hist, steem_instance=self.steem)
+            median_price = Price(median_hist, blockchain_instance=self.blockchain)
         pending_rewards = False
         active_votes_list = self.get_votes()
         curator_reward_factor = 0.5
@@ -543,23 +549,23 @@ class Comment(BlockchainObject):
             
         if not self.is_pending():
             if pending_payout_SBD or median_hist is None:
-                max_rewards = Amount(self["curator_payout_value"], steem_instance=self.steem)
+                max_rewards = Amount(self["curator_payout_value"], blockchain_instance=self.blockchain)
             else:
-                max_rewards = median_price.as_base(self.steem.steem_symbol) * Amount(self["curator_payout_value"], steem_instance=self.steem)
-            unclaimed_rewards = Amount(0, self.steem.steem_symbol, steem_instance=self.steem)
+                max_rewards = median_price.as_base(self.blockchain.token_symbol) * Amount(self["curator_payout_value"], blockchain_instance=self.blockchain)
+            unclaimed_rewards = Amount(0, self.blockchain.token_symbol, blockchain_instance=self.blockchain)
         else:
             if pending_payout_value is None and "pending_payout_value" in self:
-                pending_payout_value = Amount(self["pending_payout_value"], steem_instance=self.steem)
+                pending_payout_value = Amount(self["pending_payout_value"], blockchain_instance=self.blockchain)
             elif pending_payout_value is None:
                 pending_payout_value = 0
             elif isinstance(pending_payout_value, (float, integer_types)):
-                pending_payout_value = Amount(pending_payout_value, self.steem.sbd_symbol, steem_instance=self.steem)
+                pending_payout_value = Amount(pending_payout_value, self.blockchain.backed_token_symbol, blockchain_instance=self.blockchain)
             elif isinstance(pending_payout_value, str):
-                pending_payout_value = Amount(pending_payout_value, steem_instance=self.steem)
+                pending_payout_value = Amount(pending_payout_value, blockchain_instance=self.blockchain)
             if pending_payout_SBD or median_hist is None:
                 max_rewards = (pending_payout_value * curator_reward_factor)
             else:
-                max_rewards = median_price.as_base(self.steem.steem_symbol) * (pending_payout_value * curator_reward_factor)
+                max_rewards = median_price.as_base(self.blockchain.token_symbol) * (pending_payout_value * curator_reward_factor)
             unclaimed_rewards = max_rewards.copy()
             pending_rewards = True
 
@@ -586,13 +592,13 @@ class Comment(BlockchainObject):
             post_permlink = self["permlink"]
         else:
             [post_author, post_permlink] = resolve_authorperm(identifier)
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             return None
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.get_reblogged_by({'author': post_author, 'permlink': post_permlink}, api="follow")['accounts']
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase():
+            return self.blockchain.rpc.get_reblogged_by({'author': post_author, 'permlink': post_permlink}, api="follow")['accounts']
         else:
-            return self.steem.rpc.get_reblogged_by(post_author, post_permlink, api="follow")
+            return self.blockchain.rpc.get_reblogged_by(post_author, post_permlink, api="follow")
 
     def get_replies(self, raw_data=False, identifier=None):
         """ Returns content replies
@@ -604,18 +610,18 @@ class Comment(BlockchainObject):
             post_permlink = self["permlink"]
         else:
             [post_author, post_permlink] = resolve_authorperm(identifier)
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             return None
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            content_replies = self.steem.rpc.get_content_replies({'author': post_author, 'permlink': post_permlink}, api="tags")
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase():
+            content_replies = self.blockchain.rpc.get_content_replies({'author': post_author, 'permlink': post_permlink}, api="tags")
             if 'discussions' in content_replies:
                 content_replies = content_replies['discussions']
         else:
-            content_replies = self.steem.rpc.get_content_replies(post_author, post_permlink, api="tags")
+            content_replies = self.blockchain.rpc.get_content_replies(post_author, post_permlink, api="tags")
         if raw_data:
             return content_replies
-        return [Comment(c, steem_instance=self.steem) for c in content_replies]
+        return [Comment(c, blockchain_instance=self.blockchain) for c in content_replies]
 
     def get_all_replies(self, parent=None):
         """ Returns all content replies
@@ -636,7 +642,7 @@ class Comment(BlockchainObject):
         if children is None:
             children = self
         while children["depth"] > 0:
-            children = Comment(construct_authorperm(children["parent_author"], children["parent_permlink"]), steem_instance=self.steem)
+            children = Comment(construct_authorperm(children["parent_author"], children["parent_permlink"]), blockchain_instance=self.blockchain)
         return children
 
     def get_votes(self, raw_data=False):
@@ -645,7 +651,7 @@ class Comment(BlockchainObject):
             return self["active_votes"]
         from .vote import ActiveVotes
         authorperm = construct_authorperm(self["author"], self["permlink"])
-        return ActiveVotes(authorperm, lazy=False, steem_instance=self.steem)
+        return ActiveVotes(authorperm, lazy=False, blockchain_instance=self.blockchain)
 
     def upvote(self, weight=+100, voter=None):
         """ Upvote the post
@@ -693,7 +699,7 @@ class Comment(BlockchainObject):
         if not identifier:
             identifier = construct_authorperm(self["author"], self["permlink"])
 
-        return self.steem.vote(weight, identifier, account=account)
+        return self.blockchain.vote(weight, identifier, account=account)
 
     def edit(self, body, meta=None, replace=False):
         """ Edit an existing post
@@ -729,7 +735,7 @@ class Comment(BlockchainObject):
             else:
                 new_meta = meta
 
-        return self.steem.post(
+        return self.blockchain.post(
             original_post["title"],
             newbody,
             reply_identifier=reply_identifier,
@@ -750,7 +756,7 @@ class Comment(BlockchainObject):
                 post. (optional)
 
         """
-        return self.steem.post(
+        return self.blockchain.post(
             title,
             body,
             json_metadata=meta,
@@ -773,11 +779,11 @@ class Comment(BlockchainObject):
 
         """
         if not account:
-            if "default_account" in self.steem.config:
-                account = self.steem.config["default_account"]
+            if "default_account" in self.blockchain.config:
+                account = self.blockchain.config["default_account"]
         if not account:
             raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self.steem)
+        account = Account(account, blockchain_instance=self.blockchain)
         if not identifier:
             post_author = self["author"]
             post_permlink = self["permlink"]
@@ -786,7 +792,7 @@ class Comment(BlockchainObject):
         op = operations.Delete_comment(
             **{"author": post_author,
                "permlink": post_permlink})
-        return self.steem.finalizeOp(op, account, "posting")
+        return self.blockchain.finalizeOp(op, account, "posting")
 
     def resteem(self, identifier=None, account=None):
         """ Resteem a post
@@ -797,10 +803,10 @@ class Comment(BlockchainObject):
 
         """
         if not account:
-            account = self.steem.configStorage.get("default_account")
+            account = self.blockchain.configStorage.get("default_account")
         if not account:
             raise ValueError("You need to provide an account")
-        account = Account(account, steem_instance=self.steem)
+        account = Account(account, blockchain_instance=self.blockchain)
         if identifier is None:
             identifier = self.identifier
         author, permlink = resolve_authorperm(identifier)
@@ -811,7 +817,7 @@ class Comment(BlockchainObject):
                 "permlink": permlink
             }
         ]
-        return self.steem.custom_json(
+        return self.blockchain.custom_json(
             id="follow", json_data=json_body, required_posting_auths=[account["name"]])
 
 
@@ -821,21 +827,26 @@ class RecentReplies(list):
         :param str author: author
         :param bool skip_own: (optional) Skip replies of the author to him/herself.
             Default: True
-        :param Steem steem_instance: Steem() instance to use when accesing a RPC
+        :param Steem blockchain_instance: Steem() instance to use when accesing a RPC
     """
-    def __init__(self, author, skip_own=True, lazy=False, full=True, steem_instance=None):
-        self.steem = steem_instance or shared_steem_instance()
-        if not self.steem.is_connected():
+    def __init__(self, author, skip_own=True, lazy=False, full=True, blockchain_instance=None, **kwargs):
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]        
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
+        if not self.blockchain.is_connected():
             return None
-        self.steem.rpc.set_next_node_on_empty_reply(True)
-        state = self.steem.rpc.get_state("/@%s/recent-replies" % author)
+        self.blockchain.rpc.set_next_node_on_empty_reply(True)
+        state = self.blockchain.rpc.get_state("/@%s/recent-replies" % author)
         replies = state["accounts"][author].get("recent_replies", [])
         comments = []
         for reply in replies:
             post = state["content"][reply]
             if skip_own and post["author"] == author:
                 continue
-            comments.append(Comment(post, lazy=lazy, full=full, steem_instance=self.steem))
+            comments.append(Comment(post, lazy=lazy, full=full, blockchain_instance=self.blockchain))
         super(RecentReplies, self).__init__(comments)
 
 
@@ -843,14 +854,19 @@ class RecentByPath(list):
     """ Obtain a list of posts recent by path
 
         :param str account: Account name
-        :param Steem steem_instance: Steem() instance to use when accesing a RPC
+        :param Steem blockchain_instance: Steem() instance to use when accesing a RPC
     """
-    def __init__(self, path="trending", category=None, lazy=False, full=True, steem_instance=None):
-        self.steem = steem_instance or shared_steem_instance()
-        if not self.steem.is_connected():
+    def __init__(self, path="trending", category=None, lazy=False, full=True, blockchain_instance=None, **kwargs):
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]        
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
+        if not self.blockchain.is_connected():
             return None
-        self.steem.rpc.set_next_node_on_empty_reply(True)
-        state = self.steem.rpc.get_state("/" + path)
+        self.blockchain.rpc.set_next_node_on_empty_reply(True)
+        state = self.blockchain.rpc.get_state("/" + path)
         if state == '' or state is None or len(state["discussion_idx"]) == 0:
             return None
         replies = state["discussion_idx"][''].get(path, [])
@@ -858,7 +874,7 @@ class RecentByPath(list):
         for reply in replies:
             post = state["content"][reply]
             if category is None or (category is not None and post["category"] == category):
-                comments.append(Comment(post, lazy=lazy, full=full, steem_instance=self.steem))
+                comments.append(Comment(post, lazy=lazy, full=full, blockchain_instance=self.blockchain))
         super(RecentByPath, self).__init__(comments)
 
 
@@ -866,15 +882,20 @@ class RankedPosts(list):
     """ Obtain a list of ranked posts
 
         :param str account: Account name
-        :param Steem steem_instance: Steem() instance to use when accesing a RPC
+        :param Steem blockchain_instance: Steem() instance to use when accesing a RPC
     """
-    def __init__(self, sort="trending", tag="", observer="", lazy=False, full=True, steem_instance=None):
-        self.steem = steem_instance or shared_steem_instance()
-        if not self.steem.is_connected():
+    def __init__(self, sort="trending", tag="", observer="", lazy=False, full=True, blockchain_instance=None, **kwargs):
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]        
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
+        if not self.blockchain.is_connected():
             return None
-        self.steem.rpc.set_next_node_on_empty_reply(True)
-        posts = self.steem.rpc.get_ranked_posts({"sort": sort, "tag": tag, "observer": observer}, api="bridge")
+        self.blockchain.rpc.set_next_node_on_empty_reply(True)
+        posts = self.blockchain.rpc.get_ranked_posts({"sort": sort, "tag": tag, "observer": observer}, api="bridge")
         comments = []
         for post in posts:
-            comments.append(Comment(post, lazy=lazy, full=full, steem_instance=self.steem))
+            comments.append(Comment(post, lazy=lazy, full=full, blockchain_instance=self.blockchain))
         super(RankedPosts, self).__init__(comments)

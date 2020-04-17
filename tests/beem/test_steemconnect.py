@@ -44,7 +44,7 @@ class Testcases(unittest.TestCase):
     def test_transfer(self):
         bts = self.bts
         acc = self.account
-        acc.steem.txbuffer.clear()
+        acc.blockchain.txbuffer.clear()
         tx = acc.transfer(
             "test1", 1.000, "STEEM", memo="test")
         sc2 = SteemConnect(steem_instance=bts)

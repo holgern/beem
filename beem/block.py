@@ -49,7 +49,8 @@ class Block(BlockchainObject):
         only_virtual_ops=False,
         full=True,
         lazy=False,
-        steem_instance=None
+        blockchain_instance=None,
+        **kwargs
     ):
         """ Initilize a block
 
@@ -73,7 +74,8 @@ class Block(BlockchainObject):
             block,
             lazy=lazy,
             full=full,
-            steem_instance=steem_instance
+            blockchain_instance=blockchain_instance,
+            **kwargs
         )
 
     def _parse_json_data(self, block):
@@ -125,21 +127,21 @@ class Block(BlockchainObject):
         """
         if self.identifier is None:
             return
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             return
-        self.steem.rpc.set_next_node_on_empty_reply(False)
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
         if self.only_ops or self.only_virtual_ops:
-            if self.steem.rpc.get_use_appbase():
+            if self.blockchain.rpc.get_use_appbase():
                 try:
-                    ops_ops = self.steem.rpc.get_ops_in_block({"block_num": self.identifier, 'only_virtual': self.only_virtual_ops}, api="account_history")
+                    ops_ops = self.blockchain.rpc.get_ops_in_block({"block_num": self.identifier, 'only_virtual': self.only_virtual_ops}, api="account_history")
                     if ops_ops is None:
                         ops = None
                     else:
                         ops = ops_ops["ops"]
                 except ApiNotSupported:
-                    ops = self.steem.rpc.get_ops_in_block(self.identifier, self.only_virtual_ops, api="condenser")
+                    ops = self.blockchain.rpc.get_ops_in_block(self.identifier, self.only_virtual_ops, api="condenser")
             else:
-                ops = self.steem.rpc.get_ops_in_block(self.identifier, self.only_virtual_ops)
+                ops = self.blockchain.rpc.get_ops_in_block(self.identifier, self.only_virtual_ops)
             if bool(ops):
                 block = {'block': ops[0]["block"],
                          'timestamp': ops[0]["timestamp"],
@@ -149,19 +151,19 @@ class Block(BlockchainObject):
                          'timestamp': "1970-01-01T00:00:00",
                          'operations': []}
         else:
-            if self.steem.rpc.get_use_appbase():
+            if self.blockchain.rpc.get_use_appbase():
                 try:
-                    block = self.steem.rpc.get_block({"block_num": self.identifier}, api="block")
+                    block = self.blockchain.rpc.get_block({"block_num": self.identifier}, api="block")
                     if block and "block" in block:
                         block = block["block"]
                 except ApiNotSupported:
-                    block = self.steem.rpc.get_block(self.identifier, api="condenser")
+                    block = self.blockchain.rpc.get_block(self.identifier, api="condenser")
             else:
-                block = self.steem.rpc.get_block(self.identifier)
+                block = self.blockchain.rpc.get_block(self.identifier)
         if not block:
             raise BlockDoesNotExistsException("output: %s of identifier %s" % (str(block), str(self.identifier)))
         block = self._parse_json_data(block)
-        super(Block, self).__init__(block, lazy=self.lazy, full=self.full, steem_instance=self.steem)
+        super(Block, self).__init__(block, lazy=self.lazy, full=self.full, blockchain_instance=self.blockchain)
 
     @property
     def block_num(self):
@@ -307,7 +309,8 @@ class BlockHeader(BlockchainObject):
         block,
         full=True,
         lazy=False,
-        steem_instance=None
+        blockchain_instance=None,
+        **kwargs
     ):
         """ Initilize a block
 
@@ -325,28 +328,29 @@ class BlockHeader(BlockchainObject):
             block,
             lazy=lazy,
             full=full,
-            steem_instance=steem_instance
+            blockchain_instance=blockchain_instance,
+            **kwargs
         )
 
     def refresh(self):
         """ Even though blocks never change, you freshly obtain its contents
             from an API with this method
         """
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             return None
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            block = self.steem.rpc.get_block_header({"block_num": self.identifier}, api="block")
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase():
+            block = self.blockchain.rpc.get_block_header({"block_num": self.identifier}, api="block")
             if "header" in block:
                 block = block["header"]
         else:
-            block = self.steem.rpc.get_block_header(self.identifier)
+            block = self.blockchain.rpc.get_block_header(self.identifier)
         if not block:
             raise BlockDoesNotExistsException(str(self.identifier))
         block = self._parse_json_data(block)
         super(BlockHeader, self).__init__(
             block, lazy=self.lazy, full=self.full,
-            steem_instance=self.steem
+            blockchain_instance=self.blockchain
         )
 
     def time(self):

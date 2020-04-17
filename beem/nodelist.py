@@ -8,7 +8,7 @@ import re
 import time
 import math
 import json
-from beem.instance import shared_steem_instance
+from beem.instance import shared_blockchain_instance
 from beem.account import Account
 import logging
 log = logging.getLogger(__name__)
@@ -180,7 +180,7 @@ class NodeList(list):
             }]
         super(NodeList, self).__init__(nodes)
 
-    def update_nodes(self, weights=None, steem_instance=None):
+    def update_nodes(self, weights=None, blockchain_instance=None, **kwargs):
         """ Reads metadata from fullnodeupdate and recalculates the nodes score
 
             :param list/dict weight: can be used to weight the different benchmarks
@@ -195,14 +195,19 @@ class NodeList(list):
                 weights = {'block': 0.1, 'history': 0.1, 'apicall': 1, 'config': 1}
                 nl.update_nodes(weights)
         """
-        steem = steem_instance or shared_steem_instance()
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]        
+        steem = blockchain_instance or shared_blockchain_instance()
         metadata = None
         account = None
         cnt = 0
         while metadata is None and cnt < 5:
             cnt += 1
             try:
-                account = Account("fullnodeupdate", steem_instance=steem)
+                account = Account("fullnodeupdate", blockchain_instance=steem)
                 metadata = json.loads(account["json_metadata"])
             except:
                 steem.rpc.next()
@@ -268,7 +273,7 @@ class NodeList(list):
             new_nodes.append(new_node)
         super(NodeList, self).__init__(new_nodes)
 
-    def get_nodes(self, hive=True, exclude_limited=False, dev=False, testnet=False, testnetdev=False, wss=True, https=True, not_working=False, normal=True, appbase=True):
+    def get_nodes(self, hive=False, exclude_limited=False, dev=False, testnet=False, testnetdev=False, wss=True, https=True, not_working=False, normal=True, appbase=True):
         """ Returns nodes as list
 
             :param bool hive: When True, only HIVE nodes will be returned

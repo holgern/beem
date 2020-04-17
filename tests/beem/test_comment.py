@@ -59,7 +59,7 @@ class Testcases(unittest.TestCase):
             title = c.title
             cnt += 1
             if title == '':
-                c.steem.rpc.next()
+                c.blockchain.rpc.next()
                 c.refresh()
                 title = c.title
         self.assertTrue(isinstance(c.id, int))
@@ -96,7 +96,7 @@ class Testcases(unittest.TestCase):
             title = c.title
             cnt += 1
             if title == '':
-                c.steem.rpc.next()
+                c.blockchain.rpc.next()
                 c.refresh()
                 title = c.title
 
@@ -121,20 +121,20 @@ class Testcases(unittest.TestCase):
         self.assertIn(
             "test",
             op["voter"])
-        c.steem.txbuffer.clear()
+        c.blockchain.txbuffer.clear()
         tx = c.upvote(weight=150, voter="test")
         op = tx["operations"][0][1]
         self.assertEqual(op["weight"], 10000)
-        c.steem.txbuffer.clear()
+        c.blockchain.txbuffer.clear()
         tx = c.upvote(weight=99.9, voter="test")
         op = tx["operations"][0][1]
         self.assertEqual(op["weight"], 9990)
         
-        c.steem.txbuffer.clear()
+        c.blockchain.txbuffer.clear()
         tx = c.downvote(weight=150, voter="test")
         op = tx["operations"][0][1]
         self.assertEqual(op["weight"], -10000)
-        c.steem.txbuffer.clear()
+        c.blockchain.txbuffer.clear()
         tx = c.downvote(weight=99.9, voter="test")
         op = tx["operations"][0][1]
         self.assertEqual(op["weight"], -9990)

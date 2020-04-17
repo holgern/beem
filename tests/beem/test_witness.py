@@ -49,7 +49,7 @@ class Testcases(unittest.TestCase):
             bts = self.steemit
         bts.txbuffer.clear()
         w = Witness("gtg", steem_instance=bts)
-        tx = w.feed_publish("4 %s" % bts.sbd_symbol, "1 %s" % bts.steem_symbol)
+        tx = w.feed_publish("4 %s" % bts.backed_token_symbol, "1 %s" % bts.token_symbol)
         self.assertEqual(
             (tx["operations"][0][0]),
             "feed_publish"
@@ -70,7 +70,7 @@ class Testcases(unittest.TestCase):
             bts = self.steemit
         bts.txbuffer.clear()
         w = Witness("gtg", steem_instance=bts)
-        props = {"account_creation_fee": "0.1 %s" % bts.steem_symbol,
+        props = {"account_creation_fee": "0.1 %s" % bts.token_symbol,
                  "maximum_block_size": 32000,
                  "sbd_interest_rate": 0}
         tx = w.update(wif, "", props)

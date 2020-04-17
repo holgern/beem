@@ -4,6 +4,7 @@ Changelog
 ------
 * set hive as default for default_chain
 * get_nodes return hive nodes by default
+* Prepared for Hive HF 24
 
 0.22.14
 -------

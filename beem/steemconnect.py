@@ -13,7 +13,7 @@ except ImportError:
 import requests
 from .storage import get_default_config_storage
 from six import PY2
-from beem.instance import shared_steem_instance
+from beem.instance import shared_blockchain_instance
 from beem.amount import Amount
 
 
@@ -33,7 +33,7 @@ class SteemConnect(object):
             sc2 = SteemConnect(client_id="beem.app")
             steem = Steem(steemconnect=sc2)
             steem.wallet.unlock("supersecret-passphrase")
-            post = Comment("author/permlink", steem_instance=steem)
+            post = Comment("author/permlink", blockchain_instance=steem)
             post.upvote(voter="test")  # replace "test" with your account
 
         Examples for creating steemconnect v2 urls for broadcasting in browser:
@@ -45,8 +45,8 @@ class SteemConnect(object):
             from beem.steemconnect import SteemConnect
             from pprint import pprint
             steem = Steem(nobroadcast=True, unsigned=True)
-            sc2 = SteemConnect(steem_instance=steem)
-            acc = Account("test", steem_instance=steem)
+            sc2 = SteemConnect(blockchain_instance=steem)
+            acc = Account("test", blockchain_instance=steem)
             pprint(sc2.url_from_tx(acc.transfer("test1", 1, "STEEM", "test")))
 
         .. testcode::
@@ -61,8 +61,8 @@ class SteemConnect(object):
             from beem.steemconnect import SteemConnect
             from pprint import pprint
             stm = Steem(nobroadcast=True, unsigned=True)
-            sc2 = SteemConnect(steem_instance=stm)
-            tx = TransactionBuilder(steem_instance=stm)
+            sc2 = SteemConnect(blockchain_instance=stm)
+            tx = TransactionBuilder(blockchain_instance=stm)
             op = operations.Transfer(**{"from": 'test',
                                         "to": 'test1',
                                         "amount": '1.000 STEEM',
@@ -76,8 +76,13 @@ class SteemConnect(object):
 
     """
 
-    def __init__(self, steem_instance=None, *args, **kwargs):
-        self.steem = steem_instance or shared_steem_instance()
+    def __init__(self, blockchain_instance=None, *args, **kwargs):
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]
+        self.steem = blockchain_instance or shared_blockchain_instance()
         config = self.steem.config
         self.access_token = None
         self.get_refresh_token = kwargs.get("get_refresh_token", False)
@@ -257,7 +262,7 @@ class SteemConnect(object):
                 value = params[key]
                 if isinstance(value, list) and len(value) == 3:
                     try:
-                        amount = Amount(value, steem_instance=self.steem)
+                        amount = Amount(value, blockchain_instance=self.steem)
                         params[key] = str(amount)
                     except:
                         amount = None

@@ -10,7 +10,7 @@ from parameterized import parameterized
 import random
 import json
 from pprint import pprint
-from beem import Steem, exceptions
+from beem import Hive, exceptions
 from beem.amount import Amount
 from beem.memo import Memo
 from beem.version import version as beem_version
@@ -31,9 +31,9 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.nodelist = NodeList()
-        cls.nodelist.update_nodes(steem_instance=Steem(node=cls.nodelist.get_steem_nodes(), num_retries=10))
-        cls.bts = Steem(
-            node=cls.nodelist.get_steem_nodes(),
+        cls.nodelist.update_nodes(steem_instance=Hive(node=cls.nodelist.get_hive_nodes(), num_retries=10))
+        cls.bts = Hive(
+            node=cls.nodelist.get_hive_nodes(),
             nobroadcast=True,
             unsigned=True,
             data_refresh_time_seconds=900,
@@ -46,7 +46,7 @@ class Testcases(unittest.TestCase):
         acc = self.account
         acc.blockchain.txbuffer.clear()
         tx = acc.transfer(
-            "test", 1.33, acc.blockchain.sbd_symbol, memo="Foobar", account="test1")
+            "test", 1.33, acc.blockchain.backed_token_symbol, memo="Foobar", account="test1")
         self.assertEqual(
             tx["operations"][0][0],
             "transfer"
@@ -61,7 +61,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual(float(amount), 1.33)
 
     def test_create_account(self):
-        bts = Steem(node=self.nodelist.get_steem_nodes(),
+        bts = Hive(node=self.nodelist.get_hive_nodes(),
                     nobroadcast=True,
                     unsigned=True,
                     data_refresh_time_seconds=900,
@@ -130,7 +130,7 @@ class Testcases(unittest.TestCase):
             "test")
 
     def test_create_account_password(self):
-        bts = Steem(node=self.nodelist.get_steem_nodes(),
+        bts = Hive(node=self.nodelist.get_hive_nodes(),
                     nobroadcast=True,
                     unsigned=True,
                     data_refresh_time_seconds=900,
@@ -361,7 +361,7 @@ class Testcases(unittest.TestCase):
         self.assertFalse(bts.get_blockchain_version() == '0.0.0')
 
     def test_offline(self):
-        bts = Steem(node=self.nodelist.get_steem_nodes(),
+        bts = Hive(node=self.nodelist.get_hive_nodes(),
                     offline=True,
                     data_refresh_time_seconds=900,
                     keys={"active": wif, "owner": wif, "memo": wif})
@@ -386,15 +386,16 @@ class Testcases(unittest.TestCase):
         self.assertTrue(bts.get_config(use_stored_data=True) is None)
         self.assertEqual(bts.get_block_interval(), 3)
         self.assertEqual(bts.get_blockchain_version(), '0.0.0')
-        self.assertFalse(bts.is_hive)
-        self.assertTrue(bts.is_steem)        
+        self.assertTrue(bts.is_hive)
+        self.assertFalse(bts.is_steem)
 
     def test_properties(self):
-        bts = Steem(node=self.nodelist.get_steem_nodes(),
+        bts = Hive(node=self.nodelist.get_hive_nodes(),
                     nobroadcast=True,
                     data_refresh_time_seconds=900,
                     keys={"active": wif, "owner": wif, "memo": wif},
                     num_retries=10)
+        self.assertTrue(bts.is_hive)
         self.assertTrue(bts.get_feed_history(use_stored_data=False) is not None)
         self.assertTrue(bts.get_reward_funds(use_stored_data=False) is not None)
         self.assertTrue(bts.get_current_median_history(use_stored_data=False) is not None)
@@ -404,32 +405,32 @@ class Testcases(unittest.TestCase):
         self.assertTrue(bts.get_config(use_stored_data=False) is not None)
         self.assertTrue(bts.get_block_interval() is not None)
         self.assertTrue(bts.get_blockchain_version() is not None)
-        self.assertFalse(bts.is_hive)
-        self.assertTrue(bts.is_steem)        
+        self.assertTrue(bts.is_hive)
+        self.assertFalse(bts.is_steem)        
 
-    def test_sp_to_rshares(self):
+    def test_hp_to_rshares(self):
         stm = self.bts
-        rshares = stm.sp_to_rshares(stm.vests_to_sp(1e6))
+        rshares = stm.hp_to_rshares(stm.vests_to_hp(1e6))
         self.assertTrue(abs(rshares - 20000000000.0) < 2)
 
     def test_rshares_to_vests(self):
         stm = self.bts
-        rshares = stm.sp_to_rshares(stm.vests_to_sp(1e6))
+        rshares = stm.hp_to_rshares(stm.vests_to_hp(1e6))
         rshares2 = stm.vests_to_rshares(1e6)
         self.assertTrue(abs(rshares - rshares2) < 2)
 
-    def test_sp_to_sbd(self):
+    def test_hp_to_hbd(self):
         stm = self.bts
         sp = 500
-        ret = stm.sp_to_sbd(sp)
+        ret = stm.hp_to_hbd(sp)
         self.assertTrue(ret is not None)
 
-    def test_sbd_to_rshares(self):
+    def test_hbd_to_rshares(self):
         stm = self.bts
         test_values = [1, 10, 100, 1e3, 1e4, 1e5, 1e6, 1e7]
         for v in test_values:
             try:
-                sbd = round(stm.rshares_to_sbd(stm.sbd_to_rshares(v)), 5)
+                sbd = round(stm.rshares_to_hbd(stm.hbd_to_rshares(v)), 5)
             except ValueError:  # Reward pool smaller than 1e7 SBD (e.g. caused by a very low steem price)
                 continue
             self.assertEqual(sbd, v)
@@ -439,8 +440,8 @@ class Testcases(unittest.TestCase):
         sp = 1000
         voting_power = 9000
         for vote_pct in range(500, 10000, 500):
-            rshares = stm.sp_to_rshares(sp, voting_power=voting_power, vote_pct=vote_pct)
-            vote_pct_ret = stm.rshares_to_vote_pct(rshares, steem_power=sp, voting_power=voting_power)
+            rshares = stm.hp_to_rshares(sp, voting_power=voting_power, vote_pct=vote_pct)
+            vote_pct_ret = stm.rshares_to_vote_pct(rshares, hive_power=sp, voting_power=voting_power)
             self.assertEqual(vote_pct_ret, vote_pct)
 
     def test_sign(self):
