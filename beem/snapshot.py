@@ -16,8 +16,9 @@ from beem.utils import formatTimeString, formatTimedelta, remove_from_dict, repu
 from beem.amount import Amount
 from beem.account import Account
 from beem.vote import Vote
-from beem.instance import shared_steem_instance
+from beem.instance import shared_blockchain_instance
 from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_1_PERCENT, STEEM_100_PERCENT
+from beem import Steem, Hive
 
 log = logging.getLogger(__name__)
 
@@ -26,21 +27,26 @@ class AccountSnapshot(list):
     """ This class allows to easily access Account history
 
         :param str account_name: Name of the account
-        :param Steem steem_instance: Steem
+        :param Steem blockchain_instance: Steem
                instance
     """
-    def __init__(self, account, account_history=[], steem_instance=None):
-        self.steem = steem_instance or shared_steem_instance()
-        self.account = Account(account, steem_instance=self.steem)
+    def __init__(self, account, account_history=[], blockchain_instance=None, **kwargs):
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]          
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
+        self.account = Account(account, blockchain_instance=self.blockchain)
         self.reset()
         super(AccountSnapshot, self).__init__(account_history)
 
     def reset(self):
         """ Resets the arrays not the stored account history
         """
-        self.own_vests = [Amount(0, self.steem.vests_symbol, steem_instance=self.steem)]
-        self.own_steem = [Amount(0, self.steem.steem_symbol, steem_instance=self.steem)]
-        self.own_sbd = [Amount(0, self.steem.sbd_symbol, steem_instance=self.steem)]
+        self.own_vests = [Amount(0, self.blockchain.vest_token_symbol, blockchain_instance=self.blockchain)]
+        self.own_steem = [Amount(0, self.blockchain.token_symbol, blockchain_instance=self.blockchain)]
+        self.own_sbd = [Amount(0, self.blockchain.backed_token_symbol, blockchain_instance=self.blockchain)]
         self.delegated_vests_in = [{}]
         self.delegated_vests_out = [{}]
         self.timestamps = [addTzInfo(datetime(1970, 1, 1, 0, 0, 0, 0))]
@@ -146,9 +152,14 @@ class AccountSnapshot(list):
         sbd = self.own_sbd[index]
         sum_in = sum([din[key].amount for key in din])
         sum_out = sum([dout[key].amount for key in dout])
-        sp_in = self.steem.vests_to_sp(sum_in, timestamp=ts)
-        sp_out = self.steem.vests_to_sp(sum_out, timestamp=ts)
-        sp_own = self.steem.vests_to_sp(own, timestamp=ts)
+        if isinstance(self.blockchain, Steem):
+            sp_in = self.blockchain.vests_to_sp(sum_in, timestamp=ts)
+            sp_out = self.blockchain.vests_to_sp(sum_out, timestamp=ts)
+            sp_own = self.blockchain.vests_to_sp(own, timestamp=ts)
+        else:
+            sp_in = self.blockchain.vests_to_hp(sum_in, timestamp=ts)
+            sp_out = self.blockchain.vests_to_hp(sum_out, timestamp=ts)
+            sp_own = self.blockchain.vests_to_hp(own, timestamp=ts)            
         sp_eff = sp_own + sp_in - sp_out
         return {"timestamp": ts, "vests": own, "delegated_vests_in": din, "delegated_vests_out": dout,
                 "sp_own": sp_own, "sp_eff": sp_eff, "steem": steem, "sbd": sbd, "index": index}
@@ -275,8 +286,8 @@ class AccountSnapshot(list):
         ts = parse_time(op['timestamp'])
 
         if op['type'] == "account_create":
-            fee_steem = Amount(op['fee'], steem_instance=self.steem).amount
-            fee_vests = self.steem.sp_to_vests(Amount(op['fee'], steem_instance=self.steem).amount, timestamp=ts)
+            fee_steem = Amount(op['fee'], blockchain_instance=self.blockchain).amount
+            fee_vests = self.blockchain.sp_to_vests(Amount(op['fee'], blockchain_instance=self.blockchain).amount, timestamp=ts)
             if op['new_account_name'] == self.account["name"]:
                 self.update(ts, fee_vests, 0, 0)
                 return
@@ -285,12 +296,15 @@ class AccountSnapshot(list):
                 return
 
         elif op['type'] == "account_create_with_delegation":
-            fee_steem = Amount(op['fee'], steem_instance=self.steem).amount
-            fee_vests = self.steem.sp_to_vests(Amount(op['fee'], steem_instance=self.steem).amount, timestamp=ts)
+            fee_steem = Amount(op['fee'], blockchain_instance=self.blockchain).amount
+            if isinstance(self.blockchain, Steem):
+                fee_vests = self.blockchain.sp_to_vests(Amount(op['fee'], blockchain_instance=self.blockchain).amount, timestamp=ts)
+            else:
+                fee_vests = self.blockchain.hp_to_vests(Amount(op['fee'], blockchain_instance=self.blockchain).amount, timestamp=ts)
             if op['new_account_name'] == self.account["name"]:
-                if Amount(op['delegation'], steem_instance=self.steem).amount > 0:
+                if Amount(op['delegation'], blockchain_instance=self.blockchain).amount > 0:
                     delegation = {'account': op['creator'], 'amount':
-                                  Amount(op['delegation'], steem_instance=self.steem)}
+                                  Amount(op['delegation'], blockchain_instance=self.blockchain)}
                 else:
                     delegation = None
                 self.update(ts, fee_vests, delegation, 0)
@@ -298,12 +312,12 @@ class AccountSnapshot(list):
 
             if op['creator'] == self.account["name"]:
                 delegation = {'account': op['new_account_name'], 'amount':
-                              Amount(op['delegation'], steem_instance=self.steem)}
+                              Amount(op['delegation'], blockchain_instance=self.blockchain)}
                 self.update(ts, 0, 0, delegation, fee_steem * (-1), 0)
                 return
 
         elif op['type'] == "delegate_vesting_shares":
-            vests = Amount(op['vesting_shares'], steem_instance=self.steem)
+            vests = Amount(op['vesting_shares'], blockchain_instance=self.blockchain)
             if op['delegator'] == self.account["name"]:
                 delegation = {'account': op['delegatee'], 'amount': vests}
                 self.update(ts, 0, 0, delegation)
@@ -314,37 +328,40 @@ class AccountSnapshot(list):
                 return
 
         elif op['type'] == "transfer":
-            amount = Amount(op['amount'], steem_instance=self.steem)
+            amount = Amount(op['amount'], blockchain_instance=self.blockchain)
             if op['from'] == self.account["name"]:
-                if amount.symbol == self.steem.steem_symbol:
+                if amount.symbol == self.blockchain.blockchain_symbol:
                     self.update(ts, 0, 0, 0, amount * (-1), 0)
-                elif amount.symbol == self.steem.sbd_symbol:
+                elif amount.symbol == self.blockchain.backed_token_symbol:
                     self.update(ts, 0, 0, 0, 0, amount * (-1))
             if op['to'] == self.account["name"]:
-                if amount.symbol == self.steem.steem_symbol:
+                if amount.symbol == self.blockchain.blockchain_symbol:
                     self.update(ts, 0, 0, 0, amount, 0)
-                elif amount.symbol == self.steem.sbd_symbol:
+                elif amount.symbol == self.blockchain.backed_token_symbol:
                     self.update(ts, 0, 0, 0, 0, amount)
             return
 
         elif op['type'] == "fill_order":
-            current_pays = Amount(op["current_pays"], steem_instance=self.steem)
-            open_pays = Amount(op["open_pays"], steem_instance=self.steem)
+            current_pays = Amount(op["current_pays"], blockchain_instance=self.blockchain)
+            open_pays = Amount(op["open_pays"], blockchain_instance=self.blockchain)
             if op["current_owner"] == self.account["name"]:
-                if current_pays.symbol == self.steem.steem_symbol:
+                if current_pays.symbol == self.blockchain.token_symbol:
                     self.update(ts, 0, 0, 0, current_pays * (-1), open_pays)
-                elif current_pays.symbol == self.steem.sbd_symbol:
+                elif current_pays.symbol == self.blockchain.backed_token_symbol:
                     self.update(ts, 0, 0, 0, open_pays, current_pays * (-1))
             if op["open_owner"] == self.account["name"]:
-                if current_pays.symbol == self.steem.steem_symbol:
+                if current_pays.symbol == self.blockchain.token_symbol:
                     self.update(ts, 0, 0, 0, current_pays, open_pays * (-1))
-                elif current_pays.symbol == self.steem.sbd_symbol:
+                elif current_pays.symbol == self.blockchain.backed_token_symbol:
                     self.update(ts, 0, 0, 0, open_pays * (-1), current_pays)
             return
 
         elif op['type'] == "transfer_to_vesting":
-            steem = Amount(op['amount'], steem_instance=self.steem)
-            vests = self.steem.sp_to_vests(steem.amount, timestamp=ts)
+            steem = Amount(op['amount'], blockchain_instance=self.blockchain)
+            if isinstance(self.blockchain, Steem):
+                vests = self.blockchain.sp_to_vests(steem.amount, timestamp=ts)
+            else:
+                vests = self.blockchain.hp_to_vests(steem.amount, timestamp=ts)
             if op['from'] == self.account["name"] and op['to'] == self.account["name"]:
                 self.update(ts, vests, 0, 0, steem * (-1), 0)  # power up from and to given account
             elif op['from'] != self.account["name"] and op['to'] == self.account["name"]:
@@ -354,26 +371,26 @@ class AccountSnapshot(list):
             return
 
         elif op['type'] == "fill_vesting_withdraw":
-            vests = Amount(op['withdrawn'], steem_instance=self.steem)
+            vests = Amount(op['withdrawn'], blockchain_instance=self.blockchain)
             self.update(ts, vests * (-1), 0, 0)
             return
 
         elif op['type'] == "return_vesting_delegation":
             delegation = {'account': None, 'amount':
-                          Amount(op['vesting_shares'], steem_instance=self.steem)}
+                          Amount(op['vesting_shares'], blockchain_instance=self.blockchain)}
             self.update(ts, 0, 0, delegation)
             return
 
         elif op['type'] == "claim_reward_balance":
-            vests = Amount(op['reward_vests'], steem_instance=self.steem)
-            steem = Amount(op['reward_steem'], steem_instance=self.steem)
-            sbd = Amount(op['reward_sbd'], steem_instance=self.steem)
+            vests = Amount(op['reward_vests'], blockchain_instance=self.blockchain)
+            steem = Amount(op['reward_steem'], blockchain_instance=self.blockchain)
+            sbd = Amount(op['reward_sbd'], blockchain_instance=self.blockchain)
             self.update(ts, vests, 0, 0, steem, sbd)
             return
 
         elif op['type'] == "curation_reward":
             if "curation_reward" in only_ops or enable_rewards:
-                vests = Amount(op['reward'], steem_instance=self.steem)
+                vests = Amount(op['reward'], blockchain_instance=self.blockchain)
             if "curation_reward" in only_ops:
                 self.update(ts, vests, 0, 0)
             if enable_rewards:
@@ -382,9 +399,9 @@ class AccountSnapshot(list):
 
         elif op['type'] == "author_reward":
             if "author_reward" in only_ops or enable_rewards:
-                vests = Amount(op['vesting_payout'], steem_instance=self.steem)
-                steem = Amount(op['steem_payout'], steem_instance=self.steem)
-                sbd = Amount(op['sbd_payout'], steem_instance=self.steem)
+                vests = Amount(op['vesting_payout'], blockchain_instance=self.blockchain)
+                steem = Amount(op['steem_payout'], blockchain_instance=self.blockchain)
+                sbd = Amount(op['sbd_payout'], blockchain_instance=self.blockchain)
             if "author_reward" in only_ops:
                 self.update(ts, vests, 0, 0, steem, sbd)
             if enable_rewards:
@@ -392,33 +409,33 @@ class AccountSnapshot(list):
             return
 
         elif op['type'] == "producer_reward":
-            vests = Amount(op['vesting_shares'], steem_instance=self.steem)
+            vests = Amount(op['vesting_shares'], blockchain_instance=self.blockchain)
             self.update(ts, vests, 0, 0)
             return
 
         elif op['type'] == "comment_benefactor_reward":
             if op['benefactor'] == self.account["name"]:
                 if "reward" in op:
-                    vests = Amount(op['reward'], steem_instance=self.steem)
+                    vests = Amount(op['reward'], blockchain_instance=self.blockchain)
                     self.update(ts, vests, 0, 0)
                 else:
-                    vests = Amount(op['vesting_payout'], steem_instance=self.steem)
-                    steem = Amount(op['steem_payout'], steem_instance=self.steem)
-                    sbd = Amount(op['sbd_payout'], steem_instance=self.steem)
+                    vests = Amount(op['vesting_payout'], blockchain_instance=self.blockchain)
+                    steem = Amount(op['steem_payout'], blockchain_instance=self.blockchain)
+                    sbd = Amount(op['sbd_payout'], blockchain_instance=self.blockchain)
                     self.update(ts, vests, 0, 0, steem, sbd)
                 return
             else:
                 return
 
         elif op['type'] == "fill_convert_request":
-            amount_in = Amount(op["amount_in"], steem_instance=self.steem)
-            amount_out = Amount(op["amount_out"], steem_instance=self.steem)
+            amount_in = Amount(op["amount_in"], blockchain_instance=self.blockchain)
+            amount_out = Amount(op["amount_out"], blockchain_instance=self.blockchain)
             if op["owner"] == self.account["name"]:
                 self.update(ts, 0, 0, 0, amount_out, amount_in * (-1))
             return
 
         elif op['type'] == "interest":
-            interest = Amount(op["interest"], steem_instance=self.steem)
+            interest = Amount(op["interest"], blockchain_instance=self.blockchain)
             self.update(ts, 0, 0, 0, 0, interest)
             return
 
@@ -456,9 +473,15 @@ class AccountSnapshot(list):
                                         self.delegated_vests_out):
             sum_in = sum([din[key].amount for key in din])
             sum_out = sum([dout[key].amount for key in dout])
-            sp_in = self.steem.vests_to_sp(sum_in, timestamp=ts)
-            sp_out = self.steem.vests_to_sp(sum_out, timestamp=ts)
-            sp_own = self.steem.vests_to_sp(own, timestamp=ts)
+            if isinstance(self.blockchain, Steem):
+                sp_in = self.blockchain.vests_to_sp(sum_in, timestamp=ts)
+                sp_out = self.blockchain.vests_to_sp(sum_out, timestamp=ts)
+                sp_own = self.blockchain.vests_to_sp(own, timestamp=ts)
+            else:
+                sp_in = self.blockchain.vests_to_hp(sum_in, timestamp=ts)
+                sp_out = self.blockchain.vests_to_hp(sum_out, timestamp=ts)
+                sp_own = self.blockchain.vests_to_hp(own, timestamp=ts)
+                
             sp_eff = sp_own + sp_in - sp_out
             self.own_sp.append(sp_own)
             self.eff_sp.append(sp_eff)
@@ -505,7 +528,7 @@ class AccountSnapshot(list):
                 self.downvote_vp_timestamp.append(ts-timedelta(seconds=1))
                 self.downvote_vp.append(min([STEEM_100_PERCENT, self.downvote_vp[-1] + regenerated_vp]))
 
-                self.downvote_vp[-1] -= self.steem._calc_resulting_vote(STEEM_100_PERCENT, weight) * 4
+                self.downvote_vp[-1] -= self.blockchain._calc_resulting_vote(STEEM_100_PERCENT, weight) * 4
                 # Downvote mana pool is 1/4th of the upvote mana pool, so it gets drained 4 times as quick
                 if self.downvote_vp[-1] < 0:
                     # There's most likely a better solution to this that what I did here
@@ -552,7 +575,7 @@ class AccountSnapshot(list):
                     # Add charged VP just before new Vote
                     self.vp_timestamp.append(ts - timedelta(seconds=1))
                     self.vp.append(min([STEEM_100_PERCENT, self.vp[-1] + regenerated_vp]))
-                self.vp[-1] -= self.steem._calc_resulting_vote(self.vp[-1], weight)
+                self.vp[-1] -= self.blockchain._calc_resulting_vote(self.vp[-1], weight)
                 if self.vp[-1] < 0:
                     self.vp[-1] = 0
 
@@ -588,7 +611,10 @@ class AccountSnapshot(list):
         for (ts, vests) in zip(self.reward_timestamps, self.curation_rewards):
             if vests == 0:
                 continue
-            sp = self.steem.vests_to_sp(vests, timestamp=ts)
+            if isinstance(self.blockchain, Steem):
+                sp = self.blockchain.vests_to_sp(vests, timestamp=ts)
+            else:
+                sp = self.blockchain.vests_to_hp(vests, timestamp=ts)
             data = self.get_data(timestamp=ts, index=index)
             index = data["index"]
             if "sp_eff" in data and data["sp_eff"] > 0:
