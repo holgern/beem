@@ -61,6 +61,8 @@ class AccountSnapshot(list):
         self.in_vote_rshares = []
         self.vp = []
         self.vp_timestamp = []
+        self.downvote_vp = []
+        self.downvote_vp_timestamp = []
         self.rep = []
         self.rep_timestamp = []
 
@@ -189,7 +191,7 @@ class AccountSnapshot(list):
             self.in_vote_rep.append(int(v["reputation"]))
             self.in_vote_rshares.append(int(v["rshares"]))
         except:
-            print("Could not found: %s" % v)
+            print("Could not find: %s" % v)
             return
 
     def update(self, timestamp, own, delegated_in=None, delegated_out=None, steem=0, sbd=0):
@@ -238,7 +240,7 @@ class AccountSnapshot(list):
             elif delegated_out['amount'] != 0:
                 # new or updated non-zero delegation
                 new_deleg[delegated_out['account']] = delegated_out['amount']
-
+                # TODO
                 # skip undelegations here, wait for 'return_vesting_delegation'
                 # del new_deleg[delegated_out['account']]
 
@@ -261,7 +263,6 @@ class AccountSnapshot(list):
             ts = parse_time(op['timestamp'])
             if start_timestamp is not None and start_timestamp > ts:
                 continue
-            # print(op)
             if op['type'] in exclude_ops:
                 continue
             if len(only_ops) > 0 and op['type'] not in only_ops:
@@ -276,7 +277,6 @@ class AccountSnapshot(list):
         if op['type'] == "account_create":
             fee_steem = Amount(op['fee'], steem_instance=self.steem).amount
             fee_vests = self.steem.sp_to_vests(Amount(op['fee'], steem_instance=self.steem).amount, timestamp=ts)
-            # print(fee_vests)
             if op['new_account_name'] == self.account["name"]:
                 self.update(ts, fee_vests, 0, 0)
                 return
@@ -304,7 +304,6 @@ class AccountSnapshot(list):
 
         elif op['type'] == "delegate_vesting_shares":
             vests = Amount(op['vesting_shares'], steem_instance=self.steem)
-            # print(op)
             if op['delegator'] == self.account["name"]:
                 delegation = {'account': op['delegatee'], 'amount': vests}
                 self.update(ts, 0, 0, delegation)
@@ -316,7 +315,6 @@ class AccountSnapshot(list):
 
         elif op['type'] == "transfer":
             amount = Amount(op['amount'], steem_instance=self.steem)
-            # print(op)
             if op['from'] == self.account["name"]:
                 if amount.symbol == self.steem.steem_symbol:
                     self.update(ts, 0, 0, 0, amount * (-1), 0)
@@ -327,8 +325,6 @@ class AccountSnapshot(list):
                     self.update(ts, 0, 0, 0, amount, 0)
                 elif amount.symbol == self.steem.sbd_symbol:
                     self.update(ts, 0, 0, 0, 0, amount)
-            # print(op, vests)
-            # self.update(ts, vests, 0, 0)
             return
 
         elif op['type'] == "fill_order":
@@ -344,7 +340,6 @@ class AccountSnapshot(list):
                     self.update(ts, 0, 0, 0, current_pays, open_pays * (-1))
                 elif current_pays.symbol == self.steem.sbd_symbol:
                     self.update(ts, 0, 0, 0, open_pays * (-1), current_pays)
-            # print(op)
             return
 
         elif op['type'] == "transfer_to_vesting":
@@ -359,7 +354,6 @@ class AccountSnapshot(list):
             return
 
         elif op['type'] == "fill_vesting_withdraw":
-            # print(op)
             vests = Amount(op['withdrawn'], steem_instance=self.steem)
             self.update(ts, vests * (-1), 0, 0)
             return
@@ -388,7 +382,6 @@ class AccountSnapshot(list):
 
         elif op['type'] == "author_reward":
             if "author_reward" in only_ops or enable_rewards:
-                # print(op)
                 vests = Amount(op['vesting_payout'], steem_instance=self.steem)
                 steem = Amount(op['steem_payout'], steem_instance=self.steem)
                 sbd = Amount(op['sbd_payout'], steem_instance=self.steem)
@@ -439,18 +432,20 @@ class AccountSnapshot(list):
                 self.update_in_vote(ts, weight, op)
             return
 
+        elif op['type'] == 'hardfork_hive':
+            vests = Amount(op['vests_converted'])
+            hbd = Amount(op['steem_transferred'])
+            hive = Amount(op['sbd_transferred'])
+            self.update(ts, vests * (-1), 0, 0, hive * (-1), hbd * (-1))
+
         elif op['type'] in ['comment', 'feed_publish', 'shutdown_witness',
                             'account_witness_vote', 'witness_update', 'custom_json',
                             'limit_order_create', 'account_update',
                             'account_witness_proxy', 'limit_order_cancel', 'comment_options',
                             'delete_comment', 'interest', 'recover_account', 'pow',
-                            'fill_convert_request', 'convert', 'request_account_recovery']:
+                            'fill_convert_request', 'convert', 'request_account_recovery',
+                            'update_proposal_votes']:
             return
-
-        # if "vests" in str(op).lower():
-        #     print(op)
-        # else:
-        # print(op)
 
     def build_sp_arrays(self):
         """ Builds the own_sp and eff_sp array"""
@@ -484,20 +479,100 @@ class AccountSnapshot(list):
         """ Build vote power arrays"""
         self.vp_timestamp = [self.timestamps[1]]
         self.vp = [STEEM_100_PERCENT]
+        HF_21 = datetime(2019, 8, 27, 15, tzinfo=pytz.utc)
+        if self.timestamps[1] > HF_21:
+            self.downvote_vp_timestamp = [self.timestamps[1]]
+        else:
+            self.downvote_vp_timestamp = [HF_21]
+        self.downvote_vp = [STEEM_100_PERCENT]
+
         for (ts, weight) in zip(self.out_vote_timestamp, self.out_vote_weight):
-            self.vp.append(self.vp[-1])
+            regenerated_vp = 0
+            if ts > HF_21 and weight < 0:
+                self.downvote_vp.append(self.downvote_vp[-1])
+                if self.downvote_vp[-1] < STEEM_100_PERCENT:
+                    regenerated_vp = ((ts - self.downvote_vp_timestamp[-1]).total_seconds()) * STEEM_100_PERCENT / STEEM_VOTE_REGENERATION_SECONDS
+                    self.downvote_vp[-1] += int(regenerated_vp)
 
-            if self.vp[-1] < STEEM_100_PERCENT:
-                regenerated_vp = ((ts - self.vp_timestamp[-1]).total_seconds()) * STEEM_100_PERCENT / STEEM_VOTE_REGENERATION_SECONDS
-                self.vp[-1] += int(regenerated_vp)
+                if self.downvote_vp[-1] > STEEM_100_PERCENT:
+                    self.downvote_vp[-1] = STEEM_100_PERCENT
+                    recharge_time = self.account.get_manabar_recharge_timedelta({"current_mana_pct": self.downvote_vp[-2] / 100})
+                    # Add full downvote VP once fully charged
+                    self.downvote_vp_timestamp.append(self.downvote_vp_timestamp[-1] + recharge_time)
+                    self.downvote_vp.append(STEEM_100_PERCENT)
 
-            if self.vp[-1] > STEEM_100_PERCENT:
-                self.vp[-1] = STEEM_100_PERCENT
-            self.vp[-1] -= self.steem._calc_resulting_vote(self.vp[-1], weight)
-            if self.vp[-1] < 0:
-                self.vp[-1] = 0
+                # Add charged downvote VP just before new Vote
+                self.downvote_vp_timestamp.append(ts-timedelta(seconds=1))
+                self.downvote_vp.append(min([STEEM_100_PERCENT, self.downvote_vp[-1] + regenerated_vp]))
 
-            self.vp_timestamp.append(ts)
+                self.downvote_vp[-1] -= self.steem._calc_resulting_vote(STEEM_100_PERCENT, weight) * 4
+                # Downvote mana pool is 1/4th of the upvote mana pool, so it gets drained 4 times as quick
+                if self.downvote_vp[-1] < 0:
+                    # There's most likely a better solution to this that what I did here
+                    self.vp.append(self.vp[-1])
+
+                    if self.vp[-1] < STEEM_100_PERCENT:
+                        regenerated_vp = ((ts - self.vp_timestamp[
+                            -1]).total_seconds()) * STEEM_100_PERCENT / STEEM_VOTE_REGENERATION_SECONDS
+                        self.vp[-1] += int(regenerated_vp)
+
+                    if self.vp[-1] > STEEM_100_PERCENT:
+                        self.vp[-1] = STEEM_100_PERCENT
+                        recharge_time = self.account.get_manabar_recharge_timedelta(
+                            {"current_mana_pct": self.vp[-2] / 100})
+                        # Add full VP once fully charged
+                        self.vp_timestamp.append(self.vp_timestamp[-1] + recharge_time)
+                        self.vp.append(STEEM_100_PERCENT)
+                    if self.vp[-1] == STEEM_100_PERCENT and ts - self.vp_timestamp[-1] > timedelta(seconds=1):
+                        # Add charged VP just before new Vote
+                        self.vp_timestamp.append(ts-timedelta(seconds=1))
+                        self.vp.append(min([STEEM_100_PERCENT, self.vp[-1] + regenerated_vp]))
+                    self.vp[-1] += self.downvote_vp[-1] / 4
+                    if self.vp[-1] < 0:
+                        self.vp[-1] = 0
+
+                    self.vp_timestamp.append(ts)
+                    self.downvote_vp[-1] = 0
+                self.downvote_vp_timestamp.append(ts)
+
+            else:
+                self.vp.append(self.vp[-1])
+
+                if self.vp[-1] < STEEM_100_PERCENT:
+                    regenerated_vp = ((ts - self.vp_timestamp[-1]).total_seconds()) * STEEM_100_PERCENT / STEEM_VOTE_REGENERATION_SECONDS
+                    self.vp[-1] += int(regenerated_vp)
+
+                if self.vp[-1] > STEEM_100_PERCENT:
+                    self.vp[-1] = STEEM_100_PERCENT
+                    recharge_time = self.account.get_manabar_recharge_timedelta({"current_mana_pct": self.vp[-2] / 100})
+                    # Add full VP once fully charged
+                    self.vp_timestamp.append(self.vp_timestamp[-1] + recharge_time)
+                    self.vp.append(STEEM_100_PERCENT)
+                if self.vp[-1] == STEEM_100_PERCENT and ts - self.vp_timestamp[-1] > timedelta(seconds=1):
+                    # Add charged VP just before new Vote
+                    self.vp_timestamp.append(ts - timedelta(seconds=1))
+                    self.vp.append(min([STEEM_100_PERCENT, self.vp[-1] + regenerated_vp]))
+                self.vp[-1] -= self.steem._calc_resulting_vote(self.vp[-1], weight)
+                if self.vp[-1] < 0:
+                    self.vp[-1] = 0
+
+                self.vp_timestamp.append(ts)
+
+        if self.account.get_voting_power() == 100:
+            self.vp.append(10000)
+            recharge_time = self.account.get_manabar_recharge_timedelta({"current_mana_pct": self.vp[-2] / 100})
+            self.vp_timestamp.append(self.vp_timestamp[-1] + recharge_time)
+
+        if self.account.get_downvoting_power() == 100:
+            self.downvote_vp.append(10000)
+            recharge_time = self.account.get_manabar_recharge_timedelta(
+                {"current_mana_pct": self.downvote_vp[-2] / 100})
+            self.downvote_vp_timestamp.append(self.vp_timestamp[-1] + recharge_time)
+
+        self.vp.append(self.account.get_voting_power() * 100)
+        self.downvote_vp.append(self.account.get_downvoting_power() * 100)
+        self.downvote_vp_timestamp.append(datetime.utcnow())
+        self.vp_timestamp.append(datetime.utcnow())
 
     def build_curation_arrays(self, end_date=None, sum_days=7):
         """ Build curation arrays"""
