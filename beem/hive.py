@@ -71,16 +71,16 @@ class Hive(BlockChainInstance):
             NumRetriesReached is raised. Disabled for -1. (default is -1)
         :param int num_retries_call: Repeat num_retries_call times a rpc call on node error (default is 5)
         :param int timeout: Timeout setting for https nodes (default is 60)
-        :param bool use_sc2: When True, a steemconnect object is created. Can be used for
+        :param bool use_hs: When True, a hivesigner object is created. Can be used for
             broadcast posting op or creating hot_links (default is False)
-        :param SteemConnect steemconnect: A SteemConnect object can be set manually, set use_sc2 to True
+        :param HiveSigner hivesigner: A HiveSigner object can be set manually, set use_hs to True
         :param dict custom_chains: custom chain which should be added to the known chains
 
         Three wallet operation modes are possible:
 
-        * **Wallet Database**: Here, the steemlibs load the keys from the
+        * **Wallet Database**: Here, the beemlibs load the keys from the
           locally stored wallet SQLite database (see ``storage.py``).
-          To use this mode, simply call ``Steem()`` without the
+          To use this mode, simply call ``Hive()`` without the
           ``keys`` parameter
         * **Providing Keys**: Here, you can provide the keys for
           your accounts manually. All you need to do is add the wif
@@ -93,12 +93,12 @@ class Hive(BlockChainInstance):
           any account. This mode is only used for *foreign*
           signatures!
 
-        If no node is provided, it will connect to default nodes of
-        http://geo.steem.pl. Default settings can be changed with:
+        If no node is provided, it will connect to default nodes from
+        beem.NodeList. Default settings can be changed with:
 
         .. code-block:: python
 
-            steem = Steem(<host>)
+            hive = Hive(<host>)
 
         where ``<host>`` starts with ``https://``, ``ws://`` or ``wss://``.
 
@@ -109,9 +109,9 @@ class Hive(BlockChainInstance):
 
         .. code-block:: python
 
-            >>> from beem import Steem
-            >>> steem = Steem()
-            >>> print(steem.get_blockchain_version())  # doctest: +SKIP
+            >>> from beem import Hive
+            >>> hive = Hive()
+            >>> print(hive.get_blockchain_version())  # doctest: +SKIP
 
         This class also deals with edits, votes and reading content.
 
@@ -119,8 +119,8 @@ class Hive(BlockChainInstance):
 
         .. code-block:: python
 
-            from beem import Steem
-            stm = Steem(node=["https://mytstnet.com"], custom_chains={"MYTESTNET":
+            from beem import Hive
+            stm = Hive(node=["https://mytstnet.com"], custom_chains={"MYTESTNET":
                 {'chain_assets': [{'asset': 'HBD', 'id': 0, 'precision': 3, 'symbol': 'HBD'},
                                   {'asset': 'STEEM', 'id': 1, 'precision': 3, 'symbol': 'STEEM'},
                                   {'asset': 'VESTS', 'id': 2, 'precision': 6, 'symbol': 'VESTS'}],
@@ -227,7 +227,7 @@ class Hive(BlockChainInstance):
     def hp_to_hbd(self, hp, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
         """ Obtain the resulting HBD vote value from Hive power
 
-            :param number hive_power: Steem Power
+            :param number hive_power: Hive Power
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
             :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
@@ -255,7 +255,7 @@ class Hive(BlockChainInstance):
     def hp_to_rshares(self, hive_power, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, use_stored_data=True):
         """ Obtain the r-shares from Hive power
 
-            :param number hive_power: Steem Power
+            :param number hive_power: Hive Power
             :param int voting_power: voting power (100% = 10000)
             :param int vote_pct: voting percentage (100% = 10000)
 
@@ -361,8 +361,8 @@ class Hive(BlockChainInstance):
 
     def hbd_to_vote_pct(self, hbd, hive_power=None, vests=None, voting_power=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
         """ Obtain the voting percentage for a desired HBD value
-            for a given Steem Power or vesting shares and voting power
-            Give either Steem Power or vests, not both.
+            for a given Hive Power or vesting shares and voting power
+            Give either Hive Power or vests, not both.
             When the output is greater than 10000 or smaller than -10000,
             the HBD value is too high.
 
@@ -370,7 +370,7 @@ class Hive(BlockChainInstance):
 
             :param hbd: desired HBD value
             :type hbd: str, int, amount.Amount
-            :param number hive_power: Steem Power
+            :param number hive_power: Hive Power
             :param number vests: vesting shares
             :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
              Only impactful for very high amounts of HBD. Slight modification to the value calculation, as the not_broadcasted
@@ -421,7 +421,7 @@ class Hive(BlockChainInstance):
 
     @property
     def hive_symbol(self):
-        """ get the current chains symbol for STEEM (e.g. "TESTS" on testnet) """
+        """ get the current chains symbol for HIVE (e.g. "TESTS" on testnet) """
         return self.token_symbol
 
     @property

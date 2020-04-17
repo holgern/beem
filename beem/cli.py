@@ -295,6 +295,8 @@ def set(key, value):
         stm.config["hot_sign_redirect_uri"] = value
     elif key == "sc2_api_url":
         stm.config["sc2_api_url"] = value
+    elif key == "hs_api_url":
+        stm.config["hs_api_url"] = value
     elif key == "oauth_base_url":
         stm.config["oauth_base_url"] = value
     else:

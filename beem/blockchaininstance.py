@@ -214,7 +214,7 @@ class BlockChainInstance(object):
             self.steemconnect = SteemConnect(blockchain_instance=self, **kwargs)
         elif self.steemconnect is not None and not self.use_sc2:
             self.use_sc2 = True
-        if self.hivesigner is None and self.use_hs:
+        elif self.hivesigner is None and self.use_hs:
             self.hivesigner = HiveSigner(blockchain_instance=self, **kwargs)
         elif self.hivesigner is not None and not self.use_hs:
             self.use_hs = True            
