@@ -301,13 +301,13 @@ class Account(BlockchainObject):
     def sp(self):
         """ Returns the accounts Steem Power
         """
-        return self.get_steem_power()
+        return self.get_token_power()
 
     @property
-    def hp(self):
-        """ Returns the accounts Hive Power
+    def tp(self):
+        """ Returns the accounts Hive/Steem Power
         """
-        return self.get_steem_power()
+        return self.get_token_power()
 
     @property
     def vp(self):
@@ -350,7 +350,7 @@ class Account(BlockchainObject):
             t.add_row(["Vote Value", "%.2f $" % (self.get_voting_value_SBD())])
             t.add_row(["Last vote", "%s ago" % last_vote_time_str])
             t.add_row(["Full in ", "%s" % (self.get_recharge_time_str())])
-            t.add_row(["Steem Power", "%.2f %s" % (self.get_steem_power(), self.blockchain.token_symbol)])
+            t.add_row(["Token Power", "%.2f %s" % (self.get_token_power(), self.blockchain.token_symbol)])
             t.add_row(["Balance", "%s, %s" % (str(self.balances["available"][0]), str(self.balances["available"][1]))])
             if False and bandwidth is not None and bandwidth["allocated"] is not None and bandwidth["allocated"] > 0:
                 t.add_row(["Remaining Bandwidth", "%.2f %%" % (remaining)])
@@ -383,7 +383,7 @@ class Account(BlockchainObject):
             ret += "--- Downvoting Power ---\n"
             ret += "%.2f %% \n" % (self.get_downvoting_power())
             ret += "--- Balance ---\n"
-            ret += "%.2f SP, " % (self.get_steem_power())
+            ret += "%.2f SP, " % (self.get_token_power())
             ret += "%s, %s\n" % (str(self.balances["available"][0]), str(self.balances["available"][1]))
             if False and bandwidth["allocated"] > 0:
                 ret += "--- Bandwidth ---\n"
@@ -542,50 +542,43 @@ class Account(BlockchainObject):
             vesting_shares -= min(int(self["vesting_withdraw_rate"]), int(self["to_withdraw"]) - int(self["withdrawn"]))
         return vesting_shares
 
-    def get_steem_power(self, onlyOwnSP=False):
-        """ Returns the account steem power
+    def get_token_power(self, only_own_vests=False):
+        """ Returns the account Hive/Steem power (amount of staked token + delegations)
         """
         from beem import Steem
         if isinstance(self.blockchain, Steem):
-            return self.blockchain.vests_to_sp(self.get_vests(only_own_vests=onlyOwnSP))
+            return self.blockchain.vests_to_sp(self.get_vests(only_own_vests=only_own_vests))
         else:
-            return self.get_hive_power(onlyOwnSP=onlyOwnSP)
+            return self.blockchain.vests_to_hp(self.get_vests(only_own_vests=only_own_vests))
 
-    def get_hive_power(self, onlyOwnSP=False):
+    def get_steem_power(self, onlyOwnSP=False):
         """ Returns the account steem power
         """
-        return self.blockchain.vests_to_hp(self.get_vests(only_own_vests=onlyOwnSP))
+        return self.get_token_power(only_own_vests=onlyOwnSP)
 
+    def get_voting_value(self, post_rshares=0, voting_weight=100, voting_power=None, token_power=None, not_broadcasted_vote=True):
+        """ Returns the account voting value in Hive/Steem token units
+        """
+        if voting_power is None:
+            voting_power = self.get_voting_power()
+        if token_power is None:
+            tp = self.get_token_power()
+        else:
+            tp = token_power
+        from beem import Steem
+        if isinstance(self.blockchain, Steem):
+            voteValue = self.blockchain.sp_to_sbd(tp, post_rshares=post_rshares, voting_power=voting_power * 100, vote_pct=voting_weight * 100, not_broadcasted_vote=not_broadcasted_vote)
+        else:
+            voteValue = self.blockchain.hp_to_hbd(tp, post_rshares=post_rshares, voting_power=voting_power * 100, vote_pct=voting_weight * 100, not_broadcasted_vote=not_broadcasted_vote)
+        return voteValue
 
     def get_voting_value_SBD(self, post_rshares=0, voting_weight=100, voting_power=None, steem_power=None, not_broadcasted_vote=True):
         """ Returns the account voting value in SBD
         """
-        if voting_power is None:
-            voting_power = self.get_voting_power()
-        if steem_power is None:
-            sp = self.get_steem_power()
-        else:
-            sp = steem_power
-        from beem import Steem
-        if isinstance(self.blockchain, Steem):
-            voteValue = self.blockchain.sp_to_sbd(sp, post_rshares=post_rshares, voting_power=voting_power * 100, vote_pct=voting_weight * 100, not_broadcasted_vote=not_broadcasted_vote)
-        else:
-            voteValue = self.blockchain.hp_to_hbd(sp, post_rshares=post_rshares, voting_power=voting_power * 100, vote_pct=voting_weight * 100, not_broadcasted_vote=not_broadcasted_vote)
-        return voteValue
+        return self.get_voting_value(post_rshares=post_rshares, voting_weight=voting_weight, voting_power=voting_power,
+                                     token_power=steem_power, not_broadcasted_vote=not_broadcasted_vote)
 
-    def get_voting_value_HBD(self, post_rshares=0, voting_weight=100, voting_power=None, hive_power=None, not_broadcasted_vote=True):
-        """ Returns the account voting value in HBD
-        """
-        if voting_power is None:
-            voting_power = self.get_voting_power()
-        if hive_power is None:
-            hp = self.get_hive_power()
-        else:
-            hp = hive_power
-        voteValue = self.blockchain.hp_to_hbd(hp, post_rshares=post_rshares, voting_power=voting_power * 100, vote_pct=voting_weight * 100, not_broadcasted_vote=not_broadcasted_vote)
-        return voteValue
-
-    def get_vote_pct_for_SBD(self, sbd, voting_power=None, steem_power=None, not_broadcasted_vote=True):
+    def get_vote_pct_for_SBD(self, sbd, post_rshares=0, voting_power=None, steem_power=None, not_broadcasted_vote=True):
         """ Returns the voting percentage needed to have a vote worth a given number of SBD.
 
             If the returned number is bigger than 10000 or smaller than -10000,
@@ -595,24 +588,36 @@ class Account(BlockchainObject):
             :type sbd: str, int, amount.Amount
 
         """
+        return self.get_vote_pct_for_vote_value(sbd, post_rshares=post_rshares, voting_power=voting_power, token_power=steem_power, not_broadcasted_vote=not_broadcasted_vote)
+
+    def get_vote_pct_for_vote_value(self, token_units, post_rshares=0, voting_power=None, token_power=None, not_broadcasted_vote=True):
+        """ Returns the voting percentage needed to have a vote worth a given number of Hive/Steem token units
+
+            If the returned number is bigger than 10000 or smaller than -10000,
+            the given SBD value is too high for that account
+
+            :param token_units: The amount of HBD/SBD in vote value
+            :type token_units: str, int, amount.Amount
+
+        """
         if voting_power is None:
             voting_power = self.get_voting_power()
-        if steem_power is None:
-            steem_power = self.get_steem_power()
+        if token_power is None:
+            token_power = self.get_token_power()
 
-        if isinstance(sbd, Amount):
-            sbd = Amount(sbd, blockchain_instance=self.blockchain)
-        elif isinstance(sbd, string_types):
-            sbd = Amount(sbd, blockchain_instance=self.blockchain)
+        if isinstance(token_units, Amount):
+            token_units = Amount(token_units, blockchain_instance=self.blockchain)
+        elif isinstance(token_units, string_types):
+            token_units = Amount(token_units, blockchain_instance=self.blockchain)
         else:
-            sbd = Amount(sbd, self.blockchain.backed_token_symbol, blockchain_instance=self.blockchain)
-        if sbd['symbol'] != self.blockchain.backed_token_symbol:
-            raise AssertionError('Should input SBD, not any other asset!')
+            token_units = Amount(token_units, self.blockchain.backed_token_symbol, blockchain_instance=self.blockchain)
+        if token_units['symbol'] != self.blockchain.backed_token_symbol:
+            raise AssertionError('Should input %s, not any other asset!' % self.blockchain.backed_token_symbol)
         from beem import Steem
         if isinstance(self.blockchain, Steem):
-            vote_pct = self.blockchain.rshares_to_vote_pct(self.blockchain.sbd_to_rshares(sbd, not_broadcasted_vote=not_broadcasted_vote), voting_power=voting_power * 100, steem_power=steem_power)
+            vote_pct = self.blockchain.rshares_to_vote_pct(self.blockchain.sbd_to_rshares(token_units, not_broadcasted_vote=not_broadcasted_vote), post_rshares=post_rshares, voting_power=voting_power * 100, steem_power=token_power)
         else:
-            vote_pct = self.blockchain.rshares_to_vote_pct(self.blockchain.hbd_to_rshares(sbd, not_broadcasted_vote=not_broadcasted_vote), voting_power=voting_power * 100, hive_power=steem_power)
+            vote_pct = self.blockchain.rshares_to_vote_pct(self.blockchain.hbd_to_rshares(token_units, not_broadcasted_vote=not_broadcasted_vote), post_rshares=post_rshares, voting_power=voting_power * 100, hive_power=token_power)
         return vote_pct
 
     def get_creator(self):
@@ -3453,7 +3458,7 @@ class AccountsObject(list):
         for f in self:
             rep.append(f.rep)
             own_mvest.append(float(f.balances["available"][2]) / 1e6)
-            eff_sp.append(f.get_steem_power())
+            eff_sp.append(f.get_token_power())
             last_vote = addTzInfo(datetime.utcnow()) - (f["last_vote_time"])
             if last_vote.days >= 365:
                 no_vote += 1

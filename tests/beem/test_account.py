@@ -269,7 +269,7 @@ class Testcases(unittest.TestCase):
         vp = account.get_voting_power()
         self.assertTrue(vp >= 0)
         self.assertTrue(vp <= 100)
-        sp = account.get_steem_power()
+        sp = account.get_token_power()
         self.assertTrue(sp >= 0)
         vv = account.get_voting_value_SBD()
         self.assertTrue(vv >= 0)
@@ -498,10 +498,10 @@ class Testcases(unittest.TestCase):
             self.assertTrue(replies[0].is_comment())
             self.assertTrue(replies[0].depth > 0)
 
-    def test_get_vote_pct_for_SBD(self):
+    def test_get_vote_pct_for_vote_value(self):
         account = self.account
         for vote_pwr in range(5, 100, 5):
-            self.assertTrue(9900 <= account.get_vote_pct_for_SBD(account.get_voting_value_SBD(voting_power=vote_pwr), voting_power=vote_pwr) <= 11000)
+            self.assertTrue(9900 <= account.get_vote_pct_for_vote_value(account.get_voting_value(voting_power=vote_pwr), voting_power=vote_pwr) <= 11000)
 
     def test_list_subscriptions(self):
         stm = self.bts

@@ -608,6 +608,23 @@ class BlockChainInstance(object):
         vote_claim = post_rshares_curve_after_vote - post_rshares_curve
         return vote_claim
 
+    def _calc_revert_vote_claim(self, vote_claim, post_rshares):
+        post_rshares_normalized = post_rshares + CURVE_CONSTANT
+        post_rshares_curve = (post_rshares_normalized * post_rshares_normalized - SQUARED_CURVE_CONSTANT) / (post_rshares + CURVE_CONSTANT_X4)
+        post_rshares_curve_after_vote = vote_claim + post_rshares_curve
+        
+        a = 1
+        b = (-post_rshares_curve_after_vote + 2 * post_rshares_normalized)
+        c = (post_rshares_normalized * post_rshares_normalized - SQUARED_CURVE_CONSTANT)  - post_rshares_curve_after_vote * (post_rshares + CURVE_CONSTANT_X4)
+        # (effective_vote_rshares * effective_vote_rshares) + effective_vote_rshares * (-post_rshares_curve_after_vote + 2 * post_rshares_normalized) + ((post_rshares_normalized * post_rshares_normalized - SQUARED_CURVE_CONSTANT)  - post_rshares_curve_after_vote * (post_rshares + CURVE_CONSTANT_X4)) = 0
+        
+        x1 = (-b + math.sqrt(b*b-4*a*c)) / (2*a)
+        x2 = (-b - math.sqrt(b*b-4*a*c)) / (2*a)
+        if x1 > 0:
+            return x1
+        else:
+            return x2
+
     def vests_to_rshares(self, vests, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, subtract_dust_threshold=True, use_stored_data=True):
         """ Obtain the r-shares from vests
 

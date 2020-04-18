@@ -332,7 +332,7 @@ class Hive(BlockChainInstance):
         rshares = recent_claims * float(hbd) / ((float(reward_balance) * float(median_price)) - float(hbd))
         return int(rshares)
 
-    def rshares_to_vote_pct(self, rshares, hive_power=None, vests=None, voting_power=STEEM_100_PERCENT, use_stored_data=True):
+    def rshares_to_vote_pct(self, rshares, post_rshares=0, hive_power=None, vests=None, voting_power=STEEM_100_PERCENT, use_stored_data=True):
         """ Obtain the voting percentage for a desired rshares value
             for a given Hive Power or vesting shares and voting_power
             Give either hive_power or vests, not both.
@@ -357,6 +357,8 @@ class Hive(BlockChainInstance):
         if self.hardfork >= 20:
             rshares += math.copysign(self.get_dust_threshold(use_stored_data=use_stored_data), rshares)
 
+        rshares = math.copysign(self._calc_revert_vote_claim(abs(rshares), post_rshares), rshares)
+
         max_vote_denom = self._max_vote_denom(use_stored_data=use_stored_data)
 
         used_power = int(math.ceil(abs(rshares) * STEEM_100_PERCENT / vests))
@@ -365,7 +367,7 @@ class Hive(BlockChainInstance):
         vote_pct = used_power * STEEM_100_PERCENT / (60 * 60 * 24) / voting_power
         return int(math.copysign(vote_pct, rshares))
 
-    def hbd_to_vote_pct(self, hbd, hive_power=None, vests=None, voting_power=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
+    def hbd_to_vote_pct(self, hbd, post_rshares=0, hive_power=None, vests=None, voting_power=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
         """ Obtain the voting percentage for a desired HBD value
             for a given Hive Power or vesting shares and voting power
             Give either Hive Power or vests, not both.
@@ -392,7 +394,7 @@ class Hive(BlockChainInstance):
         if hbd['symbol'] != self.hbd_symbol:
             raise AssertionError()
         rshares = self.hbd_to_rshares(hbd, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)
-        return self.rshares_to_vote_pct(rshares, hive_power=hive_power, vests=vests, voting_power=voting_power, use_stored_data=use_stored_data)
+        return self.rshares_to_vote_pct(rshares, post_rshares=post_rshares, hive_power=hive_power, vests=vests, voting_power=voting_power, use_stored_data=use_stored_data)
 
     @property
     def chain_params(self):
