@@ -3,15 +3,19 @@ Changelog
 0.23.0
 ------
 * set hive as default for default_chain
-* get_nodes return hive nodes by default
+* get_steem_nodes added to NodeList
 * Prepared for Hive HF 24
 * steem object in all classes is replaced by blockchain
 * Hive class has been added
 * Hive and Steem are now BlockChainInstance classes
+* Hive and Steem have now is_hive and is_steem properties
 * Each class has now blockchain_instance parameter (steem_instance is stil available)
 * shared_blockchain_instance and set_shared_blockchain_instance can be used for Hive() and Steem() instances
 * token_symbol, backed_token_symbol and vest_token_symbol
 * Rename SteemWebsocket to NodeWebsocket and SteemNodeRPC to NodeRPC
+* Rshares, vote percentage and SBD/HBD calculation has been fixed for votes
+* post_rshares parameter added to all vote calculations
+* Account class has now get_token_power(), get_voting_value() and get_vote_pct_for_vote_value()
 
 0.22.14
 -------
