@@ -2537,6 +2537,31 @@ class Account(BlockchainObject):
         return self.approvewitness(
             witness=witness, account=account, approve=False)
 
+    def setproxy(self, proxy='', account=None):
+        """ Set the witness and proposal system proxy of an account
+
+        :param proxy: The account to set the proxy to (Leave empty for removing the proxy)
+        :type proxy: str or Account
+        :param account: The account the proxy should be set for
+        :type account: str or Account
+        """
+        if account is None:
+            account = self
+        elif isinstance(account, Account):
+            pass
+        else:
+            account = Account(account)
+
+        if isinstance(proxy, str):
+            proxy_name = proxy
+        else:
+            proxy_name = proxy.name
+        op = operations.Account_witness_proxy(**{
+            'account': account.name,
+            'proxy': proxy_name
+        })
+        return self.blockchain.finalizeOp(op, account, 'active')
+
     def update_memo_key(self, key, account=None, **kwargs):
         """ Update an account's memo public key
 
