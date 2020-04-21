@@ -1663,7 +1663,7 @@ class BlockChainInstance(object):
         account = Account(author, blockchain_instance=self)
         # deal with the category and tags
         if isinstance(tags, str):
-            tags = list(set([_f for _f in (re.split("[\W_]", tags)) if _f]))
+            tags = list(set([_f for _f in (re.split(r"[\W_]", tags)) if _f]))
 
         category = None
         tags = tags or json_metadata.get('tags', [])
