@@ -304,10 +304,12 @@ class GrapheneRPC(object):
         chain_id = None
         network_version = None
         is_hive = False
+        is_steem = False
         for key in props:
             if key[-8:] == "CHAIN_ID":
                 chain_id = props[key]
                 is_hive = key[:4] == "HIVE"
+                is_steem = key[:5] == "STEEM"
             elif key[-18:] == "BLOCKCHAIN_VERSION":
                 network_version = props[key]
 

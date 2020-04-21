@@ -435,4 +435,4 @@ class Hive(BlockChainInstance):
     @property
     def vests_symbol(self):
         """ get the current chains symbol for VESTS """
-        return self.vests_token_symbol
+        return self.vest_token_symbol

@@ -3590,9 +3590,9 @@ def info(objects):
         print(t.get_string(sortby="Key"))
         # Block
     for obj in objects:
-        if re.match("^[0-9-]*$", obj) or re.match("^-[0-9]*$", obj) or re.match("^[0-9-]*:[0-9]", obj) or re.match("^[0-9-]*:-[0-9]", obj):
+        if re.match(r"^[0-9-]*$", obj) or re.match(r"^-[0-9]*$", obj) or re.match(r"^[0-9-]*:[0-9]", obj) or re.match(r"^[0-9-]*:-[0-9]", obj):
             tran_nr = ''
-            if re.match("^[0-9-]*:[0-9-]", obj):
+            if re.match(r"^[0-9-]*:[0-9-]", obj):
                 obj, tran_nr = obj.split(":")
             if int(obj) < 1:
                 b = Blockchain(blockchain_instance=stm)
@@ -3630,7 +3630,7 @@ def info(objects):
                 print(t)
             else:
                 print("Block number %s unknown" % obj)
-        elif re.match("^[a-zA-Z0-9\-\._]{2,16}$", obj):
+        elif re.match(r"^[a-zA-Z0-9\-\._]{2,16}$", obj):
             account = Account(obj, blockchain_instance=stm)
             t = PrettyTable(["Key", "Value"])
             t.align = "l"
@@ -3665,7 +3665,7 @@ def info(objects):
             except exceptions.WitnessDoesNotExistsException as e:
                 print(str(e))
         # Public Key
-        elif re.match("^" + stm.prefix + ".{48,55}$", obj):
+        elif re.match(r"^" + stm.prefix + ".{48,55}$", obj):
             account = stm.wallet.getAccountFromPublicKey(obj)
             if account:
                 account = Account(account, blockchain_instance=stm)
@@ -3677,7 +3677,7 @@ def info(objects):
             else:
                 print("Public Key %s not known" % obj)
         # Post identifier
-        elif re.match(".*@.{3,16}/.*$", obj):
+        elif re.match(r".*@.{3,16}/.*$", obj):
             post = Comment(obj, blockchain_instance=stm)
             post_json = post.json()
             if post_json:

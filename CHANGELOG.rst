@@ -2,6 +2,7 @@ Changelog
 =========
 0.23.0
 ------
+* new chain ID for HF24 on HIVE has been added 
 * set hive as default for default_chain
 * get_steem_nodes added to NodeList
 * Prepared for Hive HF 24
@@ -16,6 +17,8 @@ Changelog
 * Rshares, vote percentage and SBD/HBD calculation has been fixed for votes
 * post_rshares parameter added to all vote calculations
 * Account class has now get_token_power(), get_voting_value() and get_vote_pct_for_vote_value()
+* HF 23 and HF24 operations were added thanks to @flugschwein
+* Downvote power was added to Snapshot thanks to @flugschwein
 
 0.22.14
 -------

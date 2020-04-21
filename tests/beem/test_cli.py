@@ -131,8 +131,10 @@ class Testcases(unittest.TestCase):
 
     def test_info2(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['info', '--', '-1:1'])
+        result = runner.invoke(cli, ['info', '--', '42725832:-1'])
         self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['info', '--', '42725832:1'])
+        self.assertEqual(result.exit_code, 0)        
         result = runner.invoke(cli, ['info', 'gtg'])
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['info', "@gtg/witness-gtg-log"])

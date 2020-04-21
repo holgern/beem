@@ -1670,17 +1670,17 @@ class BlockChainInstance(object):
 
         if parse_body:
             def get_urls(mdstring):
-                return list(set(re.findall('http[s]*://[^\s"><\)\(]+', mdstring)))
+                return list(set(re.findall(r'http[s]*://[^\s"><\)\(]+', mdstring)))
 
             def get_users(mdstring):
                 users = []
-                for u in re.findall('(^|[^a-zA-Z0-9_!#$%&*@＠\/]|(^|[^a-zA-Z0-9_+~.-\/#]))[@＠]([a-z][-\.a-z\d]+[a-z\d])', mdstring):
+                for u in re.findall(r'(^|[^a-zA-Z0-9_!#$%&*@＠\/]|(^|[^a-zA-Z0-9_+~.-\/#]))[@＠]([a-z][-\.a-z\d]+[a-z\d])', mdstring):
                     users.append(list(u)[-1])
                 return users
 
             def get_hashtags(mdstring):
                 hashtags = []
-                for t in re.findall('(^|\s)(#[-a-z\d]+)', mdstring):
+                for t in re.findall(r'(^|\s)(#[-a-z\d]+)', mdstring):
                     hashtags.append(list(t)[-1])
                 return hashtags
 
