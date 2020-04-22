@@ -4,8 +4,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import super
 import unittest
-from beem import Steem, exceptions
-from beem.instance import set_shared_steem_instance
+from beem import Steem, exceptions, Hive
+from beem.instance import set_shared_blockchain_instance
 from beem.account import Account
 from beem.nodelist import NodeList
 
@@ -14,12 +14,12 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         nodelist = NodeList()
-        cls.bts = Steem(
-            node=nodelist.get_nodes(),
+        cls.bts = Hive(
+            node=nodelist.get_hive_nodes(),
             nobroadcast=True,
             num_retries=10
         )
-        set_shared_steem_instance(cls.bts)
+        set_shared_blockchain_instance(cls.bts)
 
     def test_get_nodes(self):
         nodelist = NodeList()
@@ -33,7 +33,7 @@ class Testcases(unittest.TestCase):
         nodelist.update_nodes()
         hive_nodes = nodelist.get_hive_nodes()
         for node in hive_nodes:
-            blockchainobject = Steem(node=node)
+            blockchainobject = Hive(node=node)
             assert blockchainobject.is_hive
 
     def test_steem_nodes(self):
@@ -42,11 +42,16 @@ class Testcases(unittest.TestCase):
         steem_nodes = nodelist.get_steem_nodes()
         for node in steem_nodes:
             blockchainobject = Steem(node=node)
-            assert not blockchainobject.is_hive
+            assert blockchainobject.is_steem
 
     def test_nodes_update(self):
         nodelist = NodeList()
-        all_nodes = nodelist.get_nodes(exclude_limited=False, dev=True, testnet=True)
-        nodelist.update_nodes(steem_instance=self.bts)
-        nodes = nodelist.get_nodes()
+        all_nodes = nodelist.get_hive_nodes()
+        nodelist.update_nodes(blockchain_instance=self.bts)
+        nodes = nodelist.get_hive_nodes()
         self.assertIn(nodes[0], all_nodes)
+
+        all_nodes = nodelist.get_steem_nodes()
+        nodelist.update_nodes(blockchain_instance=self.bts)
+        nodes = nodelist.get_steem_nodes()
+        self.assertIn(nodes[0], all_nodes)        
