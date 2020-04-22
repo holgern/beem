@@ -1921,6 +1921,49 @@ def disapprovewitness(witness, account):
 
 
 @cli.command()
+@click.argument('proxy', nargs=1)
+@click.option('--account', '-a', help='Your account')
+def setproxy(proxy, account):
+    """Set your witness/proposal system proxy"""
+    stm = shared_blockchain_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm):
+        return
+    acc = Account(account, blockchain_instance=stm)
+    tx = acc.setproxy(proxy, account)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
+    elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
+        tx = stm.hivesigner.url_from_tx(tx)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
+@click.option('--account', '-a', help='Your account')
+def removeproxy(account):
+    """Remove your witness/proposal system proxy"""
+    stm = shared_blockchain_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm):
+        return
+    acc = Account(account, blockchain_instance=stm)
+    tx = acc.setproxy('', account)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
+    elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
+        tx = stm.hivesigner.url_from_tx(tx)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
 @click.option('--file', '-i', help='Load transaction from file. If "-", read from stdin (defaults to "-")')
 @click.option('--outfile', '-o', help='Load transaction from file. If "-", read from stdin (defaults to "-")')
 def sign(file, outfile):
