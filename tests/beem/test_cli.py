@@ -259,6 +259,16 @@ class Testcases(unittest.TestCase):
         result = runner.invoke(cli, ['-dt', 'disapprovewitness',  '-a', 'beempy', 'holger80'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
+    def test_addproxy(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['-dt', 'addproxy', '-a', 'beempy', 'holger80'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+
+    def test_delproxy(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['-dt', 'delproxy',  '-a', 'fullnodeupdate'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+
     def test_newaccount(self):
         runner = CliRunner()
         result = runner.invoke(cli, ['-dt', 'newaccount', 'beem3'], input="test\ntest\ntest\n")

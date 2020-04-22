@@ -1,5 +1,10 @@
 Changelog
 =========
+0.23.1
+------
+* setproxy function added to Account (thanks to @flugschwein)
+* addproxy and delproxy added to beempy (thanks to @flugschwein)
+
 0.23.0
 ------
 * new chain ID for HF24 on HIVE has been added 

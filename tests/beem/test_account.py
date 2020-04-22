@@ -384,6 +384,19 @@ class Testcases(unittest.TestCase):
             "beembot",
             op["owner"])
 
+    def test_proxy(self):
+        w = self.account
+        w.blockchain.txbuffer.clear()
+        tx = w.setproxy(proxy="gtg")
+        self.assertEqual(
+            (tx["operations"][0][0]),
+            "account_witness_proxy"
+        )
+        op = tx["operations"][0][1]
+        self.assertIn(
+            "gtg",
+            op["proxy"])
+
     def test_transfer_to_vesting(self):
         w = self.account
         w.blockchain.txbuffer.clear()
