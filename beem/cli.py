@@ -505,6 +505,10 @@ def updatenodes(show, hive, steem, test, only_https, only_wss):
         print(t)
     if not test:
         stm.set_default_nodes(nodes)
+        stm.rpc.nodes.set_node_urls(nodes)
+        stm.rpc.current_rpc = 0
+        stm.rpc.rpcclose()
+        stm.rpc.rpcconnect()
 
 
 @cli.command()
