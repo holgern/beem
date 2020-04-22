@@ -261,7 +261,7 @@ class Testcases(unittest.TestCase):
 
     def test_addproxy(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'addproxy', '-a', 'beempy', 'holger80'], input="test\n")
+        result = runner.invoke(cli, ['-dt', 'setproxy', '-a', 'beempy', 'holger80'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_delproxy(self):

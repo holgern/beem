@@ -1948,8 +1948,8 @@ def setproxy(proxy, account):
 
 @cli.command()
 @click.option('--account', '-a', help='Your account')
-def removeproxy(account):
-    """Remove your witness/proposal system proxy"""
+def delproxy(account):
+    """Delete your witness/proposal system proxy"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
