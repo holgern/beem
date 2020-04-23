@@ -377,8 +377,8 @@ class Testcases(unittest.TestCase):
         self.assertTrue(bts.get_hardfork_properties(use_stored_data=False) is None)
         self.assertTrue(bts.get_hardfork_properties(use_stored_data=True) is None)
         bts.refresh_data("config")
-        self.assertTrue(bts.get_network(use_stored_data=False) is None)
-        self.assertTrue(bts.get_network(use_stored_data=True) is None)
+        self.assertTrue(bts.get_network(use_stored_data=False) is not None)
+        self.assertTrue(bts.get_network(use_stored_data=True) is not None)
         bts.refresh_data("witness_schedule")
         self.assertTrue(bts.get_witness_schedule(use_stored_data=False) is None)
         self.assertTrue(bts.get_witness_schedule(use_stored_data=True) is None)
@@ -405,6 +405,7 @@ class Testcases(unittest.TestCase):
         self.assertTrue(bts.get_config(use_stored_data=False) is not None)
         self.assertTrue(bts.get_block_interval() is not None)
         self.assertTrue(bts.get_blockchain_version() is not None)
+        self.assertTrue(bts.get_blockchain_name() == "hive")
         self.assertTrue(bts.is_hive)
         self.assertFalse(bts.is_steem)        
 
