@@ -146,7 +146,7 @@ class Hive(BlockChainInstance):
             return self.data['network']
 
         if self.rpc is None:
-            return None
+            return known_chains["HIVE"]
         try:
             return self.rpc.get_network(props=config)
         except:

@@ -337,7 +337,7 @@ def nextnode(results):
         t.add_row(["Version", stm.get_blockchain_version()])
         t.add_row(["HIVE", stm.is_hive])
     else:
-        t.add_row(["Version", "steempy is in offline mode..."])
+        t.add_row(["Version", "beempy is in offline mode..."])
     print(t)
 
 
@@ -405,6 +405,16 @@ def pingnode(raw, sort, remove, threading):
             return
         t.add_row([node, rpc_time_str])
         print(t)
+
+
+@cli.command()
+def about():
+    """ About beempy"""
+    print("")
+    print("beempy version: %s" % __version__)
+    print("")
+    print("By @holger80")
+    print("")
 
 
 @cli.command()

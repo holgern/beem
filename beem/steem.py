@@ -145,7 +145,7 @@ class Steem(BlockChainInstance):
             return self.data['network']
 
         if self.rpc is None:
-            return None
+            return known_chains["STEEMAPPBASE"]
         try:
             return self.rpc.get_network(props=config)
         except:

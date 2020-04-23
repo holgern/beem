@@ -277,7 +277,7 @@ class BlockChainInstance(object):
                      'reward_funds': None,
                      'last_refresh_reward_funds': None}        
 
-    def refresh_data(self, property, force_refresh=False, data_refresh_time_seconds=None):
+    def refresh_data(self, chain_property, force_refresh=False, data_refresh_time_seconds=None):
         """ Read and stores steem blockchain parameters
             If the last data refresh is older than data_refresh_time_seconds, data will be refreshed
 
@@ -285,68 +285,77 @@ class BlockChainInstance(object):
             :param float data_refresh_time_seconds: set a new minimal refresh time in seconds
 
         """
-        if self.offline:
-            return
+        # if self.offline:
+        #    return
         if data_refresh_time_seconds is not None:
             self.data_refresh_time_seconds = data_refresh_time_seconds
-        if property == "dynamic_global_properties":
-            if self.data['last_refresh_dynamic_global_properties'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
-                if (datetime.utcnow() - self.data['last_refresh_dynamic_global_properties']).total_seconds() < self.data_refresh_time_seconds:
-                    return
+        if chain_property == "dynamic_global_properties":
+            if not self.offline:
+                if self.data['last_refresh_dynamic_global_properties'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
+                    if (datetime.utcnow() - self.data['last_refresh_dynamic_global_properties']).total_seconds() < self.data_refresh_time_seconds:
+                        return            
+                self.data['last_refresh_dynamic_global_properties'] = datetime.utcnow()
+                self.data['last_refresh'] = datetime.utcnow()
+                self.data["last_node"] = self.rpc.url      
             self.data["dynamic_global_properties"] = self.get_dynamic_global_properties(False)
-            self.data['last_refresh_dynamic_global_properties'] = datetime.utcnow()
-            self.data['last_refresh'] = datetime.utcnow()
-            self.data["last_node"] = self.rpc.url            
-        elif property == "feed_history":
-            if self.data['last_refresh_feed_history'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
-                if (datetime.utcnow() - self.data['last_refresh_feed_history']).total_seconds() < self.data_refresh_time_seconds:
-                    return
-            self.data['last_refresh_feed_history'] = datetime.utcnow()
-            self.data['last_refresh'] = datetime.utcnow()
-            self.data["last_node"] = self.rpc.url             
+        elif chain_property == "feed_history":
+            if not self.offline:
+                if self.data['last_refresh_feed_history'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
+                    if (datetime.utcnow() - self.data['last_refresh_feed_history']).total_seconds() < self.data_refresh_time_seconds:
+                        return
+            
+                self.data['last_refresh_feed_history'] = datetime.utcnow()
+                self.data['last_refresh'] = datetime.utcnow()
+                self.data["last_node"] = self.rpc.url             
             try:
                 self.data['feed_history'] = self.get_feed_history(False)
             except:
                 self.data['feed_history'] = None
             self.data['get_feed_history'] = self.data['feed_history']
-        elif property == "hardfork_properties":
-            if self.data['last_refresh_hardfork_properties'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
-                if (datetime.utcnow() - self.data['last_refresh_hardfork_properties']).total_seconds() < self.data_refresh_time_seconds:
-                    return
-            self.data['last_refresh_hardfork_properties'] = datetime.utcnow()
-            self.data['last_refresh'] = datetime.utcnow()
-            self.data["last_node"] = self.rpc.url             
+        elif chain_property == "hardfork_properties":
+            if not self.offline:
+                if self.data['last_refresh_hardfork_properties'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
+                    if (datetime.utcnow() - self.data['last_refresh_hardfork_properties']).total_seconds() < self.data_refresh_time_seconds:
+                        return
+
+                self.data['last_refresh_hardfork_properties'] = datetime.utcnow()
+                self.data['last_refresh'] = datetime.utcnow()
+                self.data["last_node"] = self.rpc.url             
             try:
                 self.data['hardfork_properties'] = self.get_hardfork_properties(False)
             except:
                 self.data['hardfork_properties'] = None
-        elif property == "witness_schedule":
-            if self.data['last_refresh_witness_schedule'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
-                if (datetime.utcnow() - self.data['last_refresh_witness_schedule']).total_seconds() < 3:
-                    return
-            self.data['last_refresh_witness_schedule'] = datetime.utcnow()
-            self.data['last_refresh'] = datetime.utcnow()
-            self.data["last_node"] = self.rpc.url             
+        elif chain_property == "witness_schedule":
+            if not self.offline:
+                if self.data['last_refresh_witness_schedule'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
+                    if (datetime.utcnow() - self.data['last_refresh_witness_schedule']).total_seconds() < 3:
+                        return
+                self.data['last_refresh_witness_schedule'] = datetime.utcnow()
+                self.data['last_refresh'] = datetime.utcnow()
+                self.data["last_node"] = self.rpc.url             
             self.data['witness_schedule'] = self.get_witness_schedule(False)
-        elif property == "config":
-            if self.data['last_refresh_config'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
-                if (datetime.utcnow() - self.data['last_refresh_config']).total_seconds() < self.data_refresh_time_seconds:
-                    return
-            self.data['last_refresh_config'] = datetime.utcnow()
-            self.data['last_refresh'] = datetime.utcnow()
-            self.data["last_node"] = self.rpc.url             
+        elif chain_property == "config":
+            if not self.offline:
+                if self.data['last_refresh_config'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
+                    if (datetime.utcnow() - self.data['last_refresh_config']).total_seconds() < self.data_refresh_time_seconds:
+                        return
+                self.data['last_refresh_config'] = datetime.utcnow()
+                self.data['last_refresh'] = datetime.utcnow()
+                self.data["last_node"] = self.rpc.url             
             self.data['config'] = self.get_config(False)
             self.data['network'] = self.get_network(False, config=self.data['config'])
-        elif property == "reward_funds":
-            if self.data['last_refresh_reward_funds'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
-                if (datetime.utcnow() - self.data['last_refresh_reward_funds']).total_seconds() < self.data_refresh_time_seconds:
-                    return
-            self.data['last_refresh_reward_funds'] = datetime.utcnow()
-            self.data['last_refresh'] = datetime.utcnow()
-            self.data["last_node"] = self.rpc.url             
+        elif chain_property == "reward_funds":
+            if not self.offline:
+                if self.data['last_refresh_reward_funds'] is not None and not force_refresh and self.data["last_node"] == self.rpc.url:
+                    if (datetime.utcnow() - self.data['last_refresh_reward_funds']).total_seconds() < self.data_refresh_time_seconds:
+                        return
+
+                self.data['last_refresh_reward_funds'] = datetime.utcnow()
+                self.data['last_refresh'] = datetime.utcnow()
+                self.data["last_node"] = self.rpc.url             
             self.data['reward_funds'] = self.get_reward_funds(False)
         else:
-            raise ValueError("%s is not unkown" % str(property))
+            raise ValueError("%s is not unkown" % str(chain_property))
 
     def get_dynamic_global_properties(self, use_stored_data=True):
         """ This call returns the *dynamic global properties*

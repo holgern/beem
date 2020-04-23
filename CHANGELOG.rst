@@ -5,6 +5,8 @@ Changelog
 * setproxy function added to Account (thanks to @flugschwein)
 * addproxy and delproxy added to beempy (thanks to @flugschwein)
 * updatenodes works in shell mode
+* Fix offline mode for Hive
+* add about command to beempy
 
 0.23.0
 ------
