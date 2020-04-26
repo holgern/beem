@@ -773,7 +773,7 @@ def keygen(import_brain_key, sequence, account_keys, account, import_password, c
             for role in ['owner', 'active', 'posting', 'memo']:
                 pk = PasswordKey(account, password, role=role)
                 t.add_row(["%s Private Key" % role, str(pk.get_private())])
-                t_pub.add_row(["%s Public Key" % role, format(bk.get_public(), "STM")])
+                t_pub.add_row(["%s Public Key" % role, format(pk.get_public(), "STM")])
         else:
             bk = BrainKey(brainkey=brain_key.upper(), sequence=sequence)
             t.add_row(["Private Key", str(bk.get_private())])
