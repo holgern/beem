@@ -177,7 +177,16 @@ class NodeList(list):
                 "owner": "pharesim",
                 "hive": True,
                 "score": 10                
-            }]
+            },
+            {
+                "url": "https://rpc.ausbit.dev",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "ausbitbank",
+                "hive": True,
+                "score": 10                
+            }
+        ]
         super(NodeList, self).__init__(nodes)
 
     def update_nodes(self, weights=None, blockchain_instance=None, **kwargs):

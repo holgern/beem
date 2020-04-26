@@ -357,7 +357,14 @@ class Hive(BlockChainInstance):
         if self.hardfork >= 20:
             rshares += math.copysign(self.get_dust_threshold(use_stored_data=use_stored_data), rshares)
 
-        rshares = math.copysign(self._calc_revert_vote_claim(abs(rshares), post_rshares), rshares)
+        if post_rshares >= 0 and rshares > 0:
+            rshares = math.copysign(self._calc_revert_vote_claim(abs(rshares), post_rshares), rshares)
+        elif post_rshares < 0 and rshares < 0:
+            rshares = math.copysign(self._calc_revert_vote_claim(abs(rshares), abs(post_rshares)), rshares)
+        elif post_rshares < 0 and rshares > 0:
+            rshares = math.copysign(self._calc_revert_vote_claim(abs(rshares), 0), rshares)
+        elif post_rshares > 0 and rshares < 0:
+            rshares = math.copysign(self._calc_revert_vote_claim(abs(rshares), post_rshares), rshares)
 
         max_vote_denom = self._max_vote_denom(use_stored_data=use_stored_data)
 

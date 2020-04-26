@@ -12,6 +12,8 @@ from prettytable import PrettyTable
 from datetime import datetime, timedelta
 import calendar
 import pytz
+import secrets
+import string
 import time
 import math
 import random
@@ -44,7 +46,7 @@ from beem.asciichart import AsciiChart
 from beem.transactionbuilder import TransactionBuilder
 from timeit import default_timer as timer
 from beembase import operations
-from beemgraphenebase.account import PrivateKey, PublicKey, BrainKey
+from beemgraphenebase.account import PrivateKey, PublicKey, BrainKey, PasswordKey
 from beemgraphenebase.base58 import Base58
 from beem.nodelist import NodeList
 from beem.conveyor import Conveyor
@@ -696,23 +698,96 @@ def delkey(confirm, pub):
 
 
 @cli.command()
-@click.option('--import-brain-key', help='Imports a brain key and derives a private and public key', is_flag=True, default=False)
-@click.option('--sequence', help='Sequence number, influences the derived private key. (default is 0)', default=0)
-def keygen(import_brain_key, sequence):
-    """ Creates a new random brain key and prints its derived private key and public key.
-        The generated key is not stored.
+@click.option('--import-brain-key', '-b', help='Imports a brain key and derives a private and public key', is_flag=True, default=False)
+@click.option('--sequence', '-s', help='Sequence number, influences the derived private key when create a single private key. (default is 0)', default=0)
+@click.option('--account-keys', '-k', help='Derives four account keys from the brainkey', is_flag=True, default=False)
+@click.option('--account', '-a', help='account name, is necessary for account key generation')
+@click.option('--import-password', '-i', help='Imports a password and derives all four account keys', is_flag=True, default=False)
+@click.option('--create-password', '-p', help='Creates a new password and derives four account keys from it', is_flag=True, default=False)
+@click.option('--wif', '-w', help='Defines how many times the password is replaced by its WIF representation (default = 0).', default=0)
+@click.option('--only-pub', '-u', help='Shows only the public keys', is_flag=True, default=False)
+@click.option('--export', '-e', help='The results are stored in a text file and will not be shown')
+def keygen(import_brain_key, sequence, account_keys, account, import_password, create_password, wif, export, only_pub):
+    """ Creates a new random brain key / password and prints its derived private key and public key.
+        The generated key is not stored. Can also be used to create new keys for an account.
+        Can also be used to derive account keys from a password/brainkey
     """
-    if import_brain_key:
-        brain_key = click.prompt("Enter brain key", confirmation_prompt=False, hide_input=True)
+    stm = shared_blockchain_instance()
+    if not account:
+        account = stm.config["default_account"]    
+    if import_password:
+        import_password = click.prompt("Enter password", confirmation_prompt=False, hide_input=True)
+    elif create_password:
+        alphabet = string.ascii_letters + string.digits
+        while True:
+            import_password = ''.join(secrets.choice(alphabet) for i in range(32))
+            if (any(c.islower() for c in import_password) and any(c.isupper() for c in import_password) and any(c.isdigit() for c in import_password)):
+                break        
+    if import_password or create_password:
+        if wif > 0:
+            password = import_password
+            for _ in range(wif):
+                pk = PasswordKey("", password, role="")
+                password = str(pk.get_private())
+            password = 'P' + password
+        else:
+            password = import_password
+        t = PrettyTable(["Key", "Value"])
+        t_pub = PrettyTable(["Key", "Value"])
+        t.add_row(["Username", account])
+        t_pub.add_row(["Username", account])
+        t.align = "l"
+        t_pub.align = "l"
+        for role in ['owner', 'active', 'posting', 'memo']:
+            pk = PasswordKey(account, password, role=role)
+            t.add_row(["%s Private Key" % role, str(pk.get_private())])
+            t_pub.add_row(["%s Public Key" % role, format(pk.get_public(), "STM")])
+        t.add_row(["Backup (Master) Password", password])
+        if wif > 0:
+            t.add_row(["WIF itersions", wif])
+            t.add_row(["Entered/created Password", import_password])
     else:
-        brain_key = None
-    bk = BrainKey(brainkey=brain_key, sequence=sequence)
-    t = PrettyTable(["Key", "Value"])
-    t.align = "l"
-    t.add_row(["Brain Key", bk.get_brainkey()])
-    t.add_row(["Private Key", str(bk.get_private())])
-    t.add_row(["Public Key", format(bk.get_public(), "STM")])
-    print(t)
+        if import_brain_key:
+            brain_key = click.prompt("Enter brain key", confirmation_prompt=False, hide_input=True)
+        else:
+            brain_key = BrainKey(brainkey=None).get_brainkey()
+        t = PrettyTable(["Key", "Value"])
+        t_pub = PrettyTable(["Key", "Value"])
+        t.align = "l"
+        t_pub.align = "l"
+        t.add_row(["Brain Key", brain_key.lower()])
+        if sequence > 0:
+            t.add_row(["Sequence", sequence])
+        if account_keys:
+            brainkey = BrainKey(brainkey=brain_key.upper()).get_brainkey()
+            if wif > 0:
+                password = brainkey
+                for _ in range(wif):
+                    pk = PasswordKey("", password, role="")
+                    password = str(pk.get_private())
+                password = 'P' + password
+                t.add_row(["WIF itersions", wif])
+                t.add_row(["Backup (Master) Password", password])
+            else:
+                password = brainkey            
+            for role in ['owner', 'active', 'posting', 'memo']:
+                pk = PasswordKey(account, password, role=role)
+                t.add_row(["%s Private Key" % role, str(pk.get_private())])
+                t_pub.add_row(["%s Public Key" % role, format(bk.get_public(), "STM")])
+        else:
+            bk = BrainKey(brainkey=brain_key.upper(), sequence=sequence)
+            t.add_row(["Private Key", str(bk.get_private())])
+            t_pub.add_row(["Public Key", format(bk.get_public(), "STM")])
+    if export and export != "-":
+        with open(export, 'w') as fp:
+            if not only_pub:
+                fp.write(str(t))
+            fp.write(str(t_pub))
+        print("%s was sucessfully saved." % export)
+    else:
+        print(t_pub)
+        if not only_pub:
+            print(t)
 
 
 @cli.command()
@@ -1513,12 +1588,51 @@ def claimaccount(creator, fee, number):
 
 
 @cli.command()
+@click.argument('account', nargs=1, required=True)
+@click.option('--owner', help='Main owner public key - when not given, a passphrase is used to create keys.')
+@click.option('--active', help='Active public key - when not given, a passphrase is used to create keys.')
+@click.option('--posting', help='posting public key - when not given, a passphrase is used to create keys.')
+@click.option('--memo', help='Memo public key - when not given, a passphrase is used to create keys.')
+def changekeys(account, owner, active, posting, memo):
+    """Changes all keys for the specified account 
+    Either keys are given in their public form or a password is used to derived from the entered password/brainkey.
+    Asks for the owner key for broadcasting the op to the chain."""
+    stm = shared_blockchain_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    account = Account(account, blockchain_instance=stm)
+    if not stm.unsigned:
+        wif = click.prompt('Owner key for %s' % account["name"], confirmation_prompt=False, hide_input=True)
+        stm.wallet.setKeys([wif])
+    if owner is None or active is None or memo is None or posting is None:
+        print("\nA Password is used to create account keys (owner, active, posting and wif).\n"
+              "Please store the entered password in a safe place.\n"
+              "beempy keygen can be used to view the derived account keys.\n"
+              "The old password can only be restored within the first 30 days.\n")
+        new_password = click.prompt("New Account Password", confirmation_prompt=True, hide_input=True)
+        if not new_password:
+            print("You cannot chose an empty password")
+            return
+        password = new_password
+    else:
+        password = None
+    tx = stm.update_account(account, owner_key=owner, active_key=active,
+                            posting_key=posting, memo_key=memo, password=password)
+    if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+        tx = stm.steemconnect.url_from_tx(tx)
+    elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
+        tx = stm.hivesigner.url_from_tx(tx)
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
+
+@cli.command()
 @click.argument('accountname', nargs=1, required=True)
 @click.option('--account', '-a', help='Account that pays the fee')
-@click.option('--owner', help='Main owner key - when not given, a passphrase is used to create keys.')
-@click.option('--active', help='Active key - when not given, a passphrase is used to create keys.')
-@click.option('--memo', help='Memo key - when not given, a passphrase is used to create keys.')
-@click.option('--posting', help='posting key - when not given, a passphrase is used to create keys.')
+@click.option('--owner', help='Main public owner key - when not given, a passphrase is used to create keys.')
+@click.option('--active', help='Active public key - when not given, a passphrase is used to create keys.')
+@click.option('--memo', help='Memo public key - when not given, a passphrase is used to create keys.')
+@click.option('--posting', help='posting public key - when not given, a passphrase is used to create keys.')
 @click.option('--create-claimed-account', '-c', help='Instead of paying the account creation fee a subsidized account is created.', is_flag=True, default=False)
 def newaccount(accountname, account, owner, active, memo, posting, create_claimed_account):
     """Create a new account"""
@@ -1534,7 +1648,7 @@ def newaccount(accountname, account, owner, active, memo, posting, create_claime
         password = click.prompt("Keys were not given - Passphrase is used to create keys\n New Account Passphrase", confirmation_prompt=True, hide_input=True)
         if not password:
             print("You cannot chose an empty password")
-            return
+            return         
         if create_claimed_account:
             tx = stm.create_claimed_account(accountname, creator=acc, password=password)
         else:

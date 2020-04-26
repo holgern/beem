@@ -7,6 +7,12 @@ Changelog
 * updatenodes works in shell mode
 * Fix offline mode for Hive
 * add about command to beempy
+* Add hive node
+* update_account function added to blockchaininstance
+* normalize added to PasswordKey, so that a Brainkey can be set as PasswordKey
+* Fixed vote percentage calculation when post rshares is negative
+* new beempy command changekeys
+* beempy keygen can be used to generate account keys from a given password and is able to generate new passwords
 
 0.23.0
 ------

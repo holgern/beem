@@ -629,7 +629,7 @@ class BlockChainInstance(object):
         
         x1 = (-b + math.sqrt(b*b-4*a*c)) / (2*a)
         x2 = (-b - math.sqrt(b*b-4*a*c)) / (2*a)
-        if x1 > 0:
+        if x1 >= 0:
             return x1
         else:
             return x2
@@ -1399,6 +1399,179 @@ class BlockChainInstance(object):
         }
         op = operations.Account_create(**op)
         return self.finalizeOp(op, creator, "active", **kwargs)
+
+    def update_account(
+        self,
+        account,
+        owner_key=None,
+        active_key=None,
+        memo_key=None,
+        posting_key=None,
+        password=None,
+        additional_owner_keys=[],
+        additional_active_keys=[],
+        additional_posting_keys=[],
+        additional_owner_accounts=[],
+        additional_active_accounts=[],
+        additional_posting_accounts=None,
+        storekeys=True,
+        store_owner_key=False,
+        json_meta=None,
+        **kwargs
+    ):
+        """ Update account
+
+            The brainkey/password can be used to recover all generated keys
+            (see :class:`beemgraphenebase.account` for more details.
+
+            The
+            corresponding keys will automatically be installed in the
+            wallet.
+
+            .. warning:: Don't call this method unless you know what
+                          you are doing! Be sure to understand what this
+                          method does and where to find the private keys
+                          for your account.
+
+            .. note:: Please note that this imports private keys
+                      (if password is present) into the wallet by
+                      default when nobroadcast is set to False.
+                      However, it **does not import the owner
+                      key** for security reasons by default.
+                      If you set store_owner_key to True, the
+                      owner key is stored.
+                      Do NOT expect to be able to recover it from
+                      the wallet if you lose your password!
+
+            :param str account_name: (**required**) account name
+            :param str json_meta: Optional updated meta data for the account
+            :param str owner_key: Main owner (public) key
+            :param str active_key: Main active (public) key
+            :param str posting_key: Main posting (public) key
+            :param str memo_key: Main memo (public) key
+            :param str password: Alternatively to providing keys, one
+                                 can provide a password from which the
+                                 keys will be derived
+            :param array additional_owner_keys:  Additional owner public keys
+            :param array additional_active_keys: Additional active public keys
+            :param array additional_posting_keys: Additional posting public keys
+            :param array additional_owner_accounts: Additional owner account
+                names
+            :param array additional_active_accounts: Additional acctive account
+                names
+            :param bool storekeys: Store new keys in the wallet (default:
+                ``True``)
+            :raises AccountExistsException: if the account already exists on
+                the blockchain
+
+        """
+        if password and (owner_key or active_key or memo_key):
+            raise ValueError(
+                "You cannot use 'password' AND provide keys!"
+            )
+
+        account = Account(account, blockchain_instance=self)
+
+        " Generate new keys from password"
+        from beemgraphenebase.account import PasswordKey
+        if password:
+            active_key = PasswordKey(account["name"], password, role="active", prefix=self.prefix)
+            owner_key = PasswordKey(account["name"], password, role="owner", prefix=self.prefix)
+            posting_key = PasswordKey(account["name"], password, role="posting", prefix=self.prefix)
+            memo_key = PasswordKey(account["name"], password, role="memo", prefix=self.prefix)
+            active_pubkey = active_key.get_public_key()
+            owner_pubkey = owner_key.get_public_key()
+            posting_pubkey = posting_key.get_public_key()
+            memo_pubkey = memo_key.get_public_key()
+            active_privkey = active_key.get_private_key()
+            posting_privkey = posting_key.get_private_key()
+            owner_privkey = owner_key.get_private_key()
+            memo_privkey = memo_key.get_private_key()
+            # store private keys
+            try:
+                if storekeys and not self.nobroadcast:
+                    if store_owner_key:
+                        self.wallet.addPrivateKey(str(owner_privkey))
+                    self.wallet.addPrivateKey(str(active_privkey))
+                    self.wallet.addPrivateKey(str(memo_privkey))
+                    self.wallet.addPrivateKey(str(posting_privkey))
+            except ValueError as e:
+                log.info(str(e))
+
+        elif (owner_key and active_key and memo_key and posting_key):
+            active_pubkey = PublicKey(
+                active_key, prefix=self.prefix)
+            owner_pubkey = PublicKey(
+                owner_key, prefix=self.prefix)
+            posting_pubkey = PublicKey(
+                posting_key, prefix=self.prefix)
+            memo_pubkey = PublicKey(
+                memo_key, prefix=self.prefix)
+        else:
+            raise ValueError(
+                "Call incomplete! Provide either a password or public keys!"
+            )
+        owner = format(owner_pubkey, self.prefix)
+        active = format(active_pubkey, self.prefix)
+        posting = format(posting_pubkey, self.prefix)
+        memo = format(memo_pubkey, self.prefix)
+
+        owner_key_authority = [[owner, 1]]
+        active_key_authority = [[active, 1]]
+        posting_key_authority = [[posting, 1]]
+        if additional_owner_accounts is None:
+            owner_accounts_authority = account['owner']['account_auths']
+        else:
+            owner_accounts_authority = []
+        if additional_active_accounts is None:
+            active_accounts_authority = account['active']['account_auths']
+        else:
+            active_accounts_authority = []
+        if additional_posting_accounts is None:
+            posting_accounts_authority = account['posting']['account_auths']
+        else:
+            posting_accounts_authority = []
+
+        # additional authorities
+        for k in additional_owner_keys:
+            owner_key_authority.append([k, 1])
+        for k in additional_active_keys:
+            active_key_authority.append([k, 1])
+        for k in additional_posting_keys:
+            posting_key_authority.append([k, 1])
+
+        if additional_owner_accounts is not None:
+            for k in additional_owner_accounts:
+                addaccount = Account(k, blockchain_instance=self)
+                owner_accounts_authority.append([addaccount["name"], 1])
+        if additional_active_accounts is not None:
+            for k in additional_active_accounts:
+                addaccount = Account(k, blockchain_instance=self)
+                active_accounts_authority.append([addaccount["name"], 1])
+        if additional_posting_accounts is not None:
+            for k in additional_posting_accounts:
+                addaccount = Account(k, blockchain_instance=self)
+                posting_accounts_authority.append([addaccount["name"], 1])
+        op = {
+            "account": account["name"],
+            'owner': {'account_auths': owner_accounts_authority,
+                      'key_auths': owner_key_authority,
+                      "address_auths": [],
+                      'weight_threshold': 1},
+            'active': {'account_auths': active_accounts_authority,
+                       'key_auths': active_key_authority,
+                       "address_auths": [],
+                       'weight_threshold': 1},
+            'posting': {'account_auths': posting_accounts_authority,
+                        'key_auths': posting_key_authority,
+                        "address_auths": [],
+                        'weight_threshold': 1},
+            'memo_key': memo,
+            "json_metadata": json_meta or account['json_metadata'],
+            "prefix": self.prefix,
+        }
+        op = operations.Account_update(**op)
+        return self.finalizeOp(op, account, "owner", **kwargs)
 
     def witness_set_properties(self, wif, owner, props, use_condenser_api=True):
         """ Set witness properties

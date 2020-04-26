@@ -273,8 +273,13 @@ class Testcases(unittest.TestCase):
         runner = CliRunner()
         result = runner.invoke(cli, ['-dt', 'newaccount', 'beem3'], input="test\ntest\ntest\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-dt', 'newaccount', 'beem3'], input="test\ntest\ntest\n")
-        self.assertEqual(result.exit_code, 0)
+
+    def test_changekeys(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['-dx', 'changekeys', 'beem'], input="test\ntest\n")
+        self.assertEqual(result.exit_code, 0)  
+        result = runner.invoke(cli, ['-dx', 'changekeys', 'beem'], input="phalanx benne tungo deprive rubbers science axstone uromere rope retreat cise tyloma sool barefit virile cobbing\nphalanx benne tungo deprive rubbers science axstone uromere rope retreat cise tyloma sool barefit virile cobbing\n")
+        self.assertEqual(result.exit_code, 0)       
 
     @unittest.skip
     def test_importaccount(self):

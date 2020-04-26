@@ -34,11 +34,21 @@ class PasswordKey(object):
         self.password = password
         self.prefix = prefix
 
+    def normalize(self, brainkey):
+        """ Correct formating with single whitespace syntax and no trailing space """
+        return " ".join(re.compile("[\t\n\v\f\r ]+").split(brainkey))
+
     def get_private(self):
-        """ Derive private key from the brain key and the current sequence
-            number
+        """ Derive private key from the account, the role and the password
         """
-        a = py23_bytes(self.account + self.role + self.password, 'utf8')
+        if self.account is None and self.role is None:
+            seed = self.password
+        elif self.account == "" and self.role == "":
+            seed = self.password
+        else:
+            seed = self.account + self.role + self.password
+        brainkey = self.normalize(seed)
+        a = py23_bytes(brainkey, 'utf8')
         s = hashlib.sha256(a).digest()
         return PrivateKey(hexlify(s).decode('ascii'), prefix=self.prefix)
 
@@ -123,11 +133,10 @@ class BrainKey(object):
     def get_public_key(self):
         return self.get_public()
 
-    def suggest(self):
+    def suggest(self, word_count=16):
         """ Suggest a new random brain key. Randomness is provided by the
             operating system using ``os.urandom()``.
         """
-        word_count = 16
         brainkey = [None] * word_count
         dict_lines = BrainKeyDictionary.split(',')
         if not len(dict_lines) == 49744:

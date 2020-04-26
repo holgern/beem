@@ -2555,7 +2555,7 @@ class Account(BlockchainObject):
         if isinstance(proxy, str):
             proxy_name = proxy
         else:
-            proxy_name = proxy.name
+            proxy_name = proxy["name"]
         op = operations.Account_witness_proxy(**{
             'account': account.name,
             'proxy': proxy_name
@@ -2592,7 +2592,7 @@ class Account(BlockchainObject):
         """ Updates all account keys
 
             This method does **not** add any private keys to your
-            wallet but merely changes the memo public key.
+            wallet but merely changes the public keys.
 
             :param str new_password: is used to derive the owner, active,
                 posting and memo key
