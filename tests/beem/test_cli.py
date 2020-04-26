@@ -225,6 +225,11 @@ class Testcases(unittest.TestCase):
         result = runner.invoke(cli, ['muter', 'beembot'])
         self.assertEqual(result.exit_code, 0)
 
+    def test_about(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['about'])
+        self.assertEqual(result.exit_code, 0)
+
     def test_muting(self):
         runner = CliRunner()
         result = runner.invoke(cli, ['muting', 'beem'])

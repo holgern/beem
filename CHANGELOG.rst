@@ -13,6 +13,8 @@ Changelog
 * Fixed vote percentage calculation when post rshares is negative
 * new beempy command changekeys
 * beempy keygen can be used to generate account keys from a given password and is able to generate new passwords
+* add option to beempy keygen to export pub account keys as json file
+* add option to beempy newaccount and changekeys to import pub account keys from a json file
 
 0.23.0
 ------

@@ -705,9 +705,9 @@ def delkey(confirm, pub):
 @click.option('--import-password', '-i', help='Imports a password and derives all four account keys', is_flag=True, default=False)
 @click.option('--create-password', '-p', help='Creates a new password and derives four account keys from it', is_flag=True, default=False)
 @click.option('--wif', '-w', help='Defines how many times the password is replaced by its WIF representation (default = 0).', default=0)
-@click.option('--only-pub', '-u', help='Shows only the public keys', is_flag=True, default=False)
+@click.option('--export-pub', '-u', help='Exports the public account keys to a json file')
 @click.option('--export', '-e', help='The results are stored in a text file and will not be shown')
-def keygen(import_brain_key, sequence, account_keys, account, import_password, create_password, wif, export, only_pub):
+def keygen(import_brain_key, sequence, account_keys, account, import_password, create_password, wif, export_pub, export):
     """ Creates a new random brain key / password and prints its derived private key and public key.
         The generated key is not stored. Can also be used to create new keys for an account.
         Can also be used to derive account keys from a password/brainkey
@@ -722,7 +722,8 @@ def keygen(import_brain_key, sequence, account_keys, account, import_password, c
         while True:
             import_password = ''.join(secrets.choice(alphabet) for i in range(32))
             if (any(c.islower() for c in import_password) and any(c.isupper() for c in import_password) and any(c.isdigit() for c in import_password)):
-                break        
+                break
+    pub_json = {"owner": "", "active": "", "posting": "", "memo": ""}
     if import_password or create_password:
         if wif > 0:
             password = import_password
@@ -742,6 +743,7 @@ def keygen(import_brain_key, sequence, account_keys, account, import_password, c
             pk = PasswordKey(account, password, role=role)
             t.add_row(["%s Private Key" % role, str(pk.get_private())])
             t_pub.add_row(["%s Public Key" % role, format(pk.get_public(), "STM")])
+            pub_json[role] = format(pk.get_public(), "STM")
         t.add_row(["Backup (Master) Password", password])
         if wif > 0:
             t.add_row(["WIF itersions", wif])
@@ -755,7 +757,8 @@ def keygen(import_brain_key, sequence, account_keys, account, import_password, c
         t_pub = PrettyTable(["Key", "Value"])
         t.align = "l"
         t_pub.align = "l"
-        t.add_row(["Brain Key", brain_key.lower()])
+        t.add_row(["Username", account])
+        t_pub.add_row(["Username", account])        
         if sequence > 0:
             t.add_row(["Sequence", sequence])
         if account_keys:
@@ -766,28 +769,35 @@ def keygen(import_brain_key, sequence, account_keys, account, import_password, c
                     pk = PasswordKey("", password, role="")
                     password = str(pk.get_private())
                 password = 'P' + password
-                t.add_row(["WIF itersions", wif])
-                t.add_row(["Backup (Master) Password", password])
             else:
                 password = brainkey            
             for role in ['owner', 'active', 'posting', 'memo']:
                 pk = PasswordKey(account, password, role=role)
                 t.add_row(["%s Private Key" % role, str(pk.get_private())])
                 t_pub.add_row(["%s Public Key" % role, format(pk.get_public(), "STM")])
+                pub_json[role] = format(pk.get_public(), "STM")
+            if wif > 0:
+                t.add_row(["WIF itersions", wif])
+                t.add_row(["Backup (Master) Password", password])                
+            t.add_row(["Entered/created Password", brain_key.lower()])
         else:
+            t.add_row(["Brain Key", brain_key.lower()])
             bk = BrainKey(brainkey=brain_key.upper(), sequence=sequence)
             t.add_row(["Private Key", str(bk.get_private())])
             t_pub.add_row(["Public Key", format(bk.get_public(), "STM")])
-    if export and export != "-":
+    if export_pub and export_pub != "":
+        pub_json = json.dumps(pub_json, indent=4)
+        with open(export_pub, 'w') as fp:
+            fp.write(pub_json)
+        print("%s was sucessfully saved." % export_pub)
+    if export and export != "":
         with open(export, 'w') as fp:
-            if not only_pub:
-                fp.write(str(t))
+            fp.write(str(t))
             fp.write(str(t_pub))
         print("%s was sucessfully saved." % export)
     else:
         print(t_pub)
-        if not only_pub:
-            print(t)
+        print(t)
 
 
 @cli.command()
@@ -1593,7 +1603,8 @@ def claimaccount(creator, fee, number):
 @click.option('--active', help='Active public key - when not given, a passphrase is used to create keys.')
 @click.option('--posting', help='posting public key - when not given, a passphrase is used to create keys.')
 @click.option('--memo', help='Memo public key - when not given, a passphrase is used to create keys.')
-def changekeys(account, owner, active, posting, memo):
+@click.option('--file', '-i', help='Load public keys from file.')
+def changekeys(account, owner, active, posting, memo, file):
     """Changes all keys for the specified account 
     Either keys are given in their public form or a password is used to derived from the entered password/brainkey.
     Asks for the owner key for broadcasting the op to the chain."""
@@ -1604,7 +1615,21 @@ def changekeys(account, owner, active, posting, memo):
     if not stm.unsigned:
         wif = click.prompt('Owner key for %s' % account["name"], confirmation_prompt=False, hide_input=True)
         stm.wallet.setKeys([wif])
-    if owner is None or active is None or memo is None or posting is None:
+    if file and file != "":
+        if not os.path.isfile(file):
+            raise Exception("File %s does not exist!" % file)
+        with open(file) as fp:
+            pubkeys = fp.read()
+        if pubkeys.find('\0') > 0:
+            with open(file, encoding='utf-16') as fp:
+                pubkeys = fp.read()
+        pubkeys = ast.literal_eval(pubkeys)
+        owner = pubkeys["owner"]
+        active = pubkeys["active"]
+        posting = pubkeys["posting"]
+        memo = pubkeys["memo"]
+        password = None
+    elif owner is None or active is None or memo is None or posting is None:
         print("\nA Password is used to create account keys (owner, active, posting and wif).\n"
               "Please store the entered password in a safe place.\n"
               "beempy keygen can be used to view the derived account keys.\n"
@@ -1634,7 +1659,8 @@ def changekeys(account, owner, active, posting, memo):
 @click.option('--memo', help='Memo public key - when not given, a passphrase is used to create keys.')
 @click.option('--posting', help='posting public key - when not given, a passphrase is used to create keys.')
 @click.option('--create-claimed-account', '-c', help='Instead of paying the account creation fee a subsidized account is created.', is_flag=True, default=False)
-def newaccount(accountname, account, owner, active, memo, posting, create_claimed_account):
+@click.option('--file', '-i', help='Load public keys from file.')
+def newaccount(accountname, account, owner, active, memo, posting, create_claimed_account, file):
     """Create a new account"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -1644,7 +1670,24 @@ def newaccount(accountname, account, owner, active, memo, posting, create_claime
     if not unlock_wallet(stm):
         return
     acc = Account(account, blockchain_instance=stm)
-    if owner is None or active is None or memo is None or posting is None:
+    if file and file != "":
+        if not os.path.isfile(file):
+            raise Exception("File %s does not exist!" % file)
+        with open(file) as fp:
+            pubkeys = fp.read()
+        if pubkeys.find('\0') > 0:
+            with open(file, encoding='utf-16') as fp:
+                pubkeys = fp.read()
+        pubkeys = ast.literal_eval(pubkeys)
+        owner = pubkeys["owner"]
+        active = pubkeys["active"]
+        posting = pubkeys["posting"]
+        memo = pubkeys["memo"]
+        if create_claimed_account:
+            tx = stm.create_claimed_account(accountname, creator=acc, owner_key=owner, active_key=active, memo_key=memo, posting_key=posting)
+        else:
+            tx = stm.create_account(accountname, creator=acc, owner_key=owner, active_key=active, memo_key=memo, posting_key=posting)        
+    elif owner is None or active is None or memo is None or posting is None:
         password = click.prompt("Keys were not given - Passphrase is used to create keys\n New Account Passphrase", confirmation_prompt=True, hide_input=True)
         if not password:
             print("You cannot chose an empty password")
