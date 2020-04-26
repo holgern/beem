@@ -1603,8 +1603,8 @@ def claimaccount(creator, fee, number):
 @click.option('--active', help='Active public key - when not given, a passphrase is used to create keys.')
 @click.option('--posting', help='posting public key - when not given, a passphrase is used to create keys.')
 @click.option('--memo', help='Memo public key - when not given, a passphrase is used to create keys.')
-@click.option('--file', '-i', help='Load public keys from file.')
-def changekeys(account, owner, active, posting, memo, file):
+@click.option('--import-pub', '-i', help='Load public keys from file.')
+def changekeys(account, owner, active, posting, memo, import_pub):
     """Changes all keys for the specified account 
     Either keys are given in their public form or a password is used to derived from the entered password/brainkey.
     Asks for the owner key for broadcasting the op to the chain."""
@@ -1615,13 +1615,13 @@ def changekeys(account, owner, active, posting, memo, file):
     if not stm.unsigned:
         wif = click.prompt('Owner key for %s' % account["name"], confirmation_prompt=False, hide_input=True)
         stm.wallet.setKeys([wif])
-    if file and file != "":
-        if not os.path.isfile(file):
-            raise Exception("File %s does not exist!" % file)
-        with open(file) as fp:
+    if import_pub and import_pub != "":
+        if not os.path.isfile(import_pub):
+            raise Exception("File %s does not exist!" % import_pub)
+        with open(import_pub) as fp:
             pubkeys = fp.read()
         if pubkeys.find('\0') > 0:
-            with open(file, encoding='utf-16') as fp:
+            with open(import_pub, encoding='utf-16') as fp:
                 pubkeys = fp.read()
         pubkeys = ast.literal_eval(pubkeys)
         owner = pubkeys["owner"]
@@ -1653,15 +1653,19 @@ def changekeys(account, owner, active, posting, memo, file):
 
 @cli.command()
 @click.argument('accountname', nargs=1, required=True)
-@click.option('--account', '-a', help='Account that pays the fee')
+@click.option('--account', '-a', help='Account that pays the fee or uses account tickets')
 @click.option('--owner', help='Main public owner key - when not given, a passphrase is used to create keys.')
 @click.option('--active', help='Active public key - when not given, a passphrase is used to create keys.')
 @click.option('--memo', help='Memo public key - when not given, a passphrase is used to create keys.')
 @click.option('--posting', help='posting public key - when not given, a passphrase is used to create keys.')
+
 @click.option('--create-claimed-account', '-c', help='Instead of paying the account creation fee a subsidized account is created.', is_flag=True, default=False)
-@click.option('--file', '-i', help='Load public keys from file.')
-def newaccount(accountname, account, owner, active, memo, posting, create_claimed_account, file):
-    """Create a new account"""
+@click.option('--import-pub', '-i', help='Load public keys from file.')
+def newaccount(accountname, account, owner, active, memo, posting, create_claimed_account, import_pub):
+    """Create a new account
+       Default setting is that a fee is payed for account creation
+       Use --create-claimed-account for free account creation
+    """
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
@@ -1670,13 +1674,13 @@ def newaccount(accountname, account, owner, active, memo, posting, create_claime
     if not unlock_wallet(stm):
         return
     acc = Account(account, blockchain_instance=stm)
-    if file and file != "":
-        if not os.path.isfile(file):
-            raise Exception("File %s does not exist!" % file)
-        with open(file) as fp:
+    if import_pub and import_pub != "":
+        if not os.path.isfile(import_pub):
+            raise Exception("File %s does not exist!" % import_pub)
+        with open(import_pub) as fp:
             pubkeys = fp.read()
         if pubkeys.find('\0') > 0:
-            with open(file, encoding='utf-16') as fp:
+            with open(import_pub, encoding='utf-16') as fp:
                 pubkeys = fp.read()
         pubkeys = ast.literal_eval(pubkeys)
         owner = pubkeys["owner"]
