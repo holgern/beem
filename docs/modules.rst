@@ -14,10 +14,13 @@ beem Modules
    beem.block
    beem.blockchain
    beem.blockchainobject
+   beem.blockchaininstance
    beem.comment
    beem.conveyor
    beem.discussions
    beem.exceptions
+   beem.hive
+   beem.hivesigner
    beem.imageuploader
    beem.instance
    beem.market
@@ -45,7 +48,7 @@ beemapi Modules
    beemapi.exceptions
    beemapi.graphenenerpc
    beemapi.node
-   beemapi.steemnoderpc
+   beemapi.noderpc
    beemapi.websocket
 
 beembase Modules
