@@ -172,6 +172,13 @@ class Testcases(unittest.TestCase):
         result = runner.invoke(cli, ['-dt', 'downvote', '--weight', '100', '@steemit/firstpost'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
+    def test_download(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['-dt', 'download', '-a', 'steemit', 'firstpost'])
+        self.assertEqual(result.exit_code, 0)
+        result = runner.invoke(cli, ['-dt', 'download', '@steemit/firstpost'])
+        self.assertEqual(result.exit_code, 0)
+
     def test_transfer(self):
         stm = shared_steem_instance()
         runner = CliRunner()

@@ -1796,12 +1796,12 @@ class BlockChainInstance(object):
 
         :param str community: (Optional) Name of the community we are posting
             into. This will also override the community specified in
-            `json_metadata`.
+            `json_metadata` and the category
         :param str app: (Optional) Name of the app which are used for posting
             when not set, beem/<version> is used
         :param tags: (Optional) A list of tags to go with the
             post. This will also override the tags specified in
-            `json_metadata`. The first tag will be used as a 'category'. If
+            `json_metadata`. The first tag will be used as a 'category' when community is not specified. If
             provided as a string, it should be space separated.
         :type tags: str, list
         :param list beneficiaries: (Optional) A list of beneficiaries
@@ -1836,7 +1836,7 @@ class BlockChainInstance(object):
         if app:
             json_metadata.update({'app': app})
         elif 'app' not in json_metadata:
-            json_metadata.update({'app': 'beempy/%s' % (beem_version)})
+            json_metadata.update({'app': 'beem/%s' % (beem_version)})
 
         if not author and self.config["default_account"]:
             author = self.config["default_account"]
@@ -1847,7 +1847,6 @@ class BlockChainInstance(object):
         if isinstance(tags, str):
             tags = list(set([_f for _f in (re.split(r"[\W_]", tags)) if _f]))
 
-        category = None
         tags = tags or json_metadata.get('tags', [])
 
         if parse_body:
@@ -1891,8 +1890,15 @@ class BlockChainInstance(object):
 
         if tags:
             # first tag should be a category
-            category = tags[0]
+            if community is None:
+                category = tags[0]
+            else:
+                category = community
             json_metadata.update({"tags": tags})
+        elif community:
+            category = community
+        else:
+            category = None
 
         # can't provide a category while replying to a post
         if reply_identifier and category:
@@ -1917,11 +1923,11 @@ class BlockChainInstance(object):
 
         post_op = operations.Comment(
             **{
-                "parent_author": parent_author,
-                "parent_permlink": parent_permlink,
+                "parent_author": parent_author.strip(),
+                "parent_permlink": parent_permlink.strip(),
                 "author": account["name"],
-                "permlink": permlink,
-                "title": title,
+                "permlink": permlink.strip(),
+                "title": title.strip(),
                 "body": body,
                 "json_metadata": json_metadata
             })

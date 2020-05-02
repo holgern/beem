@@ -38,7 +38,7 @@ from beem.hivesigner import HiveSigner
 from beem.asset import Asset
 from beem.witness import Witness, WitnessesRankedByVote, WitnessesVotedByAccount
 from beem.blockchain import Blockchain
-from beem.utils import formatTimeString, construct_authorperm, derive_beneficiaries, derive_tags, seperate_yaml_dict_from_body
+from beem.utils import formatTimeString, construct_authorperm, derive_beneficiaries, derive_tags, seperate_yaml_dict_from_body, derive_permlink
 from beem.vote import AccountVotes, ActiveVotes, Vote
 from beem import exceptions
 from beem.version import version as __version__
@@ -609,7 +609,6 @@ def walletinfo(unlock, lock):
     else:
         t.add_row(["keyring installed", "no"])
 
-        
     if unlock:
         if unlock_wallet(stm, allow_wif=False):
             t.add_row(["Wallet unlock", "successful"])
@@ -1926,41 +1925,92 @@ def uploadimage(image, account, image_name):
     else:
         print("![%s](%s)" % (image_name, tx["url"]))
 
+@cli.command()
+@click.argument('permlink', nargs=1)
+@click.option('--account', '-a', help='Account are you posting from')
+@click.option('--export', '-e', default=None, help="Export markdown to a md-file")
+def download(permlink, account, export):
+    """Download body with yaml header"""
+    stm = shared_blockchain_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if account is None:
+        account = stm.config["default_account"]
+    if permlink[0] == "@":
+        authorperm = permlink
+    else:
+        authorperm = construct_authorperm(account, permlink)
+    comment = Comment(authorperm, blockchain_instance=stm)
+    if comment["parent_author"] != "" and comment["parent_permlink"] != "":
+        reply_identifier = construct_authorperm(comment["parent_author"], comment["parent_permlink"])
+    else:
+        reply_identifier = None
+    
+    yaml_prefix = '---\n'
+    if comment["title"] != "":
+        yaml_prefix += 'title: %s\n' % comment["title"]
+    yaml_prefix += 'permlink: %s\n' % comment["permlink"]
+    yaml_prefix += 'author: %s\n' % comment["author"]
+    if "tags" in comment.json_metadata:
+        if len(comment.json_metadata["tags"]) > 0 and comment["category"] != comment.json_metadata["tags"][0] and len(comment["category"]) > 0:
+            yaml_prefix += 'community: %s\n' % comment["category"]
+        yaml_prefix += 'tags: %s\n' % ",".join(comment.json_metadata["tags"])
+    if reply_identifier is not None:
+        yaml_prefix += 'reply_identifier: %s\n' % reply_identifier    
+    yaml_prefix += '---\n'
+    if export is not None:
+        if export[-3:] != ".md":
+            export += ".md"
+        with open(export, "w", encoding="utf-8") as f:
+            f.write(yaml_prefix + comment["body"])        
+    else:
+        print(yaml_prefix + comment["body"])
+
 
 @cli.command()
-@click.argument('body', nargs=1)
+@click.argument('markdown-file', nargs=1)
 @click.option('--account', '-a', help='Account are you posting from')
 @click.option('--title', '-t', help='Title of the post')
 @click.option('--permlink', '-p', help='Manually set the permlink (optional)')
-@click.option('--tags', help='A komma separated list of tags to go with the post.')
-@click.option('--reply_identifier', help=' Identifier of the parent post/comment, when set a comment is broadcasted')
-@click.option('--community', help=' Name of the community (optional)')
+@click.option('--tags', '-g', help='A komma separated list of tags to go with the post.')
+@click.option('--reply_identifier', '-r', help=' Identifier of the parent post/comment, when set a comment is broadcasted')
+@click.option('--community', '-c', help=' Name of the community (optional)')
 @click.option('--beneficiaries', '-b', help='Post beneficiaries (komma separated, e.g. a:10%,b:20%)')
-@click.option('--percent-steem-dollars', '-b', help='50% SBD /50% SP is 10000 (default), 100% SP is 0')
-@click.option('--max-accepted-payout', '-b', help='Default is 1000000.000 [SBD]')
-@click.option('--no-parse-body', help='Disable parsing of links, tags and images', is_flag=True, default=False)
-def post(body, account, title, permlink, tags, reply_identifier, community, beneficiaries, percent_steem_dollars, max_accepted_payout, no_parse_body):
-    """broadcasts a post/comment"""
+@click.option('--percent-steem-dollars', '-d', help='50% SBD /50% SP is 10000 (default), 100% SP is 0')
+@click.option('--max-accepted-payout', '-m', help='Default is 1000000.000 [SBD]')
+@click.option('--no-parse-body', '-n', help='Disable parsing of links, tags and images', is_flag=True, default=False)
+@click.option('--no-patch-on-edit', '-e', help='Disable patch posting on edits (when the permlink already exists)', is_flag=True, default=False)
+def post(markdown_file, account, title, permlink, tags, reply_identifier, community, beneficiaries, percent_steem_dollars, max_accepted_payout, no_parse_body, no_patch_on_edit):
+    """broadcasts a post/comment. All image links which links to a file will be uploaded.
+    The yaml header can contain:
+    
+    ---
+    title: your title
+    tags: tag1,tag2
+    community: hive-100000
+    beneficiaries: beempy:5%,holger80:5%
+    ---
+    
+    """
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
 
-    if not account:
-        account = stm.config["default_account"]
-    author = account
-    if not unlock_wallet(stm):
-        return
-    with open(body) as f:
+    with open(markdown_file) as f:
         content = f.read()
     body, parameter = seperate_yaml_dict_from_body(content)
     if title is not None:
         parameter["title"] = title
+    if account is not None:
+        parameter["author"] = account
     if tags is not None:
         parameter["tags"] = tags
     if permlink is not None:
         parameter["permlink"] = permlink
     if beneficiaries is not None:
         parameter["beneficiaries"] = beneficiaries
+    if community is not None:
+        parameter["community"] = community
     if reply_identifier is not None:
         parameter["reply_identifier"] = reply_identifier
     if percent_steem_dollars is not None:
@@ -1971,6 +2021,10 @@ def post(body, account, title, permlink, tags, reply_identifier, community, bene
         parameter["max_accepted_payout"] = max_accepted_payout
     elif "max-accepted-payout" in parameter:
         parameter["max_accepted_payout"] = parameter["max-accepted-payout"]
+
+    if not unlock_wallet(stm):
+        return    
+
     tags = None
     if "tags" in parameter:
         tags = derive_tags(parameter["tags"])
@@ -1979,6 +2033,8 @@ def post(body, account, title, permlink, tags, reply_identifier, community, bene
         title = parameter["title"]
     if "author" in parameter:
         author = parameter["author"]
+    else:
+        author = stm.config["default_account"]
     permlink = None
     if "permlink" in parameter:
         permlink = parameter["permlink"]
@@ -2014,8 +2070,54 @@ def post(body, account, title, permlink, tags, reply_identifier, community, bene
         beneficiaries = derive_beneficiaries(parameter["beneficiaries"])
         for b in beneficiaries:
             Account(b["account"], blockchain_instance=stm)
-    tx = stm.post(title, body, author=author, permlink=permlink, reply_identifier=reply_identifier, community=community,
-                  tags=tags, comment_options=comment_options, beneficiaries=beneficiaries, parse_body=parse_body)
+    
+    if permlink is not None:
+        try:
+            comment = Comment(construct_authorperm(author, permlink), blockchain_instance=stm)
+        except:
+            comment = None
+    else:
+        comment = None
+        
+    iu = ImageUploader(blockchain_instance=stm)
+    for link in list(re.findall(r'!\[[^"\'@\]\(]*\]\([^"\'@\(\)]*\.(?:png|jpg|jpeg|gif|png|svg)\)', body)):
+        image = link.split("(")[1].split(")")[0]
+        image_name = link.split("![")[1].split("]")[0]
+        if image[:4] == "http":
+            continue
+        if stm.unsigned:
+            continue
+        if os.path.exists(image):
+            tx = iu.upload(image, author, image_name)
+            body = body.replace(image, tx["url"])
+    
+    
+    if comment is None and permlink is None and reply_identifier is None:
+        permlink = derive_permlink(title, with_suffix=False)
+        try:
+            comment = Comment(construct_authorperm(author, permlink), blockchain_instance=stm)
+        except:
+            comment = None
+        if comment is not None:
+            edit_ok = click.prompt("Should I edit %s [y/n]" % (str(permlink)))
+            if edit_ok not in ["y", "ye", "yes"]:                
+                permlink = derive_permlink(title, with_suffix=True)
+                comment = None
+
+    if comment is None or no_patch_on_edit:
+
+        if reply_identifier is None and (len(tags) == 0 or tags is None):
+            raise ValueError("Tags must not be empty!")
+        tx = stm.post(title, body, author=author, permlink=permlink, reply_identifier=reply_identifier, community=community,
+                      tags=tags, comment_options=comment_options, beneficiaries=beneficiaries, parse_body=parse_body,
+                      app='beempy/%s' % (__version__))
+    else:
+        import diff_match_patch as dmp_module
+        dmp = dmp_module.diff_match_patch()
+        patch = dmp.patch_make(comment.body, body)
+        patch_text = dmp.patch_toText(patch)
+        tx = stm.post(title, patch_text, author=author, permlink=permlink,
+                      tags=tags, parse_body=parse_body, app='beempy/%s' % (__version__))        
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
@@ -2042,7 +2144,8 @@ def reply(authorperm, body, account, title):
     
     if title is None:
         title = ""
-    tx = stm.post(title, body, json_metadata=None, author=account, reply_identifier=authorperm)
+    tx = stm.post(title, body, json_metadata=None, author=account, reply_identifier=authorperm,
+                  app='beempy/%s' % (__version__))
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
