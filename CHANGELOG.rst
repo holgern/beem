@@ -5,7 +5,7 @@ Changelog
 * post detects now communities and set category correctly
 * option added to remove time based suffix in derive_permlink
 * beempy download added to save posts as markdown file
-* beempy post imporved, automatic image upload, community support, patch generation on edit
+* beempy post is improved, automatic image upload, community support, patch generation on edit
 * Unit test added for beempy download
 
 0.23.1

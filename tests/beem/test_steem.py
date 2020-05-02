@@ -327,10 +327,10 @@ class Testcases(unittest.TestCase):
         self.assertEqual(op["title"], "title")
         self.assertTrue(op["permlink"].startswith("title"))
         self.assertEqual(op["parent_author"], "")
-        self.assertEqual(op["parent_permlink"], "a")
+        self.assertEqual(op["parent_permlink"], "test")
         json_metadata = json.loads(op["json_metadata"])
         self.assertEqual(json_metadata["tags"], ["a", "b", "c", "d", "e"])
-        self.assertEqual(json_metadata["app"], "beempy/%s" % (beem_version))
+        self.assertEqual(json_metadata["app"], "beem/%s" % (beem_version))
         self.assertEqual(
             (tx["operations"][1][0]),
             "comment_options"
