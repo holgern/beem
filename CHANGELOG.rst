@@ -1,5 +1,9 @@
 Changelog
 =========
+0.23.3
+------
+* bugfix for beempy post
+
 0.23.2
 ------
 * post detects now communities and set category correctly

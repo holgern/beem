@@ -2116,8 +2116,8 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
         dmp = dmp_module.diff_match_patch()
         patch = dmp.patch_make(comment.body, body)
         patch_text = dmp.patch_toText(patch)
-        tx = stm.post(title, patch_text, author=author, permlink=permlink,
-                      tags=tags, parse_body=parse_body, app='beempy/%s' % (__version__))        
+        tx = stm.post(title, patch_text, author=author, permlink=permlink, reply_identifier=reply_identifier, community=community,
+                      tags=tags, parse_body=False, app='beempy/%s' % (__version__))        
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
