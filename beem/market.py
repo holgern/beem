@@ -76,22 +76,25 @@ class Market(dict):
             if kwargs.get("steem_instance"):
                 blockchain_instance = kwargs["steem_instance"]
             elif kwargs.get("hive_instance"):
-                blockchain_instance = kwargs["hive_instance"]        
+                blockchain_instance = kwargs["hive_instance"]
         self.blockchain = blockchain_instance or shared_blockchain_instance()
 
         if quote is None and isinstance(base, str):
             quote_symbol, base_symbol = assets_from_string(base)
             quote = Asset(quote_symbol, blockchain_instance=self.blockchain)
             base = Asset(base_symbol, blockchain_instance=self.blockchain)
-            super(Market, self).__init__({"base": base, "quote": quote})
+            super(Market, self).__init__({"base": base, "quote": quote},
+                                         blockchain_instance=self.blockchain)
         elif base and quote:
             quote = Asset(quote, blockchain_instance=self.blockchain)
             base = Asset(base, blockchain_instance=self.blockchain)
-            super(Market, self).__init__({"base": base, "quote": quote})
+            super(Market, self).__init__({"base": base, "quote": quote},
+                                         blockchain_instance=self.blockchain)
         elif base is None and quote is None:
             quote = Asset(self.blockchain.backed_token_symbol, blockchain_instance=self.blockchain)
             base = Asset(self.blockchain.token_symbol, blockchain_instance=self.blockchain)
-            super(Market, self).__init__({"base": base, "quote": quote})
+            super(Market, self).__init__({"base": base, "quote": quote},
+                                         blockchain_instance=self.blockchain)
         else:
             raise ValueError("Unknown Market config")
 
@@ -775,7 +778,7 @@ class Market(dict):
                     data = r.json()["bitcoin"]
                     prices['coingecko'] = {
                         'price': float(data['usd']),
-                        'volume': float(data['usd_24h_vol'])}                       
+                        'volume': float(data['usd_24h_vol'])}
             except KeyError as e:
                 log.info(str(e))
 
@@ -843,7 +846,7 @@ class Market(dict):
                     data = r.json()["steem"]
                     prices['coingecko'] = {
                         'price': float(data['btc']),
-                        'volume': float(data['btc_24h_vol'])}                     
+                        'volume': float(data['btc_24h_vol'])}
             except KeyError as e:
                 log.info(str(e))
 
@@ -914,7 +917,7 @@ class Market(dict):
                     data = r.json()["hive"]
                     prices['coingecko'] = {
                         'price': float(data['btc']),
-                        'volume': float(data['btc_24h_vol'])}                    
+                        'volume': float(data['btc_24h_vol'])}
             except KeyError as e:
                 log.info(str(e))
 
@@ -928,4 +931,3 @@ class Market(dict):
     def hive_usd_implied(self):
         """Returns the current HIVE/USD market price"""
         return self.hive_btc_ticker() * self.btc_usd_ticker()
-
