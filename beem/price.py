@@ -455,7 +455,8 @@ class Order(Price):
             isinstance(base, dict) and
             "sell_price" in base
         ):
-            super(Order, self).__init__(base["sell_price"])
+            super(Order, self).__init__(base["sell_price"],
+                                        blockchain_instance=self.blockchain)
             self["id"] = base.get("id")
         elif (
             isinstance(base, dict) and
@@ -465,10 +466,12 @@ class Order(Price):
             super(Order, self).__init__(
                 Amount(base["min_to_receive"], blockchain_instance=self.blockchain),
                 Amount(base["amount_to_sell"], blockchain_instance=self.blockchain),
+                blockchain_instance=self.blockchain
             )
             self["id"] = base.get("id")
         elif isinstance(base, Amount) and isinstance(quote, Amount):
-            super(Order, self).__init__(None, base=base, quote=quote)
+            super(Order, self).__init__(None, base=base, quote=quote,
+                                        blockchain_instance=self.blockchain)
         else:
             raise ValueError("Unknown format to load Order")
 
@@ -513,6 +516,7 @@ class FilledOrder(Price):
             super(FilledOrder, self).__init__(
                 Amount(order["open_pays"], blockchain_instance=self.blockchain),
                 Amount(order["current_pays"], blockchain_instance=self.blockchain),
+                blockchain_instance=self.blockchain
             )
             if "date" in order:
                 self["date"] = formatTimeString(order["date"])
