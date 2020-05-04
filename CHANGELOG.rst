@@ -1,5 +1,9 @@
 Changelog
 =========
+0.23.4
+------
+* Bip39 and Bip32 support has been added
+
 0.23.3
 ------
 * bugfix for beempy post

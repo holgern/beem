@@ -183,7 +183,10 @@ def b58decode(v):
 
 
 def base58CheckEncode(version, payload):
-    s = ('%.2x' % version) + payload
+    if isinstance(version, string_types):
+        s = version + payload
+    else:
+        s = ('%.2x' % version) + payload
     checksum = doublesha256(s)[:4]
     result = s + hexlify(checksum).decode('ascii')
     return base58encode(result)
