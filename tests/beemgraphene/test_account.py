@@ -455,26 +455,32 @@ class Testcases(unittest.TestCase):
 
     def test_mnemorickey(self):
         word_list = "news clever spot drama infant detail sword cover color throw foot primary when slender rhythm clog autumn ecology enough bronze math you modify excuse"
-        mk = MnemonicKey(word_list, role="owner")
+        mk = MnemonicKey(word_list)
+        mk.set_path_BIP48(role="owner")
         self.assertEqual(str(mk.get_private_key()), str(PrivateKey("L2cgypn75kre1s7JUkTK6H7Y656GwDbNnSNZKWSQ2Rnnx6qM11KD")))
         self.assertEqual(str(mk.get_public_key()), str(PublicKey("02821aa2d26c4fd9b735dd1fed148b96fec978eae1440adf79a4bf95e118b2d8f1")))
         
-        mk = MnemonicKey(word_list, role="owner", key_sequence=5)
+        mk = MnemonicKey(word_list)
+        mk.set_path_BIP48(role="owner", key_sequence=5)
         self.assertEqual(str(mk.get_private_key()), str(PrivateKey("L5cJSZPcBMBtmuRaK9C48yyXK5JpaH15BsjKLZkmamEWKKx25Kx7")))
         self.assertEqual(str(mk.get_public_key()), str(PublicKey("0309a45aa9add2c7421e0553e23b1800e51d95e525fa4eae1bcc5fb58186e07ed5")))
 
-        mk = MnemonicKey(word_list, role="owner", account_sequence=2)
+        mk = MnemonicKey(word_list)
+        mk.set_path_BIP48(role="owner", account_sequence=2)
         self.assertEqual(str(mk.get_private_key()), str(PrivateKey("L4A95nfp1kyJtUtaTqzMyLQkz6NYSfk4R8pejcgKXQSUtPysiFgv")))
         self.assertEqual(str(mk.get_public_key()), str(PublicKey("02b164dc8819830cd50fca4217ad35fa7371cf29db1bc6a07456cc0090ca8ea8fe")))
 
-        mk = MnemonicKey(word_list, role="active")
+        mk = MnemonicKey(word_list)
+        mk.set_path_BIP48(role="active")
         self.assertEqual(str(mk.get_private_key()), str(PrivateKey("KygWePihetfhKYCHahcHjMebNSy53HtcXkccYuTn6R8QLydyPUWt")))
         self.assertEqual(str(mk.get_public_key()), str(PublicKey("035c679454155c4c41e8956ecb8e514d37d2d28da91db81c3a22f216a09af94605")))
 
-        mk = MnemonicKey(word_list, role="posting")
+        mk = MnemonicKey(word_list)
+        mk.set_path_BIP48(role="posting")        
         self.assertEqual(str(mk.get_private_key()), str(PrivateKey("L53K986B756VbqatsCi3jjPLHCq8Y38AZyXf19w6CcxuGH84Rrhs")))
         self.assertEqual(str(mk.get_public_key()), str(PublicKey("0200e7d987dfd5aaecf822420475ddcbadc8503a99893d50d06f87da48e85a8206")))
 
-        mk = MnemonicKey(word_list, role="memo")
+        mk = MnemonicKey(word_list)
+        mk.set_path_BIP48(role="memo")        
         self.assertEqual(str(mk.get_private_key()), str(PrivateKey("L5GrFqdRsroM1Ym4aMdALQBL7xN9kNMru9JTgtwbHVZ4iGvx1184")))
         self.assertEqual(str(mk.get_public_key()), str(PublicKey("02fa2cdf5a007b01b1911615a4fba9c2a864a1c1ed079d222e5d549d207412c601")))

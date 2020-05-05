@@ -353,17 +353,15 @@ class MnemonicKey(object):
     """ This class derives a private key from a BIP39 mnemoric implementation
     """
 
-    def __init__(self, word_list=None, passphrase="", network_index=13, role="owner", account_sequence=0, key_sequence=0, prefix="STM"):
+    def __init__(self, word_list=None, passphrase="", account_sequence=0, key_sequence=0, prefix="STM"):
         if word_list is not None:
             self.set_mnemonic(word_list, passphrase=passphrase)
         else:
             self.seed = None
-        self.network_index = network_index
-        self.role = role
         self.account_sequence = account_sequence
         self.key_sequence = key_sequence
         self.prefix = prefix
-        self.path_prefix = "m/48'"
+        self.path = "m/48'/13'/0'/%d'/%d'" % (self.account_sequence, self.key_sequence)
 
     def set_mnemonic(self, word_list, passphrase=""):
         mnemonic = Mnemonic()
@@ -377,7 +375,24 @@ class MnemonicKey(object):
         self.seed = mnemonic.to_seed(word_list, passphrase=passphrase)
         return word_list
 
-    def set_path(self, network_index=13, role="owner", account_sequence=0, key_sequence=0):
+    def set_path_BIP32(self, path):
+        self.path = path
+
+    def set_path_BIP44(self, account_sequence=0, chain_sequence=0, key_sequence=0, hardened_address=True):
+        if account_sequence < 0:
+            raise ValueError("account_sequence must be >= 0")
+        if key_sequence < 0:
+            raise ValueError("key_sequence must be >= 0")
+        if chain_sequence < 0:
+            raise ValueError("chain_sequence must be >= 0")        
+        self.account_sequence = account_sequence
+        self.key_sequence = key_sequence
+        if hardened_address:
+            self.path = "m/44'/0'/%d'/%d/%d'" % (self.account_sequence, chain_sequence, self.key_sequence)
+        else:
+            self.path = "m/44'/0'/%d'/%d/%d" % (self.account_sequence, chain_sequence, self.key_sequence)
+
+    def set_path_BIP48(self, network_index=13, role="owner", account_sequence=0, key_sequence=0):
         if account_sequence < 0:
             raise ValueError("account_sequence must be >= 0")
         if key_sequence < 0:
@@ -388,10 +403,18 @@ class MnemonicKey(object):
             raise ValueError("Wrong role!")
         elif isinstance(role, int) and role < 0:
             raise ValueError("role must be >= 0")
-        self.role = role
+        if role == "owner":
+            role = 0
+        elif role == "active":
+            role = 1
+        elif role == "posting":
+            role = 4
+        elif role == "memo":
+            role = 3
+
         self.account_sequence = account_sequence
         self.key_sequence = key_sequence
-        self.network_index = network_index
+        self.path = "m/48'/%d'/%d'/%d'/%d'" % (network_index, role, self.account_sequence, self.key_sequence)
 
     def next_account_sequence(self):
         """ Increment the account sequence number by 1 """
@@ -403,28 +426,11 @@ class MnemonicKey(object):
         self.key_sequence += 1
         return self  
 
+    def set_path(self, path):
+        self.path = path
+
     def get_path(self):
-        if self.account_sequence < 0:
-            raise ValueError("account_sequence must be >= 0")
-        if self.key_sequence < 0:
-            raise ValueError("key_sequence must be >= 0")
-        if self.network_index < 0:
-            raise ValueError("network_index must be >= 0")
-        if isinstance(self.role, str) and self.role not in ["owner", "active", "posting", "memo"]:
-            raise ValueError("Wrong role!")
-        elif isinstance(self.role, int) and self.role < 0:
-            raise ValueError("role must be >= 0")    
-        if self.role == "owner":
-            role = 0
-        elif self.role == "active":
-            role = 1
-        elif self.role == "posting":
-            role = 4
-        elif self.role == "memo":
-            role = 3
-        else:
-            role = self.role
-        return "%s/%d'/%d'/%d'/%d'" % (self.path_prefix, self.network_index, role, self.account_sequence, self.key_sequence)
+        return self.path
 
     def get_private(self):
         """ Derive private key from the account_sequence, the role and the key_sequence

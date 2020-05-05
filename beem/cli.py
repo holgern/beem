@@ -700,6 +700,7 @@ def delkey(confirm, pub):
 @click.option('--import-word-list', '-l', help='Imports a BIP39 wordlist and derives a private and public key', is_flag=True, default=False)
 @click.option('--strength', '-s', help='Defines word list length for BIP39 (default = 256).', default=256)
 @click.option('--passphrase', '-p', help='Sets a BIP39 passphrase', is_flag=True, default=False)
+@click.option('--path', '-m', help='Sets a path for BIP39 key creations. When path is set, network, role, account_keys, account and sequence is not used')
 @click.option('--network', '-n', help='Network index, when using BIP39, 0 for steem and 13 for hive, (default is 13)', default=13)
 @click.option('--role', '-r', help='Defines the key role for BIP39 when a single key is generated (default = owner).', default="owner")
 @click.option('--account-keys', '-k', help='Derives four BIP39 keys for each role', is_flag=True, default=False)
@@ -710,7 +711,7 @@ def delkey(confirm, pub):
 @click.option('--wif', '-w', help='Defines how many times the password is replaced by its WIF representation for password based keys (default = 0).', default=0)
 @click.option('--export-pub', '-u', help='Exports the public account keys to a json file for account creation or keychange')
 @click.option('--export', '-e', help='The results are stored in a text file and will not be shown')
-def keygen(import_word_list, strength, passphrase, network, role, account_keys, sequence, account, import_password, create_password, wif, export_pub, export):
+def keygen(import_word_list, strength, passphrase, path, network, role, account_keys, sequence, account, import_password, create_password, wif, export_pub, export):
     """ Creates a new random BIP39 key or password based key and prints its derived private key and public key.
         The generated key is not stored. Can also be used to create new keys for an account.
         Can also be used to derive account keys from a password or BIP39 wordlist
@@ -755,24 +756,36 @@ def keygen(import_word_list, strength, passphrase, network, role, account_keys, 
             t.add_row(["Entered/created Password", import_password])
     else:
         if import_word_list:
-            n_words = int(click.prompt("How many words", type=int))
-            word_array = []
-            word = None
-            m = Mnemonic()
-            while len(word_array) < n_words:
-                word = click.prompt("Enter %d. mnemnoric word" % (len(word_array) + 1), type=str)
-                word = m.expand_word(word)
-                if m.check_word(word):
-                    word_array.append(word)
-                print(" ".join(word_array))
-            word_list = " ".join(word_array)
+            n_words = click.prompt("Enter word list length or complete word list")
+            if len(n_words.split(" ")) > 0:
+                word_list = n_words
+            else:
+                n_words = int(n_words)
+                word_array = []
+                word = None
+                m = Mnemonic()
+                while len(word_array) < n_words:
+                    word = click.prompt("Enter %d. mnemnoric word" % (len(word_array) + 1), type=str)
+                    word = m.expand_word(word)
+                    if m.check_word(word):
+                        word_array.append(word)
+                    print(" ".join(word_array))
+                word_list = " ".join(word_array)
             if passphrase:
                 passphrase = import_password = click.prompt("Enter passphrase", confirmation_prompt=True, hide_input=True)
             else:
                 passphrase = ""
-            mk = MnemonicKey(word_list=word_list, passphrase=passphrase, role=role, account_sequence=account, key_sequence=sequence)
+            mk = MnemonicKey(word_list=word_list, passphrase=passphrase, account_sequence=account, key_sequence=sequence)
+            if path is not None:
+                mk.set_path(path)
+            else:
+                mk.set_path_BIP48(network_index=network, role=role, account_sequence=account, key_sequence=sequence)
         else:
-            mk = MnemonicKey(role=role, account_sequence=account, key_sequence=sequence)
+            mk = MnemonicKey(account_sequence=account, key_sequence=sequence)
+            if path is not None:
+                mk.set_path(path)
+            else:
+                mk.set_path_BIP48(network_index=network, role=role, account_sequence=account, key_sequence=sequence)
             if passphrase:
                 passphrase = import_password = click.prompt("Enter passphrase", confirmation_prompt=True, hide_input=True)
             else:
@@ -783,23 +796,20 @@ def keygen(import_word_list, strength, passphrase, network, role, account_keys, 
         t.align = "l"
         t_pub.align = "l"
         t.add_row(["Account sequence", account])
-        t_pub.add_row(["Account sequence", account])
-        t.add_row(["Key sequence", sequence])
-        t_pub.add_row(["Key sequence", sequence])
-        if account_keys:      
+        t.add_row(["Key sequence", sequence])   
+        if account_keys and path is None:  
             for role in ['owner', 'active', 'posting', 'memo']:
-                mk.set_path(role=role)
+                mk.set_path_BIP48(network_index=network, role=role, account_sequence=account, key_sequence=sequence)
                 t.add_row(["%s Private Key" % role, str(mk.get_private())])
                 t_pub.add_row(["%s Public Key" % role, format(mk.get_public(), "STM")])
+                t.add_row(["%s path" % role, mk.get_path()])               
                 pub_json[role] = format(mk.get_public(), "STM")
             if passphrase != "":
                 t.add_row(["Passphrase", passphrase])                
             t.add_row(["BIP39 wordlist", word_list])
         else:
             t.add_row(["Key role", role])
-            t_pub.add_row(["Key role", role])
             t.add_row(["path", mk.get_path()])
-            t_pub.add_row(["path", mk.get_path()])            
             t.add_row(["BIP39 wordlist", word_list.lower()])
             if passphrase != "":
                 t.add_row(["Passphrase", passphrase])                 
