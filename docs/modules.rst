@@ -2,7 +2,7 @@ Modules
 =======
 
 beem Modules
----------------
+------------
 
 .. toctree::
 
@@ -41,7 +41,7 @@ beem Modules
    beem.witness
 
 beemapi Modules
-------------------
+---------------
 
 .. toctree::
 
@@ -52,7 +52,7 @@ beemapi Modules
    beemapi.websocket
 
 beembase Modules
--------------------
+----------------
 
 .. toctree::
 
@@ -66,12 +66,13 @@ beembase Modules
 
 
 beemgraphenebase Modules
----------------------------
+------------------------
 
 .. toctree::
 
    beemgraphenebase.account
    beemgraphenebase.base58
+   beemgraphenebase.bip32
    beemgraphenebase.bip38
    beemgraphenebase.ecdsasig
    beemgraphenebase.objects

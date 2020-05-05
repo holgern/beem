@@ -294,6 +294,9 @@ class Mnemonic(object):
         nh = bin(int(hashlib.sha256(nd).hexdigest(), 16))[2:].zfill(256)[: l // 33]
         return h == nh
 
+    def check_word(self, word):
+        return word in self.wordlist
+
     def expand_word(self, prefix):
         """Expands a word when sufficient chars are given
 
@@ -350,33 +353,84 @@ class MnemonicKey(object):
     """ This class derives a private key from a BIP39 mnemoric implementation
     """
 
-    def __init__(self, word_list, passphrase="", role="active", account_number=0, sequence=0, prefix="STM"):
-        mnemonic = Mnemonic()
-        self.seed = mnemonic.to_seed(word_list, passphrase=passphrase)
+    def __init__(self, word_list=None, passphrase="", network_index=13, role="owner", account_sequence=0, key_sequence=0, prefix="STM"):
+        if word_list is not None:
+            self.set_mnemonic(word_list, passphrase=passphrase)
+        else:
+            self.seed = None
+        self.network_index = network_index
         self.role = role
-        self.account_number = account_number
-        self.sequence = sequence
+        self.account_sequence = account_sequence
+        self.key_sequence = key_sequence
         self.prefix = prefix
-        self.path_prefix = "m/48'/13'"
+        self.path_prefix = "m/48'"
+
+    def set_mnemonic(self, word_list, passphrase=""):
+        mnemonic = Mnemonic()
+        if not mnemonic.check(word_list):
+            raise ValueError("Word list is not valid!")
+        self.seed = mnemonic.to_seed(word_list, passphrase=passphrase)   
+
+    def generate_mnemonic(self, passphrase="", strength=256):
+        mnemonic = Mnemonic()
+        word_list = mnemonic.generate(strength=strength)
+        self.seed = mnemonic.to_seed(word_list, passphrase=passphrase)
+        return word_list
+
+    def set_path(self, network_index=13, role="owner", account_sequence=0, key_sequence=0):
+        if account_sequence < 0:
+            raise ValueError("account_sequence must be >= 0")
+        if key_sequence < 0:
+            raise ValueError("key_sequence must be >= 0")
+        if network_index < 0:
+            raise ValueError("network_index must be >= 0")
+        if isinstance(role, str) and role not in ["owner", "active", "posting", "memo"]:
+            raise ValueError("Wrong role!")
+        elif isinstance(role, int) and role < 0:
+            raise ValueError("role must be >= 0")
+        self.role = role
+        self.account_sequence = account_sequence
+        self.key_sequence = key_sequence
+        self.network_index = network_index
+
+    def next_account_sequence(self):
+        """ Increment the account sequence number by 1 """
+        self.account_sequence += 1
+        return self
+
+    def next_sequence(self):
+        """ Increment the key sequence number by 1 """
+        self.key_sequence += 1
+        return self  
 
     def get_path(self):
-        if self.account_number < 0:
-            raise ValueError("sequence must be >= 0")
-        if self.sequence < 0:
-            raise ValueError("account_number must be >= 0")
+        if self.account_sequence < 0:
+            raise ValueError("account_sequence must be >= 0")
+        if self.key_sequence < 0:
+            raise ValueError("key_sequence must be >= 0")
+        if self.network_index < 0:
+            raise ValueError("network_index must be >= 0")
+        if isinstance(self.role, str) and self.role not in ["owner", "active", "posting", "memo"]:
+            raise ValueError("Wrong role!")
+        elif isinstance(self.role, int) and self.role < 0:
+            raise ValueError("role must be >= 0")    
         if self.role == "owner":
-            return "%s/0'/%d'/%d'" % (self.path_prefix, self.account_number, self.sequence)
+            role = 0
         elif self.role == "active":
-            return "%s/1'/%d'/%d'" % (self.path_prefix, self.account_number, self.sequence)
+            role = 1
         elif self.role == "posting":
-            return "%s/4'/%d'/%d'" % (self.path_prefix, self.account_number, self.sequence)
+            role = 4
         elif self.role == "memo":
-            return "%s/3'/%d'/%d'" % (self.path_prefix, self.account_number, self.sequence)
-        raise ValueError("Wrong role")
+            role = 3
+        else:
+            role = self.role
+        return "%s/%d'/%d'/%d'/%d'" % (self.path_prefix, self.network_index, role, self.account_sequence, self.key_sequence)
 
     def get_private(self):
-        """ Derive private key from the account_number, the role and the sequence
+        """ Derive private key from the account_sequence, the role and the key_sequence
         """
+        if self.seed is None:
+            raise ValueError("seed is None, set or generate a mnemnoric first")
         key = BIP32Key.fromEntropy(self.seed)
         for n in parse_path(self.get_path()):
             key = key.ChildKey(n)

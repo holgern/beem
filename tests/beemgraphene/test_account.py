@@ -459,11 +459,11 @@ class Testcases(unittest.TestCase):
         self.assertEqual(str(mk.get_private_key()), str(PrivateKey("L2cgypn75kre1s7JUkTK6H7Y656GwDbNnSNZKWSQ2Rnnx6qM11KD")))
         self.assertEqual(str(mk.get_public_key()), str(PublicKey("02821aa2d26c4fd9b735dd1fed148b96fec978eae1440adf79a4bf95e118b2d8f1")))
         
-        mk = MnemonicKey(word_list, role="owner", sequence=5)
+        mk = MnemonicKey(word_list, role="owner", key_sequence=5)
         self.assertEqual(str(mk.get_private_key()), str(PrivateKey("L5cJSZPcBMBtmuRaK9C48yyXK5JpaH15BsjKLZkmamEWKKx25Kx7")))
         self.assertEqual(str(mk.get_public_key()), str(PublicKey("0309a45aa9add2c7421e0553e23b1800e51d95e525fa4eae1bcc5fb58186e07ed5")))
 
-        mk = MnemonicKey(word_list, role="owner", account_number=2)
+        mk = MnemonicKey(word_list, role="owner", account_sequence=2)
         self.assertEqual(str(mk.get_private_key()), str(PrivateKey("L4A95nfp1kyJtUtaTqzMyLQkz6NYSfk4R8pejcgKXQSUtPysiFgv")))
         self.assertEqual(str(mk.get_public_key()), str(PublicKey("02b164dc8819830cd50fca4217ad35fa7371cf29db1bc6a07456cc0090ca8ea8fe")))
 

@@ -2,9 +2,12 @@ Changelog
 =========
 0.23.4
 ------
-* Bip39 and Bip32 support has been added
+* Bip39 and Bip32 support has been added to beempy keygen
 * Privatekey derivation based on Bip39/Bip22 has been added
 * Several unit tests have been added
+* price/market fix for custom nodes (thanks to @crokkon)
+* Replace brain key generation by BIP39 for beempy keygen
+* Remove password based key generation for beempy changekeys
 
 0.23.3
 ------
