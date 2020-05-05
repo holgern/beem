@@ -8,6 +8,7 @@ Changelog
 * price/market fix for custom nodes (thanks to @crokkon)
 * Replace brain key generation by BIP39 for beempy keygen
 * Remove password based key generation for beempy changekeys
+* Improved yaml header for beempy download
 
 0.23.3
 ------

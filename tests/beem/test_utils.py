@@ -123,6 +123,12 @@ class Testcases(unittest.TestCase):
         t = "holger80:30,beembot:40"
         b = derive_beneficiaries(t)
         self.assertEqual(b, [{"account": "beembot", "weight": 4000}, {"account": "holger80", "weight": 3000}])
+        t = "holger80:30.00%,beembot:40.00%"
+        b = derive_beneficiaries(t)
+        self.assertEqual(b, [{"account": "beembot", "weight": 4000}, {"account": "holger80", "weight": 3000}]) 
+        t = "holger80:30%, beembot:40%"
+        b = derive_beneficiaries(t)
+        self.assertEqual(b, [{"account": "beembot", "weight": 4000}, {"account": "holger80", "weight": 3000}])        
         t = "holger80:30,beembot"
         b = derive_beneficiaries(t)
         self.assertEqual(b, [{"account": "beembot", "weight": 7000}, {"account": "holger80", "weight": 3000}])

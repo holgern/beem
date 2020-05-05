@@ -285,18 +285,18 @@ class Testcases(unittest.TestCase):
         runner = CliRunner()
         result = runner.invoke(cli, ['-dt', 'newaccount', 'beem3'], input="test\ntest\ntest\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-dt', 'newaccount', '--owner', 'STX7mLs2hns87f7kbf3o2HBqNoEaXiTeeU89eVF6iUCrMQJFzBsPo',
-                                     '--active', 'STX7rUmnpnCp9oZqMQeRKDB7GvXTM9KFvhzbA3AKcabgTBfQZgHZp',
-                                     '--posting', 'STX6qGWHsCpmHbphnQbS2yfhvhJXDUVDwnsbnrMZkTqfnkNEZRoLP',
-                                     '--memo', 'STX8Wvi74GYzBKgnUmiLvptzvxmPtXfjGPJL8QY3rebecXaxGGQyV', 'beem3'], input="test\ntest\n")
+        result = runner.invoke(cli, ['-dt', 'newaccount', '--owner', 'STMmLs2hns87f7kbf3o2HBqNoEaXiTeeU89eVF6iUCrMQJFzBsPo',
+                                     '--active', 'STM7rUmnpnCp9oZqMQeRKDB7GvXTM9KFvhzbA3AKcabgTBfQZgHZp',
+                                     '--posting', 'STM6qGWHsCpmHbphnQbS2yfhvhJXDUVDwnsbnrMZkTqfnkNEZRoLP',
+                                     '--memo', 'STM8Wvi74GYzBKgnUmiLvptzvxmPtXfjGPJL8QY3rebecXaxGGQyV', 'beem3'], input="test\ntest\n")
         self.assertEqual(result.exit_code, 0)                            
 
     def test_changekeys(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dx', 'changekeys', '--owner', 'STX7mLs2hns87f7kbf3o2HBqNoEaXiTeeU89eVF6iUCrMQJFzBsPo',
-                                     '--active', 'STX7rUmnpnCp9oZqMQeRKDB7GvXTM9KFvhzbA3AKcabgTBfQZgHZp',
-                                     '--posting', 'STX6qGWHsCpmHbphnQbS2yfhvhJXDUVDwnsbnrMZkTqfnkNEZRoLP',
-                                     '--memo', 'STX8Wvi74GYzBKgnUmiLvptzvxmPtXfjGPJL8QY3rebecXaxGGQyV', 'beem'], input="test\ntest\n")
+        result = runner.invoke(cli, ['-dx', 'changekeys', '--owner', 'STM7mLs2hns87f7kbf3o2HBqNoEaXiTeeU89eVF6iUCrMQJFzBsPo',
+                                     '--active', 'STM7rUmnpnCp9oZqMQeRKDB7GvXTM9KFvhzbA3AKcabgTBfQZgHZp',
+                                     '--posting', 'STM6qGWHsCpmHbphnQbS2yfhvhJXDUVDwnsbnrMZkTqfnkNEZRoLP',
+                                     '--memo', 'STM8Wvi74GYzBKgnUmiLvptzvxmPtXfjGPJL8QY3rebecXaxGGQyV', 'beem'], input="test\ntest\n")
         self.assertEqual(result.exit_code, 0)     
 
     @unittest.skip
@@ -479,9 +479,9 @@ class Testcases(unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', '--author', account_name])
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', '--author', '--title', account_name])
+        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--author', '--title', account_name])
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--curation', '--author', '--permlink', '--length', '30', account_name])
+        result = runner.invoke(cli, ['rewards', '--post', '--comment', '--author', '--permlink', '--length', '30', account_name])
         self.assertEqual(result.exit_code, 0)
 
     def test_curation(self):

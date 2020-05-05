@@ -2002,10 +2002,19 @@ def download(permlink, account, export):
         yaml_prefix += 'title: %s\n' % comment["title"]
     yaml_prefix += 'permlink: %s\n' % comment["permlink"]
     yaml_prefix += 'author: %s\n' % comment["author"]
+    yaml_prefix += 'last_update: %s\n' % comment.json()["last_update"]
+    yaml_prefix += 'max_accepted_payout: %s\n' % str(comment["max_accepted_payout"])
+    yaml_prefix += 'percent_steem_dollars: %s\n' %  str(comment["percent_steem_dollars"])
     if "tags" in comment.json_metadata:
         if len(comment.json_metadata["tags"]) > 0 and comment["category"] != comment.json_metadata["tags"][0] and len(comment["category"]) > 0:
             yaml_prefix += 'community: %s\n' % comment["category"]
         yaml_prefix += 'tags: %s\n' % ",".join(comment.json_metadata["tags"])
+    if "beneficiaries" in comment:
+        beneficiaries = []
+        for b in comment["beneficiaries"]:
+            beneficiaries.append("%s:%.2f%%" % (b["account"], b["weight"] / 10000 * 100))
+        if len(beneficiaries) > 0:
+            yaml_prefix += 'beneficiaries: %s\n' % ",".join(beneficiaries)
     if reply_identifier is not None:
         yaml_prefix += 'reply_identifier: %s\n' % reply_identifier    
     yaml_prefix += '---\n'
