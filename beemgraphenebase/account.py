@@ -22,6 +22,7 @@ from binascii import hexlify, unhexlify
 import unicodedata
 
 from .base58 import ripemd160, Base58
+from .bip32 import BIP32Key, parse_path
 from .dictionary import words as BrainKeyDictionary
 from .dictionary import words_bip39 as MnemonicDictionary
 from .py23 import py23_bytes, PY2
@@ -176,11 +177,17 @@ class BrainKey(object):
 # Copyright (c) 2017 mruddy
 @python_2_unicode_compatible
 class Mnemonic(object):
+    """BIP39 mnemoric implementation"""
     def __init__(self):
         self.wordlist = MnemonicDictionary.split(',')
-        self.radix = 2048 
+        self.radix = 2048
 
     def generate(self, strength=128):
+        """ Generates a word list based on the given strength
+
+        :param int strength: initial entropy strength, must be one of [128, 160, 192, 224, 256]
+
+        """
         if strength not in [128, 160, 192, 224, 256]:
             raise ValueError(
                 "Strength should be one of the following [128, 160, 192, 224, 256], but it is not (%d)."
@@ -267,6 +274,10 @@ class Mnemonic(object):
         return result_phrase
 
     def check(self, mnemonic):
+        """ Checks the mnemonic word list is valid
+        :param list mnemonic: mnemonic word list with lenght of 12, 15, 18, 21, 24
+        :returns: True, when valid
+        """
         mnemonic = self.normalize_string(mnemonic).split(" ")
         # list of valid mnemonic lengths
         if len(mnemonic) not in [12, 15, 18, 21, 24]:
@@ -284,6 +295,11 @@ class Mnemonic(object):
         return h == nh
 
     def expand_word(self, prefix):
+        """Expands a word when sufficient chars are given
+
+        :param str prefix: first chars of a valid dict word
+
+        """
         if prefix in self.wordlist:
             return prefix
         else:
@@ -296,10 +312,12 @@ class Mnemonic(object):
                 return prefix
 
     def expand(self, mnemonic):
+        """Expands all words given in a list"""
         return " ".join(map(self.expand_word, mnemonic.split(" ")))
 
     @classmethod
     def normalize_string(cls, txt):
+        """Normalizes strings"""
         if isinstance(txt, str if sys.version < "3" else bytes):
             utxt = txt.decode("utf8")
         elif isinstance(txt, unicode if sys.version < "3" else str):  # noqa: F821
@@ -311,6 +329,12 @@ class Mnemonic(object):
 
     @classmethod
     def to_seed(cls, mnemonic, passphrase=""):
+        """Returns a seed based on bip39
+
+        :param str mnemonic: string containing a valid mnemonic word list
+        :param str passphrase: optional, passphrase can be set to modify the returned seed.
+        
+        """
         mnemonic = cls.normalize_string(mnemonic)
         passphrase = cls.normalize_string(passphrase)
         passphrase = "mnemonic" + passphrase
@@ -318,6 +342,54 @@ class Mnemonic(object):
         passphrase = passphrase.encode("utf-8")
         stretched = hashlib.pbkdf2_hmac("sha512", mnemonic, passphrase, PBKDF2_ROUNDS)
         return stretched[:64]
+
+
+
+
+class MnemonicKey(object):
+    """ This class derives a private key from a BIP39 mnemoric implementation
+    """
+
+    def __init__(self, word_list, passphrase="", role="active", account_number=0, sequence=0, prefix="STM"):
+        mnemonic = Mnemonic()
+        self.seed = mnemonic.to_seed(word_list, passphrase=passphrase)
+        self.role = role
+        self.account_number = account_number
+        self.sequence = sequence
+        self.prefix = prefix
+        self.path_prefix = "m/48'/13'"
+
+    def get_path(self):
+        if self.account_number < 0:
+            raise ValueError("sequence must be >= 0")
+        if self.sequence < 0:
+            raise ValueError("account_number must be >= 0")
+        if self.role == "owner":
+            return "%s/0'/%d'/%d'" % (self.path_prefix, self.account_number, self.sequence)
+        elif self.role == "active":
+            return "%s/1'/%d'/%d'" % (self.path_prefix, self.account_number, self.sequence)
+        elif self.role == "posting":
+            return "%s/4'/%d'/%d'" % (self.path_prefix, self.account_number, self.sequence)
+        elif self.role == "memo":
+            return "%s/3'/%d'/%d'" % (self.path_prefix, self.account_number, self.sequence)
+        raise ValueError("Wrong role")
+
+    def get_private(self):
+        """ Derive private key from the account_number, the role and the sequence
+        """
+        key = BIP32Key.fromEntropy(self.seed)
+        for n in parse_path(self.get_path()):
+            key = key.ChildKey(n)
+        return PrivateKey(key.WalletImportFormat(), prefix=self.prefix)
+
+    def get_public(self):
+        return self.get_private().pubkey
+
+    def get_private_key(self):
+        return self.get_private()
+
+    def get_public_key(self):
+        return self.get_public()
 
 
 @python_2_unicode_compatible

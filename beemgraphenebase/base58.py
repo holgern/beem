@@ -192,13 +192,16 @@ def base58CheckEncode(version, payload):
     return base58encode(result)
 
 
-def base58CheckDecode(s):
+def base58CheckDecode(s, skip_first_bytes=True):
     s = unhexlify(base58decode(s))
     dec = hexlify(s[:-4]).decode('ascii')
     checksum = doublesha256(dec)[:4]
     if not (s[-4:] == checksum):
         raise AssertionError()
-    return dec[2:]
+    if skip_first_bytes:
+        return dec[2:]
+    else:
+        return dec
 
 
 def gphBase58CheckEncode(s):

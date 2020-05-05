@@ -75,7 +75,7 @@ class BIP32Key(object):
         """
         # Sanity checks
         # raw = check_decode(xkey)
-        raw = b'\x04' + unhexlify(base58CheckDecode(xkey))
+        raw = unhexlify(base58CheckDecode(xkey, skip_first_bytes=False))
         
         if len(raw) != 78:
             raise ValueError("extended key format wrong length")

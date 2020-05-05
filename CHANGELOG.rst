@@ -3,6 +3,8 @@ Changelog
 0.23.4
 ------
 * Bip39 and Bip32 support has been added
+* Privatekey derivation based on Bip39/Bip22 has been added
+* Several unit tests have been added
 
 0.23.3
 ------
