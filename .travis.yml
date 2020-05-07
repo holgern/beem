@@ -58,7 +58,7 @@ before_install:
   - pip install --upgrade wheel
   # Set numpy version first, other packages link against it
   - pip install six nose coverage codecov pytest pytest-cov coveralls codacy-coverage parameterized secp256k1prp cryptography scrypt
-  - pip install pycryptodomex  pyyaml appdirs pylibscrypt tox
+  - pip install pycryptodomex  pyyaml appdirs pylibscrypt tox diff_match_patch
   - pip install ecdsa requests future websocket-client pytz six Click events prettytable click_shell
 
 script:

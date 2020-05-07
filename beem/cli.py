@@ -1977,54 +1977,88 @@ def uploadimage(image, account, image_name):
         print("![%s](%s)" % (image_name, tx["url"]))
 
 @cli.command()
-@click.argument('permlink', nargs=1)
+@click.argument('permlink', nargs=-1)
 @click.option('--account', '-a', help='Account are you posting from')
-@click.option('--export', '-e', default=None, help="Export markdown to a md-file")
-def download(permlink, account, export):
+@click.option('--save', '-s', help="Saves markdown in current directoy as date_permlink.md", is_flag=True, default=False)
+@click.option('--export', '-e', default=None, help="Export markdown to given a md-file name")
+def download(permlink, account, save, export):
     """Download body with yaml header"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if account is None:
         account = stm.config["default_account"]
-    if permlink[0] == "@":
-        authorperm = permlink
-    else:
-        authorperm = construct_authorperm(account, permlink)
-    comment = Comment(authorperm, blockchain_instance=stm)
-    if comment["parent_author"] != "" and comment["parent_permlink"] != "":
-        reply_identifier = construct_authorperm(comment["parent_author"], comment["parent_permlink"])
-    else:
-        reply_identifier = None
-    
-    yaml_prefix = '---\n'
-    if comment["title"] != "":
-        yaml_prefix += 'title: %s\n' % comment["title"]
-    yaml_prefix += 'permlink: %s\n' % comment["permlink"]
-    yaml_prefix += 'author: %s\n' % comment["author"]
-    yaml_prefix += 'last_update: %s\n' % comment.json()["last_update"]
-    yaml_prefix += 'max_accepted_payout: %s\n' % str(comment["max_accepted_payout"])
-    yaml_prefix += 'percent_steem_dollars: %s\n' %  str(comment["percent_steem_dollars"])
-    if "tags" in comment.json_metadata:
-        if len(comment.json_metadata["tags"]) > 0 and comment["category"] != comment.json_metadata["tags"][0] and len(comment["category"]) > 0:
-            yaml_prefix += 'community: %s\n' % comment["category"]
-        yaml_prefix += 'tags: %s\n' % ",".join(comment.json_metadata["tags"])
-    if "beneficiaries" in comment:
-        beneficiaries = []
-        for b in comment["beneficiaries"]:
-            beneficiaries.append("%s:%.2f%%" % (b["account"], b["weight"] / 10000 * 100))
-        if len(beneficiaries) > 0:
-            yaml_prefix += 'beneficiaries: %s\n' % ",".join(beneficiaries)
-    if reply_identifier is not None:
-        yaml_prefix += 'reply_identifier: %s\n' % reply_identifier    
-    yaml_prefix += '---\n'
-    if export is not None:
-        if export[-3:] != ".md":
-            export += ".md"
-        with open(export, "w", encoding="utf-8") as f:
-            f.write(yaml_prefix + comment["body"])        
-    else:
-        print(yaml_prefix + comment["body"])
+    account = Account(account, blockchain_instance=stm)
+    if len(permlink) == 0:
+        permlink = []
+        progress_length = account.virtual_op_count()
+        print("Reading post history...")
+        last_index = 0
+        with click.progressbar(length=progress_length) as bar:
+            for h in account.history(only_ops=["comment"]):
+                if h["parent_author"] != '':
+                    continue
+                if h["author"] != account["name"]:
+                    continue
+                if h["permlink"] in permlink:
+                    continue
+                else:
+                    permlink.append(h["permlink"])
+                    bar.update(h["index"] - last_index)
+                    last_index = h["index"]
+
+    for p in permlink:
+        if p[0] == "@":
+            authorperm = p
+        elif os.path.exists(p):
+            with open(p) as f:
+                content = f.read()
+            body, parameter = seperate_yaml_dict_from_body(content)
+            if "author" in parameter and "permlink" in parameter:
+                authorperm = construct_authorperm(parameter["author"], parameter["permlink"])
+            else:
+                authorperm = construct_authorperm(account["name"], p)
+        else:
+            authorperm = construct_authorperm(account["name"], p)
+        if len(permlink) > 1:
+            print(authorperm)
+        comment = Comment(authorperm, blockchain_instance=stm)
+        if comment["parent_author"] != "" and comment["parent_permlink"] != "":
+            reply_identifier = construct_authorperm(comment["parent_author"], comment["parent_permlink"])
+        else:
+            reply_identifier = None
+
+        yaml_prefix = '---\n'
+        if comment["title"] != "":
+            yaml_prefix += 'title: "%s"\n' % comment["title"]
+        yaml_prefix += 'permlink: %s\n' % comment["permlink"]
+        yaml_prefix += 'author: %s\n' % comment["author"]
+        yaml_prefix += 'last_update: %s\n' % comment.json()["last_update"]
+        yaml_prefix += 'max_accepted_payout: %s\n' % str(comment["max_accepted_payout"])
+        yaml_prefix += 'percent_steem_dollars: %s\n' %  str(comment["percent_steem_dollars"])
+        if "tags" in comment.json_metadata:
+            if len(comment.json_metadata["tags"]) > 0 and comment["category"] != comment.json_metadata["tags"][0] and len(comment["category"]) > 0:
+                yaml_prefix += 'community: %s\n' % comment["category"]
+            yaml_prefix += 'tags: %s\n' % ",".join(comment.json_metadata["tags"])
+        if "beneficiaries" in comment:
+            beneficiaries = []
+            for b in comment["beneficiaries"]:
+                beneficiaries.append("%s:%.2f%%" % (b["account"], b["weight"] / 10000 * 100))
+            if len(beneficiaries) > 0:
+                yaml_prefix += 'beneficiaries: %s\n' % ",".join(beneficiaries)
+        if reply_identifier is not None:
+            yaml_prefix += 'reply_identifier: %s\n' % reply_identifier    
+        yaml_prefix += '---\n'
+        if save or export is not None:
+            if export is None or len(permlink) > 0:
+                export = comment.json()["created"].replace(":", "-") + "_" + comment["permlink"] + ".md"
+            if export[-3:] != ".md":
+                export += ".md"
+            
+            with open(export, "w", encoding="utf-8") as f:
+                f.write(yaml_prefix + comment["body"])
+        else:
+            print(yaml_prefix + comment["body"])
 
 
 @cli.command()
@@ -2083,8 +2117,7 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
         parameter["max_accepted_payout"] = parameter["max-accepted-payout"]
 
     if not unlock_wallet(stm):
-        return    
-
+        return
     tags = None
     if "tags" in parameter:
         tags = derive_tags(parameter["tags"])
@@ -2158,11 +2191,6 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
             comment = Comment(construct_authorperm(author, permlink), blockchain_instance=stm)
         except:
             comment = None
-        if comment is not None:
-            edit_ok = click.prompt("Should I edit %s [y/n]" % (str(permlink)))
-            if edit_ok not in ["y", "ye", "yes"]:                
-                permlink = derive_permlink(title, with_suffix=True)
-                comment = None
 
     if comment is None or no_patch_on_edit:
 
@@ -2176,6 +2204,13 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
         dmp = dmp_module.diff_match_patch()
         patch = dmp.patch_make(comment.body, body)
         patch_text = dmp.patch_toText(patch)
+        if patch_text == "":
+            print("No changes on post body detected.")
+        else:
+            print(patch_text)
+        edit_ok = click.prompt("Should I broadcast %s [y/n]" % (str(permlink)))
+        if edit_ok not in ["y", "ye", "yes"]:                
+            return
         tx = stm.post(title, patch_text, author=author, permlink=permlink, reply_identifier=reply_identifier, community=community,
                       tags=tags, parse_body=False, app='beempy/%s' % (__version__))        
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
@@ -3928,6 +3963,9 @@ def verify(blocknumber, trx, use_api):
         for key in public_keys:
             if key not in empty_public_keys or use_api:
                 new_public_keys.append(key)
+        if len(new_public_keys) == 0:
+            for key in public_keys:
+                new_public_keys.append(key)            
         if isinstance(new_public_keys, list) and len(new_public_keys) == 1:
             new_public_keys = new_public_keys[0]
         else:

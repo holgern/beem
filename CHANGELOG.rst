@@ -1,5 +1,11 @@
 Changelog
 =========
+0.23.5
+------
+* Add missing diff_match_patch to requirements
+* beempy download with providing a permlink will download all posts
+* Improve Yaml parsing
+
 0.23.4
 ------
 * Bip39 and Bip32 support has been added to beempy keygen

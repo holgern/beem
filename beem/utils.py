@@ -373,9 +373,9 @@ def derive_tags(tags):
 def seperate_yaml_dict_from_body(content):
     parameter = {}
     body = ""
-    if len(content.split("---")) > 1:
-        body = content[content.find("---", 1) + 3 :]
-        yaml_content = content[content.find("---") + 3 : content.find("---", 1)]
+    if len(content.split("---\n")) > 1:
+        body = content[content.find("---\n", 1) + 4 :]
+        yaml_content = content[content.find("---\n") + 4 : content.find("---\n", 1)]
         parameter = yaml.load(yaml_content, Loader=yaml.FullLoader)
         if not isinstance(parameter, dict):
             parameter = yaml.load(yaml_content.replace(":", ": ").replace("  ", " "), Loader=yaml.FullLoader)
