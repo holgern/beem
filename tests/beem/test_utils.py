@@ -151,8 +151,8 @@ class Testcases(unittest.TestCase):
         t = "---\npar1: data1\npar2: data2\npar3: 3\n---\n test ---"
         body, par = seperate_yaml_dict_from_body(t)
         self.assertEqual(par, {"par1": "data1", "par2": "data2", "par3": 3})
-        self.assertEqual(body, "\n test ---")
+        self.assertEqual(body, " test ---")
         t = "---\npar1:data1\npar2:data2\npar3:3\n---\n test ---"
         body, par = seperate_yaml_dict_from_body(t)
         self.assertEqual(par, {"par1": "data1", "par2": "data2", "par3": 3})
-        self.assertEqual(body, "\n test ---")
+        self.assertEqual(body, " test ---")

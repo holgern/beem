@@ -62,8 +62,6 @@ class Testcases(unittest.TestCase):
                 c.blockchain.rpc.next()
                 c.refresh()
                 title = c.title
-        self.assertTrue(isinstance(c.id, int))
-        self.assertTrue(c.id > 0)
         self.assertEqual(c.author, self.author)
         self.assertEqual(c.permlink, self.permlink)
         self.assertEqual(c.authorperm, self.authorperm)
