@@ -109,6 +109,8 @@ def unlock_wallet(stm, password=None, allow_wif=True):
         return True
     if not stm.wallet.locked():
         return True
+    if len(stm.wallet.keys) > 0:
+        return True
     password_storage = stm.config["password_storage"]
     if not password and KEYRING_AVAILABLE and password_storage == "keyring":
         password = keyring.get_password("beem", "wallet")
@@ -183,6 +185,8 @@ def node_answer_time(node):
 @click.option(
     '--hive', '-h', is_flag=True, default=False, help="Connect to the Hive blockchain")
 @click.option(
+    '--keys', '-k', help="JSON file that contains account keys, when set, the wallet cannot be used.")
+@click.option(
     '--token', '-t', is_flag=True, default=False, help="Uses a hivesigner/steemconnect token to broadcast (only broadcast operation with posting permission)")
 @click.option(
     '--expires', '-e', default=30,
@@ -190,7 +194,7 @@ def node_answer_time(node):
 @click.option(
     '--verbose', '-v', default=3, help='Verbosity')
 @click.version_option(version=__version__)
-def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hive, token, expires, verbose):
+def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hive, keys, token, expires, verbose):
 
     # Logging
     log = logging.getLogger(__name__)
@@ -203,7 +207,24 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hi
     ch.setLevel(getattr(logging, verbosity.upper()))
     ch.setFormatter(formatter)
     log.addHandler(ch)
-    
+
+    keys_list = []
+    autoconnect = False
+    if keys and keys != "":
+        if not os.path.isfile(keys):
+            raise Exception("File %s does not exist!" % keys)
+        with open(keys) as fp:
+            keyfile = fp.read()
+        if keyfile.find('\0') > 0:
+            with open(keys, encoding='utf-16') as fp:
+                keyfile = fp.read()
+        keyfile = ast.literal_eval(keyfile)
+        for account in keyfile:
+            for role in ["owner", "active", "posting", "memo"]:
+                if role in keyfile[account]:
+                    keys_list.append(keyfile[account][role])
+    if len(keys_list) > 0:
+        autoconnect = True
     if create_link:
         no_broadcast = True
         unsigned = True
@@ -218,6 +239,7 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hi
         stm = Hive(
             node=node,
             nobroadcast=no_broadcast,
+            keys=keys_list,
             offline=offline,
             nowallet=no_wallet,
             unsigned=unsigned,
@@ -228,13 +250,14 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hi
             num_retries=10,
             num_retries_call=3,
             timeout=15,
-            autoconnect=False
+            autoconnect=autoconnect
         )
     else:
         stm = Steem(
             node=node,
             nobroadcast=no_broadcast,
             offline=offline,
+            keys=keys_list,
             nowallet=no_wallet,
             unsigned=unsigned,
             use_sc2=token,
@@ -244,7 +267,7 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hi
             num_retries=10,
             num_retries_call=3,
             timeout=15,
-            autoconnect=False
+            autoconnect=autoconnect
         )
             
     set_shared_blockchain_instance(stm)

@@ -1,9 +1,13 @@
 Changelog
 =========
+0.23.6
+------
+* beempy --key key_list.json command can be used to set keys in beempy without using the wallet.
+
 0.23.5
 ------
 * Add missing diff_match_patch to requirements
-* beempy download with providing a permlink will download all posts
+* beempy download without providing a permlink will download all posts
 * Improve Yaml parsing
 
 0.23.4

@@ -26,6 +26,25 @@ To bypass password entry, you can set an environment variable ``UNLOCK``.
 
     UNLOCK=mysecretpassword beempy transfer <recipient_name> 100 STEEM
 
+Using a key json file
+---------------------
+
+A key_file.json can be used to provide private keys to beempy:
+::
+
+    {
+        "account_a": {"posting": "5xx", "active": "5xx"},
+        "account_b": {"posting": "5xx"],
+    }
+
+with
+
+::
+
+    beempy --key key_file.json command
+
+When set, the wallet cannot be used.
+
 Common Commands
 ---------------
 First, you may like to import your Steem account:

@@ -124,7 +124,7 @@ class Wallet(object):
         if "wif" in kwargs and "keys" not in kwargs:
             kwargs["keys"] = kwargs["wif"]
         master_password_set = False
-        if "keys" in kwargs:
+        if "keys" in kwargs and len(kwargs["keys"]) > 0:
             self.setKeys(kwargs["keys"])
         else:
             """ If no keys are provided manually we load the SQLite
