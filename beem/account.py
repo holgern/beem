@@ -321,6 +321,12 @@ class Account(BlockchainObject):
             return {}
         return json.loads(self["json_metadata"])
 
+    @property
+    def posting_json_metadata(self):
+        if self["posting_json_metadata"] == '':
+            return {}
+        return json.loads(self["posting_json_metadata"])
+
     def print_info(self, force_refresh=False, return_str=False, use_table=False, **kwargs):
         """ Prints import information about the account
         """
@@ -2489,7 +2495,7 @@ class Account(BlockchainObject):
             metadata = json.dumps(metadata)
         elif not isinstance(metadata, str):
             raise ValueError("Profile must be a dict or string!")
-        op = operations.Account_update(
+        op = operations.Account_update2(
             **{
                 "account": account["name"],
                 "posting_json_metadata": metadata,

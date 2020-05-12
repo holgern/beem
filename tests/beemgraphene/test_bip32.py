@@ -164,5 +164,12 @@ class Testcases(unittest.TestCase):
         self.assertEqual(m.ExtendedKey(), "xprv9uPDJpEQgRQfDcW7BkF7eTya6RPxXeJCqCJGHuCJ4GiRVLzkTXBAJMu2qaMWPrS7AANYqdq6vcBcBUdJCVVFceUvJFjaPdGZ2y9WACViL4L")
         self.assertEqual(m.ExtendedKey(private=False, encoded=True), "xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y")
 
+    def test_parse_path(self):
+        path = "48'/13'/0'/0'/0'"
+
+        bin_path = parse_path(path, as_bytes=True)    
+        self.assertEqual(b'800000308000000d800000008000000080000000', bin_path)
+
+
 if __name__ == '__main__':
     unittest.main()

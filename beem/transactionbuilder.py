@@ -13,6 +13,7 @@ from .steemconnect import SteemConnect
 from beembase.objects import Operation
 from beemgraphenebase.account import PrivateKey, PublicKey
 from beembase.signedtransactions import Signed_Transaction
+from beembase.ledgertransactions import Ledger_Transaction
 from beembase import transactions, operations
 from .exceptions import (
     InsufficientAuthorityError,
@@ -72,6 +73,8 @@ class TransactionBuilder(dict):
             self._require_reconstruction = False
         else:
             self._require_reconstruction = True
+        self._use_ledger = self.blockchain.use_ledger
+        self.path = self.blockchain.path
         self._use_condenser_api = use_condenser_api
         self.set_expiration(kwargs.get("expiration", self.blockchain.expiration))
 
@@ -166,6 +169,28 @@ class TransactionBuilder(dict):
             raise AssertionError("Could not access permission")
 
         required_treshold = account[permission]["weight_threshold"]
+        if self._use_ledger:
+            if not self._is_constructed() or self._is_require_reconstruction():
+                self.constructTx()
+
+            key_found = False
+            if self.path is not None:
+                current_pubkey = self.ledgertx.get_pubkey(self.path)
+                for authority in account[permission]["key_auths"]:
+                    if str(current_pubkey) == authority[1]:
+                        key_found = True
+                if permission == "posting" and not key_found:
+                        for authority in account["active"]["key_auths"]:
+                            if str(current_pubkey) == authority[1]:
+                                key_found = True
+                if not key_found:
+                        for authority in account["owner"]["key_auths"]:
+                            if str(current_pubkey) == authority[1]:
+                                key_found = True
+            if not key_found:
+                raise AssertionError("Could not find pubkey from %s in path: %s!" % (account["name"], self.path))
+            return
+        
         if self.blockchain.wallet.locked():
             raise WalletLocked()
         if self.blockchain.use_sc2 and self.blockchain.steemconnect is not None:
@@ -239,6 +264,35 @@ class TransactionBuilder(dict):
         """Clear all stored wifs"""
         self.wifs = set()
 
+    def setPath(self, path):
+        self.path = path
+
+    def searchPath(self, account, perm):
+        if not self.blockchain.use_ledger:
+            return
+        if not self._is_constructed() or self._is_require_reconstruction():
+            self.constructTx()
+        key_found = False
+        path = None
+        current_account_index = 0
+        current_key_index = 0
+        while not key_found and current_account_index < 5:
+            path = self.ledgertx.build_path(perm, current_account_index, current_key_index)
+            current_pubkey = self.ledgertx.get_pubkey(path)
+            key_found = False
+            for authority in account[perm]["key_auths"]:
+                if str(current_pubkey) == authority[1]:
+                    key_found = True
+            if not key_found and current_key_index < 5:
+                current_key_index += 1
+            elif not key_found and current_key_index >= 5:
+                current_key_index = 0
+                current_account_index += 1
+        if not key_found:
+            return None
+        else:
+            return path
+
     def constructTx(self, ref_block_num=None, ref_block_prefix=None):
         """ Construct the actual transaction and store it in the class's dict
             store
@@ -262,6 +316,16 @@ class TransactionBuilder(dict):
         if ref_block_num is None or ref_block_prefix is None:
             ref_block_num, ref_block_prefix = transactions.getBlockParams(
                 self.blockchain.rpc)
+        if self._use_ledger:
+            self.ledgertx = Ledger_Transaction(
+                ref_block_prefix=ref_block_prefix,
+                expiration=expiration,
+                operations=ops,
+                ref_block_num=ref_block_num,
+                custom_chains=self.blockchain.custom_chains,
+                prefix=self.blockchain.prefix
+            )
+
         self.tx = Signed_Transaction(
             ref_block_prefix=ref_block_prefix,
             expiration=expiration,
@@ -300,19 +364,30 @@ class TransactionBuilder(dict):
                 self.blockchain.chain_params["prefix"])
         elif "blockchain" in self:
             operations.default_prefix = self["blockchain"]["prefix"]
+        
+        if self._use_ledger:
+            #try:
+            #    ledgertx = Ledger_Transaction(**self.json(with_prefix=True))
+            #    ledgertx.add_custom_chains(self.blockchain.custom_chains)
+            #except:
+            #    raise ValueError("Invalid TransactionBuilder Format")
+            #ledgertx.sign(self.path, chain=self.blockchain.chain_params)
+            self.ledgertx.sign(self.path, chain=self.blockchain.chain_params)
+            self["signatures"].extend(self.ledgertx.json().get("signatures"))
+            return self.ledgertx
+        else:
+            try:
+                signedtx = Signed_Transaction(**self.json(with_prefix=True))
+                signedtx.add_custom_chains(self.blockchain.custom_chains)
+            except:
+                raise ValueError("Invalid TransactionBuilder Format")
+    
+            if not any(self.wifs):
+                raise MissingKeyError
 
-        try:
-            signedtx = Signed_Transaction(**self.json(with_prefix=True))
-            signedtx.add_custom_chains(self.blockchain.custom_chains)
-        except:
-            raise ValueError("Invalid TransactionBuilder Format")
-
-        if not any(self.wifs):
-            raise MissingKeyError
-
-        signedtx.sign(self.wifs, chain=self.blockchain.chain_params)
-        self["signatures"].extend(signedtx.json().get("signatures"))
-        return signedtx
+            signedtx.sign(self.wifs, chain=self.blockchain.chain_params)
+            self["signatures"].extend(signedtx.json().get("signatures"))
+            return signedtx
 
     def verify_authority(self):
         """ Verify the authority of the signed transaction

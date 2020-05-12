@@ -16,7 +16,7 @@ except LookupError:
     ascii = codecs.lookup('ascii')
     codecs.register(lambda name, enc=ascii: {True: enc}.get(name == 'mbcs'))
 
-VERSION = '0.23.6'
+VERSION = '0.23.7'
 
 tests_require = ['mock >= 2.0.0', 'pytest', 'pytest-mock', 'parameterized']
 
@@ -35,7 +35,8 @@ requires = [
     "click_shell",
     "prettytable",
     "pyyaml",
-    "diff_match_patch"
+    "diff_match_patch",
+    "asn1"
 ]
 
 

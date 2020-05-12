@@ -425,7 +425,8 @@ class Configuration(DataDir):
         "sc2_api_url": "https://api.steemconnect.com/api/",
         "oauth_base_url": "https://api.steemconnect.com/oauth2/",
         "hs_api_url": "https://hivesigner.com/api/",
-        "hs_oauth_base_url": "https://hivesigner.com/oauth2/"}
+        "hs_oauth_base_url": "https://hivesigner.com/oauth2/",
+        "default_path": "48'/13'/0'/0'/0'"}
 
     def __init__(self):
         super(Configuration, self).__init__()

@@ -7,5 +7,6 @@ __all__ = [
     'operationids',
     'operations',
     'signedtransactions',
+    'ledgertransactions',
     'transactions',
 ]

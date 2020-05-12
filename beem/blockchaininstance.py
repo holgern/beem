@@ -170,6 +170,8 @@ class BlockChainInstance(object):
             :param bool use_sc2: When True, a steemconnect object is created. Can be used for broadcast
                 posting op or creating hot_links  (default is False)
             :param SteemConnect steemconnect: A SteemConnect object can be set manually, set use_sc2 to True
+            :param bool use_ledger: When True, a ledger Nano S is used for signing
+            :param str path: bip32 path from which the pubkey is derived, when use_ledger is True
 
         """
 
@@ -187,9 +189,13 @@ class BlockChainInstance(object):
         self.use_hs = bool(kwargs.get("use_hs", False))        
         self.blocking = kwargs.get("blocking", False)
         self.custom_chains = kwargs.get("custom_chains", {})
+        self.use_ledger = bool(kwargs.get("use_ledger", False))
+        self.path = kwargs.get("path", None)
 
         # Store config for access through other Classes
         self.config = get_default_config_storage()
+        if self.path is None:
+            self.path = self.config["default_path"]
 
         if not self.offline:
             self.connect(node=node,

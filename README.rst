@@ -156,6 +156,12 @@ A command line tool is available. The help output shows the available commands:
 
     beempy --help
 
+Ledger support
+--------------
+For Ledger (Nano S) signing, the following package must be installed:
+
+    pip install ledgerblue
+
 Stand alone version of CLI tool beempy
 --------------------------------------
 With the help of pyinstaller, a stand alone version of beempy was created for Windows, OSX and linux.

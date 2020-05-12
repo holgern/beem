@@ -1,5 +1,15 @@
 Changelog
 =========
+0.23.7
+------
+* Fix update_account_jsonmetadata and add posting_json_metadata property to Account
+* Add Ledger Nano S support
+* beempy -u activates ledger signing
+* beempy -u listkeys shows pubkey from ledger
+* beempy -u listaccounts searches for accounts that have pubkey derived from attached ledger
+* beempy -u keygen creates pubkey lists that can be used for newaccount and changekeys
+* new option use_ledger and path for Hive
+
 0.23.6
 ------
 * beempy --key key_list.json command can be used to set keys in beempy without using the wallet.

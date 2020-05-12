@@ -62,6 +62,7 @@ beembase Modules
    beembase.operationids
    beembase.operations
    beembase.signedtransactions
+   beembase.ledgertransactions
    beembase.transactions
 
 
@@ -79,3 +80,4 @@ beemgraphenebase Modules
    beemgraphenebase.objecttypes
    beemgraphenebase.operations
    beemgraphenebase.signedtransactions
+   beemgraphenebase.unsignedtransactions

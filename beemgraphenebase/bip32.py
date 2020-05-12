@@ -10,6 +10,7 @@ import hashlib
 import struct
 import codecs
 from beemgraphenebase.base58 import base58CheckDecode, base58CheckEncode
+from beemgraphenebase.py23 import py23_bytes
 from hashlib import sha256
 from binascii import hexlify, unhexlify
 import ecdsa
@@ -33,7 +34,11 @@ EX_TEST_PRIVATE = [codecs.decode('04358394', 'hex')]  # Version strings for test
 EX_TEST_PUBLIC = [codecs.decode('043587CF', 'hex')]  # Version strings for testnet extended public keys
 
 
-def parse_path(nstr):
+def int_to_hex(x):
+    return py23_bytes(hex(x)[2:], encoding="utf-8")
+
+
+def parse_path(nstr, as_bytes=False):
     """"""
     r = list()
     for s in nstr.split('/'):
@@ -43,7 +48,15 @@ def parse_path(nstr):
             r.append(int(s[:-1]) + BIP32_HARDEN)
         else:
             r.append(int(s))
-    return r
+    if not as_bytes:
+        return r
+    path = None
+    for p in r:
+        if path is None:
+            path = int_to_hex(p)
+        else:
+            path += int_to_hex(p)
+    return path
 
 
 class BIP32Key(object):

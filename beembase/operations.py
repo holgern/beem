@@ -285,6 +285,7 @@ class Account_update2(GrapheneObject):
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
         prefix = kwargs.get("prefix", default_prefix)
+        extensions = Array([])
 
         if "owner" in kwargs:
             owner = Optional(Permission(kwargs["owner"], prefix=prefix))
@@ -302,7 +303,7 @@ class Account_update2(GrapheneObject):
             posting = Optional(None)
 
         if "memo_key" in kwargs:
-            memo_key = Optional(Permission(kwargs["memo_key"], prefix=prefix))
+            memo_key = Optional(PublicKey(kwargs["memo_key"], prefix=prefix))
         else:
             memo_key = Optional(None)        
 
@@ -327,6 +328,7 @@ class Account_update2(GrapheneObject):
             ('memo_key', memo_key),
             ('json_metadata', String(meta)),
             ('posting_json_metadata', String(posting_meta)),
+            ('extensions', extensions)
         ]))
 
 

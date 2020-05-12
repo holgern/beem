@@ -80,6 +80,7 @@ availableConfigurationKeys = [
     "nodes",
     "password_storage",
     "client_id",
+    "default_path"
 ]
 
 
@@ -106,6 +107,8 @@ def prompt_flag_callback(ctx, param, value):
 
 def unlock_wallet(stm, password=None, allow_wif=True):
     if stm.unsigned and stm.nobroadcast:
+        return True
+    if stm.use_ledger:
         return True
     if not stm.wallet.locked():
         return True
@@ -187,6 +190,10 @@ def node_answer_time(node):
 @click.option(
     '--keys', '-k', help="JSON file that contains account keys, when set, the wallet cannot be used.")
 @click.option(
+    '--use-ledger', '-u', is_flag=True, default=False, help="Uses the ledger device Nano S for signing.")
+@click.option(
+    '--path', help="BIP32 path from which the keys are derived, when not set, default_path is used.")
+@click.option(
     '--token', '-t', is_flag=True, default=False, help="Uses a hivesigner/steemconnect token to broadcast (only broadcast operation with posting permission)")
 @click.option(
     '--expires', '-e', default=30,
@@ -194,7 +201,7 @@ def node_answer_time(node):
 @click.option(
     '--verbose', '-v', default=3, help='Verbosity')
 @click.version_option(version=__version__)
-def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hive, keys, token, expires, verbose):
+def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hive, keys, use_ledger, path, token, expires, verbose):
 
     # Logging
     log = logging.getLogger(__name__)
@@ -246,6 +253,8 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hi
             use_hs=token,
             expiration=expires,
             hivesigner=sc2,
+            use_ledger=use_ledger,
+            path=path,
             debug=debug,
             num_retries=10,
             num_retries_call=3,
@@ -263,6 +272,8 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hi
             use_sc2=token,
             expiration=expires,
             steemconnect=sc2,
+            use_ledger=use_ledger,
+            path=path,
             debug=debug,
             num_retries=10,
             num_retries_call=3,
@@ -324,6 +335,8 @@ def set(key, value):
         stm.config["hs_api_url"] = value
     elif key == "oauth_base_url":
         stm.config["oauth_base_url"] = value
+    elif key == "default_path":
+        stm.config["default_path"] = value
     else:
         print("wrong key")
 
@@ -559,8 +572,10 @@ def config():
             t.add_row([key, stm.config[key]])
     node = stm.get_default_nodes()
     blockchain = stm.config["default_chain"]
+    ledger_path = stm.config["default_path"]
     nodes = json.dumps(node, indent=4)
     t.add_row(["default_chain", blockchain])
+    t.add_row(["default_path", ledger_path])
     t.add_row(["nodes", nodes])
     if "password_storage" not in availableConfigurationKeys:
         t.add_row(["password_storage", stm.config["password_storage"]])
@@ -721,7 +736,7 @@ def delkey(confirm, pub):
 
 @cli.command()
 @click.option('--import-word-list', '-l', help='Imports a BIP39 wordlist and derives a private and public key', is_flag=True, default=False)
-@click.option('--strength', '-s', help='Defines word list length for BIP39 (default = 256).', default=256)
+@click.option('--strength', help='Defines word list length for BIP39 (default = 256).', default=256)
 @click.option('--passphrase', '-p', help='Sets a BIP39 passphrase', is_flag=True, default=False)
 @click.option('--path', '-m', help='Sets a path for BIP39 key creations. When path is set, network, role, account_keys, account and sequence is not used')
 @click.option('--network', '-n', help='Network index, when using BIP39, 0 for steem and 13 for hive, (default is 13)', default=13)
@@ -742,8 +757,6 @@ def keygen(import_word_list, strength, passphrase, path, network, role, account_
     stm = shared_blockchain_instance()
     if not account and import_password or create_password:
         account = stm.config["default_account"]
-    else:
-        account = 0
     if import_password:
         import_password = click.prompt("Enter password", confirmation_prompt=False, hide_input=True)
     elif create_password:
@@ -777,7 +790,41 @@ def keygen(import_word_list, strength, passphrase, path, network, role, account_
         if wif > 0:
             t.add_row(["WIF itersions", wif])
             t.add_row(["Entered/created Password", import_password])
+    elif stm.use_ledger:
+        if stm.rpc is not None:
+            stm.rpc.rpcconnect()        
+        ledgertx = stm.new_tx()
+        ledgertx.constructTx()
+        if account is None:
+            account = 0
+        else:
+            account = int(account)
+        t = PrettyTable(["Key", "Value"])
+        t_pub = PrettyTable(["Key", "Value"])
+        t.align = "l"
+        t_pub.align = "l"
+        t.add_row(["Account sequence", account])
+        t.add_row(["Key sequence", sequence])
+        if account_keys and path is None:  
+            for role in ['owner', 'active', 'posting', 'memo']:
+                path = ledgertx.ledgertx.build_path(role, account, sequence)
+                pubkey = ledgertx.ledgertx.get_pubkey(path, request_screen_approval=False)
+                t_pub.add_row(["%s Public Key" % role, format(pubkey, "STM")])
+                t.add_row(["%s path" % role, path])               
+                pub_json[role] = format(pubkey, "STM")
+        else:
+            if path is None:
+                path = ledgertx.ledgertx.build_path(role, account, sequence)            
+            t.add_row(["Key role", role])
+            t.add_row(["path", path])
+            pubkey = ledgertx.ledgertx.get_pubkey(path, request_screen_approval=False)
+            t_pub.add_row(["Public Key", format(pubkey, "STM")])
+            pub_json[role] = format(pubkey, "STM")        
     else:
+        if account is None:
+            account = 0
+        else:
+            account = int(account)
         if import_word_list:
             n_words = click.prompt("Enter word list length or complete word list")
             if len(n_words.split(" ")) > 0:
@@ -822,8 +869,8 @@ def keygen(import_word_list, strength, passphrase, path, network, role, account_
         t.add_row(["Key sequence", sequence])   
         if account_keys and path is None:  
             for role in ['owner', 'active', 'posting', 'memo']:
-                mk.set_path_BIP48(network_index=network, role=role, account_sequence=account, key_sequence=sequence)
                 t.add_row(["%s Private Key" % role, str(mk.get_private())])
+                mk.set_path_BIP48(network_index=network, role=role, account_sequence=account, key_sequence=sequence)
                 t_pub.add_row(["%s Public Key" % role, format(mk.get_public(), "STM")])
                 t.add_row(["%s path" % role, mk.get_path()])               
                 pub_json[role] = format(mk.get_public(), "STM")
@@ -897,18 +944,35 @@ def deltoken(confirm, name):
 
 
 @cli.command()
-def listkeys():
+@click.option('--path', '-p', help='Set path (when using ledger)')
+@click.option('--ledger-approval', '-a', is_flag=True, default=False, help='When set, you can confirm the shown pubkey on your ledger.')
+def listkeys(path, ledger_approval):
     """ Show stored keys
+    
+    Can be used to receive and approve the pubkey obtained from the ledger
     """
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    t = PrettyTable(["Available Key"])
-    t.align = "l"
-    for key in stm.wallet.getPublicKeys():
-        t.add_row([key])
-    print(t)
 
+    if stm.use_ledger:
+        if path is None:
+            path = stm.config["default_path"]
+        t = PrettyTable(["Available Key for %s" % path])
+        t.align = "l"        
+        ledgertx = stm.new_tx()
+        ledgertx.constructTx()
+        pubkey = ledgertx.ledgertx.get_pubkey(path, request_screen_approval=False)
+        t.add_row([str(pubkey)])
+        if ledger_approval:
+            print(t)
+            ledgertx.ledgertx.get_pubkey(path, request_screen_approval=True)
+    else:
+        t = PrettyTable(["Available Key"])
+        t.align = "l"        
+        for key in stm.wallet.getPublicKeys():
+            t.add_row([key])
+    print(t)
 
 @cli.command()
 def listtoken():
@@ -930,18 +994,50 @@ def listtoken():
 
 
 @cli.command()
-def listaccounts():
-    """Show stored accounts"""
+@click.option('--role', '-r', help='When set, limits the shown keys for this role')
+@click.option('--max-account-index', '-a', help='Set maximum account index to check pubkeys (only when using ledger)', default=5)
+@click.option('--max-sequence', '-s', help='Set maximum key sequence to check pubkeys (only when using ledger)', default=2)
+def listaccounts(role, max_account_index, max_sequence):
+    """Show stored accounts
+    
+    Can be used with the ledger to obtain all accounts that uses pubkeys derived from this ledger
+    """
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    t = PrettyTable(["Name", "Type", "Available Key"])
-    t.align = "l"
-    for account in stm.wallet.getAccounts():
-        t.add_row([
-            account["name"] or "n/a", account["type"] or "n/a",
-            account["pubkey"]
-        ])
+
+    if stm.use_ledger:
+        t = PrettyTable(["Name", "Type", "Available Key", "Path"])
+        t.align = "l"        
+        ledgertx = stm.new_tx()
+        ledgertx.constructTx()
+        key_found = False
+        path = None
+        current_account_index = 0
+        current_key_index = 0
+        role_list = ["owner", "active", "posting", "memo"]
+        if role:
+            role_list = [role]
+        while not key_found and current_account_index < max_account_index:
+            for perm in role_list:
+                path = ledgertx.ledgertx.build_path(perm, current_account_index, current_key_index)
+                current_pubkey = ledgertx.ledgertx.get_pubkey(path)
+                account = stm.wallet.getAccountFromPublicKey(str(current_pubkey))
+                if account is not None:
+                    t.add_row([str(account), perm, str(current_pubkey), path])
+            if current_key_index < max_sequence:
+                current_key_index += 1
+            else:
+                current_key_index = 0
+                current_account_index += 1  
+    else:
+        t = PrettyTable(["Name", "Type", "Available Key"])
+        t.align = "l"        
+        for account in stm.wallet.getAccounts():
+            t.add_row([
+                account["name"] or "n/a", account["type"] or "n/a",
+                account["pubkey"]
+            ])
     print(t)
 
 
