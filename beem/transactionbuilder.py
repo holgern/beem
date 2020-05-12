@@ -177,15 +177,15 @@ class TransactionBuilder(dict):
             if self.path is not None:
                 current_pubkey = self.ledgertx.get_pubkey(self.path)
                 for authority in account[permission]["key_auths"]:
-                    if str(current_pubkey) == authority[1]:
+                    if str(current_pubkey) == authority[0]:
                         key_found = True
                 if permission == "posting" and not key_found:
                         for authority in account["active"]["key_auths"]:
-                            if str(current_pubkey) == authority[1]:
+                            if str(current_pubkey) == authority[0]:
                                 key_found = True
                 if not key_found:
                         for authority in account["owner"]["key_auths"]:
-                            if str(current_pubkey) == authority[1]:
+                            if str(current_pubkey) == authority[0]:
                                 key_found = True
             if not key_found:
                 raise AssertionError("Could not find pubkey from %s in path: %s!" % (account["name"], self.path))

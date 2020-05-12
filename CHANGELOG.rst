@@ -9,6 +9,7 @@ Changelog
 * beempy -u listaccounts searches for accounts that have pubkey derived from attached ledger
 * beempy -u keygen creates pubkey lists that can be used for newaccount and changekeys
 * new option use_ledger and path for Hive
+* Allow role selection in keygen
 
 0.23.6
 ------

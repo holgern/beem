@@ -572,10 +572,8 @@ def config():
             t.add_row([key, stm.config[key]])
     node = stm.get_default_nodes()
     blockchain = stm.config["default_chain"]
-    ledger_path = stm.config["default_path"]
     nodes = json.dumps(node, indent=4)
     t.add_row(["default_chain", blockchain])
-    t.add_row(["default_path", ledger_path])
     t.add_row(["nodes", nodes])
     if "password_storage" not in availableConfigurationKeys:
         t.add_row(["password_storage", stm.config["password_storage"]])
@@ -766,6 +764,13 @@ def keygen(import_word_list, strength, passphrase, path, network, role, account_
             if (any(c.islower() for c in import_password) and any(c.isupper() for c in import_password) and any(c.isdigit() for c in import_password)):
                 break
     pub_json = {"owner": "", "active": "", "posting": "", "memo": ""}
+    
+    if not account_keys and len(role.split(",")) > 1:
+        roles = role.split(",")
+        account_keys = True
+    else:
+        roles = ['owner', 'active', 'posting', 'memo']    
+    
     if import_password or create_password:
         if wif > 0:
             password = import_password
@@ -781,11 +786,11 @@ def keygen(import_word_list, strength, passphrase, path, network, role, account_
         t_pub.add_row(["Username", account])
         t.align = "l"
         t_pub.align = "l"
-        for role in ['owner', 'active', 'posting', 'memo']:
-            pk = PasswordKey(account, password, role=role)
-            t.add_row(["%s Private Key" % role, str(pk.get_private())])
-            t_pub.add_row(["%s Public Key" % role, format(pk.get_public(), "STM")])
-            pub_json[role] = format(pk.get_public(), "STM")
+        for r in roles:
+            pk = PasswordKey(account, password, role=r)
+            t.add_row(["%s Private Key" % r, str(pk.get_private())])
+            t_pub.add_row(["%s Public Key" % r, format(pk.get_public(), "STM")])
+            pub_json[r] = format(pk.get_public(), "STM")
         t.add_row(["Backup (Master) Password", password])
         if wif > 0:
             t.add_row(["WIF itersions", wif])
@@ -805,19 +810,31 @@ def keygen(import_word_list, strength, passphrase, path, network, role, account_
         t_pub.align = "l"
         t.add_row(["Account sequence", account])
         t.add_row(["Key sequence", sequence])
+
+        
         if account_keys and path is None:  
-            for role in ['owner', 'active', 'posting', 'memo']:
-                path = ledgertx.ledgertx.build_path(role, account, sequence)
+            for r in roles:
+                path = ledgertx.ledgertx.build_path(r, account, sequence)
                 pubkey = ledgertx.ledgertx.get_pubkey(path, request_screen_approval=False)
-                t_pub.add_row(["%s Public Key" % role, format(pubkey, "STM")])
-                t.add_row(["%s path" % role, path])               
-                pub_json[role] = format(pubkey, "STM")
+                aprove_key = PrettyTable(["Approve %s Key" % r])
+                aprove_key.align = "l"
+                aprove_key.add_row([format(pubkey, "STM")])
+                print(aprove_key)
+                ledgertx.ledgertx.get_pubkey(path, request_screen_approval=True)
+                t_pub.add_row(["%s Public Key" % r, format(pubkey, "STM")])
+                t.add_row(["%s path" % r, path])               
+                pub_json[r] = format(pubkey, "STM")          
         else:
             if path is None:
                 path = ledgertx.ledgertx.build_path(role, account, sequence)            
             t.add_row(["Key role", role])
             t.add_row(["path", path])
             pubkey = ledgertx.ledgertx.get_pubkey(path, request_screen_approval=False)
+            aprove_key = PrettyTable(["Approve %s Key" % r])
+            aprove_key.align = "l"
+            aprove_key.add_row([format(pubkey, "STM")])
+            print(aprove_key)
+            ledgertx.ledgertx.get_pubkey(path, request_screen_approval=True)
             t_pub.add_row(["Public Key", format(pubkey, "STM")])
             pub_json[role] = format(pubkey, "STM")        
     else:
@@ -868,12 +885,12 @@ def keygen(import_word_list, strength, passphrase, path, network, role, account_
         t.add_row(["Account sequence", account])
         t.add_row(["Key sequence", sequence])   
         if account_keys and path is None:  
-            for role in ['owner', 'active', 'posting', 'memo']:
-                t.add_row(["%s Private Key" % role, str(mk.get_private())])
-                mk.set_path_BIP48(network_index=network, role=role, account_sequence=account, key_sequence=sequence)
-                t_pub.add_row(["%s Public Key" % role, format(mk.get_public(), "STM")])
-                t.add_row(["%s path" % role, mk.get_path()])               
-                pub_json[role] = format(mk.get_public(), "STM")
+            for r in roles:
+                t.add_row(["%s Private Key" % r, str(mk.get_private())])
+                mk.set_path_BIP48(network_index=network, role=r, account_sequence=account, key_sequence=sequence)
+                t_pub.add_row(["%s Public Key" % r, format(mk.get_public(), "STM")])
+                t.add_row(["%s path" % r, mk.get_path()])               
+                pub_json[r] = format(mk.get_public(), "STM")
             if passphrase != "":
                 t.add_row(["Passphrase", passphrase])                
             t.add_row(["BIP39 wordlist", word_list])
