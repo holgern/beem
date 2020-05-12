@@ -53,6 +53,7 @@ class Ledger_Transaction(GrapheneUnsigned_Transaction):
         apdu_list = self.build_apdu(path, chain)
         for apdu in apdu_list:
             result = dongle.exchange(py23_bytes(apdu))
+        dongle.close()
         sigs = []
         signature = result
         sigs.append(Signature(signature))
@@ -64,6 +65,7 @@ class Ledger_Transaction(GrapheneUnsigned_Transaction):
         dongle = getDongle(True)
         apdu = self.build_apdu_pubkey(path, request_screen_approval)
         result = dongle.exchange(py23_bytes(apdu))
+        dongle.close()
         offset = 1 + result[0]
         address = result[offset + 1: offset + 1 + result[offset]]
         # public_key = result[1: 1 + result[0]]
