@@ -16,7 +16,7 @@ appdirs==1.4.4
 Click==7.1.2
 click_shell>=2.0
 prettytable
-pycodestyle==2.5.0
+pycodestyle==2.6.0
 pyflakes==2.2.0
 pylibscrypt==1.8.0
 six==1.14.0
