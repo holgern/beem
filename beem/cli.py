@@ -2169,6 +2169,10 @@ def download(permlink, account, save, export):
             yaml_prefix += 'title: "%s"\n' % comment["title"]
         yaml_prefix += 'permlink: %s\n' % comment["permlink"]
         yaml_prefix += 'author: %s\n' % comment["author"]
+        if "author" in comment.json_metadata:
+            yaml_prefix += 'authored by: %s\n' % comment.json_metadata["author"]
+        if "description" in comment.json_metadata:
+            yaml_prefix += 'description: "%s"\n' % comment.json_metadata["description"]
         yaml_prefix += 'last_update: %s\n' % comment.json()["last_update"]
         yaml_prefix += 'max_accepted_payout: %s\n' % str(comment["max_accepted_payout"])
         yaml_prefix += 'percent_steem_dollars: %s\n' %  str(comment["percent_steem_dollars"])
@@ -2299,7 +2303,11 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
         beneficiaries = derive_beneficiaries(parameter["beneficiaries"])
         for b in beneficiaries:
             Account(b["account"], blockchain_instance=stm)
-    
+    json_metadata = {}
+    if "authored_by" in parameter:
+        json_metadata["authored_by"] = parameter["authored_by"]
+    if "description" in parameter:
+        json_metadata["description"] = parameter["description"]
     if permlink is not None:
         try:
             comment = Comment(construct_authorperm(author, permlink), blockchain_instance=stm)
@@ -2316,10 +2324,13 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
             continue
         if stm.unsigned:
             continue
+        basepath = os.path.dirname(markdown_file)
         if os.path.exists(image):
             tx = iu.upload(image, author, image_name)
             body = body.replace(image, tx["url"])
-    
+        elif os.path.exists(os.path.join(basepath, image)):
+            tx = iu.upload(image, author, image_name)
+            body = body.replace(image, tx["url"])
     
     if comment is None and permlink is None and reply_identifier is None:
         permlink = derive_permlink(title, with_suffix=False)
@@ -2333,7 +2344,7 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
         if reply_identifier is None and (len(tags) == 0 or tags is None):
             raise ValueError("Tags must not be empty!")
         tx = stm.post(title, body, author=author, permlink=permlink, reply_identifier=reply_identifier, community=community,
-                      tags=tags, comment_options=comment_options, beneficiaries=beneficiaries, parse_body=parse_body,
+                      tags=tags, json_metadata=json_metadata, comment_options=comment_options, beneficiaries=beneficiaries, parse_body=parse_body,
                       app='beempy/%s' % (__version__))
     else:
         import diff_match_patch as dmp_module

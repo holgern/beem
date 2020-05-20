@@ -315,10 +315,12 @@ class GrapheneRPC(object):
 
         if chain_id is None:
             raise("Connecting to unknown network!")
-        if is_hive:
-            return self.known_chains["HIVE"]
         highest_version_chain = None
         for k, v in list(self.known_chains.items()):
+            if is_hive and k not in ["HIVE", "HIVE2"]:
+                continue
+            if is_steem and k not in ["STEEMZERO", "STEEM", "STEEMAPPBASE"]:
+                continue
             if v["chain_id"] == chain_id and self.version_string_to_int(v["min_version"]) <= self.version_string_to_int(network_version):
                 if highest_version_chain is None:
                     highest_version_chain = v

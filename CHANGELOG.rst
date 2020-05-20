@@ -1,5 +1,16 @@
 Changelog
 =========
+0.23.9
+------
+* Improve chain detection (Steem chain detection fixed and preparing for Hive HF24)
+* Add authored_by and description fields in YAMLM header
+* Improve doc
+* beempy post image upload includes the markdown file path now
+
+0.23.8
+------
+* Missing dongle.close() added (thanks to @netuoso)
+
 0.23.7
 ------
 * Fix update_account_jsonmetadata and add posting_json_metadata property to Account
