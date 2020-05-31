@@ -1,5 +1,16 @@
 Changelog
 =========
+0.23.10
+-------
+* get_node_answer_time added to NodeList
+* New node added
+* new stored parameter: default_canonical_url
+* beempy notifications sorting is reversed, a new parameter can be used to change the sorting
+* New beempy createpost command, it can be used to create an empty markdown file with YAML header for a new post
+* beempy post has now a canonical_url parameter, when not set, default_canonical_url is set
+* New beempy draw command, can be used to generate pseudo random number from block identifiers using hashsums
+* remove enum34 dependency
+
 0.23.9
 ------
 * Improve chain detection (Steem chain detection fixed and preparing for Hive HF24)

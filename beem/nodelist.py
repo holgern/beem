@@ -7,11 +7,28 @@ from builtins import next
 import re
 import time
 import math
+from timeit import default_timer as timer
 import json
 from beem.instance import shared_blockchain_instance
 from beem.account import Account
 import logging
 log = logging.getLogger(__name__)
+
+
+def node_answer_time(node):
+    try:
+        from beem.blockchaininstance import BlockChainInstance
+        stm_local = BlockChainInstance(node=node, num_retries=2, num_retries_call=2, timeout=10)
+        start = timer()
+        stm_local.get_network(use_stored_data=False)
+        stop = timer()
+        rpc_answer_time = stop - start
+    except KeyboardInterrupt:
+        rpc_answer_time = float("inf")
+        raise KeyboardInterrupt()
+    except:
+        rpc_answer_time = float("inf")
+    return rpc_answer_time
 
 
 class NodeList(list):
@@ -29,7 +46,7 @@ class NodeList(list):
             {
                 "url": "https://api.steemit.com",
                 "version": "0.20.2",
-                "type": "appbase-limited",
+                "type": "appbase",
                 "owner": "steemit",
                 "hive": False,
                 "score": 50
@@ -51,14 +68,6 @@ class NodeList(list):
                 "score": -10
             },
             {
-                "url": "https://steemd.minnowsupportproject.org",
-                "version": "0.19.12",
-                "type": "appbase",
-                "owner": "followbtcnews",
-                "hive": False,
-                "score": 100
-            },
-            {
                 "url": "https://anyx.io",
                 "version": "0.23.0",
                 "type": "appbase",
@@ -73,37 +82,13 @@ class NodeList(list):
                 "owner": "anyx",
                 "hive": True,
                 "score": 50
-            },            
-            {
-                "url": "wss://testnet.steem.vc",
-                "version": "0.19.2",
-                "type": "testnet",
-                "owner": "almost-digital",
-                "hive": False,
-                "score": 20
             },
             {
-                "url": "ws://testnet.steem.vc",
-                "version": "0.19.2",
+                "url": "https://hive-test-beeabode.roelandp.nl",
+                "version": "0.23.0",
                 "type": "testnet",
-                "owner": "almost-digital",
-                "hive": False,
-                "score": 5
-            },
-            {
-                "url": "https://testnet.steem.vc",
-                "version": "0.19.2",
-                "type": "testnet",
-                "owner": "almost-digital",
-                "hive": False,
-                "score": 10
-            },
-            {
-                "url": "http://testnet.steem.vc",
-                "version": "0.19.2",
-                "type": "testnet",
-                "owner": "almost-digital",
-                "hive": False,
+                "owner": "roelandp",
+                "hive": True,
                 "score": 5
             },
             {
@@ -185,9 +170,63 @@ class NodeList(list):
                 "owner": "ausbitbank",
                 "hive": True,
                 "score": 10                
+            },
+            {
+                "url": "https://hive.roelandp.nl",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "roelandp",
+                "hive": True,
+                "score": 10                
             }
         ]
         super(NodeList, self).__init__(nodes)
+
+    def update(self, node_list):
+        new_nodes = []
+        for node_url in node_list:
+            for node in self:
+                if node["url"] == node_url:
+                    new_nodes.append(node)
+        super(NodeList, self).__init__(new_nodes)
+
+    def get_node_answer_time(self, node_list=None, verbose=False):
+        """ Pings all nodes and measure the answer time
+        
+            .. code-block:: python
+
+                from beem.nodelist import NodeList
+                nl = NodeList()
+                nl.update_nodes()
+                nl.ping_nodes()
+        """
+        ping_times = []
+        if node_list is None:
+            node_list = []
+            for node in self:
+                node_list.append(node["url"])
+        for node in node_list:
+            ping_times.append(1000.)
+        available_nodes = []
+        for node in self:
+            available_nodes.append(node["url"])
+        for i in range(len(node_list)):
+            if node_list[i] not in available_nodes:
+                ping_times[i] = float("inf")
+                continue
+            try:
+                ping_times[i] = node_answer_time(node_list[i])
+                if  verbose:
+                    print("node %s results in %.2f" % (node_list[i], ping_times[i]))
+            except KeyboardInterrupt:
+                ping_times[i] = float("inf")
+                break
+        sorted_arg = sorted(range(len(ping_times)), key=ping_times.__getitem__)
+        sorted_nodes = []
+        for i in sorted_arg:
+            if ping_times[i] != float("inf"):
+                sorted_nodes.append({"url": node_list[i], "delay_ms": ping_times[i] * 1000})      
+        return sorted_nodes
 
     def update_nodes(self, weights=None, blockchain_instance=None, **kwargs):
         """ Reads metadata from fullnodeupdate and recalculates the nodes score

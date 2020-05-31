@@ -426,6 +426,7 @@ class Configuration(DataDir):
         "oauth_base_url": "https://api.steemconnect.com/oauth2/",
         "hs_api_url": "https://hivesigner.com/api/",
         "hs_oauth_base_url": "https://hivesigner.com/oauth2/",
+        "default_canonical_url": "https://hive.blog",
         "default_path": "48'/13'/0'/0'/0'"}
 
     def __init__(self):

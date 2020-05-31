@@ -15,6 +15,7 @@ import pytz
 import secrets
 import string
 import time
+import hashlib
 import math
 import random
 import logging
@@ -48,7 +49,7 @@ from timeit import default_timer as timer
 from beembase import operations
 from beemgraphenebase.account import PrivateKey, PublicKey, BrainKey, PasswordKey, MnemonicKey, Mnemonic
 from beemgraphenebase.base58 import Base58
-from beem.nodelist import NodeList
+from beem.nodelist import NodeList, node_answer_time
 from beem.conveyor import Conveyor
 from beem.imageuploader import ImageUploader
 from beem.rc import RC
@@ -65,14 +66,6 @@ try:
 except ImportError:
     KEYRING_AVAILABLE = False
 
-FUTURES_MODULE = None
-if not FUTURES_MODULE:
-    try:
-        from concurrent.futures import ThreadPoolExecutor, wait, as_completed
-        FUTURES_MODULE = "futures"
-    except ImportError:
-        FUTURES_MODULE = None
-
 
 availableConfigurationKeys = [
     "default_account",
@@ -80,6 +73,7 @@ availableConfigurationKeys = [
     "nodes",
     "password_storage",
     "client_id",
+    "default_canonical_url",
     "default_path"
 ]
 
@@ -154,20 +148,6 @@ def unlock_wallet(stm, password=None, allow_wif=True):
         print("Wallet Unlocked!")
         return True
 
-
-def node_answer_time(node):
-    try:
-        stm_local = BlockChainInstance(node=node, num_retries=2, num_retries_call=2, timeout=10)
-        start = timer()
-        stm_local.get_config(use_stored_data=False)
-        stop = timer()
-        rpc_answer_time = stop - start
-    except KeyboardInterrupt:
-        rpc_answer_time = float("inf")
-        raise KeyboardInterrupt()
-    except:
-        rpc_answer_time = float("inf")
-    return rpc_answer_time
 
 @shell(prompt='beempy> ', intro='Starting beempy... (use help to list all commands)', chain=True)
 # @click.group(chain=True)
@@ -337,6 +317,8 @@ def set(key, value):
         stm.config["oauth_base_url"] = value
     elif key == "default_path":
         stm.config["default_path"] = value
+    elif key == "default_canonical_url":
+        stm.config["default_canonical_url"] = value
     else:
         print("wrong key")
 
@@ -381,66 +363,34 @@ def nextnode(results):
 
 @cli.command()
 @click.option(
-    '--raw', is_flag=True, default=False,
-    help="Returns only the raw value")
-@click.option(
-    '--sort', is_flag=True, default=False,
+    '--sort', '-s', is_flag=True, default=False,
     help="Sort all nodes by ping value")
 @click.option(
-    '--remove', is_flag=True, default=False,
+    '--remove', '-r', is_flag=True, default=False,
     help="Remove node with errors from list")
-@click.option(
-    '--threading', is_flag=True, default=False,
-    help="Use a thread for each node")
-def pingnode(raw, sort, remove, threading):
+def pingnode(sort, remove):
     """ Returns the answer time in milliseconds
     """
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
     nodes = stm.get_default_nodes()
-    if not raw:
-        t = PrettyTable(["Node", "Answer time [ms]"])
-        t.align = "l"
+    
+    t = PrettyTable(["Node", "Answer time [ms]"])
+    t.align = "l"
     if sort:
-        ping_times = []
-        for node in nodes:
-            ping_times.append(1000.)
-        if threading and FUTURES_MODULE:
-            pool = ThreadPoolExecutor(max_workers=len(nodes) + 1)
-            futures = []
-        for i in range(len(nodes)):
-            try:
-                if not threading or not FUTURES_MODULE:
-                    ping_times[i] = node_answer_time(nodes[i])
-                else:
-                    futures.append(pool.submit(node_answer_time, nodes[i]))
-                if not threading or not FUTURES_MODULE:
-                    print("node %s results in %.2f" % (nodes[i], ping_times[i]))
-            except KeyboardInterrupt:
-                ping_times[i] = float("inf")
-                break
-        if threading and FUTURES_MODULE:
-            ping_times = [r.result() for r in as_completed(futures)]
-        sorted_arg = sorted(range(len(ping_times)), key=ping_times.__getitem__)
-        sorted_nodes = []
-        for i in sorted_arg:
-            if not remove or ping_times[i] != float("inf"):
-                sorted_nodes.append(nodes[i])
-        stm.set_default_nodes(sorted_nodes)
-        if not raw:
-            for i in sorted_arg:
-                t.add_row([nodes[i], "%.2f" % (ping_times[i] * 1000)])
-            print(t)
-        else:
-            print(ping_times[sorted_arg])
+        sorted_node_list = []
+        nodelist = NodeList()
+        sorted_nodes = nodelist.get_node_answer_time(nodes)
+        for node in sorted_nodes:
+            t.add_row([node["url"], "%.2f" % (node["delay_ms"])])
+            sorted_node_list.append(node["url"])
+        print(t)
+        stm.set_default_nodes(sorted_node_list)
     else:
         node = stm.rpc.url
         rpc_answer_time = node_answer_time(node)
         rpc_time_str = "%.2f" % (rpc_answer_time * 1000)
-        if raw:
-            print(rpc_time_str)
-            return
         t.add_row([node, rpc_time_str])
         print(t)
 
@@ -1564,13 +1514,14 @@ def muting(account):
 @click.option('--follows', '-f', help='Show only follows', is_flag=True, default=False)
 @click.option('--votes', '-v', help='Show only upvotes', is_flag=True, default=False)
 @click.option('--reblogs', '-b', help='Show only reblogs', is_flag=True, default=False)
-def notifications(account, limit, all, mark_as_read, replies, mentions, follows, votes, reblogs):
+@click.option('--reverse', '-s', help='Reverse sorting of notifications', is_flag=True, default=False)
+def notifications(account, limit, all, mark_as_read, replies, mentions, follows, votes, reblogs, reverse):
     """ Show notifications of an account
     """
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    if not account:
+    if account is None or account == "":
         if "default_account" in stm.config:
             account = stm.config["default_account"]
     if mark_as_read and not unlock_wallet(stm):
@@ -1585,7 +1536,10 @@ def notifications(account, limit, all, mark_as_read, replies, mentions, follows,
     last_read = None
     if limit is not None:
         limit = int(limit)
-    for note in account.get_notifications(only_unread=not all, limit=limit)[::-1]:
+    all_notifications = account.get_notifications(only_unread=not all, limit=limit)
+    if reverse:
+        all_notifications = all_notifications[::-1]
+    for note in all_notifications:
         if not show_all:
             if note["type"] == "reblog" and not reblogs:
                 continue
@@ -2173,6 +2127,10 @@ def download(permlink, account, save, export):
             yaml_prefix += 'authored by: %s\n' % comment.json_metadata["author"]
         if "description" in comment.json_metadata:
             yaml_prefix += 'description: "%s"\n' % comment.json_metadata["description"]
+        if "canonical_url" in comment.json_metadata:
+            yaml_prefix += 'canonical_url: %s\n' % comment.json_metadata["canonical_url"]
+        if "app" in comment.json_metadata:
+            yaml_prefix += 'app: %s\n' % comment.json_metadata["app"]
         yaml_prefix += 'last_update: %s\n' % comment.json()["last_update"]
         yaml_prefix += 'max_accepted_payout: %s\n' % str(comment["max_accepted_payout"])
         yaml_prefix += 'percent_steem_dollars: %s\n' %  str(comment["percent_steem_dollars"])
@@ -2205,16 +2163,71 @@ def download(permlink, account, save, export):
 @click.argument('markdown-file', nargs=1)
 @click.option('--account', '-a', help='Account are you posting from')
 @click.option('--title', '-t', help='Title of the post')
-@click.option('--permlink', '-p', help='Manually set the permlink (optional)')
 @click.option('--tags', '-g', help='A komma separated list of tags to go with the post.')
-@click.option('--reply_identifier', '-r', help=' Identifier of the parent post/comment, when set a comment is broadcasted')
 @click.option('--community', '-c', help=' Name of the community (optional)')
 @click.option('--beneficiaries', '-b', help='Post beneficiaries (komma separated, e.g. a:10%,b:20%)')
 @click.option('--percent-steem-dollars', '-d', help='50% SBD /50% SP is 10000 (default), 100% SP is 0')
 @click.option('--max-accepted-payout', '-m', help='Default is 1000000.000 [SBD]')
 @click.option('--no-parse-body', '-n', help='Disable parsing of links, tags and images', is_flag=True, default=False)
+def createpost(markdown_file, account, title, tags, community, beneficiaries, percent_steem_dollars, max_accepted_payout, no_parse_body):
+    """Creates a new markdown file with YAML header"""
+    stm = shared_blockchain_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    yaml_prefix = '---\n'                
+    if account is None:
+        account = input("author: ")
+    if title is None:
+        title = input("title: ")
+    if tags is None:
+        tags = input("tags (comma seperated):")
+    if community is None:
+        community = input("community account:")
+    if beneficiaries is None:
+        beneficiaries = input("beneficiaries (komma separated, e.g. a:10%,b:20%):")
+    if percent_steem_dollars is None:
+        ret = None
+        while ret is None:
+            ret = input("Reward: 50% or 100% Hive Power [50 or 100]?")
+            if ret not in ["50", "100"]:
+                ret = None
+        if ret == "50":
+            percent_steem_dollars = 10000
+        else:
+            percent_steem_dollars = 0
+    if max_accepted_payout is None:
+        max_accepted_payout = input("max accepted payout [return to skip]: ")
+    
+    yaml_prefix += 'title: "%s"\n' % title
+    yaml_prefix += 'author: %s\n' % account
+    yaml_prefix += 'tags: %s\n' % tags
+    yaml_prefix += 'percent_steem_dollars: %d\n' % percent_steem_dollars
+    if community is not None and community != "":
+        yaml_prefix += 'community: %s\n' % community
+    if beneficiaries is not None and beneficiaries != "":
+        yaml_prefix += 'beneficiaries: %s\n' % beneficiaries
+    if max_accepted_payout is not None and max_accepted_payout != "":
+        yaml_prefix += 'max_accepted_payout: %s\n' % max_accepted_payout
+    yaml_prefix += '---\n'     
+    with open(markdown_file, "w", encoding="utf-8") as f:
+        f.write(yaml_prefix)    
+
+
+@cli.command()
+@click.argument('markdown-file', nargs=1)
+@click.option('--account', '-a', help='Account are you posting from')
+@click.option('--title', '-t', help='Title of the post')
+@click.option('--permlink', '-p', help='Manually set the permlink (optional)')
+@click.option('--tags', '-g', help='A komma separated list of tags to go with the post.')
+@click.option('--reply-identifier', '-r', help=' Identifier of the parent post/comment, when set a comment is broadcasted')
+@click.option('--community', '-c', help=' Name of the community (optional)')
+@click.option('--canonical-url', '-u', help='Canonical url, can also set to https://hive.blog or https://peakd.com (optional)')
+@click.option('--beneficiaries', '-b', help='Post beneficiaries (komma separated, e.g. a:10%,b:20%)')
+@click.option('--percent-steem-dollars', '-d', help='50% SBD /50% SP is 10000 (default), 100% SP is 0')
+@click.option('--max-accepted-payout', '-m', help='Default is 1000000.000 [SBD]')
+@click.option('--no-parse-body', '-n', help='Disable parsing of links, tags and images', is_flag=True, default=False)
 @click.option('--no-patch-on-edit', '-e', help='Disable patch posting on edits (when the permlink already exists)', is_flag=True, default=False)
-def post(markdown_file, account, title, permlink, tags, reply_identifier, community, beneficiaries, percent_steem_dollars, max_accepted_payout, no_parse_body, no_patch_on_edit):
+def post(markdown_file, account, title, permlink, tags, reply_identifier, community, canonical_url, beneficiaries, percent_steem_dollars, max_accepted_payout, no_parse_body, no_patch_on_edit):
     """broadcasts a post/comment. All image links which links to a file will be uploaded.
     The yaml header can contain:
     
@@ -2255,6 +2268,9 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
         parameter["max_accepted_payout"] = max_accepted_payout
     elif "max-accepted-payout" in parameter:
         parameter["max_accepted_payout"] = parameter["max-accepted-payout"]
+
+    if canonical_url is not None:
+        parameter["canonical_url"] = canonical_url
 
     if not unlock_wallet(stm):
         return
@@ -2303,11 +2319,8 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
         beneficiaries = derive_beneficiaries(parameter["beneficiaries"])
         for b in beneficiaries:
             Account(b["account"], blockchain_instance=stm)
-    json_metadata = {}
-    if "authored_by" in parameter:
-        json_metadata["authored_by"] = parameter["authored_by"]
-    if "description" in parameter:
-        json_metadata["description"] = parameter["description"]
+ 
+
     if permlink is not None:
         try:
             comment = Comment(construct_authorperm(author, permlink), blockchain_instance=stm)
@@ -2338,6 +2351,28 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
             comment = Comment(construct_authorperm(author, permlink), blockchain_instance=stm)
         except:
             comment = None
+    if comment is None:
+        json_metadata = {}
+    else:
+        json_metadata = comment.json_metadata
+    if "authored_by" in parameter:
+        json_metadata["authored_by"] = parameter["authored_by"]
+    if "description" in parameter:
+        json_metadata["description"] = parameter["description"] 
+    if "canonical_url" in parameter:
+        json_metadata["canonical_url"] = parameter["canonical_url"]
+    else:
+        json_metadata["canonical_url"] = stm.config["default_canonical_url"] or "https://hive.blog"
+
+    if "canonical_url" in json_metadata and json_metadata["canonical_url"].find("@") < 0:
+        if json_metadata["canonical_url"][-1] != "/":
+                json_metadata["canonical_url"] += "/"
+        if json_metadata["canonical_url"][:8] != 'https://':
+            json_metadata["canonical_url"] = 'https://' + json_metadata["canonical_url"] 
+        if community is None:
+            json_metadata["canonical_url"] += tags[0] + "/@" + author + "/" + permlink
+        else:
+            json_metadata["canonical_url"] += community + "/@" + author + "/" + permlink
 
     if comment is None or no_patch_on_edit:
 
@@ -2359,7 +2394,7 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
         if edit_ok not in ["y", "ye", "yes"]:                
             return
         tx = stm.post(title, patch_text, author=author, permlink=permlink, reply_identifier=reply_identifier, community=community,
-                      tags=tags, parse_body=False, app='beempy/%s' % (__version__))        
+                      tags=tags, json_metadata=json_metadata, parse_body=False, app='beempy/%s' % (__version__))        
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
@@ -4323,6 +4358,129 @@ def featureflags(account, signing_account):
         # hide internal config data
         t.add_row([key, user_data[key]])
     print(t)
+
+
+@cli.command()
+@click.option('--block', '-b', help='Select a block number, when skipped the latest block is used.', default=None)
+@click.option('--trx-id', '-t', help='Select a trx-id, When skipped, the latest one is used.', default=None)
+@click.option('--draws', '-d', help='Number of draws (default = 1)', default=1)
+@click.option('--participants', '-p', help='Number of participants or file name including participants (one participant per line), (default = 100)', default="100")
+@click.option('--hashtype', '-h', help='Can be md5, sha256, sha512 (default = sha256)', default="sha256")
+@click.option('--seperator', '-s', help='Is used for sha256 and sha512 to seperate the draw number from the seed (default = ,)', default=",")
+@click.option('--account', '-a', help='The account which broadcasts the reply')
+@click.option('--reply', '-r', help='Parent post/comment authorperm. When set, the results will be broadcasted as reply to this authorperm.', default=None)
+@click.option('--without-replacement', '-w', help='When set, numbers are drawed without replacement.', is_flag=True, default=False)
+@click.option('--markdown', '-m', help='When set, results are returned in markdown format', is_flag=True, default=False)
+def draw(block, trx_id, draws, participants, hashtype, seperator, account, reply, without_replacement, markdown):
+    """ Generate pseudo-random numbers based on trx id, block id and previous block id.
+
+    When using --reply, the result is directly broadcasted as comment
+    """    
+    stm = shared_blockchain_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not account:
+        account = stm.config["default_account"]    
+    if reply is not None:
+        if not unlock_wallet(stm):
+            return
+        reply_comment = Comment(reply, blockchain_instance=stm)
+    if block is not None and block != "":
+        block = Block(int(block), blockchain_instance=stm)
+    else:
+        blockchain = Blockchain(blockchain_instance=stm)
+        block = blockchain.get_current_block()
+    data = None
+    for trx in block.transactions:
+        if trx["transaction_id"] == trx_id:
+            data = trx
+        elif trx_id is None:
+            trx_id = trx["transaction_id"]
+            data = trx
+    
+    if os.path.exists(participants):
+        with open(participants) as f:
+            content = f.read()
+        if content.find(",") > 0:
+            participants_list = content.split(",")
+        else:
+            participants_list = content.split("\n")
+        if participants_list[-1] == "":
+            participants_list = participants_list[:-1]
+        participants = len(participants_list)
+    else:
+        participants = int(participants)
+        participants_list = []
+
+    if without_replacement:
+        assert draws <= participants
+    trx = data["operations"][0]["value"]
+    if hashtype == "md5":
+        seed = hashlib.md5((trx_id + block["block_id"] + block["previous"]).encode()).hexdigest()
+    elif hashtype == "sha256":
+        seed = hashlib.sha256((trx_id + block["block_id"] + block["previous"]).encode()).hexdigest()
+    elif hashtype == "sha512":
+        seed = hashlib.sha512((trx_id + block["block_id"] + block["previous"]).encode()).hexdigest()
+    random.seed(a=seed, version=2)
+    t = PrettyTable(["Key", "Value"])
+    t.align = "l"
+    t.add_row(["block number", block["id"]])
+    t.add_row(["trx id", trx_id])
+    t.add_row(["block id", block["block_id"]])
+    t.add_row(["previous", block["previous"]])
+    t.add_row(["hash type", hashtype])
+    t.add_row(["draws", draws])
+    t.add_row(["participants", participants])
+    draw_list = [x + 1 for x in range(participants)]
+    results = []
+    for i in range(int(draws)):
+        if hashtype == "md5":
+            number = int(random.random() * len(draw_list))
+        elif hashtype == "sha256":
+            seed = hashlib.sha256((trx_id + block["block_id"] + block["previous"] + seperator +str(i + 1)).encode()).digest()
+            bigRand = int.from_bytes(seed, 'big')
+            number = bigRand % (len(draw_list))
+        elif hashtype == "sha512":
+            seed = hashlib.sha512((trx_id + block["block_id"] + block["previous"] + seperator +str(i + 1)).encode()).digest()
+            bigRand = int.from_bytes(seed, 'big')
+            number = bigRand % (len(draw_list))
+        results.append(draw_list[number])
+        if len(participants_list) > 0:
+            t.add_row(["%d. draw" % (i + 1), "%d - %s" % (draw_list[number], participants_list[draw_list[number] - 1])])
+        else:
+            t.add_row(["%d. draw" % (i + 1), draw_list[number]])
+        if without_replacement:
+            draw_list.pop(number)
+
+    body = "The following results can be checked with:\n"
+    body += "```\n"
+    if without_replacement:
+        body += "beempy draw -d %d -p %d -b %d -t %s -h %s -s '%s' -w\n" % (draws, participants, block["id"], trx_id, hashtype, seperator)
+    else:
+        body += "beempy draw -d %d -p %d -b %d -t %s -h %s -s '%s'\n" % (draws, participants, block["id"], trx_id, hashtype, seperator)
+    body += "```\n\n"
+    body += "| key | value |\n"
+    body += "| --- | --- |\n"
+    body += "| block number | [%d](https://hiveblocks.com/b/%d#%s) |\n" % (block["id"], block["id"], trx_id)
+    body += "| trx id | [%s](https://hiveblocks.com/tx/%s) |\n" % (trx_id, trx_id)
+    body += "| block id | %s |\n" % block["block_id"]
+    body += "| previous id | %s |\n" % block["previous"]
+    body += "| hash type | %s |\n" % hashtype
+    body += "| draws | %d |\n" % draws
+    body += "| participants | %d |\n" % participants
+    i = 0
+    for result in results:
+        i += 1
+        if len(participants_list) > 0:
+            body += "| %d. draw | %d - %s |\n" % (i, result, participants_list[result - 1])
+        else:
+            body += "| %d. draw | %d |\n" % (i, result)
+    if markdown:
+        print(body)
+    else:
+        print(t)
+    if reply:
+        reply_comment.reply(body, author=account)
 
 
 if __name__ == "__main__":

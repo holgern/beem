@@ -34,10 +34,9 @@ requires = [
     "Click",
     "click_shell",
     "prettytable",
-    "pyyaml",
+    "pyyaml>=5.1",
     "diff_match_patch",
-    "asn1",
-    "enum34"
+    "asn1"
 ]
 
 
