@@ -415,7 +415,7 @@ class Testcases(unittest.TestCase):
         runner = CliRunner()
         result = runner.invoke(cli, ['pingnode'])
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['pingnode', '--raw'])
+        result = runner.invoke(cli, ['pingnode', '--sort'])
         self.assertEqual(result.exit_code, 0)
 
     def test_updatenodes(self):
