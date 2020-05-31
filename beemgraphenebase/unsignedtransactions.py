@@ -8,7 +8,7 @@ import ecdsa
 import hashlib
 from binascii import hexlify, unhexlify
 from collections import OrderedDict
-import asn1
+from asn1crypto.core import OctetString
 import struct
 from future.utils import python_2_unicode_compatible
 from collections import OrderedDict
@@ -72,23 +72,22 @@ class GrapheneObjectASN1(object):
         if self.data is None:
             return py23_bytes()
         b = b""
-        encoder = asn1.Encoder()
-        encoder.start()
+        output = b""
         for name, value in list(self.data.items()):
             if name == "operations":
                 for operation in value:
                     if isinstance(value, string_types):
                         b = py23_bytes(operation, 'utf-8')
                     else:
-                        b = py23_bytes(operation)                      
-                    encoder.write(b, asn1.Numbers.OctetString)                
+                        b = py23_bytes(operation)
+                    output += OctetString(b).dump()
             elif name != "signatures":
                 if isinstance(value, string_types):
                     b = py23_bytes(value, 'utf-8')
                 else:
-                    b = py23_bytes(value)                
-                encoder.write(b, asn1.Numbers.OctetString)
-        return encoder.output()
+                    b = py23_bytes(value)
+                output += OctetString(b).dump()
+        return output
 
     def __json__(self):
         if self.data is None:
@@ -220,25 +219,22 @@ class Unsigned_Transaction(GrapheneObjectASN1):
         # Get message to sign
         #   bytes(self) will give the wire formated data according to
         #   GrapheneObject and the data given in __init__()
-        encoder = asn1.Encoder()
-        encoder.start()
-        encoder.write(unhexlify(self.chainid), asn1.Numbers.OctetString)
+        self.message = OctetString(unhexlify(self.chainid)).dump()
         for name, value in list(self.data.items()):
             if name == "operations":
                 for operation in value:
                     if isinstance(value, string_types):
                         b = py23_bytes(operation, 'utf-8')
                     else:
-                        b = py23_bytes(operation)                      
-                    encoder.write(b, asn1.Numbers.OctetString)                
+                        b = py23_bytes(operation)
+                    self.message += OctetString(b).dump()
             elif name != "signatures":
                 if isinstance(value, string_types):
                     b = py23_bytes(value, 'utf-8')
                 else:
-                    b = py23_bytes(value)                
-                encoder.write(b, asn1.Numbers.OctetString)
-        
-        self.message = encoder.output()
+                    b = py23_bytes(value)
+                self.message += OctetString(b).dump()
+
         self.digest = hashlib.sha256(self.message).digest()
 
         # restore signatures

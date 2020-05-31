@@ -780,7 +780,7 @@ def keygen(import_word_list, strength, passphrase, path, network, role, account_
             t.add_row(["Key role", role])
             t.add_row(["path", path])
             pubkey = ledgertx.ledgertx.get_pubkey(path, request_screen_approval=False)
-            aprove_key = PrettyTable(["Approve %s Key" % r])
+            aprove_key = PrettyTable(["Approve %s Key" % role])
             aprove_key.align = "l"
             aprove_key.add_row([format(pubkey, "STM")])
             print(aprove_key)

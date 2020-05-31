@@ -1,5 +1,9 @@
 Changelog
 =========
+0.23.11
+-------
+* replace asn1 by asn1crypto
+
 0.23.10
 -------
 * get_node_answer_time added to NodeList
