@@ -21,6 +21,9 @@ The library name is derived from a beam machine, similar to the analogy between 
     :target: https://anaconda.org/conda-forge/beem
 
 
+.. image:: https://repl.it/badge/github/holgern/beem
+    :target: https://repl.it/github/holgern/beem
+
 Current build status
 --------------------
 

@@ -4366,12 +4366,12 @@ def featureflags(account, signing_account):
 @click.option('--draws', '-d', help='Number of draws (default = 1)', default=1)
 @click.option('--participants', '-p', help='Number of participants or file name including participants (one participant per line), (default = 100)', default="100")
 @click.option('--hashtype', '-h', help='Can be md5, sha256, sha512 (default = sha256)', default="sha256")
-@click.option('--seperator', '-s', help='Is used for sha256 and sha512 to seperate the draw number from the seed (default = ,)', default=",")
+@click.option('--separator', '-s', help='Is used for sha256 and sha512 to seperate the draw number from the seed (default = ,)', default=",")
 @click.option('--account', '-a', help='The account which broadcasts the reply')
 @click.option('--reply', '-r', help='Parent post/comment authorperm. When set, the results will be broadcasted as reply to this authorperm.', default=None)
 @click.option('--without-replacement', '-w', help='When set, numbers are drawed without replacement.', is_flag=True, default=False)
 @click.option('--markdown', '-m', help='When set, results are returned in markdown format', is_flag=True, default=False)
-def draw(block, trx_id, draws, participants, hashtype, seperator, account, reply, without_replacement, markdown):
+def draw(block, trx_id, draws, participants, hashtype, separator, account, reply, without_replacement, markdown):
     """ Generate pseudo-random numbers based on trx id, block id and previous block id.
 
     When using --reply, the result is directly broadcasted as comment
@@ -4391,12 +4391,15 @@ def draw(block, trx_id, draws, participants, hashtype, seperator, account, reply
         blockchain = Blockchain(blockchain_instance=stm)
         block = blockchain.get_current_block()
     data = None
+    
     for trx in block.transactions:
         if trx["transaction_id"] == trx_id:
             data = trx
         elif trx_id is None:
             trx_id = trx["transaction_id"]
             data = trx
+    if trx_id is None:
+        trx_id = "0"
     
     if os.path.exists(participants):
         with open(participants) as f:
@@ -4437,11 +4440,11 @@ def draw(block, trx_id, draws, participants, hashtype, seperator, account, reply
         if hashtype == "md5":
             number = int(random.random() * len(draw_list))
         elif hashtype == "sha256":
-            seed = hashlib.sha256((trx_id + block["block_id"] + block["previous"] + seperator +str(i + 1)).encode()).digest()
+            seed = hashlib.sha256((trx_id + block["block_id"] + block["previous"] + separator +str(i + 1)).encode()).digest()
             bigRand = int.from_bytes(seed, 'big')
             number = bigRand % (len(draw_list))
         elif hashtype == "sha512":
-            seed = hashlib.sha512((trx_id + block["block_id"] + block["previous"] + seperator +str(i + 1)).encode()).digest()
+            seed = hashlib.sha512((trx_id + block["block_id"] + block["previous"] + separator +str(i + 1)).encode()).digest()
             bigRand = int.from_bytes(seed, 'big')
             number = bigRand % (len(draw_list))
         results.append(draw_list[number])
@@ -4455,9 +4458,9 @@ def draw(block, trx_id, draws, participants, hashtype, seperator, account, reply
     body = "The following results can be checked with:\n"
     body += "```\n"
     if without_replacement:
-        body += "beempy draw -d %d -p %d -b %d -t %s -h %s -s '%s' -w\n" % (draws, participants, block["id"], trx_id, hashtype, seperator)
+        body += "beempy draw -d %d -p %d -b %d -t %s -h %s -s '%s' -w\n" % (draws, participants, block["id"], trx_id, hashtype, separator)
     else:
-        body += "beempy draw -d %d -p %d -b %d -t %s -h %s -s '%s'\n" % (draws, participants, block["id"], trx_id, hashtype, seperator)
+        body += "beempy draw -d %d -p %d -b %d -t %s -h %s -s '%s'\n" % (draws, participants, block["id"], trx_id, hashtype, separator)
     body += "```\n\n"
     body += "| key | value |\n"
     body += "| --- | --- |\n"
