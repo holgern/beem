@@ -23,6 +23,7 @@ The library name is derived from a beam machine, similar to the analogy between 
 
 .. image:: https://repl.it/badge/github/holgern/beem
     :target: https://repl.it/github/holgern/beem
+    :alt: Run on Repl.it
 
 Current build status
 --------------------
