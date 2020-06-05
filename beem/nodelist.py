@@ -73,7 +73,7 @@ class NodeList(list):
                 "type": "appbase",
                 "owner": "anyx",
                 "hive": True,
-                "score": 80
+                "score": 50
             },
             {
                 "url": "http://anyx.io",
@@ -81,7 +81,7 @@ class NodeList(list):
                 "type": "appbase",
                 "owner": "anyx",
                 "hive": True,
-                "score": 50
+                "score": 20
             },
             {
                 "url": "https://hive-test-beeabode.roelandp.nl",
@@ -105,7 +105,7 @@ class NodeList(list):
                 "type": "appbase",
                 "owner": "hive",
                 "hive": True,
-                "score": 50
+                "score": 80
             },
             {
                 "url": "https://api.openhive.network",
@@ -113,7 +113,7 @@ class NodeList(list):
                 "type": "appbase",
                 "owner": "gtg",
                 "hive": True,
-                "score": 20
+                "score": 50
             },
             {
                 "url": "https://techcoderx.com",
@@ -169,7 +169,7 @@ class NodeList(list):
                 "type": "appbase",
                 "owner": "ausbitbank",
                 "hive": True,
-                "score": 10                
+                "score": 50                
             },
             {
                 "url": "https://hive.roelandp.nl",
@@ -177,7 +177,7 @@ class NodeList(list):
                 "type": "appbase",
                 "owner": "roelandp",
                 "hive": True,
-                "score": 10                
+                "score": 50                
             }
         ]
         super(NodeList, self).__init__(nodes)
