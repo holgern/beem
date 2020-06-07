@@ -1,7 +1,7 @@
 from builtins import super
 import unittest
 import mock
-from beem import Steem
+from beem import Hive
 from beem.message import Message
 from beem.account import Account
 from beem.instance import set_shared_steem_instance
@@ -16,8 +16,8 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(exclude_limited=False), num_retries=10))
-        cls.bts = Steem(
+        nodelist.update_nodes(steem_instance=Hive(node=nodelist.get_hive_nodes(), num_retries=10))
+        cls.bts = Hive(
             node=nodelist.get_nodes(exclude_limited=True),
             nobroadcast=True,
             keys=[wif],
@@ -59,7 +59,7 @@ class Testcases(unittest.TestCase):
             new=new_refresh
         ):
             Message(
-                "-----BEGIN STEEM SIGNED MESSAGE-----\n"
+                "-----BEGIN HIVE SIGNED MESSAGE-----\n"
                 "message foobar\n"
                 "-----BEGIN META-----\n"
                 "account=test\n"
@@ -68,11 +68,11 @@ class Testcases(unittest.TestCase):
                 "timestamp=2018-02-15T22:00:54\n"
                 "-----BEGIN SIGNATURE-----\n"
                 "20093ef63f375b9aa8570188cae3aad953bf6393d43ce6f03bbbd1b429e48c6a587dc012922515f6d327158df5081ea2d595888225f9f1c6c3028781c8f9451fde\n"
-                "-----END STEEM SIGNED MESSAGE-----\n"
+                "-----END HIVE SIGNED MESSAGE-----\n"
             ).verify()
 
             Message(
-                "-----BEGIN STEEM SIGNED MESSAGE-----"
+                "-----BEGIN HIVE SIGNED MESSAGE-----"
                 "message foobar\n"
                 "-----BEGIN META-----"
                 "account=test\n"
@@ -81,5 +81,5 @@ class Testcases(unittest.TestCase):
                 "timestamp=2018-02-15T22:00:54\n"
                 "-----BEGIN SIGNATURE-----"
                 "20093ef63f375b9aa8570188cae3aad953bf6393d43ce6f03bbbd1b429e48c6a587dc012922515f6d327158df5081ea2d595888225f9f1c6c3028781c8f9451fde\n"
-                "-----END STEEM SIGNED MESSAGE-----"
+                "-----END HIVE SIGNED MESSAGE-----"
             ).verify()

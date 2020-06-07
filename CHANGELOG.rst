@@ -5,6 +5,11 @@ Changelog
 * add participation_rate to Blockchain
 * beembase.transactions is deprecated
 * get_block_params added to TransactionBuilder
+* add Prefix class for PasswordKey, Brainkey, Address, PublicKey, PrivateKey, Base58
+* New Class BitcoinAddress
+* Address class has now from_pubkey class method
+* Message class improved
+* beempy message can be used to sign and to verify a message
 
 0.23.11
 -------

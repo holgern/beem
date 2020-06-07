@@ -30,6 +30,7 @@ from beem.account import Account
 from beem.steem import Steem
 from beem.hive import Hive
 from beem.comment import Comment
+from beem.message import Message
 from beem.market import Market
 from beem.block import Block
 from beem.profile import Profile
@@ -2045,6 +2046,35 @@ def beneficiaries(authorperm, beneficiaries):
         tx = stm.hivesigner.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
     print(tx)
+
+
+@cli.command()
+@click.argument('message-file', nargs=1)
+@click.option('--account', '-a', help='Account which should sign')
+@click.option('--verify', '-v', help='Verify a message instead of signing it', is_flag=True, default=False)
+def message(message_file, account, verify):
+    """Sign and verify a message
+
+    """
+    stm = shared_blockchain_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not account:
+        account = stm.config["default_account"]    
+    with open(message_file) as f:
+        message = f.read()
+    m = Message(message, blockchain_instance=stm)
+    if verify:
+        if m.verify():
+            print("Could verify message!")
+        else:
+            print("Could not verify message!")
+    else:
+        if not unlock_wallet(stm):
+            return        
+        out = m.sign(account)
+        with open(message_file, "w", encoding="utf-8") as f:
+            f.write(out)            
 
 
 @cli.command()
