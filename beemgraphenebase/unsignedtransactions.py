@@ -119,8 +119,8 @@ class GrapheneObjectASN1(object):
 class Unsigned_Transaction(GrapheneObjectASN1):
     """ Create an unsigned transaction with ASN1 encoder for using it with ledger
 
-        :param num refNum: parameter ref_block_num (see :func:`beembase.transactions.getBlockParams`)
-        :param num refPrefix: parameter ref_block_prefix (see :func:`beembase.transactions.getBlockParams`)
+        :param num ref_block_num:
+        :param num ref_block_prefix:
         :param str expiration: expiration date
         :param array operations:  array of operations
     """

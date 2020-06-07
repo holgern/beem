@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 from builtins import str
 from future.utils import python_2_unicode_compatible
 import logging
+import struct
+from binascii import unhexlify
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from .account import Account
 from .utils import formatTimeFromNow
@@ -314,8 +316,7 @@ class TransactionBuilder(dict):
             self.expiration or self.blockchain.expiration
         )
         if ref_block_num is None or ref_block_prefix is None:
-            ref_block_num, ref_block_prefix = transactions.getBlockParams(
-                self.blockchain.rpc)
+            ref_block_num, ref_block_prefix = self.get_block_params()
         if self._use_ledger:
             self.ledgertx = Ledger_Transaction(
                 ref_block_prefix=ref_block_prefix,
@@ -337,6 +338,28 @@ class TransactionBuilder(dict):
 
         super(TransactionBuilder, self).update(self.tx.json())
         self._unset_require_reconstruction()
+
+    def get_block_params(self, use_head_block=False):
+        """ Auxiliary method to obtain ``ref_block_num`` and
+            ``ref_block_prefix``. Requires a connection to a
+            node!
+        """
+
+        dynBCParams = self.blockchain.get_dynamic_global_properties(use_stored_data=False)
+        if use_head_block:
+            ref_block_num = dynBCParams["head_block_number"] & 0xFFFF
+            ref_block_prefix = struct.unpack_from(
+                "<I", unhexlify(dynBCParams["head_block_id"]), 4
+            )[0]
+        else:
+            # need to get subsequent block because block head doesn't return 'id' - stupid
+            from .block import BlockHeader
+            block = BlockHeader(int(dynBCParams["last_irreversible_block_num"]) + 1, blockchain_instance=self.blockchain)
+            ref_block_num = dynBCParams["last_irreversible_block_num"] & 0xFFFF
+            ref_block_prefix = struct.unpack_from(
+                "<I", unhexlify(block["previous"]), 4
+            )[0]
+        return ref_block_num, ref_block_prefix
 
     def sign(self, reconstruct_tx=True):
         """ Sign a provided transaction with the provided key(s)

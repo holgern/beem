@@ -20,8 +20,8 @@ log = logging.getLogger(__name__)
 class Ledger_Transaction(GrapheneUnsigned_Transaction):
     """ Create an unsigned transaction and offer method to send it to a ledger device for signing
 
-        :param num refNum: parameter ref_block_num (see :func:`beembase.transactions.getBlockParams`)
-        :param num refPrefix: parameter ref_block_prefix (see :func:`beembase.transactions.getBlockParams`)
+        :param num ref_block_num:
+        :param num ref_block_prefix:
         :param str expiration: expiration date
         :param array operations:  array of operations
         :param dict custom_chains: custom chain which should be added to the known chains

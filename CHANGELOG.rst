@@ -1,5 +1,11 @@
 Changelog
 =========
+0.23.12
+-------
+* add participation_rate to Blockchain
+* beembase.transactions is deprecated
+* get_block_params added to TransactionBuilder
+
 0.23.11
 -------
 * replace asn1 by asn1crypto

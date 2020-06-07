@@ -390,6 +390,11 @@ class Blockchain(object):
         ).time()
         return int(time.mktime(block_time.timetuple()))
 
+    @property
+    def participation_rate(self):
+        """ Returns the witness participation rate in a range from 0 to 1"""
+        return bin(int(self.blockchain.get_dynamic_global_properties(use_stored_data=False)["recent_slots_filled"])).count("1") / 128
+
     def blocks(self, start=None, stop=None, max_batch_size=None, threading=False, thread_num=8, only_ops=False, only_virtual_ops=False):
         """ Yields blocks starting from ``start``.
 
