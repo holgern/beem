@@ -63,7 +63,6 @@ beembase Modules
    beembase.operations
    beembase.signedtransactions
    beembase.ledgertransactions
-   beembase.transactions
 
 
 beemgraphenebase Modules
