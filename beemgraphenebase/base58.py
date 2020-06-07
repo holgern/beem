@@ -3,39 +3,18 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
-from builtins import object
-from builtins import chr
 from future.utils import python_2_unicode_compatible
 from binascii import hexlify, unhexlify
 from .py23 import py23_bytes, py23_chr, bytes_types, integer_types, string_types, text_type
+from .prefix import Prefix
 import hashlib
 import string
 import logging
 log = logging.getLogger(__name__)
 
-""" Default Prefix """
-PREFIX = "GPH"
-
-known_prefixes = [
-    PREFIX,
-    "BTS",
-    "MUSE",
-    "TEST",
-    "TST",
-    "STM",
-    "STX",
-    "GLX",
-    "GLS",
-    "EOS",
-    "VIT",
-    "WKA",
-    "EUR",
-    "WLS",
-]
-
 
 @python_2_unicode_compatible
-class Base58(object):
+class Base58(Prefix):
     """Base58 base class
 
     This class serves as an abstraction layer to deal with base58 encoded
@@ -60,8 +39,8 @@ class Base58(object):
         * etc.
 
     """
-    def __init__(self, data, prefix=PREFIX):
-        self._prefix = prefix
+    def __init__(self, data, prefix=None):
+        self.set_prefix(prefix)
         if isinstance(data, Base58):
             data = repr(data)
         if all(c in string.hexdigits for c in data):
@@ -70,8 +49,8 @@ class Base58(object):
             self._hex = base58CheckDecode(data)
         elif data[0] == "K" or data[0] == "L":
             self._hex = base58CheckDecode(data)[:-2]
-        elif data[:len(self._prefix)] == self._prefix:
-            self._hex = gphBase58CheckDecode(data[len(self._prefix):])
+        elif data[:len(self.prefix)] == self.prefix:
+            self._hex = gphBase58CheckDecode(data[len(self.prefix):])
         else:
             raise ValueError("Error loading Base58 object")
 
@@ -89,10 +68,7 @@ class Base58(object):
             return base58encode(self._hex)
         elif _format.upper() == "BTC":
             return base58CheckEncode(0x00, self._hex)
-        elif _format.upper() in known_prefixes:
-            return _format.upper() + str(self)
         else:
-            log.warn("Format %s unknown. You've been warned!\n" % _format)
             return _format.upper() + str(self)
 
     def __repr__(self):
@@ -168,7 +144,6 @@ def ripemd160(s):
     ripemd160 = hashlib.new('ripemd160')
     ripemd160.update(unhexlify(s))
     return ripemd160.digest()
-
 
 def doublesha256(s):
     return hashlib.sha256(hashlib.sha256(unhexlify(s)).digest()).digest()

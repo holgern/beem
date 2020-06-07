@@ -79,11 +79,11 @@ class Testcases(unittest.TestCase):
                           ])
 
     def test_btsprivkey(self):
-        self.assertEqual([format(PrivateKey("5HqUkGuo62BfcJU5vNhTXKJRXuUi9QSE6jp8C3uBJ2BVHtB8WSd").address, "BTS"),
-                          format(PrivateKey("5JWcdkhL3w4RkVPcZMdJsjos22yB5cSkPExerktvKnRNZR5gx1S").address, "BTS"),
-                          format(PrivateKey("5HvVz6XMx84aC5KaaBbwYrRLvWE46cH6zVnv4827SBPLorg76oq").address, "BTS"),
-                          format(PrivateKey("5Jete5oFNjjk3aUMkKuxgAXsp7ZyhgJbYNiNjHLvq5xzXkiqw7R").address, "BTS"),
-                          format(PrivateKey("5KDT58ksNsVKjYShG4Ls5ZtredybSxzmKec8juj7CojZj6LPRF7").address, "BTS")
+        self.assertEqual([format(PrivateKey("5HqUkGuo62BfcJU5vNhTXKJRXuUi9QSE6jp8C3uBJ2BVHtB8WSd").compressed.address, "BTS"),
+                          format(PrivateKey("5JWcdkhL3w4RkVPcZMdJsjos22yB5cSkPExerktvKnRNZR5gx1S").compressed.address, "BTS"),
+                          format(PrivateKey("5HvVz6XMx84aC5KaaBbwYrRLvWE46cH6zVnv4827SBPLorg76oq").compressed.address, "BTS"),
+                          format(PrivateKey("5Jete5oFNjjk3aUMkKuxgAXsp7ZyhgJbYNiNjHLvq5xzXkiqw7R").compressed.address, "BTS"),
+                          format(PrivateKey("5KDT58ksNsVKjYShG4Ls5ZtredybSxzmKec8juj7CojZj6LPRF7").compressed.address, "BTS")
                           ],
                          ["BTSFN9r6VYzBK8EKtMewfNbfiGCr56pHDBFi",
                           "BTSdXrrTXimLb6TEt3nHnePwFmBT6Cck112",
@@ -93,9 +93,9 @@ class Testcases(unittest.TestCase):
                           ])
 
     def test_btcprivkey(self):
-        self.assertEqual([format(PrivateKey("5HvVz6XMx84aC5KaaBbwYrRLvWE46cH6zVnv4827SBPLorg76oq").uncompressed.address, "BTC"),
-                          format(PrivateKey("5Jete5oFNjjk3aUMkKuxgAXsp7ZyhgJbYNiNjHLvq5xzXkiqw7R").uncompressed.address, "BTC"),
-                          format(PrivateKey("5KDT58ksNsVKjYShG4Ls5ZtredybSxzmKec8juj7CojZj6LPRF7").uncompressed.address, "BTC"),
+        self.assertEqual([format(PrivateKey("5HvVz6XMx84aC5KaaBbwYrRLvWE46cH6zVnv4827SBPLorg76oq").bitcoin.address, "BTC"),
+                          format(PrivateKey("5Jete5oFNjjk3aUMkKuxgAXsp7ZyhgJbYNiNjHLvq5xzXkiqw7R").bitcoin.address, "BTC"),
+                          format(PrivateKey("5KDT58ksNsVKjYShG4Ls5ZtredybSxzmKec8juj7CojZj6LPRF7").bitcoin.address, "BTC"),
                           ],
                          ["1G7qw8FiVfHEFrSt3tDi6YgfAdrDrEM44Z",
                           "12c7KAAZfpREaQZuvjC5EhpoN6si9vekqK",

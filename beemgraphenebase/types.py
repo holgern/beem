@@ -225,6 +225,36 @@ class Bytes(object):
 
 
 @python_2_unicode_compatible
+class Hash(Bytes):
+    def json(self):
+        return str(self.data)
+
+    def __bytes__(self):
+        return unhexlify(bytes(self.data, "utf-8"))
+
+
+@python_2_unicode_compatible
+class Ripemd160(Hash):
+    def __init__(self, a):
+        assert len(a) == 40, "Require 40 char long hex"
+        super().__init__(a)
+
+
+@python_2_unicode_compatible
+class Sha1(Hash):
+    def __init__(self, a):
+        assert len(a) == 40, "Require 40 char long hex"
+        super().__init__(a)
+
+
+@python_2_unicode_compatible
+class Sha256(Hash):
+    def __init__(self, a):
+        assert len(a) == 64, "Require 64 char long hex"
+        super().__init__(a)
+
+
+@python_2_unicode_compatible
 class Void(object):
     def __init__(self):
         pass
@@ -401,15 +431,18 @@ class Id(object):
 
 @python_2_unicode_compatible
 class Enum8(Uint8):
+    # List needs to be provided by super class
+    options = []
+
     def __init__(self, selection):
-        if selection not in self.options and \
-                not (isinstance(selection, int) and len(self.options) < selection):
-            raise AssertionError("Options are %s. Given '%s'" % (
-                self.options, selection))
-        if selection in self.options:
-            super(Enum8, self).__init__(self.options.index(selection))
-        else:
-            super(Enum8, self).__init__(selection)
+        if selection not in self.options or (
+            isinstance(selection, int) and len(self.options) < selection
+        ):
+            raise ValueError(
+                "Options are {}. Given '{}'".format(str(self.options), selection)
+            )
+
+        super(Enum8, self).__init__(self.options.index(selection))
 
     def __str__(self):
         """Returns data as string."""
