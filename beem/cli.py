@@ -37,6 +37,7 @@ from beem.profile import Profile
 from beem.wallet import Wallet
 from beem.steemconnect import SteemConnect
 from beem.hivesigner import HiveSigner
+from beem.memo import Memo
 from beem.asset import Asset
 from beem.witness import Witness, WitnessesRankedByVote, WitnessesVotedByAccount
 from beem.blockchain import Blockchain
@@ -2049,7 +2050,7 @@ def beneficiaries(authorperm, beneficiaries):
 
 
 @cli.command()
-@click.argument('message-file', nargs=1)
+@click.argument('message_file', nargs=1, required=False)
 @click.option('--account', '-a', help='Account which should sign')
 @click.option('--verify', '-v', help='Verify a message instead of signing it', is_flag=True, default=False)
 def message(message_file, account, verify):
@@ -2060,9 +2061,15 @@ def message(message_file, account, verify):
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
-        account = stm.config["default_account"]    
-    with open(message_file) as f:
-        message = f.read()
+        account = stm.config["default_account"]
+    if message_file is not None:
+        with open(message_file) as f:
+            message = f.read()
+    elif verify:
+        print("Please store the signed message into a text file and append the file path to beempy message -v")
+        return
+    else:
+        message = input("Enter message: ")
     m = Message(message, blockchain_instance=stm)
     if verify:
         if m.verify():
@@ -2073,8 +2080,77 @@ def message(message_file, account, verify):
         if not unlock_wallet(stm):
             return        
         out = m.sign(account)
+    if message_file is not None:
         with open(message_file, "w", encoding="utf-8") as f:
-            f.write(out)            
+            f.write(out)
+    else:
+        print(out)
+
+
+@cli.command()
+@click.argument('sender', nargs=1)
+@click.argument('memo', nargs=-1)
+@click.option('--account', '-a', help='Account which decrypts the memo with its memo key')
+@click.option('--text', '-t', help='Reads the text file content', is_flag=True, default=False)
+def decrypt(sender, memo, account, text):
+    """decrypt a (or more than one) decrypted memo/file with your memo key
+
+    """
+    stm = shared_blockchain_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not account:
+        account = stm.config["default_account"]
+    m = Memo(from_account=sender, to_account=account, blockchain_instance=stm)
+    if not unlock_wallet(stm):
+        return        
+    for entry in memo:
+        print("\n")
+        if text:
+            with open(entry) as f:
+                message = f.read()
+        else:
+            message = entry
+        out = m.decrypt(message)
+        if text:
+            with open(entry, "w", encoding="utf-8") as f:
+                f.write(out)
+        else:
+            print(out)
+
+
+@cli.command()
+@click.argument('receiver', nargs=1)
+@click.argument('memo', nargs=-1)
+@click.option('--account', '-a', help='Account which encrypts the memo with its memo key')
+@click.option('--text', '-t', help='Reads the text file content', is_flag=True, default=False)
+def encrypt(receiver, memo, account, text):
+    """encrypt a (or more than one) memo text/file with the your memo key
+
+    """
+    stm = shared_blockchain_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not account:
+        account = stm.config["default_account"]
+    m = Memo(from_account=account, to_account=receiver, blockchain_instance=stm)
+    if not unlock_wallet(stm):
+        return
+    for entry in memo:
+        print("\n")
+        if text:
+            with open(entry) as f:
+                message = f.read()
+        else:
+            message = entry
+        if message[0] == "#":
+            message = message[1:]
+        out = m.encrypt(message)["message"]
+        if text:
+            with open(entry, "w", encoding="utf-8") as f:
+                f.write(out)
+        else:
+            print(out)
 
 
 @cli.command()

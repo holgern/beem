@@ -62,6 +62,7 @@ def init_aes(shared_secret, nonce):
 def init_aes_bts(shared_secret, nonce):
     """ Initialize AES instance
         :param hex shared_secret: Shared Secret to use as encryption key
+        :param int nonce: Random nonce
         :return: AES instance
         :rtype: AES
     """

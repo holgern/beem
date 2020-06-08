@@ -12,6 +12,7 @@ Changelog
 * beempy message can be used to sign and to verify a message
 * decryption of long messages fixed
 * varint decoding added to memo decryption
+* beempy encrypt / decrypt can be used to encrypt/decrypt a memo text with your memo key
 
 0.23.11
 -------
