@@ -534,6 +534,8 @@ class TransactionBuilder(dict):
         self.ops = []
         self.wifs = set()
         self.signing_accounts = []
+        self.ref_block_num = None
+        self.ref_block_prefix = None
         # This makes sure that _is_constructed will return False afterwards
         self["expiration"] = None
         super(TransactionBuilder, self).__init__({})

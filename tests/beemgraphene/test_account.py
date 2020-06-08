@@ -7,7 +7,7 @@ from builtins import str
 import unittest
 from beemgraphenebase.base58 import Base58, base58encode
 from beemgraphenebase.bip32 import BIP32Key
-from beemgraphenebase.account import BrainKey, Address, PublicKey, PrivateKey, PasswordKey, Mnemonic, MnemonicKey
+from beemgraphenebase.account import BrainKey, Address, PublicKey, PrivateKey, PasswordKey, Mnemonic, MnemonicKey, BitcoinAddress
 from binascii import hexlify, unhexlify
 import sys
 import hashlib
@@ -102,6 +102,26 @@ class Testcases(unittest.TestCase):
                           "1Gu5191CVHmaoU3Zz3prept87jjnpFDrXL",
                           ])
 
+    def test_btcprivkeystr(self):
+        self.assertEqual([str(BitcoinAddress.from_pubkey(PrivateKey("5HvVz6XMx84aC5KaaBbwYrRLvWE46cH6zVnv4827SBPLorg76oq").pubkey)),
+                          str(BitcoinAddress.from_pubkey(PrivateKey("5Jete5oFNjjk3aUMkKuxgAXsp7ZyhgJbYNiNjHLvq5xzXkiqw7R").pubkey, compressed=True)),
+                          str(BitcoinAddress.from_pubkey(PrivateKey("5KDT58ksNsVKjYShG4Ls5ZtredybSxzmKec8juj7CojZj6LPRF7").pubkey, compressed=False)),
+                          ],
+                         ["1G7qw8FiVfHEFrSt3tDi6YgfAdrDrEM44Z",
+                          "1E2jXCkSmLxirL31gHwi1UWTjUBxCgS7pq",
+                          "1Gu5191CVHmaoU3Zz3prept87jjnpFDrXL",
+                          ])
+
+    def test_gphprivkeystr(self):
+        self.assertEqual([str(Address.from_pubkey(PrivateKey("5HvVz6XMx84aC5KaaBbwYrRLvWE46cH6zVnv4827SBPLorg76oq").pubkey)),
+                          str(Address.from_pubkey(PrivateKey("5Jete5oFNjjk3aUMkKuxgAXsp7ZyhgJbYNiNjHLvq5xzXkiqw7R").pubkey, compressed=True)),
+                          str(Address.from_pubkey(PrivateKey("5KDT58ksNsVKjYShG4Ls5ZtredybSxzmKec8juj7CojZj6LPRF7").pubkey, compressed=False, prefix="BTS")),
+                          ],
+                         ["STMBXqRucGm7nRkk6jm7BNspTJTWRtNcx7k5",
+                          "STM5tTDDR6M3mkcyVv16edsw8dGUyNQZrvKU",
+                          "BTS4XPkBqYw882fH5aR5S8mMKXCaZ1yVA76f",
+                          ])
+
     def test_PublicKey(self):
         self.assertEqual([str(PublicKey("BTS6UtYWWs3rkZGV8JA86qrgkG6tyFksgECefKE1MiH4HkLD8PFGL", prefix="BTS")),
                           str(PublicKey("BTS8YAMLtNcnqGNd3fx28NP3WoyuqNtzxXpwXTkZjbfe9scBmSyGT", prefix="BTS")),
@@ -165,6 +185,12 @@ class Testcases(unittest.TestCase):
     def test_BrainKey_suggest(self):
         b = BrainKey()
         self.assertTrue(len(b.suggest()) > 0)
+
+    def test_child(self):
+        p = PrivateKey("5JWcdkhL3w4RkVPcZMdJsjos22yB5cSkPExerktvKnRNZR5gx1S")
+        p2 = p.child(b"Foobar")
+        self.assertIsInstance(p2, PrivateKey)
+        self.assertEqual(str(p2), "5JQ6AQmjpbEZjJBLnoa3BaWa9y3LDTUBeSDwEGQD2UjYkb1gY2x")
 
     def test_BrainKey_sequences(self):
         b = BrainKey("COLORER BICORN KASBEKE FAERIE LOCHIA GOMUTI SOVKHOZ Y GERMAL AUNTIE PERFUMY TIME FEATURE GANGAN CELEMIN MATZO")
@@ -484,3 +510,32 @@ class Testcases(unittest.TestCase):
         mk.set_path_BIP48(role="memo")        
         self.assertEqual(str(mk.get_private_key()), str(PrivateKey("L5GrFqdRsroM1Ym4aMdALQBL7xN9kNMru9JTgtwbHVZ4iGvx1184")))
         self.assertEqual(str(mk.get_public_key()), str(PublicKey("02fa2cdf5a007b01b1911615a4fba9c2a864a1c1ed079d222e5d549d207412c601")))
+
+    def test_new_privatekey(self):
+        w = PrivateKey()
+        self.assertIsInstance(w, PrivateKey)
+        self.assertEqual(str(w)[0], "5")  # is a wif key that starts with 5
+
+    def test_new_BrainKey(self):
+        w = BrainKey().get_private_key()
+        self.assertIsInstance(w, PrivateKey)
+        self.assertEqual(str(w)[0], "5")  # is a wif key that starts with 5
+
+    def test_derive_private_key(self):
+        p = PrivateKey("5JWcdkhL3w4RkVPcZMdJsjos22yB5cSkPExerktvKnRNZR5gx1S")
+        p2 = p.derive_private_key(10)
+        self.assertEqual(
+            repr(p2), "2dc7cb99933132e25b37710f9ea806228b04a583da11a137ef97fd42c0007390"
+        )
+
+    def test_derive_child(self):
+        # NOTE: this key + offset pair is particularly nasty, as
+        # the resulting derived value is less then 64 bytes long.
+        # Thus, this test also tests for proper padding.
+        p = PrivateKey("5K6hMUtQB2xwjuz3SRR6uM5HNERWgBqcK7gPPZ31XtAyBNoATZd")
+        p2 = p.child(
+            b"\xaf\x8f: \xf6T?V\x0bM\xd8\x16 \xfd\xde\xe9\xb9\xac\x03\r\xba\xb2\x8d\x868-\xc2\x90\x80\xe8\x1b\xce"
+        )
+        self.assertEqual(
+            repr(p2), "0c5fae344a513a4cfab312b24c08df2b2d6afa25c0ead0d3d1d0d3e76794109b"
+        )

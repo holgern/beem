@@ -10,6 +10,8 @@ Changelog
 * Address class has now from_pubkey class method
 * Message class improved
 * beempy message can be used to sign and to verify a message
+* decryption of long messages fixed
+* varint decoding added to memo decryption
 
 0.23.11
 -------
