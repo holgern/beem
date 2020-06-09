@@ -190,6 +190,21 @@ def encode_memo(priv, pub, nonce, message, **kwargs):
     return "#" + base58encode(hexlify(py23_bytes(tx)).decode("ascii"))
 
 
+def extract_memo_data(message):
+    """ Returns the stored pubkey keys, nonce, checksum and encrypted message of a memo"""
+    raw = base58decode(message[1:])
+    from_key = PublicKey(raw[:66])
+    raw = raw[66:]
+    to_key = PublicKey(raw[:66])
+    raw = raw[66:]
+    nonce = str(struct.unpack_from("<Q", unhexlify(raw[:16]))[0])
+    raw = raw[16:]
+    check = struct.unpack_from("<I", unhexlify(raw[:8]))[0]
+    raw = raw[8:]
+    cipher = raw
+    return from_key, to_key, nonce, check, cipher
+
+
 def decode_memo(priv, message):
     """ Decode a message with a shared secret between Alice and Bob
 
@@ -201,16 +216,7 @@ def decode_memo(priv, message):
                string
     """
     # decode structure
-    raw = base58decode(message[1:])
-    from_key = PublicKey(raw[:66])
-    raw = raw[66:]
-    to_key = PublicKey(raw[:66])
-    raw = raw[66:]
-    nonce = str(struct.unpack_from("<Q", unhexlify(raw[:16]))[0])
-    raw = raw[16:]
-    check = struct.unpack_from("<I", unhexlify(raw[:8]))[0]
-    raw = raw[8:]
-    cipher = raw
+    from_key, to_key, nonce, check, cipher = extract_memo_data(message)
 
     if repr(to_key) == repr(priv.pubkey):
         shared_secret = get_shared_secret(priv, from_key)

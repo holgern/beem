@@ -2088,46 +2088,95 @@ def message(message_file, account, verify):
 
 
 @cli.command()
-@click.argument('sender', nargs=1)
 @click.argument('memo', nargs=-1)
 @click.option('--account', '-a', help='Account which decrypts the memo with its memo key')
+@click.option('--output', '-o', help='Output file name. Result is stored, when set instead of printed.')
+@click.option('--info', '-i', help='Shows information about public keys and used nonce', is_flag=True, default=False)
 @click.option('--text', '-t', help='Reads the text file content', is_flag=True, default=False)
-def decrypt(sender, memo, account, text):
+@click.option('--binary', '-b', help='Reads the binary file content', is_flag=True, default=False)
+def decrypt(memo, account, output, info, text, binary):
     """decrypt a (or more than one) decrypted memo/file with your memo key
 
     """
+    if text and binary:
+        print("You cannot set text and binary!")
+        return
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
-    m = Memo(from_account=sender, to_account=account, blockchain_instance=stm)
+    m = Memo(from_account=None, to_account=account, blockchain_instance=stm)
+
     if not unlock_wallet(stm):
-        return        
+        return
     for entry in memo:
         print("\n")
+        if not binary and info:
+            from_key, to_key, nonce = m.extract_decrypt_memo_data(entry)
+            try:
+                from_account = stm.wallet.getAccountFromPublicKey(str(from_key))
+                to_account = stm.wallet.getAccountFromPublicKey(str(to_key))
+                if from_account is not None:
+                    print("from: %s" % str(from_account))
+                else:
+                    print("from: %s" % str(from_key))
+                if to_account is not None:
+                    print("to: %s" % str(to_account))
+                else:
+                    print("to: %s" % str(to_key))
+                print("nonce: %s" % nonce)
+            except:
+                print("from: %s" % str(from_key))
+                print("to: %s" % str(to_key))
+                print("nonce: %s" % nonce)
         if text:
             with open(entry) as f:
                 message = f.read()
+        elif binary:
+            if output is None:
+                output = entry + ".dec"
+            ret = m.decrypt_binary(entry, output, buffer_size=2048)
+            if info:
+                t = PrettyTable(["Key", "Value"])
+                t.align = "l"
+                t.add_row(["file", entry])
+                for key in ret:
+                    t.add_row([key, ret[key]])
+                print(t)
         else:
             message = entry
-        out = m.decrypt(message)
         if text:
-            with open(entry, "w", encoding="utf-8") as f:
+            out = m.decrypt(message)
+            if output is None:
+                output = entry
+            with open(output, "w", encoding="utf-8") as f:
                 f.write(out)
-        else:
-            print(out)
+        elif not binary:
+            out = m.decrypt(message)
+            if info:
+                print("message: %s" % out)              
+            if output:
+                with open(output, "w", encoding="utf-8") as f:
+                    f.write(out)
+            elif not info:
+                print(out)
 
 
 @cli.command()
 @click.argument('receiver', nargs=1)
 @click.argument('memo', nargs=-1)
 @click.option('--account', '-a', help='Account which encrypts the memo with its memo key')
+@click.option('--output', '-o', help='Output file name. Result is stored, when set instead of printed.')
 @click.option('--text', '-t', help='Reads the text file content', is_flag=True, default=False)
-def encrypt(receiver, memo, account, text):
+@click.option('--binary', '-b', help='Reads the binary file content', is_flag=True, default=False)
+def encrypt(receiver, memo, account, output, text, binary):
     """encrypt a (or more than one) memo text/file with the your memo key
 
     """
+    if text and binary:
+        print("You cannot set text and binary!")
+        return    
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
@@ -2141,16 +2190,30 @@ def encrypt(receiver, memo, account, text):
         if text:
             with open(entry) as f:
                 message = f.read()
+            if message[0] == "#":
+                message = message[1:]
+        elif binary:
+            if output is None:
+                output = entry + ".enc"
+            m.encrypt_binary(entry, output, buffer_size=2048)      
         else:
             message = entry
-        if message[0] == "#":
-            message = message[1:]
-        out = m.encrypt(message)["message"]
+            if message[0] == "#":
+                message = message[1:]
+
         if text:
-            with open(entry, "w", encoding="utf-8") as f:
+            out = m.encrypt(message)["message"]
+            if output is None:
+                output = entry        
+            with open(output, "w", encoding="utf-8") as f:
                 f.write(out)
-        else:
-            print(out)
+        elif not binary:
+            out = m.encrypt(message)["message"]
+            if output is None:
+                print(out)
+            else:
+                with open(output, "w", encoding="utf-8") as f:
+                    f.write(out)                
 
 
 @cli.command()

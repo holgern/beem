@@ -7,6 +7,11 @@ from builtins import str
 from builtins import object
 from beem.instance import shared_blockchain_instance
 import random
+import os
+import struct
+from binascii import hexlify, unhexlify
+from beemgraphenebase.base58 import base58encode, base58decode
+from beem.version import version as __version__
 from beembase import memo as BtsMemo
 from beemgraphenebase.account import PrivateKey, PublicKey
 from .account import Account
@@ -149,8 +154,12 @@ class Memo(object):
 
         if to_account:
             self.to_account = Account(to_account, blockchain_instance=self.blockchain)
+        else:
+            self.to_account = None
         if from_account:
             self.from_account = Account(from_account, blockchain_instance=self.blockchain)
+        else:
+            self.from_account = None
 
     def unlock_wallet(self, *args, **kwargs):
         """ Unlock the library internal wallet
@@ -213,6 +222,63 @@ class Memo(object):
                 "to": self.to_account["memo_key"]
             }
 
+    def encrypt_binary(self, infile, outfile, buffer_size=2048):
+        """ Encrypt a binary file
+
+            :param str infile: input file name
+            :param str outfile: output file name
+            :param int buffer_size: write buffer size
+        """
+        if not os.path.exists(infile):
+            raise ValueError("%s does not exists!" % infile)
+
+        nonce = str(random.getrandbits(64))
+        memo_wif = self.blockchain.wallet.getPrivateKeyForPublicKey(
+            self.from_account["memo_key"]
+        )
+        if not memo_wif:
+            raise MissingKeyError("Memo key for %s missing!" % self.from_account["name"])
+
+        if not hasattr(self, 'chain_prefix'):
+            self.chain_prefix = self.blockchain.prefix
+
+        file_size = os.path.getsize(infile)
+        priv = PrivateKey(memo_wif)
+        pub = PublicKey(
+                self.to_account["memo_key"],
+                prefix=self.chain_prefix
+            )
+        enc = BtsMemo.encode_memo(
+            priv,
+            pub,
+            nonce,
+            "beem/%s" % __version__,
+            prefix=self.chain_prefix
+        )
+        enc = unhexlify(base58decode(enc[1:]))
+        shared_secret = BtsMemo.get_shared_secret(priv, pub)
+        aes, check = BtsMemo.init_aes(shared_secret, nonce)
+        with open(outfile, 'wb') as fout:
+            fout.write(struct.pack('<Q', len(enc)))
+            fout.write(enc)
+            fout.write(struct.pack('<Q', file_size))
+            with open(infile, 'rb') as fin:
+                while True:
+                    data = fin.read(buffer_size)
+                    n = len(data)
+                    if n == 0:
+                        break
+                    elif n % 16 != 0:
+                        data += b' ' * (16 - n % 16) # <- padded with spaces
+                    encd = aes.encrypt(data)
+                    fout.write(encd)
+
+    def extract_decrypt_memo_data(self, memo):
+        """ Returns information about an encrypted memo
+        """
+        from_key, to_key, nonce, check, cipher = BtsMemo.extract_memo_data(memo)
+        return from_key, to_key, nonce
+
     def decrypt(self, memo):
         """ Decrypt a memo
 
@@ -236,30 +302,51 @@ class Memo(object):
             nonce = memo.get("nonce")
         else:
             nonce = ""
-
-        try:
-            memo_wif = self.blockchain.wallet.getPrivateKeyForPublicKey(
-                memo_to["memo_key"]
-            )
-            pubkey = memo_from["memo_key"]
-        except MissingKeyError:
+        
+        if memo_to is None or memo_from is None:
+            from_key, to_key, nonce, check, cipher = BtsMemo.extract_memo_data(message)
             try:
-                # if that failed, we assume that we have sent the memo
                 memo_wif = self.blockchain.wallet.getPrivateKeyForPublicKey(
-                    memo_from["memo_key"]
+                    str(to_key)
                 )
-                pubkey = memo_to["memo_key"]
+                pubkey = from_key
             except MissingKeyError:
-                # if all fails, raise exception
-                raise MissingKeyError(
-                    "Non of the required memo keys are installed!"
-                    "Need any of {}".format(
-                    [memo_to["name"], memo_from["name"]]))
+                try:
+                    # if that failed, we assume that we have sent the memo
+                    memo_wif = self.blockchain.wallet.getPrivateKeyForPublicKey(
+                        str(from_key)
+                    )
+                    pubkey = to_key
+                except MissingKeyError:
+                    # if all fails, raise exception
+                    raise MissingKeyError(
+                        "Non of the required memo keys are installed!"
+                        "Need any of {}".format(
+                        [str(to_key), str(from_key)]))
+        else:
+            try:
+                memo_wif = self.blockchain.wallet.getPrivateKeyForPublicKey(
+                    memo_to["memo_key"]
+                )
+                pubkey = memo_from["memo_key"]
+            except MissingKeyError:
+                try:
+                    # if that failed, we assume that we have sent the memo
+                    memo_wif = self.blockchain.wallet.getPrivateKeyForPublicKey(
+                        memo_from["memo_key"]
+                    )
+                    pubkey = memo_to["memo_key"]
+                except MissingKeyError:
+                    # if all fails, raise exception
+                    raise MissingKeyError(
+                        "Non of the required memo keys are installed!"
+                        "Need any of {}".format(
+                        [memo_to["name"], memo_from["name"]]))
 
         if not hasattr(self, 'chain_prefix'):
             self.chain_prefix = self.blockchain.prefix
 
-        if message[0] == '#':
+        if message[0] == '#' or memo_to is None or memo_from is None:
             return BtsMemo.decode_memo(
                 PrivateKey(memo_wif),
                 message
@@ -271,3 +358,78 @@ class Memo(object):
                 nonce,
                 message
             )
+
+    def decrypt_binary(self, infile, outfile, buffer_size=2048):
+        """ Decrypt a binary file
+
+            :param str infile: encrypted binary file
+            :param str outfile: output file name
+            :param int buffer_size: read buffer size
+            :returns: encrypted memo information
+            :rtype: dict
+        """
+        if not os.path.exists(infile):
+            raise ValueError("%s does not exists!" % infile)
+        if buffer_size % 16 != 0:
+            raise ValueError("buffer_size must be dividable by 16")
+        with open(infile, 'rb') as fin:
+            memo_size = struct.unpack('<Q', fin.read(struct.calcsize('<Q')))[0]
+            memo = fin.read(memo_size)
+            orig_file_size = struct.unpack('<Q', fin.read(struct.calcsize('<Q')))[0]
+        memo = '#' + base58encode(hexlify(memo).decode("ascii"))
+        from_key, to_key, nonce, check, cipher = BtsMemo.extract_memo_data(memo)
+
+        try:
+            memo_wif = self.blockchain.wallet.getPrivateKeyForPublicKey(
+                str(to_key)
+            )
+            pubkey = from_key
+        except MissingKeyError:
+            try:
+                # if that failed, we assume that we have sent the memo
+                memo_wif = self.blockchain.wallet.getPrivateKeyForPublicKey(
+                    str(from_key)
+                )
+                pubkey = to_key
+            except MissingKeyError:
+                # if all fails, raise exception
+                raise MissingKeyError(
+                    "Non of the required memo keys are installed!"
+                    "Need any of {}".format(
+                    [str(to_key), str(from_key)]))
+
+        if not hasattr(self, 'chain_prefix'):
+            self.chain_prefix = self.blockchain.prefix
+        priv = PrivateKey(memo_wif)
+        pubkey = PublicKey(pubkey, prefix=self.chain_prefix)
+        beem_version = BtsMemo.decode_memo(
+                priv,
+                memo
+            )
+        shared_secret = BtsMemo.get_shared_secret(priv, pubkey)
+        # Init encryption
+        aes, checksum = BtsMemo.init_aes(shared_secret, nonce)
+        with open(infile, 'rb') as fin:
+            memo_size = struct.unpack('<Q', fin.read(struct.calcsize('<Q')))[0]
+            memo = fin.read(memo_size)
+            file_size = struct.unpack('<Q', fin.read(struct.calcsize('<Q')))[0]
+            with open(outfile, 'wb') as fout:
+                while True:
+                    data = fin.read(buffer_size)
+                    n = len(data)
+                    if n == 0:
+                        break
+                    decd = aes.decrypt(data)
+                    n = len(decd)
+                    if file_size > n:
+                        fout.write(decd)
+                    else:
+                        fout.write(decd[:file_size]) # <- remove padding on last block
+                    file_size -= n        
+        return {
+            "file_size": orig_file_size,
+            "from_key": str(from_key),
+            "to_key": str(to_key),
+            "nonce": nonce,
+            "beem_version": beem_version
+        }

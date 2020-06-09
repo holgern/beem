@@ -1,5 +1,12 @@
 Changelog
 =========
+0.23.13
+-------
+* receiver parameter removed from beempy decrypt 
+* beempy encrypt / decrypt is able to encryp/derypt a binary file
+* encrypt_binary, decrypt_binary and extract_decrypt_memo_data added to beem.memo
+* extract_memo_data added to beembase.memo
+
 0.23.12
 -------
 * add participation_rate to Blockchain
