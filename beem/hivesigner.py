@@ -125,7 +125,7 @@ class HiveSigner(object):
         """
         log.debug(
             "Force setting of private token. Not using the wallet database!")
-        if not isinstance(loadtoken, (set)):
+        if not isinstance(loadtoken, (dict)):
             raise ValueError("token must be a dict variable!")
         for name in loadtoken:
             self.store.add(loadtoken[name], name)
