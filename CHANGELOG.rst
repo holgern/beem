@@ -1,5 +1,9 @@
 Changelog
 =========
+0.24.1
+------
+* fixed missing module in setup.py
+
 0.24.0
 ------
 * new beemstorage module
