@@ -141,7 +141,7 @@ class Testcases(unittest.TestCase):
         w = Witness(owner, steem_instance=bts)
         keys = list(witness.keys())
         json_witness = w.json()
-        exclude_list = ['votes', 'virtual_last_update', 'virtual_scheduled_time']
+        exclude_list = ['votes', 'virtual_last_update', 'virtual_scheduled_time', 'last_aslot', 'last_confirmed_block_num']
         for k in keys:
             if k not in exclude_list:
                 if isinstance(witness[k], dict) and isinstance(json_witness[k], list):

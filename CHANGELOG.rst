@@ -10,6 +10,7 @@ Changelog
 * Wallet.store has now the Key Interface that handles key management
 * Token handling has been removed from Wallet
 * Token storage has been move from wallet to SteemConnect/HiveSigner
+* handle virtual ops batch streaming fixed thanks to @crokkon 
 
 0.23.13
 -------

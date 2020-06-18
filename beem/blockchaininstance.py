@@ -798,8 +798,10 @@ class BlockChainInstance(object):
         """Returns the default nodes"""
         if "node" in self.config:
             nodes = self.config["node"]
-        elif "nodes" in config:
+        elif "nodes" in self.config:
             nodes = self.config["nodes"]
+        elif "node" in self.config.defaults:
+            nodes = self.config["node"]
         elif "default_nodes" in self.config and bool(self.config["default_nodes"]):
             nodes = self.config["default_nodes"]
         else:
