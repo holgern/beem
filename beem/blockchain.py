@@ -559,7 +559,10 @@ class Blockchain(object):
                                 continue
                             if self.blockchain.rpc.get_use_appbase():
                                 if only_virtual_ops:
-                                    block = block["ops"]
+                                    block = {'block': block[0]["block"],
+                                             'timestamp': block[0]["timestamp"],
+                                             'id': block[0]['block'],
+                                             'operations': block}
                                 else:
                                     block = block["block"]
                             block = Block(block, only_ops=only_ops, only_virtual_ops=only_virtual_ops, blockchain_instance=self.blockchain)
