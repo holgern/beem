@@ -475,13 +475,6 @@ class Wallet(object):
                 pubs.append(pubkey)
         return pubs
 
-    def getPublicNames(self):
-        """ Return all installed public token
-        """
-        if self.token_store is None:
-            return
-        return self.token_store.getPublicNames()
-
     def wipe(self, sure=False):
         if not sure:
             log.error(
