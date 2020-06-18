@@ -11,10 +11,17 @@ except ImportError:
     from urlparse import urlparse, urljoin
     from urllib import urlencode
 import requests
-from .storage import get_default_config_storage
+import logging
 from six import PY2
 from beem.instance import shared_blockchain_instance
 from beem.amount import Amount
+from beem.exceptions import (
+    MissingKeyError,
+    WalletExists
+)
+from beemstorage.exceptions import KeyAlreadyInStoreException, WalletLocked
+
+log = logging.getLogger(__name__)
 
 
 class SteemConnect(object):
@@ -93,10 +100,130 @@ class SteemConnect(object):
         self.scope = kwargs.get("scope", "login")
         self.oauth_base_url = kwargs.get("oauth_base_url", config["oauth_base_url"])
         self.sc2_api_url = kwargs.get("sc2_api_url", config["sc2_api_url"])
+        
+        if "token" in kwargs and len(kwargs["token"]) > 0:
+            from beemstorage import InRamPlainTokenStore
+            self.store = InRamPlainTokenStore()
+            self.setToken(kwargs["keys"])
+        else:
+            """ If no keys are provided manually we load the SQLite
+                keyStorage
+            """
+            from beemstorage import SqliteEncryptedTokenStore
+            self.store = kwargs.get(
+                "token_store",
+                SqliteEncryptedTokenStore(config=config, **kwargs),
+            )        
 
     @property
     def headers(self):
         return {'Authorization': self.access_token}
+
+    def setToken(self, loadtoken):
+        """ This method is strictly only for in memory token that are
+            passed to Wallet/Steem with the ``token`` argument
+        """
+        log.debug(
+            "Force setting of private token. Not using the wallet database!")
+        if not isinstance(loadtoken, (set)):
+            raise ValueError("token must be a dict variable!")
+        for name in loadtoken:
+            self.store.add(loadtoken[name], name)
+
+    def is_encrypted(self):
+        """ Is the key store encrypted?
+        """
+        return self.store.is_encrypted()
+
+    def unlock(self, pwd):
+        """ Unlock the wallet database
+        """
+        unlock_ok = None
+        if self.store.is_encrypted():
+            unlock_ok = self.store.unlock(pwd)
+        return unlock_ok
+
+    def lock(self):
+        """ Lock the wallet database
+        """
+        lock_ok = False
+        if self.store.is_encrypted():
+            lock_ok =  self.store.lock()       
+        return lock_ok
+
+    def unlocked(self):
+        """ Is the wallet database unlocked?
+        """
+        unlocked = True
+        if self.store.is_encrypted():
+            unlocked = not self.store.locked()   
+        return unlocked
+
+    def locked(self):
+        """ Is the wallet database locked?
+        """
+        if self.store.is_encrypted():
+            return self.store.locked()
+        else:
+            return False
+
+    def changePassphrase(self, new_pwd):
+        """ Change the passphrase for the wallet database
+        """
+        self.store.change_password(new_pwd)
+
+    def created(self):
+        """ Do we have a wallet database already?
+        """
+        if len(self.store.getPublicKeys()):
+            # Already keys installed
+            return True
+        else:
+            return False
+
+    def create(self, pwd):
+        """ Alias for :func:`newWallet`
+
+            :param str pwd: Passphrase for the created wallet
+        """
+        self.newWallet(pwd)
+
+    def newWallet(self, pwd):
+        """ Create a new wallet database
+
+            :param str pwd: Passphrase for the created wallet
+        """
+        if self.created():
+            raise WalletExists("You already have created a wallet!")
+        self.store.unlock(pwd)
+
+    def addToken(self, name, token):
+        if str(name) in self.store:
+            raise KeyAlreadyInStoreException("Token already in the store")
+        self.store.add(str(token), str(name))
+
+    def getTokenForAccountName(self, name):
+        """ Obtain the private token for a given public name
+
+            :param str name: Public name
+        """      
+        if str(name) not in self.store:
+            raise MissingKeyError
+        return self.store.getPrivateKeyForPublicKey(str(name))
+
+    def removeTokenFromPublicName(self, name):
+        """ Remove a token from the wallet database
+
+            :param str name: token to be removed
+        """
+        self.store.delete(str(name))
+
+    def getPublicNames(self):
+        """ Return all installed public token
+        """
+        if self.store is None:
+            return
+        return self.store.getPublicNames()
 
     def get_login_url(self, redirect_uri, **kwargs):
         """ Returns a login url for receiving token from steemconnect
@@ -127,7 +254,7 @@ class SteemConnect(object):
             "grant_type": "authorization_code",
             "code": code,
             "client_id": self.client_id,
-            "client_secret": self.steem.wallet.getTokenForAccountName(self.client_id),
+            "client_secret": self.getTokenForAccountName(self.client_id),
         }
 
         r = requests.post(
@@ -166,7 +293,7 @@ class SteemConnect(object):
         if permission != "posting":
             self.access_token = None
             return
-        self.access_token = self.steem.wallet.getTokenForAccountName(username)
+        self.access_token = self.getTokenForAccountName(username)
 
     def broadcast(self, operations, username=None):
         """ Broadcast an operation
@@ -210,7 +337,7 @@ class SteemConnect(object):
             "grant_type": "refresh_token",
             "refresh_token": code,
             "client_id": self.client_id,
-            "client_secret": self.steem.wallet.getTokenForAccountName(self.client_id),
+            "client_secret": self.getTokenForAccountName(self.client_id),
             "scope": scope,
         }
 

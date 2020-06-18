@@ -15,14 +15,13 @@ import time
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from datetime import datetime, timedelta, date
 from beemapi.noderpc import NodeRPC
-from beemapi.exceptions import NoAccessApi, NoApiWithName
 from beemgraphenebase.account import PrivateKey, PublicKey
 from beembase import transactions, operations
 from beemgraphenebase.chains import known_chains
+from .storage import get_default_config_store
 from .account import Account
 from .amount import Amount
 from .price import Price
-from .storage import get_default_config_storage
 from .version import version as beem_version
 from .exceptions import (
     AccountExistsException,
@@ -193,7 +192,7 @@ class BlockChainInstance(object):
         self.path = kwargs.get("path", None)
 
         # Store config for access through other Classes
-        self.config = get_default_config_storage()
+        self.config = kwargs.get("config_store", get_default_config_store(**kwargs))
         if self.path is None:
             self.path = self.config["default_path"]
 

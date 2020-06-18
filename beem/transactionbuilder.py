@@ -21,9 +21,9 @@ from .exceptions import (
     InsufficientAuthorityError,
     MissingKeyError,
     InvalidWifError,
-    WalletLocked,
     OfflineHasNoRPCException
 )
+from beemstorage.exceptions import WalletLocked
 from beem.instance import shared_blockchain_instance
 log = logging.getLogger(__name__)
 

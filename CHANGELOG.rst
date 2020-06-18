@@ -1,5 +1,16 @@
 Changelog
 =========
+0.24.0
+------
+* new beemstorage module
+* Config is handled by SqliteConfigurationStore or InRamConfigurationStore
+* Keys are handled by SqliteEncryptedKeyStore or InRamPlainKeyStore
+* Move aes to beemgraphenebase
+* Wallet.keys, Wallet.keyStorage, Wallet.token and Wallet.keyMap has been removed
+* Wallet.store has now the Key Interface that handles key management
+* Token handling has been removed from Wallet
+* Token storage has been move from wallet to SteemConnect/HiveSigner
+
 0.23.13
 -------
 * receiver parameter removed from beempy decrypt 

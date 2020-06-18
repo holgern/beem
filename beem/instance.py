@@ -30,8 +30,8 @@ def shared_blockchain_instance():
     """
     if not SharedInstance.instance:
         clear_cache()
-        from beem.storage import get_default_config_storage
-        default_chain = get_default_config_storage()["default_chain"]
+        from beem.storage import get_default_config_store
+        default_chain = get_default_config_store()["default_chain"]
         if default_chain == "steem":
             SharedInstance.instance = beem.Steem(**SharedInstance.config)
         else:

@@ -49,7 +49,7 @@ class Testcases(unittest.TestCase):
 
         cls.wallet = Wallet(steem_instance=cls.stm)
         cls.wallet.wipe(True)
-        cls.wallet.newWallet(pwd="TestingOneTwoThree")
+        cls.wallet.newWallet("TestingOneTwoThree")
         cls.wallet.unlock(pwd="TestingOneTwoThree")
         cls.wallet.addPrivateKey(wif)
 

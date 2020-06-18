@@ -12,19 +12,16 @@ import json
 from pprint import pprint
 from beem import Steem, exceptions
 from beem.amount import Amount
-from beem.memo import Memo
 from beem.version import version as beem_version
-from beem.wallet import Wallet
-from beem.witness import Witness
 from beem.account import Account
 from beemgraphenebase.account import PrivateKey
-from beem.instance import set_shared_steem_instance
 from beem.nodelist import NodeList
 # Py3 compatibility
 import sys
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-
+wif2 = "5JKu2dFfjKAcD6aP1HqBDxMNbdwtvPS99CaxBzvMYhY94Pt6RDS"
+wif3 = "5K1daXjehgPZgUHz6kvm55ahEArBHfCHLy6ew8sT7sjDb76PU2P"
 
 class Testcases(unittest.TestCase):
 
@@ -37,7 +34,7 @@ class Testcases(unittest.TestCase):
             nobroadcast=True,
             unsigned=True,
             data_refresh_time_seconds=900,
-            keys={"active": wif, "owner": wif, "memo": wif},
+            keys={"active": wif, "owner": wif2, "memo": wif3},
             num_retries=10)
         cls.account = Account("test", full=True, steem_instance=cls.bts)
 
@@ -65,7 +62,7 @@ class Testcases(unittest.TestCase):
                     nobroadcast=True,
                     unsigned=True,
                     data_refresh_time_seconds=900,
-                    keys={"active": wif, "owner": wif, "memo": wif},
+                    keys={"active": wif, "owner": wif2, "memo": wif3},
                     num_retries=10)
         core_unit = "STM"
         name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
@@ -134,7 +131,7 @@ class Testcases(unittest.TestCase):
                     nobroadcast=True,
                     unsigned=True,
                     data_refresh_time_seconds=900,
-                    keys={"active": wif, "owner": wif, "memo": wif},
+                    keys={"active": wif, "owner": wif2, "memo": wif3},
                     num_retries=10)
         core_unit = "STM"
         name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
@@ -364,7 +361,7 @@ class Testcases(unittest.TestCase):
         bts = Steem(node=self.nodelist.get_steem_nodes(),
                     offline=True,
                     data_refresh_time_seconds=900,
-                    keys={"active": wif, "owner": wif, "memo": wif})
+                    keys={"active": wif, "owner": wif2, "memo": wif3})
         bts.refresh_data("feed_history")
         self.assertTrue(bts.get_feed_history(use_stored_data=False) is None)
         self.assertTrue(bts.get_feed_history(use_stored_data=True) is None)
@@ -393,7 +390,7 @@ class Testcases(unittest.TestCase):
         bts = Steem(node=self.nodelist.get_steem_nodes(),
                     nobroadcast=True,
                     data_refresh_time_seconds=900,
-                    keys={"active": wif, "owner": wif, "memo": wif},
+                    keys={"active": wif, "owner": wif2, "memo": wif3},
                     num_retries=10)
         self.assertTrue(bts.get_feed_history(use_stored_data=False) is not None)
         self.assertTrue(bts.get_reward_funds(use_stored_data=False) is not None)

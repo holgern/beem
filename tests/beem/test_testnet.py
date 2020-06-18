@@ -12,9 +12,9 @@ from beem import Steem
 from beem.exceptions import (
     InsufficientAuthorityError,
     MissingKeyError,
-    InvalidWifError,
-    WalletLocked
+    InvalidWifError
 )
+from beemstorage.exceptions import WalletLocked
 from beemapi import exceptions
 from beem.amount import Amount
 from beem.witness import Witness

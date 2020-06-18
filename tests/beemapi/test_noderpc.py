@@ -21,6 +21,8 @@ from beem.nodelist import NodeList
 import sys
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
+wif2 = "5JKu2dFfjKAcD6aP1HqBDxMNbdwtvPS99CaxBzvMYhY94Pt6RDS"
+wif3 = "5K1daXjehgPZgUHz6kvm55ahEArBHfCHLy6ew8sT7sjDb76PU2P"
 core_unit = "STM"
 
 
@@ -38,7 +40,7 @@ class Testcases(unittest.TestCase):
         cls.appbase = Steem(
             node=cls.nodes,
             nobroadcast=True,
-            keys={"active": wif, "owner": wif, "memo": wif},
+            keys={"active": wif, "owner": wif2, "memo": wif3},
             num_retries=10
         )
         cls.rpc = NodeRPC(urls=cls.nodes_steemit)

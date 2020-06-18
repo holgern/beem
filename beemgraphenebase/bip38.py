@@ -57,6 +57,11 @@ def encrypt(privkey, passphrase):
     :rtype: Base58
 
     """
+    if isinstance(privkey, str):
+        privkey = PrivateKey(privkey)
+    else:
+        privkey = PrivateKey(repr(privkey))    
+
     privkeyhex = repr(privkey)   # hex
     addr = format(privkey.bitcoin.address, "BTC")
     a = py23_bytes(addr, 'ascii')

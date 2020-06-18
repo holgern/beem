@@ -17,14 +17,16 @@ from beem.amount import Amount
 from beem.exceptions import (
     InsufficientAuthorityError,
     MissingKeyError,
-    InvalidWifError,
-    WalletLocked
+    InvalidWifError
 )
+from beemstorage.exceptions import WalletLocked
 from beemapi import exceptions
 from beem.wallet import Wallet
 from beem.utils import formatTimeFromNow
 from beem.nodelist import NodeList
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
+wif2 = "5JKu2dFfjKAcD6aP1HqBDxMNbdwtvPS99CaxBzvMYhY94Pt6RDS"
+wif3 = "5K1daXjehgPZgUHz6kvm55ahEArBHfCHLy6ew8sT7sjDb76PU2P"
 
 
 class Testcases(unittest.TestCase):
@@ -36,14 +38,14 @@ class Testcases(unittest.TestCase):
         node_list = nodelist.get_nodes(exclude_limited=True)
         cls.stm = Steem(
             node=node_list,
-            keys={"active": wif, "owner": wif, "memo": wif},
+            keys={"active": wif, "owner": wif2, "memo": wif3},
             nobroadcast=True,
             num_retries=10
         )
         cls.steemit = Steem(
             node="https://api.steemit.com",
             nobroadcast=True,
-            keys={"active": wif, "owner": wif, "memo": wif},
+            keys={"active": wif, "owner": wif2, "memo": wif3},
             num_retries=10
         )
         set_shared_steem_instance(cls.stm)

@@ -14,7 +14,6 @@ from beemgraphenebase.account import PublicKey
 from beem.instance import shared_blockchain_instance
 from beem.account import Account
 from .exceptions import InvalidMessageSignature, WrongMemoKey, AccountDoesNotExistsException, InvalidMemoKeyException
-from .storage import get_default_config_storage
 
 
 log = logging.getLogger(__name__)

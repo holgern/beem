@@ -10,7 +10,7 @@ import random
 import unittest
 import base64
 from pprint import pprint
-from beem.aes import AESCipher
+from beemgraphenebase.aes import AESCipher
 
 
 class Testcases(unittest.TestCase):

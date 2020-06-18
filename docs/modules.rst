@@ -7,7 +7,6 @@ beem Modules
 .. toctree::
 
    beem.account
-   beem.aes
    beem.amount
    beem.asciichart
    beem.asset
@@ -71,6 +70,7 @@ beemgraphenebase Modules
 .. toctree::
 
    beemgraphenebase.account
+   beemgraphenebase.aes
    beemgraphenebase.base58
    beemgraphenebase.bip32
    beemgraphenebase.bip38
@@ -80,3 +80,16 @@ beemgraphenebase Modules
    beemgraphenebase.operations
    beemgraphenebase.signedtransactions
    beemgraphenebase.unsignedtransactions
+
+
+beemstorage Modules
+-------------------
+
+.. toctree::
+
+   beemstorage.base
+   beemstorage.exceptions
+   beemstorage.interfaces
+   beemstorage.masterpassword
+   beemstorage.ram
+   beemstorage.sqlite

@@ -108,7 +108,7 @@ def unlock_wallet(stm, password=None, allow_wif=True):
         return True
     if not stm.wallet.locked():
         return True
-    if len(stm.wallet.keys) > 0:
+    if not stm.wallet.store.is_encrypted():
         return True
     password_storage = stm.config["password_storage"]
     if not password and KEYRING_AVAILABLE and password_storage == "keyring":
@@ -142,6 +142,45 @@ def unlock_wallet(stm, password=None, allow_wif=True):
             if bool(password):
                 unlock_wallet(stm, password=password)
                 if not stm.wallet.locked():
+                    return True
+        else:
+            print("Wallet could not be unlocked!")
+        return False
+    else:
+        print("Wallet Unlocked!")
+        return True
+
+
+def unlock_token_wallet(stm, sc2, password=None):
+    if stm.unsigned and stm.nobroadcast:
+        return True
+    if stm.use_ledger:
+        return True
+    if not sc2.locked():
+        return True
+    if not sc2.store.is_encrypted():
+        return True
+    password_storage = stm.config["password_storage"]
+    if not password and KEYRING_AVAILABLE and password_storage == "keyring":
+        password = keyring.get_password("beem", "wallet")
+    if not password and password_storage == "environment" and "UNLOCK" in os.environ:
+        password = os.environ.get("UNLOCK")
+    if bool(password):
+        sc2.unlock(password)
+    else:
+        password = click.prompt("Password to unlock wallet", confirmation_prompt=False, hide_input=True)
+        try:
+            sc2.unlock(password)
+        except:
+            raise exceptions.WrongMasterPasswordException("entered password is not a valid password")
+
+    if sc2.locked():
+        if password_storage == "keyring" or password_storage == "environment":
+            print("Wallet could not be unlocked with %s!" % password_storage)
+            password = click.prompt("Password to unlock wallet", confirmation_prompt=False, hide_input=True)
+            if bool(password):
+                unlock_token_wallet(stm, password=password)
+                if not sc2.locked():
                     return True
         else:
             print("Wallet could not be unlocked!")
@@ -561,6 +600,7 @@ def createwallet(wipe):
         password = keyring.set_password("beem", "wallet", password)
     elif password_storage == "environment":
         print("The new wallet password can be stored in the UNLOCK environment variable to skip password prompt!")
+    stm.wallet.wipe(True)
     stm.wallet.create(password)
     set_shared_blockchain_instance(stm)
 
@@ -584,7 +624,7 @@ def walletinfo(unlock, lock):
     t.add_row(["created", stm.wallet.created()])
     t.add_row(["locked", stm.wallet.locked()])
     t.add_row(["Number of stored keys", len(stm.wallet.getPublicKeys())])
-    t.add_row(["sql-file", stm.wallet.keyStorage.sqlDataBaseFile])
+    t.add_row(["sql-file", stm.wallet.store.sqlite_file])
     password_storage = stm.config["password_storage"]
     t.add_row(["password_storage", password_storage])
     password = os.environ.get("UNLOCK")
@@ -883,11 +923,12 @@ def addtoken(name, unsafe_import_token):
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    if not unlock_wallet(stm):
-        return
+    sc2 = SteemConnect(blockchain_instance=stm)
+    if not unlock_token_wallet(stm, sc2):
+        return    
     if not unsafe_import_token:
         unsafe_import_token = click.prompt("Enter private token", confirmation_prompt=False, hide_input=True)
-    stm.wallet.addToken(name, unsafe_import_token)
+    sc2.addToken(name, unsafe_import_token)
     set_shared_blockchain_instance(stm)
 
 
@@ -906,9 +947,10 @@ def deltoken(confirm, name):
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    if not unlock_wallet(stm):
-        return
-    stm.wallet.removeTokenFromPublicName(name)
+    sc2 = SteemConnect(blockchain_instance=stm)
+    if not unlock_token_wallet(stm, sc2):
+        return    
+    sc2.removeTokenFromPublicName(name)
     set_shared_blockchain_instance(stm)
 
 
@@ -950,10 +992,10 @@ def listtoken():
     stm = shared_blockchain_instance()
     t = PrettyTable(["name", "scope", "status"])
     t.align = "l"
-    if not unlock_wallet(stm):
-        return
     sc2 = SteemConnect(blockchain_instance=stm)
-    for name in stm.wallet.getPublicNames():
+    if not unlock_token_wallet(stm, sc2):
+        return    
+    for name in sc2.getPublicNames():
         ret = sc2.me(username=name)
         if "error" in ret:
             t.add_row([name, "-", ret["error"]])
