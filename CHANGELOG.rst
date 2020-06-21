@@ -1,5 +1,15 @@
 Changelog
 =========
+0.24.2
+------
+* New UnknownTransaction exception that is raised when using get_transaction with an unkown trx_id
+* New function is_transaction_existing which returns false, when a trx_id does not exists
+* beempy info does not show information for a trx_id
+* broadcast from TransactionBuilder can now return a trx_id, when set trx_id to True (default)
+* sign and finalizeOp from Hive and Steem return now the trx_id in a field
+* add export parameter to all broadcast commands in beempy
+* When setting unsigned in beempy, the default value of expires is changed to 3600
+
 0.24.1
 ------
 * fixed missing module in setup.py

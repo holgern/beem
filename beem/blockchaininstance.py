@@ -840,11 +840,11 @@ class BlockChainInstance(object):
             :param string permission: The required permission for
                 signing (active, owner, posting)
             :param TransactionBuilder append_to: This allows to provide an instance of
-                TransactionBuilder (see :func:`Steem.new_tx()`) to specify
+                TransactionBuilder (see :func:`BlockChainInstance.new_tx()`) to specify
                 where to put a specific operation.
 
             .. note:: ``append_to`` is exposed to every method used in the
-                Steem class
+                BlockChainInstance class
 
             .. note::   If ``ops`` is a list of operation, they all need to be
                         signable by the same key! Thus, you cannot combine ops
@@ -852,9 +852,12 @@ class BlockChainInstance(object):
                         posting permission. Neither can you use different
                         accounts for different operations!
 
-            .. note:: This uses :func:`Steem.txbuffer` as instance of
+            .. note:: This uses :func:`BlockChainInstance.txbuffer` as instance of
                 :class:`beem.transactionbuilder.TransactionBuilder`.
                 You may want to use your own txbuffer
+
+            .. note:: when doing sign + broadcast, the trx_id is added to the returned dict
+
         """
         if self.offline:
                 return {}
@@ -887,8 +890,10 @@ class BlockChainInstance(object):
         else:
             # default behavior: sign + broadcast
             self.txbuffer.appendSigner(account, permission)
-            self.txbuffer.sign()
-            return self.txbuffer.broadcast()
+            ret_sign = self.txbuffer.sign()
+            ret = self.txbuffer.broadcast()
+            ret["trx_id"] = ret_sign.id
+            return ret
 
     def sign(self, tx=None, wifs=[], reconstruct_tx=True):
         """ Sign a provided transaction with the provided key(s)
@@ -902,6 +907,8 @@ class BlockChainInstance(object):
                 is already contructed, it will not reconstructed
                 and already added signatures remain
 
+            .. note:: The trx_id is added to the returned dict
+
         """
         if tx:
             txbuffer = TransactionBuilder(tx, blockchain_instance=self)
@@ -909,11 +916,13 @@ class BlockChainInstance(object):
             txbuffer = self.txbuffer
         txbuffer.appendWif(wifs)
         txbuffer.appendMissingSignatures()
-        txbuffer.sign(reconstruct_tx=reconstruct_tx)
-        return txbuffer.json()
+        ret_sign = txbuffer.sign(reconstruct_tx=reconstruct_tx)
+        ret = txbuffer.json()
+        ret["trx_id"] = ret_sign.id
+        return ret
 
     def broadcast(self, tx=None):
-        """ Broadcast a transaction to the Steem network
+        """ Broadcast a transaction to the Hive/Steem network
 
             :param tx tx: Signed transaction to broadcast
 
@@ -1236,7 +1245,7 @@ class BlockChainInstance(object):
         json_meta=None,
         **kwargs
     ):
-        """ Create new account on Steem
+        """ Create new account on Hive/Steem
 
             The brainkey/password can be used to recover all generated keys
             (see :class:`beemgraphenebase.account` for more details.

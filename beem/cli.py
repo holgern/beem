@@ -190,6 +190,12 @@ def unlock_token_wallet(stm, sc2, password=None):
         return True
 
 
+def export_trx(tx, export):
+    if export is not None:
+        with open(export, "w", encoding="utf-8") as f:
+            json.dump(tx, f)    
+
+
 @shell(prompt='beempy> ', intro='Starting beempy... (use help to list all commands)', chain=True)
 # @click.group(chain=True)
 @click.option(
@@ -201,7 +207,7 @@ def unlock_token_wallet(stm, sc2, password=None):
 @click.option(
     '--no-wallet', '-p', is_flag=True, default=False, help="Do not load the wallet")
 @click.option(
-    '--unsigned', '-x', is_flag=True, default=False, help="Nothing will be signed")
+    '--unsigned', '-x', is_flag=True, default=False, help="Nothing will be signed, changes the default value of expires to 3600")
 @click.option(
     '--create-link', '-l', is_flag=True, default=False, help="Creates steemconnect/hivesigner links from all broadcast operations")
 @click.option(
@@ -218,7 +224,7 @@ def unlock_token_wallet(stm, sc2, password=None):
     '--token', '-t', is_flag=True, default=False, help="Uses a hivesigner/steemconnect token to broadcast (only broadcast operation with posting permission)")
 @click.option(
     '--expires', '-e', default=30,
-    help='Delay in seconds until transactions are supposed to expire(defaults to 60)')
+    help='Delay in seconds until transactions are supposed to expire(defaults to 30)')
 @click.option(
     '--verbose', '-v', default=3, help='Verbosity')
 @click.version_option(version=__version__)
@@ -235,6 +241,10 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hi
     ch.setLevel(getattr(logging, verbosity.upper()))
     ch.setFormatter(formatter)
     log.addHandler(ch)
+
+    if unsigned and expires == 30:
+        # Change expires to max duration when setting unsigned
+        expires = 3600
 
     keys_list = []
     autoconnect = False
@@ -1056,7 +1066,8 @@ def listaccounts(role, max_account_index, max_sequence):
 @click.argument('post', nargs=1)
 @click.option('--weight', '-w', help='Vote weight (from 0.1 to 100.0)')
 @click.option('--account', '-a', help='Voter account name')
-def upvote(post, account, weight):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def upvote(post, account, weight, export):
     """Upvote a post/comment
 
         POST is @author/permlink
@@ -1087,13 +1098,16 @@ def upvote(post, account, weight):
     except exceptions.VotingInvalidOnArchivedPost:
         print("Post/Comment is older than 7 days! Did not upvote.")
         tx = {}
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
+
 @cli.command()
 @click.argument('post', nargs=1)
-@click.option('--account', '-a', help='Voter account name')
-def delete(post, account):
+@click.option('--account', '-a', help='Account name')
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def delete(post, account, export):
     """delete a post/comment
 
         POST is @author/permlink
@@ -1116,15 +1130,17 @@ def delete(post, account):
     except exceptions.VotingInvalidOnArchivedPost:
         print("Could not delete post.")
         tx = {}
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
 
 @cli.command()
 @click.argument('post', nargs=1)
-@click.option('--account', '-a', help='Voter account name')
+@click.option('--account', '-a', help='Downvoter account name')
 @click.option('--weight', '-w', default=100, help='Downvote weight (from 0.1 to 100.0)')
-def downvote(post, account, weight):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def downvote(post, account, weight, export):
     """Downvote a post/comment
 
         POST is @author/permlink
@@ -1153,6 +1169,7 @@ def downvote(post, account, weight):
     except exceptions.VotingInvalidOnArchivedPost:
         print("Post/Comment is older than 7 days! Did not downvote.")
         tx = {}
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1163,8 +1180,9 @@ def downvote(post, account, weight):
 @click.argument('asset', nargs=1, callback=asset_callback)
 @click.argument('memo', nargs=1, required=False)
 @click.option('--account', '-a', help='Transfer from this account')
-def transfer(to, amount, asset, memo, account):
-    """Transfer SBD/HD STEEM/HIVE"""
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def transfer(to, amount, asset, memo, account, export):
+    """Transfer SBD/HBD or STEEM/HIVE"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
@@ -1180,6 +1198,7 @@ def transfer(to, amount, asset, memo, account):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1187,8 +1206,9 @@ def transfer(to, amount, asset, memo, account):
 @cli.command()
 @click.argument('amount', nargs=1)
 @click.option('--account', '-a', help='Powerup from this account')
-@click.option('--to', help='Powerup this account', default=None)
-def powerup(amount, account, to):
+@click.option('--to', '-t', help='Powerup this account', default=None)
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def powerup(amount, account, to, export):
     """Power up (vest STEEM/HIVE as STEEM/HIVE POWER)"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -1207,6 +1227,7 @@ def powerup(amount, account, to):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1214,7 +1235,8 @@ def powerup(amount, account, to):
 @cli.command()
 @click.argument('amount', nargs=1)
 @click.option('--account', '-a', help='Powerup from this account')
-def powerdown(amount, account):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def powerdown(amount, account, export):
     """Power down (start withdrawing VESTS from Steem POWER)
 
         amount is in VESTS
@@ -1236,6 +1258,7 @@ def powerdown(amount, account):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1244,7 +1267,8 @@ def powerdown(amount, account):
 @click.argument('amount', nargs=1)
 @click.argument('to_account', nargs=1)
 @click.option('--account', '-a', help='Delegate from this account')
-def delegate(amount, to_account, account):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def delegate(amount, to_account, account, export):
     """Delegate (start delegating VESTS to another account)
 
         amount is in VESTS / Steem
@@ -1271,6 +1295,7 @@ def delegate(amount, to_account, account):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1281,7 +1306,8 @@ def delegate(amount, to_account, account):
 @click.option('--account', '-a', help='Powerup from this account')
 @click.option('--auto_vest', help='Set to true if the from account should receive the VESTS as'
               'VESTS, or false if it should receive them as STEEM/HIVE.', is_flag=True)
-def powerdownroute(to, percentage, account, auto_vest):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def powerdownroute(to, percentage, account, auto_vest, export):
     """Setup a powerdown route"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -1296,13 +1322,15 @@ def powerdownroute(to, percentage, account, auto_vest):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
 @cli.command()
 @click.argument('new_recovery_account', nargs=1)
 @click.option('--account', '-a', help='Change the recovery account from this account')
-def changerecovery(new_recovery_account, account):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def changerecovery(new_recovery_account, account, export):
     """Changes the recovery account with the owner key (needs 30 days to be active)"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -1334,6 +1362,7 @@ def changerecovery(new_recovery_account, account):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1341,7 +1370,8 @@ def changerecovery(new_recovery_account, account):
 @cli.command()
 @click.argument('amount', nargs=1)
 @click.option('--account', '-a', help='Powerup from this account')
-def convert(amount, account):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def convert(amount, account, export):
     """Convert SBD/HBD to Steem/Hive (takes a week to settle)"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -1360,6 +1390,7 @@ def convert(amount, account):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1639,12 +1670,13 @@ def permissions(account):
 @click.argument('foreign_account', nargs=1, required=False)
 @click.option('--permission', default="posting", help='The permission to grant (defaults to "posting")')
 @click.option('--account', '-a', help='The account to allow action for')
-@click.option('--weight', help='The weight to use instead of the (full) threshold. '
+@click.option('--weight', '-w', help='The weight to use instead of the (full) threshold. '
               'If the weight is smaller than the threshold, '
               'additional signatures are required')
-@click.option('--threshold', help='The permission\'s threshold that needs to be reached '
+@click.option('--threshold', '-t', help='The permission\'s threshold that needs to be reached '
               'by signatures to be able to interact')
-def allow(foreign_account, permission, account, weight, threshold):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def allow(foreign_account, permission, account, weight, threshold, export):
     """Allow an account/key to interact with your account
 
         foreign_account: The account or key that will be allowed to interact with account.
@@ -1673,17 +1705,19 @@ def allow(foreign_account, permission, account, weight, threshold):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
 
 @cli.command()
 @click.argument('foreign_account', nargs=1, required=False)
-@click.option('--permission', default="posting", help='The permission to grant (defaults to "posting")')
+@click.option('--permission', '-p', default="posting", help='The permission to grant (defaults to "posting")')
 @click.option('--account', '-a', help='The account to disallow action for')
-@click.option('--threshold', help='The permission\'s threshold that needs to be reached '
+@click.option('--threshold', '-t', help='The permission\'s threshold that needs to be reached '
               'by signatures to be able to interact')
-def disallow(foreign_account, permission, account, threshold):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def disallow(foreign_account, permission, account, threshold, export):
     """Remove allowance an account/key to interact with your account"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -1707,6 +1741,7 @@ def disallow(foreign_account, permission, account, threshold):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1715,7 +1750,8 @@ def disallow(foreign_account, permission, account, threshold):
 @click.argument('creator', nargs=1, required=True)
 @click.option('--fee', help='When fee is 0 (default) a subsidized account is claimed and can be created later with create_claimed_account', default=0.0)
 @click.option('--number', '-n', help='Number of subsidized accounts to be claimed (default = 1), when fee = 0 STEEM', default=1)
-def claimaccount(creator, fee, number):
+@click.option('--export', '-e', help='When set, transaction is stored in a file (should be used with number = 1)')
+def claimaccount(creator, fee, number, export):
     """Claim account for claimed account creation."""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -1758,6 +1794,7 @@ def claimaccount(creator, fee, number):
     else:
         tx = stm.claim_account(creator, fee=fee)
     if tx is not None:
+        export_trx(tx, export)
         tx = json.dumps(tx, indent=4)
         print(tx)
 
@@ -1769,7 +1806,8 @@ def claimaccount(creator, fee, number):
 @click.option('--posting', help='posting public key - when not given, a passphrase is used to create keys.')
 @click.option('--memo', help='Memo public key - when not given, a passphrase is used to create keys.')
 @click.option('--import-pub', '-i', help='Load public keys from file.')
-def changekeys(account, owner, active, posting, memo, import_pub):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def changekeys(account, owner, active, posting, memo, import_pub, export):
     """Changes all keys for the specified account 
     Keys are given in their public form.
     Asks for the owner key for broadcasting the op to the chain."""
@@ -1821,6 +1859,7 @@ def changekeys(account, owner, active, posting, memo, import_pub):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1835,7 +1874,8 @@ def changekeys(account, owner, active, posting, memo, import_pub):
 @click.option('--wif', '-w', help='Defines how many times the password is replaced by its WIF representation for password based keys (default = 0).', default=0)
 @click.option('--create-claimed-account', '-c', help='Instead of paying the account creation fee a subsidized account is created.', is_flag=True, default=False)
 @click.option('--import-pub', '-i', help='Load public keys from file.')
-def newaccount(accountname, account, owner, active, memo, posting, wif, create_claimed_account, import_pub):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def newaccount(accountname, account, owner, active, memo, posting, wif, create_claimed_account, import_pub, export):
     """Create a new account
        Default setting is that a fee is payed for account creation
        Use --create-claimed-account for free account creation
@@ -1893,6 +1933,7 @@ def newaccount(accountname, account, owner, active, memo, posting, wif, create_c
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1902,7 +1943,8 @@ def newaccount(accountname, account, owner, active, memo, posting, wif, create_c
 @click.argument('value', nargs=1, required=False)
 @click.option('--account', '-a', help='setprofile as this user')
 @click.option('--pair', '-p', help='"Key=Value" pairs', multiple=True)
-def setprofile(variable, value, account, pair):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def setprofile(variable, value, account, pair, export):
     """Set a variable in an account\'s profile"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -1933,6 +1975,7 @@ def setprofile(variable, value, account, pair):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -1940,7 +1983,8 @@ def setprofile(variable, value, account, pair):
 @cli.command()
 @click.argument('variable', nargs=-1, required=True)
 @click.option('--account', '-a', help='delprofile as this user')
-def delprofile(variable, account):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def delprofile(variable, account, export):
     """Delete a variable in an account\'s profile"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -1961,6 +2005,7 @@ def delprofile(variable, account):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -2027,7 +2072,8 @@ def importaccount(account, roles):
 @cli.command()
 @click.option('--account', '-a', help='The account to updatememokey action for')
 @click.option('--key', help='The new memo key')
-def updatememokey(account, key):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def updatememokey(account, key, export):
     """Update an account\'s memo key"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -2050,6 +2096,7 @@ def updatememokey(account, key):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -2057,7 +2104,8 @@ def updatememokey(account, key):
 @cli.command()
 @click.argument('authorperm', nargs=1)
 @click.argument('beneficiaries', nargs=-1)
-def beneficiaries(authorperm, beneficiaries):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def beneficiaries(authorperm, beneficiaries, export):
     """Set beneficaries"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -2087,6 +2135,7 @@ def beneficiaries(authorperm, beneficiaries):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -2438,7 +2487,8 @@ def createpost(markdown_file, account, title, tags, community, beneficiaries, pe
 @click.option('--max-accepted-payout', '-m', help='Default is 1000000.000 [SBD]')
 @click.option('--no-parse-body', '-n', help='Disable parsing of links, tags and images', is_flag=True, default=False)
 @click.option('--no-patch-on-edit', '-e', help='Disable patch posting on edits (when the permlink already exists)', is_flag=True, default=False)
-def post(markdown_file, account, title, permlink, tags, reply_identifier, community, canonical_url, beneficiaries, percent_steem_dollars, max_accepted_payout, no_parse_body, no_patch_on_edit):
+@click.option('--export', help='When set, transaction is stored in a file')
+def post(markdown_file, account, title, permlink, tags, reply_identifier, community, canonical_url, beneficiaries, percent_steem_dollars, max_accepted_payout, no_parse_body, no_patch_on_edit, export):
     """broadcasts a post/comment. All image links which links to a file will be uploaded.
     The yaml header can contain:
     
@@ -2610,6 +2660,7 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -2619,7 +2670,8 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
 @click.argument('body', nargs=1)
 @click.option('--account', '-a', help='Account are you posting from')
 @click.option('--title', '-t', help='Title of the post')
-def reply(authorperm, body, account, title):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def reply(authorperm, body, account, title, export):
     """replies to a comment"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -2638,6 +2690,7 @@ def reply(authorperm, body, account, title):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -2645,7 +2698,8 @@ def reply(authorperm, body, account, title):
 @cli.command()
 @click.argument('witness', nargs=1)
 @click.option('--account', '-a', help='Your account')
-def approvewitness(witness, account):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def approvewitness(witness, account, export):
     """Approve a witnesses"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -2660,6 +2714,7 @@ def approvewitness(witness, account):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -2667,7 +2722,8 @@ def approvewitness(witness, account):
 @cli.command()
 @click.argument('witness', nargs=1)
 @click.option('--account', '-a', help='Your account')
-def disapprovewitness(witness, account):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def disapprovewitness(witness, account, export):
     """Disapprove a witnesses"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -2682,6 +2738,7 @@ def disapprovewitness(witness, account):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -2689,7 +2746,8 @@ def disapprovewitness(witness, account):
 @cli.command()
 @click.argument('proxy', nargs=1)
 @click.option('--account', '-a', help='Your account')
-def setproxy(proxy, account):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def setproxy(proxy, account, export):
     """Set your witness/proposal system proxy"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -2704,13 +2762,15 @@ def setproxy(proxy, account):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
 
 @cli.command()
 @click.option('--account', '-a', help='Your account')
-def delproxy(account):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def delproxy(account, export):
     """Delete your witness/proposal system proxy"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -2725,6 +2785,7 @@ def delproxy(account):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -2760,7 +2821,7 @@ def sign(file, outfile):
 
 
 @cli.command()
-@click.option('--file', help='Load transaction from file. If "-", read from stdin (defaults to "-")')
+@click.option('--file', '-f', help='Load transaction from file. If "-", read from stdin (defaults to "-")')
 def broadcast(file):
     """broadcast a signed transaction"""
     stm = shared_blockchain_instance()
@@ -2993,7 +3054,8 @@ def orderbook(chart, limit, show_date, width, height, ascii):
 @click.argument('price', nargs=1, required=False)
 @click.option('--account', '-a', help='Buy with this account (defaults to "default_account")')
 @click.option('--orderid', help='Set an orderid')
-def buy(amount, asset, price, account, orderid):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def buy(amount, asset, price, account, orderid, export):
     """Buy STEEM/HIVE or SBD/HBD from the internal market
 
         Limit buy price denoted in (SBD per STEEM or HBD per HIVE)
@@ -3030,6 +3092,7 @@ def buy(amount, asset, price, account, orderid):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -3040,7 +3103,8 @@ def buy(amount, asset, price, account, orderid):
 @click.argument('price', nargs=1, required=False)
 @click.option('--account', '-a', help='Sell with this account (defaults to "default_account")')
 @click.option('--orderid', help='Set an orderid')
-def sell(amount, asset, price, account, orderid):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def sell(amount, asset, price, account, orderid, export):
     """Sell STEEM/HIVE or SBD/HBD from the internal market
 
         Limit sell price denoted in (SBD per STEEM) or (HBD per HIVE)
@@ -3076,6 +3140,7 @@ def sell(amount, asset, price, account, orderid):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -3083,7 +3148,8 @@ def sell(amount, asset, price, account, orderid):
 @cli.command()
 @click.argument('orderid', nargs=1)
 @click.option('--account', '-a', help='Sell with this account (defaults to "default_account")')
-def cancel(orderid, account):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def cancel(orderid, account, export):
     """Cancel order in the internal market"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -3099,6 +3165,7 @@ def cancel(orderid, account):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -3152,7 +3219,8 @@ def reblog(identifier, account):
 @click.argument('follow', nargs=1)
 @click.option('--account', '-a', help='Follow from this account')
 @click.option('--what', help='Follow these objects (defaults to ["blog"])', default=["blog"])
-def follow(follow, account, what):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def follow(follow, account, what, export):
     """Follow another account"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -3169,6 +3237,7 @@ def follow(follow, account, what):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -3177,7 +3246,8 @@ def follow(follow, account, what):
 @click.argument('mute', nargs=1)
 @click.option('--account', '-a', help='Mute from this account')
 @click.option('--what', help='Mute these objects (defaults to ["ignore"])', default=["ignore"])
-def mute(mute, account, what):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def mute(mute, account, what, export):
     """Mute another account"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -3194,6 +3264,7 @@ def mute(mute, account, what):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -3201,7 +3272,8 @@ def mute(mute, account, what):
 @cli.command()
 @click.argument('unfollow', nargs=1)
 @click.option('--account', '-a', help='UnFollow/UnMute from this account')
-def unfollow(unfollow, account):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def unfollow(unfollow, account, export):
     """Unfollow/Unmute another account"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -3216,6 +3288,7 @@ def unfollow(unfollow, account):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -3227,7 +3300,8 @@ def unfollow(unfollow, account):
 @click.option('--sbd_interest_rate', help='SBD interest rate in percent')
 @click.option('--url', help='Witness URL')
 @click.option('--signing_key', help='Signing Key')
-def witnessupdate(witness, maximum_block_size, account_creation_fee, sbd_interest_rate, url, signing_key):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def witnessupdate(witness, maximum_block_size, account_creation_fee, sbd_interest_rate, url, signing_key, export):
     """Change witness properties"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -3250,13 +3324,15 @@ def witnessupdate(witness, maximum_block_size, account_creation_fee, sbd_interes
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
 
 @cli.command()
 @click.argument('witness', nargs=1)
-def witnessdisable(witness):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def witnessdisable(witness, export):
     """Disable a witness"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -3275,6 +3351,7 @@ def witnessdisable(witness):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -3282,7 +3359,8 @@ def witnessdisable(witness):
 @cli.command()
 @click.argument('witness', nargs=1)
 @click.argument('signing_key', nargs=1)
-def witnessenable(witness, signing_key):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def witnessenable(witness, signing_key, export):
     """Enable a witness"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -3298,6 +3376,7 @@ def witnessenable(witness, signing_key):
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -3309,7 +3388,8 @@ def witnessenable(witness, signing_key):
 @click.option('--account_creation_fee', help='Account creation fee', default=0.1)
 @click.option('--sbd_interest_rate', help='SBD interest rate in percent', default=0.0)
 @click.option('--url', help='Witness URL', default="")
-def witnesscreate(witness, pub_signing_key, maximum_block_size, account_creation_fee, sbd_interest_rate, url):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def witnesscreate(witness, pub_signing_key, maximum_block_size, account_creation_fee, sbd_interest_rate, url, export):
     """Create a witness"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -3330,6 +3410,7 @@ def witnesscreate(witness, pub_signing_key, maximum_block_size, account_creation
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -4204,7 +4285,8 @@ def pending(accounts, only_sum, post, comment, curation, length, author, permlin
 @click.option('--claim_all_steem', help='Claim all STEEM/HIVE, overwrites reward_steem', is_flag=True)
 @click.option('--claim_all_sbd', help='Claim all SBD/HBD, overwrites reward_sbd', is_flag=True)
 @click.option('--claim_all_vests', help='Claim all VESTS, overwrites reward_vests', is_flag=True)
-def claimreward(account, reward_steem, reward_sbd, reward_vests, claim_all_steem, claim_all_sbd, claim_all_vests):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def claimreward(account, reward_steem, reward_sbd, reward_vests, claim_all_steem, claim_all_sbd, claim_all_vests, export):
     """Claim reward balances
 
         By default, this will claim ``all`` outstanding balances.
@@ -4236,6 +4318,7 @@ def claimreward(account, reward_steem, reward_sbd, reward_vests, claim_all_steem
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
         tx = stm.hivesigner.url_from_tx(tx)
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -4245,7 +4328,8 @@ def claimreward(account, reward_steem, reward_sbd, reward_vests, claim_all_steem
 @click.argument('json_data', nargs=-1)
 @click.option('--account', '-a', help='The account which broadcasts the custom_json')
 @click.option('--active', '-t', help='When set, the active key is used for broadcasting', is_flag=True, default=False)
-def customjson(jsonid, json_data, account, active):
+@click.option('--export', '-e', help='When set, transaction is stored in a file')
+def customjson(jsonid, json_data, account, active, export):
     """Broadcasts a custom json
     
         First parameter is the cusom json id, the second field is a json file or a json key value combination
@@ -4296,6 +4380,7 @@ def customjson(jsonid, json_data, account, active):
         tx = stm.custom_json(jsonid, data, required_auths=[account])
     else:
         tx = stm.custom_json(jsonid, data, required_posting_auths=[account])
+    export_trx(tx, export)
     tx = json.dumps(tx, indent=4)
     print(tx)
 
@@ -4509,6 +4594,17 @@ def info(objects):
                 print(t)
             else:
                 print("Post now known" % obj)
+        elif re.match(r"^[a-zA-Z0-9\_]{40}$", obj):
+            b = Blockchain(blockchain_instance=stm)
+            trx = b.get_transaction(obj)
+            t = PrettyTable(["Key", "Value"])
+            t.align = "l"
+            for key in trx:
+                value = trx[key]
+                if key in ["operations", "signatures"]:
+                    value = json.dumps(value, indent=4)
+                t.add_row([key, value])
+            print(t)            
         else:
             print("Couldn't identify object to read")
 
@@ -4540,6 +4636,67 @@ def userdata(account, signing_account):
         # hide internal config data
         t.add_row([key, user_data[key]])
     print(t)
+
+
+@cli.command()
+@click.argument('account', nargs=1, required=False)
+@click.option('--number', '-n', help='Defines how many ops should be printed (default=10)', default=10)
+@click.option('--order', help='Defines how many ops should be printed (default=-1)', default=-1)
+@click.option('--virtual-ops', '-v', help='When set, virtual ops are also shown', is_flag=True, default=False)
+@click.option('--only-ops', '-o', help='Included komma seperated list of op types, which limits the shown operations. When set, virtual-ops is always set to true')
+@click.option('--exclude-ops', '-e', help='Excluded komma seperated list of op types, which limits the shown operations.')
+@click.option('--json-file', '-j', help='When set, the results are written into a json file')
+def history(account, number, order, virtual_ops, only_ops, exclude_ops, json_file):
+    """ Returns account history operations as table
+
+    """
+    stm = shared_blockchain_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not account:
+        if "default_account" in stm.config:
+            account = stm.config["default_account"]
+    account = Account(account, blockchain_instance=stm)
+    t = PrettyTable(["Nr", "Hist op"])
+    t.align = "l"
+    cnt = 0
+    batch_size = 1000
+    if batch_size > int(number) + 1 and int(number) > 0:
+        batch_size = int(number) + 1
+    if only_ops is None:
+        only_ops = []
+    else:
+        only_ops = only_ops.split(",")
+    if exclude_ops is None:
+        exclude_ops = []
+    else:
+        exclude_ops = exclude_ops.split(",")
+    if len(only_ops) > 0:
+        virtual_ops = True
+    data = []
+    if int(order) == -1:
+        hist = account.history_reverse(batch_size=batch_size, only_ops=only_ops, exclude_ops=exclude_ops)
+    else:
+        hist = account.history(batch_size=batch_size, only_ops=only_ops, exclude_ops=exclude_ops)
+    for h in hist:
+        if h["virtual_op"] == 1 and not virtual_ops:
+            continue
+        
+        cnt += 1
+        if cnt > int(number) and int(number) > 0:
+            break
+        if json_file is not None:
+            data.append(h)
+        else:
+            # if key in ["operations", "signatures"]:
+            value = json.dumps(h, indent=4)
+            t.add_row([str(cnt), value])
+
+    if json_file is not None:
+        with open(json_file, "w", encoding="utf-8") as f:
+            json.dump(data, f)
+    else:
+        print(t)
 
 
 @cli.command()

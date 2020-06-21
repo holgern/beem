@@ -20,7 +20,7 @@ from .utils import formatTimeString, addTzInfo
 from .block import Block, BlockHeader
 from beemapi.node import Nodes
 from .exceptions import BatchedCallsNotSupported, BlockDoesNotExistsException, BlockWaitTimeExceeded, OfflineHasNoRPCException
-from beemapi.exceptions import NumRetriesReached
+from beemapi.exceptions import NumRetriesReached, UnknownTransaction
 from beemgraphenebase.py23 import py23_bytes
 from beem.instance import shared_blockchain_instance
 from .amount import Amount
@@ -176,7 +176,7 @@ class Blockchain(object):
     """ This class allows to access the blockchain and read data
         from it
 
-        :param Steem blockchain_instance: Steem instance
+        :param Steem/Hive blockchain_instance: Steem or Hive instance
         :param str mode: (default) Irreversible block (``irreversible``) or
             actual head block (``head``)
         :param int max_block_wait_repetition: maximum wait repetition for next block
@@ -250,6 +250,14 @@ class Blockchain(object):
 
     def is_irreversible_mode(self):
         return self.mode == 'last_irreversible_block_num'
+
+    def is_transaction_existing(self, transaction_id):
+        """ Returns true, if the transaction_id is valid"""
+        try:
+            self.get_transaction(transaction_id)
+            return True
+        except UnknownTransaction:
+            return False
 
     def get_transaction(self, transaction_id):
         """ Returns a transaction from the blockchain

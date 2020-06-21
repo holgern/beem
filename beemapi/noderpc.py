@@ -115,6 +115,8 @@ class NodeRPC(GrapheneRPC):
             raise exceptions.NoMethodWithName(msg)
         elif re.search("Could not find method", msg):
             raise exceptions.NoMethodWithName(msg)
+        elif re.search("Unknown Transaction", msg):
+            raise exceptions.UnknownTransaction(msg)
         elif re.search("Could not find API", msg):
             if self._check_api_name(msg):
                 if self.nodes.working_nodes_count > 1 and self.nodes.num_retries > -1:

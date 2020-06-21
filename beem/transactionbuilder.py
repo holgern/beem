@@ -11,7 +11,6 @@ from binascii import unhexlify
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from .account import Account
 from .utils import formatTimeFromNow
-from .steemconnect import SteemConnect
 from beembase.objects import Operation
 from beemgraphenebase.account import PrivateKey, PublicKey
 from beembase.signedtransactions import Signed_Transaction
@@ -473,7 +472,7 @@ class TransactionBuilder(dict):
 
         return ret
 
-    def broadcast(self, max_block_age=-1):
+    def broadcast(self, max_block_age=-1, trx_id=True):
         """ Broadcast a transaction to the steem network
             Returns the signed transaction and clears itself
             after broadast
@@ -482,11 +481,14 @@ class TransactionBuilder(dict):
 
             :param int max_block_age: parameter only used
                 for appbase ready nodes
+            :param bool trx_id: When True, trx_id is return
 
         """
         # Cannot broadcast an empty transaction
         if not self._is_signed():
-            self.sign()
+            sign_ret = self.sign()
+        else:
+            sign_ret = None
 
         if "operations" not in self or not self["operations"]:
             return
@@ -524,7 +526,8 @@ class TransactionBuilder(dict):
             # log.error("Could Not broadcasting anything!")
             self.clear()
             raise e
-
+        if sign_ret is not None and "trx_id" not in ret and trx_id:
+            ret["trx_id"] = sign_ret.id
         self.clear()
         return ret
 
