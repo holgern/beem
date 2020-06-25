@@ -892,7 +892,8 @@ class BlockChainInstance(object):
             self.txbuffer.appendSigner(account, permission)
             ret_sign = self.txbuffer.sign()
             ret = self.txbuffer.broadcast()
-            ret["trx_id"] = ret_sign.id
+            if ret_sign is not None:
+                ret["trx_id"] = ret_sign.id
             return ret
 
     def sign(self, tx=None, wifs=[], reconstruct_tx=True):

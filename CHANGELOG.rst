@@ -8,6 +8,8 @@ Changelog
 * Add unit test for beem.memo
 * Use reputation api
 * Add Server error to _check_error_message
+* Fix trx_id generation when sign return none
+* Retry up to 5 times when coingecko price api failes
 
 0.24.2
 ------

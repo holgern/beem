@@ -8,6 +8,7 @@ import random
 import pytz
 import logging
 from datetime import datetime, timedelta
+import time
 from beem.instance import shared_blockchain_instance
 from .utils import (
     formatTimeFromNow, formatTime, formatTimeString, assets_from_string, parse_time, addTzInfo)
@@ -753,46 +754,53 @@ class Market(dict):
             #"https://www.bitstamp.net/api/v2/ticker/btcusd/",
             "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_vol=true",
         ]
-        try:
-            responses = list(requests.get(u, timeout=30) for u in urls)
-        except Exception as e:
-            log.debug(str(e))
-
-        for r in [x for x in responses
-                  if hasattr(x, "status_code") and x.status_code == 200 and x.json()]:
+        cnt = 0
+        while len(prices) == 0 and cnt < 5:
+            cnt += 1        
             try:
-                if "bitfinex" in r.url:
-                    data = r.json()
-                    prices['bitfinex'] = {
-                        'price': float(data['last_price']),
-                        'volume': float(data['volume'])}
-                elif "gdax" in r.url:
-                    data = r.json()
-                    prices['gdax'] = {
-                        'price': float(data['price']),
-                        'volume': float(data['volume'])}
-                elif "kraken" in r.url:
-                    data = r.json()['result']['XXBTZUSD']['p']
-                    prices['kraken'] = {
-                        'price': float(data[0]),
-                        'volume': float(data[1])}
-                elif "okcoin" in r.url:
-                    data = r.json()["ticker"]
-                    prices['okcoin'] = {
-                        'price': float(data['last']),
-                        'volume': float(data['vol'])}
-                elif "bitstamp" in r.url:
-                    data = r.json()
-                    prices['bitstamp'] = {
-                        'price': float(data['last']),
-                        'volume': float(data['volume'])}
-                elif "coingecko" in r.url:
-                    data = r.json()["bitcoin"]
-                    prices['coingecko'] = {
-                        'price': float(data['usd']),
-                        'volume': float(data['usd_24h_vol'])}
-            except KeyError as e:
-                log.info(str(e))
+                responses = list(requests.get(u, timeout=30) for u in urls)
+            except Exception as e:
+                log.debug(str(e))
+    
+            for r in [x for x in responses
+                      if hasattr(x, "status_code") and x.status_code == 200 and x.json()]:
+                try:
+                    if "bitfinex" in r.url:
+                        data = r.json()
+                        prices['bitfinex'] = {
+                            'price': float(data['last_price']),
+                            'volume': float(data['volume'])}
+                    elif "gdax" in r.url:
+                        data = r.json()
+                        prices['gdax'] = {
+                            'price': float(data['price']),
+                            'volume': float(data['volume'])}
+                    elif "kraken" in r.url:
+                        data = r.json()['result']['XXBTZUSD']['p']
+                        prices['kraken'] = {
+                            'price': float(data[0]),
+                            'volume': float(data[1])}
+                    elif "okcoin" in r.url:
+                        data = r.json()["ticker"]
+                        prices['okcoin'] = {
+                            'price': float(data['last']),
+                            'volume': float(data['vol'])}
+                    elif "bitstamp" in r.url:
+                        data = r.json()
+                        prices['bitstamp'] = {
+                            'price': float(data['last']),
+                            'volume': float(data['volume'])}
+                    elif "coingecko" in r.url:
+                        data = r.json()["bitcoin"]
+                        if 'usd_24h_vol' in data:
+                            volume = float(data['usd_24h_vol'])
+                        else:
+                            volume = 1
+                        prices['coingecko'] = {
+                            'price': float(data['usd']),
+                            'volume': volume}
+                except KeyError as e:
+                    log.info(str(e))
 
         if verbose:
             print(prices)
@@ -822,45 +830,52 @@ class Market(dict):
         ]
         headers = {'Content-type': 'application/x-www-form-urlencoded',
                    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36'}
-        try:
-            responses = list(requests.get(u, headers=headers, timeout=30) for u in urls)
-        except Exception as e:
-            log.debug(str(e))
-
-        for r in [x for x in responses
-                  if hasattr(x, "status_code") and x.status_code == 200 and x.json()]:
+        cnt = 0
+        while len(prices) == 0 and cnt < 5:
+            cnt += 1
             try:
-                if "poloniex" in r.url:
-                    data = r.json()["BTC_STEEM"]
-                    prices['poloniex'] = {
-                        'price': float(data['last']),
-                        'volume': float(data['baseVolume'])}
-                elif "bittrex" in r.url:
-                    data = r.json()["result"][0]
-                    price = (data['Bid'] + data['Ask']) / 2
-                    prices['bittrex'] = {'price': price, 'volume': data['BaseVolume']}
-                elif "binance" in r.url:
-                    data = [x for x in r.json() if x['symbol'] == 'STEEMBTC'][0]
-                    prices['binance'] = {
-                        'price': float(data['lastPrice']),
-                        'volume': float(data['quoteVolume'])}
-                elif "huobi" in r.url:
-                    data = r.json()["data"][-1]
-                    prices['huobi'] = {
-                        'price': float(data['close']),
-                        'volume': float(data['vol'])}
-                elif "upbit" in r.url:
-                    data = r.json()[-1]
-                    prices['upbit'] = {
-                        'price': float(data['tradePrice']),
-                        'volume': float(data['tradeVolume'])}
-                elif "coingecko" in r.url:
-                    data = r.json()["steem"]
-                    prices['coingecko'] = {
-                        'price': float(data['btc']),
-                        'volume': float(data['btc_24h_vol'])}
-            except KeyError as e:
-                log.info(str(e))
+                responses = list(requests.get(u, headers=headers, timeout=30) for u in urls)
+            except Exception as e:
+                log.debug(str(e))
+    
+            for r in [x for x in responses
+                      if hasattr(x, "status_code") and x.status_code == 200 and x.json()]:
+                try:
+                    if "poloniex" in r.url:
+                        data = r.json()["BTC_STEEM"]
+                        prices['poloniex'] = {
+                            'price': float(data['last']),
+                            'volume': float(data['baseVolume'])}
+                    elif "bittrex" in r.url:
+                        data = r.json()["result"][0]
+                        price = (data['Bid'] + data['Ask']) / 2
+                        prices['bittrex'] = {'price': price, 'volume': data['BaseVolume']}
+                    elif "binance" in r.url:
+                        data = [x for x in r.json() if x['symbol'] == 'STEEMBTC'][0]
+                        prices['binance'] = {
+                            'price': float(data['lastPrice']),
+                            'volume': float(data['quoteVolume'])}
+                    elif "huobi" in r.url:
+                        data = r.json()["data"][-1]
+                        prices['huobi'] = {
+                            'price': float(data['close']),
+                            'volume': float(data['vol'])}
+                    elif "upbit" in r.url:
+                        data = r.json()[-1]
+                        prices['upbit'] = {
+                            'price': float(data['tradePrice']),
+                            'volume': float(data['tradeVolume'])}
+                    elif "coingecko" in r.url:
+                        data = r.json()["steem"]
+                        if 'usd_24h_vol' in data:
+                            volume = float(data['usd_24h_vol'])
+                        else:
+                            volume = 1                
+                        prices['coingecko'] = {
+                            'price': float(data['btc']),
+                            'volume': volume}
+                except KeyError as e:
+                    log.info(str(e))
 
         if len(prices) == 0:
             raise RuntimeError("Obtaining STEEM/BTC prices has failed from all sources.")
@@ -888,50 +903,57 @@ class Market(dict):
         ]
         headers = {'Content-type': 'application/x-www-form-urlencoded',
                    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36'}
-        try:
-            responses = list(requests.get(u, headers=headers, timeout=30) for u in urls)
-        except Exception as e:
-            log.debug(str(e))
-
-        for r in [x for x in responses
-                  if hasattr(x, "status_code") and x.status_code == 200 and x.json()]:
+        cnt = 0
+        while len(prices) == 0 and cnt < 5:
+            cnt += 1        
             try:
-                if "poloniex" in r.url:
-                    data = r.json()["BTC_HIVE"]
-                    prices['poloniex'] = {
-                        'price': float(data['last']),
-                        'volume': float(data['baseVolume'])}
-                elif "bittrex" in r.url:
-                    data = r.json()["result"][0]
-                    price = (data['Bid'] + data['Ask']) / 2
-                    prices['bittrex'] = {'price': price, 'volume': data['BaseVolume']}
-                elif "binance" in r.url:
-                    data = [x for x in r.json() if x['symbol'] == 'HIVEBTC'][0]
-                    prices['binance'] = {
-                        'price': float(data['lastPrice']),
-                        'volume': float(data['quoteVolume'])}
-                elif "huobi" in r.url:
-                    data = r.json()["data"][-1]
-                    prices['huobi'] = {
-                        'price': float(data['close']),
-                        'volume': float(data['vol'])}
-                elif "upbit" in r.url:
-                    data = r.json()[-1]
-                    prices['upbit'] = {
-                        'price': float(data['tradePrice']),
-                        'volume': float(data['tradeVolume'])}
-                elif "probit" in r.url:
-                    data = r.json()["data"]
-                    prices['huobi'] = {
-                        'price': float(data['last']),
-                        'volume': float(data['base_volume'])}
-                elif "coingecko" in r.url:
-                    data = r.json()["hive"]
-                    prices['coingecko'] = {
-                        'price': float(data['btc']),
-                        'volume': float(data['btc_24h_vol'])}
-            except KeyError as e:
-                log.info(str(e))
+                responses = list(requests.get(u, headers=headers, timeout=30) for u in urls)
+            except Exception as e:
+                log.debug(str(e))
+    
+            for r in [x for x in responses
+                      if hasattr(x, "status_code") and x.status_code == 200 and x.json()]:
+                try:
+                    if "poloniex" in r.url:
+                        data = r.json()["BTC_HIVE"]
+                        prices['poloniex'] = {
+                            'price': float(data['last']),
+                            'volume': float(data['baseVolume'])}
+                    elif "bittrex" in r.url:
+                        data = r.json()["result"][0]
+                        price = (data['Bid'] + data['Ask']) / 2
+                        prices['bittrex'] = {'price': price, 'volume': data['BaseVolume']}
+                    elif "binance" in r.url:
+                        data = [x for x in r.json() if x['symbol'] == 'HIVEBTC'][0]
+                        prices['binance'] = {
+                            'price': float(data['lastPrice']),
+                            'volume': float(data['quoteVolume'])}
+                    elif "huobi" in r.url:
+                        data = r.json()["data"][-1]
+                        prices['huobi'] = {
+                            'price': float(data['close']),
+                            'volume': float(data['vol'])}
+                    elif "upbit" in r.url:
+                        data = r.json()[-1]
+                        prices['upbit'] = {
+                            'price': float(data['tradePrice']),
+                            'volume': float(data['tradeVolume'])}
+                    elif "probit" in r.url:
+                        data = r.json()["data"]
+                        prices['huobi'] = {
+                            'price': float(data['last']),
+                            'volume': float(data['base_volume'])}
+                    elif "coingecko" in r.url:
+                        data = r.json()["hive"]
+                        if 'btc_24h_vol':
+                            volume = float(data['btc_24h_vol'])
+                        else:
+                            volume = 1
+                        prices['coingecko'] = {
+                            'price': float(data['btc']),
+                            'volume': volume}
+                except KeyError as e:
+                    log.info(str(e))
 
         if len(prices) == 0:
             raise RuntimeError("Obtaining HIVE/BTC prices has failed from all sources.")
