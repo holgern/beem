@@ -238,4 +238,7 @@ def decode_memo(priv, message):
     message = aes.decrypt(unhexlify(py23_bytes(message, 'ascii')))
     message = _unpad(message, 16)
     n = varintdecode(message)
-    return '#' + message[len(message) - n:].decode("utf8")
+    if (len(message) - n) > 0 and (len(message) - n) < 8:
+        return '#' + message[len(message) - n:].decode("utf8")
+    else:
+        return '#' + message.decode("utf8")

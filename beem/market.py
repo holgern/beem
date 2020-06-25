@@ -177,8 +177,14 @@ class Market(dict):
             blockchain_instance=self.blockchain
         )
         data["percent_change"] = float(ticker["percent_change"])
-        data["sbd_volume"] = Amount(ticker["sbd_volume"], blockchain_instance=self.blockchain)
-        data["steem_volume"] = Amount(ticker["steem_volume"], blockchain_instance=self.blockchain)
+        if "sbd_volume" in ticker:
+            data["sbd_volume"] = Amount(ticker["sbd_volume"], blockchain_instance=self.blockchain)
+        elif "hbd_volume" in ticker:
+            data["sbd_volume"] = Amount(ticker["hbd_volume"], blockchain_instance=self.blockchain)
+        if "steem_volume" in ticker:
+            data["steem_volume"] = Amount(ticker["steem_volume"], blockchain_instance=self.blockchain)
+        elif "hive_volume" in ticker:
+            data["hive_volume"] = Amount(ticker["hive_volume"], blockchain_instance=self.blockchain)
 
         return data
 
@@ -199,10 +205,16 @@ class Market(dict):
         volume = self.blockchain.rpc.get_volume(api="market_history")
         if raw_data:
             return volume
-        return {
-            self["base"]["symbol"]: Amount(volume["sbd_volume"], blockchain_instance=self.blockchain),
-            self["quote"]["symbol"]: Amount(volume["steem_volume"], blockchain_instance=self.blockchain)
-        }
+        if "sbd_volume" in volume and "steem_volume" in volume:
+            return {
+                self["base"]["symbol"]: Amount(volume["sbd_volume"], blockchain_instance=self.blockchain),
+                self["quote"]["symbol"]: Amount(volume["steem_volume"], blockchain_instance=self.blockchain)
+            }
+        elif "hbd_volume" in volume and "hive_volume" in volume:
+            return {
+                self["base"]["symbol"]: Amount(volume["hbd_volume"], blockchain_instance=self.blockchain),
+                self["quote"]["symbol"]: Amount(volume["hive_volume"], blockchain_instance=self.blockchain)
+            }
 
     def orderbook(self, limit=25, raw_data=False):
         """ Returns the order book for SBD/STEEM market.

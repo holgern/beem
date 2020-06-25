@@ -80,7 +80,7 @@ class Witness(BlockchainObject):
 
     def _parse_json_data(self, witness):
         parse_times = [
-            "created", "last_sbd_exchange_update", "hardfork_time_vote",
+            "created", "last_sbd_exchange_update", "hardfork_time_vote", "last_hbd_exchange_update",
         ]
         for p in parse_times:
             if p in witness and isinstance(witness.get(p), string_types):
@@ -96,7 +96,7 @@ class Witness(BlockchainObject):
     def json(self):
         output = self.copy()
         parse_times = [
-            "created", "last_sbd_exchange_update", "hardfork_time_vote",
+            "created", "last_sbd_exchange_update", "hardfork_time_vote", "last_hbd_exchange_update",
         ]
         for p in parse_times:
             if p in output:
@@ -196,23 +196,31 @@ class WitnessesObject(list):
     def printAsTable(self, sort_key="votes", reverse=True, return_str=False, **kwargs):
         utc = pytz.timezone('UTC')
         no_feed = False
-        if len(self) > 0 and "sbd_exchange_rate" not in self[0]:
+        if len(self) > 0 and "sbd_exchange_rate" not in self[0] and "hbd_exchange_rate" not in self[0]:
             table_header = ["Name", "Votes [PV]", "Disabled", "Missed", "Fee", "Size", "Version"]
             no_feed = True
         else:
             table_header = ["Name", "Votes [PV]", "Disabled", "Missed", "Feed base", "Feed quote", "Feed update", "Fee", "Size", "Interest", "Version"]
+        if "sbd_exchange_rate" in self:
+            bd_exchange_rate = "sbd_exchange_rate"
+            bd_interest_rate = "sbd_interest_rate"
+            last_bd_exchange_update = "last_sbd_exchange_update"
+        else:
+            bd_exchange_rate = "hbd_exchange_rate"
+            bd_interest_rate = "hbd_interest_rate"
+            last_bd_exchange_update = "last_hbd_exchange_update"
         t = PrettyTable(table_header)
         t.align = "l"
         if sort_key == 'base':
-            sortedList = sorted(self, key=lambda self: self['sbd_exchange_rate']['base'], reverse=reverse)
+            sortedList = sorted(self, key=lambda self: self[bd_exchange_rate]['base'], reverse=reverse)
         elif sort_key == 'quote':
-            sortedList = sorted(self, key=lambda self: self['sbd_exchange_rate']['quote'], reverse=reverse)
-        elif sort_key == 'last_sbd_exchange_update':
-            sortedList = sorted(self, key=lambda self: (utc.localize(datetime.utcnow()) - self['last_sbd_exchange_update']).total_seconds(), reverse=reverse)
+            sortedList = sorted(self, key=lambda self: self[bd_exchange_rate]['quote'], reverse=reverse)
+        elif sort_key == 'last_sbd_exchange_update' or sort_key == "last_hbd_exchange_update":
+            sortedList = sorted(self, key=lambda self: (utc.localize(datetime.utcnow()) - self[last_bd_exchange_update]).total_seconds(), reverse=reverse)
         elif sort_key == 'account_creation_fee':
             sortedList = sorted(self, key=lambda self: self['props']['account_creation_fee'], reverse=reverse)
-        elif sort_key == 'sbd_interest_rate':
-            sortedList = sorted(self, key=lambda self: self['props']['sbd_interest_rate'], reverse=reverse)
+        elif sort_key == 'sbd_interest_rate' or sort_key == "hbd_interest_rate":
+            sortedList = sorted(self, key=lambda self: self['props'][bd_interest_rate], reverse=reverse)
         elif sort_key == 'maximum_block_size':
             sortedList = sorted(self, key=lambda self: self['props']['maximum_block_size'], reverse=reverse)
         elif sort_key == 'votes':
@@ -233,17 +241,17 @@ class WitnessesObject(list):
                            str(witness['props']['maximum_block_size']),
                            witness['running_version']])
             else:
-                td = utc.localize(datetime.utcnow()) - witness['last_sbd_exchange_update']
+                td = utc.localize(datetime.utcnow()) - witness[last_bd_exchange_update]
                 t.add_row([witness['owner'],
                            str(round(int(witness['votes']) / 1e15, 2)),
                            disabled,
                            str(witness['total_missed']),
-                           str(Amount(witness['sbd_exchange_rate']['base'], blockchain_instance=self.blockchain)),
-                           str(Amount(witness['sbd_exchange_rate']['quote'], blockchain_instance=self.blockchain)),
+                           str(Amount(witness[bd_exchange_rate]['base'], blockchain_instance=self.blockchain)),
+                           str(Amount(witness[bd_exchange_rate]['quote'], blockchain_instance=self.blockchain)),
                            str(td.days) + " days " + str(td.seconds // 3600) + ":" + str((td.seconds // 60) % 60),
                            str(witness['props']['account_creation_fee']),
                            str(witness['props']['maximum_block_size']),
-                           str(witness['props']['sbd_interest_rate'] / 100) + " %",
+                           str(witness['props'][bd_interest_rate] / 100) + " %",
                            witness['running_version']])
         if return_str:
             return t.get_string(**kwargs)

@@ -921,15 +921,16 @@ class BlockChainInstance(object):
         ret["trx_id"] = ret_sign.id
         return ret
 
-    def broadcast(self, tx=None):
+    def broadcast(self, tx=None, trx_id=True):
         """ Broadcast a transaction to the Hive/Steem network
 
             :param tx tx: Signed transaction to broadcast
+            :param bool trx_id: when True, the trx_id will be included into the return dict.
 
         """
         if tx:
             # If tx is provided, we broadcast the tx
-            return TransactionBuilder(tx, blockchain_instance=self).broadcast()
+            return TransactionBuilder(tx, blockchain_instance=self).broadcast(trx_id=trx_id)
         else:
             return self.txbuffer.broadcast()
 
@@ -2040,7 +2041,7 @@ class BlockChainInstance(object):
     def _build_comment_options_op(self, author, permlink, options,
                                   beneficiaries):
         options = remove_from_dict(options or {}, [
-            'max_accepted_payout', 'percent_steem_dollars',
+            'max_accepted_payout', 'percent_steem_dollars', 'percent_hive_dollars',
             'allow_votes', 'allow_curation_rewards', 'extensions'
         ], keep_keys=True)
         # override beneficiaries extension

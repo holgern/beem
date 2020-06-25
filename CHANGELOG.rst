@@ -1,5 +1,12 @@
 Changelog
 =========
+0.24.3
+------
+* Fix encrypted memo decryption
+* from_account and to_account in Memo() can also be a publick and private key
+* Prepare for sbd/steem replacement by hbd/hive
+* Add unit test for beem.memo
+
 0.24.2
 ------
 * New UnknownTransaction exception that is raised when using get_transaction with an unkown trx_id
@@ -9,6 +16,7 @@ Changelog
 * sign and finalizeOp from Hive and Steem return now the trx_id in a field
 * add export parameter to all broadcast commands in beempy
 * When setting unsigned in beempy, the default value of expires is changed to 3600
+* beempy history returns account history ops in table or stored in a json file
 
 0.24.1
 ------

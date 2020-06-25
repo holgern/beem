@@ -202,6 +202,18 @@ class Vote(BlockchainObject):
         return self.blockchain.rshares_to_sbd(int(self.get("rshares", 0)))
 
     @property
+    def hbd(self):
+        return self.blockchain.rshares_to_hbd(int(self.get("rshares", 0)))
+
+    @property
+    def token_backed_dollar(self):
+        from beem import Hive
+        if isinstance(self.blockchain, Hive):
+            return self.blockchain.rshares_to_hbd(int(self.get("rshares", 0)))
+        else:
+            return self.blockchain.rshares_to_sbd(int(self.get("rshares", 0)))
+
+    @property
     def rshares(self):
         return int(self.get("rshares", 0))
 
@@ -226,7 +238,7 @@ class VotesObject(list):
     def get_sorted_list(self, sort_key="time", reverse=True):
         utc = pytz.timezone('UTC')
 
-        if sort_key == 'sbd':
+        if sort_key == 'sbd' or sort_key == "hbd":
             sortedList = sorted(self, key=lambda self: self.rshares, reverse=reverse)
         elif sort_key == 'time':
             sortedList = sorted(self, key=lambda self: (utc.localize(datetime.utcnow()) - self.time).total_seconds(), reverse=reverse)
@@ -270,7 +282,7 @@ class VotesObject(list):
                     percent = vote.get('vote_percent', '')
                 t.add_row([vote['voter'],
                            vote.votee,
-                           str(round(vote.sbd, 2)).ljust(5) + "$",
+                           str(round(vote.token_backed_dollar, 2)).ljust(5) + "$",
                            timestr,
                            vote.get("rshares", ""),
                            str(percent),
@@ -304,8 +316,8 @@ class VotesObject(list):
                     v = vote["voter"]
                 elif var == "votee":
                     v = vote.votee
-                elif var == "sbd":
-                    v = vote.sbd
+                elif var == "sbd" or var == "hbd":
+                    v = vote.token_backed_dollar
                 elif var == "time":
                     v = d_time
                 elif var == "rshares":
@@ -319,7 +331,7 @@ class VotesObject(list):
 
     def print_stats(self, return_str=False, **kwargs):
         # utc = pytz.timezone('UTC')
-        table_header = ["voter", "votee", "sbd", "time", "rshares", "percent", "weight"]
+        table_header = ["voter", "votee", "sbd/hbd", "time", "rshares", "percent", "weight"]
         t = PrettyTable(table_header)
         t.align = "l"
 

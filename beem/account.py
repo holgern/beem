@@ -132,7 +132,9 @@ class Account(BlockchainObject):
 
     def _parse_json_data(self, account):
         parse_int = [
-            "sbd_seconds", "savings_sbd_seconds", "average_bandwidth", "lifetime_bandwidth", "lifetime_market_bandwidth", "reputation", "withdrawn", "to_withdraw",
+            "sbd_seconds", "savings_sbd_seconds", "average_bandwidth", "lifetime_bandwidth",
+            "lifetime_market_bandwidth", "reputation", "withdrawn", "to_withdraw",
+            "hbd_seconds", "savings_hbd_seconds",
         ]
         for p in parse_int:
             if p in account and isinstance(account.get(p), string_types):
@@ -149,7 +151,9 @@ class Account(BlockchainObject):
             "last_owner_update", "last_account_update", "created", "last_owner_proved", "last_active_proved",
             "last_account_recovery", "last_vote_time", "sbd_seconds_last_update", "sbd_last_interest_payment",
             "savings_sbd_seconds_last_update", "savings_sbd_last_interest_payment", "next_vesting_withdrawal",
-            "last_market_bandwidth_update", "last_post", "last_root_post", "last_bandwidth_update"
+            "last_market_bandwidth_update", "last_post", "last_root_post", "last_bandwidth_update",
+            "hbd_seconds_last_update", "hbd_last_interest_payment", "savings_hbd_seconds_last_update",
+            "savings_hbd_last_interest_payment"            
         ]
         for p in parse_times:
             if p in account and isinstance(account.get(p), string_types):
@@ -161,7 +165,11 @@ class Account(BlockchainObject):
             "sbd_balance",
             "savings_sbd_balance",
             "reward_sbd_balance",
+            "hbd_balance",
+            "savings_hbd_balance",
+            "reward_hbd_balance",            
             "reward_steem_balance",
+            "reward_hive_balance",
             "reward_vesting_balance",
             "reward_vesting_steem",
             "vesting_shares",
@@ -178,7 +186,7 @@ class Account(BlockchainObject):
     def json(self):
         output = self.copy()
         parse_int = [
-            "sbd_seconds", "savings_sbd_seconds",
+            "sbd_seconds", "savings_sbd_seconds", "hbd_seconds", "savings_hbd_seconds",
         ]
         parse_int_without_zero = [
             "withdrawn", "to_withdraw", "lifetime_bandwidth", 'average_bandwidth',
@@ -201,7 +209,9 @@ class Account(BlockchainObject):
             "last_owner_update", "last_account_update", "created", "last_owner_proved", "last_active_proved",
             "last_account_recovery", "last_vote_time", "sbd_seconds_last_update", "sbd_last_interest_payment",
             "savings_sbd_seconds_last_update", "savings_sbd_last_interest_payment", "next_vesting_withdrawal",
-            "last_market_bandwidth_update", "last_post", "last_root_post", "last_bandwidth_update"
+            "last_market_bandwidth_update", "last_post", "last_root_post", "last_bandwidth_update",
+            "hbd_seconds_last_update", "hbd_last_interest_payment", "savings_hbd_seconds_last_update",
+            "savings_hbd_last_interest_payment"            
         ]
         for p in parse_times:
             if p in output:
@@ -217,6 +227,10 @@ class Account(BlockchainObject):
             "savings_sbd_balance",
             "reward_sbd_balance",
             "reward_steem_balance",
+            "hbd_balance",
+            "savings_hbd_balance",
+            "reward_hbd_balance",
+            "reward_hive_balance",            
             "reward_vesting_balance",
             "reward_vesting_steem",
             "vesting_shares",
@@ -1104,7 +1118,12 @@ class Account(BlockchainObject):
         """ List balances of an account. This call returns instances of
             :class:`beem.amount.Amount`.
         """
-        amount_list = ["balance", "sbd_balance", "vesting_shares"]
+        if "sbd_balance" in self:
+            amount_list = ["balance", "sbd_balance", "vesting_shares"]
+        elif "hbd_balance" in self:
+            amount_list = ["balance", "hbd_balance", "vesting_shares"]
+        else:
+            amount_list = ["balance", "vesting_shares"]
         available_amount = []
         for amount in amount_list:
             if amount in self:
@@ -1114,7 +1133,12 @@ class Account(BlockchainObject):
     @property
     def saving_balances(self):
         savings_amount = []
-        amount_list = ["savings_balance", "savings_sbd_balance"]
+        if "savings_sbd_balance" in self:
+            amount_list = ["savings_balance", "savings_sbd_balance"]
+        elif "savings_hbd_balance" in self:
+            amount_list = ["savings_balance", "savings_hbd_balance"]
+        else:
+            amount_list = ["savings_balance"]
         for amount in amount_list:
             if amount in self:
                 savings_amount.append(self[amount].copy())
@@ -1122,7 +1146,12 @@ class Account(BlockchainObject):
 
     @property
     def reward_balances(self):
-        amount_list = ["reward_steem_balance", "reward_sbd_balance", "reward_vesting_balance"]
+        if "reward_steem_balance" in self and "reward_sbd_balance" in self:
+            amount_list = ["reward_steem_balance", "reward_sbd_balance", "reward_vesting_balance"]
+        elif "reward_hive_balance" in self and "reward_hbd_balance" in self:
+            amount_list = ["reward_hive_balance", "reward_hbd_balance", "reward_vesting_balance"]
+        else:
+            amount_list = []
         rewards_amount = []
         for amount in amount_list:
             if amount in self:
@@ -1239,12 +1268,24 @@ class Account(BlockchainObject):
                 }
 
         """
-        last_payment = (self["sbd_last_interest_payment"])
-        next_payment = last_payment + timedelta(days=30)
-        interest_rate = self.blockchain.get_dynamic_global_properties()[
-            "sbd_interest_rate"] / 100  # percent
-        interest_amount = (interest_rate / 100) * int(
-            int(self["sbd_seconds"]) / (60 * 60 * 24 * 356)) * 10**-3
+        interest_amount = 0
+        interest_rate = 0
+        next_payment = datetime(1970, 1, 1, 0, 0, 0)
+        last_payment = datetime(1970, 1, 1, 0, 0, 0)
+        if "sbd_last_interest_payment" in self:
+            last_payment = (self["sbd_last_interest_payment"])
+            next_payment = last_payment + timedelta(days=30)
+            interest_rate = self.blockchain.get_dynamic_global_properties()[
+                "sbd_interest_rate"] / 100  # percent
+            interest_amount = (interest_rate / 100) * int(
+                int(self["sbd_seconds"]) / (60 * 60 * 24 * 356)) * 10**-3
+        elif "hbd_last_interest_payment" in self:
+            last_payment = (self["hbd_last_interest_payment"])
+            next_payment = last_payment + timedelta(days=30)
+            interest_rate = self.blockchain.get_dynamic_global_properties()[
+                "hbd_interest_rate"] / 100  # percent
+            interest_amount = (interest_rate / 100) * int(
+                int(self["hbd_seconds"]) / (60 * 60 * 24 * 356)) * 10**-3            
         return {
             "interest": interest_amount,
             "last_payment": last_payment,
@@ -1401,8 +1442,10 @@ class Account(BlockchainObject):
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
-        if self.blockchain.rpc.get_use_appbase():
+        if self.blockchain.rpc.get_use_appbase() and "sbd_balance" in self:
             return self.blockchain.rpc.find_sbd_conversion_requests({'account': account}, api="database")['requests']
+        elif self.blockchain.rpc.get_use_appbase() and "hbd_balance" in self:
+            return self.blockchain.rpc.find_hbd_conversion_requests({'account': account}, api="database")['requests']
         else:
             return self.blockchain.rpc.get_conversion_requests(account)
 
