@@ -201,7 +201,7 @@ class WitnessesObject(list):
             no_feed = True
         else:
             table_header = ["Name", "Votes [PV]", "Disabled", "Missed", "Feed base", "Feed quote", "Feed update", "Fee", "Size", "Interest", "Version"]
-        if "sbd_exchange_rate" in self:
+        if "sbd_exchange_rate" in self[0]:
             bd_exchange_rate = "sbd_exchange_rate"
             bd_interest_rate = "sbd_interest_rate"
             last_bd_exchange_update = "last_sbd_exchange_update"
