@@ -432,7 +432,7 @@ class Account(BlockchainObject):
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
         if self.blockchain.rpc.get_use_appbase():
             try:
-                rep = self.blockchain.rpc.get_account_reputations({'account_lower_bound': self["name"], 'limit': 1}, api="follow")['reputations']
+                rep = self.blockchain.rpc.get_account_reputations({'account_lower_bound': self["name"], 'limit': 1}, api="reputation")['reputations']
                 if len(rep) > 0:
                     rep = int(rep[0]['reputation'])
             except:

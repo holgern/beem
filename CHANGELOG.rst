@@ -6,6 +6,7 @@ Changelog
 * from_account and to_account in Memo() can also be a publick and private key
 * Prepare for sbd/steem replacement by hbd/hive
 * Add unit test for beem.memo
+* Use reputation api
 
 0.24.2
 ------
