@@ -7,6 +7,7 @@ Changelog
 * Prepare for sbd/steem replacement by hbd/hive
 * Add unit test for beem.memo
 * Use reputation api
+* Add Server error to _check_error_message
 
 0.24.2
 ------

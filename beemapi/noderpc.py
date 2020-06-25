@@ -152,6 +152,9 @@ class NodeRPC(GrapheneRPC):
         elif re.search("!check_max_block_age", str(e)):
             self._switch_to_next_node(str(e))
             doRetry = True
+        elif re.search("Server error", str(e)):
+            self._switch_to_next_node(str(e))
+            doRetry = True            
         elif re.search("Can only vote once every 3 seconds", msg):
             raise exceptions.VotedBeforeWaitTimeReached(msg)
         elif re.search("out_of_rangeEEEE: unknown key", msg) or re.search("unknown key:unknown key", msg):
