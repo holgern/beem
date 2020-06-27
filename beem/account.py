@@ -1043,6 +1043,34 @@ class Account(BlockchainObject):
         else:
             return Accounts(name_list, blockchain_instance=self.blockchain)
 
+    def get_follow_list(self, follow_type, starting_account=None, limit=100, raw_name_list=True):
+        """ Returns the follow list for the specified follow_type (Only HIVE with HF >= 24)
+
+            :param list follow_type: follow_type can be `blacklisted`, `follow_blacklist` `muted`, or `follow_muted`
+        """
+        if not self.blockchain.is_connected():
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
+        limit_reached = True
+        cnt = 0
+        while limit_reached:
+            self.blockchain.rpc.set_next_node_on_empty_reply(False)
+            query = {'observer': self.name, 'follow_type': follow_type, 'starting_account': starting_account, 'limit': limit}
+            followers = self.blockchain.rpc.get_follow_list(query, api='bridge')
+            if cnt == 0:
+                name_list = followers
+            elif followers is not None and len(followers) > 1:
+                name_list += followers[1:]
+            if followers is not None and len(followers) >= limit:
+                starting_account = followers[-1]
+                limit_reached = True
+                cnt += 1
+            else:
+                limit_reached = False
+        if raw_name_list:
+            return name_list
+        else:
+            return Accounts(name_list, blockchain_instance=self.blockchain)
+
     def _get_followers(self, direction="follower", last_user="", what="blog", limit=100):
         """ Help function, used in get_followers and get_following
         """
@@ -2728,11 +2756,11 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 from beem.account import Account
-                from beem import Steem
+                from beem import Hive
                 active_wif = "5xxxx"
-                stm = Steem(keys=[active_wif])
+                stm = Hive(keys=[active_wif])
                 acc = Account("test", blockchain_instance=stm)
-                acc.transfer("test1", 1, "STEEM", "test")
+                acc.transfer("test1", 1, "HIVE", "test")
 
         """
 
@@ -2742,6 +2770,7 @@ class Account(BlockchainObject):
             account = Account(account, blockchain_instance=self.blockchain)
         amount = Amount(amount, asset, blockchain_instance=self.blockchain)
         to = Account(to, blockchain_instance=self.blockchain)
+        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()
         if memo and memo[0] == "#":
             from .memo import Memo
             memoObj = Memo(
@@ -2757,6 +2786,7 @@ class Account(BlockchainObject):
             "memo": memo,
             "from": account["name"],
             "prefix": self.blockchain.prefix,
+            "replace_hive_by_steem": replace_hive_by_steem,
         })
         return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
@@ -2777,7 +2807,7 @@ class Account(BlockchainObject):
         else:
             to = Account(to, blockchain_instance=self.blockchain)
         amount = self._check_amount(amount, self.blockchain.token_symbol)
-
+        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()
         to = Account(to, blockchain_instance=self.blockchain)
 
         op = operations.Transfer_to_vesting(**{
@@ -2785,6 +2815,7 @@ class Account(BlockchainObject):
             "to": to["name"],
             "amount": amount,
             "prefix": self.blockchain.prefix,
+            "replace_hive_by_steem": replace_hive_by_steem,
         })
         return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
@@ -2807,12 +2838,14 @@ class Account(BlockchainObject):
             request_id = int(request_id)
         else:
             request_id = random.getrandbits(32)
+        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()      
         op = operations.Convert(
             **{
                 "owner": account["name"],
                 "requestid": request_id,
                 "amount": amount,
                 "prefix": self.blockchain.prefix,
+                "replace_hive_by_steem": replace_hive_by_steem,
             })
 
         return self.blockchain.finalizeOp(op, account, "active")
@@ -2842,7 +2875,7 @@ class Account(BlockchainObject):
             to = account  # move to savings on same account
         else:
             to = Account(to, blockchain_instance=self.blockchain)
-
+        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()
         op = operations.Transfer_to_savings(
             **{
                 "from": account["name"],
@@ -2850,6 +2883,7 @@ class Account(BlockchainObject):
                 "amount": amount,
                 "memo": memo,
                 "prefix": self.blockchain.prefix,
+                "replace_hive_by_steem": replace_hive_by_steem,
             })
         return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
@@ -2890,6 +2924,8 @@ class Account(BlockchainObject):
         else:
             request_id = random.getrandbits(32)
 
+        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()
+
         op = operations.Transfer_from_savings(
             **{
                 "from": account["name"],
@@ -2898,6 +2934,7 @@ class Account(BlockchainObject):
                 "amount": amount,
                 "memo": memo,
                 "prefix": self.blockchain.prefix,
+                "replace_hive_by_steem": replace_hive_by_steem,
             })
         return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
@@ -2935,15 +2972,19 @@ class Account(BlockchainObject):
     def claim_reward_balance(self,
                              reward_steem=0,
                              reward_sbd=0,
+                             reward_hive=0,
+                             reward_hbd=0,                             
                              reward_vests=0,
                              account=None, **kwargs):
         """ Claim reward balances.
         By default, this will claim ``all`` outstanding balances. To bypass
         this behaviour, set desired claim amount by setting any of
-        `reward_steem`, `reward_sbd` or `reward_vests`.
+        `reward_steem`/``reward_hive, `reward_sbd`/``reward_hbd or `reward_vests`.
 
         :param str reward_steem: Amount of STEEM you would like to claim.
+        :param str reward_hive: Amount of HIVE you would like to claim.
         :param str reward_sbd: Amount of SBD you would like to claim.
+        :param str reward_hbd: Amount of HBD you would like to claim.
         :param str reward_vests: Amount of VESTS you would like to claim.
         :param str account: The source account for the claim if not
             ``default_account`` is used.
@@ -2959,9 +3000,16 @@ class Account(BlockchainObject):
         # if no values were set by user, claim all outstanding balances on
         # account
 
-        reward_steem = self._check_amount(reward_steem, self.blockchain.token_symbol)
-        reward_sbd = self._check_amount(reward_sbd, self.blockchain.backed_token_symbol)
+        reward_steem = self._check_amount(reward_steem + reward_hive, self.blockchain.token_symbol)
+        reward_sbd = self._check_amount(reward_sbd + reward_hbd, self.blockchain.backed_token_symbol)
         reward_vests = self._check_amount(reward_vests, self.blockchain.vest_token_symbol)
+        
+        reward_token = "reward_steem"
+        reward_backed_token = "reward_sbd"
+        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()
+        if not replace_hive_by_steem:
+            reward_token = "reward_hive"
+            reward_backed_token = "reward_hbd"
 
         if reward_steem.amount == 0 and reward_sbd.amount == 0 and reward_vests.amount == 0:
             if len(account.balances["rewards"]) == 3:
@@ -2971,18 +3019,19 @@ class Account(BlockchainObject):
                 op = operations.Claim_reward_balance(
                     **{
                         "account": account["name"],
-                        "reward_steem": reward_steem,
-                        "reward_sbd": reward_sbd,
+                        reward_token: reward_steem,
+                        reward_backed_token: reward_sbd,
                         "reward_vests": reward_vests,
                         "prefix": self.blockchain.prefix,
-                    })
+                        "replace_hive_by_steem": replace_hive_by_steem
+                    })         
             else:
                 reward_steem = account.balances["rewards"][0]
                 reward_vests = account.balances["rewards"][1]
                 op = operations.Claim_reward_balance(
                     **{
                         "account": account["name"],
-                        "reward_steem": reward_steem,
+                        reward_token: reward_steem,
                         "reward_vests": reward_vests,
                         "prefix": self.blockchain.prefix,
                     })

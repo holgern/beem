@@ -1,5 +1,12 @@
 Changelog
 =========
+0.24.4
+------
+* add get_replace_hive_by_steem() to Hive(), which is True on HF23
+* Replace HIVE by STEEM and SBD by HBD only when Hive HF < 24
+* Replace steem and sbd paramter names for Hive HF >= 24 by hive and hbd
+* Add get follow list to Account (only for HIVE and HF >= 24)
+
 0.24.3
 ------
 * Fix encrypted memo decryption

@@ -590,7 +590,7 @@ class Market(dict):
             amount = Amount(amount, blockchain_instance=self.blockchain)
         else:
             amount = Amount(amount, self["quote"]["symbol"], blockchain_instance=self.blockchain)
-
+        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()
         order = operations.Limit_order_create(**{
             "owner": account["name"],
             "orderid": orderid or random.getrandbits(32),
@@ -607,6 +607,7 @@ class Market(dict):
             "expiration": formatTimeFromNow(expiration),
             "fill_or_kill": killfill,
             "prefix": self.blockchain.prefix,
+            "replace_hive_by_steem": replace_hive_by_steem,
         })
 
         if returnOrderId:
@@ -674,7 +675,7 @@ class Market(dict):
             amount = Amount(amount, blockchain_instance=self.blockchain)
         else:
             amount = Amount(amount, self["quote"]["symbol"], blockchain_instance=self.blockchain)
-
+        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()
         order = operations.Limit_order_create(**{
             "owner": account["name"],
             "orderid": orderid or random.getrandbits(32),
@@ -691,6 +692,7 @@ class Market(dict):
             "expiration": formatTimeFromNow(expiration),
             "fill_or_kill": killfill,
             "prefix": self.blockchain.prefix,
+            "replace_hive_by_steem": replace_hive_by_steem,
         })
         if returnOrderId:
             # Make blocking broadcasts

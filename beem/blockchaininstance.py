@@ -739,6 +739,13 @@ class BlockChainInstance(object):
             return False
         return 'STEEM_CHAIN_ID' in self.get_config()
 
+    def get_replace_hive_by_steem(self):
+        hf_version = int(self.get_blockchain_version().split('.')[1])
+        replace_hive_by_steem = True
+        if self.is_hive and hf_version >= 24:
+            replace_hive_by_steem = False
+        return replace_hive_by_steem
+
     def set_default_account(self, account):
         """ Set the default account to be used
         """
@@ -1016,10 +1023,12 @@ class BlockChainInstance(object):
                 "Not creator account given. Define it with " +
                 "creator=x, or set the default_account using beempy")
         creator = Account(creator, blockchain_instance=self)
+        replace_hive_by_steem = self.get_replace_hive_by_steem()        
         op = {
             "fee": Amount(fee, blockchain_instance=self),
             "creator": creator["name"],
             "prefix": self.prefix,
+            "replace_hive_by_steem": replace_hive_by_steem,
         }
         op = operations.Claim_account(**op)
         return self.finalizeOp(op, creator, "active", **kwargs)
@@ -1194,10 +1203,12 @@ class BlockChainInstance(object):
             addaccount = Account(k, blockchain_instance=self)
             posting_accounts_authority.append([addaccount["name"], 1])
         if combine_with_claim_account:
+            replace_hive_by_steem = self.get_replace_hive_by_steem()              
             op = {
                 "fee": Amount(fee, blockchain_instance=self),
                 "creator": creator["name"],
                 "prefix": self.prefix,
+                "replace_hive_by_steem": replace_hive_by_steem,
             }
             op = operations.Claim_account(**op)
             ops = [op]
@@ -1395,6 +1406,7 @@ class BlockChainInstance(object):
             required_fee_steem = Amount(props["account_creation_fee"], blockchain_instance=self)
         else:
             required_fee_steem = Amount(props["account_creation_fee"], blockchain_instance=self) * 30
+        replace_hive_by_steem = self.get_replace_hive_by_steem()      
         op = {
             "fee": required_fee_steem,
             "creator": creator["name"],
@@ -1414,6 +1426,7 @@ class BlockChainInstance(object):
             'memo_key': memo,
             "json_metadata": json_meta or {},
             "prefix": self.prefix,
+            "replace_hive_by_steem": replace_hive_by_steem,
         }
         op = operations.Account_create(**op)
         return self.finalizeOp(op, creator, "active", **kwargs)
@@ -1622,8 +1635,8 @@ class BlockChainInstance(object):
         props_list = [["key", repr(PrivateKey(wif, prefix=self.prefix).pubkey)]]
         for k in props:
             props_list.append([k, props[k]])
-
-        op = operations.Witness_set_properties({"owner": owner["name"], "props": props_list, "prefix": self.prefix})
+        replace_hive_by_steem = self.get_replace_hive_by_steem()
+        op = operations.Witness_set_properties({"owner": owner["name"], "props": props_list, "prefix": self.prefix, "replace_hive_by_steem": replace_hive_by_steem})
         tb = TransactionBuilder(use_condenser_api=use_condenser_api, blockchain_instance=self)
         tb.appendOps([op])
         tb.appendWif(wif)
@@ -1660,6 +1673,7 @@ class BlockChainInstance(object):
             raise e
         if "account_creation_fee" in props:
             props["account_creation_fee"] = Amount(props["account_creation_fee"], blockchain_instance=self)
+        replace_hive_by_steem = self.get_replace_hive_by_steem()       
         op = operations.Witness_update(
             **{
                 "owner": account["name"],
@@ -1668,6 +1682,7 @@ class BlockChainInstance(object):
                 "props": props,
                 "fee": Amount(0, self.token_symbol, blockchain_instance=self),
                 "prefix": self.prefix,
+                "replace_hive_by_steem": replace_hive_by_steem,
             })
         return self.finalizeOp(op, account, "active", **kwargs)
 
@@ -2078,26 +2093,51 @@ class BlockChainInstance(object):
             options['beneficiaries'] = beneficiaries
 
         default_max_payout = "1000000.000 %s" % (self.backed_token_symbol)
-        comment_op = operations.Comment_options(
-            **{
-                "author":
-                author,
-                "permlink":
-                permlink,
-                "max_accepted_payout":
-                options.get("max_accepted_payout", default_max_payout),
-                "percent_steem_dollars":
-                int(options.get("percent_steem_dollars", STEEM_100_PERCENT)),
-                "allow_votes":
-                options.get("allow_votes", True),
-                "allow_curation_rewards":
-                options.get("allow_curation_rewards", True),
-                "extensions":
-                options.get("extensions", []),
-                "beneficiaries":
-                options.get("beneficiaries", []),
-                "prefix": self.prefix,
-            })
+        replace_hive_by_steem = self.get_replace_hive_by_steem()
+        if not replace_hive_by_steem:
+            comment_op = operations.Comment_options(
+                **{
+                    "author":
+                    author,
+                    "permlink":
+                    permlink,
+                    "max_accepted_payout":
+                    options.get("max_accepted_payout", default_max_payout),
+                    "percent_hive_dollars":
+                    int(options.get("percent_hive_dollars", STEEM_100_PERCENT)),
+                    "allow_votes":
+                    options.get("allow_votes", True),
+                    "allow_curation_rewards":
+                    options.get("allow_curation_rewards", True),
+                    "extensions":
+                    options.get("extensions", []),
+                    "beneficiaries":
+                    options.get("beneficiaries", []),
+                    "prefix": self.prefix,
+                    "replace_hive_by_steem": False,
+                })            
+        else:
+            comment_op = operations.Comment_options(
+                **{
+                    "author":
+                    author,
+                    "permlink":
+                    permlink,
+                    "max_accepted_payout":
+                    options.get("max_accepted_payout", default_max_payout),
+                    "percent_steem_dollars":
+                    int(options.get("percent_steem_dollars", STEEM_100_PERCENT)),
+                    "allow_votes":
+                    options.get("allow_votes", True),
+                    "allow_curation_rewards":
+                    options.get("allow_curation_rewards", True),
+                    "extensions":
+                    options.get("extensions", []),
+                    "beneficiaries":
+                    options.get("beneficiaries", []),
+                    "prefix": self.prefix,
+                    "replace_hive_by_steem": True,
+                })
         return comment_op
 
     def get_api_methods(self):
