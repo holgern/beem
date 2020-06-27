@@ -437,11 +437,15 @@ class Witness_set_properties(GrapheneObject):
             elif not isinstance(k[1], str) and k[0] in ["sbd_exchange_rate"]:
                 if 'prefix' not in k[1]:
                     k[1]['prefix'] = prefix
-                props[k[0]] = (hexlify(ExchangeRate(k[1], replace_hive_by_steem=replace_hive_by_steem).__bytes__())).decode()
+                if 'replace_hive_by_steem' not in k[1]:
+                    k[1]['replace_hive_by_steem'] = replace_hive_by_steem                
+                props[k[0]] = (hexlify(ExchangeRate(k[1]).__bytes__())).decode()
             elif not isinstance(k[1], str) and k[0] in ["hbd_exchange_rate"]:
                 if 'prefix' not in k[1]:
                     k[1]['prefix'] = prefix
-                props[k[0]] = (hexlify(ExchangeRate(k[1], replace_hive_by_steem=False).__bytes__())).decode()                
+                if 'replace_hive_by_steem' not in k[1]:
+                    k[1]['replace_hive_by_steem'] = False                
+                props[k[0]] = (hexlify(ExchangeRate(k[1]).__bytes__())).decode()                
             elif not is_hex and k[0] in ["url"]:
                 props[k[0]] = (hexlify(String(k[1]).__bytes__())).decode()
             else:
@@ -470,7 +474,7 @@ class Witness_update(GrapheneObject):
         if len(args) == 1 and len(kwargs) == 0:
             kwargs = args[0]
         prefix = kwargs.pop("prefix", default_prefix)
-        replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
+        replace_hive_by_steem = kwargs.pop("replace_hive_by_steem", True)
         if "block_signing_key" in kwargs and kwargs["block_signing_key"]:
             block_signing_key = (PublicKey(kwargs["block_signing_key"], prefix=prefix))
         else:
@@ -478,12 +482,14 @@ class Witness_update(GrapheneObject):
                 prefix + "1111111111111111111111111111111114T1Anm", prefix=prefix)
         if 'prefix' not in kwargs['props']:
             kwargs['props']['prefix'] = prefix
+        if 'replace_hive_by_steem' not in kwargs['props']:
+            kwargs['props']['replace_hive_by_steem'] = replace_hive_by_steem
 
         super(Witness_update, self).__init__(OrderedDict([
             ('owner', String(kwargs["owner"])),
             ('url', String(kwargs["url"])),
             ('block_signing_key', block_signing_key),
-            ('props', WitnessProps(kwargs["props"], replace_hive_by_steem=replace_hive_by_steem)),
+            ('props', WitnessProps(kwargs["props"])),
             ('fee', Amount(kwargs["fee"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
         ]))
 
@@ -609,10 +615,12 @@ class Feed_publish(GrapheneObject):
         replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
         if 'prefix' not in kwargs['exchange_rate']:
             kwargs['exchange_rate']['prefix'] = prefix
+        if 'replace_hive_by_steem' not in kwargs['exchange_rate']:
+            kwargs['exchange_rate']['replace_hive_by_steem'] = replace_hive_by_steem        
         super(Feed_publish, self).__init__(
             OrderedDict([
                 ('publisher', String(kwargs["publisher"])),
-                ('exchange_rate', ExchangeRate(kwargs["exchange_rate"], replace_hive_by_steem=replace_hive_by_steem)),
+                ('exchange_rate', ExchangeRate(kwargs["exchange_rate"])),
             ]))
 
 
@@ -751,13 +759,15 @@ class Limit_order_create2(GrapheneObject):
         replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
         if 'prefix' not in kwargs['exchange_rate']:
             kwargs['exchange_rate']['prefix'] = prefix
+        if 'replace_hive_by_steem' not in kwargs['exchange_rate']:
+            kwargs['exchange_rate']['replace_hive_by_steem'] = replace_hive_by_steem        
         super(Limit_order_create2, self).__init__(
             OrderedDict([
                 ('owner', String(kwargs["owner"])),
                 ('orderid', Uint32(kwargs["orderid"])),
                 ('amount_to_sell', Amount(kwargs["amount_to_sell"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
                 ('fill_or_kill', Bool(kwargs["fill_or_kill"])),
-                ('exchange_rate', ExchangeRate(kwargs["exchange_rate"], replace_hive_by_steem=replace_hive_by_steem)),
+                ('exchange_rate', ExchangeRate(kwargs["exchange_rate"])),
                 ('expiration', PointInTime(kwargs["expiration"])),
             ]))
 
