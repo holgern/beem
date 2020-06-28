@@ -6,11 +6,11 @@ from builtins import super, str
 import unittest
 from parameterized import parameterized
 from pprint import pprint
-from beem import Steem, exceptions
+from beem import Hive, exceptions
 from beem.comment import Comment, RecentReplies, RecentByPath, RankedPosts
 from beem.vote import Vote
 from beem.account import Account
-from beem.instance import set_shared_steem_instance
+from beem.instance import set_shared_blockchain_instance
 from beem.utils import resolve_authorperm
 from beem.nodelist import NodeList
 
@@ -21,10 +21,10 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_hive_nodes(), num_retries=10))
+        nodelist.update_nodes(blockchain_instance=Hive(node=nodelist.get_hive_nodes(), num_retries=10))
         node_list = nodelist.get_hive_nodes()
 
-        cls.bts = Steem(
+        cls.bts = Hive(
             node=node_list,
             use_condenser=True,
             nobroadcast=True,
@@ -33,8 +33,8 @@ class Testcases(unittest.TestCase):
             num_retries=10
         )
 
-        acc = Account("fullnodeupdate", steem_instance=cls.bts)
-        comment = Comment(acc.get_blog_entries(limit=5)[0], steem_instance=cls.bts)
+        acc = Account("fullnodeupdate", blockchain_instance=cls.bts)
+        comment = Comment(acc.get_blog_entries(limit=5)[0], blockchain_instance=cls.bts)
         cls.authorperm = comment.authorperm
         [author, permlink] = resolve_authorperm(cls.authorperm)
         cls.author = author
@@ -43,7 +43,7 @@ class Testcases(unittest.TestCase):
         cls.title = comment.title
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
-        # set_shared_steem_instance(cls.bts)
+        # set_shared_blockchain_instance(cls.bts)
         # cls.bts.set_default_account("test")
 
     def test_comment(self):
@@ -51,11 +51,11 @@ class Testcases(unittest.TestCase):
         with self.assertRaises(
             exceptions.ContentDoesNotExistsException
         ):
-            Comment("@abcdef/abcdef", steem_instance=bts)
+            Comment("@abcdef/abcdef", blockchain_instance=bts)
         title = ''
         cnt = 0
         while title == '' and cnt < 5:
-            c = Comment(self.authorperm, steem_instance=bts)
+            c = Comment(self.authorperm, blockchain_instance=bts)
             title = c.title
             cnt += 1
             if title == '':
@@ -89,7 +89,7 @@ class Testcases(unittest.TestCase):
         title = ''
         cnt = 0
         while title == '' and cnt < 5:
-            c = Comment({'author': self.author, 'permlink': self.permlink}, steem_instance=bts)
+            c = Comment({'author': self.author, 'permlink': self.permlink}, blockchain_instance=bts)
             c.refresh()
             title = c.title
             cnt += 1
@@ -108,7 +108,7 @@ class Testcases(unittest.TestCase):
 
     def test_vote(self):
         bts = self.bts
-        c = Comment(self.authorperm, steem_instance=bts)
+        c = Comment(self.authorperm, blockchain_instance=bts)
         bts.txbuffer.clear()
         tx = c.vote(100, account="test")
         self.assertEqual(
@@ -145,10 +145,10 @@ class Testcases(unittest.TestCase):
         else:
             content = bts.rpc.get_content(self.author, self.permlink)
 
-        c = Comment(self.authorperm, steem_instance=bts)
+        c = Comment(self.authorperm, blockchain_instance=bts)
         keys = list(content.keys())
         json_content = c.json()
-        exclude_list = ["json_metadata", "reputation", "active_votes"]
+        exclude_list = ["json_metadata", "reputation", "active_votes", "net_rshares"]
         for k in keys:
             if k not in exclude_list:
                 if isinstance(content[k], dict) and isinstance(json_content[k], list):
@@ -161,7 +161,7 @@ class Testcases(unittest.TestCase):
     def test_resteem(self):
         bts = self.bts
         bts.txbuffer.clear()
-        c = Comment(self.authorperm, steem_instance=bts)
+        c = Comment(self.authorperm, blockchain_instance=bts)
         tx = c.resteem(account="test")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -171,7 +171,7 @@ class Testcases(unittest.TestCase):
     def test_reply(self):
         bts = self.bts
         bts.txbuffer.clear()
-        c = Comment(self.authorperm, steem_instance=bts)
+        c = Comment(self.authorperm, blockchain_instance=bts)
         tx = c.reply(body="Good post!", author="test")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -185,7 +185,7 @@ class Testcases(unittest.TestCase):
     def test_delete(self):
         bts = self.bts
         bts.txbuffer.clear()
-        c = Comment(self.authorperm, steem_instance=bts)
+        c = Comment(self.authorperm, blockchain_instance=bts)
         tx = c.delete(account="test")
         self.assertEqual(
             (tx["operations"][0][0]),
@@ -199,7 +199,7 @@ class Testcases(unittest.TestCase):
     def test_edit(self):
         bts = self.bts
         bts.txbuffer.clear()
-        c = Comment(self.authorperm, steem_instance=bts)
+        c = Comment(self.authorperm, blockchain_instance=bts)
         c.edit(c.body, replace=False)
         body = c.body + "test"
         tx = c.edit(body, replace=False)
@@ -215,7 +215,7 @@ class Testcases(unittest.TestCase):
     def test_edit_replace(self):
         bts = self.bts
         bts.txbuffer.clear()
-        c = Comment(self.authorperm, steem_instance=bts)
+        c = Comment(self.authorperm, blockchain_instance=bts)
         body = c.body + "test"
         tx = c.edit(body, meta=c["json_metadata"], replace=True)
         self.assertEqual(
@@ -230,16 +230,16 @@ class Testcases(unittest.TestCase):
 
     def test_recent_replies(self):
         bts = self.bts
-        r = RecentReplies("fullnodeupdate", skip_own=True, steem_instance=bts)
+        r = RecentReplies("fullnodeupdate", skip_own=True, blockchain_instance=bts)
         self.assertTrue(len(r) >= 0)
 
     def test_recent_by_path(self):
         bts = self.bts
-        r = RecentByPath(path="trending", steem_instance=bts)
+        r = RecentByPath(path="trending", blockchain_instance=bts)
         self.assertTrue(len(r) >= 0)
 
     def test_ranked_posts(self):
         bts = self.bts
-        r = RankedPosts(sort="trending", steem_instance=bts)
+        r = RankedPosts(sort="trending", blockchain_instance=bts)
         self.assertTrue(len(r) > 0)
         self.assertTrue(r[0] is not None)

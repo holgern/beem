@@ -126,6 +126,7 @@ class Comment(BlockchainObject):
 
         parse_int = [
             "author_reputation",
+            "net_rshares",
         ]
         for p in parse_int:
             if p in comment and isinstance(comment.get(p), string_types):
@@ -210,6 +211,7 @@ class Comment(BlockchainObject):
                 output[p] = output[p].json()
         parse_int = [
             "author_reputation",
+            "net_rshares",
         ]
         for p in parse_int:
             if p in output and isinstance(output[p], integer_types):
