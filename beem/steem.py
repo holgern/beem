@@ -129,11 +129,11 @@ class Steem(BlockChainInstance):
             return self.data['network']
 
         if self.rpc is None:
-            return known_chains["STEEMAPPBASE"]
+            return known_chains["STEEM"]
         try:
             return self.rpc.get_network(props=config)
         except:
-            return known_chains["STEEMAPPBASE"]
+            return known_chains["STEEM"]
 
     def rshares_to_sbd(self, rshares, not_broadcasted_vote=False, use_stored_data=True):
         """ Calculates the current SBD value of a vote
@@ -205,6 +205,12 @@ class Steem(BlockChainInstance):
                 the conversion rate from the past
         """
         return sp * 1e6 / self.get_steem_per_mvest(timestamp, use_stored_data=use_stored_data)
+
+    def vests_to_token_power(self, vests, timestamp=None, use_stored_data=True):
+        return self.vests_to_sp(vests, timestamp=timestamp, use_stored_data=use_stored_data)
+
+    def token_power_to_vests(self, token_power, timestamp=None, use_stored_data=True):
+        return self.sp_to_vests(token_power, timestamp=timestamp, use_stored_data=use_stored_data)
 
     def sp_to_sbd(self, sp, post_rshares=0, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
         """ Obtain the resulting SBD vote value from Steem power
@@ -401,14 +407,14 @@ class Steem(BlockChainInstance):
     @property
     def chain_params(self):
         if self.offline or self.rpc is None:
-            return known_chains["STEEMAPPBASE"]
+            return known_chains["STEEM"]
         else:
             return self.get_network()
 
     @property
     def hardfork(self):
         if self.offline or self.rpc is None:
-            versions = known_chains['STEEMAPPBASE']['min_version']
+            versions = known_chains['STEEM']['min_version']
         else:
             hf_prop = self.get_hardfork_properties()
             if "current_hardfork_version" in hf_prop:

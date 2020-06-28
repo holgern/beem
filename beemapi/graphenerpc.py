@@ -305,11 +305,13 @@ class GrapheneRPC(object):
         network_version = None
         is_hive = False
         is_steem = False
+        is_blurt = False
         for key in props:
             if key[-8:] == "CHAIN_ID":
                 chain_id = props[key]
                 is_hive = key[:4] == "HIVE"
                 is_steem = key[:5] == "STEEM"
+                is_blurt = key[:5] == "BLURT"
             elif key[-18:] == "BLOCKCHAIN_VERSION":
                 network_version = props[key]
 
@@ -319,8 +321,10 @@ class GrapheneRPC(object):
         for k, v in list(self.known_chains.items()):
             if is_hive and k not in ["HIVE", "HIVE2"]:
                 continue
-            if is_steem and k not in ["STEEMZERO", "STEEM", "STEEMAPPBASE"]:
+            if is_steem and k not in ["STEEM"]:
                 continue
+            if is_blurt and k not in ["BLURT"]:
+                continue            
             if v["chain_id"] == chain_id and self.version_string_to_int(v["min_version"]) <= self.version_string_to_int(network_version):
                 if highest_version_chain is None:
                     highest_version_chain = v

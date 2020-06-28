@@ -1508,6 +1508,36 @@ def interest(account):
 
 
 @cli.command()
+@click.argument('follow-type')
+@click.option('--account', '-a', help='Get follow list for this account')
+@click.option('--limit', '-l', help='Liimts the returned accounts', default=100)
+def followlist(follow_type, account, limit):
+    """ Get information about followed lists 
+    
+    follow_type can be blog
+    On Hive, follow type can also be one the following: blacklisted, follow_blacklist, muted, or follow_muted
+    """
+    stm = shared_blockchain_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not account:
+        if "default_account" in stm.config:
+            account = [stm.config["default_account"]]
+    account = Account(account, blockchain_instance=stm)
+    if follow_type == "blog":
+        name_list = account.get_following(limit=limit)
+    else:
+        name_list = account.get_follow_list(follow_type, limit=limit)
+    t = PrettyTable(["index", "name"])
+    t.align = "r"
+    i = 0
+    for name in name_list:
+        i += 1
+        t.add_row([str(i), name])
+    print(t)
+
+
+@cli.command()
 @click.argument('account', nargs=-1, required=False)
 def follower(account):
     """ Get information about followers
@@ -3216,12 +3246,15 @@ def reblog(identifier, account):
 
 
 @cli.command()
-@click.argument('follow', nargs=1)
+@click.argument('follow', nargs=-1)
 @click.option('--account', '-a', help='Follow from this account')
 @click.option('--what', help='Follow these objects (defaults to ["blog"])', default=["blog"])
 @click.option('--export', '-e', help='When set, transaction is stored in a file')
 def follow(follow, account, what, export):
-    """Follow another account"""
+    """Follow another account
+
+       Can be blog ignore blacklist unblacklist follow_blacklist unfollow_blacklist follow_muted unfollow_muted on HIVE
+    """
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()

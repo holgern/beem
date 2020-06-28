@@ -200,6 +200,9 @@ class Hive(BlockChainInstance):
             vests = float(vests)
         return float(vests) / 1e6 * self.get_hive_per_mvest(timestamp, use_stored_data=use_stored_data)
 
+    def vests_to_token_power(self, vests, timestamp=None, use_stored_data=True):
+        return self.vests_to_hp(vests, timestamp=timestamp, use_stored_data=use_stored_data)
+
     def hp_to_vests(self, hp, timestamp=None, use_stored_data=True):
         """ Converts HP to vests
 
@@ -208,6 +211,9 @@ class Hive(BlockChainInstance):
                 the conversion rate from the past
         """
         return hp * 1e6 / self.get_hive_per_mvest(timestamp, use_stored_data=use_stored_data)
+
+    def token_power_to_vests(self, token_power, timestamp=None, use_stored_data=True):
+        return self.hp_to_vests(token_power, timestamp=timestamp, use_stored_data=use_stored_data)
 
     def hp_to_hbd(self, hp, post_rshares=0, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
         """ Obtain the resulting HBD vote value from Hive power

@@ -436,7 +436,10 @@ class Account(BlockchainObject):
                 if len(rep) > 0:
                     rep = int(rep[0]['reputation'])
             except:
-                rep = int(self['reputation'])
+                if "reputation" in self:
+                    rep = int(self['reputation'])
+                else:
+                    rep = 0
         else:
             rep = int(self['reputation'])
         return reputation_to_score(rep)
@@ -447,13 +450,9 @@ class Account(BlockchainObject):
         max_mana = self.get_effective_vesting_shares()
         if max_mana == 0:
             props = self.blockchain.get_chain_properties()
-            from beem import Steem
-            if isinstance(self.blockchain, Steem):
-                required_fee_steem = Amount(props["account_creation_fee"], blockchain_instance=self.blockchain)
-                max_mana = int(self.blockchain.sp_to_vests(required_fee_steem))
-            else:
-                required_fee_hive = Amount(props["account_creation_fee"], blockchain_instance=self.blockchain)
-                max_mana = int(self.blockchain.hp_to_vests(required_fee_hive))
+            required_fee_token = Amount(props["account_creation_fee"], blockchain_instance=self.blockchain)
+            max_mana = int(self.blockchain.token_power_to_vests(required_fee_token))
+
         last_mana = int(self["voting_manabar"]["current_mana"])
         last_update_time = self["voting_manabar"]["last_update_time"]
         last_update = datetime.utcfromtimestamp(last_update_time)
@@ -476,13 +475,9 @@ class Account(BlockchainObject):
         max_mana = self.get_effective_vesting_shares() / 4
         if max_mana == 0:
             props = self.blockchain.get_chain_properties()
-            from beem import Steem
-            if isinstance(self.blockchain, Steem):
-                required_fee_steem = Amount(props["account_creation_fee"], blockchain_instance=self.blockchain)
-                max_mana = int(self.blockchain.sp_to_vests(required_fee_steem) / 4)
-            else:
-                required_fee_hive = Amount(props["account_creation_fee"], blockchain_instance=self.blockchain)
-                max_mana = int(self.blockchain.hp_to_vests(required_fee_hive) / 4)                
+            required_fee_token = Amount(props["account_creation_fee"], blockchain_instance=self.blockchain)
+            max_mana = int(self.blockchain.token_power_to_vests(required_fee_token) / 4)
+              
         last_mana = int(self["downvote_manabar"]["current_mana"])
         last_update_time = self["downvote_manabar"]["last_update_time"]
         last_update = datetime.utcfromtimestamp(last_update_time)
@@ -565,11 +560,7 @@ class Account(BlockchainObject):
     def get_token_power(self, only_own_vests=False):
         """ Returns the account Hive/Steem power (amount of staked token + delegations)
         """
-        from beem import Steem
-        if isinstance(self.blockchain, Steem):
-            return self.blockchain.vests_to_sp(self.get_vests(only_own_vests=only_own_vests))
-        else:
-            return self.blockchain.vests_to_hp(self.get_vests(only_own_vests=only_own_vests))
+        return self.blockchain.vests_to_token_power(self.get_vests(only_own_vests=only_own_vests))
 
     def get_steem_power(self, onlyOwnSP=False):
         """ Returns the account steem power
@@ -1981,11 +1972,7 @@ class Account(BlockchainObject):
         reward_vests = Amount(0, self.blockchain.vest_token_symbol, blockchain_instance=self.blockchain)
         for reward in self.history_reverse(stop=stop, use_block_num=False, only_ops=["curation_reward"]):
             reward_vests += Amount(reward['reward'], blockchain_instance=self.blockchain)
-        from beem import Steem
-        if isinstance(self.blockchain, Steem):
-            return self.blockchain.vests_to_sp(float(reward_vests))
-        else:
-            return self.blockchain.vests_to_hp(float(reward_vests))
+        return self.blockchain.vests_to_token_power(float(reward_vests))
 
     def curation_stats(self):
         """Returns the curation reward of the last 24h and 7d and the average
@@ -2454,7 +2441,11 @@ class Account(BlockchainObject):
     def follow(self, other, what=["blog"], account=None):
         """ Follow/Unfollow/Mute/Unmute another account's blog
 
-            :param str other: Follow this account
+            .. note:: what can be one of the following on HIVE:
+            blog, ignore, blacklist, unblacklist, follow_blacklist,
+            unfollow_blacklist, follow_muted, unfollow_muted
+            
+            :param str/list other: Follow this account / accounts (only hive)
             :param list what: List of states to follow.
                 ``['blog']`` means to follow ``other``,
                 ``[]`` means to unfollow/unmute ``other``,
@@ -2470,7 +2461,8 @@ class Account(BlockchainObject):
             raise ValueError("You need to provide an account")
         if not other:
             raise ValueError("You need to provide an account to follow/unfollow/mute/unmute")
-
+        if isinstance(other, str) and other.find(",") > 0:
+            other = other.split(",")
         json_body = [
             'follow', {
                 'follower': account,

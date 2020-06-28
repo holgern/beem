@@ -499,7 +499,7 @@ class BlockChainInstance(object):
         try:
             return self.rpc.get_network(props=config)
         except:
-            return known_chains["STEEMAPPBASE"]
+            return known_chains["STEEM"]
 
     def get_median_price(self, use_stored_data=True):
         """ Returns the current median history price as Price
@@ -656,6 +656,25 @@ class BlockChainInstance(object):
             rshares -= math.copysign(self.get_dust_threshold(use_stored_data=use_stored_data), vote_pct)
         return rshares
 
+    def token_power_to_vests(self, token_power, timestamp=None, use_stored_data=True):
+        """ Converts TokenPower to vests
+
+            :param float token_power: Token power to convert
+            :param datetime timestamp: (Optional) Can be used to calculate
+                the conversion rate from the past
+        """
+        raise Exception("not implemented")
+
+    def vests_to_token_power(self, vests, timestamp=None, use_stored_data=True):
+        """ Converts vests to TokenPower
+
+            :param amount.Amount vests/float vests: Vests to convert
+            :param int timestamp: (Optional) Can be used to calculate
+                the conversion rate from the past
+
+        """
+        raise Exception("not implemented")
+
     def get_chain_properties(self, use_stored_data=True):
         """ Return witness elected chain properties
 
@@ -705,14 +724,14 @@ class BlockChainInstance(object):
     @property
     def chain_params(self):
         if self.offline or self.rpc is None:
-            return known_chains["STEEMAPPBASE"]
+            return known_chains["STEEM"]
         else:
             return self.get_network()
 
     @property
     def hardfork(self):
         if self.offline or self.rpc is None:
-            versions = known_chains['STEEMAPPBASE']['min_version']
+            versions = known_chains['STEEM']['min_version']
         else:
             hf_prop = self.get_hardfork_properties()
             if "current_hardfork_version" in hf_prop:

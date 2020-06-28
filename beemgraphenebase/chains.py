@@ -23,8 +23,17 @@ known_chains = {
             {"asset": "@@000000021", "symbol": "HIVE", "precision": 3, "id": 1},
             {"asset": "@@000000037", "symbol": "VESTS", "precision": 6, "id": 2}
         ],
+    },
+    "BLURT": {
+        "chain_id": "afa547e2e0adef898219d7f74abf36e6e957460a70120db21a03fed76cc0e8b6",
+        "min_version": '0.0.0',
+        "prefix": "BLT",
+        "chain_assets": [
+            {"asset": "@@000000021", "symbol": "BLURT", "precision": 3, "id": 1},
+            {"asset": "@@000000037", "symbol": "VESTS", "precision": 6, "id": 2}
+        ],
     },    
-    "STEEMAPPBASE": {
+    "STEEM": {
         "chain_id": "0" * int(256 / 4),
         "min_version": '0.19.10',
         "prefix": "STM",
@@ -32,26 +41,6 @@ known_chains = {
             {"asset": "@@000000013", "symbol": "SBD", "precision": 3, "id": 0},
             {"asset": "@@000000021", "symbol": "STEEM", "precision": 3, "id": 1},
             {"asset": "@@000000037", "symbol": "VESTS", "precision": 6, "id": 2}
-        ],
-    },
-    "STEEM": {
-        "chain_id": "0" * int(256 / 4),
-        "min_version": '0.19.5',
-        "prefix": "STM",
-        "chain_assets": [
-            {"asset": "SBD", "symbol": "SBD", "precision": 3, "id": 0},
-            {"asset": "STEEM", "symbol": "STEEM", "precision": 3, "id": 1},
-            {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
-        ],
-    },
-    "STEEMZERO": {
-        "chain_id": "0" * int(256 / 4),
-        "min_version": '0.0.0',
-        "prefix": "STM",
-        "chain_assets": [
-            {"asset": "SBD", "symbol": "SBD", "precision": 3, "id": 0},
-            {"asset": "STEEM", "symbol": "STEEM", "precision": 3, "id": 1},
-            {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
         ],
     },
     "TESTNET": {
