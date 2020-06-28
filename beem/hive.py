@@ -159,6 +159,9 @@ class Hive(BlockChainInstance):
         HBD_price = float(median_price * (Amount(1, self.hive_symbol, blockchain_instance=self)))
         return fund_per_share * HBD_price
 
+    def get_token_per_mvest(self, time_stamp=None, use_stored_data=True):
+        return self.get_hive_per_mvest(time_stamp=time_stamp, use_stored_data=use_stored_data)
+
     def get_hive_per_mvest(self, time_stamp=None, use_stored_data=True):
         """ Returns the MVEST to HIVE ratio
 
@@ -184,7 +187,7 @@ class Hive(BlockChainInstance):
         global_properties = self.get_dynamic_global_properties(use_stored_data=use_stored_data)
 
         return (
-            float(Amount(global_properties['total_vesting_fund_steem'], blockchain_instance=self)) /
+            float(Amount(global_properties['total_vesting_fund_hive'], blockchain_instance=self)) /
             (float(Amount(global_properties['total_vesting_shares'], blockchain_instance=self)) / 1e6)
         )
 

@@ -675,6 +675,15 @@ class BlockChainInstance(object):
         """
         raise Exception("not implemented")
 
+    def get_token_per_mvest(self, time_stamp=None, use_stored_data=True):
+        """ Returns the MVEST to TOKEN ratio
+
+            :param int time_stamp: (optional) if set, return an estimated
+                TOKEN per MVEST ratio for the given time stamp. If unset the
+                current ratio is returned (default). (can also be a datetime object)
+        """
+        raise Exception("not implemented")
+
     def get_chain_properties(self, use_stored_data=True):
         """ Return witness elected chain properties
 
@@ -842,6 +851,8 @@ class BlockChainInstance(object):
         """
         node = self.get_default_nodes()
         if len(node) < 2:
+            return
+        if not isinstance(node, list):
             return
         offline = self.offline
         while not offline and node[0] != self.rpc.url and len(node) > 1:

@@ -56,6 +56,7 @@ from beem.conveyor import Conveyor
 from beem.imageuploader import ImageUploader
 from beem.rc import RC
 from beem.blockchaininstance import BlockChainInstance
+from beem.storage import get_default_config_store
 
 click.disable_unicode_literals_warning = True
 log = logging.getLogger(__name__)
@@ -273,6 +274,12 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hi
     else:
         sc2 = None
     debug = verbose > 0
+    if not hive and not steem:
+        config = get_default_config_store()
+        if config["default_chain"].lower() == "hive":
+            hive = True
+        elif config["default_chain"].lower() == "steem":
+            steem = True
     if hive:
         stm = Hive(
             node=node,
@@ -4506,7 +4513,7 @@ def info(objects):
         t.align = "l"
         info = stm.get_dynamic_global_properties()
         median_price = stm.get_current_median_history()
-        steem_per_mvest = stm.get_steem_per_mvest()
+        token_per_mvest = stm.get_token_per_mvest()
         chain_props = stm.get_chain_properties()
         price = (Amount(median_price["base"], blockchain_instance=stm).amount / Amount(median_price["quote"], blockchain_instance=stm).amount)
         for key in info:
@@ -4514,7 +4521,7 @@ def info(objects):
                 t.add_row([key, str(Amount(info[key], blockchain_instance=stm))])
             else:
                 t.add_row([key, info[key]])
-        t.add_row(["%s per mvest" % stm.token_symbol, steem_per_mvest])
+        t.add_row(["%s per mvest" % stm.token_symbol, token_per_mvest])
         t.add_row(["internal price", price])
         t.add_row(["account_creation_fee", str(Amount(chain_props["account_creation_fee"], blockchain_instance=stm))])
         print(t.get_string(sortby="Key"))

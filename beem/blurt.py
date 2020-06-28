@@ -180,6 +180,9 @@ class Blurt(BlockChainInstance):
     def token_power_to_vests(self, token_power, timestamp=None, use_stored_data=True):
         return self.bp_to_vests(token_power, timestamp=timestamp, use_stored_data=use_stored_data)
 
+    def get_token_per_mvest(self, time_stamp=None, use_stored_data=True):
+        return self.get_blurt_per_mvest(time_stamp=time_stamp, use_stored_data=use_stored_data)
+
     def bp_to_vests(self, sp, timestamp=None, use_stored_data=True):
         """ Converts SP to vests
 

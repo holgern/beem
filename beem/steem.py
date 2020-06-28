@@ -212,6 +212,9 @@ class Steem(BlockChainInstance):
     def token_power_to_vests(self, token_power, timestamp=None, use_stored_data=True):
         return self.sp_to_vests(token_power, timestamp=timestamp, use_stored_data=use_stored_data)
 
+    def get_token_per_mvest(self, time_stamp=None, use_stored_data=True):
+        return self.get_steem_per_mvest(time_stamp=time_stamp, use_stored_data=use_stored_data)
+
     def sp_to_sbd(self, sp, post_rshares=0, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
         """ Obtain the resulting SBD vote value from Steem power
 
