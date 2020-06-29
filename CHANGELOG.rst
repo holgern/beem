@@ -1,5 +1,9 @@
 Changelog
 =========
+0.24.5
+------
+* replace percent_hive_dollars by percent_hbd
+
 0.24.4
 ------
 * add get_replace_hive_by_steem() to Hive(), for transition from HF23 to HF24 on HIVE

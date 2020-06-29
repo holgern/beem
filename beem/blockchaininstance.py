@@ -2106,7 +2106,7 @@ class BlockChainInstance(object):
     def _build_comment_options_op(self, author, permlink, options,
                                   beneficiaries):
         options = remove_from_dict(options or {}, [
-            'max_accepted_payout', 'percent_steem_dollars', 'percent_hive_dollars',
+            'max_accepted_payout', 'percent_steem_dollars', 'percent_hbd',
             'allow_votes', 'allow_curation_rewards', 'extensions'
         ], keep_keys=True)
         # override beneficiaries extension
@@ -2143,7 +2143,7 @@ class BlockChainInstance(object):
 
         default_max_payout = "1000000.000 %s" % (self.backed_token_symbol)
         replace_hive_by_steem = self.get_replace_hive_by_steem()
-        if not replace_hive_by_steem:
+        if not replace_hive_by_steem and self.is_hive:
             comment_op = operations.Comment_options(
                 **{
                     "author":
@@ -2152,8 +2152,8 @@ class BlockChainInstance(object):
                     permlink,
                     "max_accepted_payout":
                     options.get("max_accepted_payout", default_max_payout),
-                    "percent_hive_dollars":
-                    int(options.get("percent_hive_dollars", STEEM_100_PERCENT)),
+                    "percent_hbd":
+                    int(options.get("percent_hbd", STEEM_100_PERCENT)),
                     "allow_votes":
                     options.get("allow_votes", True),
                     "allow_curation_rewards":

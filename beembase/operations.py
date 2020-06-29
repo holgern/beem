@@ -558,7 +558,6 @@ class Comment_options(GrapheneObject):
         # handle beneficiaries
         if "beneficiaries" in kwargs and kwargs['beneficiaries']:
             kwargs['extensions'] = [[0, {'beneficiaries': kwargs['beneficiaries']}]]
-
         extensions = Array([])
         if "extensions" in kwargs and kwargs["extensions"]:
             extensions = Array([CommentOptionExtensions(o) for o in kwargs["extensions"]])
@@ -583,8 +582,8 @@ class Comment_options(GrapheneObject):
                     ('permlink', String(kwargs["permlink"])),
                     ('max_accepted_payout',
                      Amount(kwargs["max_accepted_payout"], prefix=prefix, replace_hive_by_steem=False)),
-                    ('percent_hive_dollars',
-                     Uint16(int(kwargs["percent_hive_dollars"]))),
+                    ('percent_hbd',
+                     Uint16(int(kwargs["percent_hbd"]))),
                     ('allow_votes', Bool(bool(kwargs["allow_votes"]))),
                     ('allow_curation_rewards',
                      Bool(bool(kwargs["allow_curation_rewards"]))),
