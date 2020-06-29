@@ -185,11 +185,16 @@ class Hive(BlockChainInstance):
             else:
                 return a2 * time_stamp + b2
         global_properties = self.get_dynamic_global_properties(use_stored_data=use_stored_data)
-
+        if self.get_replace_hive_by_steem():
+            return (
+                float(Amount(global_properties['total_vesting_fund_hive'], blockchain_instance=self)) /
+                (float(Amount(global_properties['total_vesting_shares'], blockchain_instance=self)) / 1e6)
+            )
         return (
-            float(Amount(global_properties['total_vesting_fund_hive'], blockchain_instance=self)) /
+            float(Amount(global_properties['total_vesting_fund_steem'], blockchain_instance=self)) /
             (float(Amount(global_properties['total_vesting_shares'], blockchain_instance=self)) / 1e6)
         )
+        
 
     def vests_to_hp(self, vests, timestamp=None, use_stored_data=True):
         """ Converts vests to HP

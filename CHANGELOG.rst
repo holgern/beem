@@ -2,9 +2,9 @@ Changelog
 =========
 0.24.4
 ------
-* add get_replace_hive_by_steem() to Hive(), which is True on HF23
+* add get_replace_hive_by_steem() to Hive(), for transition from HF23 to HF24 on HIVE
 * Replace HIVE by STEEM and SBD by HBD only when Hive HF < 24
-* Replace steem and sbd paramter names for Hive HF >= 24 by hive and hbd
+* Replace steem and sbd parameter names for Hive HF >= 24 by hive and hbd
 * Add get follow list to Account (only for HIVE and HF >= 24)
 * Add BLURT chain
 * Remove not used STEEM chains (STEEMZERO and STEEMAPPBASE)

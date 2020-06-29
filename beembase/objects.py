@@ -25,7 +25,6 @@ import struct
 default_prefix = "STM"
 
 
-@python_2_unicode_compatible
 class Amount(object):
     def __init__(self, d, prefix=default_prefix, replace_hive_by_steem=True):
         self.replace_hive_by_steem = replace_hive_by_steem
@@ -116,7 +115,6 @@ class Amount(object):
         return self.str_repr
 
 
-@python_2_unicode_compatible
 class Operation(GPHOperation):
     def __init__(self, *args, **kwargs):
         self.appbase = kwargs.pop("appbase", False)
@@ -256,7 +254,6 @@ class Permission(GrapheneObject):
             ]))
 
 
-@python_2_unicode_compatible
 class Extension(Array):
     def __str__(self):
         """ We overload the __str__ function because the json
