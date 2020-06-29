@@ -13,6 +13,7 @@ Changelog
 * New beempy command followlist, which can be used on HIVE to receive info about follow lists
 * Fix beempy info on Hive
 * Use Hive() on beempy when setting default_chain to "hive"
+* Simplify chain identification
 
 0.24.3
 ------

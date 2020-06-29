@@ -303,15 +303,11 @@ class GrapheneRPC(object):
             props = self.get_config(api="database")
         chain_id = None
         network_version = None
-        is_hive = False
-        is_steem = False
-        is_blurt = False
+        blockchain_name = None
         for key in props:
             if key[-8:] == "CHAIN_ID":
                 chain_id = props[key]
-                is_hive = key[:4] == "HIVE"
-                is_steem = key[:5] == "STEEM"
-                is_blurt = key[:5] == "BLURT"
+                blockchain_name = key.split("_")[0]
             elif key[-18:] == "BLOCKCHAIN_VERSION":
                 network_version = props[key]
 
@@ -319,20 +315,12 @@ class GrapheneRPC(object):
             raise("Connecting to unknown network!")
         highest_version_chain = None
         for k, v in list(self.known_chains.items()):
-            if is_hive and k not in ["HIVE", "HIVE2"]:
-                continue
-            if is_steem and k not in ["STEEM"]:
-                continue
-            if is_blurt and k not in ["BLURT"]:
-                continue            
+            if blockchain_name is not None and blockchain_name not in k:
+                continue 
             if v["chain_id"] == chain_id and self.version_string_to_int(v["min_version"]) <= self.version_string_to_int(network_version):
                 if highest_version_chain is None:
                     highest_version_chain = v
-                elif v["min_version"] == '0.19.5' and self.use_condenser:
-                    highest_version_chain = v
-                elif v["min_version"] == '0.0.0' and self.use_condenser:
-                    highest_version_chain = v
-                elif self.version_string_to_int(v["min_version"]) > self.version_string_to_int(highest_version_chain["min_version"]) and not self.use_condenser:
+                elif self.version_string_to_int(v["min_version"]) > self.version_string_to_int(highest_version_chain["min_version"]):
                     highest_version_chain = v
         if highest_version_chain is None:
             raise("Connecting to unknown network!")
