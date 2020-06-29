@@ -9,11 +9,13 @@ Changelog
 * Add BLURT chain
 * Remove not used STEEM chains (STEEMZERO and STEEMAPPBASE)
 * add Blurt class
-* get_token_per_mvest, token_power_to_vests and vests_to_token_power have been added for chain independent usage
+* rshares_to_token_backed_dollar, get_token_per_mvest, token_power_to_vests and vests_to_token_power have been added for chain independent usage
 * New beempy command followlist, which can be used on HIVE to receive info about follow lists
 * Fix beempy info on Hive
 * Use Hive() on beempy when setting default_chain to "hive"
 * Simplify chain identification
+* Fix more Token symbols in beempy
+* Fix unittest
 
 0.24.3
 ------

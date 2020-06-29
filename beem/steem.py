@@ -135,6 +135,9 @@ class Steem(BlockChainInstance):
         except:
             return known_chains["STEEM"]
 
+    def rshares_to_token_backed_dollar(self, rshares, not_broadcasted_vote=False, use_stored_data=True):
+        return self.rshares_to_sbd(rshares, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)        
+
     def rshares_to_sbd(self, rshares, not_broadcasted_vote=False, use_stored_data=True):
         """ Calculates the current SBD value of a vote
         """

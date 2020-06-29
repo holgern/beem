@@ -684,6 +684,11 @@ class BlockChainInstance(object):
         """
         raise Exception("not implemented")
 
+    def rshares_to_token_backed_dollar(self, rshares, not_broadcasted_vote=False, use_stored_data=True):
+        """ Calculates the current HBD value of a vote
+        """
+        raise Exception("not implemented")
+
     def get_chain_properties(self, use_stored_data=True):
         """ Return witness elected chain properties
 

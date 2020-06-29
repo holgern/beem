@@ -576,11 +576,7 @@ class Account(BlockchainObject):
             tp = self.get_token_power()
         else:
             tp = token_power
-        from beem import Steem
-        if isinstance(self.blockchain, Steem):
-            voteValue = self.blockchain.sp_to_sbd(tp, post_rshares=post_rshares, voting_power=voting_power * 100, vote_pct=voting_weight * 100, not_broadcasted_vote=not_broadcasted_vote)
-        else:
-            voteValue = self.blockchain.hp_to_hbd(tp, post_rshares=post_rshares, voting_power=voting_power * 100, vote_pct=voting_weight * 100, not_broadcasted_vote=not_broadcasted_vote)
+        voteValue = self.blockchain.rshares_to_token_backed_dollar(tp, post_rshares=post_rshares, voting_power=voting_power * 100, vote_pct=voting_weight * 100, not_broadcasted_vote=not_broadcasted_vote)
         return voteValue
 
     def get_voting_value_SBD(self, post_rshares=0, voting_weight=100, voting_power=None, steem_power=None, not_broadcasted_vote=True):

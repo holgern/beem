@@ -3788,7 +3788,7 @@ def curation(authorperm, account, limit, min_vote, max_vote, min_performance, ma
         for vote in comment.get_votes():
             vote_time = vote["time"]
             
-            vote_SBD = stm.rshares_to_sbd(int(vote["rshares"]))
+            vote_SBD = stm.rshares_to_token_backed_dollar(int(vote["rshares"]))
             curation_SBD = curation_rewards_SBD["active_votes"][vote["voter"]]
             curation_SP = curation_rewards_SP["active_votes"][vote["voter"]]
             if vote_SBD > 0:
@@ -3938,17 +3938,17 @@ def rewards(accounts, only_sum, post, comment, curation, length, author, permlin
         m = Market(blockchain_instance=stm)
         latest = m.ticker()["latest"]
         if author and permlink:
-            t = PrettyTable(["Author", "Permlink", "Payout", stm.backed_token_symbol, "SP + STEEM", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Author", "Permlink", "Payout", stm.backed_token_symbol, "%sP + %s" % (stm.token_symbol[0], stm.token_symbol), "Liquid USD", "Invested USD"])
         elif author and title:
-                t = PrettyTable(["Author", "Title", "Payout", stm.backed_token_symbol, "SP + STEEM", "Liquid USD", "Invested USD"])
+                t = PrettyTable(["Author", "Title", "Payout", stm.backed_token_symbol, "%sP + %s" % (stm.token_symbol[0], stm.token_symbol), "Liquid USD", "Invested USD"])
         elif author:
-            t = PrettyTable(["Author", "Payout", stm.backed_token_symbol, "SP + STEEM", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Author", "Payout", stm.backed_token_symbol, "%sP + %s" % (stm.token_symbol[0], stm.token_symbol), "Liquid USD", "Invested USD"])
         elif not author and permlink:
-            t = PrettyTable(["Permlink", "Payout", stm.backed_token_symbol, "SP + STEEM", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Permlink", "Payout", stm.backed_token_symbol, "%sP + %s" % (stm.token_symbol[0], stm.token_symbol), "Liquid USD", "Invested USD"])
         elif not author and title:
-            t = PrettyTable(["Title", "Payout", stm.backed_token_symbol, "SP + STEEM", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Title", "Payout", stm.backed_token_symbol, "%sP + %s" % (stm.token_symbol[0], stm.token_symbol), "Liquid USD", "Invested USD"])
         else:
-            t = PrettyTable(["Received", stm.backed_token_symbol, "SP + STEEM", "Liquid USD", "Invested USD"])
+            t = PrettyTable(["Received", stm.backed_token_symbol, "%sP + %s" % (stm.token_symbol[0], stm.token_symbol), "Liquid USD", "Invested USD"])
         t.align = "l"
         rows = []
         start_op = account.estimate_virtual_op_num(limit_time)
@@ -3976,7 +3976,7 @@ def rewards(accounts, only_sum, post, comment, curation, length, author, permlin
                     payout_STEEM = Amount(v["steem_payout"], blockchain_instance=stm)
                     sum_reward[0] += float(payout_SBD)
                     sum_reward[1] += float(payout_STEEM)
-                    payout_SP = stm.vests_to_sp(Amount(v["vesting_payout"], blockchain_instance=stm))
+                    payout_SP = stm.vests_to_token_power(Amount(v["vesting_payout"], blockchain_instance=stm))
                     sum_reward[2] += float(payout_SP)
                     liquid_USD = float(payout_SBD) / float(latest) * float(median_price) + float(payout_STEEM) * float(median_price)
                     sum_reward[3] += liquid_USD
@@ -3999,7 +3999,7 @@ def rewards(accounts, only_sum, post, comment, curation, length, author, permlin
                                  (invested_USD)])
                 elif v["type"] == "curation_reward":
                     reward = Amount(v["reward"], blockchain_instance=stm)
-                    payout_SP = stm.vests_to_sp(reward)
+                    payout_SP = stm.vests_to_token_power(reward)
                     liquid_USD = 0
                     invested_USD = float(payout_SP) * float(median_price)
                     sum_reward[2] += float(payout_SP)
@@ -4061,14 +4061,14 @@ def rewards(accounts, only_sum, post, comment, curation, length, author, permlin
                        "-",
                        "-",
                        "%.2f %s" % (sum_reward[0], stm.backed_token_symbol),
-                       "%.2f SP" % (sum_reward[1] + sum_reward[2]),
+                       "%.2f %sP" % (sum_reward[1] + sum_reward[2], stm.token_symbol[0]),
                        "%.2f $" % (sum_reward[3]),
                        "%.2f $" % (sum_reward[4])])
         elif not author and not (permlink or title):
             t.add_row(["", "", "", "", ""])
             t.add_row(["Sum",
                        "%.2f %s" % (sum_reward[0], stm.backed_token_symbol),
-                       "%.2f SP" % (sum_reward[1] + sum_reward[2]),
+                       "%.2f %sP" % (sum_reward[1] + sum_reward[2], stm.token_symbol[0]),
                        "%.2f $" % (sum_reward[2]),
                        "%.2f $" % (sum_reward[3])])
         else:
@@ -4076,7 +4076,7 @@ def rewards(accounts, only_sum, post, comment, curation, length, author, permlin
             t.add_row(["Sum",
                        "-",
                        "%.2f %s" % (sum_reward[0], stm.backed_token_symbol),
-                       "%.2f SP" % (sum_reward[1] + sum_reward[2]),
+                       "%.2f %sP" % (sum_reward[1] + sum_reward[2], stm.token_symbol[0]),
                        "%.2f $" % (sum_reward[3]),
                        "%.2f $" % (sum_reward[4])])
         message = "\nShowing "

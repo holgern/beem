@@ -137,6 +137,8 @@ class Hive(BlockChainInstance):
         except:
             return known_chains["HIVE"]
 
+    def rshares_to_token_backed_dollar(self, rshares, not_broadcasted_vote=False, use_stored_data=True):
+        return self.rshares_to_hbd(rshares, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)
 
     def rshares_to_hbd(self, rshares, not_broadcasted_vote=False, use_stored_data=True):
         """ Calculates the current HBD value of a vote

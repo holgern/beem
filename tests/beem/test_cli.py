@@ -70,7 +70,7 @@ class Testcases(unittest.TestCase):
 
     def test_interest(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'interest', 'beembot', 'beempy'])
+        result = runner.invoke(cli, ['-dx', 'interest', 'beembot', 'beempy'])
         self.assertEqual(result.exit_code, 0)
 
     def test_config(self):
@@ -96,7 +96,7 @@ class Testcases(unittest.TestCase):
 
     def test_changerecovery(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'changerecovery', '-a', 'beembot', 'holger80'], input=wif + "\nexit\n")
+        result = runner.invoke(cli, ['-dx', 'changerecovery', '-a', 'beembot', 'holger80'], input=wif + "\nexit\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_delkey(self):
@@ -162,54 +162,54 @@ class Testcases(unittest.TestCase):
 
     def test_upvote(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'upvote', '@steemit/firstpost'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'upvote', '@steemit/firstpost'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-dt', 'upvote', '--weight', '100', '@steemit/firstpost'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'upvote', '--weight', '100', '@steemit/firstpost'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_downvote(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'downvote', '--weight', '100', '@steemit/firstpost'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'downvote', '--weight', '100', '@steemit/firstpost'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_download(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'download', '-a', 'steemit', 'firstpost'])
+        result = runner.invoke(cli, ['-dx', 'download', '-a', 'steemit', 'firstpost'])
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-dt', 'download', '@steemit/firstpost'])
+        result = runner.invoke(cli, ['-dx', 'download', '@steemit/firstpost'])
         self.assertEqual(result.exit_code, 0)
 
     def test_transfer(self):
         stm = shared_steem_instance()
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'transfer', 'beembot', '1', stm.backed_token_symbol, 'test'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'transfer', 'beembot', '1', stm.backed_token_symbol, 'test'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_powerdownroute(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'powerdownroute', 'beembot'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'powerdownroute', 'beembot'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_convert(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'convert', '1'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'convert', '1'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_powerup(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'powerup', '1'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'powerup', '1'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_powerdown(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'powerdown', '1e3'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'powerdown', '1e3'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-dt', 'powerdown', '0'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'powerdown', '0'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_updatememokey(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'updatememokey'], input="test\ntest\ntest\n")
+        result = runner.invoke(cli, ['-dx', 'updatememokey'], input="test\ntest\ntest\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_permissions(self):
@@ -244,9 +244,9 @@ class Testcases(unittest.TestCase):
 
     def test_allow_disallow(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'allow', '--account', 'beembot', '--permission', 'posting', 'beempy'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'allow', '--account', 'beembot', '--permission', 'posting', 'beempy'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-dt', 'disallow', '--account', 'holger80', '--permission', 'posting', 'rewarding'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'disallow', '--account', 'holger80', '--permission', 'posting', 'rewarding'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_witnesses(self):
@@ -263,29 +263,29 @@ class Testcases(unittest.TestCase):
 
     def test_approvewitness(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'approvewitness', '-a', 'beempy', 'holger80'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'approvewitness', '-a', 'beempy', 'holger80'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_disapprovewitness(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'disapprovewitness',  '-a', 'beempy', 'holger80'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'disapprovewitness',  '-a', 'beempy', 'holger80'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_addproxy(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'setproxy', '-a', 'beempy', 'holger80'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'setproxy', '-a', 'beempy', 'holger80'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_delproxy(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'delproxy',  '-a', 'fullnodeupdate'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'delproxy',  '-a', 'fullnodeupdate'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_newaccount(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'newaccount', 'beem3'], input="test\ntest\ntest\n")
+        result = runner.invoke(cli, ['-dx', 'newaccount', 'beem3'], input="test\ntest\ntest\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-dt', 'newaccount', '--owner', 'STM7mLs2hns87f7kbf3o2HBqNoEaXiTeeU89eVF6iUCrMQJFzBsPo',
+        result = runner.invoke(cli, ['-dx', 'newaccount', '--owner', 'STM7mLs2hns87f7kbf3o2HBqNoEaXiTeeU89eVF6iUCrMQJFzBsPo',
                                      '--active', 'STM7rUmnpnCp9oZqMQeRKDB7GvXTM9KFvhzbA3AKcabgTBfQZgHZp',
                                      '--posting', 'STM6qGWHsCpmHbphnQbS2yfhvhJXDUVDwnsbnrMZkTqfnkNEZRoLP',
                                      '--memo', 'STM8Wvi74GYzBKgnUmiLvptzvxmPtXfjGPJL8QY3rebecXaxGGQyV', 'beem3'], input="test\ntest\n")
@@ -349,7 +349,7 @@ class Testcases(unittest.TestCase):
 
     def test_cancel(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'cancel', '5'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'cancel', '5'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_openorders(self):
@@ -378,25 +378,25 @@ class Testcases(unittest.TestCase):
 
     def test_witnesscreate(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'witnesscreate', 'beem', pub_key], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'witnesscreate', 'beem', pub_key], input="test\n")
 
     def test_witnessupdate(self):
         runner = CliRunner()
-        runner.invoke(cli, ['-dt', 'witnessupdate', 'gtg', '--maximum_block_size', 65000, '--account_creation_fee', 0.1, '--sbd_interest_rate', 0, '--url', 'https://google.de', '--signing_key', wif])
+        runner.invoke(cli, ['-dx', 'witnessupdate', 'gtg', '--maximum_block_size', 65000, '--account_creation_fee', 0.1, '--sbd_interest_rate', 0, '--url', 'https://google.de', '--signing_key', wif])
 
     def test_profile(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'setprofile', 'url', 'https://google.de'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'setprofile', 'url', 'https://google.de'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-dt', 'delprofile', 'url'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'delprofile', 'url'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_claimreward(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'claimreward'], input="test\n")
-        result = runner.invoke(cli, ['-dt', 'claimreward', '--claim_all_steem'], input="test\n")
-        result = runner.invoke(cli, ['-dt', 'claimreward', '--claim_all_sbd'], input="test\n")
-        result = runner.invoke(cli, ['-dt', 'claimreward', '--claim_all_vests'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'claimreward'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'claimreward', '--claim_all_steem'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'claimreward', '--claim_all_sbd'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'claimreward', '--claim_all_vests'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_power(self):
