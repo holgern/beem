@@ -16,7 +16,7 @@ Changelog
 * Use Hive() on beempy when setting default_chain to "hive"
 * Simplify chain identification
 * Fix more Token symbols in beempy
-* Fix unittest
+* Fix unittest and add more unit tests
 
 0.24.3
 ------

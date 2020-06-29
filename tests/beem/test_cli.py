@@ -399,9 +399,35 @@ class Testcases(unittest.TestCase):
         result = runner.invoke(cli, ['-dx', 'claimreward', '--claim_all_vests'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
+    def test_claimaccount(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['-dx', 'claimaccount', 'holger80'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'claimaccount', '-n', '2', 'holger80'], input="test\n")
+        self.assertEqual(result.exit_code, 0)
+
     def test_power(self):
         runner = CliRunner()
         result = runner.invoke(cli, ['power', 'holger80'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_history(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['history', 'holger80'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_draw(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['draw'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_witnessenable(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['-dx', 'witnessenable', 'holger80', 'STM1111111111111111111111111111111114T1A'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_witnessdisable(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['-dx', 'witnessdisable', 'holger80'])
         self.assertEqual(result.exit_code, 0)
 
     def test_nextnode(self):
@@ -452,6 +478,11 @@ class Testcases(unittest.TestCase):
     def test_pricehistory(self):
         runner = CliRunner()
         result = runner.invoke(cli, ['pricehistory'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_notifications(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['notifications', 'fullnodeupdate'])
         self.assertEqual(result.exit_code, 0)
 
     def test_pending(self):

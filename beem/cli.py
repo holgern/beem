@@ -2430,7 +2430,10 @@ def download(permlink, account, save, export):
             yaml_prefix += 'app: %s\n' % comment.json_metadata["app"]
         yaml_prefix += 'last_update: %s\n' % comment.json()["last_update"]
         yaml_prefix += 'max_accepted_payout: %s\n' % str(comment["max_accepted_payout"])
-        yaml_prefix += 'percent_steem_dollars: %s\n' %  str(comment["percent_steem_dollars"])
+        if "percent_steem_dollars" in comment:
+            yaml_prefix += 'percent_steem_dollars: %s\n' %  str(comment["percent_steem_dollars"])
+        else:
+            yaml_prefix += 'percent_hive_dollars: %s\n' %  str(comment["percent_hive_dollars"])
         if "tags" in comment.json_metadata:
             if len(comment.json_metadata["tags"]) > 0 and comment["category"] != comment.json_metadata["tags"][0] and len(comment["category"]) > 0:
                 yaml_prefix += 'community: %s\n' % comment["category"]
@@ -2464,9 +2467,10 @@ def download(permlink, account, save, export):
 @click.option('--community', '-c', help=' Name of the community (optional)')
 @click.option('--beneficiaries', '-b', help='Post beneficiaries (komma separated, e.g. a:10%,b:20%)')
 @click.option('--percent-steem-dollars', '-d', help='50% SBD /50% SP is 10000 (default), 100% SP is 0')
+@click.option('--percent-hive-dollars', '-d', help='50% SBD /50% SP is 10000 (default), 100% SP is 0')
 @click.option('--max-accepted-payout', '-m', help='Default is 1000000.000 [SBD]')
 @click.option('--no-parse-body', '-n', help='Disable parsing of links, tags and images', is_flag=True, default=False)
-def createpost(markdown_file, account, title, tags, community, beneficiaries, percent_steem_dollars, max_accepted_payout, no_parse_body):
+def createpost(markdown_file, account, title, tags, community, beneficiaries, percent_steem_dollars, percent_hive_dollars, max_accepted_payout, no_parse_body):
     """Creates a new markdown file with YAML header"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -2482,23 +2486,35 @@ def createpost(markdown_file, account, title, tags, community, beneficiaries, pe
         community = input("community account:")
     if beneficiaries is None:
         beneficiaries = input("beneficiaries (komma separated, e.g. a:10%,b:20%):")
-    if percent_steem_dollars is None:
+    if percent_steem_dollars is None and percent_hive_dollars is None:
         ret = None
         while ret is None:
-            ret = input("Reward: 50% or 100% Hive Power [50 or 100]?")
+            ret = input("50% or 100% Steem/Hive Power as post reward [50 or 100]? ")
             if ret not in ["50", "100"]:
                 ret = None
         if ret == "50":
             percent_steem_dollars = 10000
+            percent_hive_dollars = 10000
         else:
             percent_steem_dollars = 0
+            percent_hive_dollars = 0
+    elif percent_steem_dollars is not None and percent_hive_dollars is not None:
+        raise ValueError("percent_hive_dollars and percent_steem_dollars cannot be both set.")
+    elif percent_steem_dollars is None:
+        percent_steem_dollars = percent_hive_dollars
+    elif percent_hive_dollars is None:
+        percent_hive_dollars = percent_steem_dollars
+
     if max_accepted_payout is None:
         max_accepted_payout = input("max accepted payout [return to skip]: ")
     
     yaml_prefix += 'title: "%s"\n' % title
     yaml_prefix += 'author: %s\n' % account
     yaml_prefix += 'tags: %s\n' % tags
-    yaml_prefix += 'percent_steem_dollars: %d\n' % percent_steem_dollars
+    if stm.is_hive and not stm.get_replace_hive_by_steem():
+        yaml_prefix += 'percent_hive_dollars: %d\n' % percent_hive_dollars
+    else:
+        yaml_prefix += 'percent_steem_dollars: %d\n' % percent_steem_dollars
     if community is not None and community != "":
         yaml_prefix += 'community: %s\n' % community
     if beneficiaries is not None and beneficiaries != "":
@@ -2521,11 +2537,12 @@ def createpost(markdown_file, account, title, tags, community, beneficiaries, pe
 @click.option('--canonical-url', '-u', help='Canonical url, can also set to https://hive.blog or https://peakd.com (optional)')
 @click.option('--beneficiaries', '-b', help='Post beneficiaries (komma separated, e.g. a:10%,b:20%)')
 @click.option('--percent-steem-dollars', '-d', help='50% SBD /50% SP is 10000 (default), 100% SP is 0')
+@click.option('--percent-hive-dollars', '-d', help='50% SBD /50% SP is 10000 (default), 100% SP is 0')
 @click.option('--max-accepted-payout', '-m', help='Default is 1000000.000 [SBD]')
 @click.option('--no-parse-body', '-n', help='Disable parsing of links, tags and images', is_flag=True, default=False)
 @click.option('--no-patch-on-edit', '-e', help='Disable patch posting on edits (when the permlink already exists)', is_flag=True, default=False)
 @click.option('--export', help='When set, transaction is stored in a file')
-def post(markdown_file, account, title, permlink, tags, reply_identifier, community, canonical_url, beneficiaries, percent_steem_dollars, max_accepted_payout, no_parse_body, no_patch_on_edit, export):
+def post(markdown_file, account, title, permlink, tags, reply_identifier, community, canonical_url, beneficiaries, percent_steem_dollars, percent_hive_dollars, max_accepted_payout, no_parse_body, no_patch_on_edit, export):
     """broadcasts a post/comment. All image links which links to a file will be uploaded.
     The yaml header can contain:
     
@@ -2562,6 +2579,10 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
         parameter["percent_steem_dollars"] = percent_steem_dollars
     elif "percent-steem-dollars" in parameter:
         parameter["percent_steem_dollars"] = parameter["percent-steem-dollars"]
+    if percent_hive_dollars is not None:
+        parameter["percent_hive_dollars"] = percent_hive_dollars
+    elif "percent-hive-dollars" in parameter:
+        parameter["percent_hive_dollars"] = parameter["percent-hive-dollars"]
     if max_accepted_payout is not None:
         parameter["max_accepted_payout"] = max_accepted_payout
     elif "max-accepted-payout" in parameter:
@@ -2600,6 +2621,9 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
     percent_steem_dollars = None
     if "percent_steem_dollars" in parameter:
         percent_steem_dollars = parameter["percent_steem_dollars"]
+    percent_hive_dollars = None
+    if "percent_hive_dollars" in parameter:
+        percent_hive_dollars = parameter["percent_hive_dollars"]        
     max_accepted_payout = None
     if "max_accepted_payout" in parameter:
         max_accepted_payout = parameter["max_accepted_payout"]
@@ -2610,8 +2634,15 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
         if stm.backed_token_symbol not in max_accepted_payout:
             max_accepted_payout = str(Amount(float(max_accepted_payout), stm.backed_token_symbol, blockchain_instance=stm))
         comment_options["max_accepted_payout"] = max_accepted_payout
-    if percent_steem_dollars is not None:
+    if percent_hive_dollars is not None and stm.is_hive and not stm.get_replace_hive_by_steem():
+        comment_options["percent_hive_dollars"] = percent_hive_dollars
+    elif percent_steem_dollars is not None and stm.is_hive and not stm.get_replace_hive_by_steem():
+        comment_options["percent_hive_dollars"] = percent_steem_dollars        
+    elif percent_steem_dollars is not None:
         comment_options["percent_steem_dollars"] = percent_steem_dollars
+    elif percent_hive_dollars is not None:
+        comment_options["percent_steem_dollars"] = percent_hive_dollars
+
     beneficiaries = None
     if "beneficiaries" in parameter:
         beneficiaries = derive_beneficiaries(parameter["beneficiaries"])
@@ -3338,10 +3369,11 @@ def unfollow(unfollow, account, export):
 @click.option('--maximum_block_size', help='Max block size')
 @click.option('--account_creation_fee', help='Account creation fee')
 @click.option('--sbd_interest_rate', help='SBD interest rate in percent')
+@click.option('--hbd_interest_rate', help='HBD interest rate in percent')
 @click.option('--url', help='Witness URL')
 @click.option('--signing_key', help='Signing Key')
 @click.option('--export', '-e', help='When set, transaction is stored in a file')
-def witnessupdate(witness, maximum_block_size, account_creation_fee, sbd_interest_rate, url, signing_key, export):
+def witnessupdate(witness, maximum_block_size, account_creation_fee, sbd_interest_rate, hbd_interest_rate, url, signing_key, export):
     """Change witness properties"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -3359,6 +3391,8 @@ def witnessupdate(witness, maximum_block_size, account_creation_fee, sbd_interes
         props["maximum_block_size"] = int(maximum_block_size)
     if sbd_interest_rate is not None:
         props["sbd_interest_rate"] = int(float(sbd_interest_rate) * 100)
+    if hbd_interest_rate is not None:
+        props["hbd_interest_rate"] = int(float(hbd_interest_rate) * 100)
     tx = witness.update(signing_key or witness["signing_key"], url or witness["url"], props)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
