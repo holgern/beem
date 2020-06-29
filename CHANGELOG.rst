@@ -6,9 +6,9 @@ Changelog
 * Replace HIVE by STEEM and SBD by HBD only when Hive HF < 24
 * Replace steem and sbd parameter names for Hive HF >= 24 by hive and hbd
 * Add get follow list to Account (only for HIVE and HF >= 24)
-* Add BLURT chain
+* Add BLURT, SMOKE and VIZ chain_id
 * Remove not used STEEM chains (STEEMZERO and STEEMAPPBASE)
-* add Blurt class
+* Improve chain detection
 * rshares_to_token_backed_dollar, get_token_per_mvest, token_power_to_vests, token_power_to_token_backed_dollar
   and vests_to_token_power have been added for chain independent usage
 * New beempy command followlist, which can be used on HIVE to receive info about follow lists

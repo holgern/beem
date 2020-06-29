@@ -308,14 +308,14 @@ class GrapheneRPC(object):
             if key[-8:] == "CHAIN_ID":
                 chain_id = props[key]
                 blockchain_name = key.split("_")[0]
-            elif key[-18:] == "BLOCKCHAIN_VERSION":
+            elif key[-13:] == "CHAIN_VERSION":
                 network_version = props[key]
 
         if chain_id is None:
             raise("Connecting to unknown network!")
         highest_version_chain = None
         for k, v in list(self.known_chains.items()):
-            if blockchain_name is not None and blockchain_name not in k:
+            if blockchain_name is not None and blockchain_name not in k and blockchain_name != "STEEMIT" and blockchain_name != "CHAIN":
                 continue 
             if v["chain_id"] == chain_id and self.version_string_to_int(v["min_version"]) <= self.version_string_to_int(network_version):
                 if highest_version_chain is None:

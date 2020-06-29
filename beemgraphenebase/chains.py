@@ -83,6 +83,15 @@ known_chains = {
             {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
         ],
     },
+    "VIZ": {
+        "chain_id": "2040effda178d4fffff5eab7a915d4019879f5205cc5392e4bcced2b6edda0cd",
+        "min_version": "2.5.0",
+        "prefix": "VIZ",
+        "chain_assets": [
+            {"asset": "STEEM", "symbol": "VIZ", "precision": 3, "id": 1},
+            {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
+        ],
+    },    
     "WEKU": {
         "chain_id": "b24e09256ee14bab6d58bfa3a4e47b0474a73ef4d6c47eeea007848195fa085e",
         "min_version": "0.19.3",
@@ -93,6 +102,15 @@ known_chains = {
             {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
         ],
     },
+    "SMOKE": {
+        "chain_id": "1ce08345e61cd3bf91673a47fc507e7ed01550dab841fd9cdb0ab66ef576aaf0",
+        "min_version": "0.1.0",
+        "prefix": "SMK",
+        "chain_assets": [
+            {"asset": "STEEM", "symbol": "SMOKE", "precision": 3, "id": 1},
+            {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
+        ],
+    },    
     "EFTGAPPBASE": {
         "chain_id": "1c15984beb16945c01cb9bc3d654b0417c650461dfe535018fe03a4fc5a36864",
         "min_version": "0.19.12",
