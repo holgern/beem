@@ -148,7 +148,7 @@ class Testcases(unittest.TestCase):
         c = Comment(self.authorperm, blockchain_instance=bts)
         keys = list(content.keys())
         json_content = c.json()
-        exclude_list = ["json_metadata", "reputation", "active_votes", "net_rshares"]
+        exclude_list = ["json_metadata", "reputation", "active_votes", "net_rshares", "author_reputation"]
         for k in keys:
             if k not in exclude_list:
                 if isinstance(content[k], dict) and isinstance(json_content[k], list):

@@ -182,7 +182,7 @@ class Testcases(unittest.TestCase):
     def test_transfer(self):
         stm = shared_steem_instance()
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', 'transfer', 'beembot', '1', stm.sbd_symbol, 'test'], input="test\n")
+        result = runner.invoke(cli, ['-dt', 'transfer', 'beembot', '1', stm.backed_token_symbol, 'test'], input="test\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_powerdownroute(self):
@@ -326,25 +326,25 @@ class Testcases(unittest.TestCase):
     def test_buy(self):
         stm = shared_steem_instance()
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', '-x', 'buy', '1', stm.steem_symbol, '2.2'], input="test\n")
+        result = runner.invoke(cli, ['-dt', '-x', 'buy', '1', stm.token_symbol, '2.2'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-dt', '-x', 'buy', '1', stm.steem_symbol], input="y\ntest\n")
+        result = runner.invoke(cli, ['-dt', '-x', 'buy', '1', stm.token_symbol], input="y\ntest\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-dt', '-x', 'buy', '1', stm.sbd_symbol, '2.2'], input="test\n")
+        result = runner.invoke(cli, ['-dt', '-x', 'buy', '1', stm.backed_token_symbol, '2.2'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-dt', '-x', 'buy', '1', stm.sbd_symbol], input="y\ntest\n")
+        result = runner.invoke(cli, ['-dt', '-x', 'buy', '1', stm.backed_token_symbol], input="y\ntest\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_sell(self):
         stm = shared_steem_instance()
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dt', '-x', 'sell', '1', stm.steem_symbol, '2.2'], input="test\n")
+        result = runner.invoke(cli, ['-dt', '-x', 'sell', '1', stm.token_symbol, '2.2'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-dt', '-x', 'sell', '1', stm.sbd_symbol, '2.2'], input="test\n")
+        result = runner.invoke(cli, ['-dt', '-x', 'sell', '1', stm.backed_token_symbol, '2.2'], input="test\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-dt', '-x', 'sell', '1', stm.steem_symbol], input="y\ntest\n")
+        result = runner.invoke(cli, ['-dt', '-x', 'sell', '1', stm.token_symbol], input="y\ntest\n")
         self.assertEqual(result.exit_code, 0)
-        result = runner.invoke(cli, ['-dt', '-x', 'sell', '1', stm.sbd_symbol], input="y\ntest\n")
+        result = runner.invoke(cli, ['-dt', '-x', 'sell', '1', stm.backed_token_symbol], input="y\ntest\n")
         self.assertEqual(result.exit_code, 0)
 
     def test_cancel(self):
