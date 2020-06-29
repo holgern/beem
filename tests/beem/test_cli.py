@@ -422,7 +422,7 @@ class Testcases(unittest.TestCase):
 
     def test_witnessenable(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dx', 'witnessenable', 'holger80', 'STM1111111111111111111111111111111114T1A'])
+        result = runner.invoke(cli, ['-dx', 'witnessenable', 'holger80', 'STM1111111111111111111111111111111114T1Anm'])
         self.assertEqual(result.exit_code, 0)
 
     def test_witnessdisable(self):
