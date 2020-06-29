@@ -216,7 +216,7 @@ class Blurt(BlockChainInstance):
 
         """
         # calculate our account voting shares (from vests)
-        vesting_shares = int(self.sp_to_vests(blurt_power, use_stored_data=use_stored_data))
+        vesting_shares = int(self.bp_to_vests(blurt_power, use_stored_data=use_stored_data))
         return self.vests_to_rshares(vesting_shares, post_rshares=post_rshares, voting_power=voting_power, vote_pct=vote_pct, use_stored_data=use_stored_data)
 
     def vests_to_rshares(self, vests, post_rshares=0, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, subtract_dust_threshold=True, use_stored_data=True):
@@ -258,7 +258,7 @@ class Blurt(BlockChainInstance):
         if blurt_power is not None and vests is not None:
             raise ValueError("Either blurt_power or vests has to be set. Not both!")
         if blurt_power is not None:
-            vests = int(self.sp_to_vests(blurt_power, use_stored_data=use_stored_data) * 1e6)
+            vests = int(self.bp_to_vests(blurt_power, use_stored_data=use_stored_data) * 1e6)
 
         if self.hardfork >= 20:
             rshares += math.copysign(self.get_dust_threshold(use_stored_data=use_stored_data), rshares)
