@@ -225,6 +225,9 @@ class Hive(BlockChainInstance):
     def token_power_to_vests(self, token_power, timestamp=None, use_stored_data=True):
         return self.hp_to_vests(token_power, timestamp=timestamp, use_stored_data=use_stored_data)
 
+    def token_power_to_token_backed_dollar(self, token_power, post_rshares=0, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
+        return self.hp_to_hbd(token_power, post_rshares=post_rshares, voting_power=voting_power, vote_pct=vote_pct, not_broadcasted_vote=not_broadcasted_vote, use_stored_data=use_stored_data)
+
     def hp_to_hbd(self, hp, post_rshares=0, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
         """ Obtain the resulting HBD vote value from Hive power
 

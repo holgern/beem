@@ -689,6 +689,20 @@ class BlockChainInstance(object):
         """
         raise Exception("not implemented")
 
+    def token_power_to_token_backed_dollar(self, token_power, post_rshares=0, voting_power=STEEM_100_PERCENT, vote_pct=STEEM_100_PERCENT, not_broadcasted_vote=True, use_stored_data=True):
+        """ Obtain the resulting Token backed dollar vote value from Token power
+
+            :param number hive_power: Token Power
+            :param int post_rshares: rshares of post which is voted
+            :param int voting_power: voting power (100% = 10000)
+            :param int vote_pct: voting percentage (100% = 10000)
+            :param bool not_broadcasted_vote: not_broadcasted or already broadcasted vote (True = not_broadcasted vote).
+
+            Only impactful for very big votes. Slight modification to the value calculation, as the not_broadcasted
+            vote rshares decreases the reward pool.
+        """
+        raise Exception("not implemented")
+
     def get_chain_properties(self, use_stored_data=True):
         """ Return witness elected chain properties
 
