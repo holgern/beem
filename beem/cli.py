@@ -2909,6 +2909,26 @@ def broadcast(file):
     tx = json.dumps(tx, indent=4)
     print(tx)
 
+@cli.command()
+@click.option('--lines', '-n', help='Defines how many ops should be shown', default=10)
+@click.option('--mode', '-m', help='Stream mode: Can be irreversible (default) or head', default="irreversible")
+@click.option('--json', '-j', help='Output as JSON', is_flag=True, default=False)
+@click.option('--follow', '-f', help='Constantly stream output', is_flag=True, default=False)
+def stream(lines, mode, json, follow):
+    """ Stream operations
+    """
+    stm = shared_blockchain_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()    
+    b = Blockchain(mode=mode, blockchain_instance=stm)
+    op_count = 0
+    import pprint
+    for ops in b.stream(raw_ops=True):
+        op_count += 1
+        pprint.pprint(ops)
+        if op_count >= lines and not follow:
+            return
+        
 
 @cli.command()
 @click.option('--sbd-to-steem', '-i', help='Show ticker in SBD/STEEM', is_flag=True, default=False)
