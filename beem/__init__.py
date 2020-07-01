@@ -1,14 +1,15 @@
 """ beem."""
 from .steem import Steem
+from .hive import Hive
 from .version import version as __version__
 __all__ = [
     "steem",
-    "aes",
     "account",
     "amount",
     "asset",
     "block",
     "blockchain",
+    "blockchaininstance",
     "market",
     "storage",
     "price",
@@ -23,5 +24,7 @@ __all__ = [
     "profile",
     "nodelist",
     "imageuploader",
-    "snapshot"
+    "snapshot",
+    "steemconnect",
+    "hivesigner"
 ]

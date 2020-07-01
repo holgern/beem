@@ -25,9 +25,9 @@ import struct
 default_prefix = "STM"
 
 
-@python_2_unicode_compatible
 class Amount(object):
-    def __init__(self, d, prefix=default_prefix):
+    def __init__(self, d, prefix=default_prefix, replace_hive_by_steem=True):
+        self.replace_hive_by_steem = replace_hive_by_steem
         if isinstance(d, string_types):
             self.amount, self.symbol = d.strip().split(" ")
             self.precision = None
@@ -48,7 +48,12 @@ class Amount(object):
             if self.precision is None:
                 raise Exception("Asset unknown")
             self.amount = round(float(self.amount) * 10 ** self.precision)
+            # Workaround to allow transfers in HIVE
 
+            if self.symbol == "HBD" and replace_hive_by_steem:
+                self.symbol = "SBD"
+            elif self.symbol == "HIVE" and replace_hive_by_steem:
+                self.symbol = "STEEM"
             self.str_repr = '{:.{}f} {}'.format((float(self.amount) / 10 ** self.precision), self.precision, self.symbol)
         elif isinstance(d, list):
             self.amount = d[0]
@@ -82,6 +87,11 @@ class Amount(object):
         else:
             self.amount = d.amount
             self.symbol = d.symbol
+            # Workaround to allow transfers in HIVE
+            if self.symbol == "HBD" and replace_hive_by_steem:
+                self.symbol = "SBD"
+            elif self.symbol == "HIVE" and replace_hive_by_steem:
+                self.symbol = "STEEM"              
             self.asset = d.asset["asset"]
             self.precision = d.asset["precision"]
             self.amount = round(float(self.amount) * 10 ** self.precision)
@@ -91,6 +101,11 @@ class Amount(object):
 
     def __bytes__(self):
         # padding
+        # Workaround to allow transfers in HIVE
+        if self.symbol == "HBD":
+            self.symbol = "SBD"
+        elif self.symbol == "HIVE":
+            self.symbol = "STEEM"        
         symbol = self.symbol + "\x00" * (7 - len(self.symbol))
         return (struct.pack("<q", int(self.amount)) + struct.pack("<b", self.precision) +
                 py23_bytes(symbol, "ascii"))
@@ -100,7 +115,6 @@ class Amount(object):
         return self.str_repr
 
 
-@python_2_unicode_compatible
 class Operation(GPHOperation):
     def __init__(self, *args, **kwargs):
         self.appbase = kwargs.pop("appbase", False)
@@ -168,15 +182,22 @@ class WitnessProps(GrapheneObject):
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
             prefix = kwargs.get("prefix", default_prefix)
+            replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
             if "sbd_interest_rate" in kwargs:
                 super(WitnessProps, self).__init__(OrderedDict([
-                    ('account_creation_fee', Amount(kwargs["account_creation_fee"], prefix=prefix)),
+                    ('account_creation_fee', Amount(kwargs["account_creation_fee"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
                     ('maximum_block_size', Uint32(kwargs["maximum_block_size"])),
                     ('sbd_interest_rate', Uint16(kwargs["sbd_interest_rate"])),
                 ]))
+            elif "hbd_interest_rate" in kwargs:
+                super(WitnessProps, self).__init__(OrderedDict([
+                    ('account_creation_fee', Amount(kwargs["account_creation_fee"], prefix=prefix, replace_hive_by_steem=False)),
+                    ('maximum_block_size', Uint32(kwargs["maximum_block_size"])),
+                    ('hbd_interest_rate', Uint16(kwargs["hbd_interest_rate"])),
+                ]))                
             else:
                 super(WitnessProps, self).__init__(OrderedDict([
-                    ('account_creation_fee', Amount(kwargs["account_creation_fee"], prefix=prefix)),
+                    ('account_creation_fee', Amount(kwargs["account_creation_fee"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
                     ('maximum_block_size', Uint32(kwargs["maximum_block_size"])),
                 ]))
 
@@ -189,9 +210,10 @@ class Price(GrapheneObject):
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
             prefix = kwargs.get("prefix", default_prefix)
+            replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
             super(Price, self).__init__(OrderedDict([
-                ('base', Amount(kwargs["base"], prefix=prefix)),
-                ('quote', Amount(kwargs["quote"], prefix=prefix))
+                ('base', Amount(kwargs["base"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+                ('quote', Amount(kwargs["quote"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem))
             ]))
 
 
@@ -232,7 +254,6 @@ class Permission(GrapheneObject):
             ]))
 
 
-@python_2_unicode_compatible
 class Extension(Array):
     def __str__(self):
         """ We overload the __str__ function because the json
@@ -250,10 +271,11 @@ class ExchangeRate(GrapheneObject):
                 kwargs = args[0]
 
             prefix = kwargs.get("prefix", default_prefix)
+            replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
             super(ExchangeRate, self).__init__(
                 OrderedDict([
-                    ('base', Amount(kwargs["base"], prefix=prefix)),
-                    ('quote', Amount(kwargs["quote"], prefix=prefix)),
+                    ('base', Amount(kwargs["base"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+                    ('quote', Amount(kwargs["quote"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
                 ]))
 
 

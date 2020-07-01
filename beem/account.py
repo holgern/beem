@@ -11,7 +11,7 @@ import math
 import random
 import logging
 from prettytable import PrettyTable
-from beem.instance import shared_steem_instance
+from beem.instance import shared_blockchain_instance
 from .exceptions import AccountDoesNotExistsException, OfflineHasNoRPCException
 from beemapi.exceptions import ApiNotSupported, MissingRequiredActiveAuthority
 from .blockchainobject import BlockchainObject
@@ -30,11 +30,13 @@ class Account(BlockchainObject):
     """ This class allows to easily access Account data
 
         :param str account: Name of the account
-        :param Steem steem_instance: Steem
+        :param Steem/Hive blockchain_instance: Hive or Steem
                instance
         :param bool lazy: Use lazy loading
         :param bool full: Obtain all account data including orders, positions,
                etc.
+        :param Hive hive_instance: Hive instance
+        :param Steem steem_instance: Steem instance
         :returns: Account data
         :rtype: dictionary
         :raises beem.exceptions.AccountDoesNotExistsException: if account
@@ -47,9 +49,12 @@ class Account(BlockchainObject):
         .. code-block:: python
 
             >>> from beem.account import Account
-            >>> from beem import Steem
-            >>> stm = Steem()
-            >>> account = Account("gtg", steem_instance=stm)
+            >>> from beem import Hive
+            >>> from beem.nodelist import NodeList
+            >>> nodelist = NodeList()
+            >>> nodelist.update_nodes()
+            >>> stm = Hive(node=nodelist.get_hive_nodes())
+            >>> account = Account("gtg", blockchain_instance=stm)
             >>> print(account)
             <Account gtg>
             >>> print(account.balances) # doctest: +SKIP
@@ -68,12 +73,13 @@ class Account(BlockchainObject):
         account,
         full=True,
         lazy=False,
-        steem_instance=None
+        blockchain_instance=None,
+        **kwargs
     ):
         """Initialize an account
 
         :param str account: Name of the account
-        :param Steem steem_instance: Steem
+        :param Steem blockchain_instance: Steem
                instance
         :param bool lazy: Use lazy loading
         :param bool full: Obtain all account data including orders, positions,
@@ -81,7 +87,12 @@ class Account(BlockchainObject):
         """
         self.full = full
         self.lazy = lazy
-        self.steem = steem_instance or shared_steem_instance()
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
         if isinstance(account, dict):
             account = self._parse_json_data(account)
         super(Account, self).__init__(
@@ -89,25 +100,25 @@ class Account(BlockchainObject):
             lazy=lazy,
             full=full,
             id_item="name",
-            steem_instance=steem_instance
+            blockchain_instance=blockchain_instance
         )
 
     def refresh(self):
         """ Refresh/Obtain an account's data from the API server
         """
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             return
-        self.steem.rpc.set_next_node_on_empty_reply(self.steem.rpc.get_use_appbase())
-        if self.steem.rpc.get_use_appbase():
-            account = self.steem.rpc.find_accounts({'accounts': [self.identifier]}, api="database")
+        self.blockchain.rpc.set_next_node_on_empty_reply(self.blockchain.rpc.get_use_appbase())
+        if self.blockchain.rpc.get_use_appbase():
+            account = self.blockchain.rpc.find_accounts({'accounts': [self.identifier]}, api="database")
         else:
             if self.full:
-                account = self.steem.rpc.get_accounts(
+                account = self.blockchain.rpc.get_accounts(
                     [self.identifier], api="database")
             else:
-                account = self.steem.rpc.lookup_account_names(
+                account = self.blockchain.rpc.lookup_account_names(
                     [self.identifier], api="database")
-        if self.steem.rpc.get_use_appbase() and "accounts" in account:
+        if self.blockchain.rpc.get_use_appbase() and "accounts" in account:
             account = account["accounts"]
         if account and isinstance(account, list) and len(account) == 1:
             account = account[0]
@@ -115,13 +126,15 @@ class Account(BlockchainObject):
             raise AccountDoesNotExistsException(self.identifier)
         account = self._parse_json_data(account)
         self.identifier = account["name"]
-        # self.steem.refresh_data()
+        # self.blockchain.refresh_data()
 
-        super(Account, self).__init__(account, id_item="name", lazy=self.lazy, full=self.full, steem_instance=self.steem)
+        super(Account, self).__init__(account, id_item="name", lazy=self.lazy, full=self.full, blockchain_instance=self.blockchain)
 
     def _parse_json_data(self, account):
         parse_int = [
-            "sbd_seconds", "savings_sbd_seconds", "average_bandwidth", "lifetime_bandwidth", "lifetime_market_bandwidth", "reputation", "withdrawn", "to_withdraw",
+            "sbd_seconds", "savings_sbd_seconds", "average_bandwidth", "lifetime_bandwidth",
+            "lifetime_market_bandwidth", "reputation", "withdrawn", "to_withdraw",
+            "hbd_seconds", "savings_hbd_seconds",
         ]
         for p in parse_int:
             if p in account and isinstance(account.get(p), string_types):
@@ -138,7 +151,9 @@ class Account(BlockchainObject):
             "last_owner_update", "last_account_update", "created", "last_owner_proved", "last_active_proved",
             "last_account_recovery", "last_vote_time", "sbd_seconds_last_update", "sbd_last_interest_payment",
             "savings_sbd_seconds_last_update", "savings_sbd_last_interest_payment", "next_vesting_withdrawal",
-            "last_market_bandwidth_update", "last_post", "last_root_post", "last_bandwidth_update"
+            "last_market_bandwidth_update", "last_post", "last_root_post", "last_bandwidth_update",
+            "hbd_seconds_last_update", "hbd_last_interest_payment", "savings_hbd_seconds_last_update",
+            "savings_hbd_last_interest_payment"            
         ]
         for p in parse_times:
             if p in account and isinstance(account.get(p), string_types):
@@ -150,7 +165,11 @@ class Account(BlockchainObject):
             "sbd_balance",
             "savings_sbd_balance",
             "reward_sbd_balance",
+            "hbd_balance",
+            "savings_hbd_balance",
+            "reward_hbd_balance",            
             "reward_steem_balance",
+            "reward_hive_balance",
             "reward_vesting_balance",
             "reward_vesting_steem",
             "vesting_shares",
@@ -161,13 +180,13 @@ class Account(BlockchainObject):
         ]
         for p in amounts:
             if p in account and isinstance(account.get(p), (string_types, list, dict)):
-                account[p] = Amount(account[p], steem_instance=self.steem)
+                account[p] = Amount(account[p], blockchain_instance=self.blockchain)
         return account
 
     def json(self):
         output = self.copy()
         parse_int = [
-            "sbd_seconds", "savings_sbd_seconds",
+            "sbd_seconds", "savings_sbd_seconds", "hbd_seconds", "savings_hbd_seconds",
         ]
         parse_int_without_zero = [
             "withdrawn", "to_withdraw", "lifetime_bandwidth", 'average_bandwidth',
@@ -190,7 +209,9 @@ class Account(BlockchainObject):
             "last_owner_update", "last_account_update", "created", "last_owner_proved", "last_active_proved",
             "last_account_recovery", "last_vote_time", "sbd_seconds_last_update", "sbd_last_interest_payment",
             "savings_sbd_seconds_last_update", "savings_sbd_last_interest_payment", "next_vesting_withdrawal",
-            "last_market_bandwidth_update", "last_post", "last_root_post", "last_bandwidth_update"
+            "last_market_bandwidth_update", "last_post", "last_root_post", "last_bandwidth_update",
+            "hbd_seconds_last_update", "hbd_last_interest_payment", "savings_hbd_seconds_last_update",
+            "savings_hbd_last_interest_payment"            
         ]
         for p in parse_times:
             if p in output:
@@ -206,6 +227,10 @@ class Account(BlockchainObject):
             "savings_sbd_balance",
             "reward_sbd_balance",
             "reward_steem_balance",
+            "hbd_balance",
+            "savings_hbd_balance",
+            "reward_hbd_balance",
+            "reward_hive_balance",            
             "reward_vesting_balance",
             "reward_vesting_steem",
             "vesting_shares",
@@ -226,7 +251,7 @@ class Account(BlockchainObject):
 
     def get_rc(self):
         """Return RC of account"""
-        b = Blockchain(steem_instance=self.steem)
+        b = Blockchain(blockchain_instance=self.blockchain)
         return b.find_rc_accounts(self["name"])
 
     def get_rc_manabar(self):
@@ -244,7 +269,7 @@ class Account(BlockchainObject):
             current_pct = current_mana / max_mana * 100
         else:
             current_pct = 0
-        max_rc_creation_adjustment = Amount(rc_param["max_rc_creation_adjustment"], steem_instance=self.steem)
+        max_rc_creation_adjustment = Amount(rc_param["max_rc_creation_adjustment"], blockchain_instance=self.blockchain)
         return {"last_mana": last_mana, "last_update_time": last_update_time, "current_mana": current_mana,
                 "max_mana": max_mana, "current_pct": current_pct, "max_rc_creation_adjustment": max_rc_creation_adjustment}
 
@@ -261,7 +286,7 @@ class Account(BlockchainObject):
             using the current account name as reference.
 
         """
-        b = Blockchain(steem_instance=self.steem)
+        b = Blockchain(blockchain_instance=self.blockchain)
         return b.get_similar_account_names(self.name, limit=limit)
 
     @property
@@ -290,7 +315,13 @@ class Account(BlockchainObject):
     def sp(self):
         """ Returns the accounts Steem Power
         """
-        return self.get_steem_power()
+        return self.get_token_power()
+
+    @property
+    def tp(self):
+        """ Returns the accounts Hive/Steem Power
+        """
+        return self.get_token_power()
 
     @property
     def vp(self):
@@ -304,12 +335,18 @@ class Account(BlockchainObject):
             return {}
         return json.loads(self["json_metadata"])
 
+    @property
+    def posting_json_metadata(self):
+        if self["posting_json_metadata"] == '':
+            return {}
+        return json.loads(self["posting_json_metadata"])
+
     def print_info(self, force_refresh=False, return_str=False, use_table=False, **kwargs):
         """ Prints import information about the account
         """
         if force_refresh:
             self.refresh()
-            self.steem.refresh_data(True)
+            self.blockchain.refresh_data(True)
         bandwidth = self.get_bandwidth()
         if bandwidth is not None and bandwidth["allocated"] is not None and bandwidth["allocated"] > 0:
             remaining = 100 - bandwidth["used"] / bandwidth["allocated"] * 100
@@ -319,7 +356,7 @@ class Account(BlockchainObject):
         try:
             rc_mana = self.get_rc_manabar()
             rc = self.get_rc()
-            rc_calc = RC(steem_instance=self.steem)
+            rc_calc = RC(blockchain_instance=self.blockchain)
         except:
             rc_mana = None
             rc_calc = None
@@ -333,7 +370,7 @@ class Account(BlockchainObject):
             t.add_row(["Vote Value", "%.2f $" % (self.get_voting_value_SBD())])
             t.add_row(["Last vote", "%s ago" % last_vote_time_str])
             t.add_row(["Full in ", "%s" % (self.get_recharge_time_str())])
-            t.add_row(["Steem Power", "%.2f %s" % (self.get_steem_power(), self.steem.steem_symbol)])
+            t.add_row(["Token Power", "%.2f %s" % (self.get_token_power(), self.blockchain.token_symbol)])
             t.add_row(["Balance", "%s, %s" % (str(self.balances["available"][0]), str(self.balances["available"][1]))])
             if False and bandwidth is not None and bandwidth["allocated"] is not None and bandwidth["allocated"] > 0:
                 t.add_row(["Remaining Bandwidth", "%.2f %%" % (remaining)])
@@ -366,7 +403,7 @@ class Account(BlockchainObject):
             ret += "--- Downvoting Power ---\n"
             ret += "%.2f %% \n" % (self.get_downvoting_power())
             ret += "--- Balance ---\n"
-            ret += "%.2f SP, " % (self.get_steem_power())
+            ret += "%.2f SP, " % (self.get_token_power())
             ret += "%s, %s\n" % (str(self.balances["available"][0]), str(self.balances["available"][1]))
             if False and bandwidth["allocated"] > 0:
                 ret += "--- Bandwidth ---\n"
@@ -390,16 +427,19 @@ class Account(BlockchainObject):
     def get_reputation(self):
         """ Returns the account reputation in the (steemit) normalized form
         """
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             return None
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase():
             try:
-                rep = self.steem.rpc.get_account_reputations({'account_lower_bound': self["name"], 'limit': 1}, api="follow")['reputations']
+                rep = self.blockchain.rpc.get_account_reputations({'account_lower_bound': self["name"], 'limit': 1}, api="reputation")['reputations']
                 if len(rep) > 0:
                     rep = int(rep[0]['reputation'])
             except:
-                rep = int(self['reputation'])
+                if "reputation" in self:
+                    rep = int(self['reputation'])
+                else:
+                    rep = 0
         else:
             rep = int(self['reputation'])
         return reputation_to_score(rep)
@@ -409,9 +449,10 @@ class Account(BlockchainObject):
         """
         max_mana = self.get_effective_vesting_shares()
         if max_mana == 0:
-            props = self.steem.get_chain_properties()
-            required_fee_steem = Amount(props["account_creation_fee"], steem_instance=self.steem)
-            max_mana = int(self.steem.sp_to_vests(required_fee_steem))
+            props = self.blockchain.get_chain_properties()
+            required_fee_token = Amount(props["account_creation_fee"], blockchain_instance=self.blockchain)
+            max_mana = int(self.blockchain.token_power_to_vests(required_fee_token))
+
         last_mana = int(self["voting_manabar"]["current_mana"])
         last_update_time = self["voting_manabar"]["last_update_time"]
         last_update = datetime.utcfromtimestamp(last_update_time)
@@ -433,9 +474,10 @@ class Account(BlockchainObject):
             return None
         max_mana = self.get_effective_vesting_shares() / 4
         if max_mana == 0:
-            props = self.steem.get_chain_properties()
-            required_fee_steem = Amount(props["account_creation_fee"], steem_instance=self.steem)
-            max_mana = int(self.steem.sp_to_vests(required_fee_steem) / 4)
+            props = self.blockchain.get_chain_properties()
+            required_fee_token = Amount(props["account_creation_fee"], blockchain_instance=self.blockchain)
+            max_mana = int(self.blockchain.token_power_to_vests(required_fee_token) / 4)
+              
         last_mana = int(self["downvote_manabar"]["current_mana"])
         last_update_time = self["downvote_manabar"]["last_update_time"]
         last_update = datetime.utcfromtimestamp(last_update_time)
@@ -515,25 +557,35 @@ class Account(BlockchainObject):
             vesting_shares -= min(int(self["vesting_withdraw_rate"]), int(self["to_withdraw"]) - int(self["withdrawn"]))
         return vesting_shares
 
+    def get_token_power(self, only_own_vests=False):
+        """ Returns the account Hive/Steem power (amount of staked token + delegations)
+        """
+        return self.blockchain.vests_to_token_power(self.get_vests(only_own_vests=only_own_vests))
+
     def get_steem_power(self, onlyOwnSP=False):
         """ Returns the account steem power
         """
-        return self.steem.vests_to_sp(self.get_vests(only_own_vests=onlyOwnSP))
+        return self.get_token_power(only_own_vests=onlyOwnSP)
 
-    def get_voting_value_SBD(self, voting_weight=100, voting_power=None, steem_power=None, not_broadcasted_vote=True):
-        """ Returns the account voting value in SBD
+    def get_voting_value(self, post_rshares=0, voting_weight=100, voting_power=None, token_power=None, not_broadcasted_vote=True):
+        """ Returns the account voting value in Hive/Steem token units
         """
         if voting_power is None:
             voting_power = self.get_voting_power()
-        if steem_power is None:
-            sp = self.get_steem_power()
+        if token_power is None:
+            tp = self.get_token_power()
         else:
-            sp = steem_power
+            tp = token_power
+        voteValue = self.blockchain.token_power_to_token_backed_dollar(tp, post_rshares=post_rshares, voting_power=voting_power * 100, vote_pct=voting_weight * 100, not_broadcasted_vote=not_broadcasted_vote)
+        return voteValue
 
-        VoteValue = self.steem.sp_to_sbd(sp, voting_power=voting_power * 100, vote_pct=voting_weight * 100, not_broadcasted_vote=not_broadcasted_vote)
-        return VoteValue
+    def get_voting_value_SBD(self, post_rshares=0, voting_weight=100, voting_power=None, steem_power=None, not_broadcasted_vote=True):
+        """ Returns the account voting value in SBD
+        """
+        return self.get_voting_value(post_rshares=post_rshares, voting_weight=voting_weight, voting_power=voting_power,
+                                     token_power=steem_power, not_broadcasted_vote=not_broadcasted_vote)
 
-    def get_vote_pct_for_SBD(self, sbd, voting_power=None, steem_power=None, not_broadcasted_vote=True):
+    def get_vote_pct_for_SBD(self, sbd, post_rshares=0, voting_power=None, steem_power=None, not_broadcasted_vote=True):
         """ Returns the voting percentage needed to have a vote worth a given number of SBD.
 
             If the returned number is bigger than 10000 or smaller than -10000,
@@ -543,21 +595,36 @@ class Account(BlockchainObject):
             :type sbd: str, int, amount.Amount
 
         """
+        return self.get_vote_pct_for_vote_value(sbd, post_rshares=post_rshares, voting_power=voting_power, token_power=steem_power, not_broadcasted_vote=not_broadcasted_vote)
+
+    def get_vote_pct_for_vote_value(self, token_units, post_rshares=0, voting_power=None, token_power=None, not_broadcasted_vote=True):
+        """ Returns the voting percentage needed to have a vote worth a given number of Hive/Steem token units
+
+            If the returned number is bigger than 10000 or smaller than -10000,
+            the given SBD value is too high for that account
+
+            :param token_units: The amount of HBD/SBD in vote value
+            :type token_units: str, int, amount.Amount
+
+        """
         if voting_power is None:
             voting_power = self.get_voting_power()
-        if steem_power is None:
-            steem_power = self.get_steem_power()
+        if token_power is None:
+            token_power = self.get_token_power()
 
-        if isinstance(sbd, Amount):
-            sbd = Amount(sbd, steem_instance=self.steem)
-        elif isinstance(sbd, string_types):
-            sbd = Amount(sbd, steem_instance=self.steem)
+        if isinstance(token_units, Amount):
+            token_units = Amount(token_units, blockchain_instance=self.blockchain)
+        elif isinstance(token_units, string_types):
+            token_units = Amount(token_units, blockchain_instance=self.blockchain)
         else:
-            sbd = Amount(sbd, self.steem.sbd_symbol, steem_instance=self.steem)
-        if sbd['symbol'] != self.steem.sbd_symbol:
-            raise AssertionError('Should input SBD, not any other asset!')
-
-        vote_pct = self.steem.rshares_to_vote_pct(self.steem.sbd_to_rshares(sbd, not_broadcasted_vote=not_broadcasted_vote), voting_power=voting_power * 100, steem_power=steem_power)
+            token_units = Amount(token_units, self.blockchain.backed_token_symbol, blockchain_instance=self.blockchain)
+        if token_units['symbol'] != self.blockchain.backed_token_symbol:
+            raise AssertionError('Should input %s, not any other asset!' % self.blockchain.backed_token_symbol)
+        from beem import Steem
+        if isinstance(self.blockchain, Steem):
+            vote_pct = self.blockchain.rshares_to_vote_pct(self.blockchain.sbd_to_rshares(token_units, not_broadcasted_vote=not_broadcasted_vote), post_rshares=post_rshares, voting_power=voting_power * 100, steem_power=token_power)
+        else:
+            vote_pct = self.blockchain.rshares_to_vote_pct(self.blockchain.hbd_to_rshares(token_units, not_broadcasted_vote=not_broadcasted_vote), post_rshares=post_rshares, voting_power=voting_power * 100, hive_power=token_power)
         return vote_pct
 
     def get_creator(self):
@@ -659,9 +726,12 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
-                >>> stm = Steem()
-                >>> account = Account("steemit", steem_instance=stm)
+                >>> from beem import Hive
+                >>> from beem.nodelist import NodeList
+                >>> nodelist = NodeList()
+                >>> nodelist.update_nodes()
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
+                >>> account = Account("steemit", blockchain_instance=stm)
                 >>> account.get_feed(0, 1, raw_data=True)
                 []
 
@@ -670,41 +740,18 @@ class Account(BlockchainObject):
             account = self["name"]
         elif isinstance(account, Account):
             account = account["name"]
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             return None
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        success = True
-        if self.steem.rpc.get_use_appbase():
-            try:
-                if raw_data and short_entries:
-                    return [
-                        c for c in self.steem.rpc.get_feed_entries({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
-                    ]
-                elif raw_data:
-                    return [
-                        c for c in self.steem.rpc.get_feed({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
-                    ]
-                elif not raw_data:
-                    from .comment import Comment
-                    return [
-                        Comment(c['comment'], steem_instance=self.steem) for c in self.steem.rpc.get_feed({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')["feed"]
-                    ]
-            except:
-                success = False
-        if not self.steem.rpc.get_use_appbase() or not success:
-            if raw_data and short_entries:
-                return [
-                    c for c in self.steem.rpc.get_feed_entries(account, start_entry_id, limit, api='follow')
-                ]
-            elif raw_data:
-                return [
-                    c for c in self.steem.rpc.get_feed(account, start_entry_id, limit, api='follow')
-                ]
-            else:
-                from .comment import Comment
-                return [
-                    Comment(c['comment'], steem_instance=self.steem) for c in self.steem.rpc.get_feed(account, start_entry_id, limit, api='follow')
-                ]
+        from beem.discussions import Discussions, Query
+        d = Discussions(blockchain_instance=self.blockchain)
+        if short_entries:
+            truncate_body = 1
+        else:
+            truncate_body = 0
+        q = Query(limit=limit, tag=account, truncate_body=truncate_body)
+        return [
+            c for c in d.get_discussions("feed", q, limit=limit, raw_data=raw_data)
+        ]
 
     def get_feed_entries(self, start_entry_id=0, limit=100, raw_data=True,
                          account=None):
@@ -721,9 +768,12 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
-                >>> stm = Steem()
-                >>> account = Account("steemit", steem_instance=stm)
+                >>> from beem import Hive
+                >>> from beem.nodelist import NodeList
+                >>> nodelist = NodeList()
+                >>> nodelist.update_nodes()
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
+                >>> account = Account("steemit", blockchain_instance=stm)
                 >>> account.get_feed_entries(0, 1)
                 []
 
@@ -744,12 +794,15 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
-                >>> stm = Steem()
-                >>> account = Account("steemit", steem_instance=stm)
+                >>> from beem import Hive
+                >>> from beem.nodelist import NodeList
+                >>> nodelist = NodeList()
+                >>> nodelist.update_nodes()
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
+                >>> account = Account("steemit", blockchain_instance=stm)
                 >>> entry = account.get_blog_entries(0, 1, raw_data=True)[0]
-                >>> print("%s - %s - %s - %s" % (entry["author"], entry["permlink"], entry["blog"], entry["reblog_on"]))
-                steemit - firstpost - steemit - 1970-01-01T00:00:00
+                >>> print("%s - %s - %s" % (entry["author"], entry["permlink"], entry["blog"]))
+                steemit - firstpost - steemit
 
         """
         return self.get_blog(start_entry_id=start_entry_id, limit=limit, raw_data=raw_data, short_entries=True, account=account)
@@ -768,9 +821,12 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
-                >>> stm = Steem()
-                >>> account = Account("steemit", steem_instance=stm)
+                >>> from beem import Hive
+                >>> from beem.nodelist import NodeList
+                >>> nodelist = NodeList()
+                >>> nodelist.update_nodes()
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
+                >>> account = Account("steemit", blockchain_instance=stm)
                 >>> account.get_blog(0, 1)
                 [<Comment @steemit/firstpost>]
 
@@ -779,21 +835,21 @@ class Account(BlockchainObject):
             account = self["name"]
         elif isinstance(account, Account):
             account = account["name"]
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
         success = True
-        if self.steem.rpc.get_use_appbase():
+        if self.blockchain.rpc.get_use_appbase():
             try:
                 if raw_data and short_entries:
-                    ret = self.steem.rpc.get_blog_entries({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')
+                    ret = self.blockchain.rpc.get_blog_entries({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')
                     if isinstance(ret, dict) and "blog" in ret:
                         ret = ret["blog"]
                     return [
                         c for c in ret
                     ]
                 elif raw_data:
-                    ret = self.steem.rpc.get_blog({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')
+                    ret = self.blockchain.rpc.get_blog({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')
                     if isinstance(ret, dict) and "blog" in ret:
                         ret = ret["blog"]
                     return [
@@ -801,31 +857,94 @@ class Account(BlockchainObject):
                     ]
                 elif not raw_data:
                     from .comment import Comment
-                    ret = self.steem.rpc.get_blog({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')
+                    ret = self.blockchain.rpc.get_blog({'account': account, 'start_entry_id': start_entry_id, 'limit': limit}, api='follow')
                     if isinstance(ret, dict) and "blog" in ret:
                         ret = ret["blog"]
                     return [
-                        Comment(c["comment"], steem_instance=self.steem) for c in ret
+                        Comment(c["comment"], blockchain_instance=self.blockchain) for c in ret
                     ]
             except:
                 success = False
 
-        if not self.steem.rpc.get_use_appbase() or not success:
+        if not self.blockchain.rpc.get_use_appbase() or not success:
             if raw_data and short_entries:
                 return [
-                    c for c in self.steem.rpc.get_blog_entries(account, start_entry_id, limit, api='follow')
+                    c for c in self.blockchain.rpc.get_blog_entries(account, start_entry_id, limit, api='follow')
                 ]
 
             elif raw_data:
                 return [
-                    c for c in self.steem.rpc.get_blog(account, start_entry_id, limit, api='follow')
+                    c for c in self.blockchain.rpc.get_blog(account, start_entry_id, limit, api='follow')
                 ]
 
             else:
                 from .comment import Comment
+                blog_list = self.blockchain.rpc.get_blog(account, start_entry_id, limit, api='follow')
+                if blog_list is None:
+                    return []
                 return [
-                    Comment(c["comment"], steem_instance=self.steem) for c in self.steem.rpc.get_blog(account, start_entry_id, limit, api='follow')
+                    Comment(c["comment"], blockchain_instance=self.blockchain) for c in blog_list
                 ]
+
+    def get_notifications(self, only_unread=True, limit=100, raw_data=False, account=None):
+        """ Returns account notifications
+
+            :param bool only_unread: When True, only unread notfications are shown
+            :param int limit: When set, the number of shown notifications is limited (max limit = 100)
+            :param bool raw_data: When True, the raw data from the api call is returned.
+            :param str account: (optional) the account for which the notification should be received
+                to (defaults to ``default_account``)
+        """
+        if account is None:
+            account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]
+        if not self.blockchain.is_connected():
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if only_unread:
+            unread_notes = self.blockchain.rpc.unread_notifications({'account': account}, api='bridge')
+            if limit is None or limit > unread_notes["unread"]:
+                limit = unread_notes["unread"]
+        if limit is None or limit == 0:
+            return []
+        if limit > 100:
+            limit = 100
+        notifications = self.blockchain.rpc.account_notifications({'account': account, 'limit': limit}, api='bridge')
+        if raw_data:
+            return notifications
+        ret = []
+        for note in notifications:
+            note["date"] = formatTimeString(note["date"])
+            ret.append(note)
+        return ret
+
+    def mark_notifications_as_read(self, last_read=None, account=None):
+        """ Broadcast a mark all notification as read custom_json
+
+            :param str last_read: When set, this datestring is used to set the mark as read date
+            :param str account: (optional) the account to broadcast the custom_json
+                to (defaults to ``default_account``)
+
+        """
+        if account is None:
+            account = self["name"]
+        if not account:
+            raise ValueError("You need to provide an account")
+        if last_read is None:
+            last_notification = self.get_notifications(only_unread=False, limit=1, account=account)
+            if len(last_notification) == 0:
+                raise ValueError("Notification list is empty")
+            last_read = last_notification[0]["date"]
+        if isinstance(last_read, datetime):
+            last_read = formatTimeString(last_read)
+        json_body = [
+            'setLastRead', {
+                'date': last_read,
+            }
+        ]
+        return self.blockchain.custom_json(
+            "notify", json_body, required_posting_auths=[account])
 
     def get_blog_authors(self, account=None):
         """ Returns a list of authors that have had their content reblogged on a given blog account
@@ -837,27 +956,29 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
-                >>> stm = Steem()
-                >>> account = Account("steemit", steem_instance=stm)
-                >>> account.get_blog_authors()
-                []
+                >>> from beem import Hive
+                >>> from beem.nodelist import NodeList
+                >>> nodelist = NodeList()
+                >>> nodelist.update_nodes()
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
+                >>> account = Account("gtg", blockchain_instance=stm)
+                >>> account.get_blog_authors() # doctest: +SKIP
 
         """
         if account is None:
             account = self["name"]
         elif isinstance(account, Account):
             account = account["name"]
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase():
             try:
-                return self.steem.rpc.get_blog_authors({'blog_account': account}, api='follow')['blog_authors']
+                return self.blockchain.rpc.get_blog_authors({'blog_account': account}, api='follow')['blog_authors']
             except:
-                return self.steem.rpc.get_blog_authors(account, api='follow')
+                return self.blockchain.rpc.get_blog_authors(account, api='follow')
         else:
-            return self.steem.rpc.get_blog_authors(account, api='follow')
+            return self.blockchain.rpc.get_blog_authors(account, api='follow')
 
     def get_follow_count(self, account=None):
         """ get_follow_count """
@@ -865,13 +986,13 @@ class Account(BlockchainObject):
             account = self["name"]
         elif isinstance(account, Account):
             account = account["name"]
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.get_follow_count({'account': account}, api='follow')
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase():
+            return self.blockchain.rpc.get_follow_count({'account': account}, api='follow')
         else:
-            return self.steem.rpc.get_follow_count(account, api='follow')
+            return self.blockchain.rpc.get_follow_count(account, api='follow')
 
     def get_followers(self, raw_name_list=True, limit=100):
         """ Returns the account followers as list
@@ -880,7 +1001,7 @@ class Account(BlockchainObject):
         if raw_name_list:
             return name_list
         else:
-            return Accounts(name_list, steem_instance=self.steem)
+            return Accounts(name_list, blockchain_instance=self.blockchain)
 
     def get_following(self, raw_name_list=True, limit=100):
         """ Returns who the account is following as list
@@ -889,7 +1010,7 @@ class Account(BlockchainObject):
         if raw_name_list:
             return name_list
         else:
-            return Accounts(name_list, steem_instance=self.steem)
+            return Accounts(name_list, blockchain_instance=self.blockchain)
 
     def get_muters(self, raw_name_list=True, limit=100):
         """ Returns the account muters as list
@@ -898,7 +1019,7 @@ class Account(BlockchainObject):
         if raw_name_list:
             return name_list
         else:
-            return Accounts(name_list, steem_instance=self.steem)
+            return Accounts(name_list, blockchain_instance=self.blockchain)
 
     def get_mutings(self, raw_name_list=True, limit=100):
         """ Returns who the account is muting as list
@@ -907,33 +1028,61 @@ class Account(BlockchainObject):
         if raw_name_list:
             return name_list
         else:
-            return Accounts(name_list, steem_instance=self.steem)
+            return Accounts(name_list, blockchain_instance=self.blockchain)
+
+    def get_follow_list(self, follow_type, starting_account=None, limit=100, raw_name_list=True):
+        """ Returns the follow list for the specified follow_type (Only HIVE with HF >= 24)
+
+            :param list follow_type: follow_type can be `blacklisted`, `follow_blacklist` `muted`, or `follow_muted`
+        """
+        if not self.blockchain.is_connected():
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
+        limit_reached = True
+        cnt = 0
+        while limit_reached:
+            self.blockchain.rpc.set_next_node_on_empty_reply(False)
+            query = {'observer': self.name, 'follow_type': follow_type, 'starting_account': starting_account, 'limit': limit}
+            followers = self.blockchain.rpc.get_follow_list(query, api='bridge')
+            if cnt == 0:
+                name_list = followers
+            elif followers is not None and len(followers) > 1:
+                name_list += followers[1:]
+            if followers is not None and len(followers) >= limit:
+                starting_account = followers[-1]
+                limit_reached = True
+                cnt += 1
+            else:
+                limit_reached = False
+        if raw_name_list:
+            return name_list
+        else:
+            return Accounts(name_list, blockchain_instance=self.blockchain)
 
     def _get_followers(self, direction="follower", last_user="", what="blog", limit=100):
         """ Help function, used in get_followers and get_following
         """
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         followers_list = []
         limit_reached = True
         cnt = 0
         while limit_reached:
-            self.steem.rpc.set_next_node_on_empty_reply(False)
-            if self.steem.rpc.get_use_appbase():
+            self.blockchain.rpc.set_next_node_on_empty_reply(False)
+            if self.blockchain.rpc.get_use_appbase():
                 query = {'account': self.name, 'start': last_user, 'type': what, 'limit': limit}
                 if direction == "follower":
-                    followers = self.steem.rpc.get_followers(query, api='follow')
+                    followers = self.blockchain.rpc.get_followers(query, api='follow')
                     if isinstance(followers, dict) and 'followers' in followers:
                         followers = followers['followers']
                 elif direction == "following":
-                    followers = self.steem.rpc.get_following(query, api='follow')
+                    followers = self.blockchain.rpc.get_following(query, api='follow')
                     if isinstance(followers, dict) and 'following' in followers:
                         followers = followers['following']
             else:
                 if direction == "follower":
-                    followers = self.steem.rpc.get_followers(self.name, last_user, what, limit, api='follow')
+                    followers = self.blockchain.rpc.get_followers(self.name, last_user, what, limit, api='follow')
                 elif direction == "following":
-                    followers = self.steem.rpc.get_following(self.name, last_user, what, limit, api='follow')
+                    followers = self.blockchain.rpc.get_following(self.name, last_user, what, limit, api='follow')
             if cnt == 0:
                 followers_list = followers
             elif followers is not None and len(followers) > 1:
@@ -947,12 +1096,49 @@ class Account(BlockchainObject):
 
         return followers_list
 
+    def list_all_subscriptions(self, account=None):
+        """Returns all subscriptions"""
+        if account is None:
+            account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]        
+        if not self.blockchain.is_connected():
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
+        self.blockchain.rpc.set_next_node_on_empty_reply(True)
+        return self.blockchain.rpc.list_all_subscriptions({'account': account}, api='bridge')
+
+    def get_account_posts(self, sort="feed", account=None, observer=None, raw_data=False):
+        """Returns account feed"""
+        if account is None:
+            account = self["name"]
+        elif isinstance(account, Account):
+            account = account["name"]
+        if observer is None:
+            observer = account
+        if not self.blockchain.is_connected():
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
+        self.blockchain.rpc.set_next_node_on_empty_reply(True)
+        posts = self.blockchain.rpc.get_account_posts({'sort': sort, 'account': account,
+                                                  'observer': observer}, api='bridge')
+        if raw_data:
+            return posts
+        comments = []
+        from .comment import Comment
+        for post in posts:
+            comments.append(Comment(post, blockchain_instance=self.blockchain))
+        return comments
+
     @property
     def available_balances(self):
         """ List balances of an account. This call returns instances of
             :class:`beem.amount.Amount`.
         """
-        amount_list = ["balance", "sbd_balance", "vesting_shares"]
+        if "sbd_balance" in self:
+            amount_list = ["balance", "sbd_balance", "vesting_shares"]
+        elif "hbd_balance" in self:
+            amount_list = ["balance", "hbd_balance", "vesting_shares"]
+        else:
+            amount_list = ["balance", "vesting_shares"]
         available_amount = []
         for amount in amount_list:
             if amount in self:
@@ -962,7 +1148,12 @@ class Account(BlockchainObject):
     @property
     def saving_balances(self):
         savings_amount = []
-        amount_list = ["savings_balance", "savings_sbd_balance"]
+        if "savings_sbd_balance" in self:
+            amount_list = ["savings_balance", "savings_sbd_balance"]
+        elif "savings_hbd_balance" in self:
+            amount_list = ["savings_balance", "savings_hbd_balance"]
+        else:
+            amount_list = ["savings_balance"]
         for amount in amount_list:
             if amount in self:
                 savings_amount.append(self[amount].copy())
@@ -970,7 +1161,12 @@ class Account(BlockchainObject):
 
     @property
     def reward_balances(self):
-        amount_list = ["reward_steem_balance", "reward_sbd_balance", "reward_vesting_balance"]
+        if "reward_steem_balance" in self and "reward_sbd_balance" in self:
+            amount_list = ["reward_steem_balance", "reward_sbd_balance", "reward_vesting_balance"]
+        elif "reward_hive_balance" in self and "reward_hbd_balance" in self:
+            amount_list = ["reward_hive_balance", "reward_hbd_balance", "reward_vesting_balance"]
+        else:
+            amount_list = []
         rewards_amount = []
         for amount in amount_list:
             if amount in self:
@@ -1037,9 +1233,14 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
-                >>> account.get_balance("rewards", "SBD")
-                0.000 SBD
+                >>> from beem import Hive
+                >>> from beem.nodelist import NodeList
+                >>> nodelist = NodeList()
+                >>> nodelist.update_nodes()
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
+                >>> account = Account("beem.app", blockchain_instance=stm)
+                >>> account.get_balance("rewards", "HBD")
+                0.000 HBD
 
         """
         if isinstance(balances, string_types):
@@ -1061,7 +1262,7 @@ class Account(BlockchainObject):
             if b["symbol"] == symbol:
                 return b
         from .amount import Amount
-        return Amount(0, symbol, steem_instance=self.steem)
+        return Amount(0, symbol, blockchain_instance=self.blockchain)
 
     def interest(self):
         """ Calculate interest for an account
@@ -1082,12 +1283,24 @@ class Account(BlockchainObject):
                 }
 
         """
-        last_payment = (self["sbd_last_interest_payment"])
-        next_payment = last_payment + timedelta(days=30)
-        interest_rate = self.steem.get_dynamic_global_properties()[
-            "sbd_interest_rate"] / 100  # percent
-        interest_amount = (interest_rate / 100) * int(
-            int(self["sbd_seconds"]) / (60 * 60 * 24 * 356)) * 10**-3
+        interest_amount = 0
+        interest_rate = 0
+        next_payment = datetime(1970, 1, 1, 0, 0, 0)
+        last_payment = datetime(1970, 1, 1, 0, 0, 0)
+        if "sbd_last_interest_payment" in self:
+            last_payment = (self["sbd_last_interest_payment"])
+            next_payment = last_payment + timedelta(days=30)
+            interest_rate = self.blockchain.get_dynamic_global_properties()[
+                "sbd_interest_rate"] / 100  # percent
+            interest_amount = (interest_rate / 100) * int(
+                int(self["sbd_seconds"]) / (60 * 60 * 24 * 356)) * 10**-3
+        elif "hbd_last_interest_payment" in self:
+            last_payment = (self["hbd_last_interest_payment"])
+            next_payment = last_payment + timedelta(days=30)
+            interest_rate = self.blockchain.get_dynamic_global_properties()[
+                "hbd_interest_rate"] / 100  # percent
+            interest_amount = (interest_rate / 100) * int(
+                int(self["hbd_seconds"]) / (60 * 60 * 24 * 356)) * 10**-3            
         return {
             "interest": interest_amount,
             "last_payment": last_payment,
@@ -1114,14 +1327,14 @@ class Account(BlockchainObject):
         """ get_account_bandwidth """
         if account is None:
             account = self["name"]
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            # return self.steem.rpc.get_account_bandwidth({'account': account, 'type': 'post'}, api="witness")
-            return self.steem.rpc.get_account_bandwidth(account, bandwidth_type)
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase():
+            # return self.blockchain.rpc.get_account_bandwidth({'account': account, 'type': 'post'}, api="witness")
+            return self.blockchain.rpc.get_account_bandwidth(account, bandwidth_type)
         else:
-            return self.steem.rpc.get_account_bandwidth(account, bandwidth_type)
+            return self.blockchain.rpc.get_account_bandwidth(account, bandwidth_type)
 
     def get_bandwidth(self):
         """ Returns used and allocated bandwidth
@@ -1139,9 +1352,9 @@ class Account(BlockchainObject):
 
         """
         account = self["name"]
-        global_properties = self.steem.get_dynamic_global_properties()
+        global_properties = self.blockchain.get_dynamic_global_properties()
         try:
-            reserve_ratio = self.steem.get_reserve_ratio()
+            reserve_ratio = self.blockchain.get_reserve_ratio()
         except:
             return {"used": 0,
                     "allocated": 0}
@@ -1154,11 +1367,11 @@ class Account(BlockchainObject):
             return {"used": None,
                     "allocated": None}
         max_virtual_bandwidth = float(reserve_ratio["max_virtual_bandwidth"])
-        total_vesting_shares = Amount(global_properties["total_vesting_shares"], steem_instance=self.steem).amount
+        total_vesting_shares = Amount(global_properties["total_vesting_shares"], blockchain_instance=self.blockchain).amount
         allocated_bandwidth = (max_virtual_bandwidth * (vesting_shares + received_vesting_shares) / total_vesting_shares)
         allocated_bandwidth = round(allocated_bandwidth / 1000000)
 
-        if self.steem.is_connected() and self.steem.rpc.get_use_appbase():
+        if self.blockchain.is_connected() and self.blockchain.rpc.get_use_appbase():
             try:
                 account_bandwidth = self.get_account_bandwidth(bandwidth_type=1, account=account)
             except:
@@ -1195,7 +1408,12 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
+                >>> from beem import Hive
+                >>> from beem.nodelist import NodeList
+                >>> nodelist = NodeList()
+                >>> nodelist.update_nodes()
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
+                >>> account = Account("beem.app", blockchain_instance=stm)
                 >>> account.get_owner_history()
                 []
 
@@ -1204,13 +1422,13 @@ class Account(BlockchainObject):
             account = self["name"]
         elif isinstance(account, Account):
             account = account["name"]
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.find_owner_histories({'owner': account}, api="database")['owner_auths']
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase():
+            return self.blockchain.rpc.find_owner_histories({'owner': account}, api="database")['owner_auths']
         else:
-            return self.steem.rpc.get_owner_history(account)
+            return self.blockchain.rpc.get_owner_history(account)
 
     def get_conversion_requests(self, account=None):
         """ Returns a list of SBD conversion request
@@ -1222,7 +1440,12 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
+                >>> from beem import Hive
+                >>> from beem.nodelist import NodeList
+                >>> nodelist = NodeList()
+                >>> nodelist.update_nodes()
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
+                >>> account = Account("beem.app", blockchain_instance=stm)
                 >>> account.get_conversion_requests()
                 []
 
@@ -1231,13 +1454,15 @@ class Account(BlockchainObject):
             account = self["name"]
         elif isinstance(account, Account):
             account = account["name"]
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.find_sbd_conversion_requests({'account': account}, api="database")['requests']
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase() and "sbd_balance" in self:
+            return self.blockchain.rpc.find_sbd_conversion_requests({'account': account}, api="database")['requests']
+        elif self.blockchain.rpc.get_use_appbase() and "hbd_balance" in self:
+            return self.blockchain.rpc.find_hbd_conversion_requests({'account': account}, api="database")['requests']
         else:
-            return self.steem.rpc.get_conversion_requests(account)
+            return self.blockchain.rpc.get_conversion_requests(account)
 
     def get_vesting_delegations(self, start_account="", limit=100, account=None):
         """ Returns the vesting delegations by an account.
@@ -1250,7 +1475,12 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
+                >>> from beem import Hive
+                >>> from beem.nodelist import NodeList
+                >>> nodelist = NodeList()
+                >>> nodelist.update_nodes()
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
+                >>> account = Account("beem.app", blockchain_instance=stm)
                 >>> account.get_vesting_delegations()
                 []
 
@@ -1259,16 +1489,16 @@ class Account(BlockchainObject):
             account = self["name"]
         elif isinstance(account, Account):
             account = account["name"]
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            delegations = self.steem.rpc.list_vesting_delegations(
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase():
+            delegations = self.blockchain.rpc.list_vesting_delegations(
                 {'start': [account, start_account], 'limit': limit,
                  'order': 'by_delegation'}, api="database")['delegations']
             return [d for d in delegations if d['delegator'] == account]
         else:
-            return self.steem.rpc.get_vesting_delegations(account, start_account, limit)
+            return self.blockchain.rpc.get_vesting_delegations(account, start_account, limit)
 
     def get_withdraw_routes(self, account=None):
         """ Returns the withdraw routes for an account.
@@ -1280,7 +1510,12 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
+                >>> from beem import Hive
+                >>> from beem.nodelist import NodeList
+                >>> nodelist = NodeList()
+                >>> nodelist.update_nodes()
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
+                >>> account = Account("beem.app", blockchain_instance=stm)
                 >>> account.get_withdraw_routes()
                 []
 
@@ -1289,13 +1524,13 @@ class Account(BlockchainObject):
             account = self["name"]
         elif isinstance(account, Account):
             account = account["name"]
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.find_withdraw_vesting_routes({'account': account, 'order': 'by_withdraw_route'}, api="database")['routes']
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase():
+            return self.blockchain.rpc.find_withdraw_vesting_routes({'account': account, 'order': 'by_withdraw_route'}, api="database")['routes']
         else:
-            return self.steem.rpc.get_withdraw_routes(account, 'all')
+            return self.blockchain.rpc.get_withdraw_routes(account, 'all')
 
     def get_savings_withdrawals(self, direction="from", account=None):
         """ Returns the list of savings withdrawls for an account.
@@ -1308,7 +1543,12 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
+                >>> from beem import Hive
+                >>> from beem.nodelist import NodeList
+                >>> nodelist = NodeList()
+                >>> nodelist.update_nodes()
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
+                >>> account = Account("beem.app", blockchain_instance=stm)
                 >>> account.get_savings_withdrawals()
                 []
 
@@ -1317,15 +1557,15 @@ class Account(BlockchainObject):
             account = self["name"]
         elif isinstance(account, Account):
             account = account["name"]
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.find_savings_withdrawals({'account': account}, api="database")['withdrawals']
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase():
+            return self.blockchain.rpc.find_savings_withdrawals({'account': account}, api="database")['withdrawals']
         elif direction == "from":
-            return self.steem.rpc.get_savings_withdraw_from(account)
+            return self.blockchain.rpc.get_savings_withdraw_from(account)
         elif direction == "to":
-            return self.steem.rpc.get_savings_withdraw_to(account)
+            return self.blockchain.rpc.get_savings_withdraw_to(account)
 
     def get_recovery_request(self, account=None):
         """ Returns the recovery request for an account
@@ -1337,7 +1577,12 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
+                >>> from beem import Hive
+                >>> from beem.nodelist import NodeList
+                >>> nodelist = NodeList()
+                >>> nodelist.update_nodes()
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
+                >>> account = Account("beem.app", blockchain_instance=stm)
                 >>> account.get_recovery_request()
                 []
 
@@ -1346,13 +1591,13 @@ class Account(BlockchainObject):
             account = self["name"]
         elif isinstance(account, Account):
             account = account["name"]
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.find_account_recovery_requests({'account': account}, api="database")['requests']
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase():
+            return self.blockchain.rpc.find_account_recovery_requests({'account': account}, api="database")['requests']
         else:
-            return self.steem.rpc.get_recovery_request(account)
+            return self.blockchain.rpc.get_recovery_request(account)
 
     def get_escrow(self, escrow_id=0, account=None):
         """ Returns the escrow for a certain account by id
@@ -1365,7 +1610,12 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
+                >>> from beem import Hive
+                >>> from beem.nodelist import NodeList
+                >>> nodelist = NodeList()
+                >>> nodelist.update_nodes()
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
+                >>> account = Account("beem.app", blockchain_instance=stm)
                 >>> account.get_escrow(1234)
                 []
 
@@ -1374,13 +1624,13 @@ class Account(BlockchainObject):
             account = self["name"]
         elif isinstance(account, Account):
             account = account["name"]
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.find_escrows({'from': account}, api="database")['escrows']
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase():
+            return self.blockchain.rpc.find_escrows({'from': account}, api="database")['escrows']
         else:
-            return self.steem.rpc.get_escrow(account, escrow_id)
+            return self.blockchain.rpc.get_escrow(account, escrow_id)
 
     def verify_account_authority(self, keys, account=None):
         """ Returns true if the signers have enough authority to authorize an account.
@@ -1393,7 +1643,12 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("steemit")
+                >>> from beem import Hive
+                >>> from beem.nodelist import NodeList
+                >>> nodelist = NodeList()
+                >>> nodelist.update_nodes()
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
+                >>> account = Account("steemit", blockchain_instance=stm)
                 >>> print(account.verify_account_authority(["STM7Q2rLBqzPzFeteQZewv9Lu3NLE69fZoLeL6YK59t7UmssCBNTU"])["valid"])
                 False
 
@@ -1402,16 +1657,16 @@ class Account(BlockchainObject):
             account = self["name"]
         elif isinstance(account, Account):
             account = account["name"]
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         if not isinstance(keys, list):
             keys = [keys]
-        self.steem.rpc.set_next_node_on_empty_reply(False)
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
         try:
-            if self.steem.rpc.get_use_appbase():
-                return self.steem.rpc.verify_account_authority({'account': account, 'signers': keys}, api="database")
+            if self.blockchain.rpc.get_use_appbase():
+                return self.blockchain.rpc.verify_account_authority({'account': account, 'signers': keys}, api="database")
             else:
-                return self.steem.rpc.verify_account_authority(account, keys)
+                return self.blockchain.rpc.verify_account_authority(account, keys)
         except MissingRequiredActiveAuthority:
             return {'valid': False}
 
@@ -1422,27 +1677,18 @@ class Account(BlockchainObject):
 
             :rtype: list
 
-            .. code-block:: python
-
-                >>> from beem.account import Account
-                >>> from beem import Steem
-                >>> stm = Steem()
-                >>> account = Account("beem.app", steem_instance=stm)
-                >>> account.get_tags_used_by_author()
-                []
-
         """
         if account is None:
             account = self["name"]
         elif isinstance(account, Account):
             account = account["name"]
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.get_tags_used_by_author({'author': account}, api="tags")['tags']
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase():
+            return self.blockchain.rpc.get_tags_used_by_author({'author': account}, api="tags")['tags']
         else:
-            return self.steem.rpc.get_tags_used_by_author(account, api="tags")
+            return self.blockchain.rpc.get_tags_used_by_author(account, api="tags")
 
     def get_expiring_vesting_delegations(self, after=None, limit=1000, account=None):
         """ Returns the expirations for vesting delegations.
@@ -1456,7 +1702,12 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> account = Account("beem.app")
+                >>> from beem import Hive
+                >>> from beem.nodelist import NodeList
+                >>> nodelist = NodeList()
+                >>> nodelist.update_nodes()
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
+                >>> account = Account("beem.app", blockchain_instance=stm)
                 >>> account.get_expiring_vesting_delegations()
                 []
 
@@ -1465,17 +1716,17 @@ class Account(BlockchainObject):
             account = self["name"]
         elif isinstance(account, Account):
             account = account["name"]
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
         if after is None:
             after = addTzInfo(datetime.utcnow()) - timedelta(days=8)
-        if self.steem.rpc.get_use_appbase():
-            return self.steem.rpc.find_vesting_delegation_expirations({'account': account}, api="database")['delegations']
+        if self.blockchain.rpc.get_use_appbase():
+            return self.blockchain.rpc.find_vesting_delegation_expirations({'account': account}, api="database")['delegations']
         else:
-            return self.steem.rpc.get_expiring_vesting_delegations(account, formatTimeString(after), limit)
+            return self.blockchain.rpc.get_expiring_vesting_delegations(account, formatTimeString(after), limit)
 
-    def get_account_votes(self, account=None):
+    def get_account_votes(self, account=None, start_author="", start_permlink=""):
         """ Returns all votes that the account has done
 
             :rtype: list
@@ -1483,45 +1734,46 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 >>> from beem.account import Account
-                >>> from beem import Steem
-                >>> stm = Steem()
-                >>> account = Account("beem.app", steem_instance=stm)
-                >>> account.get_account_votes()
-                []
+                >>> from beem import Hive
+                >>> from beem.nodelist import NodeList
+                >>> nodelist = NodeList()
+                >>> nodelist.update_nodes()
+                >>> stm = Hive(node=nodelist.get_hive_nodes())
+                >>> account = Account("beem.app", blockchain_instance=stm)
+                >>> account.get_account_votes()  # doctest: +SKIP
 
         """
         if account is None:
             account = self["name"]
         elif isinstance(account, Account):
             account = account["name"]
-        if not self.steem.is_connected():
+        if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
-            vote_list = self.steem.rpc.get_account_votes(account, api="condenser")
-        else:
-            vote_list = self.steem.rpc.get_account_votes(account)
-        if isinstance(vote_list, dict) and "error" in vote_list:
-            start_author = ""
-            start_permlink = ""
-            vote_list = []
-            finished = False
-            while not finished:
-                ret = self.steem.rpc.list_votes({"start": [account, start_author, start_permlink], "limit": 1000, "order": "by_voter_comment"}, api="database")["votes"]
-                if start_author != "":
-                    if len(ret) == 0:
-                        finished = True
-                    ret = ret[1:]
-                for vote in ret:
-                    if vote["voter"] != account:
-                        finished = True
-                        continue
-                    vote_list.append(vote)
-                    start_author = vote["author"]
-                    start_permlink = vote["permlink"]
-            return vote_list
-        else:
-            return vote_list
+        # self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        # if self.blockchain.rpc.get_use_appbase():
+        #     vote_list = self.blockchain.rpc.get_account_votes(account, api="condenser")
+        # else:
+        #    vote_list = self.blockchain.rpc.get_account_votes(account)
+        # if isinstance(vote_list, dict) and "error" in vote_list:
+        self.blockchain.rpc.set_next_node_on_empty_reply(True)
+        vote_list = []
+        finished = False
+        while not finished:
+            ret = self.blockchain.rpc.list_votes({"start": [account, start_author, start_permlink], "limit": 1000, "order": "by_voter_comment"}, api="database")["votes"]
+            if start_author != "":
+                if len(ret) == 0:
+                    finished = True
+                ret = ret[1:]
+            for vote in ret:
+                if vote["voter"] != account:
+                    finished = True
+                    continue
+                vote_list.append(vote)
+                start_author = vote["author"]
+                start_permlink = vote["permlink"]
+        return vote_list
+        # else:
+        #     return vote_list
 
     def get_vote(self, comment):
         """Returns a vote if the account has already voted for comment.
@@ -1530,7 +1782,7 @@ class Account(BlockchainObject):
             :type comment: str, Comment
         """
         from beem.comment import Comment
-        c = Comment(comment, steem_instance=self.steem)
+        c = Comment(comment, blockchain_instance=self.blockchain)
         for v in c["active_votes"]:
             if v["voter"] == self["name"]:
                 return v
@@ -1543,7 +1795,7 @@ class Account(BlockchainObject):
             :type comment: str, Comment
         """
         from beem.comment import Comment
-        c = Comment(comment, steem_instance=self.steem)
+        c = Comment(comment, blockchain_instance=self.blockchain)
         active_votes = {v["voter"]: v for v in c["active_votes"]}
         return self["name"] in active_votes
 
@@ -1568,19 +1820,21 @@ class Account(BlockchainObject):
     def _get_account_history(self, account=None, start=-1, limit=0):
         if account is None:
             account = self
-        account = Account(account, steem_instance=self.steem)
-        if not self.steem.is_connected():
+        account = Account(account, blockchain_instance=self.blockchain)
+        if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.steem.rpc.set_next_node_on_empty_reply(False)
-        if self.steem.rpc.get_use_appbase():
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        if self.blockchain.rpc.get_use_appbase():
             try:
-                ret = self.steem.rpc.get_account_history({'account': account["name"], 'start': start, 'limit': limit}, api="account_history")['history']
+                ret = self.blockchain.rpc.get_account_history({'account': account["name"], 'start': start, 'limit': limit}, api="account_history")
+                if ret is not None:
+                    ret = ret["history"]
             except ApiNotSupported:
-                ret = self.steem.rpc.get_account_history(account["name"], start, limit, api="condenser")
+                ret = self.blockchain.rpc.get_account_history(account["name"], start, limit, api="condenser")
         else:
-            ret = self.steem.rpc.get_account_history(account["name"], start, limit, api="database")
-            if len(ret) == 0 and limit == 0:
-                ret = self.steem.rpc.get_account_history(account["name"], start, limit + 1, api="database")
+            ret = self.blockchain.rpc.get_account_history(account["name"], start, limit, api="database")
+            if ret is None or (len(ret) == 0 and limit == 0):
+                ret = self.blockchain.rpc.get_account_history(account["name"], start, limit + 1, api="database")
         return ret
 
     def estimate_virtual_op_num(self, blocktime, stop_diff=0, max_count=100):
@@ -1638,7 +1892,7 @@ class Account(BlockchainObject):
 
         # convert blocktime to block number if given as a datetime/date/time
         if isinstance(blocktime, (datetime, date, time)):
-            b = Blockchain(steem_instance=self.steem)
+            b = Blockchain(blockchain_instance=self.blockchain)
             target_blocknum = b.get_estimated_block_num(addTzInfo(blocktime), accurate=True)
         else:
             target_blocknum = blocktime
@@ -1711,10 +1965,10 @@ class Account(BlockchainObject):
             :param int days: limit number of days to be included int the return value
         """
         stop = addTzInfo(datetime.utcnow()) - timedelta(days=days)
-        reward_vests = Amount(0, self.steem.vests_symbol, steem_instance=self.steem)
+        reward_vests = Amount(0, self.blockchain.vest_token_symbol, blockchain_instance=self.blockchain)
         for reward in self.history_reverse(stop=stop, use_block_num=False, only_ops=["curation_reward"]):
-            reward_vests += Amount(reward['reward'], steem_instance=self.steem)
-        return self.steem.vests_to_sp(float(reward_vests))
+            reward_vests += Amount(reward['reward'], blockchain_instance=self.blockchain)
+        return self.blockchain.vests_to_token_power(float(reward_vests))
 
     def curation_stats(self):
         """Returns the curation reward of the last 24h and 7d and the average
@@ -1770,7 +2024,7 @@ class Account(BlockchainObject):
         """
         if order != -1 and order != 1:
             raise ValueError("order must be -1 or 1!")
-        # self.steem.rpc.set_next_node_on_empty_reply(True)
+        # self.blockchain.rpc.set_next_node_on_empty_reply(True)
         txs = self._get_account_history(start=index, limit=limit)
         if txs is None:
             return
@@ -2183,7 +2437,11 @@ class Account(BlockchainObject):
     def follow(self, other, what=["blog"], account=None):
         """ Follow/Unfollow/Mute/Unmute another account's blog
 
-            :param str other: Follow this account
+            .. note:: what can be one of the following on HIVE:
+            blog, ignore, blacklist, unblacklist, follow_blacklist,
+            unfollow_blacklist, follow_muted, unfollow_muted
+            
+            :param str/list other: Follow this account / accounts (only hive)
             :param list what: List of states to follow.
                 ``['blog']`` means to follow ``other``,
                 ``[]`` means to unfollow/unmute ``other``,
@@ -2199,7 +2457,8 @@ class Account(BlockchainObject):
             raise ValueError("You need to provide an account")
         if not other:
             raise ValueError("You need to provide an account to follow/unfollow/mute/unmute")
-
+        if isinstance(other, str) and other.find(",") > 0:
+            other = other.split(",")
         json_body = [
             'follow', {
                 'follower': account,
@@ -2207,7 +2466,7 @@ class Account(BlockchainObject):
                 'what': what
             }
         ]
-        return self.steem.custom_json(
+        return self.blockchain.custom_json(
             "follow", json_body, required_posting_auths=[account])
 
     def update_account_profile(self, profile, account=None, **kwargs):
@@ -2242,7 +2501,7 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
 
         if not isinstance(profile, dict):
             raise ValueError("Profile must be a dict type!")
@@ -2265,7 +2524,7 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
         if isinstance(metadata, dict):
             metadata = json.dumps(metadata)
         elif not isinstance(metadata, str):
@@ -2275,9 +2534,9 @@ class Account(BlockchainObject):
                 "account": account["name"],
                 "memo_key": account["memo_key"],
                 "json_metadata": metadata,
-                "prefix": self.steem.prefix,
+                "prefix": self.blockchain.prefix,
             })
-        return self.steem.finalizeOp(op, account, "active", **kwargs)
+        return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
     def update_account_jsonmetadata(self, metadata, account=None, **kwargs):
         """ Update an account's profile in json_metadata using the posting key
@@ -2290,18 +2549,18 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
         if isinstance(metadata, dict):
             metadata = json.dumps(metadata)
         elif not isinstance(metadata, str):
             raise ValueError("Profile must be a dict or string!")
-        op = operations.Account_update(
+        op = operations.Account_update2(
             **{
                 "account": account["name"],
                 "posting_json_metadata": metadata,
-                "prefix": self.steem.prefix,
+                "prefix": self.blockchain.prefix,
             })
-        return self.steem.finalizeOp(op, account, "posting", **kwargs)
+        return self.blockchain.finalizeOp(op, account, "posting", **kwargs)
 
     # -------------------------------------------------------------------------
     #  Approval and Disapproval of witnesses
@@ -2317,21 +2576,21 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
 
         # if not isinstance(witnesses, (list, set, tuple)):
         #     witnesses = {witnesses}
 
         # for witness in witnesses:
-        #     witness = Witness(witness, steem_instance=self)
+        #     witness = Witness(witness, blockchain_instance=self)
 
         op = operations.Account_witness_vote(**{
             "account": account["name"],
             "witness": witness,
             "approve": approve,
-            "prefix": self.steem.prefix,
+            "prefix": self.blockchain.prefix,
         })
-        return self.steem.finalizeOp(op, account, "active", **kwargs)
+        return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
     def disapprovewitness(self, witness, account=None, **kwargs):
         """ Disapprove a witness
@@ -2342,6 +2601,31 @@ class Account(BlockchainObject):
         """
         return self.approvewitness(
             witness=witness, account=account, approve=False)
+
+    def setproxy(self, proxy='', account=None):
+        """ Set the witness and proposal system proxy of an account
+
+        :param proxy: The account to set the proxy to (Leave empty for removing the proxy)
+        :type proxy: str or Account
+        :param account: The account the proxy should be set for
+        :type account: str or Account
+        """
+        if account is None:
+            account = self
+        elif isinstance(account, Account):
+            pass
+        else:
+            account = Account(account)
+
+        if isinstance(proxy, str):
+            proxy_name = proxy
+        else:
+            proxy_name = proxy["name"]
+        op = operations.Account_witness_proxy(**{
+            'account': account.name,
+            'proxy': proxy_name
+        })
+        return self.blockchain.finalizeOp(op, account, 'active')
 
     def update_memo_key(self, key, account=None, **kwargs):
         """ Update an account's memo public key
@@ -2356,24 +2640,24 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
 
-        PublicKey(key, prefix=self.steem.prefix)
+        PublicKey(key, prefix=self.blockchain.prefix)
 
         account["memo_key"] = key
         op = operations.Account_update(**{
             "account": account["name"],
             "memo_key": account["memo_key"],
             "json_metadata": account["json_metadata"],
-            "prefix": self.steem.prefix,
+            "prefix": self.blockchain.prefix,
         })
-        return self.steem.finalizeOp(op, account, "active", **kwargs)
+        return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
     def update_account_keys(self, new_password, account=None, **kwargs):
         """ Updates all account keys
 
             This method does **not** add any private keys to your
-            wallet but merely changes the memo public key.
+            wallet but merely changes the public keys.
 
             :param str new_password: is used to derive the owner, active,
                 posting and memo key
@@ -2383,12 +2667,12 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
 
         key_auths = {}
         for role in ['owner', 'active', 'posting', 'memo']:
             pk = PasswordKey(account['name'], new_password, role=role)
-            key_auths[role] = format(pk.get_public_key(), self.steem.prefix)
+            key_auths[role] = format(pk.get_public_key(), self.blockchain.prefix)
 
         op = operations.Account_update(**{
             "account": account["name"],
@@ -2406,10 +2690,10 @@ class Account(BlockchainObject):
                         'weight_threshold': 1},
             'memo_key': key_auths['memo'],
             "json_metadata": account['json_metadata'],
-            "prefix": self.steem.prefix,
+            "prefix": self.blockchain.prefix,
         })
 
-        return self.steem.finalizeOp(op, account, "owner", **kwargs)
+        return self.blockchain.finalizeOp(op, account, "owner", **kwargs)
 
     def change_recovery_account(self, new_recovery_account,
                                 account=None, **kwargs):
@@ -2429,16 +2713,16 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
         # Account() lookup to make sure the new account is valid
         new_rec_acc = Account(new_recovery_account,
-                              steem_instance=self.steem)
+                              blockchain_instance=self.blockchain)
         op = operations.Change_recovery_account(**{
             'account_to_recover': account['name'],
             'new_recovery_account': new_rec_acc['name'],
             'extensions': []
         })
-        return self.steem.finalizeOp(op, account, "owner", **kwargs)
+        return self.blockchain.finalizeOp(op, account, "owner", **kwargs)
 
     # -------------------------------------------------------------------------
     # Simple Transfer
@@ -2460,26 +2744,27 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 from beem.account import Account
-                from beem import Steem
+                from beem import Hive
                 active_wif = "5xxxx"
-                stm = Steem(keys=[active_wif])
-                acc = Account("test", steem_instance=stm)
-                acc.transfer("test1", 1, "STEEM", "test")
+                stm = Hive(keys=[active_wif])
+                acc = Account("test", blockchain_instance=stm)
+                acc.transfer("test1", 1, "HIVE", "test")
 
         """
 
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
-        amount = Amount(amount, asset, steem_instance=self.steem)
-        to = Account(to, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
+        amount = Amount(amount, asset, blockchain_instance=self.blockchain)
+        to = Account(to, blockchain_instance=self.blockchain)
+        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()
         if memo and memo[0] == "#":
             from .memo import Memo
             memoObj = Memo(
                 from_account=account,
                 to_account=to,
-                steem_instance=self.steem
+                blockchain_instance=self.blockchain
             )
             memo = memoObj.encrypt(memo[1:])["message"]
 
@@ -2488,9 +2773,10 @@ class Account(BlockchainObject):
             "to": to["name"],
             "memo": memo,
             "from": account["name"],
-            "prefix": self.steem.prefix,
+            "prefix": self.blockchain.prefix,
+            "replace_hive_by_steem": replace_hive_by_steem,
         })
-        return self.steem.finalizeOp(op, account, "active", **kwargs)
+        return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
     def transfer_to_vesting(self, amount, to=None, account=None, **kwargs):
         """ Vest STEEM
@@ -2503,22 +2789,23 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
         if to is None:
             to = self  # powerup on the same account
         else:
-            to = Account(to, steem_instance=self.steem)
-        amount = self._check_amount(amount, self.steem.steem_symbol)
-
-        to = Account(to, steem_instance=self.steem)
+            to = Account(to, blockchain_instance=self.blockchain)
+        amount = self._check_amount(amount, self.blockchain.token_symbol)
+        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()
+        to = Account(to, blockchain_instance=self.blockchain)
 
         op = operations.Transfer_to_vesting(**{
             "from": account["name"],
             "to": to["name"],
             "amount": amount,
-            "prefix": self.steem.prefix,
+            "prefix": self.blockchain.prefix,
+            "replace_hive_by_steem": replace_hive_by_steem,
         })
-        return self.steem.finalizeOp(op, account, "active", **kwargs)
+        return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
     def convert(self, amount, account=None, request_id=None):
         """ Convert SteemDollars to Steem (takes 3.5 days to settle)
@@ -2533,21 +2820,23 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
-        amount = self._check_amount(amount, self.steem.sbd_symbol)
+            account = Account(account, blockchain_instance=self.blockchain)
+        amount = self._check_amount(amount, self.blockchain.backed_token_symbol)
         if request_id:
             request_id = int(request_id)
         else:
             request_id = random.getrandbits(32)
+        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()      
         op = operations.Convert(
             **{
                 "owner": account["name"],
                 "requestid": request_id,
                 "amount": amount,
-                "prefix": self.steem.prefix,
+                "prefix": self.blockchain.prefix,
+                "replace_hive_by_steem": replace_hive_by_steem,
             })
 
-        return self.steem.finalizeOp(op, account, "active")
+        return self.blockchain.finalizeOp(op, account, "active")
 
     def transfer_to_savings(self, amount, asset, memo, to=None, account=None, **kwargs):
         """ Transfer SBD or STEEM into a 'savings' account.
@@ -2561,29 +2850,30 @@ class Account(BlockchainObject):
                 if not ``default_account``
 
         """
-        if asset not in [self.steem.steem_symbol, self.steem.sbd_symbol]:
+        if asset not in [self.blockchain.token_symbol, self.blockchain.backed_token_symbol]:
             raise AssertionError()
 
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
 
-        amount = Amount(amount, asset, steem_instance=self.steem)
+        amount = Amount(amount, asset, blockchain_instance=self.blockchain)
         if to is None:
             to = account  # move to savings on same account
         else:
-            to = Account(to, steem_instance=self.steem)
-
+            to = Account(to, blockchain_instance=self.blockchain)
+        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()
         op = operations.Transfer_to_savings(
             **{
                 "from": account["name"],
                 "to": to["name"],
                 "amount": amount,
                 "memo": memo,
-                "prefix": self.steem.prefix,
+                "prefix": self.blockchain.prefix,
+                "replace_hive_by_steem": replace_hive_by_steem,
             })
-        return self.steem.finalizeOp(op, account, "active", **kwargs)
+        return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
     def transfer_from_savings(self,
                               amount,
@@ -2605,22 +2895,24 @@ class Account(BlockchainObject):
                 if not ``default_account``
 
         """
-        if asset not in [self.steem.steem_symbol, self.steem.sbd_symbol]:
+        if asset not in [self.blockchain.token_symbol, self.blockchain.backed_token_symbol]:
             raise AssertionError()
 
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
         if to is None:
             to = account  # move to savings on same account
         else:
-            to = Account(to, steem_instance=self.steem)
-        amount = Amount(amount, asset, steem_instance=self.steem)
+            to = Account(to, blockchain_instance=self.blockchain)
+        amount = Amount(amount, asset, blockchain_instance=self.blockchain)
         if request_id:
             request_id = int(request_id)
         else:
             request_id = random.getrandbits(32)
+
+        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()
 
         op = operations.Transfer_from_savings(
             **{
@@ -2629,9 +2921,10 @@ class Account(BlockchainObject):
                 "to": to["name"],
                 "amount": amount,
                 "memo": memo,
-                "prefix": self.steem.prefix,
+                "prefix": self.blockchain.prefix,
+                "replace_hive_by_steem": replace_hive_by_steem,
             })
-        return self.steem.finalizeOp(op, account, "active", **kwargs)
+        return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
     def cancel_transfer_from_savings(self, request_id, account=None, **kwargs):
         """ Cancel a withdrawal from 'savings' account.
@@ -2645,21 +2938,21 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
         op = operations.Cancel_transfer_from_savings(**{
             "from": account["name"],
             "request_id": request_id,
-            "prefix": self.steem.prefix,
+            "prefix": self.blockchain.prefix,
         })
-        return self.steem.finalizeOp(op, account, "active", **kwargs)
+        return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
     def _check_amount(self, amount, symbol):
         if isinstance(amount, (float, integer_types)):
-            amount = Amount(amount, symbol, steem_instance=self.steem)
+            amount = Amount(amount, symbol, blockchain_instance=self.blockchain)
         elif isinstance(amount, string_types) and amount.replace('.', '', 1).replace(',', '', 1).isdigit():
-            amount = Amount(float(amount), symbol, steem_instance=self.steem)
+            amount = Amount(float(amount), symbol, blockchain_instance=self.blockchain)
         else:
-            amount = Amount(amount, steem_instance=self.steem)
+            amount = Amount(amount, blockchain_instance=self.blockchain)
         if not amount["symbol"] == symbol:
             raise AssertionError()
         return amount
@@ -2667,15 +2960,19 @@ class Account(BlockchainObject):
     def claim_reward_balance(self,
                              reward_steem=0,
                              reward_sbd=0,
+                             reward_hive=0,
+                             reward_hbd=0,                             
                              reward_vests=0,
                              account=None, **kwargs):
         """ Claim reward balances.
         By default, this will claim ``all`` outstanding balances. To bypass
         this behaviour, set desired claim amount by setting any of
-        `reward_steem`, `reward_sbd` or `reward_vests`.
+        `reward_steem`/``reward_hive, `reward_sbd`/``reward_hbd or `reward_vests`.
 
         :param str reward_steem: Amount of STEEM you would like to claim.
+        :param str reward_hive: Amount of HIVE you would like to claim.
         :param str reward_sbd: Amount of SBD you would like to claim.
+        :param str reward_hbd: Amount of HBD you would like to claim.
         :param str reward_vests: Amount of VESTS you would like to claim.
         :param str account: The source account for the claim if not
             ``default_account`` is used.
@@ -2684,16 +2981,23 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
         if not account:
             raise ValueError("You need to provide an account")
 
         # if no values were set by user, claim all outstanding balances on
         # account
 
-        reward_steem = self._check_amount(reward_steem, self.steem.steem_symbol)
-        reward_sbd = self._check_amount(reward_sbd, self.steem.sbd_symbol)
-        reward_vests = self._check_amount(reward_vests, self.steem.vests_symbol)
+        reward_steem = self._check_amount(reward_steem + reward_hive, self.blockchain.token_symbol)
+        reward_sbd = self._check_amount(reward_sbd + reward_hbd, self.blockchain.backed_token_symbol)
+        reward_vests = self._check_amount(reward_vests, self.blockchain.vest_token_symbol)
+        
+        reward_token = "reward_steem"
+        reward_backed_token = "reward_sbd"
+        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()
+        if not replace_hive_by_steem:
+            reward_token = "reward_hive"
+            reward_backed_token = "reward_hbd"
 
         if reward_steem.amount == 0 and reward_sbd.amount == 0 and reward_vests.amount == 0:
             if len(account.balances["rewards"]) == 3:
@@ -2703,23 +3007,24 @@ class Account(BlockchainObject):
                 op = operations.Claim_reward_balance(
                     **{
                         "account": account["name"],
-                        "reward_steem": reward_steem,
-                        "reward_sbd": reward_sbd,
+                        reward_token: reward_steem,
+                        reward_backed_token: reward_sbd,
                         "reward_vests": reward_vests,
-                        "prefix": self.steem.prefix,
-                    })
+                        "prefix": self.blockchain.prefix,
+                        "replace_hive_by_steem": replace_hive_by_steem
+                    })         
             else:
                 reward_steem = account.balances["rewards"][0]
                 reward_vests = account.balances["rewards"][1]
                 op = operations.Claim_reward_balance(
                     **{
                         "account": account["name"],
-                        "reward_steem": reward_steem,
+                        reward_token: reward_steem,
                         "reward_vests": reward_vests,
-                        "prefix": self.steem.prefix,
+                        "prefix": self.blockchain.prefix,
                     })
 
-        return self.steem.finalizeOp(op, account, "posting", **kwargs)
+        return self.blockchain.finalizeOp(op, account, "posting", **kwargs)
 
     def delegate_vesting_shares(self, to_account, vesting_shares,
                                 account=None, **kwargs):
@@ -2735,20 +3040,20 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
-        to_account = Account(to_account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
+        to_account = Account(to_account, blockchain_instance=self.blockchain)
         if to_account is None:
             raise ValueError("You need to provide a to_account")
-        vesting_shares = self._check_amount(vesting_shares, self.steem.vests_symbol)
+        vesting_shares = self._check_amount(vesting_shares, self.blockchain.vest_token_symbol)
 
         op = operations.Delegate_vesting_shares(
             **{
                 "delegator": account["name"],
                 "delegatee": to_account["name"],
                 "vesting_shares": vesting_shares,
-                "prefix": self.steem.prefix,
+                "prefix": self.blockchain.prefix,
             })
-        return self.steem.finalizeOp(op, account, "active", **kwargs)
+        return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
     def withdraw_vesting(self, amount, account=None, **kwargs):
         """ Withdraw VESTS from the vesting account.
@@ -2762,17 +3067,17 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
-        amount = self._check_amount(amount, self.steem.vests_symbol)
+            account = Account(account, blockchain_instance=self.blockchain)
+        amount = self._check_amount(amount, self.blockchain.vest_token_symbol)
 
         op = operations.Withdraw_vesting(
             **{
                 "account": account["name"],
                 "vesting_shares": amount,
-                "prefix": self.steem.prefix,
+                "prefix": self.blockchain.prefix,
             })
 
-        return self.steem.finalizeOp(op, account, "active", **kwargs)
+        return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
     def set_withdraw_vesting_route(self,
                                    to,
@@ -2795,7 +3100,7 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
         op = operations.Set_withdraw_vesting_route(
             **{
                 "from_account": account["name"],
@@ -2804,7 +3109,7 @@ class Account(BlockchainObject):
                 "auto_vest": auto_vest
             })
 
-        return self.steem.finalizeOp(op, account, "active", **kwargs)
+        return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
     def allow(
         self, foreign, weight=None, permission="posting",
@@ -2829,20 +3134,20 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
 
         if permission not in ["owner", "posting", "active"]:
             raise ValueError(
                 "Permission needs to be either 'owner', 'posting', or 'active"
             )
-        account = Account(account, steem_instance=self.steem)
+        account = Account(account, blockchain_instance=self.blockchain)
 
         if permission not in account:
-            account = Account(account, steem_instance=self.steem, lazy=False, full=True)
+            account = Account(account, blockchain_instance=self.blockchain, lazy=False, full=True)
             account.clear_cache()
             account.refresh()
         if permission not in account:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
         if permission not in account:
             raise AssertionError("Could not access permission")
 
@@ -2851,14 +3156,14 @@ class Account(BlockchainObject):
 
         authority = deepcopy(account[permission])
         try:
-            pubkey = PublicKey(foreign, prefix=self.steem.prefix)
+            pubkey = PublicKey(foreign, prefix=self.blockchain.prefix)
             authority["key_auths"].append([
                 str(pubkey),
                 weight
             ])
         except:
             try:
-                foreign_account = Account(foreign, steem_instance=self.steem)
+                foreign_account = Account(foreign, blockchain_instance=self.blockchain)
                 authority["account_auths"].append([
                     foreign_account["name"],
                     weight
@@ -2869,19 +3174,19 @@ class Account(BlockchainObject):
                 )
         if threshold:
             authority["weight_threshold"] = threshold
-            self.steem._test_weights_treshold(authority)
+            self.blockchain._test_weights_treshold(authority)
 
         op = operations.Account_update(**{
             "account": account["name"],
             permission: authority,
             "memo_key": account["memo_key"],
             "json_metadata": account["json_metadata"],
-            "prefix": self.steem.prefix
+            "prefix": self.blockchain.prefix
         })
         if permission == "owner":
-            return self.steem.finalizeOp(op, account, "owner", **kwargs)
+            return self.blockchain.finalizeOp(op, account, "owner", **kwargs)
         else:
-            return self.steem.finalizeOp(op, account, "active", **kwargs)
+            return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
     def disallow(
         self, foreign, permission="posting",
@@ -2901,7 +3206,7 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
 
         if permission not in ["owner", "active", "posting"]:
             raise ValueError(
@@ -2910,13 +3215,13 @@ class Account(BlockchainObject):
         authority = account[permission]
 
         try:
-            pubkey = PublicKey(foreign, prefix=self.steem.prefix)
+            pubkey = PublicKey(foreign, prefix=self.blockchain.prefix)
             affected_items = list(
                 [x for x in authority["key_auths"] if x[0] == str(pubkey)])
             authority["key_auths"] = list([x for x in authority["key_auths"] if x[0] != str(pubkey)])
         except:
             try:
-                foreign_account = Account(foreign, steem_instance=self.steem)
+                foreign_account = Account(foreign, blockchain_instance=self.blockchain)
                 affected_items = list(
                     [x for x in authority["account_auths"] if x[0] == foreign_account["name"]])
                 authority["account_auths"] = list([x for x in authority["account_auths"] if x[0] != foreign_account["name"]])
@@ -2936,26 +3241,26 @@ class Account(BlockchainObject):
         # Correct threshold (at most by the amount removed from the
         # authority)
         try:
-            self.steem._test_weights_treshold(authority)
+            self.blockchain._test_weights_treshold(authority)
         except:
             log.critical(
                 "The account's threshold will be reduced by %d"
                 % (removed_weight)
             )
             authority["weight_threshold"] -= removed_weight
-            self.steem._test_weights_treshold(authority)
+            self.blockchain._test_weights_treshold(authority)
 
         op = operations.Account_update(**{
             "account": account["name"],
             permission: authority,
             "memo_key": account["memo_key"],
             "json_metadata": account["json_metadata"],
-            "prefix": self.steem.prefix,
+            "prefix": self.blockchain.prefix,
         })
         if permission == "owner":
-            return self.steem.finalizeOp(op, account, "owner", **kwargs)
+            return self.blockchain.finalizeOp(op, account, "owner", **kwargs)
         else:
-            return self.steem.finalizeOp(op, account, "active", **kwargs)
+            return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
     def feed_history(self, limit=None, start_author=None, start_permlink=None,
                      account=None):
@@ -2984,7 +3289,12 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 from beem.account import Account
-                acc = Account("ned")
+                from beem import Steem
+                from beem.nodelist import NodeList
+                nodelist = NodeList()
+                nodelist.update_nodes()
+                stm = Steem(node=nodelist.get_hive_nodes())
+                acc = Account("ned", blockchain_instance=stm)
                 for reply in acc.feed_history(limit=10):
                     print(reply)
 
@@ -3000,7 +3310,7 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
         feed_count = 0
         while True:
             query_limit = 100
@@ -3010,7 +3320,7 @@ class Account(BlockchainObject):
             query = Query(start_author=start_author,
                           start_permlink=start_permlink, limit=query_limit,
                           tag=account['name'])
-            results = Discussions_by_feed(query, steem_instance=self.steem)
+            results = Discussions_by_feed(query, blockchain_instance=self.blockchain)
             if len(results) == 0 or (start_permlink and len(results) == 1):
                 return
             if feed_count > 0 and start_permlink:
@@ -3047,7 +3357,12 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 from beem.account import Account
-                acc = Account("steemitblog")
+                from beem import Steem
+                from beem.nodelist import NodeList
+                nodelist = NodeList()
+                nodelist.update_nodes()
+                stm = Steem(node=nodelist.get_hive_nodes())
+                acc = Account("steemitblog", blockchain_instance=stm)
                 for post in acc.blog_history(limit=10):
                     print(post)
 
@@ -3059,7 +3374,7 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
 
         post_count = 0
         start_permlink = None
@@ -3073,7 +3388,7 @@ class Account(BlockchainObject):
             query = {'start_author': start_author,
                      'start_permlink':start_permlink,
                      'limit': query_limit, 'tag': account['name']}
-            results = Discussions_by_blog(query, steem_instance=self.steem)
+            results = Discussions_by_blog(query, blockchain_instance=self.blockchain)
             if len(results) == 0 or (start_permlink and len(results) == 1):
                 return
             if start_permlink:
@@ -3111,7 +3426,12 @@ class Account(BlockchainObject):
             .. code-block:: python
 
                 from beem.account import Account
-                acc = Account("ned")
+                from beem import Steem
+                from beem.nodelist import NodeList
+                nodelist = NodeList()
+                nodelist.update_nodes()
+                stm = Steem(node=nodelist.get_hive_nodes())
+                acc = Account("ned", blockchain_instance=stm)
                 for comment in acc.comment_history(limit=10):
                     print(comment)
 
@@ -3123,7 +3443,7 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
 
         comment_count = 0
         while True:
@@ -3135,7 +3455,7 @@ class Account(BlockchainObject):
                      'start_permlink': start_permlink, 'limit':
                      query_limit}
             results = Discussions_by_comments(query,
-                                              steem_instance=self.steem)
+                                              blockchain_instance=self.blockchain)
             if len(results) == 0 or (start_permlink and len(results) == 1):
                 return
             if comment_count > 0 and start_permlink:
@@ -3193,7 +3513,7 @@ class Account(BlockchainObject):
         if account is None:
             account = self
         else:
-            account = Account(account, steem_instance=self.steem)
+            account = Account(account, blockchain_instance=self.blockchain)
 
         if start_author is None:
             start_author = account['name']
@@ -3209,7 +3529,7 @@ class Account(BlockchainObject):
                      'start_permlink': start_permlink, 'limit':
                      query_limit}
             results = Replies_by_last_update(query,
-                                             steem_instance=self.steem)
+                                             blockchain_instance=self.blockchain)
             if len(results) == 0 or (start_permlink and len(results) == 1):
                 return
             if reply_count > 0 and start_permlink:
@@ -3249,7 +3569,7 @@ class AccountsObject(list):
         for f in self:
             rep.append(f.rep)
             own_mvest.append(float(f.balances["available"][2]) / 1e6)
-            eff_sp.append(f.get_steem_power())
+            eff_sp.append(f.get_token_power())
             last_vote = addTzInfo(datetime.utcnow()) - (f["last_vote_time"])
             if last_vote.days >= 365:
                 no_vote += 1
@@ -3287,27 +3607,34 @@ class Accounts(AccountsObject):
         :param list name_list: list of accounts to fetch
         :param int batch_limit: (optional) maximum number of accounts
             to fetch per call, defaults to 100
-        :param Steem steem_instance: Steem() instance to use when
-            accessing a RPCcreator = Account(creator, steem_instance=self)
+        :param Steem/Hive blockchain_instance: Steem() or Hive() instance to use when
+            accessing a RPCcreator = Account(creator, blockchain_instance=self)
     """
-    def __init__(self, name_list, batch_limit=100, lazy=False, full=True, steem_instance=None):
-        self.steem = steem_instance or shared_steem_instance()
-        if not self.steem.is_connected():
+    def __init__(self, name_list, batch_limit=100, lazy=False, full=True, blockchain_instance=None, **kwargs):
+        
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
+
+        if not self.blockchain.is_connected():
             return
         accounts = []
         name_cnt = 0
 
         while name_cnt < len(name_list):
-            self.steem.rpc.set_next_node_on_empty_reply(False)
-            if self.steem.rpc.get_use_appbase():
-                accounts += self.steem.rpc.find_accounts({'accounts': name_list[name_cnt:batch_limit + name_cnt]}, api="database")["accounts"]
+            self.blockchain.rpc.set_next_node_on_empty_reply(False)
+            if self.blockchain.rpc.get_use_appbase():
+                accounts += self.blockchain.rpc.find_accounts({'accounts': name_list[name_cnt:batch_limit + name_cnt]}, api="database")["accounts"]
             else:
-                accounts += self.steem.rpc.get_accounts(name_list[name_cnt:batch_limit + name_cnt])
+                accounts += self.blockchain.rpc.get_accounts(name_list[name_cnt:batch_limit + name_cnt])
             name_cnt += batch_limit
 
         super(Accounts, self).__init__(
             [
-                Account(x, lazy=lazy, full=full, steem_instance=self.steem)
+                Account(x, lazy=lazy, full=full, blockchain_instance=self.blockchain)
                 for x in accounts
             ]
         )

@@ -98,20 +98,20 @@ def assets_from_string(text):
     Splits the string into two assets with the separator being on of the
     following: ``:``, ``/``, or ``-``.
     """
-    return re.split(r"[\-:/]", text)
+    return re.split(r"[\-:\/]", text)
 
 
 def sanitize_permlink(permlink):
     permlink = permlink.strip()
-    permlink = re.sub("_|\s|\.", "-", permlink)
-    permlink = re.sub("[^\w-]", "", permlink)
-    permlink = re.sub("[^a-zA-Z0-9-]", "", permlink)
+    permlink = re.sub(r"_|\s|\.", "-", permlink)
+    permlink = re.sub(r"[^\w-]", "", permlink)
+    permlink = re.sub(r"[^a-zA-Z0-9-]", "", permlink)
     permlink = permlink.lower()
     return permlink
 
 
 def derive_permlink(title, parent_permlink=None, parent_author=None,
-                    max_permlink_length=256):
+                    max_permlink_length=256, with_suffix=True):
     """Derive a permlink from a comment title (for root level
     comments) or the parent permlink and optionally the parent
     author (for replies).
@@ -120,20 +120,38 @@ def derive_permlink(title, parent_permlink=None, parent_author=None,
     suffix = "-" + formatTime(datetime.utcnow()) + "z"
     if parent_permlink and parent_author:
         prefix = "re-" + sanitize_permlink(parent_author) + "-"
-        rem_chars = max_permlink_length - len(suffix) - len(prefix)
+        if with_suffix:
+            rem_chars = max_permlink_length - len(suffix) - len(prefix)
+        else:
+            rem_chars = max_permlink_length - len(prefix)
         body = sanitize_permlink(parent_permlink)[:rem_chars]
-        return prefix + body + suffix
+        if with_suffix:
+            return prefix + body + suffix
+        else:
+            return prefix + body
     elif parent_permlink:
         prefix = "re-"
-        rem_chars = max_permlink_length - len(suffix) - len(prefix)
+        if with_suffix:
+            rem_chars = max_permlink_length - len(suffix) - len(prefix)
+        else:
+            rem_chars = max_permlink_length - len(prefix)
         body = sanitize_permlink(parent_permlink)[:rem_chars]
-        return prefix + body + suffix
+        if with_suffix:
+            return prefix + body + suffix
+        else:
+            return prefix + body
     else:
-        rem_chars = max_permlink_length - len(suffix)
+        if with_suffix:
+            rem_chars = max_permlink_length - len(suffix)
+        else:
+            rem_chars = max_permlink_length
         body = sanitize_permlink(title)[:rem_chars]
         if len(body) == 0:  # empty title or title consisted of only special chars
             return suffix[1:]  # use timestamp only, strip leading "-"
-        return body + suffix
+        if with_suffix:
+            return body + suffix
+        else:
+            return body
 
 
 def resolve_authorperm(identifier):
@@ -154,15 +172,15 @@ def resolve_authorperm(identifier):
 
     """
     # without any http(s)
-    match = re.match("@?([\w\-\.]*)/([\w\-]*)", identifier)
+    match = re.match(r"@?([\w\-\.]*)/([\w\-]*)", identifier)
     if hasattr(match, "group"):
         return match.group(1), match.group(2)
     # dtube url
-    match = re.match("([\w\-\.]+[^#?\s]+)/#!/v/?([\w\-\.]*)/([\w\-]*)", identifier)
+    match = re.match(r"([\w\-\.]+[^#?\s]+)/#!/v/?([\w\-\.]*)/([\w\-]*)", identifier)
     if hasattr(match, "group"):
         return match.group(2), match.group(3)
     # url
-    match = re.match("([\w\-\.]+[^#?\s]+)/@?([\w\-\.]*)/([\w\-]*)", identifier)
+    match = re.match(r"([\w\-\.]+[^#?\s]+)/@?([\w\-\.]*)/([\w\-]*)", identifier)
     if not hasattr(match, "group"):
         raise ValueError("Invalid identifier")
     return match.group(2), match.group(3)
@@ -195,7 +213,7 @@ def construct_authorperm(*args):
 
 
 def resolve_root_identifier(url):
-    m = re.match("/([^/]*)/@([^/]*)/([^#]*).*", url)
+    m = re.match(r"/([^/]*)/@([^/]*)/([^#]*).*", url)
     if not m:
         return "", ""
     else:
@@ -347,18 +365,20 @@ def derive_tags(tags):
     elif len(tags.split(" ")) > 1:
         for tag in tags.split(" "):
             tags_list.append(tag.strip())
+    elif len(tags) > 0:
+        tags_list.append(tags.strip())
     return tags_list
 
 
 def seperate_yaml_dict_from_body(content):
     parameter = {}
     body = ""
-    if len(content.split("---")) > 1:
-        body = content[content.find("---", 1) + 3 :]
-        yaml_content = content[content.find("---") + 3 : content.find("---", 1)]
-        parameter = yaml.load(yaml_content)
+    if len(content.split("---\n")) > 1:
+        body = content[content.find("---\n", 1) + 4 :]
+        yaml_content = content[content.find("---\n") + 4 : content.find("---\n", 1)]
+        parameter = yaml.load(yaml_content, Loader=yaml.FullLoader)
         if not isinstance(parameter, dict):
-            parameter = yaml.load(yaml_content.replace(":", ": ").replace("  ", " "))
+            parameter = yaml.load(yaml_content.replace(":", ": ").replace("  ", " "), Loader=yaml.FullLoader)
     else:
         body = content
     return body, parameter

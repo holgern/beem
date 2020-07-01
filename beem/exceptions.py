@@ -12,12 +12,6 @@ class WalletExists(Exception):
     pass
 
 
-class WalletLocked(Exception):
-    """ Wallet is locked
-    """
-    pass
-
-
 class RPCConnectionRequired(Exception):
     """ An RPC connection is required
     """

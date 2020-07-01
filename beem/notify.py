@@ -5,8 +5,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import logging
 from events import Events
-from beemapi.websocket import SteemWebsocket
-from beem.instance import shared_steem_instance
+from beemapi.websocket import NodeWebsocket
+from beem.instance import shared_blockchain_instance
 from beem.blockchain import Blockchain
 from beem.price import Order, FilledOrder
 log = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ class Notify(Events):
         blockchain.
 
         :param fnt on_block: Callback that will be called for each block received
-        :param Steem steem_instance: Steem instance
+        :param Steem blockchain_instance: Steem instance
 
         **Example**
 
@@ -45,25 +45,31 @@ class Notify(Events):
         # accounts=[],
         on_block=None,
         only_block_id=False,
-        steem_instance=None,
-        keep_alive=25
+        blockchain_instance=None,
+        keep_alive=25,
+        **kwargs
     ):
         # Events
         Events.__init__(self)
         self.events = Events()
 
         # Steem instance
-        self.steem = steem_instance or shared_steem_instance()
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]        
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
 
         # Callbacks
         if on_block:
             self.on_block += on_block
 
         # Open the websocket
-        self.websocket = SteemWebsocket(
-            urls=self.steem.rpc.nodes,
-            user=self.steem.rpc.user,
-            password=self.steem.rpc.password,
+        self.websocket = NodeWebsocket(
+            urls=self.blockchain.rpc.nodes,
+            user=self.blockchain.rpc.user,
+            password=self.blockchain.rpc.password,
             only_block_id=only_block_id,
             on_block=self.process_block,
             keep_alive=keep_alive

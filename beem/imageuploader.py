@@ -10,7 +10,7 @@ import collections
 import hashlib
 from binascii import hexlify, unhexlify
 import requests
-from .instance import shared_steem_instance
+from .instance import shared_blockchain_instance
 from beem.account import Account
 from beemgraphenebase.py23 import integer_types, string_types, text_type, py23_bytes
 from beemgraphenebase.account import PrivateKey
@@ -22,11 +22,19 @@ class ImageUploader(object):
         self,
         base_url="https://steemitimages.com",
         challenge="ImageSigningChallenge",
-        steem_instance=None,
+        blockchain_instance=None,
+        **kwargs
     ):
         self.challenge = challenge
         self.base_url = base_url
-        self.steem = steem_instance or shared_steem_instance()
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]        
+        self.steem = blockchain_instance or shared_blockchain_instance()
+        if self.steem.is_hive and base_url == "https://steemitimages.com":
+            self.base_url = "https://images.hive.blog"
 
     def upload(self, image, account, image_name=None):
         """ Uploads an image
@@ -41,11 +49,11 @@ class ImageUploader(object):
                 from beem import Steem
                 from beem.imageuploader import ImageUploader
                 stm = Steem(keys=["5xxx"]) # private posting key
-                iu = ImageUploader(steem_instance=stm)
+                iu = ImageUploader(blockchain_instance=stm)
                 iu.upload("path/to/image.png", "account_name") # "private posting key belongs to account_name
 
         """
-        account = Account(account, steem_instance=self.steem)
+        account = Account(account, blockchain_instance=self.steem)
         if "posting" not in account:
             account.refresh()
         if "posting" not in account:

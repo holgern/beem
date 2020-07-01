@@ -4,7 +4,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import range
 from builtins import super
-import mock
 import string
 import time
 import unittest
@@ -13,8 +12,7 @@ import random
 import itertools
 from pprint import pprint
 from beem import Steem
-from beemapi.steemnoderpc import SteemNodeRPC
-from beemapi.websocket import SteemWebsocket
+from beemapi.noderpc import NodeRPC
 from beemapi import exceptions
 from beemapi.exceptions import NumRetriesReached, CallRetriesReached
 from beem.instance import set_shared_steem_instance
@@ -23,6 +21,8 @@ from beem.nodelist import NodeList
 import sys
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
+wif2 = "5JKu2dFfjKAcD6aP1HqBDxMNbdwtvPS99CaxBzvMYhY94Pt6RDS"
+wif3 = "5K1daXjehgPZgUHz6kvm55ahEArBHfCHLy6ew8sT7sjDb76PU2P"
 core_unit = "STM"
 
 
@@ -40,10 +40,10 @@ class Testcases(unittest.TestCase):
         cls.appbase = Steem(
             node=cls.nodes,
             nobroadcast=True,
-            keys={"active": wif, "owner": wif, "memo": wif},
+            keys={"active": wif, "owner": wif2, "memo": wif3},
             num_retries=10
         )
-        cls.rpc = SteemNodeRPC(urls=cls.nodes_steemit)
+        cls.rpc = NodeRPC(urls=cls.nodes_steemit)
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
         set_shared_steem_instance(cls.nodes_steemit)
@@ -86,7 +86,7 @@ class Testcases(unittest.TestCase):
         for node in self.nodes:
             str_list += node + ";"
         str_list = str_list[:-1]
-        rpc = SteemNodeRPC(urls=str_list)
+        rpc = NodeRPC(urls=str_list)
         self.assertIn(rpc.url, self.nodes + self.nodes_steemit)
         rpc.next()
         self.assertIn(rpc.url, self.nodes + self.nodes_steemit)
@@ -96,7 +96,7 @@ class Testcases(unittest.TestCase):
         for node in self.nodes:
             str_list += node + ","
         str_list = str_list[:-1]
-        rpc = SteemNodeRPC(urls=str_list)
+        rpc = NodeRPC(urls=str_list)
         self.assertIn(rpc.url, self.nodes + self.nodes_steemit)
         rpc.next()
         self.assertIn(rpc.url, self.nodes + self.nodes_steemit)
@@ -164,21 +164,21 @@ class Testcases(unittest.TestCase):
         with self.assertRaises(
             NumRetriesReached
         ):
-            SteemNodeRPC(urls="https://wrong.link.com", num_retries=2, timeout=1)
+            NodeRPC(urls="https://wrong.link.com", num_retries=2, timeout=1)
         with self.assertRaises(
             NumRetriesReached
         ):
-            SteemNodeRPC(urls="https://wrong.link.com", num_retries=3, num_retries_call=3, timeout=1)
+            NodeRPC(urls="https://wrong.link.com", num_retries=3, num_retries_call=3, timeout=1)
         nodes = ["https://httpstat.us/500", "https://httpstat.us/501", "https://httpstat.us/502", "https://httpstat.us/503",
                  "https://httpstat.us/505", "https://httpstat.us/511", "https://httpstat.us/520", "https://httpstat.us/522",
                  "https://httpstat.us/524"]
         with self.assertRaises(
             NumRetriesReached
         ):
-            SteemNodeRPC(urls=nodes, num_retries=0, num_retries_call=0, timeout=1)
+            NodeRPC(urls=nodes, num_retries=0, num_retries_call=0, timeout=1)
 
     def test_error_handling(self):
-        rpc = SteemNodeRPC(urls=self.nodes_steemit, num_retries=2, num_retries_call=3)
+        rpc = NodeRPC(urls=self.nodes_steemit, num_retries=2, num_retries_call=3)
         with self.assertRaises(
             exceptions.NoMethodWithName
         ):
@@ -189,7 +189,7 @@ class Testcases(unittest.TestCase):
             rpc.get_accounts("test")
 
     def test_error_handling_appbase(self):
-        rpc = SteemNodeRPC(urls=self.nodes_steemit, num_retries=2, num_retries_call=3)
+        rpc = NodeRPC(urls=self.nodes_steemit, num_retries=2, num_retries_call=3)
         with self.assertRaises(
             exceptions.NoMethodWithName
         ):

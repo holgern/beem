@@ -303,24 +303,24 @@ class GrapheneRPC(object):
             props = self.get_config(api="database")
         chain_id = None
         network_version = None
+        blockchain_name = None
         for key in props:
             if key[-8:] == "CHAIN_ID":
                 chain_id = props[key]
-            elif key[-18:] == "BLOCKCHAIN_VERSION":
+                blockchain_name = key.split("_")[0]
+            elif key[-13:] == "CHAIN_VERSION":
                 network_version = props[key]
 
         if chain_id is None:
             raise("Connecting to unknown network!")
         highest_version_chain = None
         for k, v in list(self.known_chains.items()):
+            if blockchain_name is not None and blockchain_name not in k and blockchain_name != "STEEMIT" and blockchain_name != "CHAIN":
+                continue 
             if v["chain_id"] == chain_id and self.version_string_to_int(v["min_version"]) <= self.version_string_to_int(network_version):
                 if highest_version_chain is None:
                     highest_version_chain = v
-                elif v["min_version"] == '0.19.5' and self.use_condenser:
-                    highest_version_chain = v
-                elif v["min_version"] == '0.0.0' and self.use_condenser:
-                    highest_version_chain = v
-                elif self.version_string_to_int(v["min_version"]) > self.version_string_to_int(highest_version_chain["min_version"]) and not self.use_condenser:
+                elif self.version_string_to_int(v["min_version"]) > self.version_string_to_int(highest_version_chain["min_version"]):
                     highest_version_chain = v
         if highest_version_chain is None:
             raise("Connecting to unknown network!")
@@ -462,7 +462,7 @@ class GrapheneRPC(object):
         def method(*args, **kwargs):
 
             api_name = get_api_name(self.is_appbase_ready(), *args, **kwargs)
-            if self.is_appbase_ready() and self.use_condenser:
+            if self.is_appbase_ready() and self.use_condenser and api_name != "bridge":
                 api_name = "condenser_api"
             if (api_name is None):
                 api_name = 'database_api'
@@ -471,7 +471,7 @@ class GrapheneRPC(object):
             stored_num_retries_call = self.nodes.num_retries_call
             self.nodes.num_retries_call = kwargs.get("num_retries_call", stored_num_retries_call)
             add_to_queue = kwargs.get("add_to_queue", False)
-            query = get_query(self.is_appbase_ready() and not self.use_condenser, self.get_request_id(), api_name, name, args)
+            query = get_query(self.is_appbase_ready() and not self.use_condenser or api_name == "bridge", self.get_request_id(), api_name, name, args)
             if add_to_queue:
                 self.rpc_queue.append(query)
                 self.nodes.num_retries_call = stored_num_retries_call

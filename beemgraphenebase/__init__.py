@@ -8,7 +8,9 @@ from .version import version as __version__
 # from . import dictionary as BrainKeyDictionary
 
 __all__ = ['account',
+           'aes',
            'base58',
+           'bip32'
            'bip38',
            'transactions',
            'types',
@@ -17,5 +19,6 @@ __all__ = ['account',
            'objects',
            'operations',
            'signedtransactions',
+           'unsignedtransactions',
            'objecttypes',
            'py23']

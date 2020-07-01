@@ -18,9 +18,9 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(exclude_limited=False), num_retries=10))
+        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(hive=True), num_retries=10))
         cls.bts = Steem(
-            node=nodelist.get_nodes(exclude_limited=True),
+            node=nodelist.get_nodes(hive=True),
             nobroadcast=True,
             unsigned=True,
             keys={"active": wif},
@@ -49,7 +49,7 @@ class Testcases(unittest.TestCase):
             bts = self.steemit
         bts.txbuffer.clear()
         w = Witness("gtg", steem_instance=bts)
-        tx = w.feed_publish("4 SBD", "1 STEEM")
+        tx = w.feed_publish("4 %s" % bts.backed_token_symbol, "1 %s" % bts.token_symbol)
         self.assertEqual(
             (tx["operations"][0][0]),
             "feed_publish"
@@ -70,7 +70,7 @@ class Testcases(unittest.TestCase):
             bts = self.steemit
         bts.txbuffer.clear()
         w = Witness("gtg", steem_instance=bts)
-        props = {"account_creation_fee": "0.1 STEEM",
+        props = {"account_creation_fee": "0.1 %s" % bts.token_symbol,
                  "maximum_block_size": 32000,
                  "sbd_interest_rate": 0}
         tx = w.update(wif, "", props)
@@ -96,7 +96,6 @@ class Testcases(unittest.TestCase):
 
     @parameterized.expand([
         ("normal"),
-        ("steemit"),
     ])
     def test_WitnessesVotedByAccount(self, node_param):
         if node_param == "normal":
@@ -142,7 +141,7 @@ class Testcases(unittest.TestCase):
         w = Witness(owner, steem_instance=bts)
         keys = list(witness.keys())
         json_witness = w.json()
-        exclude_list = ['votes', 'virtual_last_update', 'virtual_scheduled_time']
+        exclude_list = ['votes', 'virtual_last_update', 'virtual_scheduled_time', 'last_aslot', 'last_confirmed_block_num']
         for k in keys:
             if k not in exclude_list:
                 if isinstance(witness[k], dict) and isinstance(json_witness[k], list):

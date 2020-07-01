@@ -16,7 +16,7 @@ except LookupError:
     ascii = codecs.lookup('ascii')
     codecs.register(lambda name, enc=ascii: {True: enc}.get(name == 'mbcs'))
 
-VERSION = '0.22.0'
+VERSION = '0.24.5'
 
 tests_require = ['mock >= 2.0.0', 'pytest', 'pytest-mock', 'parameterized']
 
@@ -32,8 +32,11 @@ requires = [
     "pycryptodomex",
     "pytz",
     "Click",
+    "click_shell",
     "prettytable",
-    "pyyaml"
+    "pyyaml>=5.1",
+    "diff_match_patch",
+    "asn1crypto"
 ]
 
 
@@ -66,32 +69,31 @@ if __name__ == '__main__':
     setup(
         name='beem',
         version=VERSION,
-        description='Unofficial Python library for STEEM',
+        description='Unofficial Python library for HIVE and STEEM',
         long_description=get_long_description(),
         download_url='https://github.com/holgern/beem/tarball/' + VERSION,
         author='Holger Nahrstaedt',
-        author_email='holger@nahrstaedt.de',
+        author_email='nahrstaedt@gmail.com',
         maintainer='Holger Nahrstaedt',
-        maintainer_email='holger@nahrstaedt.de',
+        maintainer_email='nahrstaedt@gmail.com',
         url='http://www.github.com/holgern/beem',
-        keywords=['steem', 'library', 'api', 'rpc'],
+        keywords=['hive', 'steem', 'library', 'api', 'rpc'],
         packages=[
             "beem",
             "beemapi",
             "beembase",
             "beemgraphenebase",
-            "beemgrapheneapi"
+            "beemgrapheneapi",
+            "beemstorage"
         ],
         classifiers=[
             'License :: OSI Approved :: MIT License',
             'Operating System :: OS Independent',
             'Programming Language :: Python',
-            'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.4',
-            'Programming Language :: Python :: 3.5',
             'Programming Language :: Python :: 3.6',
             'Programming Language :: Python :: 3.7',
+            'Programming Language :: Python :: 3.8',
             'Development Status :: 4 - Beta',
             'Intended Audience :: Developers',
             'Intended Audience :: Financial and Insurance Industry',

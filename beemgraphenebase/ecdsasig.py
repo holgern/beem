@@ -103,7 +103,11 @@ def recover_public_key(digest, signature, i, message=None):
         if not isinstance(message, bytes_types):
             message = py23_bytes(message, "utf-8")
         sigder = encode_dss_signature(r, s)
-        public_key = ec.EllipticCurvePublicNumbers(Q._Point__x, Q._Point__y, ec.SECP256K1()).public_key(default_backend())
+        try:
+            Q_point = Q.to_affine()
+            public_key = ec.EllipticCurvePublicNumbers(Q_point.x(), Q_point.y(), ec.SECP256K1()).public_key(default_backend())
+        except:
+            public_key = ec.EllipticCurvePublicNumbers(Q._Point__x, Q._Point__y, ec.SECP256K1()).public_key(default_backend())
         public_key.verify(sigder, message, ec.ECDSA(hashes.SHA256()))
         return public_key
     else:
@@ -131,13 +135,13 @@ def recoverPubkeyParameter(message, digest, signature, pubkey):
             pubkey_comp = hexlify(compressedPubkey(pubkey))
             if (p_comp == pubkey_comp):
                 return i
-        else:
+        else:  # pragma: no cover
             p = recover_public_key(digest, signature, i)
             p_comp = hexlify(compressedPubkey(p))
             p_string = hexlify(p.to_string())
             if isinstance(pubkey, PublicKey):
                 pubkey_string = py23_bytes(repr(pubkey), 'latin')
-            else:
+            else:  # pragma: no cover
                 pubkey_string = hexlify(pubkey.to_string())
             if (p_string == pubkey_string or
                     p_comp == pubkey_string):
@@ -196,7 +200,7 @@ def sign_message(message, wif, hashfn=hashlib.sha256):
             sigder = bytearray(sigder)
             lenR = sigder[3]
             lenS = sigder[5 + lenR]
-            if lenR is 32 and lenS is 32:
+            if lenR == 32 and lenS == 32:
                 # Derive the recovery parameter
                 #
                 i = recoverPubkeyParameter(
@@ -204,7 +208,7 @@ def sign_message(message, wif, hashfn=hashlib.sha256):
                 i += 4   # compressed
                 i += 27  # compact
                 break
-    else:
+    else:  # pragma: no branch  # pragma: no cover
         cnt = 0
         p = py23_bytes(priv_key)
         sk = ecdsa.SigningKey.from_string(p, curve=ecdsa.SECP256k1)
@@ -241,7 +245,7 @@ def sign_message(message, wif, hashfn=hashlib.sha256):
             sigder = bytearray(sigder)
             lenR = sigder[3]
             lenS = sigder[5 + lenR]
-            if lenR is 32 and lenS is 32:
+            if lenR == 32 and lenS == 32:
                 # Derive the recovery parameter
                 #
                 i = recoverPubkeyParameter(
@@ -295,7 +299,7 @@ def verify_message(message, signature, hashfn=hashlib.sha256, recover_parameter=
         sigder = encode_dss_signature(r, s)
         p.verify(sigder, message, ec.ECDSA(hashes.SHA256()))
         phex = compressedPubkey(p)
-    else:
+    else:  # pragma: no branch  # pragma: no cover
         p = recover_public_key(digest, sig, recover_parameter)
         # Will throw an exception of not valid
         p.verify_digest(
@@ -306,3 +310,14 @@ def verify_message(message, signature, hashfn=hashlib.sha256, recover_parameter=
         phex = compressedPubkey(p)
 
     return phex
+
+
+def tweakaddPubkey(pk, digest256, SECP256K1_MODULE=SECP256K1_MODULE):
+    if SECP256K1_MODULE == "secp256k1":
+        tmp_key = secp256k1.PublicKey(pubkey=bytes(pk), raw=True)
+        new_key = tmp_key.tweak_add(digest256)  # <-- add
+        raw_key = hexlify(new_key.serialize()).decode("ascii")
+    else:
+        raise Exception("Must have secp256k1 for `tweak_add`")
+        # raw_key = ecmult(pk, 1, digest256, SECP256K1_MODULE)
+    return PublicKey(raw_key, prefix=pk.prefix)

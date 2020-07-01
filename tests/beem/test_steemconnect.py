@@ -4,7 +4,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import range
 from builtins import super
-import mock
 import string
 import unittest
 from parameterized import parameterized
@@ -45,7 +44,7 @@ class Testcases(unittest.TestCase):
     def test_transfer(self):
         bts = self.bts
         acc = self.account
-        acc.steem.txbuffer.clear()
+        acc.blockchain.txbuffer.clear()
         tx = acc.transfer(
             "test1", 1.000, "STEEM", memo="test")
         sc2 = SteemConnect(steem_instance=bts)
@@ -65,7 +64,7 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         sc2 = SteemConnect(steem_instance=bts)
         url = sc2.get_login_url("localhost", scope="login,vote")
-        url_test = 'https://steemconnect.com/oauth2/authorize?client_id=None&redirect_uri=localhost&scope=login,vote'
+        url_test = 'https://api.steemconnect.com/oauth2/authorize?client_id=None&redirect_uri=localhost&scope=login,vote'
         self.assertEqual(len(url), len(url_test))
         self.assertEqual(len(url.split('?')), 2)
         self.assertEqual(url.split('?')[0], url_test.split('?')[0])

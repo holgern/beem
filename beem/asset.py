@@ -29,24 +29,26 @@ class Asset(BlockchainObject):
         asset,
         lazy=False,
         full=False,
-        steem_instance=None
+        blockchain_instance=None,
+        **kwargs
     ):
         self.full = full
         super(Asset, self).__init__(
             asset,
             lazy=lazy,
             full=full,
-            steem_instance=steem_instance
+            blockchain_instance=blockchain_instance,
+            **kwargs
         )
         # self.refresh()
 
     def refresh(self):
         """ Refresh the data from the API server
         """
-        self.chain_params = self.steem.get_network()
+        self.chain_params = self.blockchain.get_network()
         if self.chain_params is None:
             from beemgraphenebase.chains import known_chains
-            self.chain_params = known_chains["STEEMAPPBASE"]
+            self.chain_params = known_chains["STEEM"]
         self["asset"] = ""
         found_asset = False
         for asset in self.chain_params["chain_assets"]:

@@ -21,11 +21,12 @@ analysis_data = [
     (websocket_cacert_file_path, join('.', basename(websocket_lib_path)))
 ]
 
-a = Analysis(['beem/cli.py'],
+
+a = Analysis(['../beem/cli.py'],
              pathex=['beem'],
              binaries=binaries,
              datas=analysis_data,
-             hiddenimports=['scrypt', '_scrypt', 'websocket', 'pylibscrypt', 'cffi', 'cryptography.hazmat.backends.openssl', 'cryptography'],
+             hiddenimports=['scrypt', '_scrypt', 'websocket', 'pylibscrypt', 'cffi', 'cryptography.hazmat.backends.openssl', 'cryptography', 'pkg_resources.py2_warn'],
              hookspath=[],
              runtime_hooks=[],
              excludes=['matplotlib', 'scipy', 'pandas', 'numpy', 'PyQt5', 'tkinter'],
@@ -34,27 +35,19 @@ a = Analysis(['beem/cli.py'],
              cipher=block_cipher)
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
-
-exe = EXE(
-    pyz,
-    a.scripts,
-    exclude_binaries=True,
-    name='beempy',
-    debug=False,
-    strip=False,
-    upx=False,
-    console=True,
-    icon='beempy.ico',
-)
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    name='beempy',
-    strip=False,
-    upx=False
-)
+exe = EXE(pyz,
+          a.scripts,
+          a.binaries,
+          a.zipfiles,
+          a.datas,
+          name='beempy',
+          debug=False,
+          strip=False,
+          upx=False,
+          runtime_tmpdir=None,
+          console=True,
+          icon='beempy.ico',
+ )
 
 if platform.system() == 'Darwin':
     info_plist = {'NSHighResolutionCapable': 'True', 'NSPrincipalClass': 'NSApplication'}

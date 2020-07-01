@@ -110,3 +110,7 @@ class TimeoutException(Exception):
 
 class VotedBeforeWaitTimeReached(Exception):
     pass
+
+
+class UnknownTransaction(Exception):
+    pass

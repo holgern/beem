@@ -123,6 +123,12 @@ class Testcases(unittest.TestCase):
         t = "holger80:30,beembot:40"
         b = derive_beneficiaries(t)
         self.assertEqual(b, [{"account": "beembot", "weight": 4000}, {"account": "holger80", "weight": 3000}])
+        t = "holger80:30.00%,beembot:40.00%"
+        b = derive_beneficiaries(t)
+        self.assertEqual(b, [{"account": "beembot", "weight": 4000}, {"account": "holger80", "weight": 3000}]) 
+        t = "holger80:30%, beembot:40%"
+        b = derive_beneficiaries(t)
+        self.assertEqual(b, [{"account": "beembot", "weight": 4000}, {"account": "holger80", "weight": 3000}])        
         t = "holger80:30,beembot"
         b = derive_beneficiaries(t)
         self.assertEqual(b, [{"account": "beembot", "weight": 7000}, {"account": "holger80", "weight": 3000}])
@@ -145,8 +151,8 @@ class Testcases(unittest.TestCase):
         t = "---\npar1: data1\npar2: data2\npar3: 3\n---\n test ---"
         body, par = seperate_yaml_dict_from_body(t)
         self.assertEqual(par, {"par1": "data1", "par2": "data2", "par3": 3})
-        self.assertEqual(body, "\n test ---")
+        self.assertEqual(body, " test ---")
         t = "---\npar1:data1\npar2:data2\npar3:3\n---\n test ---"
         body, par = seperate_yaml_dict_from_body(t)
         self.assertEqual(par, {"par1": "data1", "par2": "data2", "par3": 3})
-        self.assertEqual(body, "\n test ---")
+        self.assertEqual(body, " test ---")

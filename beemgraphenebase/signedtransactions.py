@@ -45,8 +45,8 @@ class Signed_Transaction(GrapheneObject):
     """ Create a signed transaction and offer method to create the
         signature
 
-        :param num refNum: parameter ref_block_num (see :func:`beembase.transactions.getBlockParams`)
-        :param num refPrefix: parameter ref_block_prefix (see :func:`beembase.transactions.getBlockParams`)
+        :param num ref_block_num: reference block number
+        :param num ref_block_prefix: 
         :param str expiration: expiration date
         :param array operations:  array of operations
     """

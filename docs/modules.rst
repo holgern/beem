@@ -2,22 +2,24 @@ Modules
 =======
 
 beem Modules
----------------
+------------
 
 .. toctree::
 
    beem.account
-   beem.aes
    beem.amount
    beem.asciichart
    beem.asset
    beem.block
    beem.blockchain
    beem.blockchainobject
+   beem.blockchaininstance
    beem.comment
    beem.conveyor
    beem.discussions
    beem.exceptions
+   beem.hive
+   beem.hivesigner
    beem.imageuploader
    beem.instance
    beem.market
@@ -38,18 +40,18 @@ beem Modules
    beem.witness
 
 beemapi Modules
-------------------
+---------------
 
 .. toctree::
 
    beemapi.exceptions
    beemapi.graphenenerpc
    beemapi.node
-   beemapi.steemnoderpc
+   beemapi.noderpc
    beemapi.websocket
 
 beembase Modules
--------------------
+----------------
 
 .. toctree::
 
@@ -59,19 +61,35 @@ beembase Modules
    beembase.operationids
    beembase.operations
    beembase.signedtransactions
-   beembase.transactions
+   beembase.ledgertransactions
 
 
 beemgraphenebase Modules
----------------------------
+------------------------
 
 .. toctree::
 
    beemgraphenebase.account
+   beemgraphenebase.aes
    beemgraphenebase.base58
+   beemgraphenebase.bip32
    beemgraphenebase.bip38
    beemgraphenebase.ecdsasig
    beemgraphenebase.objects
    beemgraphenebase.objecttypes
    beemgraphenebase.operations
    beemgraphenebase.signedtransactions
+   beemgraphenebase.unsignedtransactions
+
+
+beemstorage Modules
+-------------------
+
+.. toctree::
+
+   beemstorage.base
+   beemstorage.exceptions
+   beemstorage.interfaces
+   beemstorage.masterpassword
+   beemstorage.ram
+   beemstorage.sqlite

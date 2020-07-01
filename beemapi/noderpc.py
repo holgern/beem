@@ -11,7 +11,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class SteemNodeRPC(GrapheneRPC):
+class NodeRPC(GrapheneRPC):
     """ This class allows to call API methods exposed by the witness node via
         websockets / rpc-json.
 
@@ -27,7 +27,7 @@ class SteemNodeRPC(GrapheneRPC):
     """
 
     def __init__(self, *args, **kwargs):
-        """ Init SteemNodeRPC
+        """ Init NodeRPC
 
             :param str urls: Either a single Websocket/Http URL, or a list of URLs
             :param str user: Username for Authentication
@@ -37,7 +37,7 @@ class SteemNodeRPC(GrapheneRPC):
             :param int timeout: Timeout setting for https nodes (default is 60)
 
         """
-        super(SteemNodeRPC, self).__init__(*args, **kwargs)
+        super(NodeRPC, self).__init__(*args, **kwargs)
         self.next_node_on_empty_reply = False
 
     def set_next_node_on_empty_reply(self, next_node_on_empty_reply=True):
@@ -61,7 +61,7 @@ class SteemNodeRPC(GrapheneRPC):
             doRetry = False
             try:
                 # Forward call to GrapheneWebsocketRPC and catch+evaluate errors
-                reply = super(SteemNodeRPC, self).rpcexec(payload)
+                reply = super(NodeRPC, self).rpcexec(payload)
                 if self.next_node_on_empty_reply and not bool(reply) and self.nodes.working_nodes_count > 1:
                     self._retry_on_next_node("Empty Reply")
                     doRetry = True
@@ -115,6 +115,8 @@ class SteemNodeRPC(GrapheneRPC):
             raise exceptions.NoMethodWithName(msg)
         elif re.search("Could not find method", msg):
             raise exceptions.NoMethodWithName(msg)
+        elif re.search("Unknown Transaction", msg):
+            raise exceptions.UnknownTransaction(msg)
         elif re.search("Could not find API", msg):
             if self._check_api_name(msg):
                 if self.nodes.working_nodes_count > 1 and self.nodes.num_retries > -1:
@@ -150,6 +152,9 @@ class SteemNodeRPC(GrapheneRPC):
         elif re.search("!check_max_block_age", str(e)):
             self._switch_to_next_node(str(e))
             doRetry = True
+        elif re.search("Server error", str(e)):
+            self._switch_to_next_node(str(e))
+            doRetry = True            
         elif re.search("Can only vote once every 3 seconds", msg):
             raise exceptions.VotedBeforeWaitTimeReached(msg)
         elif re.search("out_of_rangeEEEE: unknown key", msg) or re.search("unknown key:unknown key", msg):
@@ -185,7 +190,7 @@ class SteemNodeRPC(GrapheneRPC):
                       'database_api', 'market_history_api',
                       'block_api', 'account_by_key_api', 'chain_api',
                       'follow_api', 'condenser_api', 'debug_node_api',
-                      'witness_api', 'test_api',
+                      'witness_api', 'test_api', 'bridge',
                       'network_broadcast_api']
         for api in known_apis:
             if re.search(error_start + " " + api, msg):

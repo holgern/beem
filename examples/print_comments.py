@@ -4,6 +4,7 @@ from datetime import timedelta
 import time
 import io
 from beem.blockchain import Blockchain
+from beem.instance import shared_blockchain_instance
 from beem.utils import parse_time
 import logging
 log = logging.getLogger(__name__)
@@ -22,5 +23,6 @@ class DemoBot(object):
 if __name__ == "__main__":
     tb = DemoBot()
     blockchain = Blockchain()
+    print("Starting on %s network" % shared_blockchain_instance().get_blockchain_name())
     for vote in blockchain.stream(opNames=["comment"]):
         tb.comment(vote)

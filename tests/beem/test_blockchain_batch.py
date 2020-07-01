@@ -23,9 +23,9 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(exclude_limited=False), num_retries=10))
+        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(hive=True), num_retries=10))
         cls.bts = Steem(
-            node=nodelist.get_nodes(exclude_limited=True),
+            node=nodelist.get_nodes(hive=True),
             nobroadcast=True,
             num_retries=10,
             timeout=30,
@@ -39,7 +39,7 @@ class Testcases(unittest.TestCase):
 
         b = Blockchain(steem_instance=cls.bts)
         num = b.get_current_block_num()
-        cls.start = num - 100
+        cls.start = num - 20
         cls.stop = num
         cls.max_batch_size = 1  # appbase does not support batch rpc calls at the momement (internal error)
 

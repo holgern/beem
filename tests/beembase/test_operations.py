@@ -41,5 +41,5 @@ class Testcases(unittest.TestCase):
         self.assertEqual(o.json()[1], transferJson)
         tx = {'ref_block_num': 0, 'ref_block_prefix': 0, 'expiration': '2018-04-07T09:30:53', 'operations': [o], 'extensions': [], 'signatures': []}
         s = Signed_Transaction(tx)
-        s.sign(wifkeys=[wif], chain="STEEMAPPBASE")
+        s.sign(wifkeys=[wif], chain="STEEM")
         self.assertEqual(s.json()["operations"][0][1], transferJson)
