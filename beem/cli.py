@@ -123,7 +123,7 @@ def unlock_wallet(stm, password=None, allow_wif=True):
             password = click.prompt("Password to unlock wallet or posting/active wif", confirmation_prompt=False, hide_input=True)
         else:
             password = click.prompt("Password to unlock wallet", confirmation_prompt=False, hide_input=True)
-        if stm.wallet.stm.wallet.is_encrypted():
+        if stm.wallet.is_encrypted():
             try:
                 stm.wallet.unlock(password)
             except:
