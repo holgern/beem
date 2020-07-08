@@ -123,18 +123,36 @@ def unlock_wallet(stm, password=None, allow_wif=True):
             password = click.prompt("Password to unlock wallet or posting/active wif", confirmation_prompt=False, hide_input=True)
         else:
             password = click.prompt("Password to unlock wallet", confirmation_prompt=False, hide_input=True)
-        try:
-            stm.wallet.unlock(password)
-        except:
+        if stm.wallet.stm.wallet.is_encrypted():
+            try:
+                stm.wallet.unlock(password)
+            except:
+                try:
+                    from beemstorage import InRamPlainKeyStore
+                    stm.wallet.store = InRamPlainKeyStore()                
+                    stm.wallet.setKeys([password])
+                    print("Wif accepted!")
+                    return True                
+                except:
+                    if allow_wif:
+                        raise exceptions.WrongMasterPasswordException("entered password is not a valid password/wif")
+                    else:
+                        raise exceptions.WrongMasterPasswordException("entered password is not a valid password")
+        else:
             try:
                 stm.wallet.setKeys([password])
                 print("Wif accepted!")
-                return True                
+                return True
             except:
-                if allow_wif:
-                    raise exceptions.WrongMasterPasswordException("entered password is not a valid password/wif")
-                else:
-                    raise exceptions.WrongMasterPasswordException("entered password is not a valid password")
+                try:
+                    from beemstorage import SqliteEncryptedKeyStore
+                    stm.wallet.store = SqliteEncryptedKeyStore(config=stm.config)                    
+                    stm.wallet.unlock(password)
+                except:
+                    if allow_wif:
+                        raise exceptions.WrongMasterPasswordException("entered password is not a valid password/wif")
+                    else:
+                        raise exceptions.WrongMasterPasswordException("entered password is not a valid password")
 
     if stm.wallet.locked():
         if password_storage == "keyring" or password_storage == "environment":

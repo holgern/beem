@@ -1809,7 +1809,7 @@ class Account(BlockchainObject):
         else:
             try:
                 op_count = 0
-                op_count = self._get_account_history(start=-1, limit=0)
+                op_count = self._get_account_history(start=-1, limit=1)
                 if isinstance(op_count, list) and len(op_count) > 0 and len(op_count[0]) > 0:
                     return op_count[0][0]
                 else:
