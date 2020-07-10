@@ -183,10 +183,18 @@ class Steem(BlockChainInstance):
                 return a2 * time_stamp + b2
         global_properties = self.get_dynamic_global_properties(use_stored_data=use_stored_data)
 
-        return (
-            float(Amount(global_properties['total_vesting_fund_steem'], blockchain_instance=self)) /
-            (float(Amount(global_properties['total_vesting_shares'], blockchain_instance=self)) / 1e6)
-        )
+        if "total_vesting_fund_steem" in global_properties:
+            return (
+                float(Amount(global_properties['total_vesting_fund_steem'], blockchain_instance=self)) /
+                (float(Amount(global_properties['total_vesting_shares'], blockchain_instance=self)) / 1e6)
+            )
+        else:
+            for key in global_properties:
+                if "total_vesting_fund_" in key:
+                    return (
+                        float(Amount(global_properties[key], blockchain_instance=self)) /
+                        (float(Amount(global_properties['total_vesting_shares'], blockchain_instance=self)) / 1e6)
+                    )                    
 
     def vests_to_sp(self, vests, timestamp=None, use_stored_data=True):
         """ Converts vests to SP

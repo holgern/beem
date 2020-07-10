@@ -3,6 +3,9 @@ Changelog
 0.24.5
 ------
 * replace percent_hive_dollars by percent_hbd
+* Remove whaleshares related code
+* Fix adding of a wif in beempy
+* Checks for double ops returned by the account history api
 
 0.24.4
 ------
