@@ -2037,13 +2037,8 @@ class Account(BlockchainObject):
             txs_list = reversed(txs)
         else:
             txs_list = txs
-        trx_ids = []
         for item in txs_list:
-            item_index, event = item
-            if event["trx_id"] in trx_ids:
-                continue
-            if event["trx_id"] != "0000000000000000000000000000000000000000":
-                trx_ids.append(event["trx_id"])            
+            item_index, event = item        
             if start and isinstance(start, (datetime, date, time)):
                 timediff = start - formatTimeString(event["timestamp"])
                 if timediff.total_seconds() * float(order) > 0:
