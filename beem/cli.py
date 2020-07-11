@@ -35,7 +35,6 @@ from beem.market import Market
 from beem.block import Block
 from beem.profile import Profile
 from beem.wallet import Wallet
-from beem.steemconnect import SteemConnect
 from beem.hivesigner import HiveSigner
 from beem.memo import Memo
 from beem.asset import Asset
@@ -228,7 +227,7 @@ def export_trx(tx, export):
 @click.option(
     '--unsigned', '-x', is_flag=True, default=False, help="Nothing will be signed, changes the default value of expires to 3600")
 @click.option(
-    '--create-link', '-l', is_flag=True, default=False, help="Creates steemconnect/hivesigner links from all broadcast operations")
+    '--create-link', '-l', is_flag=True, default=False, help="Creates hivesigner links from all broadcast operations")
 @click.option(
     '--steem', '-s', is_flag=True, default=False, help="Connect to the Steem blockchain")
 @click.option(
@@ -240,7 +239,7 @@ def export_trx(tx, export):
 @click.option(
     '--path', help="BIP32 path from which the keys are derived, when not set, default_path is used.")
 @click.option(
-    '--token', '-t', is_flag=True, default=False, help="Uses a hivesigner/steemconnect token to broadcast (only broadcast operation with posting permission)")
+    '--token', '-t', is_flag=True, default=False, help="Uses a hivesigner token to broadcast (only broadcast operation with posting permission)")
 @click.option(
     '--expires', '-e', default=30,
     help='Delay in seconds until transactions are supposed to expire(defaults to 30)')
@@ -285,10 +284,7 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hi
     if create_link:
         no_broadcast = True
         unsigned = True
-        if hive:
-            sc2 = HiveSigner()
-        else:
-            sc2 = SteemConnect()
+        sc2 = HiveSigner()
     else:
         sc2 = None
     debug = verbose > 0
@@ -958,7 +954,7 @@ def addtoken(name, unsafe_import_token):
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    sc2 = SteemConnect(blockchain_instance=stm)
+    sc2 = HiveSigner(blockchain_instance=stm)
     if not unlock_token_wallet(stm, sc2):
         return    
     if not unsafe_import_token:
@@ -982,7 +978,7 @@ def deltoken(confirm, name):
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    sc2 = SteemConnect(blockchain_instance=stm)
+    sc2 = HiveSigner(blockchain_instance=stm)
     if not unlock_token_wallet(stm, sc2):
         return    
     sc2.removeTokenFromPublicName(name)
@@ -1027,7 +1023,7 @@ def listtoken():
     stm = shared_blockchain_instance()
     t = PrettyTable(["name", "scope", "status"])
     t.align = "l"
-    sc2 = SteemConnect(blockchain_instance=stm)
+    sc2 = HiveSigner(blockchain_instance=stm)
     if not unlock_token_wallet(stm, sc2):
         return    
     for name in sc2.getPublicNames():

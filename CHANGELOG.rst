@@ -5,6 +5,7 @@ Changelog
 * replace percent_hive_dollars by percent_hbd
 * Remove whaleshares related code
 * Fix adding of a wif in beempy
+* Remove SteemConnect
 
 0.24.4
 ------

@@ -104,7 +104,10 @@ class HiveSigner(object):
         if "token" in kwargs and len(kwargs["token"]) > 0:
             from beemstorage import InRamPlainTokenStore
             self.store = InRamPlainTokenStore()
-            self.setToken(kwargs["keys"])
+            token = kwargs["token"]
+            self.set_access_token(token)
+            name = self.me()["user"]
+            self.setToken({name: token})
         else:
             """ If no keys are provided manually we load the SQLite
                 keyStorage

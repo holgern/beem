@@ -28,7 +28,6 @@ from .exceptions import (
     AccountDoesNotExistsException
 )
 from .wallet import Wallet
-from .steemconnect import SteemConnect
 from .hivesigner import HiveSigner
 from .transactionbuilder import TransactionBuilder
 from .utils import formatTime, resolve_authorperm, derive_permlink, sanitize_permlink, remove_from_dict, addTzInfo, formatToTimeStamp
@@ -212,13 +211,11 @@ class BlockChainInstance(object):
         self.wallet = Wallet(blockchain_instance=self, **kwargs)
 
         # set steemconnect
-        if self.steemconnect is not None and not isinstance(self.steemconnect, (SteemConnect, HiveSigner)):
+        if self.steemconnect is not None and not isinstance(self.steemconnect, (HiveSigner)):
             raise ValueError("steemconnect musst be SteemConnect object")
         if self.hivesigner is not None and not isinstance(self.hivesigner, (HiveSigner)):
             raise ValueError("hivesigner musst be HiveSigner object")        
-        if self.steemconnect is None and self.use_sc2:
-            self.steemconnect = SteemConnect(blockchain_instance=self, **kwargs)
-        elif self.steemconnect is not None and not self.use_sc2:
+        if self.steemconnect is not None and not self.use_sc2:
             self.use_sc2 = True
         elif self.hivesigner is None and self.use_hs:
             self.hivesigner = HiveSigner(blockchain_instance=self, **kwargs)
@@ -238,7 +235,7 @@ class BlockChainInstance(object):
         if not node:
             node = self.get_default_nodes()
             if not bool(node):
-                raise ValueError("A Steem node needs to be provided!")
+                raise ValueError("A Hive node needs to be provided!")
 
         if not rpcuser and "rpcuser" in self.config:
             rpcuser = self.config["rpcuser"]
