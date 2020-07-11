@@ -398,18 +398,13 @@ class TransactionBuilder(dict):
             self["signatures"].extend(self.ledgertx.json().get("signatures"))
             return self.ledgertx
         else:
-            try:
-                signedtx = Signed_Transaction(**self.json(with_prefix=True))
-                signedtx.add_custom_chains(self.blockchain.custom_chains)
-            except:
-                raise ValueError("Invalid TransactionBuilder Format")
-    
+
             if not any(self.wifs):
                 raise MissingKeyError
 
-            signedtx.sign(self.wifs, chain=self.blockchain.chain_params)
-            self["signatures"].extend(signedtx.json().get("signatures"))
-            return signedtx
+            self.tx.sign(self.wifs, chain=self.blockchain.chain_params)
+            self["signatures"].extend(self.tx.json().get("signatures"))
+            return self.tx
 
     def verify_authority(self):
         """ Verify the authority of the signed transaction

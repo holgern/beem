@@ -6,6 +6,8 @@ Changelog
 * Remove whaleshares related code
 * Fix adding of a wif in beempy
 * Remove SteemConnect
+* Fix set token in HiveSigner
+* Add Blurt
 
 0.24.4
 ------

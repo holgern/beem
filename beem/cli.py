@@ -29,6 +29,7 @@ from beem.price import Price
 from beem.account import Account
 from beem.steem import Steem
 from beem.hive import Hive
+from beem.blurt import Blurt
 from beem.comment import Comment
 from beem.message import Message
 from beem.market import Market
@@ -288,12 +289,15 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hi
     else:
         sc2 = None
     debug = verbose > 0
+    blurt = False
     if not hive and not steem:
         config = get_default_config_store()
         if config["default_chain"].lower() == "hive":
             hive = True
         elif config["default_chain"].lower() == "steem":
             steem = True
+        elif config["default_chain"].lower() == "blurt":
+            blurt = True        
     if hive:
         stm = Hive(
             node=node,
@@ -313,7 +317,7 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hi
             timeout=15,
             autoconnect=autoconnect
         )
-    else:
+    elif steem:
         stm = Steem(
             node=node,
             nobroadcast=no_broadcast,
@@ -332,6 +336,25 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hi
             timeout=15,
             autoconnect=autoconnect
         )
+    else:
+        stm = Blurt(
+            node=node,
+            nobroadcast=no_broadcast,
+            offline=offline,
+            keys=keys_list,
+            nowallet=no_wallet,
+            unsigned=unsigned,
+            use_sc2=token,
+            expiration=expires,
+            steemconnect=sc2,
+            use_ledger=use_ledger,
+            path=path,
+            debug=debug,
+            num_retries=10,
+            num_retries_call=3,
+            timeout=15,
+            autoconnect=autoconnect
+        )        
             
     set_shared_blockchain_instance(stm)
 
@@ -527,6 +550,9 @@ def currentnode(version, url):
     '--steem', '-e', is_flag=True, default=False,
     help="Switch to STEEM nodes, when set to true.")
 @click.option(
+    '--blurt', '-b', is_flag=True, default=False,
+    help="Switch to BLURT nodes, when set to true.")
+@click.option(
     '--test', '-t', is_flag=True, default=False,
     help="Do change the node list, only print the newest nodes setup.")
 @click.option(
@@ -535,7 +561,7 @@ def currentnode(version, url):
 @click.option(
     '--only-wss', is_flag=True, default=False,
     help="Use only websocket nodes.")
-def updatenodes(show, hive, steem, test, only_https, only_wss):
+def updatenodes(show, hive, steem, blurt, test, only_https, only_wss):
     """ Update the nodelist from @fullnodeupdate
     """
     stm = shared_blockchain_instance()
@@ -550,6 +576,8 @@ def updatenodes(show, hive, steem, test, only_https, only_wss):
         blockchain = "steem"
     elif hive:
         blockchain = "hive"
+    elif blurt:
+        blockchain = "blurt"
     else:
         blockchain = stm.config["default_chain"]
     nodelist = NodeList()
@@ -561,9 +589,13 @@ def updatenodes(show, hive, steem, test, only_https, only_wss):
     elif steem:
         nodes = nodelist.get_steem_nodes(wss=not only_https, https=not only_wss)
         if stm.config["default_chain"] == "hive":
-            stm.config["default_chain"] = "steem"    
+            stm.config["default_chain"] = "steem"
+    elif blurt:
+        nodes = ["https://rpc.blurt.world", "https://blurt-rpc.steem.buzz"]
     elif stm.config["default_chain"] == "steem":
         nodes = nodelist.get_steem_nodes(wss=not only_https, https=not only_wss)
+    elif stm.config["default_chain"] == "blurt":
+        nodes = ["https://rpc.blurt.world", "https://blurt-rpc.steem.buzz"]
     else:
         nodes = nodelist.get_hive_nodes(wss=not only_https, https=not only_wss)
     if show or test:
@@ -4582,14 +4614,18 @@ def info(objects):
         median_price = stm.get_current_median_history()
         token_per_mvest = stm.get_token_per_mvest()
         chain_props = stm.get_chain_properties()
-        price = (Amount(median_price["base"], blockchain_instance=stm).amount / Amount(median_price["quote"], blockchain_instance=stm).amount)
+        try:
+            price = (Amount(median_price["base"], blockchain_instance=stm).amount / Amount(median_price["quote"], blockchain_instance=stm).amount)
+        except:
+            price = None
         for key in info:
             if isinstance(info[key], dict) and 'amount' in info[key]:
                 t.add_row([key, str(Amount(info[key], blockchain_instance=stm))])
             else:
                 t.add_row([key, info[key]])
         t.add_row(["%s per mvest" % stm.token_symbol, token_per_mvest])
-        t.add_row(["internal price", price])
+        if price is not None:
+            t.add_row(["internal price", price])
         t.add_row(["account_creation_fee", str(Amount(chain_props["account_creation_fee"], blockchain_instance=stm))])
         print(t.get_string(sortby="Key"))
         # Block

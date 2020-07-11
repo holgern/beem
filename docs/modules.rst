@@ -31,7 +31,6 @@ beem Modules
    beem.rc
    beem.snapshot
    beem.steem
-   beem.steemconnect
    beem.storage
    beem.transactionbuilder
    beem.utils
