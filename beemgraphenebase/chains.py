@@ -25,7 +25,7 @@ known_chains = {
         ],
     },
     "BLURT": {
-        "chain_id": "afa547e2e0adef898219d7f74abf36e6e957460a70120db21a03fed76cc0e8b6",
+        "chain_id": "cd8d90f29ae273abec3eaa7731e25934c63eb654d55080caff2ebb7f5df6381f",
         "min_version": '0.0.0',
         "prefix": "BLT",
         "chain_assets": [

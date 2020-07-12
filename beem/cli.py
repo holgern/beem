@@ -584,11 +584,11 @@ def updatenodes(show, hive, steem, blurt, test, only_https, only_wss):
     nodelist.update_nodes(blockchain_instance=stm)
     if hive:
         nodes = nodelist.get_hive_nodes(wss=not only_https, https=not only_wss)
-        if stm.config["default_chain"] == "steem":
+        if stm.config["default_chain"] != "hive":
             stm.config["default_chain"] = "hive"
     elif steem:
         nodes = nodelist.get_steem_nodes(wss=not only_https, https=not only_wss)
-        if stm.config["default_chain"] == "hive":
+        if stm.config["default_chain"] != "steem":
             stm.config["default_chain"] = "steem"
     elif blurt:
         nodes = ["https://rpc.blurt.world", "https://blurt-rpc.steem.buzz"]
