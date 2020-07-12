@@ -8,6 +8,7 @@ Changelog
 * Remove SteemConnect
 * Fix set token in HiveSigner
 * Add Blurt
+* Add Community for community reladed requests and broadcasts
 
 0.24.4
 ------

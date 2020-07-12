@@ -15,6 +15,7 @@ beem Modules
    beem.blockchainobject
    beem.blockchaininstance
    beem.comment
+   beem.community
    beem.conveyor
    beem.discussions
    beem.exceptions
