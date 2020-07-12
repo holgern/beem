@@ -90,8 +90,8 @@ def prompt_callback(ctx, param, value):
 
 
 def asset_callback(ctx, param, value):
-    if value not in ["STEEM", "SBD", "HIVE", "HBD"]:
-        print("Please STEEM/HIVE or SBD/HBD as asset!")
+    if value not in ["STEEM", "SBD", "HIVE", "HBD", "BLURT"]:
+        print("Please STEEM/HIVE/BLURT or SBD/HBD as asset!")
         ctx.abort()
     else:
         return value
@@ -592,6 +592,8 @@ def updatenodes(show, hive, steem, blurt, test, only_https, only_wss):
             stm.config["default_chain"] = "steem"
     elif blurt:
         nodes = ["https://rpc.blurt.world", "https://blurt-rpc.steem.buzz"]
+        if stm.config["default_chain"] != "blurt":
+            stm.config["default_chain"] = "blurt"        
     elif stm.config["default_chain"] == "steem":
         nodes = nodelist.get_steem_nodes(wss=not only_https, https=not only_wss)
     elif stm.config["default_chain"] == "blurt":
