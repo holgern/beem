@@ -2,13 +2,14 @@ Changelog
 =========
 0.24.5
 ------
-* replace percent_hive_dollars by percent_hbd
+* replace percent_hive_dollars by percent_hbd (to make beem HF24 ready)
 * Remove whaleshares related code
 * Fix adding of a wif in beempy
 * Remove SteemConnect
 * Fix set token in HiveSigner
 * Add Blurt
 * Add Community for community reladed requests and broadcasts
+* Improve community lookup for beempy createpost
 
 0.24.4
 ------

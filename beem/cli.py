@@ -55,6 +55,7 @@ from beem.nodelist import NodeList, node_answer_time
 from beem.conveyor import Conveyor
 from beem.imageuploader import ImageUploader
 from beem.rc import RC
+from beem.community import Communities, Community
 from beem.blockchaininstance import BlockChainInstance
 from beem.storage import get_default_config_store
 
@@ -2529,11 +2530,29 @@ def createpost(markdown_file, account, title, tags, community, beneficiaries, pe
     if title is None:
         title = input("title: ")
     if tags is None:
-        tags = input("tags (comma seperated):")
+        tags = input("tags (comma seperated): ")
     if community is None:
-        community = input("community account:")
+        community_found = False
+        while not community_found:
+            community = input("community account (name or title): ")
+            try:
+                community = Community(community)
+            except:
+                c = Communities(limit=1000)
+                comm_cand = c.search_title(community)
+                print(comm_cand.printAsTable())
+                index = input("Enter community Nr:")
+                if int(index) - 1 >= len(comm_cand):
+                    continue
+                community = comm_cand[int(index) - 1]
+                
+            ret = input("Selected community: %s - %s [yes/no]? " % (community["name"], community["title"]))
+            if ret in ["y", "yes"]:
+                community_found = True
+        community = community["name"]
+
     if beneficiaries is None:
-        beneficiaries = input("beneficiaries (komma separated, e.g. a:10%,b:20%):")
+        beneficiaries = input("beneficiaries (komma separated, e.g. a:10%,b:20%) [return to skip]: ")
     if percent_steem_dollars is None and percent_hbd is None:
         ret = None
         while ret is None:

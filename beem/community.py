@@ -190,6 +190,17 @@ class Community(BlockchainObject):
         self.blockchain.rpc.set_next_node_on_empty_reply(False)        
         return self.blockchain.rpc.account_notifications({"account": community, "limit": limit, "last_id": last_id}, api="bridge")
 
+    def get_ranked_posts(self, observer=None, limit=100, start_author=None, start_permlink=None, sort="created"):
+        """ Returns community post
+        """
+        community = self["name"]
+        if not self.blockchain.is_connected():
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)        
+        return self.blockchain.rpc.get_ranked_posts({"tag": community, "observer": observer,
+                                                     "limit": limit, "start_author": start_author,
+                                                     "start_permlink": start_permlink, "sort":sort}, api="bridge")
+
     def set_role(self, account, role, mod_account):
         """ Set role for a given account
 
@@ -409,10 +420,12 @@ class Community(BlockchainObject):
 
 class CommunityObject(list):
     def printAsTable(self):
-        t = PrettyTable(["Name", "Title", "lang", "subscribers", "sum_pending", "num_pending", "num_authors"])
+        t = PrettyTable(["Nr.", "Name", "Title", "lang", "subscribers", "sum_pending", "num_pending", "num_authors"])
         t.align = "l"
+        count = 0
         for community in self:
-            t.add_row([community['name'], community["title"], community["lang"], community["subscribers"], community["sum_pending"],
+            count += 1
+            t.add_row([str(count), community['name'], community["title"], community["lang"], community["subscribers"], community["sum_pending"],
                        community["num_pending"], community["num_authors"]])
         print(t)
 
