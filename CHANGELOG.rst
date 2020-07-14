@@ -11,6 +11,7 @@ Changelog
 * Add Community for community reladed requests and broadcasts
 * Improve community lookup for beempy createpost
 * Improved beempy history command output
+* Improved beempy stream
 
 0.24.4
 ------

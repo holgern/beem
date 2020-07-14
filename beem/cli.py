@@ -2978,24 +2978,66 @@ def broadcast(file):
 
 @cli.command()
 @click.option('--lines', '-n', help='Defines how many ops should be shown', default=10)
-@click.option('--mode', '-m', help='Stream mode: Can be irreversible (default) or head', default="irreversible")
-@click.option('--json', '-j', help='Output as JSON', is_flag=True, default=False)
+@click.option('--head', '-h', help='Stream mode: When set, it is set to head (default is irreversible)', is_flag=True, default=False)
+@click.option('--table', '-t', help='Output as table', is_flag=True, default=False)
 @click.option('--follow', '-f', help='Constantly stream output', is_flag=True, default=False)
-def stream(lines, mode, json, follow):
+def stream(lines, head, table, follow):
     """ Stream operations
     """
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
-        stm.rpc.rpcconnect()    
+        stm.rpc.rpcconnect()
+    mode = "irreversible"
+    if head:
+        mode = "head"
     b = Blockchain(mode=mode, blockchain_instance=stm)
     op_count = 0
-    import pprint
-    for ops in b.stream(raw_ops=True):
-        op_count += 1
-        pprint.pprint(ops)
-        if op_count >= lines and not follow:
-            return
+    if table:
+        import pprint
+        t = PrettyTable(["blocknum", "trx_num", "type", "content"])
+        t.align = "l"
+        last_block_num = 0
+        for ops in b.stream(raw_ops=False):
+            op_count += 1
+            ops.pop("_id")
+            block_num = ops.pop("block_num")
+            ops_type = ops.pop("type")
+            if last_block_num == 0:
+                last_block_num = block_num
+            trx_num = ops.pop("trx_num")
+            for key in ops:
+                if isinstance(ops[key], dict) and "nai" in ops[key]:
+                    ops[key] = str(Amount(ops[key], blockchain_instance=stm))
+                elif key == "timestamp":
+                    ops[key] = formatTimeString(ops[key])
+            # value = json.dumps(ops, indent=4)
+            if last_block_num < block_num:
+                print(t)
+                t = PrettyTable(["blocknum", "trx_num", "type", "content"])
+                t.align = "l"
+                last_block_num = block_num
+            content = str(ops)[:100]
+            if ops_type == "custom_json":
+                content = ops["id"]
+            elif ops_type == "vote":
+                content = "@%s/%s - %s" % (ops["author"], ops["permlink"][:30], ops["voter"])
+            elif ops_type == "transfer":
+                content = "%s: @%s -> @%s" % (str(ops["amount"]), ops["from"], ops["to"])
+            elif ops_type == "transfer_to_vesting":
+                content = "%s: @%s -> @%s" % (str(ops["amount"]), ops["from"], ops["to"])
+            t.add_row([str(block_num), str(trx_num), ops_type, content])
+            if op_count >= lines and not follow:
+                print(t)
+                return        
+    else:
         
+        import pprint
+        for ops in b.stream(raw_ops=True):
+            op_count += 1
+            ops["timestamp"] = formatTimeString(ops["timestamp"])
+            pprint.pprint(ops)
+            if op_count >= lines and not follow:
+                return
 
 @cli.command()
 @click.option('--sbd-to-steem', '-i', help='Show ticker in SBD/STEEM', is_flag=True, default=False)
