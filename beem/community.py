@@ -54,9 +54,9 @@ class Community(BlockchainObject):
             >>> nodelist = NodeList()
             >>> nodelist.update_nodes()
             >>> stm = Hive(node=nodelist.get_hive_nodes())
-            >>> community = Community("hive-10836", blockchain_instance=stm)
+            >>> community = Community("hive-139531", blockchain_instance=stm)
             >>> print(community)
-            <Community hive-10836>
+            <Community hive-139531>
             >>> print(community.balances) # doctest: +SKIP
 
         .. note:: This class comes with its own caching function to reduce the
