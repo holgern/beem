@@ -2996,6 +2996,7 @@ def stream(lines, head, table, follow):
         import pprint
         t = PrettyTable(["blocknum", "trx_num", "type", "content"])
         t.align = "l"
+        t._max_width = {"content" : 80}
         last_block_num = 0
         for ops in b.stream(raw_ops=False):
             op_count += 1
@@ -3015,12 +3016,13 @@ def stream(lines, head, table, follow):
                 print(t)
                 t = PrettyTable(["blocknum", "trx_num", "type", "content"])
                 t.align = "l"
+                t._max_width = {"content" : 80}
                 last_block_num = block_num
-            content = str(ops)[:100]
+            content = ops
             if ops_type == "custom_json":
                 content = ops["id"]
             elif ops_type == "vote":
-                content = "@%s/%s - %s" % (ops["author"], ops["permlink"][:30], ops["voter"])
+                content = "%.2f%% @%s/%s - %s" % (ops["weight"] / 100, ops["author"], ops["permlink"][:30], ops["voter"])
             elif ops_type == "transfer":
                 content = "%s: @%s -> @%s" % (str(ops["amount"]), ops["from"], ops["to"])
             elif ops_type == "transfer_to_vesting":
@@ -4866,6 +4868,7 @@ def history(account, limit, sort, max_length, virtual_ops, only_ops, exclude_ops
     account = Account(account, blockchain_instance=stm)
     t = PrettyTable(["Index","Type", "Hist op"])
     t.align = "l"
+    t._max_width = {"Hist op" : max_length}
     cnt = 0
     batch_size = 1000
     if batch_size > int(limit) + 1 and int(limit) > 0:
@@ -4910,8 +4913,6 @@ def history(account, limit, sort, max_length, virtual_ops, only_ops, exclude_ops
                     h[key] = str(Amount(h[key], blockchain_instance=stm))
                 if key == "json" or key == "json_metadata" and h[key] is not None and h[key] != "":
                     h[key] = json.loads(h[key])
-                if isinstance(h[key], str) and len(h[key]) > max_length:
-                    h[key] = h[key][:max_length]
             value = json.dumps(h, indent=4)
             t.add_row([str(index), op_type, value])
 
