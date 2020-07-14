@@ -10,6 +10,7 @@ Changelog
 * Add Blurt
 * Add Community for community reladed requests and broadcasts
 * Improve community lookup for beempy createpost
+* Improved beempy history command output
 
 0.24.4
 ------

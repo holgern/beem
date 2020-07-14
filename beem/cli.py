@@ -4804,13 +4804,14 @@ def userdata(account, signing_account):
 
 @cli.command()
 @click.argument('account', nargs=1, required=False)
-@click.option('--number', '-n', help='Defines how many ops should be printed (default=10)', default=10)
-@click.option('--order', help='Defines how many ops should be printed (default=-1)', default=-1)
+@click.option('--limit', '-l', help='Defines how many ops should be printed (default=10)', default=10)
+@click.option('--sort', '-s', help='Defines the printing sorting, 1 ->, -1 <- (default=-1)', default=-1)
+@click.option('--max-length', '-m', help='Maximum printed string length', default=80)
 @click.option('--virtual-ops', '-v', help='When set, virtual ops are also shown', is_flag=True, default=False)
 @click.option('--only-ops', '-o', help='Included komma seperated list of op types, which limits the shown operations. When set, virtual-ops is always set to true')
 @click.option('--exclude-ops', '-e', help='Excluded komma seperated list of op types, which limits the shown operations.')
 @click.option('--json-file', '-j', help='When set, the results are written into a json file')
-def history(account, number, order, virtual_ops, only_ops, exclude_ops, json_file):
+def history(account, limit, sort, max_length, virtual_ops, only_ops, exclude_ops, json_file):
     """ Returns account history operations as table
 
     """
@@ -4821,12 +4822,12 @@ def history(account, number, order, virtual_ops, only_ops, exclude_ops, json_fil
         if "default_account" in stm.config:
             account = stm.config["default_account"]
     account = Account(account, blockchain_instance=stm)
-    t = PrettyTable(["Nr", "Hist op"])
+    t = PrettyTable(["Index","Type", "Hist op"])
     t.align = "l"
     cnt = 0
     batch_size = 1000
-    if batch_size > int(number) + 1 and int(number) > 0:
-        batch_size = int(number) + 1
+    if batch_size > int(limit) + 1 and int(limit) > 0:
+        batch_size = int(limit) + 1
     if only_ops is None:
         only_ops = []
     else:
@@ -4838,23 +4839,39 @@ def history(account, number, order, virtual_ops, only_ops, exclude_ops, json_fil
     if len(only_ops) > 0:
         virtual_ops = True
     data = []
-    if int(order) == -1:
+    if int(sort) == -1:
         hist = account.history_reverse(batch_size=batch_size, only_ops=only_ops, exclude_ops=exclude_ops)
     else:
         hist = account.history(batch_size=batch_size, only_ops=only_ops, exclude_ops=exclude_ops)
     for h in hist:
+        
         if h["virtual_op"] == 1 and not virtual_ops:
             continue
         
         cnt += 1
-        if cnt > int(number) and int(number) > 0:
+        if cnt > int(limit) and int(limit) > 0:
             break
         if json_file is not None:
             data.append(h)
         else:
             # if key in ["operations", "signatures"]:
+            index = h.pop("index")
+            op_type = h.pop("type")
+            h.pop("trx_in_block")
+            h.pop("op_in_trx")
+            h.pop("virtual_op")
+            h.pop("_id")
+            if h["trx_id"] == "0000000000000000000000000000000000000000":
+                h.pop("trx_id")
+            for key in h:
+                if isinstance(h[key], dict) and "nai" in h[key]:
+                    h[key] = str(Amount(h[key], blockchain_instance=stm))
+                if key == "json" or key == "json_metadata" and h[key] is not None and h[key] != "":
+                    h[key] = json.loads(h[key])
+                if isinstance(h[key], str) and len(h[key]) > max_length:
+                    h[key] = h[key][:max_length]
             value = json.dumps(h, indent=4)
-            t.add_row([str(cnt), value])
+            t.add_row([str(index), op_type, value])
 
     if json_file is not None:
         with open(json_file, "w", encoding="utf-8") as f:
