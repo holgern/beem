@@ -34,14 +34,14 @@ A key_file.json can be used to provide private keys to beempy:
 
     {
         "account_a": {"posting": "5xx", "active": "5xx"},
-        "account_b": {"posting": "5xx"],
+        "account_b": {"posting": "5xx"},
     }
 
 with
 
 ::
 
-    beempy --key key_file.json command
+    beempy --keys key_file.json command
 
 When set, the wallet cannot be used.
 
