@@ -34,14 +34,14 @@ A key_file.json can be used to provide private keys to beempy:
 
     {
         "account_a": {"posting": "5xx", "active": "5xx"},
-        "account_b": {"posting": "5xx"],
+        "account_b": {"posting": "5xx"},
     }
 
 with
 
 ::
 
-    beempy --key key_file.json command
+    beempy --keys key_file.json command
 
 When set, the wallet cannot be used.
 
@@ -123,7 +123,7 @@ You can see all available commands with ``beempy --help``
 ::
 
     ~ % beempy --help
-   Usage: cli.py [OPTIONS] COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]...
+   Usage: beempy [OPTIONS] COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]...
 
    Options:
      -n, --node TEXT        URL for public Steem API (e.g.
@@ -132,6 +132,17 @@ You can see all available commands with ``beempy --help``
      -d, --no-broadcast     Do not broadcast
      -p, --no-wallet        Do not load the wallet
      -x, --unsigned         Nothing will be signed
+     -l, --create-link      Creates hivesigner links from all broadcast
+                            operations
+     -s, --steem            Connect to the Steem blockchain
+     -h, --hive             Connect to the Hive blockchain
+     -k, --keys TEXT        JSON file that contains account keys, when set, the
+                            wallet cannot be used.
+     -u, --use-ledger       Uses the ledger device Nano S for signing.
+     --path TEXT            BIP32 path from which the keys are derived, when not
+                            set, default_path is used.
+     -t, --token            Uses a hivesigner token to broadcast (only broadcast
+                            operation with posting permission)
      -e, --expires INTEGER  Delay in seconds until transactions are supposed to
                             expire (defaults to 60)
      -v, --verbose INTEGER  Verbosity
@@ -139,60 +150,102 @@ You can see all available commands with ``beempy --help``
      --help                 Show this message and exit.
 
    Commands:
+     about                   About beempy
      addkey                  Add key to wallet When no [OPTION] is given,...
+     addtoken                Add key to wallet When no [OPTION] is given, a...
      allow                   Allow an account/key to interact with your...
+                             account...
      approvewitness          Approve a witnesses
      balance                 Shows balance
+     beneficiaries           Set beneficaries
      broadcast               broadcast a signed transaction
-     buy                     Buy STEEM or SBD from the internal market...
+     buy                     Buy STEEM/HIVE or SBD/HBD from the internal
+                             market...
      cancel                  Cancel order in the internal market
+     changekeys              Changes all keys for the specified account Keys...
+     changerecovery          Changes the recovery account with the owner key...
      changewalletpassphrase  Change wallet password
+     claimaccount            Claim account for claimed account creation.
      claimreward             Claim reward balances By default, this will...
      config                  Shows local configuration
-     convert                 Convert STEEMDollars to Steem (takes a week...
+     convert                 Convert SBD/HBD to Steem/Hive (takes a week to...
+     createpost              Creates a new markdown file with YAML header
      createwallet            Create new wallet with a new password
+     curation                Lists curation rewards of all votes for
+                             authorperm...
      currentnode             Sets the currently working node at the first...
+     customjson              Broadcasts a custom json First parameter is the...
+     decrypt                 decrypt a (or more than one) decrypted memo/file...
+     delegate                Delegate (start delegating VESTS to another...
+     delete                  delete a post/comment POST is @author/permlink
      delkey                  Delete key from the wallet PUB is the public...
      delprofile              Delete a variable in an account's profile
+     delproxy                Delete your witness/proposal system proxy
+     deltoken                Delete name from the wallet name is the public...
      disallow                Remove allowance an account/key to interact...
      disapprovewitness       Disapprove a witnesses
-     downvote                Downvote a post/comment POST is...
+     download                Download body with yaml header
+     downvote                Downvote a post/comment POST is @author/permlink
+     draw                    Generate pseudo-random numbers based on trx id,...
+     encrypt                 encrypt a (or more than one) memo text/file with...
+     featureflags            Get the account's feature flags.
      follow                  Follow another account
      follower                Get information about followers
      following               Get information about following
+     followlist              Get information about followed lists follow_type...
+     history                 Returns account history operations as table
      importaccount           Import an account using a passphrase
      info                    Show basic blockchain info General...
      interest                Get information about interest payment
-     listaccounts            Show stored accounts
+     keygen                  Creates a new random BIP39 key or password based...
+     listaccounts            Show stored accounts Can be used with the ledger...
      listkeys                Show stored keys
+     listtoken               Show stored token
+     message                 Sign and verify a message
      mute                    Mute another account
      muter                   Get information about muter
      muting                  Get information about muting
      newaccount              Create a new account
      nextnode                Uses the next node in list
+     notifications           Show notifications of an account
      openorders              Show open orders
      orderbook               Obtain orderbook of the internal market
      parsewif                Parse a WIF private key without importing
+     pending                 Lists pending rewards
      permissions             Show permissions of an account
      pingnode                Returns the answer time in milliseconds
+     post                    broadcasts a post/comment.
      power                   Shows vote power and bandwidth
      powerdown               Power down (start withdrawing VESTS from...
      powerdownroute          Setup a powerdown route
-     powerup                 Power up (vest STEEM as STEEM POWER)
+     powerup                 Power up (vest STEEM/HIVE as STEEM/HIVE POWER)
      pricehistory            Show price history
-     resteem                 Resteem an existing post
-     sell                    Sell STEEM or SBD from the internal market...
+     reblog                  Reblog an existing post
+     reply                   replies to a comment
+     rewards                 Lists received rewards
+     sell                    Sell STEEM/HIVE or SBD/HBD from the internal...
      set                     Set default_account, default_vote_weight or...
      setprofile              Set a variable in an account's profile
-     sign                    Sign a provided transaction with available...
+     setproxy                Set your witness/proposal system proxy
+     sign                    Sign a provided transaction with available and...
+     stream                  Stream operations
      ticker                  Show ticker
      tradehistory            Show price history
-     transfer                Transfer SBD/STEEM
+     transfer                Transfer SBD/HBD or STEEM/HIVE
      unfollow                Unfollow/Unmute another account
      updatememokey           Update an account's memo key
-     upvote                  Upvote a post/comment POST is...
+     updatenodes             Update the nodelist from @fullnodeupdate
+     uploadimage
+     upvote                  Upvote a post/comment POST is @author/permlink
+     userdata                Get the account's email address and phone number.
+     verify                  Returns the public signing keys for a block
      votes                   List outgoing/incoming account votes
      walletinfo              Show info about wallet
+     witness                 List witness information
      witnesscreate           Create a witness
+     witnessdisable          Disable a witness
+     witnessenable           Enable a witness
      witnesses               List witnesses
+     witnessfeed             Publish price feed for a witness
+     witnessproperties       Update witness properties of witness WITNESS with...
      witnessupdate           Change witness properties
