@@ -178,6 +178,22 @@ class NodeList(list):
                 "owner": "roelandp",
                 "hive": True,
                 "score": 50                
+            },
+            {
+                "url": "https://api.c0ff33a.uk",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "c0ff33a",
+                "hive": True,
+                "score": 40                
+            },
+            {
+                "url": "https://api.deathwing.me",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "deathwing",
+                "hive": True,
+                "score": 40                
             }
         ]
         super(NodeList, self).__init__(nodes)

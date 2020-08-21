@@ -66,8 +66,6 @@ ops = [
     'comment_payout_update',
     'return_vesting_delegation',
     'comment_benefactor_reward',
-    'return_vesting_delegation',
-    'comment_benefactor_reward',
     'producer_reward',
     'clear_null_account_balance',
     'proposal_pay',

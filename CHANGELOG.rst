@@ -1,5 +1,13 @@
 Changelog
 =========
+0.24.6
+------
+* Improved community selection in beempy createpost
+* Improved Transactionbuilder object representation
+* _fetchkeys function moved outside appendSigner
+* Fix get urls in parse body
+* Two more nodes have been added to nodelist
+
 0.24.5
 ------
 * replace percent_hive_dollars by percent_hbd (to make beem HF24 ready)

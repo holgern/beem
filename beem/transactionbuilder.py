@@ -36,17 +36,17 @@ class TransactionBuilder(dict):
         :param dict tx: transaction (Optional). If not set, the new transaction is created.
         :param int expiration: Delay in seconds until transactions are supposed
             to expire *(optional)* (default is 30)
-        :param Steem steem_instance: If not set, shared_blockchain_instance() is used
+        :param Hive/Steem blockchain_instance: If not set, shared_blockchain_instance() is used
 
         .. testcode::
 
            from beem.transactionbuilder import TransactionBuilder
            from beembase.operations import Transfer
-           from beem import Steem
+           from beem import Hive
            wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-           stm = Steem(nobroadcast=True, keys={'active': wif})
-           tx = TransactionBuilder(steem_instance=stm)
-           transfer = {"from": "test", "to": "test1", "amount": "1 STEEM", "memo": ""}
+           hive = Hive(nobroadcast=True, keys={'active': wif})
+           tx = TransactionBuilder(blockchain_instance=hive)
+           transfer = {"from": "test", "to": "test1", "amount": "1 HIVE", "memo": ""}
            tx.appendOps(Transfer(transfer))
            tx.appendSigner("test", "active") # or tx.appendWif(wif)
            signed_tx = tx.sign()
@@ -113,8 +113,13 @@ class TransactionBuilder(dict):
     def _unset_require_reconstruction(self):
         self._require_reconstruction = False
 
+    def _get_auth_field(self, permission):
+        return permission
+
     def __repr__(self):
-        return str(self)
+        return "<Transaction num_ops={}, ops={}>".format(
+            len(self.ops), [op.__class__.__name__ for op in self.ops]
+        )
 
     def __str__(self):
         return str(self.json())
@@ -150,26 +155,77 @@ class TransactionBuilder(dict):
             self.ops.append(ops)
         self._set_require_reconstruction()
 
+    def _fetchkeys(self, account, perm, level=0, required_treshold=1):
+
+        # Do not travel recursion more than 2 levels
+        if level > 2:
+            return []
+
+        r = []
+        # Let's go through all *keys* of the account
+        for authority in account[perm]["key_auths"]:
+            try:
+                # Try obtain the private key from wallet
+                wif = self.blockchain.wallet.getPrivateKeyForPublicKey(authority[0])
+            except ValueError:
+                pass
+            except MissingKeyError:
+                pass
+
+            if wif:
+                r.append([wif, authority[1]])
+                # If we found a key for account, we add it
+                # to signing_accounts to be sure we do not resign
+                # another operation with the same account/wif
+                self.signing_accounts.append(account)
+
+            # Test if we reached threshold already
+            if sum([x[1] for x in r]) >= required_treshold:
+                break
+
+        # Let's see if we still need to go through accounts
+        if sum([x[1] for x in r]) < required_treshold:
+            # go one level deeper
+            for authority in account[perm]["account_auths"]:
+                # Let's see if we can find keys for an account in
+                # account_auths
+                # This is recursive with a limit at level 2 (see above)
+                auth_account = Account(authority[0], blockchain_instance=self.blockchain)
+                required_treshold = auth_account[perm]["weight_threshold"]
+                keys = self._fetchkeys(auth_account, perm, level + 1, required_treshold)
+
+                for key in keys:
+                    r.append(key)
+
+                    # Test if we reached threshold already and break
+                    if sum([x[1] for x in r]) >= required_treshold:
+                        break
+
+        return r
+
     def appendSigner(self, account, permission):
         """ Try to obtain the wif key from the wallet by telling which account
             and permission is supposed to sign the transaction
             It is possible to add more than one signer.
+
+            :param str account: account to sign transaction with
+            :param str permission: type of permission, e.g. "active", "owner" etc
         """
         if not self.blockchain.is_connected():
             return
         if permission not in ["active", "owner", "posting"]:
             raise AssertionError("Invalid permission")
         account = Account(account, blockchain_instance=self.blockchain)
-        if permission not in account:
+        auth_field = self._get_auth_field(permission)
+        if auth_field not in account:
             account = Account(account, blockchain_instance=self.blockchain, lazy=False, full=True)
             account.clear_cache()
             account.refresh()
-        if permission not in account:
+        if auth_field not in account:
             account = Account(account, blockchain_instance=self.blockchain)
-        if permission not in account:
+        if auth_field not in account:
             raise AssertionError("Could not access permission")
-
-        required_treshold = account[permission]["weight_threshold"]
+        
         if self._use_ledger:
             if not self._is_constructed() or self._is_require_reconstruction():
                 self.constructTx()
@@ -177,7 +233,7 @@ class TransactionBuilder(dict):
             key_found = False
             if self.path is not None:
                 current_pubkey = self.ledgertx.get_pubkey(self.path)
-                for authority in account[permission]["key_auths"]:
+                for authority in account[auth_field]["key_auths"]:
                     if str(current_pubkey) == authority[0]:
                         key_found = True
                 if permission == "posting" and not key_found:
@@ -197,30 +253,7 @@ class TransactionBuilder(dict):
         if self.blockchain.use_sc2 and self.blockchain.steemconnect is not None:
             self.blockchain.steemconnect.set_username(account["name"], permission)
             return
-
-        def fetchkeys(account, perm, level=0):
-            if level > 2:
-                return []
-            r = []
-            for authority in account[perm]["key_auths"]:
-                try:
-                    wif = self.blockchain.wallet.getPrivateKeyForPublicKey(
-                        authority[0])
-                    if wif:
-                        r.append([wif, authority[1]])
-                except ValueError:
-                    pass
-                except MissingKeyError:
-                    pass
-
-            if sum([x[1] for x in r]) < required_treshold:
-                # go one level deeper
-                for authority in account[perm]["account_auths"]:
-                    auth_account = Account(
-                        authority[0], blockchain_instance=self.blockchain)
-                    r.extend(fetchkeys(auth_account, perm, level + 1))
-
-            return r
+        
 
         if account["name"] not in self.signing_accounts:
             # is the account an instance of public key?
@@ -231,20 +264,20 @@ class TransactionBuilder(dict):
                     )
                 )
             else:
-                if permission not in account:
+                if auth_field not in account:
                     raise AssertionError("Could not access permission")
-                required_treshold = account[permission]["weight_threshold"]
-                keys = fetchkeys(account, permission)
+                required_treshold = account[auth_field]["weight_threshold"]
+                keys = self._fetchkeys(account, permission, required_treshold=required_treshold)
                 # If keys are empty, try again with active key
                 if not keys and permission == "posting":
-                    _keys = fetchkeys(account, "active")
+                    _keys = self._fetchkeys(account, "active", required_treshold=required_treshold)
                     keys.extend(_keys)
                 # If keys are empty, try again with owner key
                 if not keys and permission != "owner":
-                    _keys = fetchkeys(account, "owner")
+                    _keys = self._fetchkeys(account, "owner", required_treshold=required_treshold)
                     keys.extend(_keys)
                 for x in keys:
-                    self.wifs.add(x[0])
+                    self.appendWif(x[0])
 
             self.signing_accounts.append(account["name"])
 

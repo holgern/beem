@@ -2540,6 +2540,9 @@ def createpost(markdown_file, account, title, tags, community, beneficiaries, pe
             except:
                 c = Communities(limit=1000)
                 comm_cand = c.search_title(community)
+                if len(comm_cand) == 0:
+                    print("No community could be found!")
+                    continue
                 print(comm_cand.printAsTable())
                 index = input("Enter community Nr:")
                 if int(index) - 1 >= len(comm_cand):
@@ -4739,6 +4742,7 @@ def info(objects):
             account = Account(obj, blockchain_instance=stm)
             t = PrettyTable(["Key", "Value"])
             t.align = "l"
+            t._max_width = {"Value" : 80}
             account_json = account.json()
             for key in sorted(account_json):
                 value = account_json[key]
@@ -4777,6 +4781,7 @@ def info(objects):
                 key_type = stm.wallet.getKeyType(account, obj)
                 t = PrettyTable(["Account", "Key_type"])
                 t.align = "l"
+                t._max_width = {"Value" : 80}
                 t.add_row([account["name"], key_type])
                 print(t)
             else:
@@ -4788,6 +4793,7 @@ def info(objects):
             if post_json:
                 t = PrettyTable(["Key", "Value"])
                 t.align = "l"
+                t._max_width = {"Value" : 80}
                 for key in sorted(post_json):
                     if key in ["body", "active_votes"]:
                         value = "not shown"
@@ -4807,6 +4813,7 @@ def info(objects):
             trx = b.get_transaction(obj)
             t = PrettyTable(["Key", "Value"])
             t.align = "l"
+            t._max_width = {"Value" : 80}
             for key in trx:
                 value = trx[key]
                 if key in ["operations", "signatures"]:

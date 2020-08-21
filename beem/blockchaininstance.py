@@ -1930,7 +1930,8 @@ class BlockChainInstance(object):
 
         if parse_body:
             def get_urls(mdstring):
-                return list(set(re.findall(r'http[s]*://[^\s"><\)\(]+', mdstring)))
+                urls = (re.findall(r'http[s]*://[^\s"><\)\(]+', mdstring))
+                return list(dict.fromkeys(urls))
 
             def get_users(mdstring):
                 users = []
@@ -1950,6 +1951,8 @@ class BlockChainInstance(object):
             for url in get_urls(body):
                 img_exts = ['.jpg', '.png', '.gif', '.svg', '.jpeg']
                 if os.path.splitext(url)[1].lower() in img_exts:
+                    image.append(url)
+                elif url[:25] == "https://images.hive.blog/":
                     image.append(url)
                 else:
                     links.append(url)
