@@ -162,6 +162,7 @@ class TransactionBuilder(dict):
             return []
 
         r = []
+        wif = None
         # Let's go through all *keys* of the account
         for authority in account[perm]["key_auths"]:
             try:
