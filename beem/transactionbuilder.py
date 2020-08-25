@@ -344,10 +344,16 @@ class TransactionBuilder(dict):
             # otherwise, we simply wrap ops into Operations
             ops.extend([Operation(op, appbase=appbase, prefix=self.blockchain.prefix)])
 
-        # We no wrap everything into an actual transaction
-        expiration = formatTimeFromNow(
-            self.expiration or self.blockchain.expiration
-        )
+        # calculation expiration time from last block time not system time
+        # it fixes transaction expiration error when pushing transactions 
+        # when blocks are moved forward with debug_produce_block*
+        import dateutil.parser
+        from datetime import timedelta
+        now = dateutil.parser.parse(self.blockchain.get_dynamic_global_properties().get('time'))
+        expiration = now + timedelta(seconds = int(self.expiration or self.blockchain.expiration))
+        expiration = expiration.replace(microsecond = 0).isoformat()
+
+        # We now wrap everything into an actual transaction
         if ref_block_num is None or ref_block_prefix is None:
             ref_block_num, ref_block_prefix = self.get_block_params()
         if self._use_ledger:
