@@ -250,7 +250,7 @@ class WitnessesObject(list):
                            str(Amount(witness[bd_exchange_rate]['base'], blockchain_instance=self.blockchain)),
                            str(Amount(witness[bd_exchange_rate]['quote'], blockchain_instance=self.blockchain)),
                            str(td.days) + " days " + str(td.seconds // 3600) + ":" + str((td.seconds // 60) % 60),
-                           str(witness['props']['account_creation_fee']),
+                           str(Amount(witness['props']['account_creation_fee'], blockchain_instance=self.blockchain)),
                            str(witness['props']['maximum_block_size']),
                            str(witness['props'][bd_interest_rate] / 100) + " %",
                            witness['running_version']])
