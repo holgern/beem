@@ -1,5 +1,8 @@
 Changelog
 =========
+0.24.9
+------
+* Support for update_proposal_operation (thanks to dkedzierski)
 0.24.8
 ------
 * Fix is_steem

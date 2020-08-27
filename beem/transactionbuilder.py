@@ -7,10 +7,11 @@ from builtins import str
 from future.utils import python_2_unicode_compatible
 import logging
 import struct
+from datetime import timedelta
 from binascii import unhexlify
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from .account import Account
-from .utils import formatTimeFromNow
+from .utils import formatTimeFromNow, formatTimeString
 from beembase.objects import Operation
 from beemgraphenebase.account import PrivateKey, PublicKey
 from beembase.signedtransactions import Signed_Transaction
@@ -347,11 +348,12 @@ class TransactionBuilder(dict):
         # calculation expiration time from last block time not system time
         # it fixes transaction expiration error when pushing transactions 
         # when blocks are moved forward with debug_produce_block*
-        import dateutil.parser
-        from datetime import timedelta
-        now = dateutil.parser.parse(self.blockchain.get_dynamic_global_properties().get('time'))
-        expiration = now + timedelta(seconds = int(self.expiration or self.blockchain.expiration))
-        expiration = expiration.replace(microsecond = 0).isoformat()
+        if self.blockchain.is_connected():
+            now = formatTimeString(self.blockchain.get_dynamic_global_properties(use_stored_data=False).get('time')).replace(tzinfo=None)
+            expiration = now + timedelta(seconds = int(self.expiration or self.blockchain.expiration))
+            expiration = expiration.replace(microsecond = 0).isoformat()
+        else:
+            expiration = formatTimeFromNow(self.expiration or self.blockchain.expiration)            
 
         # We now wrap everything into an actual transaction
         if ref_block_num is None or ref_block_prefix is None:
