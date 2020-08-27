@@ -1,5 +1,9 @@
 Changelog
 =========
+0.24.8
+------
+* Fix is_steem
+
 0.24.7
 ------
 * Fix chain detection

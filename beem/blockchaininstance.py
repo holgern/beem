@@ -781,7 +781,7 @@ class BlockChainInstance(object):
         config = self.get_config()
         if config is None:
             return False
-        return 'HIVE_CHAIN_ID' in self.get_config()
+        return 'STEEM_CHAIN_ID' in self.get_config()
 
     def get_replace_hive_by_steem(self):
         hf_version = int(self.get_blockchain_version().split('.')[1])
