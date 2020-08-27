@@ -85,7 +85,7 @@ For Debian and Ubuntu, please ensure that the following packages are installed:
 
 .. code:: bash
 
-    sudo apt-get install build-essential libssl-dev python3-dev
+    sudo apt-get install build-essential libssl-dev python3-dev python3-pip
 
 For Fedora and RHEL-derivatives, please ensure that the following packages are installed:
 
