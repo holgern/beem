@@ -4665,6 +4665,23 @@ def verify(blocknumber, trx, use_api):
 
 
 @cli.command()
+def chainconfig():
+    """ Prints chain config in a table"""
+    stm = shared_blockchain_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    chain_config = stm.get_config()
+    t = PrettyTable(["Key", "Value"])
+    t.align = "l"
+    for key in chain_config:
+        if isinstance(chain_config[key], dict) and 'amount' in chain_config[key]:
+            t.add_row([key, str(Amount(chain_config[key], blockchain_instance=stm))])
+        else:
+            t.add_row([key, chain_config[key]])
+    print(t)
+    
+
+@cli.command()
 @click.argument('objects', nargs=-1)
 def info(objects):
     """ Show basic blockchain info

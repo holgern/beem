@@ -7,6 +7,8 @@ Changelog
 * _fetchkeys function moved outside appendSigner
 * Fix get urls in parse body
 * Two more nodes have been added to nodelist
+* new beempy chaininfo command
+* Automatic chain detection (beempy will now connect to unkown chain ids)
 
 0.24.5
 ------

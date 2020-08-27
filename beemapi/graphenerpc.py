@@ -304,12 +304,33 @@ class GrapheneRPC(object):
         chain_id = None
         network_version = None
         blockchain_name = None
+        chain_config = None
+        prefix = None
+        symbols = []
+        chain_assets = []
         for key in props:
             if key[-8:] == "CHAIN_ID":
                 chain_id = props[key]
                 blockchain_name = key.split("_")[0]
+                prefix = key[:-9]
             elif key[-13:] == "CHAIN_VERSION":
                 network_version = props[key]
+            elif key[-6:] == "SYMBOL":
+                value = {}
+                value["asset"] = props[key]["nai"]
+                value["decimals"] = props[key]["decimals"]
+                value["symbol"] = key[:-7]
+                value["id"] = -1
+                symbols.append(value)
+        symbol_id = 0
+        if len(symbols) == 2:
+            symbol_id = 1
+        for s in sorted(symbols, key=lambda self: self['nai'], reverse=False):
+            s["id"] = symbol_id
+            symbol_id += 1
+            chain_assets.append(s)
+        if chain_id is not None and network_version is not None and len(chain_assets) > 0:
+            chain_config = {"chain_id": chain_id, "min_version": network_version, "chain_assets": chain_assets}
 
         if chain_id is None:
             raise("Connecting to unknown network!")
@@ -322,7 +343,9 @@ class GrapheneRPC(object):
                     highest_version_chain = v
                 elif self.version_string_to_int(v["min_version"]) > self.version_string_to_int(highest_version_chain["min_version"]):
                     highest_version_chain = v
-        if highest_version_chain is None:
+        if highest_version_chain is None and chain_config is not None:
+            return chain_config
+        elif highest_version_chain is None:
             raise("Connecting to unknown network!")
         else:
             return highest_version_chain

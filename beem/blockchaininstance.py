@@ -496,7 +496,7 @@ class BlockChainInstance(object):
         try:
             return self.rpc.get_network(props=config)
         except:
-            return known_chains["STEEM"]
+            return known_chains["HIVE"]
 
     def get_median_price(self, use_stored_data=True):
         """ Returns the current median history price as Price
@@ -749,14 +749,14 @@ class BlockChainInstance(object):
     @property
     def chain_params(self):
         if self.offline or self.rpc is None:
-            return known_chains["STEEM"]
+            return known_chains["HIVE"]
         else:
             return self.get_network()
 
     @property
     def hardfork(self):
         if self.offline or self.rpc is None:
-            versions = known_chains['STEEM']['min_version']
+            versions = known_chains['HIVE']['min_version']
         else:
             hf_prop = self.get_hardfork_properties()
             if "current_hardfork_version" in hf_prop:
@@ -781,7 +781,7 @@ class BlockChainInstance(object):
         config = self.get_config()
         if config is None:
             return False
-        return 'STEEM_CHAIN_ID' in self.get_config()
+        return 'HIVE_CHAIN_ID' in self.get_config()
 
     def get_replace_hive_by_steem(self):
         hf_version = int(self.get_blockchain_version().split('.')[1])
