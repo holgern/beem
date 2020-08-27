@@ -391,11 +391,30 @@ class Remove_proposal(GrapheneObject):
 
         super(Remove_proposal, self).__init__(
             OrderedDict([
-                ('proposal_owner', String(kwargs["voter"])),
+                ('proposal_owner', String(kwargs["proposal_owner"])),
                 ('proposal_ids', Array(proposal_ids)),
                 ('extensions', extensions)
             ]))
 
+class Update_proposal(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+
+        prefix = kwargs.get("prefix", default_prefix)
+        extensions = Array([])
+
+        super(Update_proposal, self).__init__(
+            OrderedDict([
+                ('proposal_id', Uint64(kwargs["proposal_id"])),
+                ('creator', String(kwargs["creator"])),
+                ('daily_pay', Amount(kwargs["daily_pay"], prefix = prefix)),
+                ('subject', String(kwargs["subject"])),
+                ('permlink', String(kwargs["permlink"])),
+                ('extensions', extensions)
+            ]))
 
 class Witness_set_properties(GrapheneObject):
     def __init__(self, *args, **kwargs):
