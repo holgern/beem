@@ -105,19 +105,19 @@ For Termux on Android, please install the following packages:
 
     pkg install clang openssl python
 
-Signing and Verify can be fasten (200 %) by installing cryptography:
+Signing and Verify can be fasten (200 %) by installing cryptography (you may need to replace pip by pip3):
 
 .. code:: bash
 
     pip install -U cryptography
 
-or:
+or (you may need to replace pip by pip3):
 
 .. code:: bash
 
     pip install -U secp256k1prp
 
-Install or update beem by pip::
+Install or update beem by pip(you may need to replace pip by pip3)::
 
     pip install -U beem
 
