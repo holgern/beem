@@ -1,5 +1,9 @@
 Changelog
 =========
+0.24.7
+------
+* Fix chain detection
+
 0.24.6
 ------
 * Improved community selection in beempy createpost

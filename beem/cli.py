@@ -91,7 +91,7 @@ def prompt_callback(ctx, param, value):
 
 
 def asset_callback(ctx, param, value):
-    if value not in ["STEEM", "SBD", "HIVE", "HBD", "BLURT"]:
+    if value not in ["STEEM", "SBD", "HIVE", "HBD", "BLURT", "TBD", "TESTS"]:
         print("Please STEEM/HIVE/BLURT or SBD/HBD as asset!")
         ctx.abort()
     else:

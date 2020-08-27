@@ -312,25 +312,31 @@ class GrapheneRPC(object):
             if key[-8:] == "CHAIN_ID":
                 chain_id = props[key]
                 blockchain_name = key.split("_")[0]
-                prefix = key[:-9]
             elif key[-13:] == "CHAIN_VERSION":
                 network_version = props[key]
+            elif key[-14:] == "ADDRESS_PREFIX":
+                prefix = props[key]
             elif key[-6:] == "SYMBOL":
                 value = {}
                 value["asset"] = props[key]["nai"]
-                value["decimals"] = props[key]["decimals"]
-                value["symbol"] = key[:-7]
+                value["precision"] = props[key]["decimals"]
+                if "IS_TEST_NET" in props and props["IS_TEST_NET"] and "nai" in props[key] and props[key]["nai"] == "@@000000013":
+                    value["symbol"] = "TBD"
+                elif "IS_TEST_NET" in props and props["IS_TEST_NET"] and "nai" in props[key] and props[key]["nai"] == "@@000000021":
+                    value["symbol"] = "TESTS"
+                else:
+                    value["symbol"] = key[:-7]
                 value["id"] = -1
                 symbols.append(value)
         symbol_id = 0
         if len(symbols) == 2:
             symbol_id = 1
-        for s in sorted(symbols, key=lambda self: self['nai'], reverse=False):
+        for s in sorted(symbols, key=lambda self: self['asset'], reverse=False):
             s["id"] = symbol_id
             symbol_id += 1
             chain_assets.append(s)
-        if chain_id is not None and network_version is not None and len(chain_assets) > 0:
-            chain_config = {"chain_id": chain_id, "min_version": network_version, "chain_assets": chain_assets}
+        if chain_id is not None and network_version is not None and len(chain_assets) > 0 and prefix is not None:
+            chain_config = {"prefix": prefix, "chain_id": chain_id, "min_version": network_version, "chain_assets": chain_assets}
 
         if chain_id is None:
             raise("Connecting to unknown network!")
