@@ -7,6 +7,7 @@ from builtins import str
 from future.utils import python_2_unicode_compatible
 import logging
 import struct
+import time
 from datetime import timedelta
 from binascii import unhexlify
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
@@ -387,10 +388,7 @@ class TransactionBuilder(dict):
         """
 
         dynBCParams = self.blockchain.get_dynamic_global_properties(use_stored_data=False)
-        # fix for corner case where last_irreversible_block_num == head_block_number
-        # then int(dynBCParams["last_irreversible_block_num"]) + 1 does not exists
-        # and BlockHeader throws error
-        if use_head_block or int(dynBCParams["last_irreversible_block_num"]) == int(dynBCParams["head_block_number"]):
+        if use_head_block:
             ref_block_num = dynBCParams["head_block_number"] & 0xFFFF
             ref_block_prefix = struct.unpack_from(
                 "<I", unhexlify(dynBCParams["head_block_id"]), 4
@@ -398,7 +396,15 @@ class TransactionBuilder(dict):
         else:
             # need to get subsequent block because block head doesn't return 'id' - stupid
             from .block import BlockHeader
-            block = BlockHeader(int(dynBCParams["last_irreversible_block_num"]) + 1, blockchain_instance=self.blockchain)
+            from .exceptions import BlockDoesNotExistsException
+            try:
+                block = BlockHeader(int(dynBCParams["last_irreversible_block_num"]) + 1, blockchain_instance=self.blockchain)
+            except BlockDoesNotExistsException:
+                # fix for corner case where last_irreversible_block_num == head_block_number
+                # then int(dynBCParams["last_irreversible_block_num"]) + 1 does not exists
+                # and BlockHeader throws error                
+                time.sleep(3)
+                block = BlockHeader(int(dynBCParams["last_irreversible_block_num"]) + 1, blockchain_instance=self.blockchain)
             ref_block_num = dynBCParams["last_irreversible_block_num"] & 0xFFFF
             ref_block_prefix = struct.unpack_from(
                 "<I", unhexlify(block["previous"]), 4

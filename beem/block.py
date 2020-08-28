@@ -341,7 +341,7 @@ class BlockHeader(BlockchainObject):
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
         if self.blockchain.rpc.get_use_appbase():
             block = self.blockchain.rpc.get_block_header({"block_num": self.identifier}, api="block")
-            if "header" in block:
+            if block is not None and "header" in block:
                 block = block["header"]
         else:
             block = self.blockchain.rpc.get_block_header(self.identifier)
