@@ -388,7 +388,7 @@ class TransactionBuilder(dict):
         # fix for corner case where last_irreversible_block_num == head_block_number
         # then int(dynBCParams["last_irreversible_block_num"]) + 1 does not exists
         # and BlockHeader throws error
-        if use_head_block or int(dynBCParams["last_irreversible_block_num"]) == int(dynBCParams["head_block_number"]):)
+        if use_head_block or int(dynBCParams["last_irreversible_block_num"]) == int(dynBCParams["head_block_number"]):
             ref_block_num = dynBCParams["head_block_number"] & 0xFFFF
             ref_block_prefix = struct.unpack_from(
                 "<I", unhexlify(dynBCParams["head_block_id"]), 4
