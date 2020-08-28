@@ -384,7 +384,7 @@ class TransactionBuilder(dict):
             node!
         """
 
-        dynBCParams = self.blockchain.get_dynamic_global_properties(use_stored_data=False
+        dynBCParams = self.blockchain.get_dynamic_global_properties(use_stored_data=False)
         # fix for corner case where last_irreversible_block_num == head_block_number
         # then int(dynBCParams["last_irreversible_block_num"]) + 1 does not exists
         # and BlockHeader throws error
