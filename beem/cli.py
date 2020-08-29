@@ -91,6 +91,19 @@ def asset_callback(ctx, param, value):
 def prompt_flag_callback(ctx, param, value):
     if not value:
         ctx.abort()
+    
+
+def is_keyring_available():
+    KEYRING_AVAILABLE = False
+    try:
+        import keyring
+        if not isinstance(keyring.get_keyring(), keyring.backends.fail.Keyring):
+            KEYRING_AVAILABLE = True
+        else:
+            KEYRING_AVAILABLE = False
+    except ImportError:
+        KEYRING_AVAILABLE = False
+    return KEYRING_AVAILABLE
 
 
 def unlock_wallet(stm, password=None, allow_wif=True):
@@ -103,17 +116,8 @@ def unlock_wallet(stm, password=None, allow_wif=True):
     if not stm.wallet.store.is_encrypted():
         return True
     password_storage = stm.config["password_storage"]
-    KEYRING_AVAILABLE = False
-    if password_storage == "keyring":
-        try:
-            import keyring
-            if not isinstance(keyring.get_keyring(), keyring.backends.fail.Keyring):
-                KEYRING_AVAILABLE = True
-            else:
-                KEYRING_AVAILABLE = False
-        except ImportError:
-            KEYRING_AVAILABLE = False
-    if not password and KEYRING_AVAILABLE and password_storage == "keyring":
+    if not password and password_storage == "keyring" and is_keyring_available():
+        import keyring
         password = keyring.get_password("beem", "wallet")
     if not password and password_storage == "environment" and "UNLOCK" in os.environ:
         password = os.environ.get("UNLOCK")
@@ -180,18 +184,9 @@ def unlock_token_wallet(stm, sc2, password=None):
         return True
     if not sc2.store.is_encrypted():
         return True
-    password_storage = stm.config["password_storage"]
-    KEYRING_AVAILABLE = False
-    if password_storage == "keyring":
-        try:
-            import keyring
-            if not isinstance(keyring.get_keyring(), keyring.backends.fail.Keyring):
-                KEYRING_AVAILABLE = True
-            else:
-                KEYRING_AVAILABLE = False
-        except ImportError:
-            KEYRING_AVAILABLE = False    
-    if not password and KEYRING_AVAILABLE and password_storage == "keyring":
+    password_storage = stm.config["password_storage"]  
+    if not password and password_storage == "keyring" and is_keyring_available():
+        import keyring
         password = keyring.get_password("beem", "wallet")
     if not password and password_storage == "environment" and "UNLOCK" in os.environ:
         password = os.environ.get("UNLOCK")
@@ -399,22 +394,14 @@ def set(key, value):
             stm.set_default_nodes("")
     elif key == "default_chain":
         stm.config["default_chain"] = value
-    elif key == "password_storage":
-        KEYRING_AVAILABLE = False
-        if value == "keyring":
-            try:
-                import keyring
-                if not isinstance(keyring.get_keyring(), keyring.backends.fail.Keyring):
-                    KEYRING_AVAILABLE = True
-                else:
-                    KEYRING_AVAILABLE = False
-            except ImportError:
-                KEYRING_AVAILABLE = False        
+    elif key == "password_storage":      
         stm.config["password_storage"] = value
-        if KEYRING_AVAILABLE and value == "keyring":
+        if is_keyring_available() and value == "keyring":
+            import keyring
             password = click.prompt("Password to unlock wallet (Will be stored in keyring)", confirmation_prompt=False, hide_input=True)
             password = keyring.set_password("beem", "wallet", password)
-        elif KEYRING_AVAILABLE and value != "keyring":
+        elif is_keyring_available() and value != "keyring":
+            import keyring
             try:
                 keyring.delete_password("beem", "wallet")
             except keyring.errors.PasswordDeleteError:
@@ -681,8 +668,9 @@ def createwallet(wipe):
     if not bool(password):
         print("Password cannot be empty! Quitting...")
         return
-    password_storage = stm.config["password_storage"]
-    if KEYRING_AVAILABLE and password_storage == "keyring":
+    password_storage = stm.config["password_storage"]  
+    if password_storage == "keyring" and is_keyring_available():
+        import keyring
         password = keyring.set_password("beem", "wallet", password)
     elif password_storage == "environment":
         print("The new wallet password can be stored in the UNLOCK environment variable to skip password prompt!")
@@ -718,7 +706,7 @@ def walletinfo(unlock, lock):
         t.add_row(["UNLOCK env set", "yes"])
     else:
         t.add_row(["UNLOCK env set", "no"])
-    if KEYRING_AVAILABLE:
+    if is_keyring_available():
         t.add_row(["keyring installed", "yes"])
     else:
         t.add_row(["keyring installed", "no"])
@@ -1486,7 +1474,8 @@ def changewalletpassphrase():
         print("Password cannot be empty! Quitting...")
         return
     password_storage = stm.config["password_storage"]
-    if KEYRING_AVAILABLE and password_storage == "keyring":
+    if password_storage == "keyring" and is_keyring_available():
+        import keyring
         keyring.set_password("beem", "wallet", newpassword)
     elif password_storage == "environment":
         print("The new wallet password can be stored in the UNLOCK invironment variable to skip password prompt!")
