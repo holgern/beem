@@ -10,14 +10,6 @@ from beemgraphenebase.py23 import py23_bytes
 from beemgraphenebase import bip38
 from beemgraphenebase.aes import AESCipher
 from .exceptions import WrongMasterPasswordException, WalletLocked
-try:
-    import keyring
-    if not isinstance(keyring.get_keyring(), keyring.backends.fail.Keyring):
-        KEYRING_AVAILABLE = True
-    else:
-        KEYRING_AVAILABLE = False
-except ImportError:
-    KEYRING_AVAILABLE = False
 
 log = logging.getLogger(__name__)
 
@@ -66,6 +58,16 @@ class MasterPassword(object):
             return bool(self.password)
         else:
             password_storage = self.config["password_storage"]
+            KEYRING_AVAILABLE = False
+            if password_storage == "keyring":
+                try:
+                    import keyring
+                    if not isinstance(keyring.get_keyring(), keyring.backends.fail.Keyring):
+                        KEYRING_AVAILABLE = True
+                    else:
+                        KEYRING_AVAILABLE = False
+                except ImportError:
+                    KEYRING_AVAILABLE = False
             if (
                 "UNLOCK" in os.environ
                 and os.environ["UNLOCK"]

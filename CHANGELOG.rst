@@ -5,6 +5,7 @@ Changelog
 * Support for update_proposal_operation (thanks to dkedzierski)
 * Remove not needed SECP256K1 import
 * Fix corner case last_irreversible_block_num == head_block_number for Transactionbuilder (thanks to dkedzierski)
+* import keyring only when needed
 
 0.24.8
 ------
