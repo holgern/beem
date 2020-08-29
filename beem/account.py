@@ -494,6 +494,9 @@ class Account(BlockchainObject):
 
     def get_voting_power(self, with_regeneration=True):
         """ Returns the account voting power in the range of 0-100%
+
+            :param bool with_regeneration: When True, voting power regeneration is
+                included into the result (default True)
         """
         if "voting_manabar" in self:
             manabar = self.get_manabar()
@@ -520,6 +523,9 @@ class Account(BlockchainObject):
 
     def get_downvoting_power(self, with_regeneration=True):
         """ Returns the account downvoting power in the range of 0-100%
+
+            :param bool with_regeneration: When True, downvoting power regeneration is
+                included into the result (default True)
         """
         if "downvote_manabar" not in self:
             return 0
@@ -540,6 +546,9 @@ class Account(BlockchainObject):
 
     def get_vests(self, only_own_vests=False):
         """ Returns the account vests
+
+            :param bool only_own_vests: When True, only owned vests is
+                returned without delegation (default False)
         """
         vests = (self["vesting_shares"])
         if not only_own_vests and "delegated_vesting_shares" in self and "received_vesting_shares" in self:
@@ -557,10 +566,16 @@ class Account(BlockchainObject):
             vesting_shares -= min(int(self["vesting_withdraw_rate"]), int(self["to_withdraw"]) - int(self["withdrawn"]))
         return vesting_shares
 
-    def get_token_power(self, only_own_vests=False):
+    def get_token_power(self, only_own_vests=False, use_stored_data=True):
         """ Returns the account Hive/Steem power (amount of staked token + delegations)
+
+            :param bool only_own_vests: When True, only owned vests is
+                returned without delegation (default False)
+            :param bool use_stored_data: When False, an API call returns the current
+                vests_to_token_power ratio everytime (default True)
+
         """
-        return self.blockchain.vests_to_token_power(self.get_vests(only_own_vests=only_own_vests))
+        return self.blockchain.vests_to_token_power(self.get_vests(only_own_vests=only_own_vests), use_stored_data=use_stored_data)
 
     def get_steem_power(self, onlyOwnSP=False):
         """ Returns the account steem power

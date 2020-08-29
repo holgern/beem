@@ -38,23 +38,7 @@ from .ecdsasig import sign_message, verify_message
 import logging
 log = logging.getLogger(__name__)
 
-try:
-    import secp256k1prp as secp256k1
-    USE_SECP256K1 = True
-    log.debug("Loaded secp256k1prp binding.")    
-except:
-    try:
-        import secp256k1
-        USE_SECP256K1 = True
-        log.debug("Loaded secp256k1 binding.")
-    except Exception:
-        USE_SECP256K1 = False
-        log.debug("To speed up transactions signing install \n"
-                  "    pip install secp256k1\n"
-                  "or  pip install secp256k1prp")
 
-
-@python_2_unicode_compatible
 class GrapheneObjectASN1(object):
     """ Core abstraction class
 
