@@ -65,7 +65,7 @@ class TransactionBuilder(dict):
             if kwargs.get("steem_instance"):
                 blockchain_instance = kwargs["steem_instance"]
             elif kwargs.get("hive_instance"):
-                blockchain_instance = kwargs["hive_instance"]        
+                blockchain_instance = kwargs["hive_instance"]  
         self.blockchain = blockchain_instance or shared_blockchain_instance()
         self.clear()
         if tx and isinstance(tx, dict):
@@ -77,7 +77,7 @@ class TransactionBuilder(dict):
             self._require_reconstruction = True
         self._use_ledger = self.blockchain.use_ledger
         self.path = self.blockchain.path
-        self._use_condenser_api = bool(blockchain_instance.config["use_condenser"])
+        self._use_condenser_api = bool(self.blockchain.config["use_condenser"])
         self.set_expiration(kwargs.get("expiration", self.blockchain.expiration))
 
     def set_expiration(self, p):
