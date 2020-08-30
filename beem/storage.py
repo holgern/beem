@@ -42,6 +42,7 @@ def generate_config_store(config, blockchain="hive"):
     config.setdefault("hs_oauth_base_url", "https://hivesigner.com/oauth2/")
     config.setdefault("default_canonical_url", "https://hive.blog")
     config.setdefault("default_path", "48'/13'/0'/0'/0'")
+    config.setdefault("use_condenser", True)
     return config
 
 def get_default_config_store(*args, **kwargs):

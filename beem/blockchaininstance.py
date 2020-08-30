@@ -159,8 +159,6 @@ class BlockChainInstance(object):
                 "irreversible")
             :param bool bundle: Do not broadcast transactions right away, but allow
                 to bundle operations *(optional)*
-            :param bool use_condenser: Use the old condenser_api rpc protocol on nodes with version
-                0.19.4 or higher. The settings has no effect on nodes with version of 0.19.3 or lower.
             :param int num_retries: Set the maximum number of reconnects to the nodes before
                 NumRetriesReached is raised. Disabled for -1. (default is -1)
             :param int num_retries_call: Repeat num_retries_call times a rpc call on node error (default is 5)
@@ -1650,7 +1648,7 @@ class BlockChainInstance(object):
         op = operations.Account_update(**op)
         return self.finalizeOp(op, account, "owner", **kwargs)
 
-    def witness_set_properties(self, wif, owner, props, use_condenser_api=True):
+    def witness_set_properties(self, wif, owner, props):
         """ Set witness properties
 
             :param str wif: Private signing key
@@ -1683,7 +1681,7 @@ class BlockChainInstance(object):
             props_list.append([k, props[k]])
         replace_hive_by_steem = self.get_replace_hive_by_steem()
         op = operations.Witness_set_properties({"owner": owner["name"], "props": props_list, "prefix": self.prefix, "replace_hive_by_steem": replace_hive_by_steem})
-        tb = TransactionBuilder(use_condenser_api=use_condenser_api, blockchain_instance=self)
+        tb = TransactionBuilder(blockchain_instance=self)
         tb.appendOps([op])
         tb.appendWif(wif)
         tb.sign()

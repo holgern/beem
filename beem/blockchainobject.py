@@ -1,10 +1,4 @@
 # This Python file uses the following encoding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import str
-from future.utils import python_2_unicode_compatible
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from beem.instance import shared_blockchain_instance
 from datetime import datetime, timedelta
@@ -12,12 +6,11 @@ import json
 import threading
 
 
-@python_2_unicode_compatible
 class ObjectCache(dict):
 
     def __init__(self, initial_data={}, default_expiration=10, auto_clean=True):
         super(ObjectCache, self).__init__(initial_data)
-        self.default_expiration = default_expiration
+        self.set_expiration(default_expiration)
         self.auto_clean = auto_clean
         self.lock = threading.RLock()
 
@@ -85,6 +78,11 @@ class ObjectCache(dict):
             n = len(list(self.keys()))
         return "ObjectCache(n={}, default_expiration={})".format(
             n, self.default_expiration)
+
+    def set_expiration(self, expiration):
+        """ Set new default expiration time in seconds (default: 10s)
+        """
+        self.default_expiration = expiration
 
 
 class BlockchainObject(dict):

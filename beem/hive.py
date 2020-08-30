@@ -153,7 +153,8 @@ class Hive(BlockChainInstance):
         reward_fund = self.get_reward_funds(use_stored_data=use_stored_data)
         reward_balance = float(Amount(reward_fund["reward_balance"], blockchain_instance=self))
         recent_claims = float(reward_fund["recent_claims"]) + not_broadcasted_vote_rshares
-
+        if recent_claims == 0:
+            return 0
         fund_per_share = reward_balance / (recent_claims)
         median_price = self.get_median_price(use_stored_data=use_stored_data)
         if median_price is None:

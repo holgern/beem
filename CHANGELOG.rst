@@ -6,6 +6,8 @@ Changelog
 * Remove not needed SECP256K1 import
 * Fix corner case last_irreversible_block_num == head_block_number for Transactionbuilder (thanks to dkedzierski)
 * import keyring only when needed
+* Add use_condenser to config (can be set wtih beempy set), when set to False, condenser calls are not used
+* Add set_expiration to Object Cache
 
 0.24.8
 ------

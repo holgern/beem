@@ -61,6 +61,7 @@ from beem.storage import get_default_config_store
 
 click.disable_unicode_literals_warning = True
 log = logging.getLogger(__name__)
+
 availableConfigurationKeys = [
     "default_account",
     "default_vote_weight",
@@ -422,6 +423,8 @@ def set(key, value):
         stm.config["default_path"] = value
     elif key == "default_canonical_url":
         stm.config["default_canonical_url"] = value
+    elif key == "use_condenser":
+        stm.config["use_condenser"] = value in ["true", "True"]
     else:
         print("wrong key")
 
@@ -641,6 +644,8 @@ def config():
     t.add_row(["nodes", nodes])
     if "password_storage" not in availableConfigurationKeys:
         t.add_row(["password_storage", stm.config["password_storage"]])
+    if not stm.config["use_condenser"]:
+        t.add_row(["use_condenser", stm.config["use_condenser"]])
     t.add_row(["data_dir", stm.config.data_dir])
     print(t)
 
@@ -4836,7 +4841,12 @@ def info(objects):
                 print("Post now known" % obj)
         elif re.match(r"^[a-zA-Z0-9\_]{40}$", obj):
             b = Blockchain(blockchain_instance=stm)
-            trx = b.get_transaction(obj)
+            from beemapi.exceptions import UnknownTransaction
+            try:
+                trx = b.get_transaction(obj)
+            except UnknownTransaction:
+                print("%s is unknown!" % obj)
+                return
             t = PrettyTable(["Key", "Value"])
             t.align = "l"
             t._max_width = {"Value" : 80}

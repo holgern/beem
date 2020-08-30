@@ -168,7 +168,14 @@ class Comment(BlockchainObject):
                 if isinstance(content, list) and len(content) >0:
                     content =content[0]
             except:
-                content = self.blockchain.rpc.get_content(author, permlink)
+                if self.blockchain.config["use_condenser"]:
+                    content = self.blockchain.rpc.get_content(author, permlink)
+                else:
+                    content =self.blockchain.rpc.find_comments({"start": [author, permlink], "limit": 1, "order": "by_permlink"}, api="database")
+                    if content is not None and "comments" in content:
+                        content =content["comments"]
+                    if isinstance(content, list) and len(content) >0:
+                        content =content[0]                
         else:
             content = self.blockchain.rpc.get_content(author, permlink)
         if not content or not content['author'] or not content['permlink']:

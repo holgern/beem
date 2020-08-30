@@ -58,7 +58,6 @@ class TransactionBuilder(dict):
     def __init__(
         self,
         tx={},
-        use_condenser_api=True,
         blockchain_instance=None,
         **kwargs
     ):
@@ -78,7 +77,7 @@ class TransactionBuilder(dict):
             self._require_reconstruction = True
         self._use_ledger = self.blockchain.use_ledger
         self.path = self.blockchain.path
-        self._use_condenser_api = use_condenser_api
+        self._use_condenser_api = bool(blockchain_instance.config["use_condenser"])
         self.set_expiration(kwargs.get("expiration", self.blockchain.expiration))
 
     def set_expiration(self, p):
@@ -539,17 +538,14 @@ class TransactionBuilder(dict):
         if "operations" not in self or not self["operations"]:
             return
         ret = self.json()
-        if self.blockchain.is_connected() and self.blockchain.rpc.get_use_appbase():
-            # Returns an internal Error at the moment
-            if not self._use_condenser_api:
-                args = {'trx': self.json(), 'max_block_age': max_block_age}
-                broadcast_api = "network_broadcast"
-            else:
-                args = self.json()
-                broadcast_api = "condenser"
+
+        # Returns an internal Error at the moment
+        if not self._use_condenser_api:
+            args = {'trx': self.json(), 'max_block_age': max_block_age}
+            broadcast_api = "network_broadcast"
         else:
             args = self.json()
-            broadcast_api = "network_broadcast"
+            broadcast_api = "condenser"
 
         if self.blockchain.nobroadcast:
             log.info("Not broadcasting anything!")
@@ -560,7 +556,7 @@ class TransactionBuilder(dict):
             self.blockchain.rpc.set_next_node_on_empty_reply(False)
             if self.blockchain.use_sc2:
                 ret = self.blockchain.steemconnect.broadcast(self["operations"])
-            elif self.blockchain.blocking:
+            elif self.blockchain.blocking and self._use_condenser_api:
                 ret = self.blockchain.rpc.broadcast_transaction_synchronous(
                     args, api=broadcast_api)
                 if "trx" in ret:
