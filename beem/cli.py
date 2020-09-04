@@ -92,7 +92,7 @@ def asset_callback(ctx, param, value):
 def prompt_flag_callback(ctx, param, value):
     if not value:
         ctx.abort()
-    
+
 
 def is_keyring_available():
     KEYRING_AVAILABLE = False
@@ -135,10 +135,10 @@ def unlock_wallet(stm, password=None, allow_wif=True):
             except:
                 try:
                     from beemstorage import InRamPlainKeyStore
-                    stm.wallet.store = InRamPlainKeyStore()                
+                    stm.wallet.store = InRamPlainKeyStore()
                     stm.wallet.setKeys([password])
                     print("Wif accepted!")
-                    return True                
+                    return True
                 except:
                     if allow_wif:
                         raise exceptions.WrongMasterPasswordException("entered password is not a valid password/wif")
@@ -152,7 +152,7 @@ def unlock_wallet(stm, password=None, allow_wif=True):
             except:
                 try:
                     from beemstorage import SqliteEncryptedKeyStore
-                    stm.wallet.store = SqliteEncryptedKeyStore(config=stm.config)                    
+                    stm.wallet.store = SqliteEncryptedKeyStore(config=stm.config)
                     stm.wallet.unlock(password)
                 except:
                     if allow_wif:
@@ -185,7 +185,7 @@ def unlock_token_wallet(stm, sc2, password=None):
         return True
     if not sc2.store.is_encrypted():
         return True
-    password_storage = stm.config["password_storage"]  
+    password_storage = stm.config["password_storage"]
     if not password and password_storage == "keyring" and is_keyring_available():
         import keyring
         password = keyring.get_password("beem", "wallet")
@@ -219,7 +219,7 @@ def unlock_token_wallet(stm, sc2, password=None):
 def export_trx(tx, export):
     if export is not None:
         with open(export, "w", encoding="utf-8") as f:
-            json.dump(tx, f)    
+            json.dump(tx, f)
 
 
 @shell(prompt='beempy> ', intro='Starting beempy... (use help to list all commands)', chain=True)
@@ -304,7 +304,7 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hi
         elif config["default_chain"].lower() == "steem":
             steem = True
         elif config["default_chain"].lower() == "blurt":
-            blurt = True        
+            blurt = True
     if hive:
         stm = Hive(
             node=node,
@@ -361,8 +361,8 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hi
             num_retries_call=3,
             timeout=15,
             autoconnect=autoconnect
-        )        
-            
+        )
+
     set_shared_blockchain_instance(stm)
 
     pass
@@ -395,7 +395,7 @@ def set(key, value):
             stm.set_default_nodes("")
     elif key == "default_chain":
         stm.config["default_chain"] = value
-    elif key == "password_storage":      
+    elif key == "password_storage":
         stm.config["password_storage"] = value
         if is_keyring_available() and value == "keyring":
             import keyring
@@ -481,7 +481,7 @@ def pingnode(sort, remove):
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
     nodes = stm.get_default_nodes()
-    
+
     t = PrettyTable(["Node", "Answer time [ms]"])
     t.align = "l"
     if sort:
@@ -604,7 +604,7 @@ def updatenodes(show, hive, steem, blurt, test, only_https, only_wss):
     elif blurt:
         nodes = ["https://rpc.blurt.world", "https://blurt-rpc.steem.buzz"]
         if stm.config["default_chain"] != "blurt":
-            stm.config["default_chain"] = "blurt"        
+            stm.config["default_chain"] = "blurt"
     elif stm.config["default_chain"] == "steem":
         nodes = nodelist.get_steem_nodes(wss=not only_https, https=not only_wss)
     elif stm.config["default_chain"] == "blurt":
@@ -673,7 +673,7 @@ def createwallet(wipe):
     if not bool(password):
         print("Password cannot be empty! Quitting...")
         return
-    password_storage = stm.config["password_storage"]  
+    password_storage = stm.config["password_storage"]
     if password_storage == "keyring" and is_keyring_available():
         import keyring
         password = keyring.set_password("beem", "wallet", password)
@@ -697,7 +697,7 @@ def walletinfo(unlock, lock):
         stm.wallet.lock()
     elif unlock:
         unlock_wallet(stm, allow_wif=False)
-      
+
     t = PrettyTable(["Key", "Value"])
     t.align = "l"
     t.add_row(["created", stm.wallet.created()])
@@ -835,13 +835,13 @@ def keygen(import_word_list, strength, passphrase, path, network, role, account_
             if (any(c.islower() for c in import_password) and any(c.isupper() for c in import_password) and any(c.isdigit() for c in import_password)):
                 break
     pub_json = {"owner": "", "active": "", "posting": "", "memo": ""}
-    
+
     if not account_keys and len(role.split(",")) > 1:
         roles = role.split(",")
         account_keys = True
     else:
-        roles = ['owner', 'active', 'posting', 'memo']    
-    
+        roles = ['owner', 'active', 'posting', 'memo']
+
     if import_password or create_password:
         if wif > 0:
             password = import_password
@@ -868,7 +868,7 @@ def keygen(import_word_list, strength, passphrase, path, network, role, account_
             t.add_row(["Entered/created Password", import_password])
     elif stm.use_ledger:
         if stm.rpc is not None:
-            stm.rpc.rpcconnect()        
+            stm.rpc.rpcconnect()
         ledgertx = stm.new_tx()
         ledgertx.constructTx()
         if account is None:
@@ -882,8 +882,8 @@ def keygen(import_word_list, strength, passphrase, path, network, role, account_
         t.add_row(["Account sequence", account])
         t.add_row(["Key sequence", sequence])
 
-        
-        if account_keys and path is None:  
+
+        if account_keys and path is None:
             for r in roles:
                 path = ledgertx.ledgertx.build_path(r, account, sequence)
                 pubkey = ledgertx.ledgertx.get_pubkey(path, request_screen_approval=False)
@@ -893,11 +893,11 @@ def keygen(import_word_list, strength, passphrase, path, network, role, account_
                 print(aprove_key)
                 ledgertx.ledgertx.get_pubkey(path, request_screen_approval=True)
                 t_pub.add_row(["%s Public Key" % r, format(pubkey, "STM")])
-                t.add_row(["%s path" % r, path])               
-                pub_json[r] = format(pubkey, "STM")          
+                t.add_row(["%s path" % r, path])
+                pub_json[r] = format(pubkey, "STM")
         else:
             if path is None:
-                path = ledgertx.ledgertx.build_path(role, account, sequence)            
+                path = ledgertx.ledgertx.build_path(role, account, sequence)
             t.add_row(["Key role", role])
             t.add_row(["path", path])
             pubkey = ledgertx.ledgertx.get_pubkey(path, request_screen_approval=False)
@@ -907,7 +907,7 @@ def keygen(import_word_list, strength, passphrase, path, network, role, account_
             print(aprove_key)
             ledgertx.ledgertx.get_pubkey(path, request_screen_approval=True)
             t_pub.add_row(["Public Key", format(pubkey, "STM")])
-            pub_json[role] = format(pubkey, "STM")        
+            pub_json[role] = format(pubkey, "STM")
     else:
         if account is None:
             account = 0
@@ -954,23 +954,23 @@ def keygen(import_word_list, strength, passphrase, path, network, role, account_
         t.align = "l"
         t_pub.align = "l"
         t.add_row(["Account sequence", account])
-        t.add_row(["Key sequence", sequence])   
-        if account_keys and path is None:  
+        t.add_row(["Key sequence", sequence])
+        if account_keys and path is None:
             for r in roles:
                 t.add_row(["%s Private Key" % r, str(mk.get_private())])
                 mk.set_path_BIP48(network_index=network, role=r, account_sequence=account, key_sequence=sequence)
                 t_pub.add_row(["%s Public Key" % r, format(mk.get_public(), "STM")])
-                t.add_row(["%s path" % r, mk.get_path()])               
+                t.add_row(["%s path" % r, mk.get_path()])
                 pub_json[r] = format(mk.get_public(), "STM")
             if passphrase != "":
-                t.add_row(["Passphrase", passphrase])                
+                t.add_row(["Passphrase", passphrase])
             t.add_row(["BIP39 wordlist", word_list])
         else:
             t.add_row(["Key role", role])
             t.add_row(["path", mk.get_path()])
             t.add_row(["BIP39 wordlist", word_list.lower()])
             if passphrase != "":
-                t.add_row(["Passphrase", passphrase])                 
+                t.add_row(["Passphrase", passphrase])
             t.add_row(["Private Key", str(mk.get_private())])
             t_pub.add_row(["Public Key", format(mk.get_public(), "STM")])
             pub_json[role] = format(mk.get_public(), "STM")
@@ -1004,7 +1004,7 @@ def addtoken(name, unsafe_import_token):
         stm.rpc.rpcconnect()
     sc2 = HiveSigner(blockchain_instance=stm)
     if not unlock_token_wallet(stm, sc2):
-        return    
+        return
     if not unsafe_import_token:
         unsafe_import_token = click.prompt("Enter private token", confirmation_prompt=False, hide_input=True)
     sc2.addToken(name, unsafe_import_token)
@@ -1028,7 +1028,7 @@ def deltoken(confirm, name):
         stm.rpc.rpcconnect()
     sc2 = HiveSigner(blockchain_instance=stm)
     if not unlock_token_wallet(stm, sc2):
-        return    
+        return
     sc2.removeTokenFromPublicName(name)
     set_shared_blockchain_instance(stm)
 
@@ -1038,7 +1038,7 @@ def deltoken(confirm, name):
 @click.option('--ledger-approval', '-a', is_flag=True, default=False, help='When set, you can confirm the shown pubkey on your ledger.')
 def listkeys(path, ledger_approval):
     """ Show stored keys
-    
+
     Can be used to receive and approve the pubkey obtained from the ledger
     """
     stm = shared_blockchain_instance()
@@ -1049,7 +1049,7 @@ def listkeys(path, ledger_approval):
         if path is None:
             path = stm.config["default_path"]
         t = PrettyTable(["Available Key for %s" % path])
-        t.align = "l"        
+        t.align = "l"
         ledgertx = stm.new_tx()
         ledgertx.constructTx()
         pubkey = ledgertx.ledgertx.get_pubkey(path, request_screen_approval=False)
@@ -1059,7 +1059,7 @@ def listkeys(path, ledger_approval):
             ledgertx.ledgertx.get_pubkey(path, request_screen_approval=True)
     else:
         t = PrettyTable(["Available Key"])
-        t.align = "l"        
+        t.align = "l"
         for key in stm.wallet.getPublicKeys():
             t.add_row([key])
     print(t)
@@ -1073,7 +1073,7 @@ def listtoken():
     t.align = "l"
     sc2 = HiveSigner(blockchain_instance=stm)
     if not unlock_token_wallet(stm, sc2):
-        return    
+        return
     for name in sc2.getPublicNames():
         ret = sc2.me(username=name)
         if "error" in ret:
@@ -1089,7 +1089,7 @@ def listtoken():
 @click.option('--max-sequence', '-s', help='Set maximum key sequence to check pubkeys (only when using ledger)', default=2)
 def listaccounts(role, max_account_index, max_sequence):
     """Show stored accounts
-    
+
     Can be used with the ledger to obtain all accounts that uses pubkeys derived from this ledger
     """
     stm = shared_blockchain_instance()
@@ -1098,7 +1098,7 @@ def listaccounts(role, max_account_index, max_sequence):
 
     if stm.use_ledger:
         t = PrettyTable(["Name", "Type", "Available Key", "Path"])
-        t.align = "l"        
+        t.align = "l"
         ledgertx = stm.new_tx()
         ledgertx.constructTx()
         key_found = False
@@ -1119,10 +1119,10 @@ def listaccounts(role, max_account_index, max_sequence):
                 current_key_index += 1
             else:
                 current_key_index = 0
-                current_account_index += 1  
+                current_account_index += 1
     else:
         t = PrettyTable(["Name", "Type", "Available Key"])
-        t.align = "l"        
+        t.align = "l"
         for account in stm.wallet.getAccounts():
             t.add_row([
                 account["name"] or "n/a", account["type"] or "n/a",
@@ -1145,7 +1145,7 @@ def upvote(post, account, weight, export):
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not weight:
-        weight = stm.config["default_vote_weight"]        
+        weight = stm.config["default_vote_weight"]
     else:
         weight = float(weight)
         if weight > 100:
@@ -1195,7 +1195,7 @@ def delete(post, account, export):
         if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
             tx = stm.steemconnect.url_from_tx(tx)
         elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
-            tx = stm.hivesigner.url_from_tx(tx)    
+            tx = stm.hivesigner.url_from_tx(tx)
     except exceptions.VotingInvalidOnArchivedPost:
         print("Could not delete post.")
         tx = {}
@@ -1223,7 +1223,7 @@ def downvote(post, account, weight, export):
         raise ValueError("Maximum downvote weight is 100.0!")
     elif weight < 0:
         raise ValueError("Minimum downvote weight is 0!")
-    
+
     if not account:
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
@@ -1234,7 +1234,7 @@ def downvote(post, account, weight, export):
         if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
             tx = stm.steemconnect.url_from_tx(tx)
         elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
-            tx = stm.hivesigner.url_from_tx(tx)    
+            tx = stm.hivesigner.url_from_tx(tx)
     except exceptions.VotingInvalidOnArchivedPost:
         print("Post/Comment is older than 7 days! Did not downvote.")
         tx = {}
@@ -1357,7 +1357,7 @@ def delegate(amount, to_account, account, export):
         if amount.symbol == stm.token_symbol and isinstance(stm, Steem):
             amount = stm.sp_to_vests(float(amount))
         elif amount.symbol == stm.token_symbol and isinstance(stm, Hive):
-            amount = stm.hp_to_vests(float(amount))        
+            amount = stm.hp_to_vests(float(amount))
 
     tx = acc.delegate_vesting_shares(to_account, amount)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
@@ -1470,7 +1470,7 @@ def changewalletpassphrase():
     """
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
-        stm.rpc.rpcconnect()    
+        stm.rpc.rpcconnect()
     if not unlock_wallet(stm, allow_wif=False):
         return
     newpassword = None
@@ -1582,8 +1582,8 @@ def interest(account):
 @click.option('--account', '-a', help='Get follow list for this account')
 @click.option('--limit', '-l', help='Liimts the returned accounts', default=100)
 def followlist(follow_type, account, limit):
-    """ Get information about followed lists 
-    
+    """ Get information about followed lists
+
     follow_type can be blog
     On Hive, follow type can also be one the following: blacklisted, follow_blacklist, muted, or follow_muted
     """
@@ -1700,7 +1700,7 @@ def notifications(account, limit, all, mark_as_read, replies, mentions, follows,
         if "default_account" in stm.config:
             account = stm.config["default_account"]
     if mark_as_read and not unlock_wallet(stm):
-        return    
+        return
     if not replies and not mentions and not follows and not votes and not reblogs:
         show_all = True
     else:
@@ -1721,13 +1721,13 @@ def notifications(account, limit, all, mark_as_read, replies, mentions, follows,
             elif note["type"] == "reply" and not replies:
                 continue
             elif note["type"] == "reply_comment" and not replies:
-                continue            
+                continue
             elif note["type"] == "mention" and not mentions:
                 continue
             elif note["type"] == "follow" and not follows:
                 continue
             elif note["type"] == "vote" and not votes:
-                continue            
+                continue
         t.add_row([
             str(datetime.fromtimestamp(calendar.timegm(note["date"].timetuple()))),
             note["type"],
@@ -1908,7 +1908,7 @@ def claimaccount(creator, fee, number, export):
 @click.option('--import-pub', '-i', help='Load public keys from file.')
 @click.option('--export', '-e', help='When set, transaction is stored in a file')
 def changekeys(account, owner, active, posting, memo, import_pub, export):
-    """Changes all keys for the specified account 
+    """Changes all keys for the specified account
     Keys are given in their public form.
     Asks for the owner key for broadcasting the op to the chain."""
     stm = shared_blockchain_instance()
@@ -2006,7 +2006,7 @@ def newaccount(accountname, account, owner, active, memo, posting, wif, create_c
         if create_claimed_account:
             tx = stm.create_claimed_account(accountname, creator=acc, owner_key=owner, active_key=active, memo_key=memo, posting_key=posting)
         else:
-            tx = stm.create_account(accountname, creator=acc, owner_key=owner, active_key=active, memo_key=memo, posting_key=posting)        
+            tx = stm.create_account(accountname, creator=acc, owner_key=owner, active_key=active, memo_key=memo, posting_key=posting)
     elif owner is None or active is None or memo is None or posting is None:
         import_password = click.prompt("Keys were not given - Passphrase is used to create keys\n New Account Passphrase", confirmation_prompt=True, hide_input=True)
         if not import_password:
@@ -2019,7 +2019,7 @@ def newaccount(accountname, account, owner, active, memo, posting, wif, create_c
                 password = str(pk.get_private())
             password = 'P' + password
         else:
-            password = import_password        
+            password = import_password
         if create_claimed_account:
             tx = stm.create_claimed_account(accountname, creator=acc, password=password)
         else:
@@ -2028,7 +2028,7 @@ def newaccount(accountname, account, owner, active, memo, posting, wif, create_c
         if create_claimed_account:
             tx = stm.create_claimed_account(accountname, creator=acc, owner_key=owner, active_key=active, memo_key=memo, posting_key=posting)
         else:
-            tx = stm.create_account(accountname, creator=acc, owner_key=owner, active_key=active, memo_key=memo, posting_key=posting)        
+            tx = stm.create_account(accountname, creator=acc, owner_key=owner, active_key=active, memo_key=memo, posting_key=posting)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
@@ -2269,7 +2269,7 @@ def message(message_file, account, verify):
             print("Could not verify message!")
     else:
         if not unlock_wallet(stm):
-            return        
+            return
         out = m.sign(account)
     if message_file is not None:
         with open(message_file, "w", encoding="utf-8") as f:
@@ -2346,7 +2346,7 @@ def decrypt(memo, account, output, info, text, binary):
         elif not binary:
             out = m.decrypt(message)
             if info:
-                print("message: %s" % out)              
+                print("message: %s" % out)
             if output:
                 with open(output, "w", encoding="utf-8") as f:
                     f.write(out)
@@ -2367,7 +2367,7 @@ def encrypt(receiver, memo, account, output, text, binary):
     """
     if text and binary:
         print("You cannot set text and binary!")
-        return    
+        return
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
@@ -2386,7 +2386,7 @@ def encrypt(receiver, memo, account, output, text, binary):
         elif binary:
             if output is None:
                 output = entry + ".enc"
-            m.encrypt_binary(entry, output, buffer_size=2048)      
+            m.encrypt_binary(entry, output, buffer_size=2048)
         else:
             message = entry
             if message[0] == "#":
@@ -2395,7 +2395,7 @@ def encrypt(receiver, memo, account, output, text, binary):
         if text:
             out = m.encrypt(message)["message"]
             if output is None:
-                output = entry        
+                output = entry
             with open(output, "w", encoding="utf-8") as f:
                 f.write(out)
         elif not binary:
@@ -2404,7 +2404,7 @@ def encrypt(receiver, memo, account, output, text, binary):
                 print(out)
             else:
                 with open(output, "w", encoding="utf-8") as f:
-                    f.write(out)                
+                    f.write(out)
 
 
 @cli.command()
@@ -2508,14 +2508,14 @@ def download(permlink, account, save, export):
             if len(beneficiaries) > 0:
                 yaml_prefix += 'beneficiaries: %s\n' % ",".join(beneficiaries)
         if reply_identifier is not None:
-            yaml_prefix += 'reply_identifier: %s\n' % reply_identifier    
+            yaml_prefix += 'reply_identifier: %s\n' % reply_identifier
         yaml_prefix += '---\n'
         if save or export is not None:
             if export is None or len(permlink) > 0:
                 export = comment.json()["created"].replace(":", "-") + "_" + comment["permlink"] + ".md"
             if export[-3:] != ".md":
                 export += ".md"
-            
+
             with open(export, "w", encoding="utf-8") as f:
                 f.write(yaml_prefix + comment["body"])
         else:
@@ -2538,7 +2538,7 @@ def createpost(markdown_file, account, title, tags, community, beneficiaries, pe
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    yaml_prefix = '---\n'                
+    yaml_prefix = '---\n'
     if account is None:
         account = input("author: ")
     if title is None:
@@ -2562,7 +2562,7 @@ def createpost(markdown_file, account, title, tags, community, beneficiaries, pe
                 if int(index) - 1 >= len(comm_cand):
                     continue
                 community = comm_cand[int(index) - 1]
-                
+
             ret = input("Selected community: %s - %s [yes/no]? " % (community["name"], community["title"]))
             if ret in ["y", "yes"]:
                 community_found = True
@@ -2591,7 +2591,7 @@ def createpost(markdown_file, account, title, tags, community, beneficiaries, pe
 
     if max_accepted_payout is None:
         max_accepted_payout = input("max accepted payout [return to skip]: ")
-    
+
     yaml_prefix += 'title: "%s"\n' % title
     yaml_prefix += 'author: %s\n' % account
     yaml_prefix += 'tags: %s\n' % tags
@@ -2605,9 +2605,9 @@ def createpost(markdown_file, account, title, tags, community, beneficiaries, pe
         yaml_prefix += 'beneficiaries: %s\n' % beneficiaries
     if max_accepted_payout is not None and max_accepted_payout != "":
         yaml_prefix += 'max_accepted_payout: %s\n' % max_accepted_payout
-    yaml_prefix += '---\n'     
+    yaml_prefix += '---\n'
     with open(markdown_file, "w", encoding="utf-8") as f:
-        f.write(yaml_prefix)    
+        f.write(yaml_prefix)
 
 
 @cli.command()
@@ -2629,14 +2629,14 @@ def createpost(markdown_file, account, title, tags, community, beneficiaries, pe
 def post(markdown_file, account, title, permlink, tags, reply_identifier, community, canonical_url, beneficiaries, percent_steem_dollars, percent_hbd, max_accepted_payout, no_parse_body, no_patch_on_edit, export):
     """broadcasts a post/comment. All image links which links to a file will be uploaded.
     The yaml header can contain:
-    
+
     ---
     title: your title
     tags: tag1,tag2
     community: hive-100000
     beneficiaries: beempy:5%,holger80:5%
     ---
-    
+
     """
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -2707,7 +2707,7 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
         percent_steem_dollars = parameter["percent_steem_dollars"]
     percent_hbd = None
     if "percent_hbd" in parameter:
-        percent_hbd = parameter["percent_hbd"]        
+        percent_hbd = parameter["percent_hbd"]
     max_accepted_payout = None
     if "max_accepted_payout" in parameter:
         max_accepted_payout = parameter["max_accepted_payout"]
@@ -2721,7 +2721,7 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
     if percent_hbd is not None and stm.is_hive and not stm.get_replace_hive_by_steem():
         comment_options["percent_hbd"] = percent_hbd
     elif percent_steem_dollars is not None and stm.is_hive and not stm.get_replace_hive_by_steem():
-        comment_options["percent_hbd"] = percent_steem_dollars        
+        comment_options["percent_hbd"] = percent_steem_dollars
     elif percent_steem_dollars is not None:
         comment_options["percent_steem_dollars"] = percent_steem_dollars
     elif percent_hbd is not None:
@@ -2731,7 +2731,7 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
         beneficiaries = derive_beneficiaries(parameter["beneficiaries"])
         for b in beneficiaries:
             Account(b["account"], blockchain_instance=stm)
- 
+
 
     if permlink is not None:
         try:
@@ -2740,7 +2740,7 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
             comment = None
     else:
         comment = None
-        
+
     iu = ImageUploader(blockchain_instance=stm)
     for link in list(re.findall(r'!\[[^"\'@\]\(]*\]\([^"\'@\(\)]*\.(?:png|jpg|jpeg|gif|png|svg)\)', body)):
         image = link.split("(")[1].split(")")[0]
@@ -2756,7 +2756,7 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
         elif os.path.exists(os.path.join(basepath, image)):
             tx = iu.upload(image, author, image_name)
             body = body.replace(image, tx["url"])
-    
+
     if comment is None and permlink is None and reply_identifier is None:
         permlink = derive_permlink(title, with_suffix=False)
         try:
@@ -2770,7 +2770,7 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
     if "authored_by" in parameter:
         json_metadata["authored_by"] = parameter["authored_by"]
     if "description" in parameter:
-        json_metadata["description"] = parameter["description"] 
+        json_metadata["description"] = parameter["description"]
     if "canonical_url" in parameter:
         json_metadata["canonical_url"] = parameter["canonical_url"]
     else:
@@ -2780,7 +2780,7 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
         if json_metadata["canonical_url"][-1] != "/":
                 json_metadata["canonical_url"] += "/"
         if json_metadata["canonical_url"][:8] != 'https://':
-            json_metadata["canonical_url"] = 'https://' + json_metadata["canonical_url"] 
+            json_metadata["canonical_url"] = 'https://' + json_metadata["canonical_url"]
         if community is None:
             json_metadata["canonical_url"] += tags[0] + "/@" + author + "/" + permlink
         else:
@@ -2803,10 +2803,10 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
         else:
             print(patch_text)
         edit_ok = click.prompt("Should I broadcast %s [y/n]" % (str(permlink)))
-        if edit_ok not in ["y", "ye", "yes"]:                
+        if edit_ok not in ["y", "ye", "yes"]:
             return
         tx = stm.post(title, patch_text, author=author, permlink=permlink, reply_identifier=reply_identifier, community=community,
-                      tags=tags, json_metadata=json_metadata, parse_body=False, app='beempy/%s' % (__version__))        
+                      tags=tags, json_metadata=json_metadata, parse_body=False, app='beempy/%s' % (__version__))
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
     elif stm.unsigned and stm.nobroadcast and stm.hivesigner is not None:
@@ -2832,7 +2832,7 @@ def reply(authorperm, body, account, title, export):
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
         return
-    
+
     if title is None:
         title = ""
     tx = stm.post(title, body, json_metadata=None, author=account, reply_identifier=authorperm,
@@ -3047,9 +3047,9 @@ def stream(lines, head, table, follow):
             t.add_row([str(block_num), str(trx_num), ops_type, content])
             if op_count >= lines and not follow:
                 print(t)
-                return        
+                return
     else:
-        
+
         import pprint
         for ops in b.stream(raw_ops=True):
             op_count += 1
@@ -3713,7 +3713,7 @@ def witnessfeed(witness, wif, base, quote, support_peg):
         if hive_usd is None:
             hive_usd = market.hive_usd_implied()
         hbd_usd = float(latest_price.as_base(stm.backed_token_symbol)) * hive_usd
-        quote = Amount(1. / hbd_usd, stm.token_symbol, blockchain_instance=stm)        
+        quote = Amount(1. / hbd_usd, stm.token_symbol, blockchain_instance=stm)
     else:
         if str(quote[-5:]).upper() == stm.token_symbol:
             quote = Amount(quote, blockchain_instance=stm)
@@ -3726,7 +3726,7 @@ def witnessfeed(witness, wif, base, quote, support_peg):
     elif base is None and stm.is_hive:
         if hive_usd is None:
             hive_usd = market.hive_usd_implied()
-        base = Amount(hive_usd, stm.backed_token_symbol, blockchain_instance=stm)        
+        base = Amount(hive_usd, stm.backed_token_symbol, blockchain_instance=stm)
     else:
         if str(quote[-3:]).upper() == stm.backed_token_symbol:
             base = Amount(base, blockchain_instance=stm)
@@ -3968,7 +3968,7 @@ def curation(authorperm, account, limit, min_vote, max_vote, min_performance, ma
         highest_vote = [0, 0, 0, 0, 0, 0]
         for vote in comment.get_votes():
             vote_time = vote["time"]
-            
+
             vote_SBD = stm.rshares_to_token_backed_dollar(int(vote["rshares"]))
             curation_SBD = curation_rewards_SBD["active_votes"][vote["voter"]]
             curation_SP = curation_rewards_SP["active_votes"][vote["voter"]]
@@ -3989,7 +3989,7 @@ def curation(authorperm, account, limit, min_vote, max_vote, min_performance, ma
                    penalty,
                    float(curation_SP),
                    performance]
-            
+
 
             rows.append(row)
         sortedList = sorted(rows, key=lambda row: (row[1]), reverse=False)
@@ -4030,7 +4030,7 @@ def curation(authorperm, account, limit, min_vote, max_vote, min_performance, ma
             if row[-1] > max_curation[-1]:
                 max_curation = row
             if row[2] > highest_vote[2]:
-                highest_vote = row            
+                highest_vote = row
             if show_all_voter or account == row[0]:
                 if not all_posts:
                     voter = [row[0]]
@@ -4552,7 +4552,7 @@ def claimreward(account, reward_steem, reward_sbd, reward_vests, claim_all_steem
 @click.option('--export', '-e', help='When set, transaction is stored in a file')
 def customjson(jsonid, json_data, account, active, export):
     """Broadcasts a custom json
-    
+
         First parameter is the cusom json id, the second field is a json file or a json key value combination
         e.g. beempy customjson -a holger80 dw-heist username holger80 amount 100
     """
@@ -4575,7 +4575,7 @@ def customjson(jsonid, json_data, account, active, export):
     else:
         try:
             with open(json_data[0], 'r') as f:
-                data = json.load(f)            
+                data = json.load(f)
         except:
             print("%s is not a valid file or json field" % json_data)
             return
@@ -4664,7 +4664,7 @@ def verify(blocknumber, trx, use_api):
                 new_public_keys.append(key)
         if len(new_public_keys) == 0:
             for key in public_keys:
-                new_public_keys.append(key)            
+                new_public_keys.append(key)
         if isinstance(new_public_keys, list) and len(new_public_keys) == 1:
             new_public_keys = new_public_keys[0]
         else:
@@ -4693,7 +4693,7 @@ def chainconfig():
         else:
             t.add_row([key, chain_config[key]])
     print(t)
-    
+
 
 @cli.command()
 @click.argument('objects', nargs=-1)
@@ -4855,7 +4855,7 @@ def info(objects):
                 if key in ["operations", "signatures"]:
                     value = json.dumps(value, indent=4)
                 t.add_row([key, value])
-            print(t)            
+            print(t)
         else:
             print("Couldn't identify object to read")
 
@@ -4932,10 +4932,10 @@ def history(account, limit, sort, max_length, virtual_ops, only_ops, exclude_ops
     else:
         hist = account.history(batch_size=batch_size, only_ops=only_ops, exclude_ops=exclude_ops)
     for h in hist:
-        
+
         if h["virtual_op"] == 1 and not virtual_ops:
             continue
-        
+
         cnt += 1
         if cnt > int(limit) and int(limit) > 0:
             break
@@ -5010,12 +5010,12 @@ def draw(block, trx_id, draws, participants, hashtype, separator, account, reply
     """ Generate pseudo-random numbers based on trx id, block id and previous block id.
 
     When using --reply, the result is directly broadcasted as comment
-    """    
+    """
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not account:
-        account = stm.config["default_account"]    
+        account = stm.config["default_account"]
     if reply is not None:
         if not unlock_wallet(stm):
             return
@@ -5026,7 +5026,7 @@ def draw(block, trx_id, draws, participants, hashtype, separator, account, reply
         blockchain = Blockchain(blockchain_instance=stm)
         block = blockchain.get_current_block()
     data = None
-    
+
     for trx in block.transactions:
         if trx["transaction_id"] == trx_id:
             data = trx
@@ -5035,7 +5035,7 @@ def draw(block, trx_id, draws, participants, hashtype, separator, account, reply
             data = trx
     if trx_id is None:
         trx_id = "0"
-    
+
     if os.path.exists(participants):
         with open(participants) as f:
             content = f.read()
