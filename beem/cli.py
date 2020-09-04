@@ -4393,7 +4393,10 @@ def pending(accounts, only_sum, post, comment, curation, length, author, permlin
             votes = AccountVotes(account, start=limit_time, stop=start_time, blockchain_instance=stm)
             for vote in votes:
                 authorperm = construct_authorperm(vote["author"], vote["permlink"])
-                c = Comment(authorperm, blockchain_instance=stm)
+                try:
+                    c = Comment(authorperm, blockchain_instance=stm)
+                except exceptions.ContentDoesNotExistsException:
+                    continue
                 rewards = c.get_curation_rewards()
                 if not rewards["pending_rewards"]:
                     continue
