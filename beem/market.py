@@ -607,6 +607,7 @@ class Market(dict):
             "expiration": formatTimeFromNow(expiration),
             "fill_or_kill": killfill,
             "prefix": self.blockchain.prefix,
+            "json_str": not bool(self.blockchain.config["use_condenser"]),
             "replace_hive_by_steem": replace_hive_by_steem,
         })
 
@@ -692,6 +693,7 @@ class Market(dict):
             "expiration": formatTimeFromNow(expiration),
             "fill_or_kill": killfill,
             "prefix": self.blockchain.prefix,
+            "json_str": not bool(self.blockchain.config["use_condenser"]),
             "replace_hive_by_steem": replace_hive_by_steem,
         })
         if returnOrderId:

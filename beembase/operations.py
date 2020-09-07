@@ -52,6 +52,7 @@ class Transfer(GrapheneObject):
             kwargs = args[0]
         prefix = kwargs.get("prefix", default_prefix)
         replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
+        json_str = kwargs.get("json_str", False)
         if "memo" not in kwargs:
             kwargs["memo"] = ""
         if isinstance(kwargs["memo"], dict):
@@ -65,7 +66,7 @@ class Transfer(GrapheneObject):
         super(Transfer, self).__init__(OrderedDict([
             ('from', String(kwargs["from"])),
             ('to', String(kwargs["to"])),
-            ('amount', Amount(kwargs["amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+            ('amount', Amount(kwargs["amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
             ('memo', memo),
         ]))
 
@@ -92,10 +93,11 @@ class Transfer_to_vesting(GrapheneObject):
             kwargs = args[0]
         prefix = kwargs.get("prefix", default_prefix)
         replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
+        json_str = kwargs.get("json_str", False)
         super(Transfer_to_vesting, self).__init__(OrderedDict([
             ('from', String(kwargs["from"])),
             ('to', String(kwargs["to"])),
-            ('amount', Amount(kwargs["amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+            ('amount', Amount(kwargs["amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
         ]))
 
 
@@ -184,6 +186,7 @@ class Account_create(GrapheneObject):
             kwargs = args[0]
         prefix = kwargs.get("prefix", default_prefix)
         replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
+        json_str = kwargs.get("json_str", False)
         if not len(kwargs["new_account_name"]) <= 16:
             raise AssertionError("Account name must be at most 16 chars long")
 
@@ -195,7 +198,7 @@ class Account_create(GrapheneObject):
                 meta = kwargs["json_metadata"]
 
         super(Account_create, self).__init__(OrderedDict([
-            ('fee', Amount(kwargs["fee"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+            ('fee', Amount(kwargs["fee"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
             ('creator', String(kwargs["creator"])),
             ('new_account_name', String(kwargs["new_account_name"])),
             ('owner', Permission(kwargs["owner"], prefix=prefix)),
@@ -215,6 +218,7 @@ class Account_create_with_delegation(GrapheneObject):
             kwargs = args[0]
         prefix = kwargs.get("prefix", default_prefix)
         replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
+        json_str = kwargs.get("json_str", False)
         if not len(kwargs["new_account_name"]) <= 16:
             raise AssertionError("Account name must be at most 16 chars long")
 
@@ -226,8 +230,8 @@ class Account_create_with_delegation(GrapheneObject):
                 meta = kwargs["json_metadata"]
 
         super(Account_create_with_delegation, self).__init__(OrderedDict([
-            ('fee', Amount(kwargs["fee"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
-            ('delegation', Amount(kwargs["delegation"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+            ('fee', Amount(kwargs["fee"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
+            ('delegation', Amount(kwargs["delegation"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
             ('creator', String(kwargs["creator"])),
             ('new_account_name', String(kwargs["new_account_name"])),
             ('owner', Permission(kwargs["owner"], prefix=prefix)),
@@ -342,6 +346,7 @@ class Create_proposal(GrapheneObject):
             kwargs = args[0]
         prefix = kwargs.get("prefix", default_prefix)
         replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
+        json_str = kwargs.get("json_str", False)
         extensions = Array([])
 
         super(Create_proposal, self).__init__(
@@ -350,7 +355,7 @@ class Create_proposal(GrapheneObject):
                 ('receiver', String(kwargs["receiver"])),
                 ('start_date', PointInTime(kwargs["start_date"])),
                 ('end_date', PointInTime(kwargs["end_date"])),
-                ('daily_pay', Amount(kwargs["daily_pay"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+                ('daily_pay', Amount(kwargs["daily_pay"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
                 ('subject', String(kwargs["subject"])),
                 ('permlink', String(kwargs["permlink"])),
                 ('extensions', extensions)
@@ -424,6 +429,7 @@ class Witness_set_properties(GrapheneObject):
             kwargs = args[0]
         prefix = kwargs.pop("prefix", default_prefix)
         replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
+        json_str = kwargs.get("json_str", False)
         extensions = Array([])
         props = {}
         for k in kwargs["props"]:
@@ -449,9 +455,9 @@ class Witness_set_properties(GrapheneObject):
             elif isinstance(k[1], int) and k[0] in ["hbd_interest_rate"]:
                 props[k[0]] = (hexlify(Uint16(k[1]).__bytes__())).decode()            
             elif not isinstance(k[1], str) and k[0] in ["account_creation_fee"]:
-                props[k[0]] = (hexlify(Amount(k[1], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem).__bytes__())).decode()
+                props[k[0]] = (hexlify(Amount(k[1], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str).__bytes__())).decode()
             elif not is_hex and isinstance(k[1], str) and k[0] in ["account_creation_fee"]:
-                props[k[0]] = (hexlify(Amount(k[1], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem).__bytes__())).decode()
+                props[k[0]] = (hexlify(Amount(k[1], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str).__bytes__())).decode()
             elif not isinstance(k[1], str) and k[0] in ["sbd_exchange_rate"]:
                 if 'prefix' not in k[1]:
                     k[1]['prefix'] = prefix
@@ -493,6 +499,7 @@ class Witness_update(GrapheneObject):
             kwargs = args[0]
         prefix = kwargs.pop("prefix", default_prefix)
         replace_hive_by_steem = kwargs.pop("replace_hive_by_steem", True)
+        json_str = kwargs.get("json_str", False)
         if "block_signing_key" in kwargs and kwargs["block_signing_key"]:
             block_signing_key = (PublicKey(kwargs["block_signing_key"], prefix=prefix))
         else:
@@ -508,7 +515,7 @@ class Witness_update(GrapheneObject):
             ('url', String(kwargs["url"])),
             ('block_signing_key', block_signing_key),
             ('props', WitnessProps(kwargs["props"])),
-            ('fee', Amount(kwargs["fee"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+            ('fee', Amount(kwargs["fee"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
         ]))
 
 
@@ -573,6 +580,7 @@ class Comment_options(GrapheneObject):
             kwargs = args[0]
         prefix = kwargs.get("prefix", default_prefix)
         replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
+        json_str = kwargs.get("json_str", False)
         # handle beneficiaries
         if "beneficiaries" in kwargs and kwargs['beneficiaries']:
             kwargs['extensions'] = [[0, {'beneficiaries': kwargs['beneficiaries']}]]
@@ -585,7 +593,7 @@ class Comment_options(GrapheneObject):
                     ('author', String(kwargs["author"])),
                     ('permlink', String(kwargs["permlink"])),
                     ('max_accepted_payout',
-                     Amount(kwargs["max_accepted_payout"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+                     Amount(kwargs["max_accepted_payout"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
                     ('percent_steem_dollars',
                      Uint16(int(kwargs["percent_steem_dollars"]))),
                     ('allow_votes', Bool(bool(kwargs["allow_votes"]))),
@@ -630,6 +638,7 @@ class Feed_publish(GrapheneObject):
             kwargs = args[0]
         prefix = kwargs.get("prefix", default_prefix)
         replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
+        json_str = kwargs.get("json_str", False)
         if 'prefix' not in kwargs['exchange_rate']:
             kwargs['exchange_rate']['prefix'] = prefix
         if 'replace_hive_by_steem' not in kwargs['exchange_rate']:
@@ -649,11 +658,12 @@ class Convert(GrapheneObject):
             kwargs = args[0]
         prefix = kwargs.get("prefix", default_prefix)
         replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
+        json_str = kwargs.get("json_str", False)
         super(Convert, self).__init__(
             OrderedDict([
                 ('owner', String(kwargs["owner"])),
                 ('requestid', Uint32(kwargs["requestid"])),
-                ('amount', Amount(kwargs["amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+                ('amount', Amount(kwargs["amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
             ]))
 
 
@@ -693,10 +703,11 @@ class Claim_account(GrapheneObject):
             kwargs = args[0]
         prefix = kwargs.get("prefix", default_prefix)
         replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
+        json_str = kwargs.get("json_str", False)
         super(Claim_account, self).__init__(
             OrderedDict([
                 ('creator', String(kwargs["creator"])),
-                ('fee', Amount(kwargs["fee"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+                ('fee', Amount(kwargs["fee"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
                 ('extensions', Array([])),
             ]))
 
@@ -755,12 +766,13 @@ class Limit_order_create(GrapheneObject):
             kwargs = args[0]
         prefix = kwargs.get("prefix", default_prefix)
         replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
+        json_str = kwargs.get("json_str", False)
         super(Limit_order_create, self).__init__(
             OrderedDict([
                 ('owner', String(kwargs["owner"])),
                 ('orderid', Uint32(kwargs["orderid"])),
-                ('amount_to_sell', Amount(kwargs["amount_to_sell"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
-                ('min_to_receive', Amount(kwargs["min_to_receive"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+                ('amount_to_sell', Amount(kwargs["amount_to_sell"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
+                ('min_to_receive', Amount(kwargs["min_to_receive"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
                 ('fill_or_kill', Bool(kwargs["fill_or_kill"])),
                 ('expiration', PointInTime(kwargs["expiration"])),
             ]))
@@ -774,6 +786,7 @@ class Limit_order_create2(GrapheneObject):
             kwargs = args[0]
         prefix = kwargs.get("prefix", default_prefix)
         replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
+        json_str = kwargs.get("json_str", False)
         if 'prefix' not in kwargs['exchange_rate']:
             kwargs['exchange_rate']['prefix'] = prefix
         if 'replace_hive_by_steem' not in kwargs['exchange_rate']:
@@ -782,7 +795,7 @@ class Limit_order_create2(GrapheneObject):
             OrderedDict([
                 ('owner', String(kwargs["owner"])),
                 ('orderid', Uint32(kwargs["orderid"])),
-                ('amount_to_sell', Amount(kwargs["amount_to_sell"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+                ('amount_to_sell', Amount(kwargs["amount_to_sell"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
                 ('fill_or_kill', Bool(kwargs["fill_or_kill"])),
                 ('exchange_rate', ExchangeRate(kwargs["exchange_rate"])),
                 ('expiration', PointInTime(kwargs["expiration"])),
@@ -811,6 +824,7 @@ class Transfer_from_savings(GrapheneObject):
             kwargs = args[0]
         prefix = kwargs.get("prefix", default_prefix)
         replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
+        json_str = kwargs.get("json_str", False)
         if "memo" not in kwargs:
             kwargs["memo"] = ""
 
@@ -819,7 +833,7 @@ class Transfer_from_savings(GrapheneObject):
                 ('from', String(kwargs["from"])),
                 ('request_id', Uint32(kwargs["request_id"])),
                 ('to', String(kwargs["to"])),
-                ('amount', Amount(kwargs["amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+                ('amount', Amount(kwargs["amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
                 ('memo', String(kwargs["memo"])),
             ]))
 
@@ -845,12 +859,13 @@ class Claim_reward_balance(GrapheneObject):
             kwargs = args[0]
         prefix = kwargs.get("prefix", default_prefix)
         replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
+        json_str = kwargs.get("json_str", False)
         if "reward_sbd" in kwargs and "reward_steem" in kwargs:
             super(Claim_reward_balance, self).__init__(
                 OrderedDict([
                     ('account', String(kwargs["account"])),
-                    ('reward_steem', Amount(kwargs["reward_steem"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
-                    ('reward_sbd', Amount(kwargs["reward_sbd"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+                    ('reward_steem', Amount(kwargs["reward_steem"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
+                    ('reward_sbd', Amount(kwargs["reward_sbd"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
                     ('reward_vests', Amount(kwargs["reward_vests"], prefix=prefix)),
                 ]))
         elif "reward_hbd" in kwargs and "reward_hive" in kwargs:
@@ -865,7 +880,7 @@ class Claim_reward_balance(GrapheneObject):
             super(Claim_reward_balance, self).__init__(
                 OrderedDict([
                     ('account', String(kwargs["account"])),
-                    ('reward_steem', Amount(kwargs["reward_steem"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+                    ('reward_steem', Amount(kwargs["reward_steem"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
                     ('reward_vests', Amount(kwargs["reward_vests"], prefix=prefix)),
                 ]))
         else:
@@ -885,13 +900,14 @@ class Transfer_to_savings(GrapheneObject):
             kwargs = args[0]
         prefix = kwargs.get("prefix", default_prefix)
         replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
+        json_str = kwargs.get("json_str", False)
         if "memo" not in kwargs:
             kwargs["memo"] = ""
         super(Transfer_to_savings, self).__init__(
             OrderedDict([
                 ('from', String(kwargs["from"])),
                 ('to', String(kwargs["to"])),
-                ('amount', Amount(kwargs["amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+                ('amount', Amount(kwargs["amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
                 ('memo', String(kwargs["memo"])),
             ]))
 
@@ -939,6 +955,7 @@ class Escrow_transfer(GrapheneObject):
             kwargs = args[0]
         prefix = kwargs.get("prefix", default_prefix)
         replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
+        json_str = kwargs.get("json_str", False)
         meta = ""
         if "json_meta" in kwargs and kwargs["json_meta"]:
             if (isinstance(kwargs["json_meta"], dict) or isinstance(kwargs["json_meta"], list)):
@@ -952,9 +969,9 @@ class Escrow_transfer(GrapheneObject):
                     ('to', String(kwargs["to"])),
                     ('agent', String(kwargs["agent"])),
                     ('escrow_id', Uint32(kwargs["escrow_id"])),
-                    ('sbd_amount', Amount(kwargs["sbd_amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
-                    ('steem_amount', Amount(kwargs["steem_amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
-                    ('fee', Amount(kwargs["fee"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+                    ('sbd_amount', Amount(kwargs["sbd_amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
+                    ('steem_amount', Amount(kwargs["steem_amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
+                    ('fee', Amount(kwargs["fee"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
                     ('ratification_deadline', PointInTime(kwargs["ratification_deadline"])),
                     ('escrow_expiration', PointInTime(kwargs["escrow_expiration"])),
                     ('json_meta', String(meta)),
@@ -998,6 +1015,7 @@ class Escrow_release(GrapheneObject):
             kwargs = args[0]
         prefix = kwargs.get("prefix", default_prefix)
         replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
+        json_str = kwargs.get("json_str", False)
         if "steem_amount" in kwargs and "sbd_amount" in kwargs:
             super(Escrow_release, self).__init__(
                 OrderedDict([
@@ -1005,8 +1023,8 @@ class Escrow_release(GrapheneObject):
                     ('to', String(kwargs["to"])),
                     ('who', String(kwargs["who"])),
                     ('escrow_id', Uint32(kwargs["escrow_id"])),
-                    ('sbd_amount', Amount(kwargs["sbd_amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
-                    ('steem_amount', Amount(kwargs["steem_amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+                    ('sbd_amount', Amount(kwargs["sbd_amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
+                    ('steem_amount', Amount(kwargs["steem_amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
                 ]))
         else:
             super(Escrow_release, self).__init__(

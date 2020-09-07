@@ -10,7 +10,7 @@ from parameterized import parameterized
 import random
 import json
 from pprint import pprint
-from beem import Hive, exceptions
+from beem import Hive, exceptions, Steem
 from beem.amount import Amount
 from beem.version import version as beem_version
 from beem.account import Account
@@ -45,12 +45,20 @@ class Testcases(unittest.TestCase):
         acc.blockchain.txbuffer.clear()
         tx = acc.transfer(
             "test", 1.33, acc.blockchain.backed_token_symbol, memo="Foobar", account="test1")
-        self.assertEqual(
-            tx["operations"][0][0],
-            "transfer"
-        )
         self.assertEqual(len(tx["operations"]), 1)
-        op = tx["operations"][0][1]
+        if isinstance(tx["operations"][0], list):
+            self.assertEqual(
+                tx["operations"][0][0],
+                "transfer"
+            )
+            op = tx["operations"][0][1]
+        else:
+            self.assertEqual(
+                tx["operations"][0]["type"],
+                "transfer_operation"
+            )
+            
+            op = tx["operations"][0]["value"]
         self.assertIn("memo", op)
         self.assertEqual(op["memo"], "Foobar")
         self.assertEqual(op["from"], "test1")
@@ -88,11 +96,18 @@ class Testcases(unittest.TestCase):
             additional_posting_accounts=["test3"],
             storekeys=False,
         )
-        self.assertEqual(
-            tx["operations"][0][0],
-            "account_create"
-        )
-        op = tx["operations"][0][1]
+        if isinstance(tx["operations"][0], list):
+            self.assertEqual(
+                tx["operations"][0][0],
+                "account_create"
+            )
+            op = tx["operations"][0][1]
+        else:
+            self.assertEqual(
+                tx["operations"][0]["type"],
+                "account_create_operation"
+            )
+            op = tx["operations"][0]["value"]         
         role = "active"
         self.assertIn(
             format(key5.pubkey, core_unit),
@@ -149,11 +164,18 @@ class Testcases(unittest.TestCase):
             additional_active_accounts=["test1"],
             storekeys=False,
         )
-        self.assertEqual(
-            tx["operations"][0][0],
-            "account_create"
-        )
-        op = tx["operations"][0][1]
+        if isinstance(tx["operations"][0], list):
+            self.assertEqual(
+                tx["operations"][0][0],
+                "account_create"
+            )
+            op = tx["operations"][0][1]
+        else:
+            self.assertEqual(
+                tx["operations"][0]["type"],
+                "account_create_operation"
+            )
+            op = tx["operations"][0]["value"]        
         role = "active"
         self.assertIn(
             format(key5.pubkey, core_unit),
@@ -247,11 +269,19 @@ class Testcases(unittest.TestCase):
             threshold=1,
             permission="owner",
         )
-        self.assertEqual(
-            (tx["operations"][0][0]),
-            "account_update"
-        )
-        op = tx["operations"][0][1]
+        if isinstance(tx["operations"][0], list):
+            
+            self.assertEqual(
+                (tx["operations"][0][0]),
+                "account_update"
+            )
+            op = tx["operations"][0][1]
+        else:
+            self.assertEqual(
+                (tx["operations"][0]["type"]),
+                "account_update_operation"
+            )
+            op = tx["operations"][0]["value"]            
         self.assertIn("owner", op)
         self.assertIn(
             [wif, '1'],
@@ -288,11 +318,19 @@ class Testcases(unittest.TestCase):
         self.assertEqual(acc.blockchain.prefix, prefix)
         acc.blockchain.txbuffer.clear()
         tx = acc.update_memo_key(pkey)
-        self.assertEqual(
-            (tx["operations"][0][0]),
-            "account_update"
-        )
-        op = tx["operations"][0][1]
+        if isinstance(tx["operations"][0], list):
+            self.assertEqual(
+                (tx["operations"][0][0]),
+                "account_update"
+            )
+            op = tx["operations"][0][1]
+        else:
+            self.assertEqual(
+                (tx["operations"][0]["type"]),
+                "account_update_operation"
+            )
+            op = tx["operations"][0]["value"]
+            
         self.assertEqual(
             op["memo_key"],
             pkey)
@@ -301,11 +339,18 @@ class Testcases(unittest.TestCase):
         w = self.account
         w.blockchain.txbuffer.clear()
         tx = w.approvewitness("test1")
-        self.assertEqual(
-            (tx["operations"][0][0]),
-            "account_witness_vote"
-        )
-        op = tx["operations"][0][1]
+        if isinstance(tx["operations"][0], list):
+            self.assertEqual(
+                (tx["operations"][0][0]),
+                "account_witness_vote"
+            )
+            op = tx["operations"][0][1]
+        else:
+            self.assertEqual(
+                (tx["operations"][0]["type"]),
+                "account_witness_vote_operation"
+            )
+            op = tx["operations"][0]["value"]            
         self.assertIn(
             "test1",
             op["witness"])
@@ -316,11 +361,18 @@ class Testcases(unittest.TestCase):
         tx = bts.post("title", "body", author="test", permlink=None, reply_identifier=None,
                       json_metadata=None, comment_options=None, community="test", tags=["a", "b", "c", "d", "e"],
                       beneficiaries=[{'account': 'test1', 'weight': 5000}, {'account': 'test2', 'weight': 5000}], self_vote=True)
-        self.assertEqual(
-            (tx["operations"][0][0]),
-            "comment"
-        )
-        op = tx["operations"][0][1]
+        if isinstance(tx["operations"][0], list):
+            self.assertEqual(
+                (tx["operations"][0][0]),
+                "comment"
+            )
+            op = tx["operations"][0][1]
+        else:
+            self.assertEqual(
+                (tx["operations"][0]["type"]),
+                "comment_operation"
+            )
+            op = tx["operations"][0]["value"]            
         self.assertEqual(op["body"], "body")
         self.assertEqual(op["title"], "title")
         self.assertTrue(op["permlink"].startswith("title"))
@@ -329,22 +381,38 @@ class Testcases(unittest.TestCase):
         json_metadata = json.loads(op["json_metadata"])
         self.assertEqual(json_metadata["tags"], ["a", "b", "c", "d", "e"])
         self.assertEqual(json_metadata["app"], "beem/%s" % (beem_version))
-        self.assertEqual(
-            (tx["operations"][1][0]),
-            "comment_options"
-        )
-        op = tx["operations"][1][1]
+        if isinstance(tx["operations"][1], list):
+            self.assertEqual(
+                (tx["operations"][1][0]),
+                "comment_options"
+            )
+            op = tx["operations"][1][1]
+        else:
+                
+            self.assertEqual(
+                (tx["operations"][1]["type"]),
+                "comment_options_operation"
+            )
+            op = tx["operations"][1]["value"]
         self.assertEqual(len(op['extensions'][0][1]['beneficiaries']), 2)
 
     def test_comment_option(self):
         bts = self.bts
         bts.txbuffer.clear()
         tx = bts.comment_options({}, "@gtg/witness-gtg-log", account="test")
-        self.assertEqual(
-            (tx["operations"][0][0]),
-            "comment_options"
-        )
-        op = tx["operations"][0][1]
+        if isinstance(tx["operations"][0], list):
+            self.assertEqual(
+                (tx["operations"][0][0]),
+                "comment_options"
+            )
+            op = tx["operations"][0][1]
+        else:
+            self.assertEqual(
+                (tx["operations"][0]["type"]),
+                "comment_options_operation"
+            )
+            op = tx["operations"][0]["value"]
+            
         self.assertIn(
             "gtg",
             op["author"])
@@ -466,3 +534,14 @@ class Testcases(unittest.TestCase):
         assert not bts.is_hive
         bts.switch_blockchain("hive", update_nodes=True)
         assert bts.is_hive        
+
+    def test_switch_blockchain(self):
+        bts = self.bts
+        nodes_hive = self.nodelist.get_hive_nodes()
+        nodes_steem = self.nodelist.get_steem_nodes()
+        rpc = Steem(nodes_steem)
+        assert rpc.is_steem
+        assert not rpc.get_replace_hive_by_steem()
+        rpc = Hive(nodes_hive)
+        assert rpc.is_hive
+        assert rpc.get_replace_hive_by_steem()

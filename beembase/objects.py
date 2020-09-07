@@ -6,6 +6,7 @@ from builtins import bytes, int, str
 from builtins import object
 from future.utils import python_2_unicode_compatible
 import json
+from math import floor
 from beemgraphenebase.py23 import py23_bytes, bytes_types, integer_types, string_types, text_type
 from collections import OrderedDict
 from beemgraphenebase.types import (
@@ -26,8 +27,9 @@ default_prefix = "STM"
 
 
 class Amount(object):
-    def __init__(self, d, prefix=default_prefix, replace_hive_by_steem=True):
+    def __init__(self, d, prefix=default_prefix, replace_hive_by_steem=True, json_str=False):
         self.replace_hive_by_steem = replace_hive_by_steem
+        self.json_str = json_str
         if isinstance(d, string_types):
             self.amount, self.symbol = d.strip().split(" ")
             self.precision = None
@@ -47,7 +49,7 @@ class Amount(object):
                         self.asset = asset["asset"]
             if self.precision is None:
                 raise Exception("Asset unknown")
-            self.amount = round(float(self.amount) * 10 ** self.precision)
+            self.amount = floor(float(self.amount) * 10 ** self.precision)
             # Workaround to allow transfers in HIVE
 
             if self.symbol == "HBD" and replace_hive_by_steem:
@@ -94,7 +96,7 @@ class Amount(object):
                 self.symbol = "STEEM"              
             self.asset = d.asset["asset"]
             self.precision = d.asset["precision"]
-            self.amount = round(float(self.amount) * 10 ** self.precision)
+            self.amount = floor(float(self.amount) * 10 ** self.precision)
             self.str_repr = str(d)
             # self.str_repr = json.dumps((d.json()))
             # self.str_repr = '{:.{}f} {}'.format((float(self.amount) / 10 ** self.precision), self.precision, self.asset)
@@ -111,7 +113,8 @@ class Amount(object):
                 py23_bytes(symbol, "ascii"))
 
     def __str__(self):
-        # return json.dumps({"amount": self.amount, "precision": self.precision, "nai": self.asset})
+        if self.json_str:
+            return json.dumps({"amount": str(self.amount), "precision": self.precision, "nai": self.asset})
         return self.str_repr
 
 
@@ -127,8 +130,6 @@ class Operation(GPHOperation):
         return class_
 
     def operations(self):
-        if self.prefix == "WLS":
-            return operations_wls
         return operations
 
     def getOperationNameForId(self, i):

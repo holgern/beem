@@ -2791,6 +2791,7 @@ class Account(BlockchainObject):
             "memo": memo,
             "from": account["name"],
             "prefix": self.blockchain.prefix,
+            "json_str": not bool(self.blockchain.config["use_condenser"]),
             "replace_hive_by_steem": replace_hive_by_steem,
         })
         return self.blockchain.finalizeOp(op, account, "active", **kwargs)
@@ -2820,6 +2821,7 @@ class Account(BlockchainObject):
             "to": to["name"],
             "amount": amount,
             "prefix": self.blockchain.prefix,
+            "json_str": not bool(self.blockchain.config["use_condenser"]),
             "replace_hive_by_steem": replace_hive_by_steem,
         })
         return self.blockchain.finalizeOp(op, account, "active", **kwargs)
@@ -2850,6 +2852,7 @@ class Account(BlockchainObject):
                 "requestid": request_id,
                 "amount": amount,
                 "prefix": self.blockchain.prefix,
+                "json_str": not bool(self.blockchain.config["use_condenser"]),
                 "replace_hive_by_steem": replace_hive_by_steem,
             })
 
@@ -2888,6 +2891,7 @@ class Account(BlockchainObject):
                 "amount": amount,
                 "memo": memo,
                 "prefix": self.blockchain.prefix,
+                "json_str": not bool(self.blockchain.config["use_condenser"]),
                 "replace_hive_by_steem": replace_hive_by_steem,
             })
         return self.blockchain.finalizeOp(op, account, "active", **kwargs)
@@ -2939,6 +2943,7 @@ class Account(BlockchainObject):
                 "amount": amount,
                 "memo": memo,
                 "prefix": self.blockchain.prefix,
+                "json_str": not bool(self.blockchain.config["use_condenser"]),
                 "replace_hive_by_steem": replace_hive_by_steem,
             })
         return self.blockchain.finalizeOp(op, account, "active", **kwargs)

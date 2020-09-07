@@ -8,6 +8,8 @@ Changelog
 * import keyring only when needed
 * Add use_condenser to config (can be set wtih beempy set), when set to False, condenser calls are not used
 * Add set_expiration to Object Cache
+* Use floor instead of round in beembase/Amount in order to handle floats which have a higher precision than allowed
+* json_str parameter has been added to beembase.Amount, when True, a json dict is returned as string (needing when broadcasting with use_condenser=False)
 
 0.24.8
 ------

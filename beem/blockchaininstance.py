@@ -769,22 +769,24 @@ class BlockChainInstance(object):
 
     @property
     def is_hive(self):
-        config = self.get_config()
+        config = self.get_config(use_stored_data=True)
         if config is None:
             return False
-        return 'HIVE_CHAIN_ID' in self.get_config()
+        return 'HIVE_CHAIN_ID' in config
 
     @property
     def is_steem(self):
-        config = self.get_config()
+        config = self.get_config(use_stored_data=True)
         if config is None:
             return False
-        return 'STEEM_CHAIN_ID' in self.get_config()
+        return 'STEEM_CHAIN_ID' in config
 
     def get_replace_hive_by_steem(self):
-        hf_version = int(self.get_blockchain_version().split('.')[1])
+        if not self.is_hive:
+            return False
+        hf_version = int(self.get_blockchain_version(use_stored_data=True).split('.')[1])
         replace_hive_by_steem = True
-        if self.is_hive and hf_version >= 24:
+        if hf_version >= 24:
             replace_hive_by_steem = False
         return replace_hive_by_steem
 
@@ -1072,6 +1074,7 @@ class BlockChainInstance(object):
             "fee": Amount(fee, blockchain_instance=self),
             "creator": creator["name"],
             "prefix": self.prefix,
+            "json_str": not bool(self.config["use_condenser"]),
             "replace_hive_by_steem": replace_hive_by_steem,
         }
         op = operations.Claim_account(**op)
@@ -1252,6 +1255,7 @@ class BlockChainInstance(object):
                 "fee": Amount(fee, blockchain_instance=self),
                 "creator": creator["name"],
                 "prefix": self.prefix,
+                "json_str": not bool(self.config["use_condenser"]),
                 "replace_hive_by_steem": replace_hive_by_steem,
             }
             op = operations.Claim_account(**op)
@@ -1470,6 +1474,7 @@ class BlockChainInstance(object):
             'memo_key': memo,
             "json_metadata": json_meta or {},
             "prefix": self.prefix,
+            "json_str": not bool(self.config["use_condenser"]),
             "replace_hive_by_steem": replace_hive_by_steem,
         }
         op = operations.Account_create(**op)
@@ -1680,7 +1685,9 @@ class BlockChainInstance(object):
         for k in props:
             props_list.append([k, props[k]])
         replace_hive_by_steem = self.get_replace_hive_by_steem()
-        op = operations.Witness_set_properties({"owner": owner["name"], "props": props_list, "prefix": self.prefix, "replace_hive_by_steem": replace_hive_by_steem})
+        op = operations.Witness_set_properties({"owner": owner["name"], "props": props_list, "prefix": self.prefix,
+                                                "json_str": not bool(self.config["use_condenser"]),
+                                                "replace_hive_by_steem": replace_hive_by_steem})
         tb = TransactionBuilder(blockchain_instance=self)
         tb.appendOps([op])
         tb.appendWif(wif)
@@ -1726,6 +1733,7 @@ class BlockChainInstance(object):
                 "props": props,
                 "fee": Amount(0, self.token_symbol, blockchain_instance=self),
                 "prefix": self.prefix,
+                "json_str": not bool(self.config["use_condenser"]),
                 "replace_hive_by_steem": replace_hive_by_steem,
             })
         return self.finalizeOp(op, account, "active", **kwargs)

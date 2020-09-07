@@ -78,7 +78,7 @@ class Testcases(unittest.TestCase):
         self.dotest(amount, 1.3001, symbol)        
 
         amount = Amount(amount=1.3001, asset=Asset("SBD", steem_instance=stm), fixed_point_arithmetic=True, steem_instance=stm)
-        self.dotest(amount, 1.3, symbol)   
+        self.dotest(amount, 1.3, symbol)
 
         # keyword inits
         amount = Amount(amount=1.3, asset=dict(Asset("SBD", steem_instance=stm)), steem_instance=stm)
