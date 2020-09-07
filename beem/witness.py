@@ -360,7 +360,10 @@ class Witnesses(WitnessesObject):
         if self.blockchain.rpc.get_use_appbase():
             self.active_witnessess = self.blockchain.rpc.get_active_witnesses(api="database")['witnesses']
             self.schedule = self.blockchain.rpc.get_witness_schedule(api="database")
-            self.witness_count = self.blockchain.rpc.get_witness_count(api="condenser")
+            if self.blockchain.config["use_condenser"]:
+                self.witness_count = self.blockchain.rpc.get_witness_count(api="condenser")
+            else:
+                self.witness_count = self.blockchain.rpc.get_witness_count()
         else:
             self.active_witnessess = self.blockchain.rpc.get_active_witnesses()
             self.schedule = self.blockchain.rpc.get_witness_schedule()
@@ -446,7 +449,7 @@ class WitnessesRankedByVote(WitnessesObject):
         witnessList = []
         last_limit = limit
         self.identifier = ""
-        use_condenser = True
+        use_condenser = self.blockchain.config["use_condenser"]
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
         if self.blockchain.rpc.get_use_appbase() and not use_condenser:
             query_limit = 1000
@@ -474,7 +477,7 @@ class WitnessesRankedByVote(WitnessesObject):
         if (last_limit < limit):
             last_limit += 1
         if self.blockchain.rpc.get_use_appbase() and not use_condenser:
-            witnessess = self.blockchain.rpc.list_witnesses({'start': [last_account], 'limit': last_limit, 'order': 'by_vote_name'}, api="database")['witnesses']
+            witnessess = self.blockchain.rpc.list_witnesses({'start': [0, last_account], 'limit': last_limit, 'order': 'by_vote_name'}, api="database")['witnesses']
         elif self.blockchain.rpc.get_use_appbase() and use_condenser:
             witnessess = self.blockchain.rpc.get_witnesses_by_vote(last_account, last_limit, api="condenser")
         else:

@@ -10,6 +10,7 @@ Changelog
 * Add set_expiration to Object Cache
 * Use floor instead of round in beembase/Amount in order to handle floats which have a higher precision than allowed
 * json_str parameter has been added to beembase.Amount, when True, a json dict is returned as string (needing when broadcasting with use_condenser=False)
+* Handle deleted comments in beempy pending thanks to @crokkon
 
 0.24.8
 ------
