@@ -1370,6 +1370,41 @@ def delegate(amount, to_account, account, export):
 
 
 @cli.command()
+@click.option('--account', '-a', help="List outgoing delegations from this account")
+def listdelegations(account):
+    """ List all outgoing delegations from an account.
+
+    The default account is used if no other account name is given as
+        option to this command.
+    """
+    stm = shared_blockchain_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+    if not account:
+        account = stm.config["default_account"]
+    acc = Account(account, blockchain_instance=stm)
+    pt = PrettyTable(["Delegatee", stm.vests_symbol, "%s Power" % (stm.token_symbol)])
+    pt.align = "r"
+    start_account = ""
+    limit = 100
+    stop = False
+    while stop is False:
+        delegations = acc.get_vesting_delegations(
+            start_account=start_account, limit=limit)
+        if len(delegations) < limit:
+            stop = True
+        if start_account != "" and len(delegations) > 0:
+            # skip first entry if it was already part of the previous call
+            delegations = delegations[1:]
+        for deleg in delegations:
+            vests = Amount(deleg['vesting_shares'], blockchain_instance=stm)
+            token_power = "%.3f" % (stm.vests_to_token_power(vests))
+            pt.add_row([deleg['delegatee'], str(vests), token_power])
+            start_account = deleg['delegatee']
+    print(pt)
+
+
+@cli.command()
 @click.argument('to', nargs=1)
 @click.option('--percentage', default=100, help='The percent of the withdraw to go to the "to" account')
 @click.option('--account', '-a', help='Powerup from this account')
