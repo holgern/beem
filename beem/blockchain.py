@@ -910,7 +910,7 @@ class Blockchain(object):
                 ret = self.blockchain.rpc.get_account_reputations(lastname, steps, api="follow")
             for account in ret:
                 if isinstance(account, dict):
-                    account_name = account["account"]
+                    account_name = account["name"]
                 else:
                     account_name = account
                 if account_name != lastname:
