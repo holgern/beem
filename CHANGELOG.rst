@@ -1,5 +1,11 @@
 Changelog
 =========
+0.24.10
+-------
+* Add hbd_interest_rate to beempy witnessproperties
+* Add beempy listdelegations (thanks to @crokkon)
+* fix account_name assignment from dict in get_account_reputations() (PR #259)
+
 0.24.9
 ------
 * Support for update_proposal_operation (thanks to dkedzierski)

@@ -3679,9 +3679,10 @@ def witnesscreate(witness, pub_signing_key, maximum_block_size, account_creation
 @click.option('--account_subsidy_decay', help='Per block decay of the account subsidy pool')
 @click.option('--maximum_block_size', help='Max block size')
 @click.option('--sbd_interest_rate', help='SBD interest rate in percent')
-@click.option('--new_signing_key', help='Set new signing key')
+@click.option('--hbd_interest_rate', help='HBD interest rate in percent')
+@click.option('--new_signing_key', help='Set new signing key (pubkey)')
 @click.option('--url', help='Witness URL')
-def witnessproperties(witness, wif, account_creation_fee, account_subsidy_budget, account_subsidy_decay, maximum_block_size, sbd_interest_rate, new_signing_key, url):
+def witnessproperties(witness, wif, account_creation_fee, account_subsidy_budget, account_subsidy_decay, maximum_block_size, sbd_interest_rate, hbd_interest_rate, new_signing_key, url):
     """Update witness properties of witness WITNESS with the witness signing key WIF"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
@@ -3699,6 +3700,8 @@ def witnessproperties(witness, wif, account_creation_fee, account_subsidy_budget
         props["maximum_block_size"] = int(maximum_block_size)
     if sbd_interest_rate is not None:
         props["sbd_interest_rate"] = int(sbd_interest_rate * 100)
+    if hbd_interest_rate is not None:
+        props["hbd_interest_rate"] = int(hbd_interest_rate * 100)        
     if new_signing_key is not None:
         props["new_signing_key"] = new_signing_key
     if url is not None:
