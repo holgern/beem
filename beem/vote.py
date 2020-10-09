@@ -102,7 +102,11 @@ class Vote(BlockchainObject):
                 try:
                     votes = self.blockchain.rpc.get_active_votes({'author': author, 'permlink': permlink}, api="tags")['votes']
                 except:
-                    votes = self.blockchain.rpc.get_active_votes(author, permlink, api="database_api")
+                    from beemapi.exceptions import InvalidParameters
+                    try:
+                        votes = self.blockchain.rpc.get_active_votes(author, permlink, api="database_api")
+                    except InvalidParameters:
+                        raise VoteDoesNotExistsException(self.identifier)
             else:
                 votes = self.blockchain.rpc.get_active_votes(author, permlink, api="database_api")
         except UnkownKey:
@@ -378,8 +382,11 @@ class ActiveVotes(VotesObject):
             #    votes = authorperm["active_votes"]
             if self.blockchain.rpc.get_use_appbase():
                 self.blockchain.rpc.set_next_node_on_empty_reply(False)
+                from beemapi.exceptions import InvalidParameters
                 try:
                     votes = self.blockchain.rpc.get_active_votes(authorperm["author"], authorperm["permlink"], api="condenser")
+                except InvalidParameters:
+                    raise VoteDoesNotExistsException(construct_authorperm(authorperm["author"], authorperm["permlink"]))
                 except:
                     votes = self.blockchain.rpc.get_active_votes({'author': authorperm["author"],
                                                              'permlink': authorperm["permlink"]},
@@ -391,8 +398,11 @@ class ActiveVotes(VotesObject):
             [author, permlink] = resolve_authorperm(authorperm)
             if self.blockchain.rpc.get_use_appbase():
                 self.blockchain.rpc.set_next_node_on_empty_reply(False)
+                from beemapi.exceptions import InvalidParameters
                 try:
                     votes = self.blockchain.rpc.get_active_votes(author, permlink, api="condenser")
+                except InvalidParameters:
+                    raise VoteDoesNotExistsException(construct_authorperm(author, permlink))                    
                 except:
                     votes = self.blockchain.rpc.get_active_votes({'author': author,
                                                              'permlink': permlink},

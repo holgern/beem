@@ -11,7 +11,8 @@ Changelog
 * Fix compatibility issues with HF 24
 * account get_follow_count, get_followers and get_following have been fixed
 * improved get_discussions calls, fallback to condenser when tags api not available
-* Fix detection when content does not exists
+* Fix detection when content does not exists on HF24
+* Fix detection when a vote does not exists on HF24
 
 0.24.9
 ------
