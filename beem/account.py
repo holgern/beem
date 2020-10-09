@@ -1792,9 +1792,13 @@ class Account(BlockchainObject):
                     finished = True
                 ret = ret[1:]
             for vote in ret:
+                if vote["voter"] != account:
+                    finished = True
+                    continue
                 last_update = formatTimeString(vote["last_update"])
                 if start_date is not None and last_update < start_date:
                     finished = True
+                    continue
                 vote_list.append(vote)
                 start_author = vote["author"]
                 start_permlink = vote["permlink"]
