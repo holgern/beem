@@ -1,14 +1,4 @@
-"""types."""
-# encoding=utf8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
-from builtins import bytes
-from builtins import str
-from builtins import object
-from builtins import int
+# -*- coding: utf-8 -*-
 import json
 import struct
 import sys
@@ -18,8 +8,6 @@ from binascii import hexlify, unhexlify
 from datetime import datetime
 from collections import OrderedDict
 from .objecttypes import object_type
-
-from future.utils import python_2_unicode_compatible
 from .py23 import py23_bytes
 
 timeformat = '%Y-%m-%dT%H:%M:%S%Z'
@@ -57,7 +45,6 @@ def JsonObj(data):
     return json.loads(str(data))
 
 
-@python_2_unicode_compatible
 class Uint8(object):
     """Uint8."""
 
@@ -74,7 +61,6 @@ class Uint8(object):
         return '%d' % self.data
 
 
-@python_2_unicode_compatible
 class Int16(object):
     """Int16."""
 
@@ -90,7 +76,6 @@ class Int16(object):
         return '%d' % self.data
 
 
-@python_2_unicode_compatible
 class Uint16(object):
     def __init__(self, d):
         self.data = int(d)
@@ -103,7 +88,6 @@ class Uint16(object):
         return '%d' % self.data
 
 
-@python_2_unicode_compatible
 class Uint32(object):
     def __init__(self, d):
         self.data = int(d)
@@ -117,7 +101,6 @@ class Uint32(object):
         return '%d' % self.data
 
 
-@python_2_unicode_compatible
 class Uint64(object):
     def __init__(self, d):
         self.data = int(d)
@@ -131,7 +114,6 @@ class Uint64(object):
         return '%d' % self.data
 
 
-@python_2_unicode_compatible
 class Varint32(object):
     def __init__(self, d):
         self.data = int(d)
@@ -145,7 +127,6 @@ class Varint32(object):
         return '%d' % self.data
 
 
-@python_2_unicode_compatible
 class Int64(object):
     def __init__(self, d):
         self.data = int(d)
@@ -159,7 +140,6 @@ class Int64(object):
         return '%d' % self.data
 
 
-@python_2_unicode_compatible
 class HexString(object):
     def __init__(self, d):
         self.data = d
@@ -174,7 +154,6 @@ class HexString(object):
         return '%s' % str(self.data)
 
 
-@python_2_unicode_compatible
 class String(object):
     def __init__(self, d):
         self.data = d
@@ -209,7 +188,6 @@ class String(object):
         return bytes("".join(r), "utf-8")
 
 
-@python_2_unicode_compatible
 class Bytes(object):
     def __init__(self, d):
         self.data = d
@@ -224,7 +202,6 @@ class Bytes(object):
         return str(self.data)
 
 
-@python_2_unicode_compatible
 class Hash(Bytes):
     def json(self):
         return str(self.data)
@@ -233,28 +210,24 @@ class Hash(Bytes):
         return unhexlify(bytes(self.data, "utf-8"))
 
 
-@python_2_unicode_compatible
 class Ripemd160(Hash):
     def __init__(self, a):
         assert len(a) == 40, "Require 40 char long hex"
         super().__init__(a)
 
 
-@python_2_unicode_compatible
 class Sha1(Hash):
     def __init__(self, a):
         assert len(a) == 40, "Require 40 char long hex"
         super().__init__(a)
 
 
-@python_2_unicode_compatible
 class Sha256(Hash):
     def __init__(self, a):
         assert len(a) == 64, "Require 64 char long hex"
         super().__init__(a)
 
 
-@python_2_unicode_compatible
 class Void(object):
     def __init__(self):
         pass
@@ -268,7 +241,6 @@ class Void(object):
         return ""
 
 
-@python_2_unicode_compatible
 class Array(object):
     def __init__(self, d):
         self.data = d
@@ -292,7 +264,6 @@ class Array(object):
         return json.dumps(r)
 
 
-@python_2_unicode_compatible
 class PointInTime(object):
     def __init__(self, d):
         self.data = d
@@ -314,7 +285,6 @@ class PointInTime(object):
         return self.data
 
 
-@python_2_unicode_compatible
 class Signature(object):
     def __init__(self, d):
         self.data = d
@@ -328,7 +298,6 @@ class Signature(object):
         return json.dumps(hexlify(self.data).decode('ascii'))
 
 
-@python_2_unicode_compatible
 class Bool(Uint8):  # Bool = Uint8
     def __init__(self, d):
         super(Bool, self).__init__(d)
@@ -343,7 +312,6 @@ class Set(Array):  # Set = Array
         super(Set, self).__init__(d)
 
 
-@python_2_unicode_compatible
 class Fixed_array(object):
     def __init__(self, d):
         raise NotImplementedError
@@ -357,7 +325,6 @@ class Fixed_array(object):
         raise NotImplementedError
 
 
-@python_2_unicode_compatible
 class Optional(object):
     def __init__(self, d):
         self.data = d
@@ -379,7 +346,6 @@ class Optional(object):
         return not bool(py23_bytes(self.data))
 
 
-@python_2_unicode_compatible
 class Static_variant(object):
     def __init__(self, d, type_id):
         self.data = d
@@ -394,7 +360,6 @@ class Static_variant(object):
         return json.dumps([self.type_id, self.data.json()])
 
 
-@python_2_unicode_compatible
 class Map(object):
     def __init__(self, data):
         self.data = data
@@ -415,7 +380,6 @@ class Map(object):
         return json.dumps(r)
 
 
-@python_2_unicode_compatible
 class Id(object):
     def __init__(self, d):
         self.data = Varint32(d)
@@ -429,7 +393,6 @@ class Id(object):
         return str(self.data)
 
 
-@python_2_unicode_compatible
 class Enum8(Uint8):
     # List needs to be provided by super class
     options = []

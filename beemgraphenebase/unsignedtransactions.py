@@ -1,8 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import bytes, str, int
+# -*- coding: utf-8 -*-
 from beemgraphenebase.py23 import py23_bytes, bytes_types
 import ecdsa
 import hashlib
@@ -10,7 +6,6 @@ from binascii import hexlify, unhexlify
 from collections import OrderedDict
 from asn1crypto.core import OctetString
 import struct
-from future.utils import python_2_unicode_compatible
 from collections import OrderedDict
 import json
 

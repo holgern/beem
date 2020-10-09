@@ -1,9 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import range
-from builtins import super
+# -*- coding: utf-8 -*-
 import string
 import unittest
 import random
@@ -26,7 +21,7 @@ from beem.transactionbuilder import TransactionBuilder
 from beembase.operations import Transfer
 from beemgraphenebase.account import PasswordKey, PrivateKey, PublicKey
 from beem.utils import parse_time, formatTimedelta
-from beem.nodelist import NodeList
+from .nodes import get_hive_nodes, get_steem_nodes
 
 # Py3 compatibility
 import sys
@@ -37,14 +32,12 @@ core_unit = "STM"
 class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.nodelist = NodeList()
-        cls.nodelist.update_nodes(steem_instance=Steem(node=cls.nodelist.get_nodes(hive=True), num_retries=10))
-        stm = Steem(node=cls.nodelist.get_nodes(hive=True))
+        stm = Steem(node=get_hive_nodes())
         stm.config.refreshBackup()
         stm.set_default_nodes(["xyz"])
         del stm
 
-        cls.urls = cls.nodelist.get_nodes(hive=True)
+        cls.urls = get_hive_nodes()
         cls.bts = Steem(
             node=cls.urls,
             nobroadcast=True,
@@ -60,7 +53,7 @@ class Testcases(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        stm = Steem(node=cls.nodelist.get_nodes())
+        stm = Steem(node=get_hive_nodes())
         stm.config.recover_with_latest_backup()
 
     @parameterized.expand([

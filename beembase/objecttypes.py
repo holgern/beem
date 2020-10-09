@@ -1,7 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+# -*- coding: utf-8 -*-
 #: Object types for object ids
 object_type = {}
 object_type["dynamic_global_property"] = 0

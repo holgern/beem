@@ -1,8 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import super
+# -*- coding: utf-8 -*-
 import unittest
 from parameterized import parameterized
 import pytz
@@ -14,7 +10,7 @@ from beem.account import Account
 from beem.vote import Vote, ActiveVotes, AccountVotes
 from beem.instance import set_shared_steem_instance
 from beem.utils import construct_authorperm, resolve_authorperm, resolve_authorpermvoter, construct_authorpermvoter
-from beem.nodelist import NodeList
+from .nodes import get_hive_nodes, get_steem_nodes
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
@@ -22,10 +18,8 @@ wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(hive=True), num_retries=10))
         cls.bts = Steem(
-            node=nodelist.get_nodes(hive=True),
+            node=get_hive_nodes(),
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10

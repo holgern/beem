@@ -1,7 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+# -*- coding: utf-8 -*-
 #: Operation ids
 ops = [
     'vote',
@@ -73,6 +70,11 @@ ops = [
     'sps_fund',
     'hardfork_hive',
     'hardfork_hive_restore',
+    'delayed_voting',
+    'consolidate_treasury_balance',
+    'effective_comment_vote',
+    'ineffective_delete_comment',
+    'sps_convert'
 ]
 operations = {o: ops.index(o) for o in ops}
 

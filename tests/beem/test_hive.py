@@ -1,9 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import range
-from builtins import super
+# -*- coding: utf-8 -*-
 import string
 import unittest
 from parameterized import parameterized
@@ -15,7 +10,7 @@ from beem.amount import Amount
 from beem.version import version as beem_version
 from beem.account import Account
 from beemgraphenebase.account import PrivateKey
-from beem.nodelist import NodeList
+from .nodes import get_hive_nodes, get_steem_nodes
 # Py3 compatibility
 import sys
 
@@ -28,10 +23,8 @@ class Testcases(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.nodelist = NodeList()
-        cls.nodelist.update_nodes(steem_instance=Hive(node=cls.nodelist.get_hive_nodes(), num_retries=10))
         cls.bts = Hive(
-            node=cls.nodelist.get_hive_nodes(),
+            node=get_hive_nodes(),
             nobroadcast=True,
             unsigned=True,
             data_refresh_time_seconds=900,
@@ -67,7 +60,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual(float(amount), 1.33)
 
     def test_create_account(self):
-        bts = Hive(node=self.nodelist.get_hive_nodes(),
+        bts = Hive(node=get_hive_nodes(),
                     nobroadcast=True,
                     unsigned=True,
                     data_refresh_time_seconds=900,
@@ -143,7 +136,7 @@ class Testcases(unittest.TestCase):
             "test")
 
     def test_create_account_password(self):
-        bts = Hive(node=self.nodelist.get_hive_nodes(),
+        bts = Hive(node=get_hive_nodes(),
                     nobroadcast=True,
                     unsigned=True,
                     data_refresh_time_seconds=900,
@@ -416,8 +409,12 @@ class Testcases(unittest.TestCase):
         self.assertIn(
             "gtg",
             op["author"])
-        self.assertEqual('1000000.000 SBD', op["max_accepted_payout"])
-        self.assertEqual(10000, op["percent_steem_dollars"])
+        if "percent_steem_dollars" in op:
+            self.assertEqual('1000000.000 SBD', op["max_accepted_payout"])
+            self.assertEqual(10000, op["percent_steem_dollars"])
+        else:
+            self.assertEqual('1000000.000 HBD', op["max_accepted_payout"])
+            self.assertEqual(10000, op["percent_hbd"])            
         self.assertEqual(True, op["allow_votes"])
         self.assertEqual(True, op["allow_curation_rewards"])
         self.assertEqual("witness-gtg-log", op["permlink"])
@@ -427,7 +424,7 @@ class Testcases(unittest.TestCase):
         self.assertFalse(bts.get_blockchain_version() == '0.0.0')
 
     def test_offline(self):
-        bts = Hive(node=self.nodelist.get_hive_nodes(),
+        bts = Hive(node=get_hive_nodes(),
                     offline=True,
                     data_refresh_time_seconds=900,
                     keys={"active": wif, "owner": wif2, "memo": wif3})
@@ -456,7 +453,7 @@ class Testcases(unittest.TestCase):
         self.assertFalse(bts.is_steem)
 
     def test_properties(self):
-        bts = Hive(node=self.nodelist.get_hive_nodes(),
+        bts = Hive(node=get_hive_nodes(),
                     nobroadcast=True,
                     data_refresh_time_seconds=900,
                     keys={"active": wif, "owner": wif2, "memo": wif3},
@@ -535,13 +532,3 @@ class Testcases(unittest.TestCase):
         bts.switch_blockchain("hive", update_nodes=True)
         assert bts.is_hive        
 
-    def test_switch_blockchain(self):
-        bts = self.bts
-        nodes_hive = self.nodelist.get_hive_nodes()
-        nodes_steem = self.nodelist.get_steem_nodes()
-        rpc = Steem(nodes_steem)
-        assert rpc.is_steem
-        assert not rpc.get_replace_hive_by_steem()
-        rpc = Hive(nodes_hive)
-        assert rpc.is_hive
-        assert rpc.get_replace_hive_by_steem()

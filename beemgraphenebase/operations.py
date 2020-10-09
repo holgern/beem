@@ -1,8 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from collections import OrderedDict
+# -*- coding: utf-8 -*-
 import json
 from .types import (
     Uint8, Int16, Uint16, Uint32, Uint64,

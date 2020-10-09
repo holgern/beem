@@ -1,8 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import super
+# -*- coding: utf-8 -*-
 import unittest
 from parameterized import parameterized
 from pprint import pprint
@@ -12,7 +8,7 @@ from beem.amount import Amount
 from beem.asset import Asset
 from beem.wallet import Wallet
 from beem.instance import set_shared_steem_instance, shared_steem_instance
-from beem.nodelist import NodeList
+from .nodes import get_hive_nodes, get_steem_nodes
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
@@ -22,11 +18,9 @@ class Testcases(unittest.TestCase):
     def setUpClass(cls):
         stm = shared_steem_instance()
         stm.config.refreshBackup()
-        nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(exclude_limited=False), num_retries=10))
 
         cls.stm = Steem(
-            node=nodelist.get_nodes(exclude_limited=True),
+            node=get_hive_nodes(),
             nobroadcast=True,
             # We want to bundle many operations into a single transaction
             bundle=True,

@@ -1,16 +1,11 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import str
-from builtins import super
+# -*- coding: utf-8 -*-
 import unittest
 import pytz
 from datetime import datetime, timedelta
 from parameterized import parameterized
 from pprint import pprint
 from beem import Steem, exceptions, constants
-from beem.nodelist import NodeList
+from .nodes import get_hive_nodes, get_steem_nodes
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
@@ -19,10 +14,8 @@ class Testcases(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(exclude_limited=False), num_retries=10))
         cls.appbase = Steem(
-            node=nodelist.get_nodes(exclude_limited=True),
+            node=get_steem_nodes(),
             nobroadcast=True,
             bundle=False,
             # Overwrite wallet to use this list of wifs only

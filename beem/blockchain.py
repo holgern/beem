@@ -1,12 +1,4 @@
-# This Python file uses the following encoding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future.utils import python_2_unicode_compatible
-from builtins import str
-from builtins import range
-from builtins import object
+# -*- coding: utf-8 -*-
 import sys
 import time
 import hashlib
@@ -26,10 +18,7 @@ from beem.instance import shared_blockchain_instance
 from .amount import Amount
 import beem as stm
 log = logging.getLogger(__name__)
-if sys.version_info < (3, 0):
-    from Queue import Queue
-else:
-    from queue import Queue
+from queue import Queue
 FUTURES_MODULE = None
 if not FUTURES_MODULE:
     try:
@@ -171,7 +160,6 @@ class Pool:
         return results
 
 
-@python_2_unicode_compatible
 class Blockchain(object):
     """ This class allows to access the blockchain and read data
         from it

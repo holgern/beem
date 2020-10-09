@@ -1,9 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import str
-from builtins import super
+# -*- coding: utf-8 -*-
 import unittest
 import pytz
 from datetime import datetime, timedelta
@@ -15,8 +10,8 @@ from beem.block import Block
 from beem.amount import Amount
 from beem.asset import Asset
 from beem.utils import formatTimeString
-from beem.nodelist import NodeList
 from beem.instance import set_shared_steem_instance
+from .nodes import get_hive_nodes
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
@@ -25,10 +20,7 @@ class Testcases(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        nodelist = NodeList()
-        nodes = nodelist.get_nodes(hive=True)
-        nodelist.update_nodes(steem_instance=Steem(node=nodes, num_retries=10))
-        node_list = nodelist.get_nodes(hive=True)
+        node_list = get_hive_nodes()
       
         cls.bts = Steem(
             node=node_list,
@@ -121,7 +113,7 @@ class Testcases(unittest.TestCase):
         h_list = []
         for h in account.history_reverse(start=start, stop=stop, use_block_num=False, batch_size=10, raw_output=True):
             h_list.append(h)
-        self.assertEqual(h_list[0][0], 9)
+        self.assertEqual(h_list[0][0], 8)
         self.assertEqual(h_list[-1][0], 1)
         self.assertEqual(h_list[0][1]['block'], h_all_raw[-10 + zero_element][1]['block'])
         self.assertEqual(h_list[-1][1]['block'], h_all_raw[-2 + zero_element][1]['block'])

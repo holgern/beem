@@ -1,11 +1,11 @@
-from builtins import super
+# -*- coding: utf-8 -*-
 import unittest
 import mock
 from beem import Hive
 from beem.message import Message
 from beem.account import Account
 from beem.instance import set_shared_steem_instance
-from beem.nodelist import NodeList
+from .nodes import get_hive_nodes, get_steem_nodes
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 core_unit = "STM"
@@ -15,10 +15,8 @@ class Testcases(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Hive(node=nodelist.get_hive_nodes(), num_retries=10))
         cls.bts = Hive(
-            node=nodelist.get_nodes(exclude_limited=True),
+            node=get_hive_nodes(),
             nobroadcast=True,
             keys=[wif],
             num_retries=10

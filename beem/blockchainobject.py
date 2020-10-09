@@ -1,4 +1,4 @@
-# This Python file uses the following encoding: utf-8
+# -*- coding: utf-8 -*-
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from beem.instance import shared_blockchain_instance
 from datetime import datetime, timedelta

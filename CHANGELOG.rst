@@ -5,6 +5,10 @@ Changelog
 * Add hbd_interest_rate to beempy witnessproperties
 * Add beempy listdelegations (thanks to @crokkon)
 * fix account_name assignment from dict in get_account_reputations() (PR #259)
+* Add new operation ids for HF 24
+* Remove remaining py2 code
+* Run unit tests on beta.openhive.network
+* Fix compatibility issues with HF 24
 
 0.24.9
 ------

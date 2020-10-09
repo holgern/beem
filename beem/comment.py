@@ -1,9 +1,4 @@
-# This Python file uses the following encoding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import str
+# -*- coding: utf-8 -*-
 import json
 import re
 import logging
@@ -499,12 +494,16 @@ class Comment(BlockchainObject):
         benefactor_tokens = author_tokens * beneficiaries_pct / 100.
         author_tokens -= benefactor_tokens
 
-        if median_hist is not None:
+        if median_hist is not None and "percent_steem_dollars" in self:
             sbd_steem = author_tokens * self["percent_steem_dollars"] / 20000.
             vesting_steem = median_price.as_base(self.blockchain.token_symbol) * (author_tokens - sbd_steem)
             return {'pending_rewards': True, "payout_SP": vesting_steem, "payout_SBD": sbd_steem, "total_payout_SBD": author_tokens}
+        elif median_hist is not None and "percent_hbd" in self:
+            sbd_steem = author_tokens * self["percent_hbd"] / 20000.
+            vesting_steem = median_price.as_base(self.blockchain.token_symbol) * (author_tokens - sbd_steem)
+            return {'pending_rewards': True, "payout_SP": vesting_steem, "payout_SBD": sbd_steem, "total_payout_SBD": author_tokens}        
         else:
-            return {'pending_rewards': True, "total_payout": author_tokens}
+            return {'pending_rewards': True, "total_payout": author_tokens, "payout_SBD": None, "total_payout_SBD": None}
 
     def get_curation_rewards(self, pending_payout_SBD=False, pending_payout_value=None):
         """ Returns the curation rewards. The split between creator/curator is currently 50%/50%.

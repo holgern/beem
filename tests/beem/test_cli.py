@@ -1,9 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import str
-from builtins import super
+# -*- coding: utf-8 -*-
 import unittest
 import click
 from click.testing import CliRunner
@@ -15,7 +10,7 @@ from beemgraphenebase.account import PrivateKey
 from beem.cli import cli, balance
 from beem.instance import set_shared_steem_instance, shared_steem_instance
 from beembase.operationids import getOperationNameForId
-from beem.nodelist import NodeList
+from .nodes import get_hive_nodes, get_steem_nodes
 
 wif = "5Jt2wTfhUt5GkZHV1HYVfkEaJ6XnY8D2iA4qjtK9nnGXAhThM3w"
 posting_key = "5Jh1Gtu2j4Yi16TfhoDmg8Qj3ULcgRi7A49JXdfUUTVPkaFaRKz"
@@ -26,10 +21,7 @@ pub_key = "STX52xMqKegLk4tdpNcUXU9Rw5DtdM9fxf3f12Gp55v1UjLX3ELZf"
 class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        nodelist = NodeList()
-        nodelist.update_nodes()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(hive=True), num_retries=10))
-        cls.node_list = nodelist.get_nodes(hive=True)
+        cls.node_list = get_hive_nodes()
        
         # stm = shared_steem_instance()
         # stm.config.refreshBackup()
@@ -401,8 +393,8 @@ class Testcases(unittest.TestCase):
 
     def test_claimaccount(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dx', 'claimaccount', 'holger80'], input="test\n")
-        result = runner.invoke(cli, ['-dx', 'claimaccount', '-n', '2', 'holger80'], input="test\n")
+        result = runner.invoke(cli, ['-dx', 'claimaccount', 'holger80'])
+        result = runner.invoke(cli, ['-dx', 'claimaccount', '-n', '2', 'holger80'])
         self.assertEqual(result.exit_code, 0)
 
     def test_power(self):

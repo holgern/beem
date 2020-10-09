@@ -1,10 +1,4 @@
-# This Python file uses the following encoding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import bytes, int, str
-from future.utils import python_2_unicode_compatible
+# -*- coding: utf-8 -*-
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from beem.instance import shared_blockchain_instance
 from beem.asset import Asset
@@ -27,7 +21,6 @@ def quantize(amount, precision):
     return amount.quantize(places, rounding=ROUND_DOWN)  
 
 
-@python_2_unicode_compatible
 class Amount(dict):
     """ This class deals with Amounts of any asset to simplify dealing with the tuple::
 

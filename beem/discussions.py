@@ -1,8 +1,4 @@
-# This Python file uses the following encoding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+# -*- coding: utf-8 -*-
 from .instance import shared_blockchain_instance
 from .account import Account
 from .comment import Comment

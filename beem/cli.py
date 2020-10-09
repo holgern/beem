@@ -1,9 +1,4 @@
-# This Python file uses the following encoding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import bytes, int, str
+# -*- coding: utf-8 -*-
 import os
 import ast
 import json
@@ -440,7 +435,7 @@ def nextnode(results):
     stm.move_current_node_to_front()
     node = stm.get_default_nodes()
     offline = stm.offline
-    if len(node) < 2:
+    if len(node) < 2 or isinstance(node, str):
         print("At least two nodes are needed!")
         return
     node = node[1:] + [node[0]]
@@ -2252,13 +2247,16 @@ def beneficiaries(authorperm, beneficiaries, export):
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
         return
-
+    
     options = {"author": c["author"],
                "permlink": c["permlink"],
                "max_accepted_payout": c["max_accepted_payout"],
-               "percent_steem_dollars": c["percent_steem_dollars"],
                "allow_votes": c["allow_votes"],
                "allow_curation_rewards": c["allow_curation_rewards"]}
+    if "percent_steem_dollars" in c:
+        options["percent_steem_dollars"] = c["percent_steem_dollars"]
+    elif "percent_hbd" in c:
+        options["percent_hbd"] = c["percent_hbd"]
 
     if isinstance(beneficiaries, tuple) and len(beneficiaries) == 1:
         beneficiaries = beneficiaries[0].split(",")
@@ -2530,7 +2528,7 @@ def download(permlink, account, save, export):
         yaml_prefix += 'max_accepted_payout: %s\n' % str(comment["max_accepted_payout"])
         if "percent_steem_dollars" in comment:
             yaml_prefix += 'percent_steem_dollars: %s\n' %  str(comment["percent_steem_dollars"])
-        else:
+        elif "percent_hbd" in comment:
             yaml_prefix += 'percent_hbd: %s\n' %  str(comment["percent_hbd"])
         if "tags" in comment.json_metadata:
             if len(comment.json_metadata["tags"]) > 0 and comment["category"] != comment.json_metadata["tags"][0] and len(comment["category"]) > 0:

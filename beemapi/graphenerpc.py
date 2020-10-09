@@ -1,11 +1,4 @@
-"""graphennewsrpc."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import next
-from builtins import str
-from builtins import object
+# -*- coding: utf-8 -*-
 from itertools import cycle
 import threading
 import sys
@@ -27,10 +20,7 @@ from .rpcutils import (
 from .node import Nodes
 from beemgraphenebase.version import version as beem_version
 from beemgraphenebase.chains import known_chains
-if sys.version_info[0] < 3:
-    from thread import interrupt_main
-else:
-    from _thread import interrupt_main
+from _thread import interrupt_main
 WEBSOCKET_MODULE = None
 if not WEBSOCKET_MODULE:
     try:

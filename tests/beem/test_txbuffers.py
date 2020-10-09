@@ -1,8 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import super
+# -*- coding: utf-8 -*-
 import unittest
 from parameterized import parameterized
 from beem import Steem
@@ -23,7 +19,7 @@ from beemstorage.exceptions import WalletLocked
 from beemapi import exceptions
 from beem.wallet import Wallet
 from beem.utils import formatTimeFromNow
-from beem.nodelist import NodeList
+from .nodes import get_hive_nodes, get_steem_nodes
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 wif2 = "5JKu2dFfjKAcD6aP1HqBDxMNbdwtvPS99CaxBzvMYhY94Pt6RDS"
 wif3 = "5K1daXjehgPZgUHz6kvm55ahEArBHfCHLy6ew8sT7sjDb76PU2P"
@@ -33,9 +29,7 @@ class Testcases(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(exclude_limited=False), num_retries=10))
-        node_list = nodelist.get_nodes(exclude_limited=True)
+        node_list = get_hive_nodes()
         cls.stm = Steem(
             node=node_list,
             keys={"active": wif, "owner": wif2, "memo": wif3},

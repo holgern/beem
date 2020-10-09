@@ -1,9 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import range
-from builtins import super
+# -*- coding: utf-8 -*-
 import string
 import unittest
 from parameterized import parameterized
@@ -15,7 +10,7 @@ from beem.amount import Amount
 from beem.version import version as beem_version
 from beem.account import Account
 from beemgraphenebase.account import PrivateKey
-from beem.nodelist import NodeList
+from .nodes import get_hive_nodes, get_steem_nodes
 # Py3 compatibility
 import sys
 
@@ -27,10 +22,8 @@ class Testcases(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.nodelist = NodeList()
-        cls.nodelist.update_nodes(steem_instance=Steem(node=cls.nodelist.get_steem_nodes(), num_retries=10))
         cls.bts = Steem(
-            node=cls.nodelist.get_steem_nodes(),
+            node=get_steem_nodes(),
             nobroadcast=True,
             unsigned=True,
             data_refresh_time_seconds=900,
@@ -67,7 +60,7 @@ class Testcases(unittest.TestCase):
         self.assertEqual(float(amount), 1.33)
 
     def test_create_account(self):
-        bts = Steem(node=self.nodelist.get_steem_nodes(),
+        bts = Steem(node=get_steem_nodes(),
                     nobroadcast=True,
                     unsigned=True,
                     data_refresh_time_seconds=900,
@@ -143,7 +136,7 @@ class Testcases(unittest.TestCase):
             "test")
 
     def test_create_account_password(self):
-        bts = Steem(node=self.nodelist.get_steem_nodes(),
+        bts = Steem(node=get_steem_nodes(),
                     nobroadcast=True,
                     unsigned=True,
                     data_refresh_time_seconds=900,
@@ -423,7 +416,7 @@ class Testcases(unittest.TestCase):
         self.assertFalse(bts.get_blockchain_version() == '0.0.0')
 
     def test_offline(self):
-        bts = Steem(node=self.nodelist.get_steem_nodes(),
+        bts = Steem(node=get_steem_nodes(),
                     offline=True,
                     data_refresh_time_seconds=900,
                     keys={"active": wif, "owner": wif2, "memo": wif3})
@@ -452,7 +445,7 @@ class Testcases(unittest.TestCase):
         self.assertTrue(bts.is_steem)        
 
     def test_properties(self):
-        bts = Steem(node=self.nodelist.get_steem_nodes(),
+        bts = Steem(node=get_steem_nodes(),
                     nobroadcast=True,
                     data_refresh_time_seconds=900,
                     keys={"active": wif, "owner": wif2, "memo": wif3},

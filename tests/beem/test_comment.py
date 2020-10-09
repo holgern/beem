@@ -1,8 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import super, str
+# -*- coding: utf-8 -*-
 import unittest
 from parameterized import parameterized
 from pprint import pprint
@@ -12,7 +8,7 @@ from beem.vote import Vote
 from beem.account import Account
 from beem.instance import set_shared_blockchain_instance
 from beem.utils import resolve_authorperm
-from beem.nodelist import NodeList
+from .nodes import get_hive_nodes, get_steem_nodes
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
@@ -20,9 +16,7 @@ wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        nodelist = NodeList()
-        nodelist.update_nodes(blockchain_instance=Hive(node=nodelist.get_hive_nodes(), num_retries=10))
-        node_list = nodelist.get_hive_nodes()
+        node_list = get_hive_nodes()
 
         cls.bts = Hive(
             node=node_list,

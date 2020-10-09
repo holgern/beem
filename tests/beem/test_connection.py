@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import unittest
 from beem import Hive, Steem
 from beem.account import Account

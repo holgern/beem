@@ -1,9 +1,4 @@
-# This Python file uses the following encoding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import bytes, int, str
+# -*- coding: utf-8 -*-
 import pytz
 import json
 from datetime import datetime, timedelta, date, time
@@ -1005,7 +1000,10 @@ class Account(BlockchainObject):
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
         if self.blockchain.rpc.get_use_appbase():
-            return self.blockchain.rpc.get_follow_count({'account': account}, api='follow')
+            try:
+                return self.blockchain.rpc.get_follow_count({'account': account}, api='follow')
+            except:
+                return self.blockchain.rpc.get_follow_count(account, api='condenser')
         else:
             return self.blockchain.rpc.get_follow_count(account, api='follow')
 
@@ -1086,18 +1084,30 @@ class Account(BlockchainObject):
             if self.blockchain.rpc.get_use_appbase():
                 query = {'account': self.name, 'start': last_user, 'type': what, 'limit': limit}
                 if direction == "follower":
-                    followers = self.blockchain.rpc.get_followers(query, api='follow')
+                    try:
+                        followers = self.blockchain.rpc.get_followers(query, api='follow')
+                    except:
+                        followers = self.blockchain.rpc.get_followers(self.name, last_user, what, limit, api='condenser')
                     if isinstance(followers, dict) and 'followers' in followers:
                         followers = followers['followers']
                 elif direction == "following":
-                    followers = self.blockchain.rpc.get_following(query, api='follow')
+                    try:
+                        followers = self.blockchain.rpc.get_following(query, api='follow')
+                    except:
+                        followers = self.blockchain.rpc.get_following(self.name, last_user, what, limit, api='condenser')
                     if isinstance(followers, dict) and 'following' in followers:
                         followers = followers['following']
             else:
                 if direction == "follower":
-                    followers = self.blockchain.rpc.get_followers(self.name, last_user, what, limit, api='follow')
+                    try:
+                        followers = self.blockchain.rpc.get_followers(self.name, last_user, what, limit, api='follow')
+                    except:
+                        followers = self.blockchain.rpc.get_followers([self.name, last_user, what, limit], api='condenser')
                 elif direction == "following":
-                    followers = self.blockchain.rpc.get_following(self.name, last_user, what, limit, api='follow')
+                    try:
+                        followers = self.blockchain.rpc.get_following(self.name, last_user, what, limit, api='follow')
+                    except:
+                        followers = self.blockchain.rpc.get_following(self.name, last_user, what, limit, api='condenser')
             if cnt == 0:
                 followers_list = followers
             elif followers is not None and len(followers) > 1:
@@ -1741,9 +1751,9 @@ class Account(BlockchainObject):
         else:
             return self.blockchain.rpc.get_expiring_vesting_delegations(account, formatTimeString(after), limit)
 
-    def get_account_votes(self, account=None, start_author="", start_permlink=""):
+    def get_account_votes(self, account=None, start_author="", start_permlink="", limit=1000, start_date=None):
         """ Returns all votes that the account has done
-
+            
             :rtype: list
 
             .. code-block:: python
@@ -1774,15 +1784,17 @@ class Account(BlockchainObject):
         vote_list = []
         finished = False
         while not finished:
-            ret = self.blockchain.rpc.list_votes({"start": [account, start_author, start_permlink], "limit": 1000, "order": "by_voter_comment"}, api="database")["votes"]
+            ret = self.blockchain.rpc.list_votes({"start": [account, start_author, start_permlink], "limit": limit, "order": "by_voter_comment"}, api="database")["votes"]
+            if len(ret) < limit:
+                finished = True
             if start_author != "":
                 if len(ret) == 0:
                     finished = True
                 ret = ret[1:]
             for vote in ret:
-                if vote["voter"] != account:
+                last_update = formatTimeString(vote["last_update"])
+                if start_date is not None and last_update < start_date:
                     finished = True
-                    continue
                 vote_list.append(vote)
                 start_author = vote["author"]
                 start_permlink = vote["permlink"]

@@ -1,8 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import int, str
+# -*- coding: utf-8 -*-
 from beemgraphenebase.unsignedtransactions import Unsigned_Transaction as GrapheneUnsigned_Transaction
 from .operations import Operation
 from beemgraphenebase.chains import known_chains

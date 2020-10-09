@@ -1,10 +1,4 @@
-# This Python file uses the following encoding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import str
-from future.utils import python_2_unicode_compatible
+# -*- coding: utf-8 -*-
 import logging
 import struct
 import time
@@ -29,7 +23,6 @@ from beem.instance import shared_blockchain_instance
 log = logging.getLogger(__name__)
 
 
-@python_2_unicode_compatible
 class TransactionBuilder(dict):
     """ This class simplifies the creation of transactions by adding
         operations and signers.

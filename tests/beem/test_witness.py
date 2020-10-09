@@ -1,15 +1,11 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import super
+# -*- coding: utf-8 -*-
 import unittest
 from parameterized import parameterized
 from pprint import pprint
 from beem import Steem
 from beem.witness import Witness, Witnesses, WitnessesVotedByAccount, WitnessesRankedByVote
 from beem.instance import set_shared_steem_instance
-from beem.nodelist import NodeList
+from .nodes import get_hive_nodes, get_steem_nodes
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
@@ -17,17 +13,15 @@ wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(hive=True), num_retries=10))
         cls.bts = Steem(
-            node=nodelist.get_nodes(hive=True),
+            node=get_hive_nodes(),
             nobroadcast=True,
             unsigned=True,
             keys={"active": wif},
             num_retries=10
         )
         cls.steemit = Steem(
-            node="https://api.steemit.com",
+            node=get_steem_nodes(),
             nobroadcast=True,
             unsigned=True,
             keys={"active": wif},

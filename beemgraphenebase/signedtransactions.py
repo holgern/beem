@@ -1,8 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import bytes, str, int
+# -*- coding: utf-8 -*-
 from beemgraphenebase.py23 import py23_bytes, bytes_types
 import ecdsa
 import hashlib

@@ -1,9 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import range
-from builtins import super
+# -*- coding: utf-8 -*-
 import string
 import unittest
 from parameterized import parameterized
@@ -19,7 +14,7 @@ from beem.witness import Witness
 from beem.account import Account
 from beemgraphenebase.account import PrivateKey
 from beem.instance import set_shared_steem_instance, shared_steem_instance
-from beem.nodelist import NodeList
+from .nodes import get_hive_nodes, get_steem_nodes
 # Py3 compatibility
 import sys
 core_unit = "STM"
@@ -31,11 +26,9 @@ class Testcases(unittest.TestCase):
     def setUpClass(cls):
         stm = shared_steem_instance()
         stm.config.refreshBackup()
-        nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(exclude_limited=False), num_retries=10))
 
         cls.stm = Steem(
-            node=nodelist.get_nodes(exclude_limited=True),
+            node=get_steem_nodes(),
             nobroadcast=True,
             # We want to bundle many operations into a single transaction
             bundle=True,

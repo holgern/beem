@@ -1,10 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import str
-from builtins import object
-from future.utils import python_2_unicode_compatible
+# -*- coding: utf-8 -*-
 from collections import OrderedDict
 import json
 from beemgraphenebase.types import (
@@ -19,7 +13,6 @@ from .objecttypes import object_type
 from .operationids import operations
 
 
-@python_2_unicode_compatible
 class Operation(object):
     def __init__(self, op):
         if isinstance(op, list) and len(op) == 2:
@@ -81,7 +74,6 @@ class Operation(object):
         return json.dumps([self.opId, self.op.toJson()])
 
 
-@python_2_unicode_compatible
 class GrapheneObject(object):
     """ Core abstraction class
 

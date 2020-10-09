@@ -1,13 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import bytes
-from builtins import chr
-from builtins import range
-from builtins import object
-from future.utils import python_2_unicode_compatible
 import hashlib
 import sys
 import re
@@ -80,7 +71,6 @@ class PasswordKey(Prefix):
         return self.get_public()
 
 
-@python_2_unicode_compatible
 class BrainKey(Prefix):
     """Brainkey implementation similar to the graphene-ui web-wallet.
 
@@ -178,7 +168,6 @@ class BrainKey(Prefix):
 # 
 # Copyright (c) 2013 Pavol Rusnak
 # Copyright (c) 2017 mruddy
-@python_2_unicode_compatible
 class Mnemonic(object):
     """BIP39 mnemoric implementation"""
     def __init__(self):
@@ -456,7 +445,6 @@ class MnemonicKey(Prefix):
         return self.get_public()
 
 
-@python_2_unicode_compatible
 class Address(Prefix):
     """ Address class
 
@@ -541,7 +529,6 @@ class Address(Prefix):
         return py23_bytes(self._address)
 
 
-@python_2_unicode_compatible
 class GrapheneAddress(Address):
     """ Graphene Addresses are different. Hence we have a different class
     """
@@ -561,7 +548,6 @@ class GrapheneAddress(Address):
         return cls(result, prefix=pubkey.prefix)
 
 
-@python_2_unicode_compatible
 class PublicKey(Prefix):
     """ This class deals with Public Keys and inherits ``Address``.
 
@@ -714,7 +700,6 @@ class PublicKey(Prefix):
         return GrapheneAddress.from_pubkey(repr(self), prefix=self.prefix)
 
 
-@python_2_unicode_compatible
 class PrivateKey(Prefix):
     """ Derives the compressed and uncompressed public keys and
         constructs two instances of :class:`PublicKey`:

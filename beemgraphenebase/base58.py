@@ -1,9 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import str
-from future.utils import python_2_unicode_compatible
+# -*- coding: utf-8 -*-
 from binascii import hexlify, unhexlify
 from .py23 import py23_bytes, py23_chr, bytes_types, integer_types, string_types, text_type
 from .prefix import Prefix
@@ -13,7 +8,6 @@ import logging
 log = logging.getLogger(__name__)
 
 
-@python_2_unicode_compatible
 class Base58(Prefix):
     """Base58 base class
 
