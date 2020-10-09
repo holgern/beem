@@ -49,8 +49,12 @@ class Testcases(unittest.TestCase):
         m = Market(u'HIVE:HBD', steem_instance=bts)
         ticker = m.ticker()
         self.assertEqual(len(ticker), 6)
-        self.assertEqual(ticker['hive_volume']["symbol"], u'HIVE')
-        self.assertEqual(ticker['hbd_volume']["symbol"], u'HBD')
+        if "hive_volume" in ticker:
+            self.assertEqual(ticker['hive_volume']["symbol"], u'HIVE')
+            self.assertEqual(ticker['hbd_volume']["symbol"], u'HBD')
+        else:
+            self.assertEqual(ticker['steem_volume']["symbol"], u'HIVE')
+            self.assertEqual(ticker['sbd_volume']["symbol"], u'HBD')
 
     def test_volume(self):
         bts = self.bts
