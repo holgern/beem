@@ -133,6 +133,8 @@ class NodeRPC(GrapheneRPC):
             raise exceptions.UnnecessarySignatureDetected(msg)
         elif re.search("WinError", msg):
             raise exceptions.RPCError(msg)
+        elif re.search("Invalid parameters", msg):
+            raise exceptions.InvalidParameters()
         elif re.search("Unable to acquire database lock", msg):
             self.nodes.sleep_and_check_retries(str(msg), call_retry=True)
             doRetry = True

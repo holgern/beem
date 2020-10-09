@@ -127,10 +127,12 @@ class Market(dict):
             * ``highest_bid``: Price of the highest bid
             * ``sbd_volume``: Volume of SBD
             * ``steem_volume``: Volume of STEEM
+            * ``hbd_volume``: Volume of HBD
+            * ``hive_volume``: Volume of HIVE
             * ``percent_change``: 24h change percentage (in %)
 
             .. note::
-                Market is STEEM:SBD and prices are SBD per STEEM!
+                Market is HIVE:HBD and prices are HBD per HIVE!
 
             Sample Output:
 
@@ -176,7 +178,7 @@ class Market(dict):
         if "sbd_volume" in ticker:
             data["sbd_volume"] = Amount(ticker["sbd_volume"], blockchain_instance=self.blockchain)
         elif "hbd_volume" in ticker:
-            data["sbd_volume"] = Amount(ticker["hbd_volume"], blockchain_instance=self.blockchain)
+            data["hbd_volume"] = Amount(ticker["hbd_volume"], blockchain_instance=self.blockchain)
         if "steem_volume" in ticker:
             data["steem_volume"] = Amount(ticker["steem_volume"], blockchain_instance=self.blockchain)
         elif "hive_volume" in ticker:

@@ -63,7 +63,7 @@ class Testcases(unittest.TestCase):
         bts = self.bts
         query = Query()
         query["limit"] = 2
-        # query["tag"] = "holger80"
+        query["tag"] = "hive"
         d = Discussions_by_created(query, steem_instance=bts)
         self.assertEqual(len(d), 2)
 
@@ -125,11 +125,11 @@ class Testcases(unittest.TestCase):
     def test_promoted(self):
         bts = self.bts
         query = Query()
-        query["limit"] = 1
-        query["tag"] = "banjo"
+        query["limit"] = 2
+        query["tag"] = "hive"
         d = Discussions_by_promoted(query, steem_instance=bts)
         discussions = Discussions(steem_instance=bts)
         d2 = []
-        for dd in discussions.get_discussions("promoted", query, limit=10):
+        for dd in discussions.get_discussions("promoted", query, limit=2):
             d2.append(dd)
         self.assertEqual(len(d), len(d2))

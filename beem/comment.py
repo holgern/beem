@@ -164,7 +164,11 @@ class Comment(BlockchainObject):
                     content =content[0]
             except:
                 if self.blockchain.config["use_condenser"]:
-                    content = self.blockchain.rpc.get_content(author, permlink)
+                    from beemapi.exceptions import InvalidParameters
+                    try:
+                        content = self.blockchain.rpc.get_content(author, permlink)
+                    except InvalidParameters:
+                        raise ContentDoesNotExistsException(self.identifier)
                 else:
                     content =self.blockchain.rpc.find_comments({"start": [author, permlink], "limit": 1, "order": "by_permlink"}, api="database")
                     if content is not None and "comments" in content:
@@ -172,7 +176,11 @@ class Comment(BlockchainObject):
                     if isinstance(content, list) and len(content) >0:
                         content =content[0]                
         else:
-            content = self.blockchain.rpc.get_content(author, permlink)
+            from beemapi.exceptions import InvalidParameters
+            try:            
+                content = self.blockchain.rpc.get_content(author, permlink)
+            except InvalidParameters:
+                raise ContentDoesNotExistsException(self.identifier)                
         if not content or not content['author'] or not content['permlink']:
             raise ContentDoesNotExistsException(self.identifier)
         content = self._parse_json_data(content)
@@ -837,7 +845,7 @@ class RecentReplies(list):
             Default: True
         :param Steem blockchain_instance: Steem() instance to use when accesing a RPC
     """
-    def __init__(self, author, skip_own=True, lazy=False, full=True, blockchain_instance=None, **kwargs):
+    def __init__(self, author, skip_own=True, start_permlink="", limit=100, lazy=False, full=True, blockchain_instance=None, **kwargs):
         if blockchain_instance is None:
             if kwargs.get("steem_instance"):
                 blockchain_instance = kwargs["steem_instance"]
@@ -847,11 +855,10 @@ class RecentReplies(list):
         if not self.blockchain.is_connected():
             return None
         self.blockchain.rpc.set_next_node_on_empty_reply(True)
-        state = self.blockchain.rpc.get_state("/@%s/recent-replies" % author)
-        replies = state["accounts"][author].get("recent_replies", [])
+        account = Account(author, blockchain_instance=self.blockchain)
+        replies = account.get_account_posts(sort="replies", raw_data=True)
         comments = []
-        for reply in replies:
-            post = state["content"][reply]
+        for post in replies:
             if skip_own and post["author"] == author:
                 continue
             comments.append(Comment(post, lazy=lazy, full=full, blockchain_instance=self.blockchain))

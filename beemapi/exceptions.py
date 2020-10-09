@@ -96,6 +96,10 @@ class InvalidEndpointUrl(Exception):
     pass
 
 
+class InvalidParameters(Exception):
+    pass
+
+
 class UnnecessarySignatureDetected(Exception):
     pass
 

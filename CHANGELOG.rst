@@ -9,6 +9,9 @@ Changelog
 * Remove remaining py2 code
 * Run unit tests on beta.openhive.network
 * Fix compatibility issues with HF 24
+* account get_follow_count, get_followers and get_following have been fixed
+* improved get_discussions calls, fallback to condenser when tags api not available
+* Fix detection when content does not exists
 
 0.24.9
 ------
