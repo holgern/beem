@@ -30,6 +30,10 @@ matrix:
       env:
         - TOXENV=short
     - os: linux
+      python: 3.9
+      env:
+        - TOXENV=short
+    - os: linux
       python: 3.6
       env:
         - TOXENV=py36short
