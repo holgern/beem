@@ -194,15 +194,15 @@ class GrapheneRPC(object):
                 if self.url[:3] == "wss":
                     self.ws = create_ws_instance(use_ssl=True)
                     self.ws.settimeout(self.timeout)
-                    self.current_rpc = self.rpc_methods["ws"]
+                    self.current_rpc = self.rpc_methods["wsappbase"]
                 elif self.url[:2] == "ws":
                     self.ws = create_ws_instance(use_ssl=False)
                     self.ws.settimeout(self.timeout)
-                    self.current_rpc = self.rpc_methods["ws"]
+                    self.current_rpc = self.rpc_methods["wsappbase"]
                 else:
                     self.ws = None
                     self.session = shared_session_instance()
-                    self.current_rpc = self.rpc_methods["jsonrpc"]
+                    self.current_rpc = self.rpc_methods["appbase"]
                     self.headers = {'User-Agent': 'beem v%s' % (beem_version),
                                     'content-type': 'application/json; charset=utf-8'}
             try:
@@ -224,9 +224,9 @@ class GrapheneRPC(object):
                         props = self.get_config()
                 except Exception as e:
                     if re.search("Bad Cast:Invalid cast from type", str(e)):
-                        # retry with appbase
-                        if self.current_rpc == self.rpc_methods['ws']:
-                            self.current_rpc = self.rpc_methods['wsappbase']
+                        # retry with not appbase
+                        if self.current_rpc == self.rpc_methods['wsappbase']:
+                            self.current_rpc = self.rpc_methods['ws']
                         else:
                             self.current_rpc = self.rpc_methods['appbase']
                         props = self.get_config(api="database")

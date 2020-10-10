@@ -1,5 +1,9 @@
 Changelog
 =========
+0.24.11
+-------
+* assumes that a rpc server uses appbase
+
 0.24.10
 -------
 * Add hbd_interest_rate to beempy witnessproperties
