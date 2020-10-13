@@ -104,11 +104,11 @@ class Vote(BlockchainObject):
                 except:
                     from beemapi.exceptions import InvalidParameters
                     try:
-                        votes = self.blockchain.rpc.get_active_votes(author, permlink, api="database_api")
+                        votes = self.blockchain.rpc.get_active_votes(author, permlink, api="condenser")
                     except InvalidParameters:
                         raise VoteDoesNotExistsException(self.identifier)
             else:
-                votes = self.blockchain.rpc.get_active_votes(author, permlink, api="database_api")
+                votes = self.blockchain.rpc.get_active_votes(author, permlink, api="condenser")
         except UnkownKey:
             raise VoteDoesNotExistsException(self.identifier)
 
@@ -392,7 +392,7 @@ class ActiveVotes(VotesObject):
                                                              'permlink': authorperm["permlink"]},
                                                             api="tags")['votes']
             else:
-                votes = self.blockchain.rpc.get_active_votes(authorperm["author"], authorperm["permlink"])
+                votes = self.blockchain.rpc.get_active_votes(authorperm["author"], authorperm["permlink"], api="condenser")
             authorperm = authorperm["authorperm"]
         elif isinstance(authorperm, string_types):
             [author, permlink] = resolve_authorperm(authorperm)
@@ -408,7 +408,7 @@ class ActiveVotes(VotesObject):
                                                              'permlink': permlink},
                                                             api="tags")['votes']
             else:
-                votes = self.blockchain.rpc.get_active_votes(author, permlink)
+                votes = self.blockchain.rpc.get_active_votes(author, permlink, api="condenser")
         elif isinstance(authorperm, list):
             votes = authorperm
             authorperm = None

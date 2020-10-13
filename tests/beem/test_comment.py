@@ -3,7 +3,7 @@ import unittest
 from parameterized import parameterized
 from pprint import pprint
 from beem import Hive, exceptions
-from beem.comment import Comment, RecentReplies, RecentByPath, RankedPosts
+from beem.comment import Comment, RecentReplies, RecentByPath, RankedPosts, AccountPosts
 from beem.vote import Vote
 from beem.account import Account
 from beem.instance import set_shared_blockchain_instance
@@ -40,12 +40,19 @@ class Testcases(unittest.TestCase):
         # set_shared_blockchain_instance(cls.bts)
         # cls.bts.set_default_account("test")
 
-    def test_comment(self):
+    @parameterized.expand([
+        ("bridge"),
+        ("tags"),
+        ("condenser"),
+        ("database")
+    ])
+    def test_comment(self, api):
         bts = self.bts
         with self.assertRaises(
             exceptions.ContentDoesNotExistsException
         ):
-            Comment("@abcdef/abcdef", blockchain_instance=bts)
+            Comment("@abcdef/abcdef", api=api, blockchain_instance=bts)
+
         title = ''
         cnt = 0
         while title == '' and cnt < 5:
@@ -78,12 +85,18 @@ class Testcases(unittest.TestCase):
         self.assertTrue(len(votes) > 0)
         self.assertTrue(isinstance(votes[0], Vote))
 
-    def test_comment_dict(self):
+    @parameterized.expand([
+        ("bridge"),
+        ("tags"),
+        ("condenser"),
+        ("database")
+    ])
+    def test_comment_dict(self, api):
         bts = self.bts
         title = ''
         cnt = 0
         while title == '' and cnt < 5:
-            c = Comment({'author': self.author, 'permlink': self.permlink}, blockchain_instance=bts)
+            c = Comment({'author': self.author, 'permlink': self.permlink}, api=api, blockchain_instance=bts)
             c.refresh()
             title = c.title
             cnt += 1
@@ -131,7 +144,13 @@ class Testcases(unittest.TestCase):
         op = tx["operations"][0][1]
         self.assertEqual(op["weight"], -9990)
 
-    def test_export(self):
+    @parameterized.expand([
+        ("bridge"),
+        ("tags"),
+        ("condenser"),
+        ("database")
+    ])
+    def test_export(self, api):
         bts = self.bts
 
         if bts.rpc.get_use_appbase():
@@ -139,7 +158,7 @@ class Testcases(unittest.TestCase):
         else:
             content = bts.rpc.get_content(self.author, self.permlink)
 
-        c = Comment(self.authorperm, blockchain_instance=bts)
+        c = Comment(self.authorperm, api=api, blockchain_instance=bts)
         keys = list(content.keys())
         json_content = c.json()
         exclude_list = ["json_metadata", "reputation", "active_votes", "net_rshares", "author_reputation"]
@@ -234,6 +253,19 @@ class Testcases(unittest.TestCase):
 
     def test_ranked_posts(self):
         bts = self.bts
-        r = RankedPosts(sort="trending", blockchain_instance=bts)
-        self.assertTrue(len(r) > 0)
+        r = RankedPosts(sort="trending", limit=102, blockchain_instance=bts)
+        self.assertTrue(len(r) == 102)
         self.assertTrue(r[0] is not None)
+
+        r = RankedPosts(sort="trending", limit=102, raw_data=True, blockchain_instance=bts)
+        self.assertTrue(len(r) == 102)
+        self.assertTrue(r[0] is not None)
+
+    def test_account_posts(self):
+        bts = self.bts
+        r = AccountPosts("feed", "holger80", limit=102, blockchain_instance=bts)
+        self.assertTrue(len(r) == 102)
+        self.assertTrue(r[0] is not None)
+
+        r = AccountPosts("feed", "holger80", limit=102, raw_data=True, blockchain_instance=bts)
+        self.assertTrue(len(r) == 102)        

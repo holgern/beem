@@ -1,5 +1,13 @@
 Changelog
 =========
+0.24.12
+-------
+* Fix beempy witnessfeed for HF24
+* Fix more hbd renaming in beempy
+* improved RankedPosts class
+* New AccountPosts class for account feed and more
+* Comment class has been cleaned up, use_tags_api has been replaced by api
+
 0.24.11
 -------
 * assumes that a rpc server uses appbase

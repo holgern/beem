@@ -3092,8 +3092,9 @@ def stream(lines, head, table, follow):
                 return
 
 @cli.command()
-@click.option('--sbd-to-steem', '-i', help='Show ticker in SBD/STEEM', is_flag=True, default=False)
-def ticker(sbd_to_steem):
+@click.option('--sbd-to-steem', help='Show ticker in SBD/STEEM', is_flag=True, default=False)
+@click.option('--hbd-to-hive', '-i', help='Show ticker in HBD/HIVE', is_flag=True, default=False)
+def ticker(sbd_to_steem, hbd_to_hive):
     """ Show ticker
     """
     stm = shared_blockchain_instance()
@@ -3104,9 +3105,9 @@ def ticker(sbd_to_steem):
     market = Market(blockchain_instance=stm)
     ticker = market.ticker()
     for key in ticker:
-        if key in ["highest_bid", "latest", "lowest_ask"] and sbd_to_steem:
+        if key in ["highest_bid", "latest", "lowest_ask"] and (sbd_to_steem or hbd_to_hive):
             t.add_row([key, str(ticker[key].as_base(stm.backed_token_symbol))])
-        elif key in "percent_change" and sbd_to_steem:
+        elif key in "percent_change" and (sbd_to_steem or hbd_to_hive):
             t.add_row([key, "%.2f %%" % -ticker[key]])
         elif key in "percent_change":
             t.add_row([key, "%.2f %%" % ticker[key]])
@@ -3153,12 +3154,13 @@ def pricehistory(width, height, ascii):
 @cli.command()
 @click.option('--days', '-d', help='Limit the days of shown trade history (default 7)', default=7.)
 @click.option('--hours', help='Limit the intervall history intervall (default 2 hours)', default=2.0)
-@click.option('--sbd-to-steem', '-i', help='Show ticker in SBD/STEEM', is_flag=True, default=False)
+@click.option('--sbd-to-steem', help='Show ticker in SBD/STEEM', is_flag=True, default=False)
+@click.option('--hbd-to-hive', '-i', help='Show ticker in HBD/HIVE', is_flag=True, default=False)
 @click.option('--limit', '-l', help='Limit number of trades which is fetched at each intervall point (default 100)', default=100)
 @click.option('--width', '-w', help='Plot width (default 75)', default=75)
 @click.option('--height', '-h', help='Plot height (default 15)', default=15)
 @click.option('--ascii', help='Use only ascii symbols', is_flag=True, default=False)
-def tradehistory(days, hours, sbd_to_steem, limit, width, height, ascii):
+def tradehistory(days, hours, sbd_to_steem, hbd_to_hive, limit, width, height, ascii):
     """ Show price history
     """
     stm = shared_blockchain_instance()
@@ -3171,7 +3173,7 @@ def tradehistory(days, hours, sbd_to_steem, limit, width, height, ascii):
     intervall = timedelta(hours=hours)
     trades = m.trade_history(start=start, stop=stop, limit=limit, intervall=intervall)
     price = []
-    if sbd_to_steem:
+    if sbd_to_steem or hbd_to_hive:
         base_str = stm.token_symbol
     else:
         base_str = stm.backed_token_symbol
@@ -3187,7 +3189,7 @@ def tradehistory(days, hours, sbd_to_steem, limit, width, height, ascii):
     else:
         charset = u'utf8'
     chart = AsciiChart(height=height, width=width, offset=3, placeholder='{:6.2f} ', charset=charset)
-    if sbd_to_steem:
+    if sbd_to_steem or hbd_to_hive:
         print("\n     Trade history %s - %s \n\n%s/%s" % (formatTimeString(start), formatTimeString(stop),
                                                           stm.backed_token_symbol, stm.token_symbol))
     else:
@@ -3641,23 +3643,35 @@ def witnessenable(witness, signing_key, export):
 @click.option('--maximum_block_size', help='Max block size', default=65536)
 @click.option('--account_creation_fee', help='Account creation fee', default=0.1)
 @click.option('--sbd_interest_rate', help='SBD interest rate in percent', default=0.0)
+@click.option('--hbd_interest_rate', help='HBD interest rate in percent', default=0.0)
 @click.option('--url', help='Witness URL', default="")
 @click.option('--export', '-e', help='When set, transaction is stored in a file')
-def witnesscreate(witness, pub_signing_key, maximum_block_size, account_creation_fee, sbd_interest_rate, url, export):
+def witnesscreate(witness, pub_signing_key, maximum_block_size, account_creation_fee, sbd_interest_rate, hbd_interest_rate, url, export):
     """Create a witness"""
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
     if not unlock_wallet(stm):
         return
-    props = {
-        "account_creation_fee":
-            Amount("%.3f %s" % (float(account_creation_fee), stm.token_symbol), blockchain_instance=stm),
-        "maximum_block_size":
-            int(maximum_block_size),
-        "sbd_interest_rate":
-            int(sbd_interest_rate * 100)
-    }
+    if stm.is_hive and stm.hardfork >= 24:
+        
+        props = {
+            "account_creation_fee":
+                Amount("%.3f %s" % (float(account_creation_fee), stm.token_symbol), blockchain_instance=stm),
+            "maximum_block_size":
+                int(maximum_block_size),
+            "hbd_interest_rate":
+                int(hbd_interest_rate * 100)
+        }
+    else:
+        props = {
+            "account_creation_fee":
+                Amount("%.3f %s" % (float(account_creation_fee), stm.token_symbol), blockchain_instance=stm),
+            "maximum_block_size":
+                int(maximum_block_size),
+            "sbd_interest_rate":
+                int(sbd_interest_rate * 100)
+        }        
 
     tx = stm.witness_update(pub_signing_key, url, props, account=witness)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
@@ -3730,9 +3744,17 @@ def witnessfeed(witness, wif, base, quote, support_peg):
             return
     witness = Witness(witness, blockchain_instance=stm)
     market = Market(blockchain_instance=stm)
-    old_base = witness["sbd_exchange_rate"]["base"]
-    old_quote = witness["sbd_exchange_rate"]["quote"]
-    last_published_price = Price(witness["sbd_exchange_rate"], blockchain_instance=stm)
+    use_hbd = False
+    if "hbd_exchange_rate" in witness:
+        use_hbd = True
+        old_base = witness["hbd_exchange_rate"]["base"]
+        old_quote = witness["hbd_exchange_rate"]["quote"]
+        last_published_price = Price(witness["hbd_exchange_rate"], blockchain_instance=stm)   
+    else:
+        old_base = witness["sbd_exchange_rate"]["base"]
+        old_quote = witness["sbd_exchange_rate"]["quote"]
+        last_published_price = Price(witness["sbd_exchange_rate"], blockchain_instance=stm)
+     
     steem_usd = None
     hive_usd = None
     print("Old price %.3f (base: %s, quote %s)" % (float(last_published_price), old_base, old_quote))
@@ -3770,9 +3792,12 @@ def witnessfeed(witness, wif, base, quote, support_peg):
             base = Amount(base, stm.backed_token_symbol, blockchain_instance=stm)
     new_price = Price(base=base, quote=quote, blockchain_instance=stm)
     print("New price %.3f (base: %s, quote %s)" % (float(new_price), base, quote))
-    if wif is not None:
-        props = {"sbd_exchange_rate": new_price}
+    if wif is not None and use_hbd:
+        props = {"hbd_exchange_rate": new_price}
         tx = stm.witness_set_properties(wif, witness["owner"], props)
+    elif wif is not None:
+        props = {"sbd_exchange_rate": new_price}
+        tx = stm.witness_set_properties(wif, witness["owner"], props)        
     else:
         tx = witness.feed_publish(base, quote=quote)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:

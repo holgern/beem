@@ -1132,7 +1132,7 @@ class Account(BlockchainObject):
         self.blockchain.rpc.set_next_node_on_empty_reply(True)
         return self.blockchain.rpc.list_all_subscriptions({'account': account}, api='bridge')
 
-    def get_account_posts(self, sort="feed", account=None, observer=None, raw_data=False):
+    def get_account_posts(self, sort="feed", limit=20, account=None, observer=None, raw_data=False):
         """Returns account feed"""
         if account is None:
             account = self["name"]
@@ -1142,16 +1142,8 @@ class Account(BlockchainObject):
             observer = account
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
-        self.blockchain.rpc.set_next_node_on_empty_reply(True)
-        posts = self.blockchain.rpc.get_account_posts({'sort': sort, 'account': account,
-                                                  'observer': observer}, api='bridge')
-        if raw_data:
-            return posts
-        comments = []
-        from .comment import Comment
-        for post in posts:
-            comments.append(Comment(post, blockchain_instance=self.blockchain))
-        return comments
+        from beem.comment import AccountPosts
+        return AccountPosts(sort, account, observer=observer, limit=limit, raw_data=raw_data)
 
     @property
     def available_balances(self):

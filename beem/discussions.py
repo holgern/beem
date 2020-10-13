@@ -222,7 +222,9 @@ class Discussions_by_trending(list):
         if self.blockchain.rpc.get_use_appbase() and use_appbase:
             posts = self.blockchain.rpc.get_discussions_by_trending(reduced_query, api="tags")['discussions']
         if len(posts) == 0:
-            posts = self.blockchain.rpc.get_discussions_by_trending(reduced_query)
+            posts = self.blockchain.rpc.get_discussions_by_trending(reduced_query, api="condenser")
+        if posts is None:
+            posts = []
         if raw_data:
             super(Discussions_by_trending, self).__init__(
                 [

@@ -4,6 +4,7 @@ import re
 import logging
 import pytz
 import math
+import warnings
 from datetime import datetime, date, time
 from .instance import shared_blockchain_instance
 from .account import Account
@@ -23,8 +24,8 @@ class Comment(BlockchainObject):
 
         :param str authorperm: identifier to post/comment in the form of
             ``@author/permlink``
-        :param boolean use_tags_api: when set to False, list_comments from the database_api is used
-        :param Steem blockchain_instance: :class:`beem.steem.Steem` instance to use when accessing a RPC
+        :param str tags: defines which api is used. Can be bridge, tags, condenser or database (default = bridge)
+        :param Hive blockchain_instance: :class:`beem.hive.Steem` instance to use when accessing a RPC
 
 
         .. code-block:: python
@@ -45,7 +46,8 @@ class Comment(BlockchainObject):
     def __init__(
         self,
         authorperm,
-        use_tags_api=True,
+        api="bridge",
+        observer="",
         full=True,
         lazy=False,
         blockchain_instance=None,
@@ -53,7 +55,8 @@ class Comment(BlockchainObject):
     ):
         self.full = full
         self.lazy = lazy
-        self.use_tags_api = use_tags_api
+        self.api = api
+        self.observer = observer
         if blockchain_instance is None:
             if kwargs.get("steem_instance"):
                 blockchain_instance = kwargs["steem_instance"]
@@ -153,28 +156,24 @@ class Comment(BlockchainObject):
         [author, permlink] = resolve_authorperm(self.identifier)
         self.blockchain.rpc.set_next_node_on_empty_reply(True)
         if self.blockchain.rpc.get_use_appbase():
+            from beemapi.exceptions import InvalidParameters
             try:
-                if self.use_tags_api:
+                if self.api == "tags":
                     content = self.blockchain.rpc.get_discussion({'author': author, 'permlink': permlink}, api="tags")
-                else:
+                elif self.api == "database":
                     content =self.blockchain.rpc.list_comments({"start": [author, permlink], "limit": 1, "order": "by_permlink"}, api="database")
+                elif self.api == "bridge":
+                    content = self.blockchain.rpc.get_post({"author": author, "permlink": permlink, "observer": self.observer}, api="bridge")
+                elif self.api == "condenser":
+                    content = self.blockchain.rpc.get_content(author, permlink, api="condenser")
+                else:
+                    raise ValueError("api must be: tags, database, bridge or condenser")
                 if content is not None and "comments" in content:
                     content =content["comments"]
                 if isinstance(content, list) and len(content) >0:
                     content =content[0]
-            except:
-                if self.blockchain.config["use_condenser"]:
-                    from beemapi.exceptions import InvalidParameters
-                    try:
-                        content = self.blockchain.rpc.get_content(author, permlink)
-                    except InvalidParameters:
-                        raise ContentDoesNotExistsException(self.identifier)
-                else:
-                    content =self.blockchain.rpc.find_comments({"start": [author, permlink], "limit": 1, "order": "by_permlink"}, api="database")
-                    if content is not None and "comments" in content:
-                        content =content["comments"]
-                    if isinstance(content, list) and len(content) >0:
-                        content =content[0]                
+            except InvalidParameters:
+                raise ContentDoesNotExistsException(self.identifier)
         else:
             from beemapi.exceptions import InvalidParameters
             try:            
@@ -858,6 +857,8 @@ class RecentReplies(list):
         account = Account(author, blockchain_instance=self.blockchain)
         replies = account.get_account_posts(sort="replies", raw_data=True)
         comments = []
+        if replies is None:
+            replies = []
         for post in replies:
             if skip_own and post["author"] == author:
                 continue
@@ -866,40 +867,28 @@ class RecentReplies(list):
 
 
 class RecentByPath(list):
-    """ Obtain a list of posts recent by path
+    """ Obtain a list of posts recent by path, does the same as RankedPosts
 
         :param str account: Account name
         :param Steem blockchain_instance: Steem() instance to use when accesing a RPC
     """
     def __init__(self, path="trending", category=None, lazy=False, full=True, blockchain_instance=None, **kwargs):
-        if blockchain_instance is None:
-            if kwargs.get("steem_instance"):
-                blockchain_instance = kwargs["steem_instance"]
-            elif kwargs.get("hive_instance"):
-                blockchain_instance = kwargs["hive_instance"]        
-        self.blockchain = blockchain_instance or shared_blockchain_instance()
-        if not self.blockchain.is_connected():
-            return None
-        self.blockchain.rpc.set_next_node_on_empty_reply(True)
-        state = self.blockchain.rpc.get_state("/" + path)
-        if state == '' or state is None or len(state["discussion_idx"]) == 0:
-            return None
-        replies = state["discussion_idx"][''].get(path, [])
-        comments = []
-        for reply in replies:
-            post = state["content"][reply]
-            if category is None or (category is not None and post["category"] == category):
-                comments.append(Comment(post, lazy=lazy, full=full, blockchain_instance=self.blockchain))
-        super(RecentByPath, self).__init__(comments)
+        
+        super(RecentByPath, self).__init__(RankedPosts(sort=path, tag=category))
 
 
 class RankedPosts(list):
     """ Obtain a list of ranked posts
 
-        :param str account: Account name
+        :param str sort: can be: trending, hot, muted, created
+        :param str tag: tag, when used my, the community posts of the observer are shown
+        :param str observer: Observer name
+        :param int limit: limits the number of returns comments
+        :param str start_author: start author
+        :param str start_permlink: start permlink
         :param Steem blockchain_instance: Steem() instance to use when accesing a RPC
     """
-    def __init__(self, sort="trending", tag="", observer="", lazy=False, full=True, blockchain_instance=None, **kwargs):
+    def __init__(self, sort="trending", tag="", observer="", limit=21, start_author="", start_permlink="", lazy=False, full=True, raw_data=False, blockchain_instance=None, **kwargs):
         if blockchain_instance is None:
             if kwargs.get("steem_instance"):
                 blockchain_instance = kwargs["steem_instance"]
@@ -908,9 +897,76 @@ class RankedPosts(list):
         self.blockchain = blockchain_instance or shared_blockchain_instance()
         if not self.blockchain.is_connected():
             return None
-        self.blockchain.rpc.set_next_node_on_empty_reply(True)
-        posts = self.blockchain.rpc.get_ranked_posts({"sort": sort, "tag": tag, "observer": observer}, api="bridge")
         comments = []
-        for post in posts:
-            comments.append(Comment(post, lazy=lazy, full=full, blockchain_instance=self.blockchain))
+        api_limit = limit
+        if api_limit > 100:
+            api_limit = 100
+        last_n = -1
+        while len(comments) < limit and last_n != len(comments):
+            last_n = len(comments)        
+            self.blockchain.rpc.set_next_node_on_empty_reply(True)
+            posts = self.blockchain.rpc.get_ranked_posts({"sort": sort, "tag": tag, "observer": observer,
+                                                          "limit": api_limit, "start_author": start_author,
+                                                          "start_permlink": start_permlink}, api="bridge")
+            
+            for post in posts:
+                if len(comments) > 0 and comments[-1]["author"] == post["author"] and comments[-1]["permlink"] == post["permlink"]:
+                    continue
+                if len(comments) >= limit:
+                    continue
+                if raw_data:
+                    comments.append(post)
+                else:
+                    comments.append(Comment(post, lazy=lazy, full=full, blockchain_instance=self.blockchain))
+            start_author = comments[-1]["author"]
+            start_permlink = comments[-1]["permlink"]
+            if limit - len(comments) < 100:
+                api_limit = limit - len(comments) + 1
         super(RankedPosts, self).__init__(comments)
+
+
+class AccountPosts(list):
+    """ Obtain a list of account related posts
+
+        :param str sort: can be: comments, posts, blog, replies, feed
+        :param str account: Account name
+        :param str observer: Observer name
+        :param int limit: limits the number of returns comments
+        :param str start_author: start author
+        :param str start_permlink: start permlink
+        :param Hive blockchain_instance: Hive() instance to use when accesing a RPC
+    """
+    def __init__(self, sort, account, observer="", limit=20, start_author="", start_permlink="", lazy=False, full=True, raw_data=False, blockchain_instance=None, **kwargs):
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]        
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
+        if not self.blockchain.is_connected():
+            return None
+        comments = []
+        api_limit = limit
+        if api_limit > 100:
+            api_limit = 100
+        last_n = -1
+        while len(comments) < limit and last_n != len(comments):
+            last_n = len(comments)
+            self.blockchain.rpc.set_next_node_on_empty_reply(True)
+            posts = self.blockchain.rpc.get_account_posts({"sort": sort, "account": account, "observer": observer,
+                                                          "limit": api_limit, "start_author": start_author,
+                                                          "start_permlink": start_permlink}, api="bridge")
+            for post in posts:
+                if len(comments) > 0 and comments[-1]["author"] == post["author"] and comments[-1]["permlink"] == post["permlink"]:
+                    continue
+                if len(comments) >= limit:
+                    continue                
+                if raw_data:
+                    comments.append(post)
+                else:
+                    comments.append(Comment(post, lazy=lazy, full=full, blockchain_instance=self.blockchain))
+            start_author = comments[-1]["author"]
+            start_permlink = comments[-1]["permlink"]
+            if limit - len(comments) < 100:
+                api_limit = limit - len(comments) + 1
+        super(AccountPosts, self).__init__(comments)
