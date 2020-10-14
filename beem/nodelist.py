@@ -189,6 +189,14 @@ class NodeList(list):
                 "owner": "deathwing",
                 "hive": True,
                 "score": 40                
+            },
+            {
+                "url": "https://hive-api.arcange.eu",
+                "version": "1.24.2",
+                "type": "appbase",
+                "owner": "arcange",
+                "hive": True,
+                "score": 40                   
             }
         ]
         super(NodeList, self).__init__(nodes)

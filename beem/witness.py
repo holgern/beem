@@ -140,7 +140,7 @@ class Witness(BlockchainObject):
         elif isinstance(base, string_types):
             base = Amount(base, blockchain_instance=self.blockchain)
         else:
-            base = Amount(base, self.blockchain.sbd_symbol, blockchain_instance=self.blockchain)
+            base = Amount(base, self.blockchain.backed_token_symbol, blockchain_instance=self.blockchain)
 
         if isinstance(quote, Amount):
             quote = Amount(quote, blockchain_instance=self.blockchain)
@@ -149,7 +149,7 @@ class Witness(BlockchainObject):
         else:
             quote = Amount(quote, self.blockchain.token_symbol, blockchain_instance=self.blockchain)
 
-        if not base.symbol == self.blockchain.sbd_symbol:
+        if not base.symbol == self.blockchain.backed_token_symbol:
             raise AssertionError()
         if not quote.symbol == self.blockchain.token_symbol:
             raise AssertionError()

@@ -82,7 +82,7 @@ class Comment(BlockchainObject):
 
     def _parse_json_data(self, comment):
         parse_times = [
-            "active", "cashout_time", "created", "last_payout", "last_update",
+            "active", "cashout_time", "created", "last_payout", "last_update", "updated",
             "max_cashout_time"
         ]
         for p in parse_times:
@@ -197,7 +197,7 @@ class Comment(BlockchainObject):
         if "community" in output:
             output.pop("community")
         parse_times = [
-            "active", "cashout_time", "created", "last_payout", "last_update",
+            "active", "cashout_time", "created", "last_payout", "last_update", "updated",
             "max_cashout_time"
         ]
         for p in parse_times:
@@ -894,7 +894,7 @@ class RankedPosts(list):
         :param str start_permlink: start permlink
         :param Steem blockchain_instance: Steem() instance to use when accesing a RPC
     """
-    def __init__(self, sort="trending", tag="", observer="", limit=21, start_author="", start_permlink="", lazy=False, full=True, raw_data=False, blockchain_instance=None, **kwargs):
+    def __init__(self, sort, tag="", observer="", limit=21, start_author="", start_permlink="", lazy=False, full=True, raw_data=False, blockchain_instance=None, **kwargs):
         if blockchain_instance is None:
             if kwargs.get("steem_instance"):
                 blockchain_instance = kwargs["steem_instance"]
@@ -910,11 +910,12 @@ class RankedPosts(list):
         last_n = -1
         while len(comments) < limit and last_n != len(comments):
             last_n = len(comments)        
-            self.blockchain.rpc.set_next_node_on_empty_reply(True)
+            self.blockchain.rpc.set_next_node_on_empty_reply(False)
             posts = self.blockchain.rpc.get_ranked_posts({"sort": sort, "tag": tag, "observer": observer,
                                                           "limit": api_limit, "start_author": start_author,
                                                           "start_permlink": start_permlink}, api="bridge")
-            
+            if posts is None:
+                continue
             for post in posts:
                 if len(comments) > 0 and comments[-1]["author"] == post["author"] and comments[-1]["permlink"] == post["permlink"]:
                     continue
@@ -924,8 +925,9 @@ class RankedPosts(list):
                     comments.append(post)
                 else:
                     comments.append(Comment(post, lazy=lazy, full=full, blockchain_instance=self.blockchain))
-            start_author = comments[-1]["author"]
-            start_permlink = comments[-1]["permlink"]
+            if len(comments) > 0:
+                start_author = comments[-1]["author"]
+                start_permlink = comments[-1]["permlink"]
             if limit - len(comments) < 100:
                 api_limit = limit - len(comments) + 1
         super(RankedPosts, self).__init__(comments)
@@ -958,10 +960,12 @@ class AccountPosts(list):
         last_n = -1
         while len(comments) < limit and last_n != len(comments):
             last_n = len(comments)
-            self.blockchain.rpc.set_next_node_on_empty_reply(True)
+            self.blockchain.rpc.set_next_node_on_empty_reply(False)
             posts = self.blockchain.rpc.get_account_posts({"sort": sort, "account": account, "observer": observer,
                                                           "limit": api_limit, "start_author": start_author,
                                                           "start_permlink": start_permlink}, api="bridge")
+            if posts is None:
+                continue            
             for post in posts:
                 if len(comments) > 0 and comments[-1]["author"] == post["author"] and comments[-1]["permlink"] == post["permlink"]:
                     continue
@@ -971,8 +975,9 @@ class AccountPosts(list):
                     comments.append(post)
                 else:
                     comments.append(Comment(post, lazy=lazy, full=full, blockchain_instance=self.blockchain))
-            start_author = comments[-1]["author"]
-            start_permlink = comments[-1]["permlink"]
+            if len(comments) > 0:
+                start_author = comments[-1]["author"]
+                start_permlink = comments[-1]["permlink"]
             if limit - len(comments) < 100:
                 api_limit = limit - len(comments) + 1
         super(AccountPosts, self).__init__(comments)

@@ -1,5 +1,11 @@
 Changelog
 =========
+0.24.14
+-------
+* Add new node (https://hive-api.arcange.eu)
+* Fix logic in RankedPosts and AccountPosts
+* Fix feed_publish
+
 0.24.12
 -------
 * Fix beempy witnessfeed for HF24
