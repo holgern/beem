@@ -9,6 +9,7 @@ Changelog
 * Comment class has been cleaned up, use_tags_api has been replaced by api
 * Add check if get_account_votes is still supported (is dropped in HF24)
 * New SupportedByHivemind exception has been added
+* Fix issue #263
 
 0.24.11
 -------

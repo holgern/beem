@@ -4217,8 +4217,12 @@ def rewards(accounts, only_sum, post, comment, curation, length, author, permlin
                         continue
                     if not comment and c.is_comment():
                         continue
-                    payout_SBD = Amount(v["sbd_payout"], blockchain_instance=stm)
-                    payout_STEEM = Amount(v["steem_payout"], blockchain_instance=stm)
+                    if "sbd_payout" in v:
+                        payout_SBD = Amount(v["sbd_payout"], blockchain_instance=stm)
+                        payout_STEEM = Amount(v["steem_payout"], blockchain_instance=stm)
+                    else:
+                        payout_SBD = Amount(v["hbd_payout"], blockchain_instance=stm)
+                        payout_STEEM = Amount(v["hive_payout"], blockchain_instance=stm)                        
                     sum_reward[0] += float(payout_SBD)
                     sum_reward[1] += float(payout_STEEM)
                     payout_SP = stm.vests_to_token_power(Amount(v["vesting_payout"], blockchain_instance=stm))
