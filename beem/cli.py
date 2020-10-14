@@ -2506,8 +2506,8 @@ def download(permlink, account, save, export):
         if len(permlink) > 1:
             print(authorperm)
         comment = Comment(authorperm, blockchain_instance=stm)
-        if comment["parent_author"] != "" and comment["parent_permlink"] != "":
-            reply_identifier = construct_authorperm(comment["parent_author"], comment["parent_permlink"])
+        if comment.parent_author != "" and comment.parent_permlink != "":
+            reply_identifier = construct_authorperm(comment.parent_author, comment.parent_permlink)
         else:
             reply_identifier = None
 
@@ -2524,7 +2524,10 @@ def download(permlink, account, save, export):
             yaml_prefix += 'canonical_url: %s\n' % comment.json_metadata["canonical_url"]
         if "app" in comment.json_metadata:
             yaml_prefix += 'app: %s\n' % comment.json_metadata["app"]
-        yaml_prefix += 'last_update: %s\n' % comment.json()["last_update"]
+        if "last_update" in comment.json():
+            yaml_prefix += 'last_update: %s\n' % comment.json()["last_update"]
+        else:
+            yaml_prefix += 'last_update: %s\n' % comment.json()["updated"]
         yaml_prefix += 'max_accepted_payout: %s\n' % str(comment["max_accepted_payout"])
         if "percent_steem_dollars" in comment:
             yaml_prefix += 'percent_steem_dollars: %s\n' %  str(comment["percent_steem_dollars"])

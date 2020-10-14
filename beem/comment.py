@@ -269,11 +269,17 @@ class Comment(BlockchainObject):
 
     @property
     def parent_author(self):
-        return self["parent_author"]
+        if "parent_author" in self:
+            return self["parent_author"]
+        else:
+            return ""
 
     @property
     def parent_permlink(self):
-        return self["parent_permlink"]
+        if "parent_permlink" in self:
+            return self["parent_permlink"]
+        else:
+            return ""
 
     @property
     def depth(self):
