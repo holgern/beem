@@ -8,7 +8,7 @@ import logging
 from prettytable import PrettyTable
 from beem.instance import shared_blockchain_instance
 from .exceptions import AccountDoesNotExistsException, OfflineHasNoRPCException
-from beemapi.exceptions import ApiNotSupported, MissingRequiredActiveAuthority
+from beemapi.exceptions import ApiNotSupported, MissingRequiredActiveAuthority, SupportedByHivemind
 from .blockchainobject import BlockchainObject
 from .blockchain import Blockchain
 from .utils import formatTimeString, formatTimedelta, remove_from_dict, reputation_to_score, addTzInfo
@@ -1776,7 +1776,10 @@ class Account(BlockchainObject):
         vote_list = []
         finished = False
         while not finished:
-            ret = self.blockchain.rpc.list_votes({"start": [account, start_author, start_permlink], "limit": limit, "order": "by_voter_comment"}, api="database")["votes"]
+            try:
+                ret = self.blockchain.rpc.list_votes({"start": [account, start_author, start_permlink], "limit": limit, "order": "by_voter_comment"}, api="database")["votes"]
+            except SupportedByHivemind:
+                return vote_list
             if len(ret) < limit:
                 finished = True
             if start_author != "":

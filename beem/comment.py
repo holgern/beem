@@ -886,7 +886,7 @@ class RecentByPath(list):
 class RankedPosts(list):
     """ Obtain a list of ranked posts
 
-        :param str sort: can be: trending, hot, muted, created
+        :param str sort: can be: trending, hot, created, promoted, payout, payout_comments, muted
         :param str tag: tag, when used my, the community posts of the observer are shown
         :param str observer: Observer name
         :param int limit: limits the number of returns comments

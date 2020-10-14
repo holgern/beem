@@ -100,6 +100,10 @@ class InvalidParameters(Exception):
     pass
 
 
+class SupportedByHivemind(Exception):
+    pass
+
+
 class UnnecessarySignatureDetected(Exception):
     pass
 
