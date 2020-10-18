@@ -87,6 +87,11 @@ For Debian and Ubuntu, please ensure that the following packages are installed:
 
     sudo apt-get install build-essential libssl-dev python3-dev python3-pip python3-setuptools
 
+The following package speeds up beempy:
+.. code:: bash
+
+    sudo apt-get install python3-gmpy2
+
 For Fedora and RHEL-derivatives, please ensure that the following packages are installed:
 
 .. code:: bash
@@ -105,30 +110,30 @@ For Termux on Android, please install the following packages:
 
     pkg install clang openssl python
 
-Signing and Verify can be fasten (200 %) by installing cryptography (you may need to replace pip by pip3):
+Signing and Verify can be fasten (200 %) by installing cryptography (you may need to replace pip3 by pip):
 
 .. code:: bash
 
-    pip install -U cryptography
+    pip3 install -U cryptography
 
-or (you may need to replace pip by pip3):
+or (you may need to replace pip3 by pip):
 
 .. code:: bash
 
-    pip install -U secp256k1prp
+    pip3 install -U secp256k1prp
 
-Install or update beem by pip(you may need to replace pip by pip3)::
+Install or update beem by pip(you may need to replace pip3 by pip)::
 
-    pip install -U beem
+    pip3 install -U beem
 
 You can install beem from this repository if you want the latest
 but possibly non-compiling version::
 
     git clone https://github.com/holgern/beem.git
     cd beem
-    python setup.py build
+    python3 setup.py build
 
-    python setup.py install --user
+    python3 setup.py install --user
 
 Run tests after install::
 
@@ -164,7 +169,7 @@ Ledger support
 --------------
 For Ledger (Nano S) signing, the following package must be installed:
 
-    pip install ledgerblue
+    pip3 install ledgerblue
 
 Stand alone version of CLI tool beempy
 --------------------------------------
