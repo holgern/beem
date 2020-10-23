@@ -89,6 +89,7 @@ class GrapheneRPC(object):
     :param bool autoconnect: When set to false, connection is performed on the first rpc call (default is True)
     :param bool use_condenser: Use the old condenser_api rpc protocol on nodes with version
         0.19.4 or higher. The settings has no effect on nodes with version of 0.19.3 or lower.
+    :param bool use_tor: When set to true, 'socks5h://localhost:9050' is set as proxy
     :param dict custom_chains: custom chain which should be added to the known chains
 
     Available APIs:
@@ -123,6 +124,7 @@ class GrapheneRPC(object):
         num_retries = kwargs.get("num_retries", 100)
         num_retries_call = kwargs.get("num_retries_call", 5)
         self.use_condenser = kwargs.get("use_condenser", False)
+        self.use_tor = kwargs.get("use_tor", False)
         self.disable_chain_detection = kwargs.get("disable_chain_detection", False)
         self.known_chains = known_chains
         custom_chain = kwargs.get("custom_chains", {})
@@ -202,6 +204,10 @@ class GrapheneRPC(object):
                 else:
                     self.ws = None
                     self.session = shared_session_instance()
+                    if self.use_tor:
+                        self.session.proxies = {}
+                        self.session.proxies['http'] = 'socks5h://localhost:9050'
+                        self.session.proxies['https'] = 'socks5h://localhost:9050'                        
                     self.current_rpc = self.rpc_methods["appbase"]
                     self.headers = {'User-Agent': 'beem v%s' % (beem_version),
                                     'content-type': 'application/json; charset=utf-8'}

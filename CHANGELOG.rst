@@ -1,5 +1,11 @@
 Changelog
 =========
+0.24.14
+-------
+* Add option add_tor to config storage, which allows it to use beempy in tails
+* Remove Events requirements, beem.notify and beemapi.websocket, as it is not well tested and there are no websocket api nodes available on hive
+* Remove unnecessary requirements (pylibscrypt and future)
+
 0.24.13
 -------
 * Add new node (https://hive-api.arcange.eu)

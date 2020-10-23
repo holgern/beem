@@ -19,7 +19,6 @@ __all__ = [
     "wallet",
     "vote",
     "message",
-    "notify",
     "comment",
     "discussions",
     "witness",

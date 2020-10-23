@@ -64,7 +64,8 @@ availableConfigurationKeys = [
     "password_storage",
     "client_id",
     "default_canonical_url",
-    "default_path"
+    "default_path",
+    "use_tor"
 ]
 
 
@@ -420,6 +421,8 @@ def set(key, value):
         stm.config["default_canonical_url"] = value
     elif key == "use_condenser":
         stm.config["use_condenser"] = value in ["true", "True"]
+    elif key == "use_tor":
+        stm.config["use_tor"] = value in ["true", "True"]        
     else:
         print("wrong key")
 
@@ -630,7 +633,7 @@ def config():
     t.align = "l"
     for key in stm.config:
         # hide internal config data
-        if key in availableConfigurationKeys and key != "nodes" and key != "node":
+        if key in availableConfigurationKeys and key != "nodes" and key != "node" and key != "use_tor":
             t.add_row([key, stm.config[key]])
     node = stm.get_default_nodes()
     blockchain = stm.config["default_chain"]
@@ -642,6 +645,7 @@ def config():
     if not stm.config["use_condenser"]:
         t.add_row(["use_condenser", stm.config["use_condenser"]])
     t.add_row(["data_dir", stm.config.data_dir])
+    t.add_row(["use_tor", bool(stm.config["use_tor"])])
     print(t)
 
 

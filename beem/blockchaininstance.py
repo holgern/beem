@@ -235,7 +235,12 @@ class BlockChainInstance(object):
         if not rpcpassword and "rpcpassword" in self.config:
             rpcpassword = self.config["rpcpassword"]
 
-        self.rpc = NodeRPC(node, rpcuser, rpcpassword, **kwargs)
+        if "use_tor" in self.config:
+            use_tor = self.config["use_tor"]
+        else:
+            use_tor = False
+
+        self.rpc = NodeRPC(node, rpcuser, rpcpassword, use_tor=use_tor, **kwargs)
 
     def is_connected(self):
         """Returns if rpc is connected"""

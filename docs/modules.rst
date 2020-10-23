@@ -27,7 +27,6 @@ beem Modules
    beem.memo
    beem.message
    beem.nodelist
-   beem.notify
    beem.price
    beem.rc
    beem.snapshot
@@ -48,7 +47,6 @@ beemapi Modules
    beemapi.graphenenerpc
    beemapi.node
    beemapi.noderpc
-   beemapi.websocket
 
 beembase Modules
 ----------------

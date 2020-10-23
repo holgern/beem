@@ -19,6 +19,7 @@ class NodeRPC(GrapheneRPC):
         :param int timeout: Timeout setting for https nodes (default is 60)
         :param bool use_condenser: Use the old condenser_api rpc protocol on nodes with version
             0.19.4 or higher. The settings has no effect on nodes with version of 0.19.3 or lower.
+        :param bool use_tor: When set to true, 'socks5h://localhost:9050' is set as proxy
 
     """
 
@@ -31,6 +32,7 @@ class NodeRPC(GrapheneRPC):
             :param int num_retries: Try x times to num_retries to a node on disconnect, -1 for indefinitely
             :param int num_retries_call: Repeat num_retries_call times a rpc call on node error (default is 5)
             :param int timeout: Timeout setting for https nodes (default is 60)
+            :param bool use_tor: When set to true, 'socks5h://localhost:9050' is set as proxy
 
         """
         super(NodeRPC, self).__init__(*args, **kwargs)

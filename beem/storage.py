@@ -39,6 +39,7 @@ def generate_config_store(config, blockchain="hive"):
     config.setdefault("default_canonical_url", "https://hive.blog")
     config.setdefault("default_path", "48'/13'/0'/0'/0'")
     config.setdefault("use_condenser", True)
+    config.setdefault("use_tor", False)
     return config
 
 def get_default_config_store(*args, **kwargs):
