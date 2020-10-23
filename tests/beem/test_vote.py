@@ -108,6 +108,7 @@ class Testcases(unittest.TestCase):
         vote_list = votes.get_list()
         self.assertTrue(isinstance(vote_list, list))
 
+    @unittest.skip
     def test_accountvotes(self):
         bts = self.bts
         utc = pytz.timezone('UTC')
