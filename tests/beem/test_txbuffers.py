@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import unittest
 from parameterized import parameterized
-from beem import Steem
-from beem.instance import set_shared_steem_instance
+from beem import Steem, Hive
+from beem.instance import set_shared_blockchain_instance
 from beem.transactionbuilder import TransactionBuilder
 from beembase.signedtransactions import Signed_Transaction
 from beembase.operations import Transfer
@@ -30,19 +30,19 @@ class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         node_list = get_hive_nodes()
-        cls.stm = Steem(
+        cls.stm = Hive(
             node=node_list,
             keys={"active": wif, "owner": wif2, "memo": wif3},
             nobroadcast=True,
             num_retries=10
         )
-        cls.steemit = Steem(
+        cls.steemit = Hive(
             node="https://api.steemit.com",
             nobroadcast=True,
             keys={"active": wif, "owner": wif2, "memo": wif3},
             num_retries=10
         )
-        set_shared_steem_instance(cls.stm)
+        set_shared_blockchain_instance(cls.stm)
         cls.stm.set_default_account("test")
 
     def test_emptyTransaction(self):
@@ -58,4 +58,4 @@ class Testcases(unittest.TestCase):
         signed_tx = Signed_Transaction(trx)
         key = signed_tx.verify(chain=stm.chain_params, recover_parameter=False)
         public_key = format(Base58(key[0]), stm.prefix)
-        self.assertEqual(public_key, "STM4tzr1wjmuov9ftXR6QNv7qDWsbShMBPQpuwatZsfSc5pKjRDfq")
+        self.assertEqual(public_key, "STM4xA6aCu23rKxsEZWF2xVYJvJAyycuoFxBRQEuQ5Hc7UtFET7fT")

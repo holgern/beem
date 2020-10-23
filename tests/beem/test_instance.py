@@ -45,9 +45,9 @@ class Testcases(unittest.TestCase):
         )
         set_shared_steem_instance(cls.bts)
         acc = Account("fullnodeupdate", steem_instance=cls.bts)
-        comment = Comment(acc.get_blog_entries(limit=20)[-1], steem_instance=cls.bts)
+        comment = Comment(acc.get_blog_entries(limit=10)[1], steem_instance=cls.bts)
         cls.authorperm = comment.authorperm
-        votes = comment.get_votes()
+        votes = comment.get_votes(raw_data=True)
         last_vote = votes[-1]
         cls.authorpermvoter = comment['authorperm'] + '|' + last_vote["voter"]
 

@@ -517,7 +517,9 @@ class Testcases(unittest.TestCase):
             bts.broadcast(tx=tx)
 
     def test_switch_blockchain(self):
-        bts = self.bts
+        bts = Steem(
+            node=get_steem_nodes(),
+            num_retries=10)        
         bts.switch_blockchain("steem", update_nodes=True)
         assert not bts.is_hive
         bts.switch_blockchain("hive", update_nodes=True)
