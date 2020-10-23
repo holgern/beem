@@ -197,7 +197,15 @@ class NodeList(list):
                 "owner": "arcange",
                 "hive": True,
                 "score": 40                   
-            }
+            },
+            {
+                "url": "https://fin.hive.3speak.co",
+                "version": "1.24.2",
+                "type": "appbase",
+                "owner": "3speak",
+                "hive": True,
+                "score": 40                   
+            }            
         ]
         super(NodeList, self).__init__(nodes)
 
