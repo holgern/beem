@@ -135,7 +135,7 @@ class NodeList(list):
                 "score": 10
             },
             {
-                "url": "https://rpc.esteem.app",
+                "url": "https://rpc.ecency.com",
                 "version": "0.23.0",
                 "type": "appbase",
                 "owner": "good-karma",
