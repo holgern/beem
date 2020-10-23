@@ -52,7 +52,7 @@ install:
 - cmd: conda install --yes conda-build setuptools pip parameterized cryptography
 - cmd: conda install --yes pycryptodomex pyyaml pytest pytest-mock coverage mock appdirs pylibscrypt pywin32
 - cmd: pip install scrypt -U
-- cmd: conda install --yes ecdsa requests future websocket-client pytz six Click events prettytable pyinstaller click-shell asn1crypto
+- cmd: conda install --yes ecdsa requests websocket-client pytz six Click prettytable pyinstaller click-shell asn1crypto
 
 
 build_script:
