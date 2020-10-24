@@ -156,7 +156,7 @@ class SQLiteCommon(object):
             cursor = connection.cursor()
             cursor.execute(*query)
             connection.commit()
-        except:
+        except Exception:
             connection.close()
             raise
         ret = None
@@ -207,10 +207,10 @@ class SQLiteStore(SQLiteFile, SQLiteCommon, StoreInterface):
         """
         query = (
             "SELECT {} FROM {} WHERE {}=?".format(
-                self.__value__,
-                self.__tablename__,
-                self.__key__
-            ), (key,))
+                self.__value__, self.__tablename__, self.__key__
+            ),
+            (key,),
+        )
         return True if self.sql_fetchone(query) else False
 
     def __setitem__(self, key, value):
@@ -242,10 +242,10 @@ class SQLiteStore(SQLiteFile, SQLiteCommon, StoreInterface):
         """
         query = (
             "SELECT {} FROM {} WHERE {}=?".format(
-                self.__value__,
-                self.__tablename__,
-                self.__key__
-            ), (key,))
+                self.__value__, self.__tablename__, self.__key__
+            ),
+            (key,),
+        )
         result = self.sql_fetchone(query)
         if result:
             return result[0]
@@ -261,15 +261,13 @@ class SQLiteStore(SQLiteFile, SQLiteCommon, StoreInterface):
         return iter(self.keys())
 
     def keys(self):
-        query = ("SELECT {} from {}".format(
-            self.__key__,
-            self.__tablename__), )
+        query = ("SELECT {} from {}".format(self.__key__, self.__tablename__),)
         return [x[0] for x in self.sql_fetchall(query)]
 
     def __len__(self):
         """ return lenght of store
         """
-        query = ("SELECT id from {}".format(self.__tablename__), )
+        query = ("SELECT id from {}".format(self.__tablename__),)
         return len(self.sql_fetchall(query))
 
     def __contains__(self, key):
@@ -287,10 +285,11 @@ class SQLiteStore(SQLiteFile, SQLiteCommon, StoreInterface):
     def items(self):
         """ returns all items off the store as tuples
         """
-        query = ("SELECT {}, {} from {}".format(
-            self.__key__,
-            self.__value__,
-            self.__tablename__), )
+        query = (
+            "SELECT {}, {} from {}".format(
+                self.__key__, self.__value__, self.__tablename__
+            ),
+        )
         r = []
         for key, value in self.sql_fetchall(query):
             r.append((key, value))
@@ -314,39 +313,37 @@ class SQLiteStore(SQLiteFile, SQLiteCommon, StoreInterface):
             :param str value: Value
         """
         query = (
-            "DELETE FROM {} WHERE {}=?".format(
-                self.__tablename__,
-                self.__key__
-            ), (key,))
+            "DELETE FROM {} WHERE {}=?".format(self.__tablename__, self.__key__),
+            (key,),
+        )
         self.sql_execute(query)
 
     def wipe(self):
         """ Wipe the store
         """
-        query = ("DELETE FROM {}".format(self.__tablename__), )
+        query = ("DELETE FROM {}".format(self.__tablename__),)
         self.sql_execute(query)
 
     def exists(self):
         """ Check if the database table exists
         """
-        query = ("SELECT name FROM sqlite_master " +
-                 "WHERE type='table' AND name=?",
-                 (self.__tablename__, ))
+        query = (
+            "SELECT name FROM sqlite_master " + "WHERE type='table' AND name=?",
+            (self.__tablename__,),
+        )
         return True if self.sql_fetchone(query) else False
 
     def create(self):  # pragma: no cover
         """ Create the new table in the SQLite database
         """
-        query = ((
-            """
+        query = (
+            (
+                """
             CREATE TABLE {} (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 {} STRING(256),
                 {} STRING(256)
             )"""
-        ).format(
-            self.__tablename__,
-            self.__key__,
-            self.__value__
-        ), )
+            ).format(self.__tablename__, self.__key__, self.__value__),
+        )
         self.sql_execute(query)

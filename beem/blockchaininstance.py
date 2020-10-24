@@ -10,7 +10,7 @@ from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text
 from datetime import datetime, timedelta, date
 from beemapi.noderpc import NodeRPC
 from beemgraphenebase.account import PrivateKey, PublicKey
-from beembase import transactions, operations
+from beembase import operations
 from beemgraphenebase.chains import known_chains
 from .storage import get_default_config_store
 from .account import Account
