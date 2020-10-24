@@ -32,7 +32,7 @@ class Testcases(unittest.TestCase):
         acc = Account("fullnodeupdate", steem_instance=cls.bts)
         n_votes = 0
         index = 0
-        entries = acc.get_blog_entries(limit=30)[::-1]
+        entries = acc.get_blog(limit=20)[::-1]
         while n_votes == 0:
             comment = Comment(entries[index], steem_instance=cls.bts)
             votes = comment.get_votes()
