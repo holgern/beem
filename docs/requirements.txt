@@ -6,8 +6,7 @@ websocket-client
 pytz
 pycryptodomex>=3.4.6
 scrypt>=0.7.1
-Events>=0.2.2
-pyyaml
+ruamel.yaml
 pytest
 pytest-mock
 coverage

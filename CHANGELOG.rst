@@ -3,6 +3,7 @@ Changelog
 0.24.14
 -------
 * Add option add_tor to config storage, which allows it to use beempy in tails
+* Switch from pyyaml to ruamel.yaml
 * Remove Events requirements, beem.notify and beemapi.websocket, as it is not well tested and there are no websocket api nodes available on hive
 * Remove unnecessary requirements (pylibscrypt and future
 * add new node (fin.hive.3speak.co) and change change rpc.esteem.app to rpc.ecency.com

@@ -50,7 +50,7 @@ install:
 - cmd: conda update -q conda
 - cmd: conda info -a
 - cmd: conda install --yes conda-build setuptools pip parameterized cryptography
-- cmd: conda install --yes pycryptodomex pyyaml pytest pytest-mock coverage mock appdirs pylibscrypt pywin32
+- cmd: conda install --yes pycryptodomex ruamel.yaml pytest pytest-mock coverage mock appdirs pylibscrypt pywin32
 - cmd: pip install scrypt -U
 - cmd: conda install --yes ecdsa requests websocket-client pytz six Click prettytable pyinstaller click-shell asn1crypto
 

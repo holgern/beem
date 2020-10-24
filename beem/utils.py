@@ -6,7 +6,7 @@ import math
 from datetime import datetime, tzinfo, timedelta, date, time
 import pytz
 import difflib
-import yaml
+from ruamel.yaml import YAML
 
 timeFormat = "%Y-%m-%dT%H:%M:%S"
 # https://github.com/matiasb/python-unidiff/blob/master/unidiff/constants.py#L37
@@ -371,9 +371,10 @@ def seperate_yaml_dict_from_body(content):
     if len(content.split("---\n")) > 1:
         body = content[content.find("---\n", 1) + 4 :]
         yaml_content = content[content.find("---\n") + 4 : content.find("---\n", 1)]
-        parameter = yaml.load(yaml_content, Loader=yaml.FullLoader)
+        yaml=YAML(typ="safe")
+        parameter = yaml.load(yaml_content)
         if not isinstance(parameter, dict):
-            parameter = yaml.load(yaml_content.replace(":", ": ").replace("  ", " "), Loader=yaml.FullLoader)
+            parameter = yaml.load(yaml_content.replace(":", ": ").replace("  ", " "))
     else:
         body = content
     return body, parameter

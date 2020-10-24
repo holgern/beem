@@ -16,7 +16,6 @@ import random
 import logging
 import click
 from click_shell import shell
-import yaml
 import re
 from beem.instance import set_shared_blockchain_instance, shared_blockchain_instance
 from beem.amount import Amount

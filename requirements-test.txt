@@ -8,9 +8,8 @@ websocket-client==0.57.0
 pytz==2020.1
 pycryptodomex==3.9.8
 scrypt==0.8.17
-Events==0.3
 cryptography==3.1.1
-pyyaml>=4.2b1
+ruamel.yaml
 mock==4.0.2
 appdirs==1.4.4
 Click==7.1.2

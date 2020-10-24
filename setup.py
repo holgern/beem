@@ -31,7 +31,7 @@ requires = [
     "Click",
     "click_shell",
     "prettytable",
-    "pyyaml>=5.1",
+    "ruamel.yaml",
     "diff_match_patch",
     "asn1crypto"
 ]
