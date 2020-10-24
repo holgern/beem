@@ -9,6 +9,7 @@ Changelog
 * add new node (fin.hive.3speak.co) and change change rpc.esteem.app to rpc.ecency.com
 * Replace diff_match_patch by difflib and add unit tests
 * Increase timeout and retry cound in beempy
+* Remove obsolete replace_hive_by_steem parameter
 
 0.24.13
 -------

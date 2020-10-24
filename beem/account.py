@@ -2755,7 +2755,7 @@ class Account(BlockchainObject):
     # -------------------------------------------------------------------------
     # Simple Transfer
     # -------------------------------------------------------------------------
-    def transfer(self, to, amount, asset, memo="", account=None, **kwargs):
+    def transfer(self, to, amount, asset, memo="", skip_account_check=False, account=None, **kwargs):
         """ Transfer an asset to another account.
 
             :param str to: Recipient
@@ -2763,6 +2763,8 @@ class Account(BlockchainObject):
             :param str asset: Asset to transfer
             :param str memo: (optional) Memo, may begin with `#` for encrypted
                 messaging
+            :param bool skip_account_check: (optional) When True, the receiver
+                account name is not checked to speed up sending multiple transfers in a row
             :param str account: (optional) the source account for the transfer
                 if not ``default_account``
 
@@ -2781,12 +2783,17 @@ class Account(BlockchainObject):
         """
 
         if account is None:
-            account = self
-        else:
+            account = self  
+        elif not skip_account_check:
             account = Account(account, blockchain_instance=self.blockchain)
         amount = Amount(amount, asset, blockchain_instance=self.blockchain)
-        to = Account(to, blockchain_instance=self.blockchain)
-        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()
+        if not skip_account_check:
+            to = Account(to, blockchain_instance=self.blockchain)
+            to_name = to["name"]
+            account_name = account["name"]
+        else:
+            to_name = to
+            account_name = account
         if memo and memo[0] == "#":
             from .memo import Memo
             memoObj = Memo(
@@ -2795,15 +2802,14 @@ class Account(BlockchainObject):
                 blockchain_instance=self.blockchain
             )
             memo = memoObj.encrypt(memo[1:])["message"]
-
+        
         op = operations.Transfer(**{
             "amount": amount,
-            "to": to["name"],
+            "to": to_name,
             "memo": memo,
-            "from": account["name"],
+            "from": account_name,
             "prefix": self.blockchain.prefix,
             "json_str": not bool(self.blockchain.config["use_condenser"]),
-            "replace_hive_by_steem": replace_hive_by_steem,
         })
         return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
@@ -2824,7 +2830,6 @@ class Account(BlockchainObject):
         else:
             to = Account(to, blockchain_instance=self.blockchain)
         amount = self._check_amount(amount, self.blockchain.token_symbol)
-        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()
         to = Account(to, blockchain_instance=self.blockchain)
 
         op = operations.Transfer_to_vesting(**{
@@ -2833,7 +2838,6 @@ class Account(BlockchainObject):
             "amount": amount,
             "prefix": self.blockchain.prefix,
             "json_str": not bool(self.blockchain.config["use_condenser"]),
-            "replace_hive_by_steem": replace_hive_by_steem,
         })
         return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
@@ -2855,8 +2859,7 @@ class Account(BlockchainObject):
         if request_id:
             request_id = int(request_id)
         else:
-            request_id = random.getrandbits(32)
-        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()      
+            request_id = random.getrandbits(32)  
         op = operations.Convert(
             **{
                 "owner": account["name"],
@@ -2864,7 +2867,6 @@ class Account(BlockchainObject):
                 "amount": amount,
                 "prefix": self.blockchain.prefix,
                 "json_str": not bool(self.blockchain.config["use_condenser"]),
-                "replace_hive_by_steem": replace_hive_by_steem,
             })
 
         return self.blockchain.finalizeOp(op, account, "active")
@@ -2894,7 +2896,6 @@ class Account(BlockchainObject):
             to = account  # move to savings on same account
         else:
             to = Account(to, blockchain_instance=self.blockchain)
-        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()
         op = operations.Transfer_to_savings(
             **{
                 "from": account["name"],
@@ -2903,7 +2904,6 @@ class Account(BlockchainObject):
                 "memo": memo,
                 "prefix": self.blockchain.prefix,
                 "json_str": not bool(self.blockchain.config["use_condenser"]),
-                "replace_hive_by_steem": replace_hive_by_steem,
             })
         return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
@@ -2944,8 +2944,6 @@ class Account(BlockchainObject):
         else:
             request_id = random.getrandbits(32)
 
-        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()
-
         op = operations.Transfer_from_savings(
             **{
                 "from": account["name"],
@@ -2955,7 +2953,6 @@ class Account(BlockchainObject):
                 "memo": memo,
                 "prefix": self.blockchain.prefix,
                 "json_str": not bool(self.blockchain.config["use_condenser"]),
-                "replace_hive_by_steem": replace_hive_by_steem,
             })
         return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
@@ -3024,13 +3021,13 @@ class Account(BlockchainObject):
         reward_steem = self._check_amount(reward_steem + reward_hive, self.blockchain.token_symbol)
         reward_sbd = self._check_amount(reward_sbd + reward_hbd, self.blockchain.backed_token_symbol)
         reward_vests = self._check_amount(reward_vests, self.blockchain.vest_token_symbol)
-        
-        reward_token = "reward_steem"
-        reward_backed_token = "reward_sbd"
-        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()
-        if not replace_hive_by_steem:
+
+        if self.blockchain.is_hive:
             reward_token = "reward_hive"
             reward_backed_token = "reward_hbd"
+        else:
+            reward_token = "reward_steem"
+            reward_backed_token = "reward_sbd"            
 
         if reward_steem.amount == 0 and reward_sbd.amount == 0 and reward_vests.amount == 0:
             if len(account.balances["rewards"]) == 3:
@@ -3044,7 +3041,6 @@ class Account(BlockchainObject):
                         reward_backed_token: reward_sbd,
                         "reward_vests": reward_vests,
                         "prefix": self.blockchain.prefix,
-                        "replace_hive_by_steem": replace_hive_by_steem
                     })         
             else:
                 reward_steem = account.balances["rewards"][0]

@@ -21,8 +21,7 @@ default_prefix = "STM"
 
 
 class Amount(object):
-    def __init__(self, d, prefix=default_prefix, replace_hive_by_steem=True, json_str=False):
-        self.replace_hive_by_steem = replace_hive_by_steem
+    def __init__(self, d, prefix=default_prefix, json_str=False):
         self.json_str = json_str
         if isinstance(d, string_types):
             self.amount, self.symbol = d.strip().split(" ")
@@ -46,10 +45,6 @@ class Amount(object):
             self.amount = floor(float(self.amount) * 10 ** self.precision)
             # Workaround to allow transfers in HIVE
 
-            if self.symbol == "HBD" and replace_hive_by_steem:
-                self.symbol = "SBD"
-            elif self.symbol == "HIVE" and replace_hive_by_steem:
-                self.symbol = "STEEM"
             self.str_repr = '{:.{}f} {}'.format((float(self.amount) / 10 ** self.precision), self.precision, self.symbol)
         elif isinstance(d, list):
             self.amount = d[0]
@@ -83,11 +78,6 @@ class Amount(object):
         else:
             self.amount = d.amount
             self.symbol = d.symbol
-            # Workaround to allow transfers in HIVE
-            if self.symbol == "HBD" and replace_hive_by_steem:
-                self.symbol = "SBD"
-            elif self.symbol == "HIVE" and replace_hive_by_steem:
-                self.symbol = "STEEM"              
             self.asset = d.asset["asset"]
             self.precision = d.asset["precision"]
             self.amount = floor(float(self.amount) * 10 ** self.precision)
@@ -177,22 +167,21 @@ class WitnessProps(GrapheneObject):
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
             prefix = kwargs.get("prefix", default_prefix)
-            replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
             if "sbd_interest_rate" in kwargs:
                 super(WitnessProps, self).__init__(OrderedDict([
-                    ('account_creation_fee', Amount(kwargs["account_creation_fee"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+                    ('account_creation_fee', Amount(kwargs["account_creation_fee"], prefix=prefix)),
                     ('maximum_block_size', Uint32(kwargs["maximum_block_size"])),
                     ('sbd_interest_rate', Uint16(kwargs["sbd_interest_rate"])),
                 ]))
             elif "hbd_interest_rate" in kwargs:
                 super(WitnessProps, self).__init__(OrderedDict([
-                    ('account_creation_fee', Amount(kwargs["account_creation_fee"], prefix=prefix, replace_hive_by_steem=False)),
+                    ('account_creation_fee', Amount(kwargs["account_creation_fee"], prefix=prefix)),
                     ('maximum_block_size', Uint32(kwargs["maximum_block_size"])),
                     ('hbd_interest_rate', Uint16(kwargs["hbd_interest_rate"])),
                 ]))                
             else:
                 super(WitnessProps, self).__init__(OrderedDict([
-                    ('account_creation_fee', Amount(kwargs["account_creation_fee"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+                    ('account_creation_fee', Amount(kwargs["account_creation_fee"], prefix=prefix)),
                     ('maximum_block_size', Uint32(kwargs["maximum_block_size"])),
                 ]))
 
@@ -205,10 +194,9 @@ class Price(GrapheneObject):
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
             prefix = kwargs.get("prefix", default_prefix)
-            replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
             super(Price, self).__init__(OrderedDict([
-                ('base', Amount(kwargs["base"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
-                ('quote', Amount(kwargs["quote"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem))
+                ('base', Amount(kwargs["base"], prefix=prefix)),
+                ('quote', Amount(kwargs["quote"], prefix=prefix))
             ]))
 
 
@@ -266,11 +254,10 @@ class ExchangeRate(GrapheneObject):
                 kwargs = args[0]
 
             prefix = kwargs.get("prefix", default_prefix)
-            replace_hive_by_steem = kwargs.get("replace_hive_by_steem", True)
             super(ExchangeRate, self).__init__(
                 OrderedDict([
-                    ('base', Amount(kwargs["base"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
-                    ('quote', Amount(kwargs["quote"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem)),
+                    ('base', Amount(kwargs["base"], prefix=prefix)),
+                    ('quote', Amount(kwargs["quote"], prefix=prefix)),
                 ]))
 
 

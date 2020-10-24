@@ -2634,7 +2634,7 @@ def createpost(markdown_file, account, title, tags, community, beneficiaries, pe
     yaml_prefix += 'title: "%s"\n' % title
     yaml_prefix += 'author: %s\n' % account
     yaml_prefix += 'tags: %s\n' % tags
-    if stm.is_hive and not stm.get_replace_hive_by_steem():
+    if stm.is_hive:
         yaml_prefix += 'percent_hbd: %d\n' % percent_hbd
     else:
         yaml_prefix += 'percent_steem_dollars: %d\n' % percent_steem_dollars
@@ -2757,9 +2757,9 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
         if stm.backed_token_symbol not in max_accepted_payout:
             max_accepted_payout = str(Amount(float(max_accepted_payout), stm.backed_token_symbol, blockchain_instance=stm))
         comment_options["max_accepted_payout"] = max_accepted_payout
-    if percent_hbd is not None and stm.is_hive and not stm.get_replace_hive_by_steem():
+    if percent_hbd is not None and stm.is_hive:
         comment_options["percent_hbd"] = percent_hbd
-    elif percent_steem_dollars is not None and stm.is_hive and not stm.get_replace_hive_by_steem():
+    elif percent_steem_dollars is not None and stm.is_hive:
         comment_options["percent_hbd"] = percent_steem_dollars
     elif percent_steem_dollars is not None:
         comment_options["percent_steem_dollars"] = percent_steem_dollars

@@ -153,7 +153,6 @@ class Witness(BlockchainObject):
             raise AssertionError()
         if not quote.symbol == self.blockchain.token_symbol:
             raise AssertionError()
-        replace_hive_by_steem = self.blockchain.get_replace_hive_by_steem()
         op = operations.Feed_publish(
             **{
                 "publisher": account["name"],
@@ -163,7 +162,6 @@ class Witness(BlockchainObject):
                 },
                 "prefix": self.blockchain.prefix,
                 "json_str": not bool(self.blockchain.config["use_condenser"]),
-                "replace_hive_by_steem": replace_hive_by_steem,
             })
         return self.blockchain.finalizeOp(op, account, "active")
 
