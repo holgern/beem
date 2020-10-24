@@ -7,6 +7,7 @@ from datetime import datetime, tzinfo, timedelta, date, time
 import pytz
 import difflib
 from ruamel.yaml import YAML
+import difflib
 
 timeFormat = "%Y-%m-%dT%H:%M:%S"
 # https://github.com/matiasb/python-unidiff/blob/master/unidiff/constants.py#L37
@@ -294,15 +295,11 @@ def remove_from_dict(obj, keys=list(), keep_keys=True):
 
 
 def make_patch(a, b, n=3):
-    # _no_eol = '\n' + "\ No newline at end of file" + '\n'
-    _no_eol = "\n"
-    diffs = difflib.unified_diff(a.splitlines(True), b.splitlines(True), n=n)
-    try:
-        _, _ = next(diffs), next(diffs)
-        del _
-    except StopIteration:
-        pass
-    return "".join([d if d[-1] == "\n" else d + _no_eol for d in diffs])
+    diffs = difflib.unified_diff(a.splitlines(True),b.splitlines(True),n=0)
+    try: _,_ = next(diffs),next(diffs)
+    except StopIteration: pass
+    # diffs = list(diffs); print(diffs)
+    return ''.join([d if d[-1] == '\n' else d+'\n' for d in diffs])
 
 
 def findall_patch_hunks(body=None):

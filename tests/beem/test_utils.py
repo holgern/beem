@@ -11,14 +11,14 @@ from beem.utils import (
     sanitize_permlink,
     derive_permlink,
     resolve_root_identifier,
-    make_patch,
     remove_from_dict,
     formatToTimeStamp,
     formatTimeString,
     addTzInfo,
     derive_beneficiaries,
     derive_tags,
-    seperate_yaml_dict_from_body
+    seperate_yaml_dict_from_body,
+    make_patch
 )
 
 
@@ -75,8 +75,30 @@ class Testcases(unittest.TestCase):
 
     def test_patch(self):
         self.assertEqual(make_patch("aa", "ab"), '@@ -1 +1 @@\n-aa\n+ab\n')
+        self.assertEqual(make_patch("aa\n", "ab\n"), '@@ -1 +1 @@\n-aa\n+ab\n')
         self.assertEqual(make_patch("Hello!\n Das ist ein Test!\nEnd.\n", "Hello!\n This is a Test\nEnd.\n"),
-                         '@@ -1,3 +1,3 @@\n Hello!\n- Das ist ein Test!\n+ This is a Test\n End.\n')
+                          '@@ -2 +2 @@\n- Das ist ein Test!\n+ This is a Test\n')
+
+        s1 = "test1\ntest2\ntest3\ntest4\ntest5\ntest6\n"
+        s2 = "test1\ntest2\ntest3\ntest4\ntest5\ntest6\n"
+        patch = make_patch(s1, s2)
+        self.assertEqual(patch, "")
+
+        s2 = "test1\ntest2\ntest7\ntest4\ntest5\ntest6\n"
+        patch = make_patch(s1, s2)
+        self.assertEqual(patch, "@@ -3 +3 @@\n-test3\n+test7\n")
+
+        s2 = "test1\ntest2\ntest3\ntest4\ntest5\n"
+        patch = make_patch(s1, s2)
+        self.assertEqual(patch, "@@ -6 +5,0 @@\n-test6\n")
+
+        s2 = "test2\ntest3\ntest4\ntest5\ntest6\n"
+        patch = make_patch(s1, s2)
+        self.assertEqual(patch,  '@@ -1 +0,0 @@\n-test1\n')
+
+        s2 = ""
+        patch = make_patch(s1, s2)
+        self.assertEqual(patch, '@@ -1,6 +0,0 @@\n-test1\n-test2\n-test3\n-test4\n-test5\n-test6\n')
 
     def test_formatTimedelta(self):
         now = datetime.now()
@@ -153,3 +175,4 @@ class Testcases(unittest.TestCase):
         body, par = seperate_yaml_dict_from_body(t)
         self.assertEqual(par, {"par1": "data1", "par2": "data2", "par3": 3})
         self.assertEqual(body, " test ---")
+

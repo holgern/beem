@@ -32,7 +32,6 @@ requires = [
     "click_shell",
     "prettytable",
     "ruamel.yaml",
-    "diff_match_patch",
     "asn1crypto"
 ]
 

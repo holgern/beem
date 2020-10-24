@@ -35,7 +35,7 @@ from beem.memo import Memo
 from beem.asset import Asset
 from beem.witness import Witness, WitnessesRankedByVote, WitnessesVotedByAccount
 from beem.blockchain import Blockchain
-from beem.utils import formatTimeString, construct_authorperm, derive_beneficiaries, derive_tags, seperate_yaml_dict_from_body, derive_permlink
+from beem.utils import formatTimeString, construct_authorperm, derive_beneficiaries, derive_tags, seperate_yaml_dict_from_body, derive_permlink, make_patch
 from beem.vote import AccountVotes, ActiveVotes, Vote
 from beem import exceptions
 from beem.version import version as __version__
@@ -2833,10 +2833,7 @@ def post(markdown_file, account, title, permlink, tags, reply_identifier, commun
                       tags=tags, json_metadata=json_metadata, comment_options=comment_options, beneficiaries=beneficiaries, parse_body=parse_body,
                       app='beempy/%s' % (__version__))
     else:
-        import diff_match_patch as dmp_module
-        dmp = dmp_module.diff_match_patch()
-        patch = dmp.patch_make(comment.body, body)
-        patch_text = dmp.patch_toText(patch)
+        patch_text = make_patch(comment.body, body)
         if patch_text == "":
             print("No changes on post body detected.")
         else:
