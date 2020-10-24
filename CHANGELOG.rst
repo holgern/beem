@@ -8,6 +8,7 @@ Changelog
 * Remove unnecessary requirements (pylibscrypt and future
 * add new node (fin.hive.3speak.co) and change change rpc.esteem.app to rpc.ecency.com
 * Replace diff_match_patch by difflib and add unit tests
+* Increase timeout and retry cound in beempy
 
 0.24.13
 -------

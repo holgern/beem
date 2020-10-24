@@ -315,8 +315,8 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hi
             path=path,
             debug=debug,
             num_retries=10,
-            num_retries_call=3,
-            timeout=15,
+            num_retries_call=5,
+            timeout=30,
             autoconnect=autoconnect
         )
     elif steem:
@@ -334,8 +334,8 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hi
             path=path,
             debug=debug,
             num_retries=10,
-            num_retries_call=3,
-            timeout=15,
+            num_retries_call=5,
+            timeout=30,
             autoconnect=autoconnect
         )
     else:
@@ -353,8 +353,8 @@ def cli(node, offline, no_broadcast, no_wallet, unsigned, create_link, steem, hi
             path=path,
             debug=debug,
             num_retries=10,
-            num_retries_call=3,
-            timeout=15,
+            num_retries_call=5,
+            timeout=30,
             autoconnect=autoconnect
         )
 

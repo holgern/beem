@@ -276,7 +276,7 @@ class Testcases(unittest.TestCase):
 
     def test_newaccount(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ['-dx', 'newaccount', 'beem3'], input="test\ntest\ntest\n")
+        result = runner.invoke(cli, ['-dx', 'newaccount', 'beem3'], input="test\ntest\n")
         self.assertEqual(result.exit_code, 0)
         result = runner.invoke(cli, ['-dx', 'newaccount', '--owner', 'STM7mLs2hns87f7kbf3o2HBqNoEaXiTeeU89eVF6iUCrMQJFzBsPo',
                                      '--active', 'STM7rUmnpnCp9oZqMQeRKDB7GvXTM9KFvhzbA3AKcabgTBfQZgHZp',
