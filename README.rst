@@ -66,13 +66,13 @@ About beem
 * Node error handling and automatic node switching
 * Usage of pycryptodomex instead of the outdated pycrypto
 * Complete documentation of beempy and all classes including all functions
-* hivesigner/steemconnect integration
+* hivesigner integration
 * Works on read-only systems
 * Own BlockchainObject class with cache
 * Contains all broadcast operations
 * Estimation of virtual account operation index from date or block number
 * the command line tool beempy uses click and has more commands
-* SteemNodeRPC can be used to execute even not implemented RPC-Calls
+* NodeRPC can be used to execute even not implemented RPC-Calls
 * More complete implemention
 
 Installation

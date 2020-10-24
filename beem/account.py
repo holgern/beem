@@ -2813,28 +2813,37 @@ class Account(BlockchainObject):
         })
         return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
-    def transfer_to_vesting(self, amount, to=None, account=None, **kwargs):
+    def transfer_to_vesting(self, amount, to=None, account=None, skip_account_check=False, **kwargs):
         """ Vest STEEM
 
             :param float amount: Amount to transfer
             :param str to: Recipient (optional) if not set equal to account
             :param str account: (optional) the source account for the transfer
                 if not ``default_account``
+            :param bool skip_account_check: (optional) When True, the receiver
+                account name is not checked to speed up sending multiple transfers in a row
         """
         if account is None:
             account = self
-        else:
+        elif not skip_account_check:
             account = Account(account, blockchain_instance=self.blockchain)
-        if to is None:
-            to = self  # powerup on the same account
-        else:
-            to = Account(to, blockchain_instance=self.blockchain)
         amount = self._check_amount(amount, self.blockchain.token_symbol)
-        to = Account(to, blockchain_instance=self.blockchain)
+        if to is None and skip_account_check:
+            to = self["name"]  # powerup on the same account
+        else:
+            to = self
+
+        if not skip_account_check:
+            to = Account(to, blockchain_instance=self.blockchain)
+            to_name = to["name"]
+            account_name = account["name"]
+        else:
+            to_name = to
+            account_name = account        
 
         op = operations.Transfer_to_vesting(**{
-            "from": account["name"],
-            "to": to["name"],
+            "from": account_name,
+            "to": to_name,
             "amount": amount,
             "prefix": self.blockchain.prefix,
             "json_str": not bool(self.blockchain.config["use_condenser"]),
