@@ -74,10 +74,10 @@ class Testcases(unittest.TestCase):
         self.assertEqual(len(derive_permlink("a" * 1024)), 256)
 
     def test_patch(self):
-        self.assertEqual(make_patch("aa", "ab"), '@@ -1 +1 @@\n-aa\n+ab\n')
-        self.assertEqual(make_patch("aa\n", "ab\n"), '@@ -1 +1 @@\n-aa\n+ab\n')
+        self.assertEqual(make_patch("aa", "ab"), '@@ -1,2 +1,2 @@\n a\n-a\n+b\n')
+        self.assertEqual(make_patch("aa\n", "ab\n"), '@@ -1,3 +1,3 @@\n a\n-a\n+b\n %0A\n')
         self.assertEqual(make_patch("Hello!\n Das ist ein Test!\nEnd.\n", "Hello!\n This is a Test\nEnd.\n"),
-                          '@@ -2 +2 @@\n- Das ist ein Test!\n+ This is a Test\n')
+                          '@@ -5,25 +5,22 @@\n o!%0A \n-Da\n+Thi\n s is\n-t ein\n+ a\n  Test\n-!\n %0AEnd\n')
 
         s1 = "test1\ntest2\ntest3\ntest4\ntest5\ntest6\n"
         s2 = "test1\ntest2\ntest3\ntest4\ntest5\ntest6\n"
@@ -86,19 +86,19 @@ class Testcases(unittest.TestCase):
 
         s2 = "test1\ntest2\ntest7\ntest4\ntest5\ntest6\n"
         patch = make_patch(s1, s2)
-        self.assertEqual(patch, "@@ -3 +3 @@\n-test3\n+test7\n")
+        self.assertEqual(patch, "@@ -13,9 +13,9 @@\n test\n-3\n+7\n %0Ates\n")
 
         s2 = "test1\ntest2\ntest3\ntest4\ntest5\n"
         patch = make_patch(s1, s2)
-        self.assertEqual(patch, "@@ -6 +5,0 @@\n-test6\n")
+        self.assertEqual(patch, "@@ -27,10 +27,4 @@\n st5%0A\n-test6%0A\n")
 
         s2 = "test2\ntest3\ntest4\ntest5\ntest6\n"
         patch = make_patch(s1, s2)
-        self.assertEqual(patch,  '@@ -1 +0,0 @@\n-test1\n')
+        self.assertEqual(patch,  '@@ -1,10 +1,4 @@\n-test1%0A\n test\n')
 
         s2 = ""
         patch = make_patch(s1, s2)
-        self.assertEqual(patch, '@@ -1,6 +0,0 @@\n-test1\n-test2\n-test3\n-test4\n-test5\n-test6\n')
+        self.assertEqual(patch, '@@ -1,36 +0,0 @@\n-test1%0Atest2%0Atest3%0Atest4%0Atest5%0Atest6%0A\n')
 
     def test_formatTimedelta(self):
         now = datetime.now()

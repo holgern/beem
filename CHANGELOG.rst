@@ -2,7 +2,7 @@ Changelog
 =========
 0.24.15
 -------
-* Add diff_match_patch dependency, as the difflib implementation do not work
+* Add diff_match_patch dependency again, as the difflib implementation does not work
 
 0.24.14
 -------
