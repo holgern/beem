@@ -294,12 +294,12 @@ def remove_from_dict(obj, keys=list(), keep_keys=True):
         return {k: v for k, v in items if k not in keys}
 
 
-def make_patch(a, b, n=3):
-    diffs = difflib.unified_diff(a.splitlines(True),b.splitlines(True),n=0)
-    try: _,_ = next(diffs),next(diffs)
-    except StopIteration: pass
-    # diffs = list(diffs); print(diffs)
-    return ''.join([d if d[-1] == '\n' else d+'\n' for d in diffs])
+def make_patch(a, b):
+    import diff_match_patch as dmp_module
+    dmp = dmp_module.diff_match_patch()
+    patch = dmp.patch_make(a, b)
+    patch_text = dmp.patch_toText(patch)   
+    return patch_text
 
 
 def findall_patch_hunks(body=None):

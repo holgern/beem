@@ -28,4 +28,5 @@ tox
 codacy-coverage
 virtualenv
 codecov
+diff_match_patch
 asn1crypto
