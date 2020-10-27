@@ -45,6 +45,20 @@ class Testcases(unittest.TestCase):
         self.assertEqual("0.999 STEEM", t.__str__())
         self.assertEqual("0.999 STEEM", str(t))
 
+        a = "8.9999 STEEM"
+        t = Amount(a)
+        self.assertEqual("8.999 STEEM", t.__str__())
+        self.assertEqual("8.999 STEEM", str(t))
+        a = "8.9991 STEEM"
+        t = Amount(a)
+        self.assertEqual("8.999 STEEM", t.__str__())
+        self.assertEqual("8.999 STEEM", str(t))
+
+        a = "8.19 STEEM"
+        t = Amount(a)
+        self.assertEqual("8.190 STEEM", t.__str__())
+        self.assertEqual("8.190 STEEM", str(t))        
+
     def test_Operation(self):
         a = {"amount": '1000', "precision": 3, "nai": '@@000000013'}
         j = ["transfer", {'from': 'a', 'to': 'b', 'amount': a, 'memo': 'c'}]

@@ -82,6 +82,9 @@ class Testcases(unittest.TestCase):
         amount = Amount(amount=1.3, asset=symbol, blockchain_instance=stm)
         self.dotest(amount, 1.3, symbol)
 
+        amount = Amount(amount=8.190, asset=symbol, blockchain_instance=stm)
+        self.dotest(amount, 8.190, symbol)        
+
     def test_copy(self):
         amount = Amount("1", self.symbol)
         self.dotest(amount.copy(), 1, self.symbol)
@@ -132,6 +135,9 @@ class Testcases(unittest.TestCase):
             int(Amount(0.151, self.symbol)),
             151)
         self.assertEqual(
+            int(Amount(8.190, self.symbol)),
+            8190)
+        self.assertEqual(
             int(Amount(round(0.1509,3), self.symbol)),
             151)
         self.assertEqual(
@@ -157,7 +163,10 @@ class Testcases(unittest.TestCase):
             0.151)
         self.assertEqual(
             float(Amount(round(0.1509, 3), self.symbol)),
-            0.151)            
+            0.151)
+        self.assertEqual(
+            float(Amount(8.190, self.symbol)),
+            8.190)                    
 
     def test_plus(self):
         a1 = Amount(1, self.symbol)

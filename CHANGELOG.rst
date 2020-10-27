@@ -1,5 +1,10 @@
 Changelog
 =========
+0.24.16
+-------
+* Fix bug in rounding which prevents sending certain amounts (e.g. 8.19 HIVE)
+* Added unit tests to check if 8.190 is correctly working
+
 0.24.15
 -------
 * Add diff_match_patch dependency again, as the difflib implementation does not work

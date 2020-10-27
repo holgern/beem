@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 from math import floor
+import decimal
 from beemgraphenebase.py23 import py23_bytes, bytes_types, integer_types, string_types, text_type
 from collections import OrderedDict
 from beemgraphenebase.types import (
@@ -18,6 +19,11 @@ from beemgraphenebase.chains import known_chains
 from .operationids import operations
 import struct
 default_prefix = "STM"
+
+
+def value_to_decimal(value, decimal_places):
+    decimal.getcontext().rounding = decimal.ROUND_DOWN  # define rounding method
+    return decimal.Decimal(str(float(value))).quantize(decimal.Decimal('1e-{}'.format(decimal_places)))
 
 
 class Amount(object):
@@ -42,7 +48,7 @@ class Amount(object):
                         self.asset = asset["asset"]
             if self.precision is None:
                 raise Exception("Asset unknown")
-            self.amount = floor(float(self.amount) * 10 ** self.precision)
+            self.amount = round(value_to_decimal(self.amount, self.precision) * 10 ** self.precision)
             # Workaround to allow transfers in HIVE
 
             self.str_repr = '{:.{}f} {}'.format((float(self.amount) / 10 ** self.precision), self.precision, self.symbol)
@@ -80,7 +86,7 @@ class Amount(object):
             self.symbol = d.symbol
             self.asset = d.asset["asset"]
             self.precision = d.asset["precision"]
-            self.amount = floor(float(self.amount) * 10 ** self.precision)
+            self.amount = round(value_to_decimal(self.amount, self.precision) * 10 ** self.precision)
             self.str_repr = str(d)
             # self.str_repr = json.dumps((d.json()))
             # self.str_repr = '{:.{}f} {}'.format((float(self.amount) / 10 ** self.precision), self.precision, self.asset)
@@ -91,7 +97,7 @@ class Amount(object):
         if self.symbol == "HBD":
             self.symbol = "SBD"
         elif self.symbol == "HIVE":
-            self.symbol = "STEEM"        
+            self.symbol = "STEEM"
         symbol = self.symbol + "\x00" * (7 - len(self.symbol))
         return (struct.pack("<q", int(self.amount)) + struct.pack("<b", self.precision) +
                 py23_bytes(symbol, "ascii"))
