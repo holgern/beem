@@ -2,7 +2,7 @@ Changelog
 =========
 0.24.16
 -------
-* Fix bug in rounding which prevents sending certain amounts (e.g. 8.19 HIVE)
+* Fix bug in bytes representation of an Amount which prevents sending certain amounts (e.g. 8.19 HIVE)
 * Added unit tests to check if 8.190 is correctly working
 
 0.24.15
