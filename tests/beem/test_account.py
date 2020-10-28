@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from parameterized import parameterized
 from pprint import pprint
 from beem import Steem, exceptions
-from beem.account import Account
+from beem.account import Account, extract_account_name
 from beem.block import Block
 from beem.amount import Amount
 from beem.asset import Asset
@@ -402,6 +402,47 @@ class Testcases(unittest.TestCase):
             "beembot",
             op["from"])
 
+        w.blockchain.txbuffer.clear()
+        tx = w.transfer_to_vesting("1 HIVE", skip_account_check=True)
+        self.assertEqual(
+            (tx["operations"][0][0]),
+            "transfer_to_vesting"
+        )
+        op = tx["operations"][0][1]
+        self.assertIn(
+            "beembot",
+            op["from"])
+
+    def test_transfer(self):
+        w = self.account
+        w.blockchain.txbuffer.clear()
+        tx = w.transfer("beembot", "1", "HIVE")
+        self.assertEqual(
+            (tx["operations"][0][0]),
+            "transfer"
+        )
+        op = tx["operations"][0][1]
+        self.assertIn(
+            "beembot",
+            op["from"])
+        self.assertIn(
+            "beembot",
+            op["to"])        
+
+        w.blockchain.txbuffer.clear()
+        tx = w.transfer("beembot", "1", "HIVE", skip_account_check=True)
+        self.assertEqual(
+            (tx["operations"][0][0]),
+            "transfer"
+        )
+        op = tx["operations"][0][1]
+        self.assertIn(
+            "beembot",
+            op["from"])
+        self.assertIn(
+            "beembot",
+            op["to"])        
+
     def test_json_export(self):
         account = Account("beembot", steem_instance=self.bts)
         if account.blockchain.rpc.get_use_appbase():
@@ -522,3 +563,11 @@ class Testcases(unittest.TestCase):
         stm = self.bts
         account = Account("gtg", steem_instance=stm)
         assert isinstance(account.get_notifications(), list)
+
+    def test_extract_account_name(self):
+        stm = self.bts
+        account = Account("holger80", steem_instance=stm)
+        self.assertEqual(extract_account_name(account), "holger80")
+        self.assertEqual(extract_account_name("holger80"), "holger80")
+        self.assertEqual(extract_account_name({"name": "holger80"}), "holger80")
+        self.assertEqual(extract_account_name(""), "")

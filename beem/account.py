@@ -21,6 +21,17 @@ from beem.constants import STEEM_VOTE_REGENERATION_SECONDS, STEEM_1_PERCENT, STE
 log = logging.getLogger(__name__)
 
 
+def extract_account_name(account):
+    if isinstance(account, str):
+        return account
+    elif isinstance(account, Account):
+        return account["name"]
+    elif isinstance(account, dict) and "name" in account:
+        return account["name"]
+    else:
+        return ""
+
+
 class Account(BlockchainObject):
     """ This class allows to easily access Account data
 
@@ -748,8 +759,7 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
-        elif isinstance(account, Account):
-            account = account["name"]
+        account = extract_account_name(account)
         if not self.blockchain.is_connected():
             return None
         from beem.discussions import Discussions, Query
@@ -843,8 +853,8 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
-        elif isinstance(account, Account):
-            account = account["name"]
+        account = extract_account_name(account)
+
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
@@ -907,8 +917,7 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
-        elif isinstance(account, Account):
-            account = account["name"]
+        account = extract_account_name(account)
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
@@ -939,6 +948,7 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
+        account = extract_account_name(account)
         if not account:
             raise ValueError("You need to provide an account")
         if last_read is None:
@@ -977,8 +987,7 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
-        elif isinstance(account, Account):
-            account = account["name"]
+        account = extract_account_name(account)
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
@@ -994,8 +1003,7 @@ class Account(BlockchainObject):
         """ get_follow_count """
         if account is None:
             account = self["name"]
-        elif isinstance(account, Account):
-            account = account["name"]
+        account = extract_account_name(account)
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
@@ -1125,8 +1133,7 @@ class Account(BlockchainObject):
         """Returns all subscriptions"""
         if account is None:
             account = self["name"]
-        elif isinstance(account, Account):
-            account = account["name"]        
+        account = extract_account_name(account)        
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(True)
@@ -1136,8 +1143,7 @@ class Account(BlockchainObject):
         """Returns account feed"""
         if account is None:
             account = self["name"]
-        elif isinstance(account, Account):
-            account = account["name"]
+        account = extract_account_name(account)
         if observer is None:
             observer = account
         if not self.blockchain.is_connected():
@@ -1344,6 +1350,7 @@ class Account(BlockchainObject):
         """ get_account_bandwidth """
         if account is None:
             account = self["name"]
+        account = extract_account_name(account)
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
@@ -1437,8 +1444,7 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
-        elif isinstance(account, Account):
-            account = account["name"]
+        account = extract_account_name(account)
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
@@ -1469,8 +1475,7 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
-        elif isinstance(account, Account):
-            account = account["name"]
+        account = extract_account_name(account)
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
@@ -1504,8 +1509,7 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
-        elif isinstance(account, Account):
-            account = account["name"]
+        account = extract_account_name(account)
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
@@ -1539,8 +1543,7 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
-        elif isinstance(account, Account):
-            account = account["name"]
+        account = extract_account_name(account)
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
@@ -1572,8 +1575,7 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
-        elif isinstance(account, Account):
-            account = account["name"]
+        account = extract_account_name(account)
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
@@ -1606,8 +1608,7 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
-        elif isinstance(account, Account):
-            account = account["name"]
+        account = extract_account_name(account)
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
@@ -1639,8 +1640,7 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
-        elif isinstance(account, Account):
-            account = account["name"]
+        account = extract_account_name(account)
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
@@ -1672,8 +1672,7 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
-        elif isinstance(account, Account):
-            account = account["name"]
+        account = extract_account_name(account)
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         if not isinstance(keys, list):
@@ -1697,8 +1696,7 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
-        elif isinstance(account, Account):
-            account = account["name"]
+        account = extract_account_name(account)
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
@@ -1731,8 +1729,7 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
-        elif isinstance(account, Account):
-            account = account["name"]
+        account = extract_account_name(account)
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
@@ -1762,8 +1759,7 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
-        elif isinstance(account, Account):
-            account = account["name"]
+        account = extract_account_name(account)
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         # self.blockchain.rpc.set_next_node_on_empty_reply(False)
@@ -1847,22 +1843,22 @@ class Account(BlockchainObject):
 
     def _get_account_history(self, account=None, start=-1, limit=0):
         if account is None:
-            account = self
-        account = Account(account, blockchain_instance=self.blockchain)
+            account = self["name"]
+        account = extract_account_name(account)
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
         if self.blockchain.rpc.get_use_appbase():
             try:
-                ret = self.blockchain.rpc.get_account_history({'account': account["name"], 'start': start, 'limit': limit}, api="account_history")
+                ret = self.blockchain.rpc.get_account_history({'account': account, 'start': start, 'limit': limit}, api="account_history")
                 if ret is not None:
                     ret = ret["history"]
             except ApiNotSupported:
-                ret = self.blockchain.rpc.get_account_history(account["name"], start, limit, api="condenser")
+                ret = self.blockchain.rpc.get_account_history(account, start, limit, api="condenser")
         else:
-            ret = self.blockchain.rpc.get_account_history(account["name"], start, limit, api="database")
+            ret = self.blockchain.rpc.get_account_history(account, start, limit, api="database")
             if ret is None or (len(ret) == 0 and limit == 0):
-                ret = self.blockchain.rpc.get_account_history(account["name"], start, limit + 1, api="database")
+                ret = self.blockchain.rpc.get_account_history(account, start, limit + 1, api="database")
         return ret
 
     def estimate_virtual_op_num(self, blocktime, stop_diff=0, max_count=100):
@@ -2481,6 +2477,7 @@ class Account(BlockchainObject):
         """
         if account is None:
             account = self["name"]
+        account = extract_account_name(account)
         if not account:
             raise ValueError("You need to provide an account")
         if not other:
@@ -2789,11 +2786,9 @@ class Account(BlockchainObject):
         amount = Amount(amount, asset, blockchain_instance=self.blockchain)
         if not skip_account_check:
             to = Account(to, blockchain_instance=self.blockchain)
-            to_name = to["name"]
-            account_name = account["name"]
-        else:
-            to_name = to
-            account_name = account
+
+        to_name = extract_account_name(to)
+        account_name = extract_account_name(account)        
         if memo and memo[0] == "#":
             from .memo import Memo
             memoObj = Memo(
@@ -2835,11 +2830,8 @@ class Account(BlockchainObject):
 
         if not skip_account_check:
             to = Account(to, blockchain_instance=self.blockchain)
-            to_name = to["name"]
-            account_name = account["name"]
-        else:
-            to_name = to
-            account_name = account        
+        to_name = extract_account_name(to)
+        account_name = extract_account_name(account)           
 
         op = operations.Transfer_to_vesting(**{
             "from": account_name,

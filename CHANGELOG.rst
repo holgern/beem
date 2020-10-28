@@ -1,5 +1,11 @@
 Changelog
 =========
+0.24.17
+-------
+* Fixed a bug when using skip_account_check=True
+* Refactor code in Account
+* Add more unit tests
+
 0.24.16
 -------
 * Fix bug in bytes representation of an Amount which prevents sending certain amounts (e.g. 8.19 HIVE)
