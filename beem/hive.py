@@ -82,7 +82,7 @@ class Hive(BlockChainInstance):
         where ``<host>`` starts with ``https://``, ``ws://`` or ``wss://``.
 
         The purpose of this class it to simplify interaction with
-        Steem.
+        Hive.
 
         The idea is to have a class that allows to do this:
 

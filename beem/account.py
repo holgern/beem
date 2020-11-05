@@ -1831,20 +1831,22 @@ class Account(BlockchainObject):
         else:
             try:
                 op_count = 0
-                op_count = self._get_account_history(start=-1, limit=0)
+                op_count = self._get_account_history(start=-1, limit=1)
                 if op_count is None or len(op_count) == 0:
                     op_count = self._get_account_history(start=-1, limit=1)
                 if isinstance(op_count, list) and len(op_count) > 0 and len(op_count[0]) > 0:
-                    return op_count[0][0]
+                    return op_count[-1][0]
                 else:
                     return 0
             except IndexError:
                 return 0
 
-    def _get_account_history(self, account=None, start=-1, limit=0):
+    def _get_account_history(self, account=None, start=-1, limit=1):
         if account is None:
             account = self["name"]
         account = extract_account_name(account)
+        if limit < 1:
+            limit = 1
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
@@ -1857,8 +1859,6 @@ class Account(BlockchainObject):
                 ret = self.blockchain.rpc.get_account_history(account, start, limit, api="condenser")
         else:
             ret = self.blockchain.rpc.get_account_history(account, start, limit, api="database")
-            if ret is None or (len(ret) == 0 and limit == 0):
-                ret = self.blockchain.rpc.get_account_history(account, start, limit + 1, api="database")
         return ret
 
     def estimate_virtual_op_num(self, blocktime, stop_diff=0, max_count=100):
@@ -1904,6 +1904,8 @@ class Account(BlockchainObject):
 
         """
         def get_blocknum(index):
+            if index == 0:
+                index = 1
             op = self._get_account_history(start=(index))
             return op[0][1]['block']
 
@@ -1912,7 +1914,7 @@ class Account(BlockchainObject):
             return 0
 
         # calculate everything with block numbers
-        created = get_blocknum(0)
+        created = get_blocknum(1)
 
         # convert blocktime to block number if given as a datetime/date/time
         if isinstance(blocktime, (datetime, date, time)):
@@ -2207,6 +2209,8 @@ class Account(BlockchainObject):
             start_index = start
         elif start is not None and max_index > batch_size:
             op_est = self.estimate_virtual_op_num(start, stop_diff=1)
+            if op_est == 0:
+                op_est = 1
             est_diff = 0
             if isinstance(start, (datetime, date, time)):
                 for h in self.get_account_history(op_est, 0):
@@ -2229,16 +2233,26 @@ class Account(BlockchainObject):
             start_index = op_est - est_diff
         else:
             start_index = 0
+        
+        if stop is not None and not use_block_num and not isinstance(stop, (datetime, date, time)):
+            if start_index + stop < _limit:
+                _limit = stop
 
-        first = start_index + _limit
+        first = start_index + _limit - 1
         if first > max_index:
-            _limit = max_index - start_index + 1
-            first = start_index + _limit
+            _limit = max_index - start_index
+            first = start_index + _limit - 1
+        elif first < _limit:
+            first = _limit
         last_round = False
+        
         if _limit < 0:
             return
+        last_item_index = -1
         while True:
             # RPC call
+            if first < _limit:
+                first = _limit    
             for item in self.get_account_history(first, _limit, start=None, stop=None, order=1, raw_output=raw_output):
                 if raw_output:
                     item_index, event = item
@@ -2258,6 +2272,8 @@ class Account(BlockchainObject):
                     continue
                 elif start is not None and not use_block_num and item_index < start:
                     continue
+                elif last_item_index == item_index:
+                    continue
                 if stop is not None and isinstance(stop, (datetime, date, time)):
                     timediff = stop - formatTimeString(timestamp)
                     if timediff.total_seconds() < 0:
@@ -2271,13 +2287,14 @@ class Account(BlockchainObject):
                     continue
                 if not only_ops or op_type in only_ops:
                     yield item
+                last_item_index = item_index
             if first < max_index and first + _limit >= max_index and not last_round:
-                _limit = max_index - first - 1
+                _limit = max_index - first
                 first = max_index
                 last_round = True
             else:
-                first += (_limit + 1)
-                if stop is not None and not use_block_num and isinstance(stop, int) and first >= stop + _limit:
+                first += (_limit)
+                if stop is not None and not use_block_num and isinstance(stop, int) and first >= stop + _limit + 1:
                     break
                 elif first > max_index or last_round:
                     break
@@ -2374,6 +2391,8 @@ class Account(BlockchainObject):
         elif start is not None and first > batch_size:
             op_est = self.estimate_virtual_op_num(start, stop_diff=1)
             est_diff = 0
+            if op_est == 0:
+                op_est = 1
             if isinstance(start, (datetime, date, time)):
                 for h in self.get_account_history(op_est, 0):
                     block_date = formatTimeString(h["timestamp"])
@@ -2395,7 +2414,7 @@ class Account(BlockchainObject):
             first = op_est + est_diff
         if stop is not None and isinstance(stop, int) and stop < 0 and not use_block_num:
             stop += first
-
+        last_item_index = -1
         while True:
             # RPC call
             if first - _limit < 0:
@@ -2419,6 +2438,8 @@ class Account(BlockchainObject):
                     continue
                 elif start is not None and not use_block_num and item_index > start:
                     continue
+                elif item_index == last_item_index:
+                    continue
                 if stop is not None and isinstance(stop, (datetime, date, time)):
                     timediff = stop - formatTimeString(timestamp)
                     if timediff.total_seconds() > 0:
@@ -2434,7 +2455,8 @@ class Account(BlockchainObject):
                     continue
                 if not only_ops or op_type in only_ops:
                     yield item
-            first -= (_limit + 1)
+                last_item_index = item_index
+            first -= (_limit)
             if first < 1:
                 break
 

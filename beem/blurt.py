@@ -75,20 +75,20 @@ class Blurt(BlockChainInstance):
 
         .. code-block:: python
 
-            steem = Steem(<host>)
+            blurt = Blurt(<host>)
 
         where ``<host>`` starts with ``https://``, ``ws://`` or ``wss://``.
 
         The purpose of this class it to simplify interaction with
-        Steem.
+        Blurt.
 
         The idea is to have a class that allows to do this:
 
         .. code-block:: python
 
-            >>> from beem import Steem
-            >>> steem = Steem()
-            >>> print(steem.get_blockchain_version())  # doctest: +SKIP
+            >>> from beem import Blurt
+            >>> blurt = Blurt()
+            >>> print(blurt.get_blockchain_version())  # doctest: +SKIP
 
         This class also deals with edits, votes and reading content.
 

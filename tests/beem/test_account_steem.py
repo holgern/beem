@@ -20,9 +20,9 @@ class Testcases(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-      
-        cls.bts = Hive(
-            node=get_hive_nodes(),
+
+        cls.bts = Steem(
+            node=get_steem_nodes(),
             nobroadcast=True,
             bundle=False,
             unsigned=True,
@@ -45,7 +45,7 @@ class Testcases(unittest.TestCase):
         # symbol = asset["symbol"]
         self.assertEqual(account.name, "beembot")
         self.assertEqual(account["name"], account.name)
-        self.assertIsInstance(account.get_balance("available", "HBD"), Amount)
+        self.assertIsInstance(account.get_balance("available", "SBD"), Amount)
         account.print_info()
         # self.assertIsInstance(account.balance({"symbol": symbol}), Amount)
         self.assertIsInstance(account.available_balances, list)
@@ -67,10 +67,6 @@ class Testcases(unittest.TestCase):
         h_all_raw = []
         for h in account.history_reverse(raw_output=True):
             h_all_raw.append(h)
-        index = h_all_raw[0][0]
-        for op in h_all_raw:
-            self.assertEqual(op[0], index)
-            index -= 1
         # h_all_raw = h_all_raw[zero_element:]
         zero_element = h_all_raw[-1][0]
         h_list = []
@@ -298,7 +294,7 @@ class Testcases(unittest.TestCase):
     def test_MissingKeyError(self):
         w = self.account
         w.blockchain.txbuffer.clear()
-        tx = w.convert("1 HBD")
+        tx = w.convert("1 SBD")
         with self.assertRaises(
             exceptions.MissingKeyError
         ):
@@ -359,7 +355,7 @@ class Testcases(unittest.TestCase):
     def test_transfer_from_savings(self):
         w = self.account
         w.blockchain.txbuffer.clear()
-        tx = w.transfer_from_savings(1, "HIVE", "")
+        tx = w.transfer_from_savings(1, "STEEM", "")
         self.assertEqual(
             (tx["operations"][0][0]),
             "transfer_from_savings"
@@ -372,7 +368,7 @@ class Testcases(unittest.TestCase):
     def test_transfer_to_savings(self):
         w = self.account
         w.blockchain.txbuffer.clear()
-        tx = w.transfer_to_savings(1, "HIVE", "")
+        tx = w.transfer_to_savings(1, "STEEM", "")
         self.assertEqual(
             (tx["operations"][0][0]),
             "transfer_to_savings"
@@ -385,7 +381,7 @@ class Testcases(unittest.TestCase):
     def test_convert(self):
         w = self.account
         w.blockchain.txbuffer.clear()
-        tx = w.convert("1 HBD")
+        tx = w.convert("1 SBD")
         self.assertEqual(
             (tx["operations"][0][0]),
             "convert"
@@ -411,7 +407,7 @@ class Testcases(unittest.TestCase):
     def test_transfer_to_vesting(self):
         w = self.account
         w.blockchain.txbuffer.clear()
-        tx = w.transfer_to_vesting("1 HIVE")
+        tx = w.transfer_to_vesting("1 STEEM")
         self.assertEqual(
             (tx["operations"][0][0]),
             "transfer_to_vesting"
@@ -422,7 +418,7 @@ class Testcases(unittest.TestCase):
             op["from"])
 
         w.blockchain.txbuffer.clear()
-        tx = w.transfer_to_vesting("1 HIVE", skip_account_check=True)
+        tx = w.transfer_to_vesting("1 STEEM", skip_account_check=True)
         self.assertEqual(
             (tx["operations"][0][0]),
             "transfer_to_vesting"
@@ -435,7 +431,7 @@ class Testcases(unittest.TestCase):
     def test_transfer(self):
         w = self.account
         w.blockchain.txbuffer.clear()
-        tx = w.transfer("beembot", "1", "HIVE")
+        tx = w.transfer("beembot", "1", "STEEM")
         self.assertEqual(
             (tx["operations"][0][0]),
             "transfer"
@@ -449,7 +445,7 @@ class Testcases(unittest.TestCase):
             op["to"])        
 
         w.blockchain.txbuffer.clear()
-        tx = w.transfer("beembot", "1", "HIVE", skip_account_check=True)
+        tx = w.transfer("beembot", "1", "STEEM", skip_account_check=True)
         self.assertEqual(
             (tx["operations"][0][0]),
             "transfer"
@@ -505,10 +501,6 @@ class Testcases(unittest.TestCase):
         h_all_raw = []
         for h in account.history(raw_output=False):
             h_all_raw.append(h)
-        index = h_all_raw[0]["index"]
-        for op in h_all_raw:
-            self.assertEqual(op["index"], index)
-            index += 1
         last_block = h_all_raw[0]["block"]
         i = 1
         for op in h_all_raw[1:5]:
@@ -520,20 +512,6 @@ class Testcases(unittest.TestCase):
             self.assertTrue(op_num <= i)
             i += 1
             last_block = new_block
-
-    def test_history_votes(self):
-        stm = self.bts
-        account = Account("gtg", steem_instance=stm)
-        utc = pytz.timezone('UTC')
-        limit_time = utc.localize(datetime.utcnow()) - timedelta(days=2)
-        votes_list = []
-        for v in account.history(start=limit_time, only_ops=["vote"]):
-            votes_list.append(v)
-        start_num = votes_list[0]["block"]
-        votes_list2 = []
-        for v in account.history(start=start_num, only_ops=["vote"]):
-            votes_list2.append(v)
-        self.assertTrue(abs(len(votes_list) - len(votes_list2)) < 2)
 
     def test_comment_history(self):
         account = self.account
@@ -571,21 +549,6 @@ class Testcases(unittest.TestCase):
         account = self.account
         for vote_pwr in range(5, 100, 5):
             self.assertTrue(9900 <= account.get_vote_pct_for_vote_value(account.get_voting_value(voting_power=vote_pwr), voting_power=vote_pwr) <= 11000)
-
-    def test_list_subscriptions(self):
-        stm = self.bts
-        account = Account("holger80", steem_instance=stm)
-        assert len(account.list_all_subscriptions()) > 0
-
-    def test_account_feeds(self):
-        stm = self.bts
-        account = Account("holger80", steem_instance=stm)
-        assert len(account.get_account_posts()) > 0
-
-    def test_notifications(self):
-        stm = self.bts
-        account = Account("gtg", steem_instance=stm)
-        assert isinstance(account.get_notifications(), list)
 
     def test_extract_account_name(self):
         stm = self.bts

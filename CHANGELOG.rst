@@ -1,5 +1,11 @@
 Changelog
 =========
+0.24.18
+-------
+* Adapt account history on api changes and fixes issue #267
+* Speed up history call, when limit is below 1000
+* Improve unit tests for account history
+
 0.24.17
 -------
 * Fixed a bug when using skip_account_check=True
