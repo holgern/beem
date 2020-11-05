@@ -4,7 +4,7 @@ import unittest
 import random
 from parameterized import parameterized
 from pprint import pprint
-from beem import Steem
+from beem import Steem, Hive
 from beem.amount import Amount
 from beem.witness import Witness
 from beem.account import Account
@@ -32,20 +32,20 @@ core_unit = "STM"
 class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        stm = Steem(node=get_hive_nodes())
+        stm = Hive(node=get_hive_nodes())
         stm.config.refreshBackup()
         stm.set_default_nodes(["xyz"])
         del stm
 
         cls.urls = get_hive_nodes()
-        cls.bts = Steem(
+        cls.bts = Hive(
             node=cls.urls,
             nobroadcast=True,
             num_retries=10
         )
         set_shared_steem_instance(cls.bts)
         acc = Account("fullnodeupdate", steem_instance=cls.bts)
-        comment = Comment(acc.get_blog_entries(limit=10)[1], steem_instance=cls.bts)
+        comment = Comment(acc.get_blog_entries(limit=5)[1], steem_instance=cls.bts)
         cls.authorperm = comment.authorperm
         votes = comment.get_votes(raw_data=True)
         last_vote = votes[-1]
@@ -53,7 +53,7 @@ class Testcases(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        stm = Steem(node=get_hive_nodes())
+        stm = Hive(node=get_hive_nodes())
         stm.config.recover_with_latest_backup()
 
     @parameterized.expand([

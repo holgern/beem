@@ -653,10 +653,10 @@ class Account(BlockchainObject):
         """
         if self['mined']:
             return None
-        ops = list(self.get_account_history(0, 0))
-        if not ops or 'creator' not in ops[0]:
+        ops = list(self.get_account_history(1, 1))
+        if not ops or 'creator' not in ops[-1]:
             return None
-        return ops[0]['creator']
+        return ops[-1]['creator']
 
     def get_recharge_time_str(self, voting_power_goal=100, starting_voting_power=None):
         """ Returns the account recharge time as string
@@ -1841,7 +1841,7 @@ class Account(BlockchainObject):
             except IndexError:
                 return 0
 
-    def _get_account_history(self, account=None, start=-1, limit=1):
+    def _get_account_history(self, account=None, start=-1, limit=1, operation_filter_low=None, operation_filter_high=None):
         if account is None:
             account = self["name"]
         account = extract_account_name(account)
@@ -1850,15 +1850,33 @@ class Account(BlockchainObject):
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
-        if self.blockchain.rpc.get_use_appbase():
-            try:
-                ret = self.blockchain.rpc.get_account_history({'account': account, 'start': start, 'limit': limit}, api="account_history")
-                if ret is not None:
-                    ret = ret["history"]
-            except ApiNotSupported:
-                ret = self.blockchain.rpc.get_account_history(account, start, limit, api="condenser")
+        if operation_filter_low is None and operation_filter_high is None:
+            if self.blockchain.rpc.get_use_appbase():
+                try:
+                    ret = self.blockchain.rpc.get_account_history({'account': account, 'start': start, 'limit': limit}, api="account_history")
+                    if ret is not None:
+                        ret = ret["history"]
+                except ApiNotSupported:
+                    ret = self.blockchain.rpc.get_account_history(account, start, limit, api="condenser")
+            else:
+                ret = self.blockchain.rpc.get_account_history(account, start, limit, api="database")
         else:
-            ret = self.blockchain.rpc.get_account_history(account, start, limit, api="database")
+            if self.blockchain.rpc.get_use_appbase():
+                try:
+                    ret = self.blockchain.rpc.get_account_history({'account': account, 'start': start, 'limit': limit,
+                                                                   'operation_filter_low': operation_filter_low,
+                                                                   'operation_filter_high': operation_filter_low}, api="account_history")
+                    if ret is not None:
+                        ret = ret["history"]
+                except ApiNotSupported:
+                    ret = self.blockchain.rpc.get_account_history(account, start, limit,
+                                                                  operation_filter_low,
+                                                                  operation_filter_high, api="condenser")
+            else:
+                ret = self.blockchain.rpc.get_account_history(account, start, limit,
+                                                              operation_filter_low,
+                                                              operation_filter_high,
+                                                              api="database")            
         return ret
 
     def estimate_virtual_op_num(self, blocktime, stop_diff=0, max_count=100):
@@ -1907,6 +1925,8 @@ class Account(BlockchainObject):
             if index == 0:
                 index = 1
             op = self._get_account_history(start=(index))
+            if len(op) == 0:
+                return None
             return op[0][1]['block']
 
         max_index = self.virtual_op_count()
@@ -1966,6 +1986,9 @@ class Account(BlockchainObject):
             # get block number for current op number estimation
             if op_num != last_op_num:
                 block_num = get_blocknum(op_num)
+                while block_num is None and op_num < max_index:
+                    op_num += 1
+                    block_num = get_blocknum(op_num)
                 last_op_num = op_num
 
             # check if the required accuracy was reached
