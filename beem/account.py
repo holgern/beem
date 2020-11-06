@@ -8,7 +8,7 @@ import logging
 from prettytable import PrettyTable
 from beem.instance import shared_blockchain_instance
 from .exceptions import AccountDoesNotExistsException, OfflineHasNoRPCException
-from beemapi.exceptions import ApiNotSupported, MissingRequiredActiveAuthority, SupportedByHivemind
+from beemapi.exceptions import ApiNotSupported, MissingRequiredActiveAuthority, SupportedByHivemind, FilteredItemNotFound
 from .blockchainobject import BlockchainObject
 from .blockchain import Blockchain
 from .utils import formatTimeString, formatTimedelta, remove_from_dict, reputation_to_score, addTzInfo
@@ -1865,7 +1865,7 @@ class Account(BlockchainObject):
                 try:
                     ret = self.blockchain.rpc.get_account_history({'account': account, 'start': start, 'limit': limit,
                                                                    'operation_filter_low': operation_filter_low,
-                                                                   'operation_filter_high': operation_filter_low}, api="account_history")
+                                                                   'operation_filter_high': operation_filter_high}, api="account_history")
                     if ret is not None:
                         ret = ret["history"]
                 except ApiNotSupported:
@@ -2041,6 +2041,35 @@ class Account(BlockchainObject):
                 "7d": self.get_curation_reward(days=7),
                 "avg": self.get_curation_reward(days=7) / 7}
 
+    def _get_operation_filter(self, only_ops=[], exclude_ops=[]):
+        from beembase.operationids import operations
+        operation_filter_low = 0
+        operation_filter_high = 0
+        if len(only_ops) == 0 and len(exclude_ops) == 0:
+            return None, None
+        if len(only_ops) > 0:
+            for op in only_ops:
+                op_id = operations[op]
+                if op_id <= 64:
+                    operation_filter_low += 2**op_id
+                else:
+                    operation_filter_high += 2 ** (op_id - 64 - 1)
+        else:
+            for op in operations:
+                op_id = operations[op]
+                if op_id <= 64:
+                    operation_filter_low += 2**op_id
+                else:
+                    operation_filter_high += 2 ** (op_id - 64 - 1)
+            for op in exclude_ops:
+                op_id = operations[op]
+                if op_id <= 64:
+                    operation_filter_low -= 2**op_id
+                else:
+                    operation_filter_high -= 2 ** (op_id - 64 - 1)
+        return operation_filter_low, operation_filter_high
+        
+
     def get_account_history(self, index, limit, order=-1, start=None, stop=None, use_block_num=True, only_ops=[], exclude_ops=[], raw_output=False):
         """ Returns a generator for individual account transactions. This call can be used in a
             ``for`` loop.
@@ -2074,7 +2103,14 @@ class Account(BlockchainObject):
         if order != -1 and order != 1:
             raise ValueError("order must be -1 or 1!")
         # self.blockchain.rpc.set_next_node_on_empty_reply(True)
-        txs = self._get_account_history(start=index, limit=limit)
+        operation_filter_low = None
+        operation_filter_high = None
+        if self.blockchain.rpc.url == 'https://api.hive.blog':
+            operation_filter_low, operation_filter_high = self._get_operation_filter(only_ops=only_ops, exclude_ops=exclude_ops)
+        try:
+            txs = self._get_account_history(start=index, limit=limit, operation_filter_low=operation_filter_low, operation_filter_high=operation_filter_high)
+        except FilteredItemNotFound:
+            txs = []
         if txs is None:
             return
         start = addTzInfo(start)
@@ -2272,11 +2308,19 @@ class Account(BlockchainObject):
         if _limit < 0:
             return
         last_item_index = -1
+        
+        if self.blockchain.rpc.url == 'https://api.hive.blog' and (len(only_ops) > 0 or len(exclude_ops) > 0):
+            operation_filter = True
+        else:
+            operation_filter = False
+            
         while True:
             # RPC call
             if first < _limit:
-                first = _limit    
-            for item in self.get_account_history(first, _limit, start=None, stop=None, order=1, raw_output=raw_output):
+                first = _limit
+            batch_count = 0
+            for item in self.get_account_history(first, _limit, start=None, stop=None, order=1, only_ops=only_ops, exclude_ops=exclude_ops, raw_output=raw_output):
+                batch_count += 1
                 if raw_output:
                     item_index, event = item
                     op_type, op = event['op']
@@ -2295,7 +2339,7 @@ class Account(BlockchainObject):
                     continue
                 elif start is not None and not use_block_num and item_index < start:
                     continue
-                elif last_item_index == item_index:
+                elif last_item_index >= item_index:
                     continue
                 if stop is not None and isinstance(stop, (datetime, date, time)):
                     timediff = stop - formatTimeString(timestamp)
@@ -2306,17 +2350,23 @@ class Account(BlockchainObject):
                     return
                 elif stop is not None and not use_block_num and item_index > stop:
                     return
-                if exclude_ops and op_type in exclude_ops:
-                    continue
-                if not only_ops or op_type in only_ops:
+                if operation_filter:
                     yield item
+                else:
+                    if exclude_ops and op_type in exclude_ops:
+                        continue
+                    if not only_ops or op_type in only_ops:
+                        yield item                
                 last_item_index = item_index
             if first < max_index and first + _limit >= max_index and not last_round:
                 _limit = max_index - first
                 first = max_index
                 last_round = True
             else:
-                first += (_limit)
+                if operation_filter and batch_count < _limit and first + 2000 < max_index and _limit == 1000:
+                    first += 2000
+                else:
+                    first += _limit
                 if stop is not None and not use_block_num and isinstance(stop, int) and first >= stop + _limit + 1:
                     break
                 elif first > max_index or last_round:
@@ -2437,12 +2487,20 @@ class Account(BlockchainObject):
             first = op_est + est_diff
         if stop is not None and isinstance(stop, int) and stop < 0 and not use_block_num:
             stop += first
-        last_item_index = -1
+            
+        if self.blockchain.rpc.url == 'https://api.hive.blog' and (len(only_ops) > 0 or len(exclude_ops) > 0):
+            operation_filter = True
+        else:
+            operation_filter = False
+        
+        last_item_index = first + 1
         while True:
             # RPC call
             if first - _limit < 0:
                 _limit = first
+            batch_count = 0
             for item in self.get_account_history(first, _limit, start=None, stop=None, order=-1, only_ops=only_ops, exclude_ops=exclude_ops, raw_output=raw_output):
+                batch_count += 1
                 if raw_output:
                     item_index, event = item
                     op_type, op = event['op']
@@ -2461,7 +2519,7 @@ class Account(BlockchainObject):
                     continue
                 elif start is not None and not use_block_num and item_index > start:
                     continue
-                elif item_index == last_item_index:
+                elif last_item_index <= item_index:
                     continue
                 if stop is not None and isinstance(stop, (datetime, date, time)):
                     timediff = stop - formatTimeString(timestamp)
@@ -2474,12 +2532,18 @@ class Account(BlockchainObject):
                 elif stop is not None and not use_block_num and item_index < stop:
                     first = 0
                     return
-                if exclude_ops and op_type in exclude_ops:
-                    continue
-                if not only_ops or op_type in only_ops:
+                if operation_filter:
                     yield item
+                else:
+                    if exclude_ops and op_type in exclude_ops:
+                        continue
+                    if not only_ops or op_type in only_ops:
+                        yield item                    
                 last_item_index = item_index
-            first -= (_limit)
+            if operation_filter and batch_count < _limit and _limit == 1000:
+                first -= 2000
+            else:
+                first -= (_limit)
             if first < 1:
                 break
 

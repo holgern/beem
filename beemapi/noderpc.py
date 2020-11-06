@@ -139,6 +139,8 @@ class NodeRPC(GrapheneRPC):
             raise exceptions.InvalidParameters()
         elif re.search("Supported by Hivemind", msg):
             raise exceptions.SupportedByHivemind()
+        elif re.search("Could not find filtered operation", msg):
+            raise exceptions.FilteredItemNotFound(msg)
         elif re.search("Unable to acquire database lock", msg):
             self.nodes.sleep_and_check_retries(str(msg), call_retry=True)
             doRetry = True

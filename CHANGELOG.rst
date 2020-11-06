@@ -6,6 +6,7 @@ Changelog
 * Speed up history call, when limit is below 1000
 * Improve unit tests for account history
 * Fix estimate_virtual_op_num, when get_account_history returns an empty entry for an index
+* Implement _get_operation_filter and use filter operations in history and history_reverse on the https://api.hive.blog api node
 
 0.24.17
 -------

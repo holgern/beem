@@ -535,6 +535,13 @@ class Testcases(unittest.TestCase):
             votes_list2.append(v)
         self.assertTrue(abs(len(votes_list) - len(votes_list2)) < 2)
 
+        account = Account("beembot", blockchain_instance=stm)
+        votes_list = list(account.history(only_ops=["vote"]))
+        votes_list2 = list(account.history_reverse(only_ops=["vote"]))
+        self.assertEqual(len(votes_list), len(votes_list2))
+        self.assertEqual(votes_list[0]["voter"], votes_list2[-1]["voter"])
+        self.assertEqual(votes_list[-1]["voter"], votes_list2[0]["voter"])
+
     def test_comment_history(self):
         account = self.account
         comments = []

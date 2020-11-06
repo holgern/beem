@@ -92,6 +92,10 @@ class NoAccessApi(RPCError):
     pass
 
 
+class FilteredItemNotFound(RPCError):
+    pass
+
+
 class InvalidEndpointUrl(Exception):
     pass
 
