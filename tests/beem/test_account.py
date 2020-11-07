@@ -493,12 +493,14 @@ class Testcases(unittest.TestCase):
         self.assertTrue(abs(op_num1 - op_num3) < 200)
         block_diff1 = 0
         block_diff2 = 0
-        for h in account.get_account_history(op_num4 - 1, 0):
+        for h in account.get_account_history(op_num4 - 1, 1):
             block_diff1 = (block_num - h["block"])
-        for h in account.get_account_history(op_num4 + 1, 0):
+        for h in account.get_account_history(op_num4 + 1, 1):
             block_diff2 = (block_num - h["block"])
         self.assertTrue(block_diff1 > 0)
+        self.assertTrue(block_diff1 < 1000)
         self.assertTrue(block_diff2 <= 0)
+        self.assertTrue(block_diff2 > -1000)
 
     def test_estimate_virtual_op_num2(self):
         account = self.account
@@ -541,6 +543,47 @@ class Testcases(unittest.TestCase):
         self.assertEqual(len(votes_list), len(votes_list2))
         self.assertEqual(votes_list[0]["voter"], votes_list2[-1]["voter"])
         self.assertEqual(votes_list[-1]["voter"], votes_list2[0]["voter"])
+
+    def test_history_op_filter(self):
+        stm = Hive("https://api.hive.blog")
+        account = Account("beembot", blockchain_instance=stm)
+        votes_list = list(account.history(only_ops=["vote"]))
+        other_list = list(account.history(exclude_ops=["vote"]))
+        all_list = list(account.history())
+        self.assertEqual(len(all_list), len(votes_list) + len(other_list))
+        index = 0
+        for h in sorted((votes_list + other_list), key=lambda h: h["index"]):
+            self.assertEqual(index, h["index"])
+            index += 1
+        votes_list = list(account.history_reverse(only_ops=["vote"]))
+        other_list = list(account.history_reverse(exclude_ops=["vote"]))
+        all_list = list(account.history_reverse())
+        self.assertEqual(len(all_list), len(votes_list) + len(other_list))
+        index = 0
+        for h in sorted((votes_list + other_list), key=lambda h: h["index"]):
+            self.assertEqual(index, h["index"])
+            index += 1        
+
+    def test_history_op_filter2(self):
+        stm = Hive("https://api.hive.blog")
+        batch_size = 100
+        account = Account("beembot", blockchain_instance=stm)
+        votes_list = list(account.history(only_ops=["vote"], batch_size=batch_size))
+        other_list = list(account.history(exclude_ops=["vote"], batch_size=batch_size))
+        all_list = list(account.history(batch_size=batch_size))
+        self.assertEqual(len(all_list), len(votes_list) + len(other_list))
+        index = 0
+        for h in sorted((votes_list + other_list), key=lambda h: h["index"]):
+            self.assertEqual(index, h["index"])
+            index += 1
+        votes_list = list(account.history_reverse(only_ops=["vote"], batch_size=batch_size))
+        other_list = list(account.history_reverse(exclude_ops=["vote"], batch_size=batch_size))
+        all_list = list(account.history_reverse(batch_size=batch_size))
+        self.assertEqual(len(all_list), len(votes_list) + len(other_list))
+        index = 0
+        for h in sorted((votes_list + other_list), key=lambda h: h["index"]):
+            self.assertEqual(index, h["index"])
+            index += 1    
 
     def test_comment_history(self):
         account = self.account
@@ -601,3 +644,19 @@ class Testcases(unittest.TestCase):
         self.assertEqual(extract_account_name("holger80"), "holger80")
         self.assertEqual(extract_account_name({"name": "holger80"}), "holger80")
         self.assertEqual(extract_account_name(""), "")
+
+    def test_get_blocknum_from_hist(self):
+        stm = Hive("https://api.hive.blog")
+        account = Account("beembot", blockchain_instance=stm)
+        created, min_index = account._get_first_blocknum()
+        if min_index == 0:
+            self.assertEqual(created, 23687631)
+            block = account._get_blocknum_from_hist(0, min_index=min_index)
+            self.assertEqual(block, 23687631)
+            hist_num = account.estimate_virtual_op_num(block, min_index=min_index)
+            self.assertEqual(hist_num, 0)
+        else:
+            self.assertEqual(created, 23721519)
+        min_index = 1
+        block = account._get_blocknum_from_hist(0, min_index=min_index)
+        self.assertEqual(block, 23721519)

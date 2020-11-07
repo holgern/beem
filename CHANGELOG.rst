@@ -1,5 +1,9 @@
 Changelog
 =========
+0.24.19
+-------
+* Fix  history item with index 0 for https://api.hive.blog 
+
 0.24.18
 -------
 * Adapt account history on api changes and fixes issue #267

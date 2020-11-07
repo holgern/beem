@@ -1835,6 +1835,8 @@ class Account(BlockchainObject):
                 if op_count is None or len(op_count) == 0:
                     op_count = self._get_account_history(start=-1, limit=1)
                 if isinstance(op_count, list) and len(op_count) > 0 and len(op_count[0]) > 0:
+                    if self.blockchain.rpc.url == "https://api.hive.blog":
+                        return op_count[-1][0] + 1
                     return op_count[-1][0]
                 else:
                     return 0
@@ -1847,6 +1849,8 @@ class Account(BlockchainObject):
         account = extract_account_name(account)
         if limit < 1:
             limit = 1
+        elif limit > 1000:
+            limit = 1000
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
@@ -1879,7 +1883,24 @@ class Account(BlockchainObject):
                                                               api="database")            
         return ret
 
-    def estimate_virtual_op_num(self, blocktime, stop_diff=0, max_count=100):
+    def _get_blocknum_from_hist(self, index, min_index=1):
+        if index >= 0 and index < min_index:
+            index = min_index
+        op = self._get_account_history(start=(index))
+        if len(op) == 0:
+            return None
+        return op[0][1]['block']
+
+    def _get_first_blocknum(self):
+        min_index = 0
+        try:
+            created = self._get_blocknum_from_hist(0, min_index=min_index)
+        except:
+            min_index = 1
+            created = self._get_blocknum_from_hist(0, min_index=min_index)
+        return created, min_index
+
+    def estimate_virtual_op_num(self, blocktime, stop_diff=0, max_count=100, min_index=None):
         """ Returns an estimation of an virtual operation index for a given time or blockindex
 
             :param blocktime: start time or start block index from which account
@@ -1921,20 +1942,15 @@ class Account(BlockchainObject):
                 print(block_est - block_num)
 
         """
-        def get_blocknum(index):
-            if index == 0:
-                index = 1
-            op = self._get_account_history(start=(index))
-            if len(op) == 0:
-                return None
-            return op[0][1]['block']
-
         max_index = self.virtual_op_count()
         if max_index < stop_diff:
             return 0
 
         # calculate everything with block numbers
-        created = get_blocknum(1)
+        if min_index is None:
+            created, min_index = self._get_first_blocknum()
+        else:
+            created = self._get_blocknum_from_hist(0, min_index=min_index)
 
         # convert blocktime to block number if given as a datetime/date/time
         if isinstance(blocktime, (datetime, date, time)):
@@ -1948,7 +1964,7 @@ class Account(BlockchainObject):
             return 0
 
         # get the block number from the account's latest operation
-        latest_blocknum = get_blocknum(-1)
+        latest_blocknum = self._get_blocknum_from_hist(-1, min_index=min_index)
 
         # requested blocknum/timestamp is after the latest account operation
         if target_blocknum >= latest_blocknum:
@@ -1985,10 +2001,10 @@ class Account(BlockchainObject):
 
             # get block number for current op number estimation
             if op_num != last_op_num:
-                block_num = get_blocknum(op_num)
+                block_num = self._get_blocknum_from_hist(op_num, min_index=min_index)
                 while block_num is None and op_num < max_index:
                     op_num += 1
-                    block_num = get_blocknum(op_num)
+                    block_num = self._get_blocknum_from_hist(op_num, min_index=min_index)
                 last_op_num = op_num
 
             # check if the required accuracy was reached
@@ -2267,9 +2283,10 @@ class Account(BlockchainObject):
         if start is not None and not use_block_num and not isinstance(start, (datetime, date, time)):
             start_index = start
         elif start is not None and max_index > batch_size:
-            op_est = self.estimate_virtual_op_num(start, stop_diff=1)
-            if op_est == 0:
-                op_est = 1
+            created, min_index = self._get_first_blocknum()
+            op_est = self.estimate_virtual_op_num(start, stop_diff=1, min_index=min_index)
+            if op_est < min_index:
+                op_est = min_index
             est_diff = 0
             if isinstance(start, (datetime, date, time)):
                 for h in self.get_account_history(op_est, 0):
@@ -2301,7 +2318,9 @@ class Account(BlockchainObject):
         if first > max_index:
             _limit = max_index - start_index
             first = start_index + _limit - 1
-        elif first < _limit:
+        elif first < _limit and self.blockchain.rpc.url == "https://api.hive.blog":
+            first = _limit - 1
+        elif first < _limit and self.blockchain.rpc.url != "https://api.hive.blog":
             first = _limit
         last_round = False
         
@@ -2316,7 +2335,9 @@ class Account(BlockchainObject):
             
         while True:
             # RPC call
-            if first < _limit:
+            if first < _limit - 1 and self.blockchain.rpc.url == "https://api.hive.blog":
+                first = _limit - 1
+            elif first < _limit and self.blockchain.rpc.url != "https://api.hive.blog":
                 first = _limit
             batch_count = 0
             for item in self.get_account_history(first, _limit, start=None, stop=None, order=1, only_ops=only_ops, exclude_ops=exclude_ops, raw_output=raw_output):
@@ -2462,10 +2483,11 @@ class Account(BlockchainObject):
         elif start is not None and isinstance(start, int) and not use_block_num:
             first = start
         elif start is not None and first > batch_size:
-            op_est = self.estimate_virtual_op_num(start, stop_diff=1)
+            created, min_index = self._get_first_blocknum()
+            op_est = self.estimate_virtual_op_num(start, stop_diff=1, min_index=min_index)
             est_diff = 0
-            if op_est == 0:
-                op_est = 1
+            if op_est < min_index:
+                op_est = min_index
             if isinstance(start, (datetime, date, time)):
                 for h in self.get_account_history(op_est, 0):
                     block_date = formatTimeString(h["timestamp"])
@@ -2496,7 +2518,9 @@ class Account(BlockchainObject):
         last_item_index = first + 1
         while True:
             # RPC call
-            if first - _limit < 0:
+            if first - _limit < 0 and self.blockchain.rpc.url == 'https://api.hive.blog':
+                _limit = first + 1
+            elif first - _limit < 0 and self.blockchain.rpc.url != 'https://api.hive.blog':
                 _limit = first
             batch_count = 0
             for item in self.get_account_history(first, _limit, start=None, stop=None, order=-1, only_ops=only_ops, exclude_ops=exclude_ops, raw_output=raw_output):
