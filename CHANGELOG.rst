@@ -1,5 +1,9 @@
 Changelog
-=========
+========
+0.24.20
+-------
+* New hive node has been added (https://hived.emre.sh)
+
 0.24.19
 -------
 * Fix  history item with index 0 for https://api.hive.blog 

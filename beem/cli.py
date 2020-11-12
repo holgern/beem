@@ -220,7 +220,7 @@ def export_trx(tx, export):
 @shell(prompt='beempy> ', intro='Starting beempy... (use help to list all commands)', chain=True)
 # @click.group(chain=True)
 @click.option(
-    '--node', '-n', default="", help="URL for public Steem API (e.g. https://api.steemit.com)")
+    '--node', '-n', default="", help="URL for public Hive API (e.g. https://api.hive.blog)")
 @click.option(
     '--offline', '-o', is_flag=True, default=False, help="Prevent connecting to network")
 @click.option(

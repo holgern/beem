@@ -291,7 +291,7 @@ class Testcases(unittest.TestCase):
         following = account.get_following()
         self.assertTrue(isinstance(following, list))
         count = account.get_follow_count()
-        self.assertEqual(count['follower_count'], len(followers))
+        self.assertEqual(count['follower_count'], len(followers) + 1)
         self.assertEqual(count['following_count'], len(following))
         
 

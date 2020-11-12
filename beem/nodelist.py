@@ -205,6 +205,14 @@ class NodeList(list):
                 "owner": "3speak",
                 "hive": True,
                 "score": 40                   
+            },
+            {
+                "url": "https://hived.emre.sh",
+                "version": "1.24.2",
+                "type": "appbase",
+                "owner": "emrebeyler",
+                "hive": True,
+                "score": 40                   
             }            
         ]
         super(NodeList, self).__init__(nodes)
