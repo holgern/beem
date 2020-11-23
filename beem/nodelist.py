@@ -55,12 +55,28 @@ class NodeList(list):
                 "score": 20
             },
             {
-                "url": "wss://steemd.privex.io",
-                "version": "0.20.2",
+                "url": "https://api.steemdb.online",
+                "version": "0.23.0",
                 "type": "appbase",
-                "owner": "privex",
+                "owner": "steem_supporter",
                 "hive": False,
-                "score": -10
+                "score": 20
+            },
+            {
+                "url": "https://api.steem.buzz",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "ericet",
+                "hive": False,
+                "score": 20
+            },
+            {
+                "url": "https://api.steem.buzz",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "ericet",
+                "hive": False,
+                "score": 20
             },
             {
                 "url": "https://anyx.io",
@@ -69,14 +85,6 @@ class NodeList(list):
                 "owner": "anyx",
                 "hive": True,
                 "score": 50
-            },
-            {
-                "url": "http://anyx.io",
-                "version": "0.23.0",
-                "type": "appbase",
-                "owner": "anyx",
-                "hive": True,
-                "score": 20
             },
             {
                 "url": "https://hive-test-beeabode.roelandp.nl",
@@ -120,17 +128,17 @@ class NodeList(list):
             },
             {
                 "url": "https://steem.61bts.com",
-                "version": "0.22.5",
+                "version": "0.23.0",
                 "type": "appbase",
-                "owner": "",
+                "owner": "ety001",
                 "hive": False,
                 "score": 10
             },
             {
-                "url": "https://steem.bts.tw",
+                "url": "https://cn.steems.top",
                 "version": "0.22.5",
                 "type": "appbase",
-                "owner": "",
+                "owner": "maiyude",
                 "hive": False,
                 "score": 10
             },
