@@ -8,6 +8,11 @@ import pytz
 import difflib
 from ruamel.yaml import YAML
 import difflib
+import secrets
+import string
+from beemgraphenebase.account import PasswordKey
+import ast
+import os
 
 timeFormat = "%Y-%m-%dT%H:%M:%S"
 # https://github.com/matiasb/python-unidiff/blob/master/unidiff/constants.py#L37
@@ -383,3 +388,97 @@ def load_dirty_json(dirty_json):
         dirty_json = re.sub(r, s, dirty_json)
     clean_json = json.loads(dirty_json)
     return clean_json    
+
+
+def create_new_password(length=32):
+    """Creates a random password containing alphanumeric chars with at least 1 number and 1 upper and lower char"""
+    alphabet = string.ascii_letters + string.digits
+    while True:
+        import_password = ''.join(secrets.choice(alphabet) for i in range(length))
+        if (any(c.islower() for c in import_password) and any(c.isupper() for c in import_password) and any(c.isdigit() for c in import_password)):
+            break
+    return import_password
+
+
+def import_coldcard_wif(filename):
+    """Reads a exported coldcard Wif text file and returns the WIF and used path"""
+    next_var = ""
+    import_password = ""
+    path = ""
+    with open(filename) as fp: 
+        for line in fp:
+            if line.strip() == "":
+                continue
+            if line.strip() == "WIF (privkey):":
+                next_var = "wif"
+                continue
+            elif "Path Used" in line.strip():
+                next_var = "path"
+                continue
+            if next_var == "wif":
+                import_password = line.strip()
+            elif next_var == "path":
+                path = line
+            next_var = ""
+    return import_password, path.lstrip().replace("\n", "")
+
+
+def generate_password(import_password, wif=1):
+    if wif > 0:
+        password = import_password
+        for _ in range(wif):
+            pk = PasswordKey("", password, role="")
+            password = str(pk.get_private())
+        password = 'P' + password
+    else:
+        password = import_password
+    return password
+
+
+def import_pubkeys(import_pub):
+    if not os.path.isfile(import_pub):
+        raise Exception("File %s does not exist!" % import_pub)
+    with open(import_pub) as fp:
+        pubkeys = fp.read()
+    if pubkeys.find('\0') > 0:
+        with open(import_pub, encoding='utf-16') as fp:
+            pubkeys = fp.read()
+    pubkeys = ast.literal_eval(pubkeys)
+    owner = pubkeys["owner"]
+    active = pubkeys["active"]
+    posting = pubkeys["posting"]
+    memo = pubkeys["memo"]
+    return owner, active, posting, memo
+
+
+def import_custom_json(jsonid, json_data):
+    data = {}
+    if isinstance(json_data, tuple) and len(json_data) > 1:
+        key = None
+        for j in json_data:
+            if key is None:
+                key = j
+            else:
+                data[key] = j
+                key = None
+        if key is not None:
+            print("Value is missing for key: %s" % key)
+            return None
+    else:
+        try:
+            with open(json_data[0], 'r') as f:
+                data = json.load(f)
+        except:
+            print("%s is not a valid file or json field" % json_data)
+            return None
+    for d in data:
+        if isinstance(data[d], str) and data[d][0] == "{" and data[d][-1] == "}":
+            field = {}
+            for keyvalue in data[d][1:-1].split(","):
+                key = keyvalue.split(":")[0].strip()
+                value = keyvalue.split(":")[1].strip()
+                if jsonid == "ssc-mainnet1" and key == "quantity":
+                    value = float(value)
+                field[key] = value
+            data[d] = field
+    return data

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 from datetime import datetime, date, timedelta
+import os
 from beem.utils import (
     formatTimedelta,
     assets_from_string,
@@ -18,7 +19,11 @@ from beem.utils import (
     derive_beneficiaries,
     derive_tags,
     seperate_yaml_dict_from_body,
-    make_patch
+    make_patch,
+    create_new_password,
+    generate_password,
+    import_coldcard_wif,
+    import_pubkeys
 )
 
 
@@ -176,3 +181,36 @@ class Testcases(unittest.TestCase):
         self.assertEqual(par, {"par1": "data1", "par2": "data2", "par3": 3})
         self.assertEqual(body, " test ---")
 
+    def test_create_new_password(self):
+        new_password = create_new_password()
+        self.assertEqual(len(new_password), 32)
+        self.assertTrue(any(c.islower() for c in new_password))
+        self.assertTrue(any(c.isupper() for c in new_password))
+        self.assertTrue(any(c.isdigit() for c in new_password))
+
+        new_password2 = create_new_password()
+        self.assertFalse(new_password == new_password2)
+        new_password = create_new_password(length=16)
+        self.assertEqual(len(new_password), 16)
+
+    def test_generate_password(self):
+        new_password = generate_password("test", wif=0)
+        self.assertEqual(new_password, "test")
+        new_password = generate_password("test", wif=1)
+        self.assertAlmostEqual(new_password, "P5K2YUVmWfxbmvsNxCsfvArXdGXm7d5DC9pn4yD75k2UaSYgkXTh")
+
+    def test_import_coldcard_wif(self):
+        data_dir = os.path.join(os.path.dirname(__file__), 'data')
+        file = os.path.join(data_dir, "drv-wif-idx100.txt")
+        wif, path = import_coldcard_wif(file)
+        self.assertEqual(wif, "L5K7x3Zs6jgY5jMovRzdgucWHmvuidyPj1f8ioCAzGjHMhjmL5EL")
+        self.assertEqual(path, "m/83696968'/2'/100'")
+
+    def test_import_pubkeys(self):
+        data_dir = os.path.join(os.path.dirname(__file__), 'data')
+        file = os.path.join(data_dir, "pubkey.json")
+        owner, active, posting, memo = import_pubkeys(file)
+        self.assertEqual(owner, "STM7d8DzUzjs5jbSkBVNctRaZFGe991MhzzTrqMoTVvZJ5oyZN7Cj")
+        self.assertEqual(active, "STM7oADsCds97GqyEDY4cQC66brVrg7XHuRa2MLvYbuGrdKnNoQa6")
+        self.assertEqual(posting, "STM5fpGcVwvUFF55EzWQ35oJeERcWvt4M9dXwehdpYmKaFCCqihL7")
+        self.assertEqual(memo, "STM6A7DywWvMZRokxAK5CpTo8XAPKbrMennAs4ntwRFq5nj2jR7nG")

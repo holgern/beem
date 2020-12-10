@@ -4,7 +4,9 @@ Changelog
 -------
 * New hive node has been added (https://hived.emre.sh)
 * Add option to use a derived WIF from coldcard hardware wallet to derive a new account password
-* beempy keygen and beempy importaccount have now a new option import-coldcard
+* beempy passwordgen and beempy importaccount have now a new option import-coldcard
+* beempy passwordgen handles now password generation and import, whereas beempy keygen handles BIP39 related key generation.
+* refactoring and better unit testing
 
 0.24.19
 -------

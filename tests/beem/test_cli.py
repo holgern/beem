@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 import click
+import os
 from click.testing import CliRunner
 from pprint import pprint
 from beem import Steem, exceptions
@@ -10,6 +11,7 @@ from beemgraphenebase.account import PrivateKey
 from beem.cli import cli, balance
 from beem.instance import set_shared_steem_instance, shared_steem_instance
 from beembase.operationids import getOperationNameForId
+from beem.utils import import_pubkeys
 from .nodes import get_hive_nodes, get_steem_nodes
 
 wif = "5Jt2wTfhUt5GkZHV1HYVfkEaJ6XnY8D2iA4qjtK9nnGXAhThM3w"
@@ -146,6 +148,22 @@ class Testcases(unittest.TestCase):
         runner = CliRunner()
         result = runner.invoke(cli, ['keygen'])
         self.assertEqual(result.exit_code, 0)
+
+    def test_passwordgen(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['passwordgen'])
+        self.assertEqual(result.exit_code, 0)
+        data_dir = os.path.join(os.path.dirname(__file__), 'data')
+        file = os.path.join(data_dir, "drv-wif-idx100.txt")
+        file2 = os.path.join(data_dir, "wif_pub_temp.json")
+        result = runner.invoke(cli, ['passwordgen', '-a', 'test', '-o', file, '-u', file2, '-w', 1])
+        self.assertEqual(result.exit_code, 0)
+        owner, active, posting, memo = import_pubkeys(file2)
+        self.assertEqual(owner, "STM7d8DzUzjs5jbSkBVNctRaZFGe991MhzzTrqMoTVvZJ5oyZN7Cj")
+        self.assertEqual(active, "STM7oADsCds97GqyEDY4cQC66brVrg7XHuRa2MLvYbuGrdKnNoQa6")
+        self.assertEqual(posting, "STM5fpGcVwvUFF55EzWQ35oJeERcWvt4M9dXwehdpYmKaFCCqihL7")
+        self.assertEqual(memo, "STM6A7DywWvMZRokxAK5CpTo8XAPKbrMennAs4ntwRFq5nj2jR7nG")        
+        os.remove(file2)
 
     def test_set(self):
         runner = CliRunner()
