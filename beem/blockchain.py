@@ -221,7 +221,7 @@ class Blockchain(object):
             if kwargs.get("steem_instance"):
                 blockchain_instance = kwargs["steem_instance"]
             elif kwargs.get("hive_instance"):
-                blockchain_instance = kwargs["hive_instance"]        
+                blockchain_instance = kwargs["hive_instance"]
         self.blockchain = blockchain_instance or shared_blockchain_instance()
 
         if mode == "irreversible":
@@ -313,7 +313,7 @@ class Blockchain(object):
                       when instantiating from this class.
 
             .. code-block:: python
-        
+
                 >>> from beem.blockchain import Blockchain
                 >>> from datetime import datetime
                 >>> blockchain = Blockchain()
@@ -339,10 +339,10 @@ class Blockchain(object):
             if block_number > last_block.identifier:
                 block_number = last_block.identifier
             block_time_diff = timedelta(seconds=10)
-            
+
             last_block_time_diff_seconds = 10
             second_last_block_time_diff_seconds = 10
-            
+
             while block_time_diff.total_seconds() > self.block_interval or block_time_diff.total_seconds() < -self.block_interval:
                 block = BlockHeader(block_number, blockchain_instance=self.blockchain)
                 second_last_block_time_diff_seconds = last_block_time_diff_seconds
@@ -518,54 +518,43 @@ class Blockchain(object):
                     # Get full block
                     if (head_block - blocknumblock) < batches:
                         batches = head_block - blocknumblock + 1
-                    for blocknum in range(blocknumblock, blocknumblock + batches - 1):
+                    # add up to 'batches' calls to the queue
+                    block_batch = []
+                    for blocknum in range(blocknumblock, blocknumblock + batches):
+                        if blocknum == blocknumblock + batches - 1:
+                            add_to_queue = False  # execute the call with the last request
+                        else:
+                            add_to_queue = True  # append request to the queue w/o executing
                         if only_virtual_ops:
                             if self.blockchain.rpc.get_use_appbase():
-                                # self.blockchain.rpc.get_ops_in_block({"block_num": blocknum, 'only_virtual': only_virtual_ops}, api="account_history", add_to_queue=True)
-                                self.blockchain.rpc.get_ops_in_block(blocknum, only_virtual_ops, add_to_queue=True)
+                                block_batch = self.blockchain.rpc.get_ops_in_block({"block_num": blocknum, 'only_virtual': only_virtual_ops}, api="account_history", add_to_queue=add_to_queue)
                             else:
-                                self.blockchain.rpc.get_ops_in_block(blocknum, only_virtual_ops, add_to_queue=True)
+                                block_batch = self.blockchain.rpc.get_ops_in_block(blocknum, only_virtual_ops, add_to_queue=add_to_queue)
                         else:
                             if self.blockchain.rpc.get_use_appbase():
-                                self.blockchain.rpc.get_block({"block_num": blocknum}, api="block", add_to_queue=True)
+                                block_batch = self.blockchain.rpc.get_block({"block_num": blocknum}, api="block", add_to_queue=add_to_queue)
                             else:
-                                self.blockchain.rpc.get_block(blocknum, add_to_queue=True)
-                        latest_block = blocknum
-                    if batches >= 1:
-                        latest_block += 1
-                    if latest_block <= head_block:
-                        if only_virtual_ops:
-                            if self.blockchain.rpc.get_use_appbase():
-                                # self.blockchain.rpc.get_ops_in_block({"block_num": blocknum, 'only_virtual': only_virtual_ops}, api="account_history", add_to_queue=False)
-                                block_batch = self.blockchain.rpc.get_ops_in_block(blocknum, only_virtual_ops, add_to_queue=False)
+                                block_batch = self.blockchain.rpc.get_block(blocknum, add_to_queue=add_to_queue)
+
+                    if not bool(block_batch):
+                        raise BatchedCallsNotSupported()
+                    if not isinstance(block_batch, list):
+                        block_batch = [block_batch]
+                    for block in block_batch:
+                        if not bool(block):
+                            continue
+                        if self.blockchain.rpc.get_use_appbase():
+                            if only_virtual_ops:
+                                block = {'block': block['ops'][0]["block"],
+                                         'timestamp': block['ops'][0]["timestamp"],
+                                         'id': block['ops'][0]['block'],
+                                         'operations': block['ops']}
                             else:
-                                block_batch = self.blockchain.rpc.get_ops_in_block(blocknum, only_virtual_ops, add_to_queue=False)
-                        else:
-                            if self.blockchain.rpc.get_use_appbase():
-                                block_batch = self.blockchain.rpc.get_block({"block_num": latest_block}, api="block", add_to_queue=False)
-                            else:
-                                block_batch = self.blockchain.rpc.get_block(latest_block, add_to_queue=False)
-                        if not bool(block_batch):
-                            raise BatchedCallsNotSupported()
-                        blocknum = latest_block - len(block_batch) + 1
-                        if not isinstance(block_batch, list):
-                            block_batch = [block_batch]
-                        for block in block_batch:
-                            if not bool(block):
-                                continue
-                            if self.blockchain.rpc.get_use_appbase():
-                                if only_virtual_ops:
-                                    block = {'block': block[0]["block"],
-                                             'timestamp': block[0]["timestamp"],
-                                             'id': block[0]['block'],
-                                             'operations': block}
-                                else:
-                                    block = block["block"]
-                            block = Block(block, only_ops=only_ops, only_virtual_ops=only_virtual_ops, blockchain_instance=self.blockchain)
-                            block["id"] = block.block_num
-                            block.identifier = block.block_num
-                            yield block
-                            blocknum = block.block_num
+                                block = block["block"]
+                        block = Block(block, only_ops=only_ops, only_virtual_ops=only_virtual_ops, blockchain_instance=self.blockchain)
+                        block["id"] = block.block_num
+                        block.identifier = block.block_num
+                        yield block
             else:
                 # Blocks from start until head block
                 for blocknum in range(start, head_block + 1):
