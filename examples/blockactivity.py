@@ -57,11 +57,13 @@ def main(args=None):
     print(blk_inst)
     block_count = 0
     total_ops = 0
+    total_virtual_ops = 0
     total_trx = 0
     blocksperday = 20 * 60 * 24
     
-    blockchain = Blockchain(blockchain_instance=blk_inst)
-    last_block_id = blockchain.get_current_block_num() - blocksperday
+    blockchain = Blockchain(blockchain_instance=blk_inst, )
+    current_block_num = blockchain.get_current_block_num()
+    last_block_id = current_block_num - blocksperday
 
     last_block = Block(last_block_id, blockchain_instance=blk_inst)
 
@@ -69,6 +71,12 @@ def main(args=None):
 
     start = timer()
     for entry in blockchain.blocks(start=last_block_id, max_batch_size=max_batch_size, threading=threading, thread_num=thread_num):
+        if "block" in entry:
+            block_time = parse_time(entry["block"]["timestamp"])
+        else:
+            block_time = entry["timestamp"]
+        if block_time > stopTime:
+            break
         block_count += 1
         if "block" in entry:
             trxs = entry["block"]["transactions"]
@@ -78,20 +86,31 @@ def main(args=None):
             total_trx += 1
             for op in tx["operations"]:
                 total_ops += 1
-        if "block" in entry:
-            block_time = parse_time(entry["block"]["timestamp"])
-        else:
-            block_time = entry["timestamp"]
+
         ops_per_day = total_ops / block_count * blocksperday
         if block_count % (block_debug) == 0:
             print("%d blocks remaining... estimated ops per day: %.1f" % (blocksperday - block_count, ops_per_day))
-        if block_time > stopTime:
-            break
+
     duration = timer() - start
+    
+    stopTime = last_block.time() + timedelta(seconds=60 * 60 * 24)
+    start = timer()
+    for entry in blockchain.blocks(start=last_block_id, max_batch_size=max_batch_size, threading=threading, thread_num=thread_num, only_virtual_ops=True): 
+        block_time = entry["timestamp"]
+        if block_time > stopTime:
+            break        
+        for tx in entry["operations"]:
+            for op in tx["op"]:
+                total_virtual_ops += 1
+
+    duration = timer() - start    
+    
+    
     print("Received %.2f blocks/s." % (block_count / duration))
     print("Bocks: %d, duration %.3f s" % (block_count, duration))
     print("Operations per day: %d" % total_ops)
     print("Trx per day: %d" % total_trx)
+    print("Virtual Operations per day: %d" % total_virtual_ops)
 
 if __name__ == '__main__':
     sys.exit(main())

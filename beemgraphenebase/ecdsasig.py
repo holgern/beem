@@ -101,7 +101,11 @@ def recover_public_key(digest, signature, i, message=None):
             Q_point = Q.to_affine()
             public_key = ec.EllipticCurvePublicNumbers(Q_point.x(), Q_point.y(), ec.SECP256K1()).public_key(default_backend())
         except:
-            public_key = ec.EllipticCurvePublicNumbers(Q._Point__x, Q._Point__y, ec.SECP256K1()).public_key(default_backend())
+            try:
+                public_key = ec.EllipticCurvePublicNumbers(Q._Point__x, Q._Point__y, ec.SECP256K1()).public_key(default_backend())
+            except:
+                Q_point = Q.to_affine()
+                public_key = ec.EllipticCurvePublicNumbers(int(Q_point.x()), int(Q_point.y()), ec.SECP256K1()).public_key(default_backend())
         public_key.verify(sigder, message, ec.ECDSA(hashes.SHA256()))
         return public_key
     else:

@@ -1,5 +1,11 @@
 Changelog
 ========
+0.24.21
+-------
+* Fix bug in ecda (convert mpz into int when not supported)
+* add coinactivity example script
+* PR #272: correct blockchain virtual op batch calls (thanks to @crokkon)
+
 0.24.20
 -------
 * New hive node has been added (https://hived.emre.sh)
