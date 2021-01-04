@@ -880,9 +880,11 @@ class Blockchain(object):
         else:
             lastname = start
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
+        skip_first = False
         while True:
             if self.blockchain.rpc.get_use_appbase():
-                ret = self.blockchain.rpc.get_account_reputations({'account_lower_bound': lastname, 'limit': steps}, api="follow")["reputations"]
+                ret = self.blockchain.rpc.get_account_reputations({'account_lower_bound': lastname, 'limit': steps},
+                                                                  api="follow")["reputations"]
             else:
                 ret = self.blockchain.rpc.get_account_reputations(lastname, steps, api="follow")
             for account in ret:
@@ -890,7 +892,7 @@ class Blockchain(object):
                     account_name = account["name"]
                 else:
                     account_name = account
-                if account_name != lastname:
+                if account_name != lastname or skip_first is False:
                     yield account
                     cnt += 1
                     if account_name == stop or (limit > 0 and cnt > limit):
@@ -900,6 +902,9 @@ class Blockchain(object):
             lastname = account_name
             if len(ret) < steps:
                 return
+            # skip the first result for all follow-up requests because
+            # this was already included in the previous iteration.
+            skip_first = True
 
     def get_similar_account_names(self, name, limit=5):
         """ Returns limit similar accounts with name as list
