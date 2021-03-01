@@ -6,7 +6,7 @@ ecdsa==0.16.1
 requests==2.25.1
 websocket-client==0.57.0
 pytz==2021.1
-pycryptodomex==3.9.9
+pycryptodomex==3.10.1
 scrypt==0.8.17
 cryptography==3.4.1
 ruamel.yaml
