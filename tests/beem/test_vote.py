@@ -64,9 +64,13 @@ class Testcases(unittest.TestCase):
         self.assertEqual(self.voter, vote_json["voter"])
         self.assertEqual(self.voter, vote.voter)
         self.assertTrue(vote.weight >= 0)
-        self.assertTrue(vote.hbd >= 0)
-        self.assertTrue(vote.rshares >= 0)
-        self.assertTrue(vote.percent >= 0)
+        if vote.percent >= 0:
+            self.assertTrue(vote.hbd >= 0)
+            self.assertTrue(vote.rshares >= 0)
+        else:
+            self.assertTrue(vote.hbd < 0)
+            self.assertTrue(vote.rshares < 0)            
+
         self.assertTrue(vote.reputation is not None)
         self.assertTrue(vote.rep is not None)
         self.assertTrue(vote.time is not None)
@@ -78,9 +82,12 @@ class Testcases(unittest.TestCase):
         self.assertEqual(self.voter, vote_json["voter"])
         self.assertEqual(self.voter, vote.voter)
         self.assertTrue(vote.weight >= 0)
-        self.assertTrue(vote.hbd >= 0)
-        self.assertTrue(vote.rshares >= 0)
-        self.assertTrue(vote.percent >= 0)
+        if vote.percent >= 0:
+            self.assertTrue(vote.hbd >= 0)
+            self.assertTrue(vote.rshares >= 0)
+        else:
+            self.assertTrue(vote.hbd < 0)
+            self.assertTrue(vote.rshares < 0)
         self.assertTrue(vote.reputation is not None)
         self.assertTrue(vote.rep is not None)
         self.assertTrue(vote.time is not None)
