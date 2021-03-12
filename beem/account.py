@@ -3152,9 +3152,9 @@ class Account(BlockchainObject):
         # if no values were set by user, claim all outstanding balances on
         # account
 
-        reward_steem = self._check_amount(reward_steem + reward_hive, self.blockchain.token_symbol)
-        reward_sbd = self._check_amount(reward_sbd + reward_hbd, self.blockchain.backed_token_symbol)
-        reward_vests = self._check_amount(reward_vests, self.blockchain.vest_token_symbol)
+        reward_token_amount = self._check_amount(reward_steem + reward_hive, self.blockchain.token_symbol)
+        reward_backed_token_amount = self._check_amount(reward_sbd + reward_hbd, self.blockchain.backed_token_symbol)
+        reward_vests_amount = self._check_amount(reward_vests, self.blockchain.vest_token_symbol)
 
         if self.blockchain.is_hive:
             reward_token = "reward_hive"
@@ -3163,29 +3163,31 @@ class Account(BlockchainObject):
             reward_token = "reward_steem"
             reward_backed_token = "reward_sbd"            
 
-        if reward_steem.amount == 0 and reward_sbd.amount == 0 and reward_vests.amount == 0:
+        if reward_token_amount.amount == 0 and reward_backed_token_amount.amount == 0 and reward_vests_amount.amount == 0:
             if len(account.balances["rewards"]) == 3:
-                reward_steem = account.balances["rewards"][0]
-                reward_sbd = account.balances["rewards"][1]
-                reward_vests = account.balances["rewards"][2]
-                op = operations.Claim_reward_balance(
-                    **{
-                        "account": account["name"],
-                        reward_token: reward_steem,
-                        reward_backed_token: reward_sbd,
-                        "reward_vests": reward_vests,
-                        "prefix": self.blockchain.prefix,
-                    })         
+                reward_token_amount = account.balances["rewards"][0]
+                reward_backed_token_amount = account.balances["rewards"][1]
+                reward_vests_amount = account.balances["rewards"][2]
             else:
-                reward_steem = account.balances["rewards"][0]
-                reward_vests = account.balances["rewards"][1]
-                op = operations.Claim_reward_balance(
-                    **{
-                        "account": account["name"],
-                        reward_token: reward_steem,
-                        "reward_vests": reward_vests,
-                        "prefix": self.blockchain.prefix,
-                    })
+                reward_token_amount = account.balances["rewards"][0]
+                reward_vests_amount = account.balances["rewards"][1]
+        if len(account.balances["rewards"]) == 3:
+            op = operations.Claim_reward_balance(
+                **{
+                    "account": account["name"],
+                    reward_token: reward_token_amount,
+                    reward_backed_token: reward_backed_token_amount,
+                    "reward_vests": reward_vests_amount,
+                    "prefix": self.blockchain.prefix,
+                })         
+        else:
+            op = operations.Claim_reward_balance(
+                **{
+                    "account": account["name"],
+                    reward_token: reward_token_amount,
+                    "reward_vests": reward_vests_amount,
+                    "prefix": self.blockchain.prefix,
+                })
 
         return self.blockchain.finalizeOp(op, account, "posting", **kwargs)
 

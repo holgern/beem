@@ -8,7 +8,8 @@ Changelog
 * Add Blocks class, which uses get_block_range
 * PR #272: correct blockchain virtual op batch calls (thanks to @crokkon)
 * PR #276: blockchain: get_account_reputations fix for first (thanks to @crokkon)
-* PR #287: beempy witnessproperties: fix interest rate options
+* PR #287: beempy witnessproperties: fix interest rate options (thanks to @crokkon)
+* Fix #289: Unable to Claim Specific Reward Asset
 
 0.24.20
 -------
