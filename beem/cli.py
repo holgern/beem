@@ -2602,7 +2602,7 @@ def createpost(markdown_file, account, title, tags, community, beneficiaries, pe
     stm = shared_blockchain_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    yaml_prefix = '---\n'
+
     if account is None:
         account = input("author: ")
     if title is None:
@@ -2626,7 +2626,6 @@ def createpost(markdown_file, account, title, tags, community, beneficiaries, pe
                 if int(index) - 1 >= len(comm_cand):
                     continue
                 community = comm_cand[int(index) - 1]
-
             ret = input("Selected community: %s - %s [yes/no]? " % (community["name"], community["title"]))
             if ret in ["y", "yes"]:
                 community_found = True
@@ -2655,7 +2654,7 @@ def createpost(markdown_file, account, title, tags, community, beneficiaries, pe
 
     if max_accepted_payout is None:
         max_accepted_payout = input("max accepted payout [return to skip]: ")
-
+    yaml_prefix = '---\n'
     yaml_prefix += 'title: "%s"\n' % title
     yaml_prefix += 'author: %s\n' % account
     yaml_prefix += 'tags: %s\n' % tags

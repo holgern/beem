@@ -1,5 +1,6 @@
 import sys
 from datetime import datetime, timedelta
+from prettytable import PrettyTable
 import argparse
 from timeit import default_timer as timer
 import logging
@@ -14,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 def parse_args(args=None):
-    d = 'Verify blocktivity by counting operations and trx for the last 24 hours.'
+    d = 'Show op type stats for either hive, blurt or steem.'
     parser = argparse.ArgumentParser(description=d)
     parser.add_argument('blockchain', type=str, nargs='?',
                         default=sys.stdin,
@@ -43,7 +44,7 @@ def main(args=None):
         threading = False
         thread_num = 8
         block_debug = 20
-        nodes = ["https://api.blurt.blog", "https://rpc.blurtworld.com", "https://rpc.blurtworld.com"]
+        nodes = ["https://rpc.blurt.buzz/", "https://api.blurt.blog", "https://rpc.blurtworld.com", "https://rpc.blurtworld.com"]
         blk_inst = Blurt(node=nodes, num_retries=3, num_retries_call=3, timeout=30)
     elif blockchain == "steem":
         max_batch_size = 50
@@ -57,9 +58,8 @@ def main(args=None):
     print(blk_inst)
     block_count = 0
     total_ops = 0
-    total_virtual_ops = 0
     total_trx = 0
-    duration_s = 60 * 60 * 24
+    duration_s = 60 * 60 * 1
     blocksperday = int(duration_s / 3)
     
     blockchain = Blockchain(blockchain_instance=blk_inst, )
@@ -71,6 +71,7 @@ def main(args=None):
     stopTime = last_block.time() + timedelta(seconds=duration_s)
 
     start = timer()
+    op_stats = {}
     for entry in blockchain.blocks(start=last_block_id, max_batch_size=max_batch_size, threading=threading, thread_num=thread_num):
         if "block" in entry:
             block_time = parse_time(entry["block"]["timestamp"])
@@ -86,32 +87,29 @@ def main(args=None):
         for tx in trxs:
             total_trx += 1
             for op in tx["operations"]:
+                if "_operation" in op["type"]:
+                    op_type = op["type"][:-10]
+                else:
+                    op_type = op["type"]
+                if op_type in op_stats:
+                    op_stats[op_type] += 1
+                else:
+                    op_stats[op_type] = 1
                 total_ops += 1
 
         ops_per_day = total_ops / block_count * blocksperday
         if block_count % (block_debug) == 0:
             print("%d blocks remaining... estimated ops per day: %.1f" % (blocksperday - block_count, ops_per_day))
 
-    duration = timer() - start
-    
-    stopTime = last_block.time() + timedelta(seconds=duration_s)
-    start = timer()
-    for entry in blockchain.blocks(start=last_block_id, max_batch_size=max_batch_size, threading=threading, thread_num=thread_num, only_virtual_ops=True): 
-        block_time = entry["timestamp"]
-        if block_time > stopTime:
-            break        
-        for tx in entry["operations"]:
-            for op in tx["op"]:
-                total_virtual_ops += 1
-
     duration = timer() - start    
-    
-    
-    print("Received %.2f blocks/s." % (block_count / duration))
-    print("Bocks: %d, duration %.3f s" % (block_count, duration))
-    print("Operations per day: %d" % total_ops)
-    print("Trx per day: %d" % total_trx)
-    print("Virtual Operations per day: %d" % total_virtual_ops)
-
+    t = PrettyTable(["Type", "Count", "percentage"])
+    t.align = "l"
+    op_list = []
+    for o in op_stats:
+        op_list.append({"type": o, "n": op_stats[o], "perc": op_stats[o] / total_ops * 100})
+    op_list_sorted = sorted(op_list, key=lambda x: x['n'], reverse=True)
+    for op in op_list_sorted:
+        t.add_row([op["type"], op["n"], "%.2f %%" % op["perc"]])
+    print(t)
 if __name__ == '__main__':
     sys.exit(main())

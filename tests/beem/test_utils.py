@@ -2,6 +2,7 @@
 import unittest
 from datetime import datetime, date, timedelta
 import os
+from ruamel.yaml import YAML
 from beem.utils import (
     formatTimedelta,
     assets_from_string,
@@ -23,7 +24,8 @@ from beem.utils import (
     create_new_password,
     generate_password,
     import_coldcard_wif,
-    import_pubkeys
+    import_pubkeys,
+    create_yaml_header
 )
 
 
@@ -180,6 +182,15 @@ class Testcases(unittest.TestCase):
         body, par = seperate_yaml_dict_from_body(t)
         self.assertEqual(par, {"par1": "data1", "par2": "data2", "par3": 3})
         self.assertEqual(body, " test ---")
+
+    def create_yaml_header(self):
+        comment = {"title": "test", "author": "holger80", "max_accepted_payout": 100}
+        yaml_content = create_yaml_header(comment)
+        yaml_safe = YAML(typ="safe")
+        parameter = yaml_safe.load(yaml_content)
+        self.assertEqual(parameter["title"], "test")
+        self.assertEqual(parameter["author"], "holger80")
+        self.assertEqual(parameter["max_accepted_payout"], "100")  
 
     def test_create_new_password(self):
         new_password = create_new_password()

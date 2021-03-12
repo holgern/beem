@@ -4,6 +4,7 @@ import json
 from .exceptions import BlockDoesNotExistsException
 from .utils import parse_time, formatTimeString
 from .blockchainobject import BlockchainObject
+from beem.instance import shared_blockchain_instance
 from beemapi.exceptions import ApiNotSupported
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 
@@ -73,6 +74,8 @@ class Block(BlockchainObject):
             blockchain_instance=blockchain_instance,
             **kwargs
         )
+        if self.identifier is None:
+            self.identifier = self.block_num
 
     def _parse_json_data(self, block):
         parse_times = [
@@ -381,3 +384,37 @@ class BlockHeader(BlockchainObject):
                 else:
                     output[p] = p_date
         return json.loads(str(json.dumps(output)))
+
+
+class Blocks(list):
+    """ Obtain a list of blocks
+
+        :param list name_list: list of accounts to fetch
+        :param int count: (optional) maximum number of accounts
+            to fetch per call, defaults to 100
+        :param Steem/Hive blockchain_instance: Steem() or Hive() instance to use when
+            accessing a RPCcreator = Account(creator, blockchain_instance=self)
+    """
+    def __init__(self, starting_block_num, count=1000, lazy=False, full=True, blockchain_instance=None, **kwargs):
+        
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
+
+        if not self.blockchain.is_connected():
+            return
+        blocks = []
+
+        self.blockchain.rpc.set_next_node_on_empty_reply(False)
+
+        blocks = self.blockchain.rpc.get_block_range({'starting_block_num': starting_block_num,  "count": count}, api="block")['blocks']
+
+        super(Blocks, self).__init__(
+            [
+                Block(x, lazy=lazy, full=full, blockchain_instance=self.blockchain)
+                for x in blocks
+            ]
+        )

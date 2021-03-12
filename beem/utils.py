@@ -381,6 +381,46 @@ def seperate_yaml_dict_from_body(content):
         body = content
     return body, parameter
 
+
+def create_yaml_header(comment, json_metadata={}, reply_identifier=None):
+    yaml_prefix = '---\n'
+    if comment["title"] != "":
+        yaml_prefix += 'title: "%s"\n' % comment["title"]
+    if "permlink" in comment:
+        yaml_prefix += 'permlink: %s\n' % comment["permlink"]
+    yaml_prefix += 'author: %s\n' % comment["author"]
+    if "author" in json_metadata:
+        yaml_prefix += 'authored by: %s\n' % json_metadata["author"]
+    if "description" in json_metadata:
+        yaml_prefix += 'description: "%s"\n' % json_metadata["description"]
+    if "canonical_url" in json_metadata:
+        yaml_prefix += 'canonical_url: %s\n' % json_metadata["canonical_url"]
+    if "app" in json_metadata:
+        yaml_prefix += 'app: %s\n' % json_metadata["app"]
+    if "last_update" in comment:
+        yaml_prefix += 'last_update: %s\n' % comment["last_update"]
+    elif "updated" in comment:
+        yaml_prefix += 'last_update: %s\n' % comment["updated"]
+    yaml_prefix += 'max_accepted_payout: %s\n' % str(comment["max_accepted_payout"])
+    if "percent_steem_dollars" in comment:
+        yaml_prefix += 'percent_steem_dollars: %s\n' %  str(comment["percent_steem_dollars"])
+    elif "percent_hbd" in comment:
+        yaml_prefix += 'percent_hbd: %s\n' %  str(comment["percent_hbd"])
+    if "tags" in json_metadata:
+        if len(json_metadata["tags"]) > 0 and comment["category"] != json_metadata["tags"][0] and len(comment["category"]) > 0:
+            yaml_prefix += 'community: %s\n' % comment["category"]
+        yaml_prefix += 'tags: %s\n' % ",".join(json_metadata["tags"])
+    if "beneficiaries" in comment:
+        beneficiaries = []
+        for b in comment["beneficiaries"]:
+            beneficiaries.append("%s:%.2f%%" % (b["account"], b["weight"] / 10000 * 100))
+        if len(beneficiaries) > 0:
+            yaml_prefix += 'beneficiaries: %s\n' % ",".join(beneficiaries)
+    if reply_identifier is not None:
+        yaml_prefix += 'reply_identifier: %s\n' % reply_identifier
+    yaml_prefix += '---\n'
+    return yaml_prefix
+
     
 def load_dirty_json(dirty_json):
     regex_replace = [(r"([ \{,:\[])(u)?'([^']+)'", r'\1"\3"'), (r" False([, \}\]])", r' false\1'), (r" True([, \}\]])", r' true\1')]
