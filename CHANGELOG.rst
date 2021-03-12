@@ -1,5 +1,9 @@
 Changelog
 ========
+0.24.22
+-------
+* Fix to parameter in transfer_to_vesting
+
 0.24.21
 -------
 * Fix bug in ecda (convert mpz into int when not supported)

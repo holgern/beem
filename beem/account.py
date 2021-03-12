@@ -2958,9 +2958,6 @@ class Account(BlockchainObject):
         amount = self._check_amount(amount, self.blockchain.token_symbol)
         if to is None and skip_account_check:
             to = self["name"]  # powerup on the same account
-        else:
-            to = self
-
         if not skip_account_check:
             to = Account(to, blockchain_instance=self.blockchain)
         to_name = extract_account_name(to)
