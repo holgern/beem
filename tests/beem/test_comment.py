@@ -28,7 +28,7 @@ class Testcases(unittest.TestCase):
         )
 
         acc = Account("fullnodeupdate", blockchain_instance=cls.bts)
-        comment = Comment(acc.get_blog_entries(limit=5)[0], blockchain_instance=cls.bts)
+        comment = Comment(acc.get_blog_entries(limit=5)[1], blockchain_instance=cls.bts)
         cls.authorperm = comment.authorperm
         [author, permlink] = resolve_authorperm(cls.authorperm)
         cls.author = author

@@ -3,7 +3,8 @@ Changelog
 0.24.22
 -------
 * Fix to parameter in transfer_to_vesting
-* Allow hybrid operation in operations (pre / post HF 24 operation are supported)
+* Improve hybrid operation in operations (pre / post HF 24 operation are supported)
+* UpdateProposalExtensions has been added to Update_proposal as preperation for the next HF (thanks to @drov0)
 
 0.24.21
 -------
