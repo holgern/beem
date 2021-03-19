@@ -324,3 +324,48 @@ class CommentOptionExtensions(Static_variant):
         else:
             raise Exception("Unknown CommentOptionExtension")
         super(CommentOptionExtensions, self).__init__(data, type_id)
+
+
+class UpdateProposalEndDate(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if isArgsThisClass(self, args):
+            self.data = args[0].data
+        else:
+            if len(args) == 1 and len(kwargs) == 0:
+                kwargs = args[0]
+
+            super(UpdateProposalEndDate, self).__init__(
+                OrderedDict([
+                    ('end_date', PointInTime(kwargs['update_proposal_end_date'])),
+                ]))
+
+
+class UpdateProposalExtensions(Static_variant):
+    """ Serialize Update proposal extensions.
+
+        :param end_date: A static_variant containing the new end_date.
+
+        Example::
+
+            [1,
+                {'end_date': '2021-03-28T04:00:00'}
+            ]
+
+    """
+    def __init__(self, o):
+        if type(o) == dict and 'type' in o and 'value' in o:
+            if o['type'] == "end_date":
+                type_id = 1
+            else:
+                type_id = ~0
+            data = o['value']
+        else:
+            type_id, data = o
+
+        if type_id == 1:
+            data = (UpdateProposalEndDate(data))
+        else:
+            raise Exception("Unknown UpdateProposalExtension")
+        super(UpdateProposalExtensions, self).__init__(data, type_id)
+
+

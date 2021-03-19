@@ -25,7 +25,8 @@ from .objects import (
     ExchangeRate,
     Beneficiaries,
     Beneficiary,
-    CommentOptionExtensions
+    CommentOptionExtensions,
+    UpdateProposalExtensions
 )
 
 default_prefix = "STM"
@@ -401,6 +402,9 @@ class Update_proposal(GrapheneObject):
 
         prefix = kwargs.get("prefix", default_prefix)
         extensions = Array([])
+        if "extensions" in kwargs and kwargs["extensions"]:
+            extensions = Array([UpdateProposalExtensions(o) for o in kwargs["extensions"]])
+
 
         super(Update_proposal, self).__init__(
             OrderedDict([
