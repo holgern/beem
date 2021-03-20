@@ -1354,11 +1354,7 @@ class Account(BlockchainObject):
         if not self.blockchain.is_connected():
             raise OfflineHasNoRPCException("No RPC available in offline mode!")
         self.blockchain.rpc.set_next_node_on_empty_reply(False)
-        if self.blockchain.rpc.get_use_appbase():
-            # return self.blockchain.rpc.get_account_bandwidth({'account': account, 'type': 'post'}, api="witness")
-            return self.blockchain.rpc.get_account_bandwidth(account, bandwidth_type)
-        else:
-            return self.blockchain.rpc.get_account_bandwidth(account, bandwidth_type)
+        return self.blockchain.rpc.get_account_bandwidth(account, bandwidth_type)
 
     def get_bandwidth(self):
         """ Returns used and allocated bandwidth

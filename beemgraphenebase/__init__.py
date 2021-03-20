@@ -10,9 +10,8 @@ from .version import version as __version__
 __all__ = ['account',
            'aes',
            'base58',
-           'bip32'
+           'bip32',
            'bip38',
-           'transactions',
            'types',
            'ecdasig',
            'chains',

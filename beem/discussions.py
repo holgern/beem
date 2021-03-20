@@ -587,7 +587,7 @@ class Discussions_by_votes(list):
         if raw_data:
             super(Discussions_by_votes, self).__init__(
                 [
-                    Comment(x, lazy=lazy, blockchain_instance=self.blockchain)
+                    x
                     for x in posts
                 ]
             )
@@ -854,7 +854,7 @@ class Discussions_by_comments(list):
         if raw_data:
             super(Discussions_by_comments, self).__init__(
                 [
-                    Comment(x, lazy=lazy, blockchain_instance=self.blockchain)
+                    x
                     for x in posts
                 ]
             )            

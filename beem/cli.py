@@ -198,7 +198,7 @@ def unlock_token_wallet(stm, sc2, password=None):
             print("Wallet could not be unlocked with %s!" % password_storage)
             password = click.prompt("Password to unlock wallet", confirmation_prompt=False, hide_input=True)
             if bool(password):
-                unlock_token_wallet(stm, password=password)
+                unlock_token_wallet(stm, sc2, password=password)
                 if not sc2.locked():
                     return True
         else:

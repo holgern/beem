@@ -335,7 +335,7 @@ class GrapheneRPC(object):
             chain_config = {"prefix": prefix, "chain_id": chain_id, "min_version": network_version, "chain_assets": chain_assets}
 
         if chain_id is None:
-            raise("Connecting to unknown network!")
+            raise RPCError("Connecting to unknown network!")
         highest_version_chain = None
         for k, v in list(self.known_chains.items()):
             if blockchain_name is not None and blockchain_name not in k and blockchain_name != "STEEMIT" and blockchain_name != "CHAIN":
@@ -348,7 +348,7 @@ class GrapheneRPC(object):
         if highest_version_chain is None and chain_config is not None:
             return chain_config
         elif highest_version_chain is None:
-            raise("Connecting to unknown network!")
+            raise RPCError("Connecting to unknown network!")
         else:
             return highest_version_chain
 
