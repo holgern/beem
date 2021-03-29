@@ -1,8 +1,4 @@
-# This Python file uses the following encoding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+# -*- coding: utf-8 -*-
 import hashlib
 import base64
 import json
@@ -11,7 +7,7 @@ import requests
 import struct
 from datetime import datetime
 from binascii import hexlify
-from .instance import shared_steem_instance
+from .instance import shared_blockchain_instance
 from .account import Account
 from beemgraphenebase.py23 import py23_bytes
 from beemgraphenebase.ecdsasig import sign_message
@@ -47,16 +43,21 @@ class Conveyor(object):
     """
 
     def __init__(self, url="https://conveyor.steemit.com",
-                 steem_instance=None):
+                 blockchain_instance=None, **kwargs):
         """ Initialize a Conveyor instance
             :param str url: (optional) URL to the Conveyor API, defaults to
                 https://conveyor.steemit.com
-            :param beem.steem.Steem steem_instance: Steem instance
+            :param beem.steem.Steem blockchain_instance: Steem instance
 
         """
 
         self.url = url
-        self.steem = steem_instance or shared_steem_instance()
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]        
+        self.steem = blockchain_instance or shared_blockchain_instance()
         self.id = 0
         self.ENCODING = 'utf-8'
         self.TIMEFORMAT = '%Y-%m-%dT%H:%M:%S.%f'
@@ -127,11 +128,11 @@ class Conveyor(object):
             :params dict params: request parameters as `dict`
 
         """
-        account = Account(account, steem_instance=self.steem)
+        account = Account(account, blockchain_instance=self.steem)
         if signing_account is None:
             signer = account
         else:
-            signer = Account(signing_account, steem_instance=self.steem)
+            signer = Account(signing_account, blockchain_instance=self.steem)
         if "posting" not in signer:
             signer.refresh()
         if "posting" not in signer:
@@ -157,11 +158,11 @@ class Conveyor(object):
                 from beem import Steem
                 from beem.conveyor import Conveyor
                 s = Steem(keys=["5JPOSTINGKEY"])
-                c = Conveyor(steem_instance=s)
+                c = Conveyor(blockchain_instance=s)
                 print(c.get_user_data('accountname'))
 
         """
-        account = Account(account, steem_instance=self.steem)
+        account = Account(account, blockchain_instance=self.steem)
         user_data = self._conveyor_method(account, signing_account,
                                           "conveyor.get_user_data",
                                           [account['name']])
@@ -186,7 +187,7 @@ class Conveyor(object):
                 from beem import Steem
                 from beem.conveyor import Conveyor
                 s = Steem(keys=["5JADMINPOSTINGKEY"])
-                c = Conveyor(steem_instance=s)
+                c = Conveyor(blockchain_instance=s)
                 userdata = {'email': 'foo@bar.com', 'phone':'+123456789'}
                 c.set_user_data('accountname', userdata, 'adminaccountname')
 
@@ -210,11 +211,11 @@ class Conveyor(object):
                 from beem import Steem
                 from beem.conveyor import Conveyor
                 s = Steem(keys=["5JPOSTINGKEY"])
-                c = Conveyor(steem_instance=s)
+                c = Conveyor(blockchain_instance=s)
                 print(c.get_feature_flags('accountname'))
 
         """
-        account = Account(account, steem_instance=self.steem)
+        account = Account(account, blockchain_instance=self.steem)
         feature_flags = self._conveyor_method(account, signing_account,
                                               "conveyor.get_feature_flags",
                                               [account['name']])
@@ -239,11 +240,11 @@ class Conveyor(object):
                 from beem import Steem
                 from beem.conveyor import Conveyor
                 s = Steem(keys=["5JPOSTINGKEY"])
-                c = Conveyor(steem_instance=s)
+                c = Conveyor(blockchain_instance=s)
                 print(c.get_feature_flag('accountname', 'accepted_tos'))
 
         """
-        account = Account(account, steem_instance=self.steem)
+        account = Account(account, blockchain_instance=self.steem)
         return self._conveyor_method(account, signing_account,
                                      "conveyor.get_feature_flag",
                                      [account['name'], flag])
@@ -256,7 +257,7 @@ class Conveyor(object):
             :param str body: draft post body
 
         """
-        account = Account(account, steem_instance=self.steem)
+        account = Account(account, blockchain_instance=self.steem)
         draft = {'title': title, 'body': body}
         return self._conveyor_method(account, None,
                                      "conveyor.save_draft",
@@ -279,7 +280,7 @@ class Conveyor(object):
                 }
 
         """
-        account = Account(account, steem_instance=self.steem)
+        account = Account(account, blockchain_instance=self.steem)
         return self._conveyor_method(account, None,
                                      "conveyor.list_drafts",
                                      [account['name']])
@@ -292,7 +293,7 @@ class Conveyor(object):
                 `list_drafts`
 
         """
-        account = Account(account, steem_instance=self.steem)
+        account = Account(account, blockchain_instance=self.steem)
         return self._conveyor_method(account, None,
                                      "conveyor.remove_draft",
                                      [account['name'], uuid])

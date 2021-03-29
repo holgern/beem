@@ -1,9 +1,4 @@
-# This Python file uses the following encoding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import next
+# -*- coding: utf-8 -*-
 import re
 import json
 import time as timenow
@@ -11,7 +6,13 @@ import math
 from datetime import datetime, tzinfo, timedelta, date, time
 import pytz
 import difflib
-import yaml
+from ruamel.yaml import YAML
+import difflib
+import secrets
+import string
+from beemgraphenebase.account import PasswordKey
+import ast
+import os
 
 timeFormat = "%Y-%m-%dT%H:%M:%S"
 # https://github.com/matiasb/python-unidiff/blob/master/unidiff/constants.py#L37
@@ -98,20 +99,20 @@ def assets_from_string(text):
     Splits the string into two assets with the separator being on of the
     following: ``:``, ``/``, or ``-``.
     """
-    return re.split(r"[\-:/]", text)
+    return re.split(r"[\-:\/]", text)
 
 
 def sanitize_permlink(permlink):
     permlink = permlink.strip()
-    permlink = re.sub("_|\s|\.", "-", permlink)
-    permlink = re.sub("[^\w-]", "", permlink)
-    permlink = re.sub("[^a-zA-Z0-9-]", "", permlink)
+    permlink = re.sub(r"_|\s|\.", "-", permlink)
+    permlink = re.sub(r"[^\w-]", "", permlink)
+    permlink = re.sub(r"[^a-zA-Z0-9-]", "", permlink)
     permlink = permlink.lower()
     return permlink
 
 
 def derive_permlink(title, parent_permlink=None, parent_author=None,
-                    max_permlink_length=256):
+                    max_permlink_length=256, with_suffix=True):
     """Derive a permlink from a comment title (for root level
     comments) or the parent permlink and optionally the parent
     author (for replies).
@@ -120,20 +121,38 @@ def derive_permlink(title, parent_permlink=None, parent_author=None,
     suffix = "-" + formatTime(datetime.utcnow()) + "z"
     if parent_permlink and parent_author:
         prefix = "re-" + sanitize_permlink(parent_author) + "-"
-        rem_chars = max_permlink_length - len(suffix) - len(prefix)
+        if with_suffix:
+            rem_chars = max_permlink_length - len(suffix) - len(prefix)
+        else:
+            rem_chars = max_permlink_length - len(prefix)
         body = sanitize_permlink(parent_permlink)[:rem_chars]
-        return prefix + body + suffix
+        if with_suffix:
+            return prefix + body + suffix
+        else:
+            return prefix + body
     elif parent_permlink:
         prefix = "re-"
-        rem_chars = max_permlink_length - len(suffix) - len(prefix)
+        if with_suffix:
+            rem_chars = max_permlink_length - len(suffix) - len(prefix)
+        else:
+            rem_chars = max_permlink_length - len(prefix)
         body = sanitize_permlink(parent_permlink)[:rem_chars]
-        return prefix + body + suffix
+        if with_suffix:
+            return prefix + body + suffix
+        else:
+            return prefix + body
     else:
-        rem_chars = max_permlink_length - len(suffix)
+        if with_suffix:
+            rem_chars = max_permlink_length - len(suffix)
+        else:
+            rem_chars = max_permlink_length
         body = sanitize_permlink(title)[:rem_chars]
         if len(body) == 0:  # empty title or title consisted of only special chars
             return suffix[1:]  # use timestamp only, strip leading "-"
-        return body + suffix
+        if with_suffix:
+            return body + suffix
+        else:
+            return body
 
 
 def resolve_authorperm(identifier):
@@ -154,15 +173,15 @@ def resolve_authorperm(identifier):
 
     """
     # without any http(s)
-    match = re.match("@?([\w\-\.]*)/([\w\-]*)", identifier)
+    match = re.match(r"@?([\w\-\.]*)/([\w\-]*)", identifier)
     if hasattr(match, "group"):
         return match.group(1), match.group(2)
     # dtube url
-    match = re.match("([\w\-\.]+[^#?\s]+)/#!/v/?([\w\-\.]*)/([\w\-]*)", identifier)
+    match = re.match(r"([\w\-\.]+[^#?\s]+)/#!/v/?([\w\-\.]*)/([\w\-]*)", identifier)
     if hasattr(match, "group"):
         return match.group(2), match.group(3)
     # url
-    match = re.match("([\w\-\.]+[^#?\s]+)/@?([\w\-\.]*)/([\w\-]*)", identifier)
+    match = re.match(r"([\w\-\.]+[^#?\s]+)/@?([\w\-\.]*)/([\w\-]*)", identifier)
     if not hasattr(match, "group"):
         raise ValueError("Invalid identifier")
     return match.group(2), match.group(3)
@@ -195,7 +214,7 @@ def construct_authorperm(*args):
 
 
 def resolve_root_identifier(url):
-    m = re.match("/([^/]*)/@([^/]*)/([^#]*).*", url)
+    m = re.match(r"/([^/]*)/@([^/]*)/([^#]*).*", url)
     if not m:
         return "", ""
     else:
@@ -280,16 +299,12 @@ def remove_from_dict(obj, keys=list(), keep_keys=True):
         return {k: v for k, v in items if k not in keys}
 
 
-def make_patch(a, b, n=3):
-    # _no_eol = '\n' + "\ No newline at end of file" + '\n'
-    _no_eol = "\n"
-    diffs = difflib.unified_diff(a.splitlines(True), b.splitlines(True), n=n)
-    try:
-        _, _ = next(diffs), next(diffs)
-        del _
-    except StopIteration:
-        pass
-    return "".join([d if d[-1] == "\n" else d + _no_eol for d in diffs])
+def make_patch(a, b):
+    import diff_match_patch as dmp_module
+    dmp = dmp_module.diff_match_patch()
+    patch = dmp.patch_make(a, b)
+    patch_text = dmp.patch_toText(patch)   
+    return patch_text
 
 
 def findall_patch_hunks(body=None):
@@ -347,21 +362,64 @@ def derive_tags(tags):
     elif len(tags.split(" ")) > 1:
         for tag in tags.split(" "):
             tags_list.append(tag.strip())
+    elif len(tags) > 0:
+        tags_list.append(tags.strip())
     return tags_list
 
 
 def seperate_yaml_dict_from_body(content):
     parameter = {}
     body = ""
-    if len(content.split("---")) > 1:
-        body = content[content.find("---", 1) + 3 :]
-        yaml_content = content[content.find("---") + 3 : content.find("---", 1)]
+    if len(content.split("---\n")) > 1:
+        body = content[content.find("---\n", 1) + 4 :]
+        yaml_content = content[content.find("---\n") + 4 : content.find("---\n", 1)]
+        yaml=YAML(typ="safe")
         parameter = yaml.load(yaml_content)
         if not isinstance(parameter, dict):
             parameter = yaml.load(yaml_content.replace(":", ": ").replace("  ", " "))
     else:
         body = content
     return body, parameter
+
+
+def create_yaml_header(comment, json_metadata={}, reply_identifier=None):
+    yaml_prefix = '---\n'
+    if comment["title"] != "":
+        yaml_prefix += 'title: "%s"\n' % comment["title"]
+    if "permlink" in comment:
+        yaml_prefix += 'permlink: %s\n' % comment["permlink"]
+    yaml_prefix += 'author: %s\n' % comment["author"]
+    if "author" in json_metadata:
+        yaml_prefix += 'authored by: %s\n' % json_metadata["author"]
+    if "description" in json_metadata:
+        yaml_prefix += 'description: "%s"\n' % json_metadata["description"]
+    if "canonical_url" in json_metadata:
+        yaml_prefix += 'canonical_url: %s\n' % json_metadata["canonical_url"]
+    if "app" in json_metadata:
+        yaml_prefix += 'app: %s\n' % json_metadata["app"]
+    if "last_update" in comment:
+        yaml_prefix += 'last_update: %s\n' % comment["last_update"]
+    elif "updated" in comment:
+        yaml_prefix += 'last_update: %s\n' % comment["updated"]
+    yaml_prefix += 'max_accepted_payout: %s\n' % str(comment["max_accepted_payout"])
+    if "percent_steem_dollars" in comment:
+        yaml_prefix += 'percent_steem_dollars: %s\n' %  str(comment["percent_steem_dollars"])
+    elif "percent_hbd" in comment:
+        yaml_prefix += 'percent_hbd: %s\n' %  str(comment["percent_hbd"])
+    if "tags" in json_metadata:
+        if len(json_metadata["tags"]) > 0 and comment["category"] != json_metadata["tags"][0] and len(comment["category"]) > 0:
+            yaml_prefix += 'community: %s\n' % comment["category"]
+        yaml_prefix += 'tags: %s\n' % ",".join(json_metadata["tags"])
+    if "beneficiaries" in comment:
+        beneficiaries = []
+        for b in comment["beneficiaries"]:
+            beneficiaries.append("%s:%.2f%%" % (b["account"], b["weight"] / 10000 * 100))
+        if len(beneficiaries) > 0:
+            yaml_prefix += 'beneficiaries: %s\n' % ",".join(beneficiaries)
+    if reply_identifier is not None:
+        yaml_prefix += 'reply_identifier: %s\n' % reply_identifier
+    yaml_prefix += '---\n'
+    return yaml_prefix
 
     
 def load_dirty_json(dirty_json):
@@ -370,3 +428,97 @@ def load_dirty_json(dirty_json):
         dirty_json = re.sub(r, s, dirty_json)
     clean_json = json.loads(dirty_json)
     return clean_json    
+
+
+def create_new_password(length=32):
+    """Creates a random password containing alphanumeric chars with at least 1 number and 1 upper and lower char"""
+    alphabet = string.ascii_letters + string.digits
+    while True:
+        import_password = ''.join(secrets.choice(alphabet) for i in range(length))
+        if (any(c.islower() for c in import_password) and any(c.isupper() for c in import_password) and any(c.isdigit() for c in import_password)):
+            break
+    return import_password
+
+
+def import_coldcard_wif(filename):
+    """Reads a exported coldcard Wif text file and returns the WIF and used path"""
+    next_var = ""
+    import_password = ""
+    path = ""
+    with open(filename) as fp: 
+        for line in fp:
+            if line.strip() == "":
+                continue
+            if line.strip() == "WIF (privkey):":
+                next_var = "wif"
+                continue
+            elif "Path Used" in line.strip():
+                next_var = "path"
+                continue
+            if next_var == "wif":
+                import_password = line.strip()
+            elif next_var == "path":
+                path = line
+            next_var = ""
+    return import_password, path.lstrip().replace("\n", "")
+
+
+def generate_password(import_password, wif=1):
+    if wif > 0:
+        password = import_password
+        for _ in range(wif):
+            pk = PasswordKey("", password, role="")
+            password = str(pk.get_private())
+        password = 'P' + password
+    else:
+        password = import_password
+    return password
+
+
+def import_pubkeys(import_pub):
+    if not os.path.isfile(import_pub):
+        raise Exception("File %s does not exist!" % import_pub)
+    with open(import_pub) as fp:
+        pubkeys = fp.read()
+    if pubkeys.find('\0') > 0:
+        with open(import_pub, encoding='utf-16') as fp:
+            pubkeys = fp.read()
+    pubkeys = ast.literal_eval(pubkeys)
+    owner = pubkeys["owner"]
+    active = pubkeys["active"]
+    posting = pubkeys["posting"]
+    memo = pubkeys["memo"]
+    return owner, active, posting, memo
+
+
+def import_custom_json(jsonid, json_data):
+    data = {}
+    if isinstance(json_data, tuple) and len(json_data) > 1:
+        key = None
+        for j in json_data:
+            if key is None:
+                key = j
+            else:
+                data[key] = j
+                key = None
+        if key is not None:
+            print("Value is missing for key: %s" % key)
+            return None
+    else:
+        try:
+            with open(json_data[0], 'r') as f:
+                data = json.load(f)
+        except:
+            print("%s is not a valid file or json field" % json_data)
+            return None
+    for d in data:
+        if isinstance(data[d], str) and data[d][0] == "{" and data[d][-1] == "}":
+            field = {}
+            for keyvalue in data[d][1:-1].split(","):
+                key = keyvalue.split(":")[0].strip()
+                value = keyvalue.split(":")[1].strip()
+                if jsonid == "ssc-mainnet1" and key == "quantity":
+                    value = float(value)
+                field[key] = value
+            data[d] = field
+    return data

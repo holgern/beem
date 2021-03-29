@@ -1,11 +1,4 @@
-"""graphennewsrpc."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import next
-from builtins import str
-from builtins import object
+# -*- coding: utf-8 -*-
 from itertools import cycle
 import threading
 import sys
@@ -27,10 +20,7 @@ from .rpcutils import (
 from .node import Nodes
 from beemgraphenebase.version import version as beem_version
 from beemgraphenebase.chains import known_chains
-if sys.version_info[0] < 3:
-    from thread import interrupt_main
-else:
-    from _thread import interrupt_main
+from _thread import interrupt_main
 WEBSOCKET_MODULE = None
 if not WEBSOCKET_MODULE:
     try:
@@ -99,6 +89,7 @@ class GrapheneRPC(object):
     :param bool autoconnect: When set to false, connection is performed on the first rpc call (default is True)
     :param bool use_condenser: Use the old condenser_api rpc protocol on nodes with version
         0.19.4 or higher. The settings has no effect on nodes with version of 0.19.3 or lower.
+    :param bool use_tor: When set to true, 'socks5h://localhost:9050' is set as proxy
     :param dict custom_chains: custom chain which should be added to the known chains
 
     Available APIs:
@@ -133,6 +124,7 @@ class GrapheneRPC(object):
         num_retries = kwargs.get("num_retries", 100)
         num_retries_call = kwargs.get("num_retries_call", 5)
         self.use_condenser = kwargs.get("use_condenser", False)
+        self.use_tor = kwargs.get("use_tor", False)
         self.disable_chain_detection = kwargs.get("disable_chain_detection", False)
         self.known_chains = known_chains
         custom_chain = kwargs.get("custom_chains", {})
@@ -204,15 +196,19 @@ class GrapheneRPC(object):
                 if self.url[:3] == "wss":
                     self.ws = create_ws_instance(use_ssl=True)
                     self.ws.settimeout(self.timeout)
-                    self.current_rpc = self.rpc_methods["ws"]
+                    self.current_rpc = self.rpc_methods["wsappbase"]
                 elif self.url[:2] == "ws":
                     self.ws = create_ws_instance(use_ssl=False)
                     self.ws.settimeout(self.timeout)
-                    self.current_rpc = self.rpc_methods["ws"]
+                    self.current_rpc = self.rpc_methods["wsappbase"]
                 else:
                     self.ws = None
                     self.session = shared_session_instance()
-                    self.current_rpc = self.rpc_methods["jsonrpc"]
+                    if self.use_tor:
+                        self.session.proxies = {}
+                        self.session.proxies['http'] = 'socks5h://localhost:9050'
+                        self.session.proxies['https'] = 'socks5h://localhost:9050'                        
+                    self.current_rpc = self.rpc_methods["appbase"]
                     self.headers = {'User-Agent': 'beem v%s' % (beem_version),
                                     'content-type': 'application/json; charset=utf-8'}
             try:
@@ -234,9 +230,9 @@ class GrapheneRPC(object):
                         props = self.get_config()
                 except Exception as e:
                     if re.search("Bad Cast:Invalid cast from type", str(e)):
-                        # retry with appbase
-                        if self.current_rpc == self.rpc_methods['ws']:
-                            self.current_rpc = self.rpc_methods['wsappbase']
+                        # retry with not appbase
+                        if self.current_rpc == self.rpc_methods['wsappbase']:
+                            self.current_rpc = self.rpc_methods['ws']
                         else:
                             self.current_rpc = self.rpc_methods['appbase']
                         props = self.get_config(api="database")
@@ -303,27 +299,56 @@ class GrapheneRPC(object):
             props = self.get_config(api="database")
         chain_id = None
         network_version = None
+        blockchain_name = None
+        chain_config = None
+        prefix = None
+        symbols = []
+        chain_assets = []
         for key in props:
             if key[-8:] == "CHAIN_ID":
                 chain_id = props[key]
-            elif key[-18:] == "BLOCKCHAIN_VERSION":
+                blockchain_name = key.split("_")[0]
+            elif key[-13:] == "CHAIN_VERSION":
                 network_version = props[key]
+            elif key[-14:] == "ADDRESS_PREFIX":
+                prefix = props[key]
+            elif key[-6:] == "SYMBOL":
+                value = {}
+                value["asset"] = props[key]["nai"]
+                value["precision"] = props[key]["decimals"]
+                if "IS_TEST_NET" in props and props["IS_TEST_NET"] and "nai" in props[key] and props[key]["nai"] == "@@000000013":
+                    value["symbol"] = "TBD"
+                elif "IS_TEST_NET" in props and props["IS_TEST_NET"] and "nai" in props[key] and props[key]["nai"] == "@@000000021":
+                    value["symbol"] = "TESTS"
+                else:
+                    value["symbol"] = key[:-7]
+                value["id"] = -1
+                symbols.append(value)
+        symbol_id = 0
+        if len(symbols) == 2:
+            symbol_id = 1
+        for s in sorted(symbols, key=lambda self: self['asset'], reverse=False):
+            s["id"] = symbol_id
+            symbol_id += 1
+            chain_assets.append(s)
+        if chain_id is not None and network_version is not None and len(chain_assets) > 0 and prefix is not None:
+            chain_config = {"prefix": prefix, "chain_id": chain_id, "min_version": network_version, "chain_assets": chain_assets}
 
         if chain_id is None:
-            raise("Connecting to unknown network!")
+            raise RPCError("Connecting to unknown network!")
         highest_version_chain = None
         for k, v in list(self.known_chains.items()):
+            if blockchain_name is not None and blockchain_name not in k and blockchain_name != "STEEMIT" and blockchain_name != "CHAIN":
+                continue 
             if v["chain_id"] == chain_id and self.version_string_to_int(v["min_version"]) <= self.version_string_to_int(network_version):
                 if highest_version_chain is None:
                     highest_version_chain = v
-                elif v["min_version"] == '0.19.5' and self.use_condenser:
+                elif self.version_string_to_int(v["min_version"]) > self.version_string_to_int(highest_version_chain["min_version"]):
                     highest_version_chain = v
-                elif v["min_version"] == '0.0.0' and self.use_condenser:
-                    highest_version_chain = v
-                elif self.version_string_to_int(v["min_version"]) > self.version_string_to_int(highest_version_chain["min_version"]) and not self.use_condenser:
-                    highest_version_chain = v
-        if highest_version_chain is None:
-            raise("Connecting to unknown network!")
+        if highest_version_chain is None and chain_config is not None:
+            return chain_config
+        elif highest_version_chain is None:
+            raise RPCError("Connecting to unknown network!")
         else:
             return highest_version_chain
 
@@ -462,7 +487,7 @@ class GrapheneRPC(object):
         def method(*args, **kwargs):
 
             api_name = get_api_name(self.is_appbase_ready(), *args, **kwargs)
-            if self.is_appbase_ready() and self.use_condenser:
+            if self.is_appbase_ready() and self.use_condenser and api_name != "bridge":
                 api_name = "condenser_api"
             if (api_name is None):
                 api_name = 'database_api'
@@ -471,7 +496,7 @@ class GrapheneRPC(object):
             stored_num_retries_call = self.nodes.num_retries_call
             self.nodes.num_retries_call = kwargs.get("num_retries_call", stored_num_retries_call)
             add_to_queue = kwargs.get("add_to_queue", False)
-            query = get_query(self.is_appbase_ready() and not self.use_condenser, self.get_request_id(), api_name, name, args)
+            query = get_query(self.is_appbase_ready() and not self.use_condenser or api_name == "bridge", self.get_request_id(), api_name, name, args)
             if add_to_queue:
                 self.rpc_queue.append(query)
                 self.nodes.num_retries_call = stored_num_retries_call

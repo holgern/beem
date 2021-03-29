@@ -9,10 +9,10 @@ environment:
     WITH_COMPILER: "cmd /E:ON /V:ON /C .\\appveyor\\run_with_compiler.cmd"
 
   matrix:
-    - PYTHON: "C:\\Python36-x64"
+    - PYTHON: "C:\\Python37-x64"
       PYTHON_ARCH: "64"
-      MINICONDA: C:\Miniconda36-x64
-      COMM_PY: "py36"
+      MINICONDA: C:\Miniconda37-x64
+      COMM_PY: "py37"
 
       
 install:
@@ -24,11 +24,13 @@ install:
     if ($env:APPVEYOR_PULL_REQUEST_NUMBER) {
         $env:BUILD = "beempy-{0}-{1}-{2}_win64.zip" -f $env:COMM_TAG, $env:COMM_HASH, $env:COMM_PY
         $env:BUILD2 = "beempy-onefile-{0}-{1}-{2}_win64.zip" -f $env:COMM_TAG, $env:COMM_HASH, $env:COMM_PY
+        $env:BUILD3 = "BeempySetup-{0}-{1}-{2}_win64.exe" -f $env:COMM_TAG, $env:COMM_HASH, $env:COMM_PY
         $env:AVVER = "{0}-{1}" -f $env:COMM_TAG.TrimStart("v"), $env:COMM_HASH
     }
     else {
         $env:BUILD = "beempy-{0}-{1}-{2}-{3}_win64.zip" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH, $env:COMM_PY
         $env:BUILD2 = "beempy-onefile-{0}-{1}-{2}-{3}_win64.zip" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH, $env:COMM_PY
+        $env:BUILD3 = "BeempySetup-{0}-{1}-{2}-{3}_win64.exe" -f $env:COMM_TAG, $env:COMM_COUNT, $env:COMM_HASH, $env:COMM_PY
         $env:AVVER = "{0}-{1}" -f $env:COMM_TAG.TrimStart("v"), $env:COMM_COUNT
     }
 
@@ -48,25 +50,28 @@ install:
 - cmd: conda update -q conda
 - cmd: conda info -a
 - cmd: conda install --yes conda-build setuptools pip parameterized cryptography
-- cmd: conda install --yes pycryptodomex pyyaml pytest pytest-mock coverage mock appdirs pylibscrypt
+- cmd: conda install --yes pycryptodomex ruamel.yaml pytest pytest-mock coverage mock appdirs pylibscrypt pywin32
 - cmd: pip install scrypt -U
-- cmd: conda install --yes ecdsa requests future websocket-client pytz six Click events prettytable pyinstaller
+- cmd: conda install --yes ecdsa requests websocket-client pytz six Click prettytable pyinstaller click-shell diff-match-patch asn1crypto
 
 
 build_script:
  # Build the compiled extension
+- cmd: activate root
 - cmd: python setup.py build
 - cmd: python setup.py install --user
 
 test_script:
 # Run the project tests
+- cmd: activate root
 - cmd: py.test tests/beembase
 - cmd: py.test tests/beemgraphene
 
 after_test:
  # If tests are successful, create binary packages for the project.
-- cmd: pyinstaller beempy-onedir.spec
-- cmd: pyinstaller beempy-onefile.spec
+- cmd: activate root
+- cmd: pyinstaller pyinstaller\beempy-onedir.spec
+- cmd: pyinstaller pyinstaller\beempy-onefile.spec
 
 # package artifacts
 - cmd: copy /Y C:\OpenSSL-v111-Win64\bin\libcrypto-1_1-x64.dll dist\beempy
@@ -77,12 +82,16 @@ after_test:
 #- ps: 7z a -m0=LZMA2 -mx9 $env:BUILD .\dist\beempy
 - ps: 7z a $env:BUILD .\dist\beempy
 - ps: 7z a $env:BUILD2 .\dist\beempy.exe
+- cmd: makensis.exe /V4 pyinstaller\windows_installer.nsi
+- ps: Copy-Item .\pyinstaller\BeempySetup.exe -Destination $env:BUILD3
 
 - ps: | # generate sha256 hashes
     (get-filehash $env:BUILD -algorithm SHA256).Hash | out-file ("{0}.sha256" -f $env:BUILD) -encoding ascii
     type ("{0}.sha256" -f $env:BUILD)
     (get-filehash $env:BUILD2 -algorithm SHA256).Hash | out-file ("{0}.sha256" -f $env:BUILD2) -encoding ascii
     type ("{0}.sha256" -f $env:BUILD2)
+    (get-filehash $env:BUILD3 -algorithm SHA256).Hash | out-file ("{0}.sha256" -f $env:BUILD3) -encoding ascii
+    type ("{0}.sha256" -f $env:BUILD3)
     
 #(get-filehash beempy.zip -algorithm SHA256).Hash | out-file "beempy.zip.sha256" -encoding ascii 
 
@@ -91,11 +100,15 @@ artifacts:
 - path: $(BUILD)
   name: beempy
 - path: $(BUILD).sha256
-  name: beempy sha256 hash
+  name: beempy_sha256
 - path: $(BUILD2)
-  name: beempy onefile
+  name: beempy_onefile
 - path: $(BUILD2).sha256
-  name: beempy onefile sha256 hash
+  name: beempy_onefile_sha256
+- path: $(BUILD3)
+  name: beempy_installer
+- path: $(BUILD3).sha256
+  name: beempy_installer_sha256
 #- path: beempy.zip
 #  name: beempy_zip
 #- path: beempy.zip.sha256
@@ -104,3 +117,17 @@ artifacts:
 on_finish: 
 - ps: | # update appveyor build version, done last to prevent webhook breakage
     update-appveyorbuild -version $env:AVVER
+
+deploy:
+  provider: GitHub
+  auth_token:
+    secure: 0/vpfUG++7riJDu6Zc0smoTJJJm1t9/qiOzY/IR5vtaFNZNVYmRbEt8jS8LxpnFW
+  artifact: beempy, beempy_sha256, beempy_onefile, beempy_onefile_sha256, beempy_installer, beempy_installer_sha256
+  draft: true
+  prerelease: true
+  description: "standalone executable of beempy for windows"
+  tag: $(APPVEYOR_REPO_TAG_NAME) # will not work until tag is pushed
+  on:
+#    configuration: Release    # Debug contains non-redist MS DLLs
+    APPVEYOR_REPO_TAG: true   # deploy on tag push only
+    branch: master   # release from master branch only

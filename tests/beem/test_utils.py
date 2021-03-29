@@ -1,9 +1,8 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+# -*- coding: utf-8 -*-
 import unittest
 from datetime import datetime, date, timedelta
+import os
+from ruamel.yaml import YAML
 from beem.utils import (
     formatTimedelta,
     assets_from_string,
@@ -14,14 +13,19 @@ from beem.utils import (
     sanitize_permlink,
     derive_permlink,
     resolve_root_identifier,
-    make_patch,
     remove_from_dict,
     formatToTimeStamp,
     formatTimeString,
     addTzInfo,
     derive_beneficiaries,
     derive_tags,
-    seperate_yaml_dict_from_body
+    seperate_yaml_dict_from_body,
+    make_patch,
+    create_new_password,
+    generate_password,
+    import_coldcard_wif,
+    import_pubkeys,
+    create_yaml_header
 )
 
 
@@ -77,9 +81,31 @@ class Testcases(unittest.TestCase):
         self.assertEqual(len(derive_permlink("a" * 1024)), 256)
 
     def test_patch(self):
-        self.assertEqual(make_patch("aa", "ab"), '@@ -1 +1 @@\n-aa\n+ab\n')
+        self.assertEqual(make_patch("aa", "ab"), '@@ -1,2 +1,2 @@\n a\n-a\n+b\n')
+        self.assertEqual(make_patch("aa\n", "ab\n"), '@@ -1,3 +1,3 @@\n a\n-a\n+b\n %0A\n')
         self.assertEqual(make_patch("Hello!\n Das ist ein Test!\nEnd.\n", "Hello!\n This is a Test\nEnd.\n"),
-                         '@@ -1,3 +1,3 @@\n Hello!\n- Das ist ein Test!\n+ This is a Test\n End.\n')
+                          '@@ -5,25 +5,22 @@\n o!%0A \n-Da\n+Thi\n s is\n-t ein\n+ a\n  Test\n-!\n %0AEnd\n')
+
+        s1 = "test1\ntest2\ntest3\ntest4\ntest5\ntest6\n"
+        s2 = "test1\ntest2\ntest3\ntest4\ntest5\ntest6\n"
+        patch = make_patch(s1, s2)
+        self.assertEqual(patch, "")
+
+        s2 = "test1\ntest2\ntest7\ntest4\ntest5\ntest6\n"
+        patch = make_patch(s1, s2)
+        self.assertEqual(patch, "@@ -13,9 +13,9 @@\n test\n-3\n+7\n %0Ates\n")
+
+        s2 = "test1\ntest2\ntest3\ntest4\ntest5\n"
+        patch = make_patch(s1, s2)
+        self.assertEqual(patch, "@@ -27,10 +27,4 @@\n st5%0A\n-test6%0A\n")
+
+        s2 = "test2\ntest3\ntest4\ntest5\ntest6\n"
+        patch = make_patch(s1, s2)
+        self.assertEqual(patch,  '@@ -1,10 +1,4 @@\n-test1%0A\n test\n')
+
+        s2 = ""
+        patch = make_patch(s1, s2)
+        self.assertEqual(patch, '@@ -1,36 +0,0 @@\n-test1%0Atest2%0Atest3%0Atest4%0Atest5%0Atest6%0A\n')
 
     def test_formatTimedelta(self):
         now = datetime.now()
@@ -123,6 +149,12 @@ class Testcases(unittest.TestCase):
         t = "holger80:30,beembot:40"
         b = derive_beneficiaries(t)
         self.assertEqual(b, [{"account": "beembot", "weight": 4000}, {"account": "holger80", "weight": 3000}])
+        t = "holger80:30.00%,beembot:40.00%"
+        b = derive_beneficiaries(t)
+        self.assertEqual(b, [{"account": "beembot", "weight": 4000}, {"account": "holger80", "weight": 3000}]) 
+        t = "holger80:30%, beembot:40%"
+        b = derive_beneficiaries(t)
+        self.assertEqual(b, [{"account": "beembot", "weight": 4000}, {"account": "holger80", "weight": 3000}])        
         t = "holger80:30,beembot"
         b = derive_beneficiaries(t)
         self.assertEqual(b, [{"account": "beembot", "weight": 7000}, {"account": "holger80", "weight": 3000}])
@@ -145,8 +177,51 @@ class Testcases(unittest.TestCase):
         t = "---\npar1: data1\npar2: data2\npar3: 3\n---\n test ---"
         body, par = seperate_yaml_dict_from_body(t)
         self.assertEqual(par, {"par1": "data1", "par2": "data2", "par3": 3})
-        self.assertEqual(body, "\n test ---")
+        self.assertEqual(body, " test ---")
         t = "---\npar1:data1\npar2:data2\npar3:3\n---\n test ---"
         body, par = seperate_yaml_dict_from_body(t)
         self.assertEqual(par, {"par1": "data1", "par2": "data2", "par3": 3})
-        self.assertEqual(body, "\n test ---")
+        self.assertEqual(body, " test ---")
+
+    def create_yaml_header(self):
+        comment = {"title": "test", "author": "holger80", "max_accepted_payout": 100}
+        yaml_content = create_yaml_header(comment)
+        yaml_safe = YAML(typ="safe")
+        parameter = yaml_safe.load(yaml_content)
+        self.assertEqual(parameter["title"], "test")
+        self.assertEqual(parameter["author"], "holger80")
+        self.assertEqual(parameter["max_accepted_payout"], "100")  
+
+    def test_create_new_password(self):
+        new_password = create_new_password()
+        self.assertEqual(len(new_password), 32)
+        self.assertTrue(any(c.islower() for c in new_password))
+        self.assertTrue(any(c.isupper() for c in new_password))
+        self.assertTrue(any(c.isdigit() for c in new_password))
+
+        new_password2 = create_new_password()
+        self.assertFalse(new_password == new_password2)
+        new_password = create_new_password(length=16)
+        self.assertEqual(len(new_password), 16)
+
+    def test_generate_password(self):
+        new_password = generate_password("test", wif=0)
+        self.assertEqual(new_password, "test")
+        new_password = generate_password("test", wif=1)
+        self.assertAlmostEqual(new_password, "P5K2YUVmWfxbmvsNxCsfvArXdGXm7d5DC9pn4yD75k2UaSYgkXTh")
+
+    def test_import_coldcard_wif(self):
+        data_dir = os.path.join(os.path.dirname(__file__), 'data')
+        file = os.path.join(data_dir, "drv-wif-idx100.txt")
+        wif, path = import_coldcard_wif(file)
+        self.assertEqual(wif, "L5K7x3Zs6jgY5jMovRzdgucWHmvuidyPj1f8ioCAzGjHMhjmL5EL")
+        self.assertEqual(path, "m/83696968'/2'/100'")
+
+    def test_import_pubkeys(self):
+        data_dir = os.path.join(os.path.dirname(__file__), 'data')
+        file = os.path.join(data_dir, "pubkey.json")
+        owner, active, posting, memo = import_pubkeys(file)
+        self.assertEqual(owner, "STM51mq6zWEz3NGRYL8uMpJAe9c1qzf4ufh2ha4QqWzizqVrPL9Nq")
+        self.assertEqual(active, "STM6oVMzJJJgSu3hV1DZBcLdMUJYj3Cs6kGXf6WVLP3HhgLgNkA5J")
+        self.assertEqual(posting, "STM8XJdv7T36XhKRmPaodt8tqoeMbNgLrsiyweNESvnKqZWQQekCQ")
+        self.assertEqual(memo, "STM87KR1HKDoLiC3dv3goE99KDqEocBi3br8vcop6DgrCTwJcWexH")

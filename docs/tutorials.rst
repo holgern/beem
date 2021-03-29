@@ -20,7 +20,7 @@ one comment operation from each sender.
   from beem import Steem
   from beem.account import Account
   from beem.comment import Comment
-  from beem.instance import set_shared_steem_instance
+  from beem.instance import set_shared_blockchain_instance
 
   # not a real working key
   wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
@@ -31,7 +31,7 @@ one comment operation from each sender.
       keys=[wif],
   )
   # Set stm as shared instance
-  set_shared_steem_instance(stm)
+  set_shared_blockchain_instance(stm)
 
   # Account and Comment will use now stm
   account = Account("test")
@@ -58,7 +58,7 @@ When using  `nobroadcast=True` the transaction is not broadcasted but printed.
   from pprint import pprint
   from beem import Steem
   from beem.account import Account
-  from beem.instance import set_shared_steem_instance
+  from beem.instance import set_shared_blockchain_instance
 
   # Only for testing not a real working key
   wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
@@ -69,7 +69,7 @@ When using  `nobroadcast=True` the transaction is not broadcasted but printed.
       keys=[wif],
   )
   # Set testnet as shared instance
-  set_shared_steem_instance(testnet)
+  set_shared_blockchain_instance(testnet)
 
   # Account will use now testnet
   account = Account("test")
@@ -140,7 +140,7 @@ Simple Sell Script
     # Sell and buy calls always refer to the *quote*
     #
     market = Market("SBD:STEEM",
-        steem_instance=steem
+        blockchain_instance=steem
     )
 
     #
@@ -192,7 +192,7 @@ Sell at a timely rate
         # Sell and buy calls always refer to the *quote*
         #
         market = Market("STEEM:SBD",
-            steem_instance=steem
+            blockchain_instance=steem
         )
 
         sell()
@@ -277,7 +277,7 @@ Example with one operation with and without the wallet:
     stm = Steem()
     # Uncomment the following when using a wallet:
     # stm.wallet.unlock("secret_password")
-    tx = TransactionBuilder(steem_instance=stm)
+    tx = TransactionBuilder(blockchain_instance=stm)
     op = operations.Transfer(**{"from": 'user_a',
                                 "to": 'user_b',
                                 "amount": '1.000 SBD',
@@ -299,7 +299,7 @@ Example with signing and broadcasting two operations:
     stm = Steem()
     # Uncomment the following when using a wallet:
     # stm.wallet.unlock("secret_password")
-    tx = TransactionBuilder(steem_instance=stm)
+    tx = TransactionBuilder(blockchain_instance=stm)
     ops = []
     op = operations.Transfer(**{"from": 'user_a',
                                 "to": 'user_b',

@@ -5,6 +5,7 @@ source =
     beembase/
     beemapi/
     beemgraphenebase/
+    beemstorage/
 omit = 
      */.eggs/*
      */.tox/*

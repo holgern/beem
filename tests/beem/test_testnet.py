@@ -1,10 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import range
-from builtins import super
-import mock
+# -*- coding: utf-8 -*-
 import string
 import unittest
 import random
@@ -13,9 +7,9 @@ from beem import Steem
 from beem.exceptions import (
     InsufficientAuthorityError,
     MissingKeyError,
-    InvalidWifError,
-    WalletLocked
+    InvalidWifError
 )
+from beemstorage.exceptions import WalletLocked
 from beemapi import exceptions
 from beem.amount import Amount
 from beem.witness import Witness

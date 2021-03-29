@@ -1,10 +1,7 @@
-The updates and developement of beem takes place at https://github.com/holgern/beem
+beem - Unofficial Python Library for HIVE and STEEM
+===================================================
 
-
-beem - Unofficial Python Library for Hive
-=========================================
-
-beem is an unofficial python library for steem, which is created new from scratch from `python-bitshares`_
+beem is an unofficial python library for steem and HIVE, which is created new from scratch from `python-bitshares`_
 The library name is derived from a beam machine, similar to the analogy between steem and steam. beem includes `python-graphenelib`_.
 
 .. image:: https://img.shields.io/pypi/v/beem.svg
@@ -23,6 +20,10 @@ The library name is derived from a beam machine, similar to the analogy between 
 .. image:: https://anaconda.org/conda-forge/beem/badges/downloads.svg
     :target: https://anaconda.org/conda-forge/beem
 
+
+.. image:: https://repl.it/badge/github/holgern/beem
+    :target: https://repl.it/github/holgern/beem
+    :alt: Run on Repl.it
 
 Current build status
 --------------------
@@ -56,8 +57,8 @@ You may find help in the  `beem-discord-channel`_. The discord channel can also 
 
 A complete library documentation is available at  `beem.readthedocs.io`_.
 
-Advantages over the official steem-python library
-=================================================
+About beem
+==========
 
 * High unit test coverage
 * Support for websocket nodes
@@ -65,18 +66,18 @@ Advantages over the official steem-python library
 * Node error handling and automatic node switching
 * Usage of pycryptodomex instead of the outdated pycrypto
 * Complete documentation of beempy and all classes including all functions
-* steemconnect integration
+* hivesigner integration
 * Works on read-only systems
 * Own BlockchainObject class with cache
 * Contains all broadcast operations
 * Estimation of virtual account operation index from date or block number
 * the command line tool beempy uses click and has more commands
-* SteemNodeRPC can be used to execute even not implemented RPC-Calls
+* NodeRPC can be used to execute even not implemented RPC-Calls
 * More complete implemention
 
 Installation
 ============
-The minimal working python version is 2.7.x. or 3.4.x
+The minimal working python version is 3.6.x
 
 beem can be installed parallel to python-steem.
 
@@ -84,7 +85,12 @@ For Debian and Ubuntu, please ensure that the following packages are installed:
 
 .. code:: bash
 
-    sudo apt-get install build-essential libssl-dev python-dev
+    sudo apt-get install build-essential libssl-dev python3-dev python3-pip python3-setuptools
+
+The following package speeds up beempy:
+.. code:: bash
+
+    sudo apt-get install python3-gmpy2
 
 For Fedora and RHEL-derivatives, please ensure that the following packages are installed:
 
@@ -102,32 +108,32 @@ For Termux on Android, please install the following packages:
 
 .. code:: bash
 
-    pkg install clang openssl-dev python-dev
+    pkg install clang openssl python
 
-Signing and Verify can be fasten (200 %) by installing cryptography:
-
-.. code:: bash
-
-    pip install -U cryptography
-
-or:
+Signing and Verify can be fasten (200 %) by installing cryptography (you may need to replace pip3 by pip):
 
 .. code:: bash
 
-    pip install -U secp256k1prp
+    pip3 install -U cryptography
 
-Install or update beem by pip::
+or (you may need to replace pip3 by pip):
 
-    pip install -U beem
+.. code:: bash
+
+    pip3 install -U secp256k1prp
+
+Install or update beem by pip(you may need to replace pip3 by pip)::
+
+    pip3 install -U beem
 
 You can install beem from this repository if you want the latest
 but possibly non-compiling version::
 
     git clone https://github.com/holgern/beem.git
     cd beem
-    python setup.py build
+    python3 setup.py build
 
-    python setup.py install --user
+    python3 setup.py install --user
 
 Run tests after install::
 
@@ -159,6 +165,12 @@ A command line tool is available. The help output shows the available commands:
 
     beempy --help
 
+Ledger support
+--------------
+For Ledger (Nano S) signing, the following package must be installed:
+
+    pip3 install ledgerblue
+
 Stand alone version of CLI tool beempy
 --------------------------------------
 With the help of pyinstaller, a stand alone version of beempy was created for Windows, OSX and linux.
@@ -185,3 +197,4 @@ Acknowledgements
 .. _Anaconda: https://www.continuum.io
 .. _beem.readthedocs.io: http://beem.readthedocs.io/en/latest/
 .. _beem-discord-channel: https://discord.gg/4HM592V
+    

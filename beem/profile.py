@@ -1,11 +1,10 @@
-# This Python file uses the following encoding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+# -*- coding: utf-8 -*-
 import logging
 import json
-import collections
+try:
+    from collections.abc import Mapping  # noqa
+except ImportError:
+    from collections import Mapping  # noqa
 
 
 class DotDict(dict):
@@ -53,7 +52,7 @@ class Profile(DotDict):
 
     def update(self, u):
         for k, v in u.items():
-            if isinstance(v, collections.Mapping):
+            if isinstance(v, Mapping):
                 self.setdefault(k, {}).update(v)
             else:
                 self[k] = u[k]

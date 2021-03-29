@@ -24,41 +24,78 @@ from beembase.memo import (
 )
 
 test_cases = [
-    {'from': 'GPH7FPzbN7hnRk24T3Nh9MYM1xBaF5xyRYu8WtyTrtLoUG8cUtszM',
-     'message_bts': '688fe6c97f78ad2d3c5a82d9aa61bc23',
-     'message': '#FYu8pMPJxTv7q2geNLSQC8dm47uqdNtFLCoDY5yZWjAz2R4wNyHEwQ48hPWm9SuAZ6fCFmjQrFCBVQFSP7EkobrWWRGaeqH6msKkPjRsMd6UUaNva1nmtLc55RAzqPLht',
-     'nonce': '16332877645293003478',
-     'plain': u'I am this!',
-     'to': 'GPH6HAMuJRkjGJkj6cZWBbTU13gkUhBep383prqRdExXsZsYTrWT5',
-     'wif': '5Jpkeq1jiNE8Pe24GxFWTsyWbcP59Qq4cD7qg3Wgd6JFJqJkoG8'},
-    {'from': 'GPH7FPzbN7hnRk24T3Nh9MYM1xBaF5xyRYu8WtyTrtLoUG8cUtszM',
-     'message_bts': 'db7ab7dfefee3ffa2394ec438601ceff',
-     'message': '#FYu8pMPJxTv7q2geNLSQC8dm47uqdNtFLCoDY5yZWjAz2R4wNyHEwQ48hPWm9SuAZ6fCFmjQrFCBVQFSP7EkobrWWRGaeqH6msKkPjRsMd6pNxowQQGhkWuR9z5W1aLau',
-     'nonce': '16332877645293003478',
-     'plain': u'Hello World',
-     'to': 'GPH6HAMuJRkjGJkj6cZWBbTU13gkUhBep383prqRdExXsZsYTrWT5',
-     'wif': '5Jpkeq1jiNE8Pe24GxFWTsyWbcP59Qq4cD7qg3Wgd6JFJqJkoG8'},
-    {'from': 'GPH7FPzbN7hnRk24T3Nh9MYM1xBaF5xyRYu8WtyTrtLoUG8cUtszM',
-     'message_bts': '01b6616cbd10bdd0743c82c2bd580651f3e852360a739e7d11c45f483871dc45',
-     'message': '#FYu8pMPJxTv7q2geNLSQC8dm47uqdNtFLCoDY5yZWjAz2R4wNyHEwQ48hPWm9SuAZ6fCFmjQrFCBVQFSP7EkobrWWRGaeqH6msKkPjRsMd6iKUwipf3H34zh3CAZVHNDy',
-     'nonce': '16332877645293003478',
-     'plain': u'Daniel Larimer',
-     'to': 'GPH6HAMuJRkjGJkj6cZWBbTU13gkUhBep383prqRdExXsZsYTrWT5',
-     'wif': '5Jpkeq1jiNE8Pe24GxFWTsyWbcP59Qq4cD7qg3Wgd6JFJqJkoG8'},
-    {'from': 'GPH7FPzbN7hnRk24T3Nh9MYM1xBaF5xyRYu8WtyTrtLoUG8cUtszM',
-     'message_bts': '24702af49bc82e06eb74a4acd91b18c389b13a6c9850a0fd3f728f486fe6daf4',
-     'message': '#FYu8pMPJxTv7q2geNLSQC8dm47uqdNtFLCoDY5yZWjAz2R4wNyHEwQ48hPWm9SuAZ6fCFmjQrFCBVQFSP7EkobrWWRGaeqH6msKkPjRsMd6QyDwh8a4rxrSLnY2H4ztCK',
-     'nonce': '16332877645293003478',
-     'plain': u'Thanks you, sir!',
-     'to': 'GPH6HAMuJRkjGJkj6cZWBbTU13gkUhBep383prqRdExXsZsYTrWT5',
-     'wif': '5Jpkeq1jiNE8Pe24GxFWTsyWbcP59Qq4cD7qg3Wgd6JFJqJkoG8'},
-    {'from': 'GPH7FPzbN7hnRk24T3Nh9MYM1xBaF5xyRYu8WtyTrtLoUG8cUtszM',
-     'message_bts': 'db059f7a0f9053b041cd95c373ed9dff3445491d03ef17c490870ebcfcc6ec61a53718ec6cc8f5d81da6fcaa77b40d19',
-     'message': '#5Kh3GamVLQtmU7PRHr6gyvAXqKtcRUaDy7Yp4BWqFuNeRq88ioc6rTGMGc7bRC1PtUV2LAeqsiQtbuRgPFSppVXPccS5BSWfqSxMF7ytAbmafekm2DweU1F2nqYwFgWYVe8wsHQdZVpzCdm8BJUY4xBCEU2xrB8nX4559EKag5BuU',
-     'nonce': '16332877645293003478',
-     'plain': u'Ã¤Ã¶Ã¼ÃŸâ‚¬@$Â²Â³',
-     'to': 'GPH6HAMuJRkjGJkj6cZWBbTU13gkUhBep383prqRdExXsZsYTrWT5',
-     'wif': '5Jpkeq1jiNE8Pe24GxFWTsyWbcP59Qq4cD7qg3Wgd6JFJqJkoG8'}
+    {
+        "from": "GPH7FPzbN7hnRk24T3Nh9MYM1xBaF5xyRYu8WtyTrtLoUG8cUtszM",
+        "message_bts": "688fe6c97f78ad2d3c5a82d9aa61bc23",
+        'message': '#FYu8pMPJxTv7q2geNLSQC8dm47uqdNtFLCoDY5yZWjAz2R4wNyHEwQ48hPWm9SuAZ6fCFmjQrFCBVQFSP7EkobrWWRGaeqH6msKkPjRsMd6UUaNva1nmtLc55RAzqPLht',
+        "nonce": "16332877645293003478",
+        "plain": "I am this!",
+        "to": "GPH6HAMuJRkjGJkj6cZWBbTU13gkUhBep383prqRdExXsZsYTrWT5",
+        "wif": "5Jpkeq1jiNE8Pe24GxFWTsyWbcP59Qq4cD7qg3Wgd6JFJqJkoG8",
+    },
+    {  # no with integer nonce
+        "from": "GPH7FPzbN7hnRk24T3Nh9MYM1xBaF5xyRYu8WtyTrtLoUG8cUtszM",
+        "message_bts": "688fe6c97f78ad2d3c5a82d9aa61bc23",
+        'message': '#FYu8pMPJxTv7q2geNLSQC8dm47uqdNtFLCoDY5yZWjAz2R4wNyHEwQ48hPWm9SuAZ6fCFmjQrFCBVQFSP7EkobrWWRGaeqH6msKkPjRsMd6UUaNva1nmtLc55RAzqPLht',
+        "nonce": 16332877645293003478,
+        "plain": "I am this!",
+        "to": "GPH6HAMuJRkjGJkj6cZWBbTU13gkUhBep383prqRdExXsZsYTrWT5",
+        "wif": "5Jpkeq1jiNE8Pe24GxFWTsyWbcP59Qq4cD7qg3Wgd6JFJqJkoG8",
+    },
+    {
+        "from": "GPH7FPzbN7hnRk24T3Nh9MYM1xBaF5xyRYu8WtyTrtLoUG8cUtszM",
+        "message_bts": "db7ab7dfefee3ffa2394ec438601ceff",
+        'message': '#FYu8pMPJxTv7q2geNLSQC8dm47uqdNtFLCoDY5yZWjAz2R4wNyHEwQ48hPWm9SuAZ6fCFmjQrFCBVQFSP7EkobrWWRGaeqH6msKkPjRsMd6pNxowQQGhkWuR9z5W1aLau',
+        "nonce": "16332877645293003478",
+        "plain": "Hello World",
+        "to": "GPH6HAMuJRkjGJkj6cZWBbTU13gkUhBep383prqRdExXsZsYTrWT5",
+        "wif": "5Jpkeq1jiNE8Pe24GxFWTsyWbcP59Qq4cD7qg3Wgd6JFJqJkoG8",
+    },
+    {
+        "from": "GPH7FPzbN7hnRk24T3Nh9MYM1xBaF5xyRYu8WtyTrtLoUG8cUtszM",
+        "message_bts": "01b6616cbd10bdd0743c82c2bd580651f3e852360a739e7d11c45f483871dc45",
+        'message': '#FYu8pMPJxTv7q2geNLSQC8dm47uqdNtFLCoDY5yZWjAz2R4wNyHEwQ48hPWm9SuAZ6fCFmjQrFCBVQFSP7EkobrWWRGaeqH6msKkPjRsMd6iKUwipf3H34zh3CAZVHNDy',
+        "nonce": "16332877645293003478",
+        "plain": "Daniel Larimer",
+        "to": "GPH6HAMuJRkjGJkj6cZWBbTU13gkUhBep383prqRdExXsZsYTrWT5",
+        "wif": "5Jpkeq1jiNE8Pe24GxFWTsyWbcP59Qq4cD7qg3Wgd6JFJqJkoG8",
+    },
+    {
+        "from": "GPH7FPzbN7hnRk24T3Nh9MYM1xBaF5xyRYu8WtyTrtLoUG8cUtszM",
+        "message_bts": "24702af49bc82e06eb74a4acd91b18c389b13a6c9850a0fd3f728f486fe6daf4",
+        'message': '#8vxJp5YDC1Mv7J8sShbhdyrDNyo2JFuUxMmkYvg3tREpXDxoAvZSxzJ8Yqhx6qCyKfpHVczST9ySdXQANy2XBdFpztTu29pUibJBUzoKWgKYQyn7ixqUKhkexUA9Vt7W4crzbvnHhoB9Xogj9xxyhiN',
+        "nonce": "16332877645293003478",
+        "plain": "Thanks you, sir!",
+        "to": "GPH6HAMuJRkjGJkj6cZWBbTU13gkUhBep383prqRdExXsZsYTrWT5",
+        "wif": "5Jpkeq1jiNE8Pe24GxFWTsyWbcP59Qq4cD7qg3Wgd6JFJqJkoG8",
+    },
+    {
+        "from": "GPH7FPzbN7hnRk24T3Nh9MYM1xBaF5xyRYu8WtyTrtLoUG8cUtszM",
+        "message_bts": "1566da5b57e8e0fd9f530a352812a4197b8113df6495efdb246909c6ee1ffea6",
+        'message': '#8vxJp5YDC1Mv7J8sShbhdyrDNyo2JFuUxMmkYvg3tREpXDxoAvZSxzJ8Yqhx6qCyKfpHVczST9ySdXQANy2XBdFpztTu29pUibJBUzoKWgKfW6Ew2qCiLrZFodoFmpQ77fg7HRGRRLN42jkJs3HxJf1',
+        "nonce": "16332877645293003478",
+        "plain": "äöüß€@$²³",
+        "to": "GPH6HAMuJRkjGJkj6cZWBbTU13gkUhBep383prqRdExXsZsYTrWT5",
+        "wif": "5Jpkeq1jiNE8Pe24GxFWTsyWbcP59Qq4cD7qg3Wgd6JFJqJkoG8",
+    },
+    {
+        "from": "GPH6APYcWtrWXBhcrjPEhPz41bc98NxjnvufVVnRH1M8sjwtvFacz",
+        "message_bts": "40b7ed2efd5e23b97e3f3aec6319fda722194e08b4cee45b84566e2741916797",
+        "message": "#D2BAH3MLo3eMbJh9nR5jy53KXf22b55fQpNLXoGD4bqkE3EkiZirwL8GWsaFJ6g1RDzgRXiYXuNFwCyDddHzuL1Sxam5KCEMYZY4E5MmvMnv46ptN1Bur7Yuo7X6tfRtU",
+        "nonce": "10864609094208714729",
+        "plain": "1234567890\x02\x02",  # final bytes LOOK LIKE padding
+        "to": "GPH7Ge953jTDzHKxFAzy19uhJtXxw8CbBM938hkSKWE3yXfRjLV57",
+        "wif": "5KR8jzysz2kbYy3TkL3x6NRxfNXwQUWyeVAF5ZagxdqKMawGgXG",
+    },
+    {
+        "from": "GPH6APYcWtrWXBhcrjPEhPz41bc98NxjnvufVVnRH1M8sjwtvFacz",
+        "message_bts": "f43800298f9974c7b334bb1bf6224f236309520e99697f3980775231bfb4ef21",
+        "message": "#D2BAH3MLo3eMbJh9nR5jy53KXf22b55fQpNLXoGD4bqkE3EkiZirwL8GWsaFJ6g1RDzgRXiYXuNFwCyDddHzuL1SxTXsyHkXiqBXGwC9v8guy8xFQQ7w5dLFXVHHgmZSV",
+        "nonce": "8555724032490455626",
+        "plain": "abcdefghijÛ",  # padding limit and last character is unicode
+        "to": "GPH7Ge953jTDzHKxFAzy19uhJtXxw8CbBM938hkSKWE3yXfRjLV57",
+        "wif": "5KR8jzysz2kbYy3TkL3x6NRxfNXwQUWyeVAF5ZagxdqKMawGgXG",
+    },    
 ]
 
 test_shared_secrets = [
@@ -75,35 +112,52 @@ test_shared_secrets = [
 ]
 
 
+not_enough_padding = [
+    {
+        "from": "GPH6APYcWtrWXBhcrjPEhPz41bc98NxjnvufVVnRH1M8sjwtvFacz",
+        "message_bts": "0b93e05a3b017d00ee16dfea0c1a9d64",
+        "message": "#D2BAH3MLo3eMbJh9nR5jy53KXf22b55fQpNLXoGD4bqkE3EkiZirwL8GWsaFJ6g1RDzgRXiYXuNFwCyDddHzuL1SxQrkhcLU2k4tfkcKx1apw8mfzCCJ699LXJxnTgsZd",
+        "nonce": "7675159740645758991",
+        "plain": "abcdefghijÛ",
+        "to": "GPH7Ge953jTDzHKxFAzy19uhJtXxw8CbBM938hkSKWE3yXfRjLV57",
+        "wif": "5KR8jzysz2kbYy3TkL3x6NRxfNXwQUWyeVAF5ZagxdqKMawGgXG",
+    }
+]
+
+
 class Testcases(unittest.TestCase):
 
     def test_padding(self):
         for l in range(0, 255):
-            s = bytes(l * chr(l), 'utf-8')
-            padded = _pad(s, 16).decode('utf-8')
-            self.assertEqual(s.decode('utf-8'), _unpad(padded, 16))
+            s = bytes(l * chr(l), "utf-8")
+            padded = _pad(s, 16)
+            self.assertEqual(s, _unpad(padded, 16))
 
     def test_decrypt_bts(self):
         for memo in test_cases:
-            dec = decode_memo_bts(PrivateKey(memo["wif"]),
-                                  PublicKey(memo["to"], prefix="GPH"),
-                                  memo["nonce"],
-                                  memo["message_bts"])
+            dec = decode_memo_bts(
+                PrivateKey(memo["wif"]),
+                PublicKey(memo["to"], prefix="GPH"),
+                memo["nonce"],
+                memo["message_bts"],
+            )
             self.assertEqual(memo["plain"], dec)
 
     def test_encrypt_bts(self):
         for memo in test_cases:
-            enc = encode_memo_bts(PrivateKey(memo["wif"]),
-                                  PublicKey(memo["to"], prefix="GPH"),
-                                  memo["nonce"],
-                                  memo["plain"])
+            enc = encode_memo_bts(
+                PrivateKey(memo["wif"]),
+                PublicKey(memo["to"], prefix="GPH"),
+                memo["nonce"],
+                memo["plain"],
+            )
             self.assertEqual(memo["message_bts"], enc)
 
     def test_decrypt(self):
         for memo in test_cases:
             dec = decode_memo(PrivateKey(memo["wif"]),
                               memo["message"])
-            self.assertEqual(memo["plain"], dec)
+            self.assertEqual(memo["plain"], dec[1:])
 
     def test_encrypt(self):
         for memo in test_cases:
@@ -114,7 +168,7 @@ class Testcases(unittest.TestCase):
             self.assertEqual(memo["message"], enc)
 
     def test_encrypt_decrypt(self):
-        base58 = u'#HU6pdQ4Hh8cFrDVooekRPVZu4BdrhAe9RxrWrei2CwfAApAPdM4PT5mSV9cV3tTuWKotYQF6suyM4JHFBZz4pcwyezPzuZ2na7uwhRcLqFotsqxWRBpaXkNks2QCnYLS8'
+        base58 = u'#HU6pdQ4Hh8cFrDVooekRPVZu4BdrhAe9RxrWrei2CwfAApAPdM4PT5mSV9cV3tTuWKotYQF6suyM4JHFBZz4pcwyezPzuZ2na7uwhRcLqFoxprno9kWoHiS766vPUKqGX'
         text = u'#爱'
         nonce = u'1462976530069648'
         wif = str(PasswordKey("", "", role="", prefix="STM").get_private_key())
@@ -123,7 +177,7 @@ class Testcases(unittest.TestCase):
         cypertext = encode_memo(private_key,
                                 public_key,
                                 nonce,
-                                text, prefix="STM")
+                                text[1:], prefix="STM")
         self.assertEqual(cypertext, base58)
         plaintext = decode_memo(private_key, cypertext)
         self.assertEqual(plaintext, text)
@@ -147,5 +201,22 @@ class Testcases(unittest.TestCase):
 
             self.assertEqual(
                 get_shared_secret(sender_private_key, receiver_public_key),
-                get_shared_secret(receiver_private_key, sender_public_key)
+                get_shared_secret(receiver_private_key, sender_public_key),
             )
+
+    def test_decrypt_bugged_padding_bts(self):
+        for memo in not_enough_padding:
+            dec = decode_memo_bts(
+                PrivateKey(memo["wif"]),
+                PublicKey(memo["to"], prefix="GPH"),
+                memo["nonce"],
+                memo["message_bts"],
+            )
+            self.assertEqual(memo["plain"], dec)
+
+    def test_decrypt_bugged_padding(self):
+        for memo in not_enough_padding:
+            dec = decode_memo(PrivateKey(memo["wif"]),
+                              memo["message"]
+            )
+            self.assertEqual(memo["plain"], dec[1:])

@@ -1,12 +1,8 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import super
+# -*- coding: utf-8 -*-
 import unittest
 from parameterized import parameterized
-from beem import Steem
-from beem.instance import set_shared_steem_instance
+from beem import Steem, Hive
+from beem.instance import set_shared_blockchain_instance
 from beem.transactionbuilder import TransactionBuilder
 from beembase.signedtransactions import Signed_Transaction
 from beembase.operations import Transfer
@@ -17,36 +13,36 @@ from beem.amount import Amount
 from beem.exceptions import (
     InsufficientAuthorityError,
     MissingKeyError,
-    InvalidWifError,
-    WalletLocked
+    InvalidWifError
 )
+from beemstorage.exceptions import WalletLocked
 from beemapi import exceptions
 from beem.wallet import Wallet
 from beem.utils import formatTimeFromNow
-from beem.nodelist import NodeList
+from .nodes import get_hive_nodes, get_steem_nodes
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
+wif2 = "5JKu2dFfjKAcD6aP1HqBDxMNbdwtvPS99CaxBzvMYhY94Pt6RDS"
+wif3 = "5K1daXjehgPZgUHz6kvm55ahEArBHfCHLy6ew8sT7sjDb76PU2P"
 
 
 class Testcases(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(exclude_limited=False), num_retries=10))
-        node_list = nodelist.get_nodes(exclude_limited=True)
-        cls.stm = Steem(
+        node_list = get_hive_nodes()
+        cls.stm = Hive(
             node=node_list,
-            keys={"active": wif, "owner": wif, "memo": wif},
+            keys={"active": wif, "owner": wif2, "memo": wif3},
             nobroadcast=True,
             num_retries=10
         )
-        cls.steemit = Steem(
+        cls.steemit = Hive(
             node="https://api.steemit.com",
             nobroadcast=True,
-            keys={"active": wif, "owner": wif, "memo": wif},
+            keys={"active": wif, "owner": wif2, "memo": wif3},
             num_retries=10
         )
-        set_shared_steem_instance(cls.stm)
+        set_shared_blockchain_instance(cls.stm)
         cls.stm.set_default_account("test")
 
     def test_emptyTransaction(self):
@@ -62,4 +58,4 @@ class Testcases(unittest.TestCase):
         signed_tx = Signed_Transaction(trx)
         key = signed_tx.verify(chain=stm.chain_params, recover_parameter=False)
         public_key = format(Base58(key[0]), stm.prefix)
-        self.assertEqual(public_key, "STM4tzr1wjmuov9ftXR6QNv7qDWsbShMBPQpuwatZsfSc5pKjRDfq")
+        self.assertEqual(public_key, "STM4xA6aCu23rKxsEZWF2xVYJvJAyycuoFxBRQEuQ5Hc7UtFET7fT")

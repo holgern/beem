@@ -7,8 +7,7 @@ from builtins import str
 import unittest
 import json
 from beemgraphenebase import types
-from beem.amount import Amount
-from beem import Steem
+from binascii import hexlify, unhexlify
 from beemgraphenebase.py23 import (
     py23_bytes,
     py23_chr,
@@ -179,3 +178,60 @@ class Testcases(unittest.TestCase):
         u = types.Map([[types.Uint16(10), types.Uint16(11)]])
         self.assertEqual(py23_bytes(u), b"\x01\n\x00\x0b\x00")
         self.assertEqual(str(u), '[["10", "11"]]')
+
+    def test_enum8(self):
+        class MyEnum(types.Enum8):
+            options = ["foo", "bar"]
+
+        u = MyEnum("bar")
+        self.assertEqual(bytes(u), b"\x01")
+        self.assertEqual(str(u), "bar")
+
+        with self.assertRaises(ValueError):
+            MyEnum("barbar")
+
+    def test_Hash(self):
+        u = types.Hash(hexlify(b"foobar").decode("ascii"))
+        self.assertEqual(bytes(u), b"foobar")
+        self.assertEqual(str(u), "666f6f626172")
+        self.assertEqual(u.json(), "666f6f626172")
+
+    def test_ripemd160(self):
+        u = types.Ripemd160("37f332f68db77bd9d7edd4969571ad671cf9dd3b")
+        self.assertEqual(
+            bytes(u), b"7\xf32\xf6\x8d\xb7{\xd9\xd7\xed\xd4\x96\x95q\xadg\x1c\xf9\xdd;"
+        )
+        self.assertEqual(str(u), "37f332f68db77bd9d7edd4969571ad671cf9dd3b")
+        self.assertEqual(u.json(), "37f332f68db77bd9d7edd4969571ad671cf9dd3b")
+
+        with self.assertRaises(AssertionError):
+            types.Ripemd160("barbar")
+
+    def test_sha1(self):
+        u = types.Sha1("37f332f68db77bd9d7edd4969571ad671cf9dd3b")
+        self.assertEqual(
+            bytes(u), b"7\xf32\xf6\x8d\xb7{\xd9\xd7\xed\xd4\x96\x95q\xadg\x1c\xf9\xdd;"
+        )
+        self.assertEqual(str(u), "37f332f68db77bd9d7edd4969571ad671cf9dd3b")
+        self.assertEqual(u.json(), "37f332f68db77bd9d7edd4969571ad671cf9dd3b")
+
+        with self.assertRaises(AssertionError):
+            types.Sha1("barbar")
+
+    def test_sha256(self):
+        u = types.Sha256(
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        )
+        self.assertEqual(
+            bytes(u),
+            b"\xe3\xb0\xc4B\x98\xfc\x1c\x14\x9a\xfb\xf4\xc8\x99o\xb9$'\xaeA\xe4d\x9b\x93L\xa4\x95\x99\x1bxR\xb8U",
+        )
+        self.assertEqual(
+            str(u), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        )
+        self.assertEqual(
+            u.json(), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        )
+
+        with self.assertRaises(AssertionError):
+            types.Sha256("barbar")

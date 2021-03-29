@@ -92,7 +92,19 @@ class NoAccessApi(RPCError):
     pass
 
 
+class FilteredItemNotFound(RPCError):
+    pass
+
+
 class InvalidEndpointUrl(Exception):
+    pass
+
+
+class InvalidParameters(Exception):
+    pass
+
+
+class SupportedByHivemind(Exception):
     pass
 
 
@@ -109,4 +121,8 @@ class TimeoutException(Exception):
 
 
 class VotedBeforeWaitTimeReached(Exception):
+    pass
+
+
+class UnknownTransaction(Exception):
     pass

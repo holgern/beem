@@ -1,16 +1,9 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import super
-from builtins import str
+# -*- coding: utf-8 -*-
 import time
 import unittest
 from beem import Steem, exceptions
 from beem.instance import set_shared_steem_instance
 from beem.blockchainobject import ObjectCache
-from beem.account import Account
-from beem.nodelist import NodeList
 
 
 class Testcases(unittest.TestCase):
