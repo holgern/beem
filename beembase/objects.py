@@ -1,11 +1,7 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import bytes, int, str
-from builtins import object
-from future.utils import python_2_unicode_compatible
+# -*- coding: utf-8 -*-
 import json
+from math import floor
+import decimal
 from beemgraphenebase.py23 import py23_bytes, bytes_types, integer_types, string_types, text_type
 from collections import OrderedDict
 from beemgraphenebase.types import (
@@ -20,14 +16,19 @@ from .objecttypes import object_type
 from beemgraphenebase.account import PublicKey
 from beemgraphenebase.objects import Operation as GPHOperation
 from beemgraphenebase.chains import known_chains
-from .operationids import operations, operations_wls
+from .operationids import operations
 import struct
 default_prefix = "STM"
 
 
-@python_2_unicode_compatible
+def value_to_decimal(value, decimal_places):
+    decimal.getcontext().rounding = decimal.ROUND_DOWN  # define rounding method
+    return decimal.Decimal(str(float(value))).quantize(decimal.Decimal('1e-{}'.format(decimal_places)))
+
+
 class Amount(object):
-    def __init__(self, d, prefix=default_prefix):
+    def __init__(self, d, prefix=default_prefix, json_str=False):
+        self.json_str = json_str
         if isinstance(d, string_types):
             self.amount, self.symbol = d.strip().split(" ")
             self.precision = None
@@ -47,7 +48,8 @@ class Amount(object):
                         self.asset = asset["asset"]
             if self.precision is None:
                 raise Exception("Asset unknown")
-            self.amount = round(float(self.amount) * 10 ** self.precision)
+            self.amount = round(value_to_decimal(self.amount, self.precision) * 10 ** self.precision)
+            # Workaround to allow transfers in HIVE
 
             self.str_repr = '{:.{}f} {}'.format((float(self.amount) / 10 ** self.precision), self.precision, self.symbol)
         elif isinstance(d, list):
@@ -84,23 +86,28 @@ class Amount(object):
             self.symbol = d.symbol
             self.asset = d.asset["asset"]
             self.precision = d.asset["precision"]
-            self.amount = round(float(self.amount) * 10 ** self.precision)
+            self.amount = round(value_to_decimal(self.amount, self.precision) * 10 ** self.precision)
             self.str_repr = str(d)
             # self.str_repr = json.dumps((d.json()))
             # self.str_repr = '{:.{}f} {}'.format((float(self.amount) / 10 ** self.precision), self.precision, self.asset)
 
     def __bytes__(self):
         # padding
+        # Workaround to allow transfers in HIVE
+        if self.symbol == "HBD":
+            self.symbol = "SBD"
+        elif self.symbol == "HIVE":
+            self.symbol = "STEEM"
         symbol = self.symbol + "\x00" * (7 - len(self.symbol))
         return (struct.pack("<q", int(self.amount)) + struct.pack("<b", self.precision) +
                 py23_bytes(symbol, "ascii"))
 
     def __str__(self):
-        # return json.dumps({"amount": self.amount, "precision": self.precision, "nai": self.asset})
+        if self.json_str:
+            return json.dumps({"amount": str(self.amount), "precision": self.precision, "nai": self.asset})
         return self.str_repr
 
 
-@python_2_unicode_compatible
 class Operation(GPHOperation):
     def __init__(self, *args, **kwargs):
         self.appbase = kwargs.pop("appbase", False)
@@ -113,8 +120,6 @@ class Operation(GPHOperation):
         return class_
 
     def operations(self):
-        if self.prefix == "WLS":
-            return operations_wls
         return operations
 
     def getOperationNameForId(self, i):
@@ -174,6 +179,12 @@ class WitnessProps(GrapheneObject):
                     ('maximum_block_size', Uint32(kwargs["maximum_block_size"])),
                     ('sbd_interest_rate', Uint16(kwargs["sbd_interest_rate"])),
                 ]))
+            elif "hbd_interest_rate" in kwargs:
+                super(WitnessProps, self).__init__(OrderedDict([
+                    ('account_creation_fee', Amount(kwargs["account_creation_fee"], prefix=prefix)),
+                    ('maximum_block_size', Uint32(kwargs["maximum_block_size"])),
+                    ('hbd_interest_rate', Uint16(kwargs["hbd_interest_rate"])),
+                ]))                
             else:
                 super(WitnessProps, self).__init__(OrderedDict([
                     ('account_creation_fee', Amount(kwargs["account_creation_fee"], prefix=prefix)),
@@ -232,7 +243,6 @@ class Permission(GrapheneObject):
             ]))
 
 
-@python_2_unicode_compatible
 class Extension(Array):
     def __str__(self):
         """ We overload the __str__ function because the json
@@ -315,8 +325,8 @@ class CommentOptionExtensions(Static_variant):
             raise Exception("Unknown CommentOptionExtension")
         super(CommentOptionExtensions, self).__init__(data, type_id)
 
-        
-class SocialActionCommentCreate(GrapheneObject):
+
+class UpdateProposalEndDate(GrapheneObject):
     def __init__(self, *args, **kwargs):
         if isArgsThisClass(self, args):
             self.data = args[0].data
@@ -324,90 +334,38 @@ class SocialActionCommentCreate(GrapheneObject):
             if len(args) == 1 and len(kwargs) == 0:
                 kwargs = args[0]
 
-            meta = ""
-            if "json_metadata" in kwargs and kwargs["json_metadata"]:
-                if (isinstance(kwargs["json_metadata"], dict)
-                        or isinstance(kwargs["json_metadata"], list)):
-                    meta = json.dumps(kwargs["json_metadata"])
-                else:
-                    meta = kwargs["json_metadata"]
-
-            pod = String(kwargs["pod"]) if "pod" in kwargs else None
-            max_accepted_payout = Amount(kwargs["max_accepted_payout"]) if "max_accepted_payout" in kwargs else None
-            allow_replies = Bool(kwargs["allow_replies"]) if "allow_replies" in kwargs else None
-            allow_votes = Bool(kwargs["allow_votes"]) if "allow_votes" in kwargs else None
-            allow_curation_rewards = Bool(kwargs["allow_curation_rewards"]) if "allow_curation_rewards" in kwargs else None
-            allow_friends = Bool(kwargs["allow_friends"]) if "allow_friends" in kwargs else None
-
-            super(SocialActionCommentCreate, self).__init__(
+            super(UpdateProposalEndDate, self).__init__(
                 OrderedDict([
-                    ('permlink', String(kwargs["permlink"])),
-                    ('parent_author', String(kwargs["parent_author"])),
-                    ('parent_permlink', String(kwargs["parent_permlink"])),
-                    ('pod', Optional(pod)),
-                    ('max_accepted_payout', Optional(max_accepted_payout)),
-                    ('allow_replies', Optional(allow_replies)),
-                    ('allow_votes', Optional(allow_votes)),
-                    ('allow_curation_rewards', Optional(allow_curation_rewards)),
-                    ('allow_friends', Optional(allow_friends)),
-                    ('title', String(kwargs["title"])),
-                    ('body', String(kwargs["body"])),
-                    ('json_metadata', String(meta)),
+                    ('end_date', PointInTime(kwargs['update_proposal_end_date'])),
                 ]))
 
-class SocialActionCommentUpdate(GrapheneObject):
-    def __init__(self, *args, **kwargs):
-        if isArgsThisClass(self, args):
-            self.data = args[0].data
-        else:
-            if len(args) == 1 and len(kwargs) == 0:
-                kwargs = args[0]
 
-            meta = Optional(None)
-            if "json_metadata" in kwargs and kwargs["json_metadata"]:
-                if (isinstance(kwargs["json_metadata"], dict)
-                        or isinstance(kwargs["json_metadata"], list)):
-                    meta = json.dumps(kwargs["json_metadata"])
-                else:
-                    if "json_metadata" in kwargs:
-                        meta = kwargs["json_metadata"]
+class UpdateProposalExtensions(Static_variant):
+    """ Serialize Update proposal extensions.
 
-            title = kwargs["title"] if "title" in kwargs else None
-            body = kwargs["body"] if "body" in kwargs else None
+        :param end_date: A static_variant containing the new end_date.
 
-            super(SocialActionCommentUpdate, self).__init__(
-                OrderedDict([
-                    ('permlink', String(kwargs["permlink"])),
-                    ('title', Optional(String(kwargs["title"]))),
-                    ('body', Optional(String(kwargs["body"]))),
-                    ('json_metadata', meta),
-                ]))
+        Example::
 
-class SocialActionCommentDelete(GrapheneObject):
-    def __init__(self, *args, **kwargs):
-        if isArgsThisClass(self, args):
-            self.data = args[0].data
-        else:
-            if len(args) == 1 and len(kwargs) == 0:
-                kwargs = args[0]
+            [1,
+                {'end_date': '2021-03-28T04:00:00'}
+            ]
 
-            super(SocialActionCommentDelete, self).__init__(
-                OrderedDict([
-                    ('permlink', String(kwargs["permlink"]))
-                ]))
-
-class SocialActionVariant(Static_variant):
+    """
     def __init__(self, o):
-        type_id, data = o
-        if type_id == 0:
-            data = SocialActionCommentCreate(data)
-        else:
-            if type_id == 1:
-                data = SocialActionCommentUpdate(data)
+        if type(o) == dict and 'type' in o and 'value' in o:
+            if o['type'] == "end_date":
+                type_id = 1
             else:
-                if type_id == 2:
-                    data = SocialActionCommentDelete(data)
-                else:
-                    raise Exception("Unknown SocialAction")
-        Static_variant.__init__(self, data, type_id)
+                type_id = ~0
+            data = o['value']
+        else:
+            type_id, data = o
+
+        if type_id == 1:
+            data = (UpdateProposalEndDate(data))
+        else:
+            raise Exception("Unknown UpdateProposalExtension")
+        super(UpdateProposalExtensions, self).__init__(data, type_id)
+
 

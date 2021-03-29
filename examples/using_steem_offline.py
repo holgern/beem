@@ -19,7 +19,7 @@ from beem.steem import Steem
 from beem.utils import parse_time, formatTimedelta
 from beemapi.exceptions import NumRetriesReached
 from beem.nodelist import NodeList
-from beembase.transactions import getBlockParams
+from beem.transactionbuilder import TransactionBuilder
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
@@ -29,7 +29,8 @@ wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
 if __name__ == "__main__":
     stm_online = Steem()
-    ref_block_num, ref_block_prefix = getBlockParams(stm_online)
+    trx_builder = TransactionBuilder(blockchain_instance=stm_online)
+    ref_block_num, ref_block_prefix = trx_builder.get_block_params()
     print("ref_block_num %d - ref_block_prefix %d" % (ref_block_num, ref_block_prefix))
 
     stm = Steem(offline=True)

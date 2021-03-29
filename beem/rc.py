@@ -1,11 +1,7 @@
-# This Python file uses the following encoding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+# -*- coding: utf-8 -*-
 import logging
 import json
-from .instance import shared_steem_instance
+from .instance import shared_blockchain_instance
 from beem.constants import state_object_size_info, resource_execution_time, EXEC_FOLLOW_CUSTOM_OP_SCALE
 import hashlib
 from binascii import hexlify, unhexlify
@@ -21,9 +17,15 @@ from beemgraphenebase.py23 import py23_bytes, bytes_types
 class RC(object):
     def __init__(
         self,
-        steem_instance=None,
+        blockchain_instance=None,
+        **kwargs
     ):
-        self.steem = steem_instance or shared_steem_instance()
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
 
     def get_tx_size(self, op):
         """Returns the tx size of an operation"""
@@ -86,7 +88,7 @@ class RC(object):
         state_bytes_count += state_object_size_info["comment_object_parent_permlink_char_size"] * parent_permlink_length
         execution_time_count = resource_execution_time["comment_operation_exec_time"]
         resource_count = self.get_resource_count(tx_size, execution_time_count, state_bytes_count)
-        return self.steem.get_rc_cost(resource_count)
+        return self.blockchain.get_rc_cost(resource_count)
 
     def vote_dict(self, vote_dict):
         """Calc RC costs for a vote
@@ -114,7 +116,7 @@ class RC(object):
         state_bytes_count = state_object_size_info["comment_vote_object_base_size"]
         execution_time_count = resource_execution_time["vote_operation_exec_time"]
         resource_count = self.get_resource_count(tx_size, execution_time_count, state_bytes_count)
-        return self.steem.get_rc_cost(resource_count)
+        return self.blockchain.get_rc_cost(resource_count)
 
     def transfer_dict(self, transfer_dict):
         """Calc RC costs for a transfer dict object
@@ -144,7 +146,7 @@ class RC(object):
         """Calc RC of a transfer"""
         execution_time_count = resource_execution_time["transfer_operation_exec_time"]
         resource_count = self.get_resource_count(tx_size, execution_time_count, market_op_count=market_op_count)
-        return self.steem.get_rc_cost(resource_count)
+        return self.blockchain.get_rc_cost(resource_count)
 
     def custom_json_dict(self, custom_json_dict):
         """Calc RC costs for a custom_json
@@ -180,7 +182,7 @@ class RC(object):
         if follow_id:
             execution_time_count *= EXEC_FOLLOW_CUSTOM_OP_SCALE
         resource_count = self.get_resource_count(tx_size, execution_time_count)
-        return self.steem.get_rc_cost(resource_count)
+        return self.blockchain.get_rc_cost(resource_count)
 
     def account_update_dict(self, account_update_dict):
         """Calc RC costs for account update"""
@@ -188,13 +190,13 @@ class RC(object):
         tx_size = self.get_tx_size(op)
         execution_time_count = resource_execution_time["account_update_operation_exec_time"]
         resource_count = self.get_resource_count(tx_size, execution_time_count)
-        return self.steem.get_rc_cost(resource_count)
+        return self.blockchain.get_rc_cost(resource_count)
 
     def claim_account(self, tx_size=300):
         """Claim account"""
         execution_time_count = resource_execution_time["claim_account_operation_exec_time"]
         resource_count = self.get_resource_count(tx_size, execution_time_count, new_account_op_count=1)
-        return self.steem.get_rc_cost(resource_count)
+        return self.blockchain.get_rc_cost(resource_count)
 
     def get_authority_byte_count(self, auth):
         return (state_object_size_info["authority_base_size"]
@@ -212,7 +214,7 @@ class RC(object):
         tx_size = self.get_tx_size(op)
         execution_time_count = resource_execution_time["account_update_operation_exec_time"]
         resource_count = self.get_resource_count(tx_size, execution_time_count, state_bytes_count)
-        return self.steem.get_rc_cost(resource_count)
+        return self.blockchain.get_rc_cost(resource_count)
 
     def create_claimed_account_dict(self, create_claimed_account_dict):
         """Calc RC costs for claimed account create"""
@@ -225,4 +227,4 @@ class RC(object):
         tx_size = self.get_tx_size(op)
         execution_time_count = resource_execution_time["account_update_operation_exec_time"]
         resource_count = self.get_resource_count(tx_size, execution_time_count, state_bytes_count)
-        return self.steem.get_rc_cost(resource_count)
+        return self.blockchain.get_rc_cost(resource_count)

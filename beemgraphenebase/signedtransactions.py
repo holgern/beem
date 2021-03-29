@@ -1,8 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import bytes, str, int
+# -*- coding: utf-8 -*-
 from beemgraphenebase.py23 import py23_bytes, bytes_types
 import ecdsa
 import hashlib
@@ -25,28 +21,13 @@ from .ecdsasig import sign_message, verify_message
 import logging
 log = logging.getLogger(__name__)
 
-try:
-    import secp256k1prp as secp256k1
-    USE_SECP256K1 = True
-    log.debug("Loaded secp256k1prp binding.")    
-except:
-    try:
-        import secp256k1
-        USE_SECP256K1 = True
-        log.debug("Loaded secp256k1 binding.")
-    except Exception:
-        USE_SECP256K1 = False
-        log.debug("To speed up transactions signing install \n"
-                  "    pip install secp256k1\n"
-                  "or  pip install secp256k1prp")
-
 
 class Signed_Transaction(GrapheneObject):
     """ Create a signed transaction and offer method to create the
         signature
 
-        :param num refNum: parameter ref_block_num (see :func:`beembase.transactions.getBlockParams`)
-        :param num refPrefix: parameter ref_block_prefix (see :func:`beembase.transactions.getBlockParams`)
+        :param num ref_block_num: reference block number
+        :param num ref_block_prefix: 
         :param str expiration: expiration date
         :param array operations:  array of operations
     """

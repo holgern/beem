@@ -1,39 +1,27 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import super
+# -*- coding: utf-8 -*-
 import unittest
 from parameterized import parameterized
 from beem import Steem
 from beem.amount import Amount
 from beem.asset import Asset
-from beem.nodelist import NodeList
-from beem.instance import set_shared_steem_instance, SharedInstance
+from beem.instance import set_shared_blockchain_instance, SharedInstance
 from decimal import Decimal
+from .nodes import get_hive_nodes, get_steem_nodes
 
 
 class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(exclude_limited=False), num_retries=10))
         cls.bts = Steem(
-            node=nodelist.get_nodes(exclude_limited=True),
+            node=get_hive_nodes(),
             nobroadcast=True,
             num_retries=10
         )
-        cls.steemit = Steem(
-            node="https://api.steemit.com",
-            nobroadcast=True,
-            use_condenser=False,
-            num_retries=10
-        )
-        set_shared_steem_instance(cls.bts)
-        cls.asset = Asset("SBD")
+        set_shared_blockchain_instance(cls.bts)
+        cls.asset = Asset("HBD")
         cls.symbol = cls.asset["symbol"]
         cls.precision = cls.asset["precision"]
-        cls.asset2 = Asset("STEEM")
+        cls.asset2 = Asset("HIVE")
 
     def dotest(self, ret, amount, symbol):
         self.assertEqual(float(ret), float(amount))
@@ -44,55 +32,58 @@ class Testcases(unittest.TestCase):
     def test_init(self):
         stm = self.bts
         # String init
-        asset = Asset("SBD", steem_instance=stm)
+        asset = Asset("HBD", blockchain_instance=stm)
         symbol = asset["symbol"]
         precision = asset["precision"]
-        amount = Amount("1 {}".format(symbol), steem_instance=stm)
+        amount = Amount("1 {}".format(symbol), blockchain_instance=stm)
         self.dotest(amount, 1, symbol)
 
         # Amount init
-        amount = Amount(amount, steem_instance=stm)
+        amount = Amount(amount, blockchain_instance=stm)
         self.dotest(amount, 1, symbol)
 
         # blockchain dict init
         amount = Amount({
             "amount": 1 * 10 ** precision,
             "asset_id": asset["id"]
-        }, steem_instance=stm)
+        }, blockchain_instance=stm)
         self.dotest(amount, 1, symbol)
 
         # API dict init
         amount = Amount({
             "amount": 1.3 * 10 ** precision,
             "asset": asset["id"]
-        }, steem_instance=stm)
+        }, blockchain_instance=stm)
         self.dotest(amount, 1.3, symbol)
 
         # Asset as symbol
-        amount = Amount(1.3, Asset("SBD"), steem_instance=stm)
+        amount = Amount(1.3, Asset("HBD"), blockchain_instance=stm)
         self.dotest(amount, 1.3, symbol)
 
         # Asset as symbol
-        amount = Amount(1.3, symbol, steem_instance=stm)
+        amount = Amount(1.3, symbol, blockchain_instance=stm)
         self.dotest(amount, 1.3, symbol)
 
         # keyword inits
-        amount = Amount(amount=1.3, asset=Asset("SBD", steem_instance=stm), steem_instance=stm)
+        amount = Amount(amount=1.3, asset=Asset("HBD", blockchain_instance=stm), blockchain_instance=stm)
         self.dotest(amount, 1.3, symbol)
         
-        amount = Amount(amount=1.3001, asset=Asset("SBD", steem_instance=stm), steem_instance=stm)
+        amount = Amount(amount=1.3001, asset=Asset("HBD", blockchain_instance=stm), blockchain_instance=stm)
         self.dotest(amount, 1.3001, symbol)        
 
-        amount = Amount(amount=1.3001, asset=Asset("SBD", steem_instance=stm), fixed_point_arithmetic=True, steem_instance=stm)
-        self.dotest(amount, 1.3, symbol)   
-
-        # keyword inits
-        amount = Amount(amount=1.3, asset=dict(Asset("SBD", steem_instance=stm)), steem_instance=stm)
+        amount = Amount(amount=1.3001, asset=Asset("HBD", blockchain_instance=stm), fixed_point_arithmetic=True, blockchain_instance=stm)
         self.dotest(amount, 1.3, symbol)
 
         # keyword inits
-        amount = Amount(amount=1.3, asset=symbol, steem_instance=stm)
+        amount = Amount(amount=1.3, asset=dict(Asset("HBD", blockchain_instance=stm)), blockchain_instance=stm)
         self.dotest(amount, 1.3, symbol)
+
+        # keyword inits
+        amount = Amount(amount=1.3, asset=symbol, blockchain_instance=stm)
+        self.dotest(amount, 1.3, symbol)
+
+        amount = Amount(amount=8.190, asset=symbol, blockchain_instance=stm)
+        self.dotest(amount, 8.190, symbol)        
 
     def test_copy(self):
         amount = Amount("1", self.symbol)
@@ -112,24 +103,24 @@ class Testcases(unittest.TestCase):
             (1.0, self.symbol))
 
     def test_json_appbase(self):
-        asset = Asset("SBD", steem_instance=self.bts)
-        amount = Amount("1", asset, new_appbase_format=False, steem_instance=self.bts)
+        asset = Asset("HBD", blockchain_instance=self.bts)
+        amount = Amount("1", asset, new_appbase_format=False, blockchain_instance=self.bts)
         if self.bts.rpc.get_use_appbase():
             self.assertEqual(
                 amount.json(),
                 [str(1 * 10 ** asset.precision), asset.precision, asset.asset])
         else:
-            self.assertEqual(amount.json(), "1.000 SBD")
+            self.assertEqual(amount.json(), "1.000 HBD")
 
     def test_json_appbase2(self):
-        asset = Asset("SBD", steem_instance=self.bts)
-        amount = Amount("1", asset, new_appbase_format=True, steem_instance=self.bts)
+        asset = Asset("HBD", blockchain_instance=self.bts)
+        amount = Amount("1", asset, new_appbase_format=True, blockchain_instance=self.bts)
         if self.bts.rpc.get_use_appbase():
             self.assertEqual(
                 amount.json(),
                 {'amount': str(1 * 10 ** asset.precision), 'nai': asset.asset, 'precision': asset.precision})
         else:
-            self.assertEqual(amount.json(), "1.000 SBD")
+            self.assertEqual(amount.json(), "1.000 HBD")
 
     def test_string(self):
         self.assertEqual(
@@ -144,6 +135,9 @@ class Testcases(unittest.TestCase):
             int(Amount(0.151, self.symbol)),
             151)
         self.assertEqual(
+            int(Amount(8.190, self.symbol)),
+            8190)
+        self.assertEqual(
             int(Amount(round(0.1509,3), self.symbol)),
             151)
         self.assertEqual(
@@ -153,7 +147,7 @@ class Testcases(unittest.TestCase):
             int(Amount(int(1), self.symbol)),
             1000)      
         self.assertEqual(
-            int(Amount(amount=round(0.1509,3), asset=Asset("SBD"))),
+            int(Amount(amount=round(0.1509,3), asset=Asset("HBD"))),
             151)
 
     def test_dict(self):
@@ -169,7 +163,10 @@ class Testcases(unittest.TestCase):
             0.151)
         self.assertEqual(
             float(Amount(round(0.1509, 3), self.symbol)),
-            0.151)            
+            0.151)
+        self.assertEqual(
+            float(Amount(8.190, self.symbol)),
+            8.190)                    
 
     def test_plus(self):
         a1 = Amount(1, self.symbol)

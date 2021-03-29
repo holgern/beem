@@ -1,11 +1,6 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import super
+# -*- coding: utf-8 -*-
 import unittest
 from parameterized import parameterized
-import mock
 from pprint import pprint
 from beem import Steem, exceptions
 from beem.account import Account
@@ -13,7 +8,7 @@ from beem.amount import Amount
 from beem.asset import Asset
 from beem.wallet import Wallet
 from beem.instance import set_shared_steem_instance, shared_steem_instance
-from beem.nodelist import NodeList
+from .nodes import get_hive_nodes, get_steem_nodes
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
@@ -23,11 +18,9 @@ class Testcases(unittest.TestCase):
     def setUpClass(cls):
         stm = shared_steem_instance()
         stm.config.refreshBackup()
-        nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(exclude_limited=False), num_retries=10))
 
         cls.stm = Steem(
-            node=nodelist.get_nodes(exclude_limited=True),
+            node=get_hive_nodes(),
             nobroadcast=True,
             # We want to bundle many operations into a single transaction
             bundle=True,
@@ -139,30 +132,3 @@ class Testcases(unittest.TestCase):
         ):
             self.wallet.getPostingKeysForAccount("test")
 
-    def test_encrypt(self):
-        stm = self.stm
-        self.wallet.steem = stm
-        self.wallet.unlock(pwd="TestingOneTwoThree")
-        self.wallet.masterpassword = "TestingOneTwoThree"
-        self.assertEqual([self.wallet.encrypt_wif("5HqUkGuo62BfcJU5vNhTXKJRXuUi9QSE6jp8C3uBJ2BVHtB8WSd"),
-                          self.wallet.encrypt_wif("5KN7MzqK5wt2TP1fQCYyHBtDrXdJuXbUzm4A9rKAteGu3Qi5CVR")],
-                         ["6PRN5mjUTtud6fUXbJXezfn6oABoSr6GSLjMbrGXRZxSUcxThxsUW8epQi",
-                          "6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg"])
-        self.wallet.masterpassword = "Satoshi"
-        self.assertEqual([self.wallet.encrypt_wif("5HtasZ6ofTHP6HCwTqTkLDuLQisYPah7aUnSKfC7h4hMUVw2gi5")],
-                         ["6PRNFFkZc2NZ6dJqFfhRoFNMR9Lnyj7dYGrzdgXXVMXcxoKTePPX1dWByq"])
-        self.wallet.masterpassword = "TestingOneTwoThree"
-
-    def test_deencrypt(self):
-        stm = self.stm
-        self.wallet.steem = stm
-        self.wallet.unlock(pwd="TestingOneTwoThree")
-        self.wallet.masterpassword = "TestingOneTwoThree"
-        self.assertEqual([self.wallet.decrypt_wif("6PRN5mjUTtud6fUXbJXezfn6oABoSr6GSLjMbrGXRZxSUcxThxsUW8epQi"),
-                          self.wallet.decrypt_wif("6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg")],
-                         ["5HqUkGuo62BfcJU5vNhTXKJRXuUi9QSE6jp8C3uBJ2BVHtB8WSd",
-                          "5KN7MzqK5wt2TP1fQCYyHBtDrXdJuXbUzm4A9rKAteGu3Qi5CVR"])
-        self.wallet.masterpassword = "Satoshi"
-        self.assertEqual([self.wallet.decrypt_wif("6PRNFFkZc2NZ6dJqFfhRoFNMR9Lnyj7dYGrzdgXXVMXcxoKTePPX1dWByq")],
-                         ["5HtasZ6ofTHP6HCwTqTkLDuLQisYPah7aUnSKfC7h4hMUVw2gi5"])
-        self.wallet.masterpassword = "TestingOneTwoThree"

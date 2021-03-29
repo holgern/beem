@@ -1,5 +1,426 @@
 Changelog
-=========
+========
+0.24.22
+-------
+* Fix to parameter in transfer_to_vesting
+* Improve hybrid operation in operations (pre / post HF 24 operation are supported)
+* UpdateProposalExtensions has been added to Update_proposal as preperation for the next HF (thanks to @drov0)
+* Fix some small code issues
+
+0.24.21
+-------
+* Fix bug in ecda (convert mpz into int when not supported)
+* add coinactivity example script
+* add blockstats example script
+* Add Blocks class, which uses get_block_range
+* PR #272: correct blockchain virtual op batch calls (thanks to @crokkon)
+* PR #276: blockchain: get_account_reputations fix for first (thanks to @crokkon)
+* PR #287: beempy witnessproperties: fix interest rate options (thanks to @crokkon)
+* Fix #289: Unable to Claim Specific Reward Asset
+
+0.24.20
+-------
+* New hive node has been added (https://hived.emre.sh)
+* Add option to use a derived WIF from coldcard hardware wallet to derive a new account password
+* beempy passwordgen and beempy importaccount have now a new option import-coldcard
+* beempy passwordgen handles now password generation and import, whereas beempy keygen handles BIP39 related key generation.
+* refactoring and better unit testing
+
+0.24.19
+-------
+* Fix  history item with index 0 for https://api.hive.blog 
+
+0.24.18
+-------
+* Adapt account history on api changes and fixes issue #267
+* Speed up history call, when limit is below 1000
+* Improve unit tests for account history
+* Fix estimate_virtual_op_num, when get_account_history returns an empty entry for an index
+* Implement _get_operation_filter and use filter operations in history and history_reverse on the https://api.hive.blog api node
+
+0.24.17
+-------
+* Fixed a bug when using skip_account_check=True
+* Refactor code in Account
+* Add more unit tests
+
+0.24.16
+-------
+* Fix bug in bytes representation of an Amount which prevents sending certain amounts (e.g. 8.19 HIVE)
+* Added unit tests to check if 8.190 is correctly working
+
+0.24.15
+-------
+* Add diff_match_patch dependency again, as the difflib implementation does not work
+
+0.24.14
+-------
+* Add option add_tor to config storage, which allows it to use beempy in tails
+* Switch from pyyaml to ruamel.yaml
+* Remove Events requirements, beem.notify and beemapi.websocket, as it is not well tested and there are no websocket api nodes available on hive
+* Remove unnecessary requirements (pylibscrypt and future)
+* add new node (fin.hive.3speak.co) and change change rpc.esteem.app to rpc.ecency.com
+* Replace diff_match_patch by difflib and add unit tests
+* Increase timeout and retry count in beempy
+* Remove obsolete replace_hive_by_steem parameter
+* skip_account_check added to account.transfer and account.transfer_to_vesting
+
+0.24.13
+-------
+* Add new node (https://hive-api.arcange.eu)
+* Fix logic in RankedPosts and AccountPosts
+* Fix feed_publish
+
+0.24.12
+-------
+* Fix beempy witnessfeed for HF24
+* Fix more hbd renaming in beempy
+* improved RankedPosts class
+* New AccountPosts class for account feed and more
+* Comment class has been cleaned up, use_tags_api has been replaced by api
+* Add check if get_account_votes is still supported (is dropped in HF24)
+* New SupportedByHivemind exception has been added
+* Fix issue #263
+
+0.24.11
+-------
+* assumes that a rpc server uses appbase
+
+0.24.10
+-------
+* Add hbd_interest_rate to beempy witnessproperties
+* Add beempy listdelegations (thanks to @crokkon)
+* fix account_name assignment from dict in get_account_reputations() (PR #259)
+* Add new operation ids for HF 24
+* Remove remaining py2 code
+* Run unit tests on beta.openhive.network
+* Fix compatibility issues with HF 24
+* account get_follow_count, get_followers and get_following have been fixed
+* improved get_discussions calls, fallback to condenser when tags api not available
+* Fix detection when content does not exists on HF24
+* Fix detection when a vote does not exists on HF24
+
+0.24.9
+------
+* Support for update_proposal_operation (thanks to dkedzierski)
+* Remove not needed SECP256K1 import
+* Fix corner case last_irreversible_block_num == head_block_number for Transactionbuilder (thanks to dkedzierski)
+* import keyring only when needed
+* Add use_condenser to config (can be set wtih beempy set), when set to False, condenser calls are not used
+* Add set_expiration to Object Cache
+* Use floor instead of round in beembase/Amount in order to handle floats which have a higher precision than allowed
+* json_str parameter has been added to beembase.Amount, when True, a json dict is returned as string (needing when broadcasting with use_condenser=False)
+* Handle deleted comments in beempy pending thanks to @crokkon
+
+0.24.8
+------
+* Fix is_steem
+
+0.24.7
+------
+* Fix chain detection
+
+0.24.6
+------
+* Improved community selection in beempy createpost
+* Improved Transactionbuilder object representation
+* _fetchkeys function moved outside appendSigner
+* Fix get urls in parse body
+* Two more nodes have been added to nodelist
+* new beempy chaininfo command
+* Automatic chain detection (beempy will now connect to unkown chain ids)
+
+0.24.5
+------
+* replace percent_hive_dollars by percent_hbd (to make beem HF24 ready)
+* Remove whaleshares related code
+* Fix adding of a wif in beempy
+* Remove SteemConnect
+* Fix set token in HiveSigner
+* Add Blurt
+* Add Community for community reladed requests and broadcasts
+* Improve community lookup for beempy createpost
+* Improved beempy history command output
+* Improved beempy stream
+
+0.24.4
+------
+* add get_replace_hive_by_steem() to Hive(), for transition from HF23 to HF24 on HIVE
+* Replace HIVE by STEEM and SBD by HBD only when Hive HF < 24
+* Replace steem and sbd parameter names for Hive HF >= 24 by hive and hbd
+* Add get follow list to Account (only for HIVE and HF >= 24)
+* Add BLURT, SMOKE and VIZ chain_id
+* Remove not used STEEM chains (STEEMZERO and STEEMAPPBASE)
+* Improve chain detection
+* rshares_to_token_backed_dollar, get_token_per_mvest, token_power_to_vests, token_power_to_token_backed_dollar
+  and vests_to_token_power have been added for chain independent usage
+* New beempy command followlist, which can be used on HIVE to receive info about follow lists
+* Fix beempy info on Hive
+* Use Hive() on beempy when setting default_chain to "hive"
+* Simplify chain identification
+* Fix more Token symbols in beempy
+* Fix unittest and add more unit tests
+
+0.24.3
+------
+* Fix encrypted memo decryption
+* from_account and to_account in Memo() can also be a publick and private key
+* Prepare for sbd/steem replacement by hbd/hive
+* Add unit test for beem.memo
+* Use reputation api
+* Add Server error to _check_error_message
+* Fix trx_id generation when sign return none
+* Retry up to 5 times when coingecko price api failes
+
+0.24.2
+------
+* New UnknownTransaction exception that is raised when using get_transaction with an unkown trx_id
+* New function is_transaction_existing which returns false, when a trx_id does not exists
+* beempy info does not show information for a trx_id
+* broadcast from TransactionBuilder can now return a trx_id, when set trx_id to True (default)
+* sign and finalizeOp from Hive and Steem return now the trx_id in a field
+* add export parameter to all broadcast commands in beempy
+* When setting unsigned in beempy, the default value of expires is changed to 3600
+* beempy history returns account history ops in table or stored in a json file
+
+0.24.1
+------
+* fixed missing module in setup.py
+
+0.24.0
+------
+* new beemstorage module
+* Config is handled by SqliteConfigurationStore or InRamConfigurationStore
+* Keys are handled by SqliteEncryptedKeyStore or InRamPlainKeyStore
+* Move aes to beemgraphenebase
+* Wallet.keys, Wallet.keyStorage, Wallet.token and Wallet.keyMap has been removed
+* Wallet.store has now the Key Interface that handles key management
+* Token handling has been removed from Wallet
+* Token storage has been move from wallet to SteemConnect/HiveSigner
+* handle virtual ops batch streaming fixed thanks to @crokkon 
+
+0.23.13
+-------
+* receiver parameter removed from beempy decrypt 
+* beempy encrypt / decrypt is able to encryp/derypt a binary file
+* encrypt_binary, decrypt_binary and extract_decrypt_memo_data added to beem.memo
+* extract_memo_data added to beembase.memo
+
+0.23.12
+-------
+* add participation_rate to Blockchain
+* beembase.transactions is deprecated
+* get_block_params added to TransactionBuilder
+* add Prefix class for PasswordKey, Brainkey, Address, PublicKey, PrivateKey, Base58
+* New Class BitcoinAddress
+* Address class has now from_pubkey class method
+* Message class improved
+* beempy message can be used to sign and to verify a message
+* decryption of long messages fixed
+* varint decoding added to memo decryption
+* beempy encrypt / decrypt can be used to encrypt/decrypt a memo text with your memo key
+
+0.23.11
+-------
+* replace asn1 by asn1crypto
+
+0.23.10
+-------
+* get_node_answer_time added to NodeList
+* New node added
+* new stored parameter: default_canonical_url
+* beempy notifications sorting is reversed, a new parameter can be used to change the sorting
+* New beempy createpost command, it can be used to create an empty markdown file with YAML header for a new post
+* beempy post has now a canonical_url parameter, when not set, default_canonical_url is set
+* New beempy draw command, can be used to generate pseudo random number from block identifiers using hashsums
+* remove enum34 dependency
+
+0.23.9
+------
+* Improve chain detection (Steem chain detection fixed and preparing for Hive HF24)
+* Add authored_by and description fields in YAMLM header
+* Improve doc
+* beempy post image upload includes the markdown file path now
+
+0.23.8
+------
+* Missing dongle.close() added (thanks to @netuoso)
+
+0.23.7
+------
+* Fix update_account_jsonmetadata and add posting_json_metadata property to Account
+* Add Ledger Nano S support
+* beempy -u activates ledger signing
+* beempy -u listkeys shows pubkey from ledger
+* beempy -u listaccounts searches for accounts that have pubkey derived from attached ledger
+* beempy -u keygen creates pubkey lists that can be used for newaccount and changekeys
+* new option use_ledger and path for Hive
+* Allow role selection in keygen
+
+0.23.6
+------
+* beempy --key key_list.json command can be used to set keys in beempy without using the wallet.
+
+0.23.5
+------
+* Add missing diff_match_patch to requirements
+* beempy download without providing a permlink will download all posts
+* Improve Yaml parsing
+
+0.23.4
+------
+* Bip39 and Bip32 support has been added to beempy keygen
+* Privatekey derivation based on Bip39/Bip22 has been added
+* Several unit tests have been added
+* price/market fix for custom nodes (thanks to @crokkon)
+* Replace brain key generation by BIP39 for beempy keygen
+* Remove password based key generation for beempy changekeys
+* Improved yaml header for beempy download
+
+0.23.3
+------
+* bugfix for beempy post
+
+0.23.2
+------
+* post detects now communities and set category correctly
+* option added to remove time based suffix in derive_permlink
+* beempy download added to save posts as markdown file
+* beempy post is improved, automatic image upload, community support, patch generation on edit
+* Unit test added for beempy download
+
+0.23.1
+------
+* setproxy function added to Account (thanks to @flugschwein)
+* addproxy and delproxy added to beempy (thanks to @flugschwein)
+* updatenodes works in shell mode
+* Fix offline mode for Hive
+* add about command to beempy
+* Add hive node
+* update_account function added to blockchaininstance
+* normalize added to PasswordKey, so that a Brainkey can be set as PasswordKey
+* Fixed vote percentage calculation when post rshares is negative
+* new beempy command changekeys
+* beempy keygen can be used to generate account keys from a given password and is able to generate new passwords
+* add option to beempy keygen to export pub account keys as json file
+* add option to beempy newaccount and changekeys to import pub account keys from a json file
+
+0.23.0
+------
+* new chain ID for HF24 on HIVE has been added 
+* set hive as default for default_chain
+* get_steem_nodes added to NodeList
+* Prepared for Hive HF 24
+* steem object in all classes is replaced by blockchain
+* Hive class has been added
+* Hive and Steem are now BlockChainInstance classes
+* Hive and Steem have now is_hive and is_steem properties
+* Each class has now blockchain_instance parameter (steem_instance is stil available)
+* shared_blockchain_instance and set_shared_blockchain_instance can be used for Hive() and Steem() instances
+* token_symbol, backed_token_symbol and vest_token_symbol
+* Rename SteemWebsocket to NodeWebsocket and SteemNodeRPC to NodeRPC
+* Rshares, vote percentage and SBD/HBD calculation has been fixed for votes
+* post_rshares parameter added to all vote calculations
+* Account class has now get_token_power(), get_voting_value() and get_vote_pct_for_vote_value()
+* HF 23 and HF24 operations were added thanks to @flugschwein
+* Downvote power was added to Snapshot thanks to @flugschwein
+
+0.22.14
+-------
+* add click_shell to turn beempy into a shell utility with autocompletion
+* new click_shell added as requirements
+* Installer added for beempy on windows
+* Add get_hive_nodes and get_steem_nodes functions to NodeList
+* beempy command resteem renamed to reblog
+* When using in shell mode, beempy walletinfo --unlock can be used to unlock the wallet and walletinfo --lock to unlock it again
+* Add get_blockchain_name to Steem, returns either steem or hive
+* Add switch_blockchain to Steem, can be used to switch between hive and steem
+* Storage has now a new config "default_chain", can be either hive or steem
+* updatenode --hive switches to hive and use hive nodes
+* updatenode --steem switches to steem and use steem nodes
+
+0.22.13
+-------
+* HiveSigner support added
+* api link to steemconnect has been fixed
+* change recovery account added to beempy
+* hive node has been added
+* add account get_notifications and mark_notifications_as_read
+* beempy notifications has been added
+* bridge api support added
+* config storage improved and add get_default_config_storage, get_default_key_storage and get_default_token_storage
+* list_all_subscriptions and get_account_posts added
+* image upload url fixed for HIVE
+* reduce number of performed api calls on Steem object creation
+
+0.22.12
+-------
+* Add hive node
+* get_feed uses now discussion_by_feed
+* get_account_votes has been fixed
+* ActiveVotes has been fixed
+* Discussions has been fixed
+* raw_data parameter added to all discussions
+* beempy curation, beempy votes and beempy pending has been fixed
+* Votes table improved
+* fix curation and author reward calculation
+
+0.22.11
+-------
+* Fix asset check in Amount and Price
+* Fix get_curation_rewards for comments
+* Fix empty return in _get_account_history
+* Fix several unit tests
+* Fix deprecated collections import
+* Fix more HIVE/HBD symbols in beempy for HIVE
+* Add information about HIVE in the documentation
+
+0.22.10
+-------
+* HIVE nodes are now also detected as appbase ready (thanks to @crokkon)
+
+0.22.9
+------
+* add steem node
+* fix 'dict' object has no attribute 'split
+
+0.22.8
+------
+* Allow to use HIVE/HBD also in operations
+
+0.22.7
+------
+* Fix HIVE/HBD symbols in operations
+
+0.22.6
+------
+* Add hive_btc_ticker and hive_usd_ticker
+* use coingecko API
+* add HIVE/HBD to all marker operation in beempy
+
+0.22.5
+------
+* Add workaround to allow transfers of HIVE/HBD in HIVE (operation need to use STEEM/SBD internally)
+
+0.22.4
+------
+* fix AttributeError: 'PointJacobi' object has no attribute '_Point__x'
+
+0.22.3
+------
+* Add two new hive api nodes
+
+0.22.1
+------
+* Fix get_nodes defaults
+
+0.22.0
+------
+* Add HIVE chain
+* improve hive chain detection
+* add hive option to nodes in Nodelist
+* new is_hive property of steem object
+
 0.21.1
 ------
 * Fix non ascii text handling on some nodes

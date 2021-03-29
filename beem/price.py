@@ -1,13 +1,7 @@
-# This Python file uses the following encoding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import str
-from future.utils import python_2_unicode_compatible
+# -*- coding: utf-8 -*-
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
 from fractions import Fraction
-from beem.instance import shared_steem_instance
+from beem.instance import shared_blockchain_instance
 from .exceptions import InvalidAssetException
 from .account import Account
 from .amount import Amount, quantize
@@ -17,7 +11,15 @@ from .utils import parse_time, assets_from_string
 from decimal import Decimal
 
 
-@python_2_unicode_compatible
+def check_asset(other, self, stm):
+    if isinstance(other, dict) and "asset" in other and isinstance(self, dict) and "asset" in self:
+        if not Asset(other["asset"], blockchain_instance=stm) == Asset(self["asset"], blockchain_instance=stm):
+            raise AssertionError()
+    else:
+        if not other == self:
+            raise AssertionError()
+
+
 class Price(dict):
     """ This class deals with all sorts of prices of any pair of assets to
         simplify dealing with the tuple::
@@ -34,7 +36,7 @@ class Price(dict):
         :param list args: Allows to deal with different representations of a price
         :param Asset base: Base asset
         :param Asset quote: Quote asset
-        :param Steem steem_instance: Steem instance
+        :param Steem blockchain_instance: Steem instance
         :returns: All data required to represent a price
         :rtype: dictionary
 
@@ -67,9 +69,11 @@ class Price(dict):
         .. code-block:: python
 
             >>> from beem.price import Price
-            >>> Price("0.3314 SBD/STEEM") * 2
+            >>> from beem import Steem
+            >>> stm = Steem("https://api.steemit.com")
+            >>> Price("0.3314 SBD/STEEM", blockchain_instance=stm) * 2
             0.662804 SBD/STEEM
-            >>> Price(0.3314, "SBD", "STEEM")
+            >>> Price(0.3314, "SBD", "STEEM", blockchain_instance=stm)
             0.331402 SBD/STEEM
 
     """
@@ -79,21 +83,26 @@ class Price(dict):
         base=None,
         quote=None,
         base_asset=None,  # to identify sell/buy
-        steem_instance=None
+        blockchain_instance=None,
+        **kwargs
     ):
-
-        self.steem = steem_instance or shared_steem_instance()
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
         if price == "":
             price = None
         if (price is not None and isinstance(price, string_types) and not base and not quote):
             import re
             price, assets = price.split(" ")
             base_symbol, quote_symbol = assets_from_string(assets)
-            base = Asset(base_symbol, steem_instance=self.steem)
-            quote = Asset(quote_symbol, steem_instance=self.steem)
+            base = Asset(base_symbol, blockchain_instance=self.blockchain)
+            quote = Asset(quote_symbol, blockchain_instance=self.blockchain)
             frac = Fraction(float(price)).limit_denominator(10 ** base["precision"])
-            self["quote"] = Amount(amount=frac.denominator, asset=quote, steem_instance=self.steem)
-            self["base"] = Amount(amount=frac.numerator, asset=base, steem_instance=self.steem)
+            self["quote"] = Amount(amount=frac.denominator, asset=quote, blockchain_instance=self.blockchain)
+            self["base"] = Amount(amount=frac.numerator, asset=base, blockchain_instance=self.blockchain)
 
         elif (price is not None and isinstance(price, dict) and
                 "base" in price and
@@ -103,30 +112,30 @@ class Price(dict):
             # Regular 'price' objects according to steem-core
             # base_id = price["base"]["asset_id"]
             # if price["base"]["asset_id"] == base_id:
-            self["base"] = Amount(price["base"], steem_instance=self.steem)
-            self["quote"] = Amount(price["quote"], steem_instance=self.steem)
+            self["base"] = Amount(price["base"], blockchain_instance=self.blockchain)
+            self["quote"] = Amount(price["quote"], blockchain_instance=self.blockchain)
             # else:
-            #    self["quote"] = Amount(price["base"], steem_instance=self.steem)
-            #    self["base"] = Amount(price["quote"], steem_instance=self.steem)
+            #    self["quote"] = Amount(price["base"], blockchain_instance=self.blockchain)
+            #    self["base"] = Amount(price["quote"], blockchain_instance=self.blockchain)
 
         elif (price is not None and isinstance(base, Asset) and isinstance(quote, Asset)):
             frac = Fraction(float(price)).limit_denominator(10 ** base["precision"])
-            self["quote"] = Amount(amount=frac.denominator, asset=quote, steem_instance=self.steem)
-            self["base"] = Amount(amount=frac.numerator, asset=base, steem_instance=self.steem)
+            self["quote"] = Amount(amount=frac.denominator, asset=quote, blockchain_instance=self.blockchain)
+            self["base"] = Amount(amount=frac.numerator, asset=base, blockchain_instance=self.blockchain)
 
         elif (price is not None and isinstance(base, string_types) and isinstance(quote, string_types)):
-            base = Asset(base, steem_instance=self.steem)
-            quote = Asset(quote, steem_instance=self.steem)
+            base = Asset(base, blockchain_instance=self.blockchain)
+            quote = Asset(quote, blockchain_instance=self.blockchain)
             frac = Fraction(float(price)).limit_denominator(10 ** base["precision"])
-            self["quote"] = Amount(amount=frac.denominator, asset=quote, steem_instance=self.steem)
-            self["base"] = Amount(amount=frac.numerator, asset=base, steem_instance=self.steem)
+            self["quote"] = Amount(amount=frac.denominator, asset=quote, blockchain_instance=self.blockchain)
+            self["base"] = Amount(amount=frac.numerator, asset=base, blockchain_instance=self.blockchain)
 
         elif (price is None and isinstance(base, string_types) and isinstance(quote, string_types)):
-            self["quote"] = Amount(quote, steem_instance=self.steem)
-            self["base"] = Amount(base, steem_instance=self.steem)
+            self["quote"] = Amount(quote, blockchain_instance=self.blockchain)
+            self["base"] = Amount(base, blockchain_instance=self.blockchain)
         elif (price is not None and isinstance(price, string_types) and isinstance(base, string_types)):
-            self["quote"] = Amount(price, steem_instance=self.steem)
-            self["base"] = Amount(base, steem_instance=self.steem)
+            self["quote"] = Amount(price, blockchain_instance=self.blockchain)
+            self["base"] = Amount(base, blockchain_instance=self.blockchain)
         # len(args) > 1
 
         elif isinstance(price, Amount) and isinstance(base, Amount):
@@ -141,11 +150,11 @@ class Price(dict):
                 isinstance(base, string_types)):
             import re
             base_symbol, quote_symbol = assets_from_string(base)
-            base = Asset(base_symbol, steem_instance=self.steem)
-            quote = Asset(quote_symbol, steem_instance=self.steem)
+            base = Asset(base_symbol, blockchain_instance=self.blockchain)
+            quote = Asset(quote_symbol, blockchain_instance=self.blockchain)
             frac = Fraction(float(price)).limit_denominator(10 ** base["precision"])
-            self["quote"] = Amount(amount=frac.denominator, asset=quote, steem_instance=self.steem)
-            self["base"] = Amount(amount=frac.numerator, asset=base, steem_instance=self.steem)
+            self["quote"] = Amount(amount=frac.denominator, asset=quote, blockchain_instance=self.blockchain)
+            self["base"] = Amount(amount=frac.numerator, asset=base, blockchain_instance=self.blockchain)
 
         else:
             raise ValueError("Couldn't parse 'Price'.")
@@ -164,7 +173,7 @@ class Price(dict):
             None,
             base=self["base"].copy(),
             quote=self["quote"].copy(),
-            steem_instance=self.steem)
+            blockchain_instance=self.blockchain)
 
     def _safedivide(self, a, b):
         if b != 0.0:
@@ -183,7 +192,9 @@ class Price(dict):
             .. code-block:: python
 
                 >>> from beem.price import Price
-                >>> Price("0.3314 SBD/STEEM").as_base("STEEM")
+                >>> from beem import Steem
+                >>> stm = Steem("https://api.steemit.com")
+                >>> Price("0.3314 SBD/STEEM", blockchain_instance=stm).as_base("STEEM")
                 3.017483 STEEM/SBD
 
         """
@@ -202,7 +213,9 @@ class Price(dict):
             .. code-block:: python
 
                 >>> from beem.price import Price
-                >>> Price("0.3314 SBD/STEEM").as_quote("SBD")
+                >>> from beem import Steem
+                >>> stm = Steem("https://api.steemit.com")
+                >>> Price("0.3314 SBD/STEEM", blockchain_instance=stm).as_quote("SBD")
                 3.017483 STEEM/SBD
 
         """
@@ -219,7 +232,9 @@ class Price(dict):
             .. code-block:: python
 
                 >>> from beem.price import Price
-                >>> Price("0.3314 SBD/STEEM").invert()
+                >>> from beem import Steem
+                >>> stm = Steem("https://api.steemit.com")
+                >>> Price("0.3314 SBD/STEEM", blockchain_instance=stm).invert()
                 3.017483 STEEM/SBD
 
         """
@@ -270,27 +285,26 @@ class Price(dict):
             if self["quote"]["symbol"] == other["base"]["symbol"]:
                 a["base"] = Amount(
                     float(self["base"]) * float(other["base"]), self["base"]["symbol"],
-                    steem_instance=self.steem
+                    blockchain_instance=self.blockchain
                 )
                 a["quote"] = Amount(
                     float(self["quote"]) * float(other["quote"]), other["quote"]["symbol"],
-                    steem_instance=self.steem
+                    blockchain_instance=self.blockchain
                 )
             # a/b * c/a =  c/b
             elif self["base"]["symbol"] == other["quote"]["symbol"]:
                 a["base"] = Amount(
                     float(self["base"]) * float(other["base"]), other["base"]["symbol"],
-                    steem_instance=self.steem
+                    blockchain_instance=self.blockchain
                 )
                 a["quote"] = Amount(
                     float(self["quote"]) * float(other["quote"]), self["quote"]["symbol"],
-                    steem_instance=self.steem
+                    blockchain_instance=self.blockchain
                 )
             else:
                 raise ValueError("Wrong rotation of prices")
         elif isinstance(other, Amount):
-            if not other["asset"] == self["quote"]["asset"]:
-                raise AssertionError()
+            check_asset(other["asset"], self["quote"]["asset"], self.blockchain)
             a = other.copy() * self["price"]
             a["asset"] = self["base"]["asset"].copy()
             a["symbol"] = self["base"]["asset"]["symbol"]
@@ -321,15 +335,14 @@ class Price(dict):
                 raise InvalidAssetException
             a["base"] = Amount(
                 float(self["base"].amount / other["base"].amount), other["quote"]["symbol"],
-                steem_instance=self.steem
+                blockchain_instance=self.blockchain
             )
             a["quote"] = Amount(
                 float(self["quote"].amount / other["quote"].amount), self["quote"]["symbol"],
-                steem_instance=self.steem
+                blockchain_instance=self.blockchain
             )
         elif isinstance(other, Amount):
-            if not other["asset"] == self["quote"]["asset"]:
-                raise AssertionError()
+            check_asset(other["asset"], self["quote"]["asset"], self.blockchain)
             a = other.copy() / self["price"]
             a["asset"] = self["base"]["asset"].copy()
             a["symbol"] = self["base"]["asset"]["symbol"]
@@ -409,7 +422,7 @@ class Price(dict):
         return Market(
             base=self["base"]["asset"],
             quote=self["quote"]["asset"],
-            steem_instance=self.steem
+            blockchain_instance=self.blockchain
         )
 
 
@@ -419,7 +432,7 @@ class Order(Price):
         ratio of base and quote) but instead has those amounts represent the
         amounts of an actual order!
 
-        :param Steem steem_instance: Steem instance
+        :param Steem blockchain_instance: Steem instance
 
         .. note::
 
@@ -427,15 +440,16 @@ class Order(Price):
                 'deleted' key which is set to ``True`` and all other
                 data be ``None``.
     """
-    def __init__(self, base, quote=None, steem_instance=None, **kwargs):
+    def __init__(self, base, quote=None, blockchain_instance=None, **kwargs):
 
-        self.steem = steem_instance or shared_steem_instance()
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
 
         if (
             isinstance(base, dict) and
             "sell_price" in base
         ):
-            super(Order, self).__init__(base["sell_price"])
+            super(Order, self).__init__(base["sell_price"],
+                                        blockchain_instance=self.blockchain)
             self["id"] = base.get("id")
         elif (
             isinstance(base, dict) and
@@ -443,12 +457,14 @@ class Order(Price):
             "amount_to_sell" in base
         ):
             super(Order, self).__init__(
-                Amount(base["min_to_receive"], steem_instance=self.steem),
-                Amount(base["amount_to_sell"], steem_instance=self.steem),
+                Amount(base["min_to_receive"], blockchain_instance=self.blockchain),
+                Amount(base["amount_to_sell"], blockchain_instance=self.blockchain),
+                blockchain_instance=self.blockchain
             )
             self["id"] = base.get("id")
         elif isinstance(base, Amount) and isinstance(quote, Amount):
-            super(Order, self).__init__(None, base=base, quote=quote)
+            super(Order, self).__init__(None, base=base, quote=quote,
+                                        blockchain_instance=self.blockchain)
         else:
             raise ValueError("Unknown format to load Order")
 
@@ -476,23 +492,24 @@ class FilledOrder(Price):
         ratio of base and quote) but instead has those amounts represent the
         amounts of an actually filled order!
 
-        :param Steem steem_instance: Steem instance
+        :param Steem blockchain_instance: Steem instance
 
         .. note:: Instances of this class come with an additional ``date`` key
                   that shows when the order has been filled!
     """
 
-    def __init__(self, order, steem_instance=None, **kwargs):
+    def __init__(self, order, blockchain_instance=None, **kwargs):
 
-        self.steem = steem_instance or shared_steem_instance()
+        self.blockchain = blockchain_instance or shared_blockchain_instance()
         if isinstance(order, dict) and "current_pays" in order and "open_pays" in order:
             # filled orders from account history
             if "op" in order:
                 order = order["op"]
 
             super(FilledOrder, self).__init__(
-                Amount(order["open_pays"], steem_instance=self.steem),
-                Amount(order["current_pays"], steem_instance=self.steem),
+                Amount(order["open_pays"], blockchain_instance=self.blockchain),
+                Amount(order["current_pays"], blockchain_instance=self.blockchain),
+                blockchain_instance=self.blockchain
             )
             if "date" in order:
                 self["date"] = formatTimeString(order["date"])

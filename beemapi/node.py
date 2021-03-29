@@ -1,9 +1,4 @@
-# This Python file uses the following encoding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import str
+# -*- coding: utf-8 -*-
 import json
 import re
 import time
@@ -30,6 +25,11 @@ class Node(object):
 class Nodes(list):
     """Stores Node URLs and error counts"""
     def __init__(self, urls, num_retries, num_retries_call):
+        self.set_node_urls(urls)
+        self.num_retries = num_retries
+        self.num_retries_call = num_retries_call
+
+    def set_node_urls(self, urls):
         if isinstance(urls, str):
             url_list = re.split(r",|;", urls)
             if url_list is None:
@@ -41,12 +41,10 @@ class Nodes(list):
         elif urls is not None:
             url_list = [urls]
         else:
-            url_list = []
+            url_list = []        
         super(Nodes, self).__init__([Node(x) for x in url_list])
-        self.num_retries = num_retries
-        self.num_retries_call = num_retries_call
         self.current_node_index = -1
-        self.freeze_current_node = False
+        self.freeze_current_node = False        
 
     def __iter__(self):
         return self

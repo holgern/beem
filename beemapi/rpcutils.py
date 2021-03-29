@@ -1,8 +1,4 @@
-"""graphennewsrpc."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+# -*- coding: utf-8 -*-
 import time
 import json
 import logging
@@ -20,6 +16,10 @@ def is_network_appbase_ready(props):
         return False
     elif "STEEM_BLOCKCHAIN_VERSION" in props:
         return True
+    elif "HIVE_BLOCKCHAIN_VERSION" in props:
+        return True
+    else:
+        return False
 
 
 def get_query(appbase, request_id, api_name, name, args):
@@ -73,7 +73,7 @@ def get_api_name(appbase, *args, **kwargs):
     else:
         # Sepcify the api to talk to
         if ("api" in kwargs) and len(kwargs["api"]) > 0:
-            if kwargs["api"] not in ["jsonrpc", "hive"]:
+            if kwargs["api"] not in ["jsonrpc", "hive", "bridge"]:
                 api_name = kwargs["api"].replace("_api", "") + "_api"
             else:
                 api_name = kwargs["api"]

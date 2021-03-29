@@ -1,8 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import bytes, int, str
+# -*- coding: utf-8 -*-
 import sys
 import logging
 import hashlib
@@ -57,8 +53,13 @@ def encrypt(privkey, passphrase):
     :rtype: Base58
 
     """
+    if isinstance(privkey, str):
+        privkey = PrivateKey(privkey)
+    else:
+        privkey = PrivateKey(repr(privkey))    
+
     privkeyhex = repr(privkey)   # hex
-    addr = format(privkey.uncompressed.address, "BTC")
+    addr = format(privkey.bitcoin.address, "BTC")
     a = py23_bytes(addr, 'ascii')
     salt = hashlib.sha256(hashlib.sha256(a).digest()).digest()[0:4]
     if sys.version < '3':
@@ -125,7 +126,7 @@ def decrypt(encrypted_privkey, passphrase):
     wif = Base58(privraw)
     """ Verify Salt """
     privkey = PrivateKey(format(wif, "wif"))
-    addr = format(privkey.uncompressed.address, "BTC")
+    addr = format(privkey.bitcoin.address, "BTC")
     a = py23_bytes(addr, 'ascii')
     saltverify = hashlib.sha256(hashlib.sha256(a).digest()).digest()[0:4]
     if saltverify != salt:

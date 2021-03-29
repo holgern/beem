@@ -1,10 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import range
-from builtins import super
-import mock
+# -*- coding: utf-8 -*-
 import string
 import unittest
 from parameterized import parameterized
@@ -13,47 +7,51 @@ import json
 from pprint import pprint
 from beem import Steem, exceptions
 from beem.amount import Amount
-from beem.memo import Memo
 from beem.version import version as beem_version
-from beem.wallet import Wallet
-from beem.witness import Witness
 from beem.account import Account
 from beemgraphenebase.account import PrivateKey
-from beem.instance import set_shared_steem_instance
-from beem.nodelist import NodeList
+from .nodes import get_hive_nodes, get_steem_nodes
 # Py3 compatibility
 import sys
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-
+wif2 = "5JKu2dFfjKAcD6aP1HqBDxMNbdwtvPS99CaxBzvMYhY94Pt6RDS"
+wif3 = "5K1daXjehgPZgUHz6kvm55ahEArBHfCHLy6ew8sT7sjDb76PU2P"
 
 class Testcases(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.nodelist = NodeList()
-        cls.nodelist.update_nodes(steem_instance=Steem(node=cls.nodelist.get_nodes(exclude_limited=False), num_retries=10))
         cls.bts = Steem(
-            node=cls.nodelist.get_nodes(exclude_limited=True),
+            node=get_steem_nodes(),
             nobroadcast=True,
             unsigned=True,
             data_refresh_time_seconds=900,
-            keys={"active": wif, "owner": wif, "memo": wif},
+            keys={"active": wif, "owner": wif2, "memo": wif3},
             num_retries=10)
         cls.account = Account("test", full=True, steem_instance=cls.bts)
 
     def test_transfer(self):
         bts = self.bts
         acc = self.account
-        acc.steem.txbuffer.clear()
+        acc.blockchain.txbuffer.clear()
         tx = acc.transfer(
-            "test", 1.33, "SBD", memo="Foobar", account="test1")
-        self.assertEqual(
-            tx["operations"][0][0],
-            "transfer"
-        )
+            "test", 1.33, acc.blockchain.sbd_symbol, memo="Foobar", account="test1")
         self.assertEqual(len(tx["operations"]), 1)
-        op = tx["operations"][0][1]
+        if isinstance(tx["operations"][0], list):
+            self.assertEqual(
+                tx["operations"][0][0],
+                "transfer"
+            )
+            
+            op = tx["operations"][0][1]
+        else:
+            self.assertEqual(
+                tx["operations"][0]["type"],
+                "transfer_operation"
+            )
+            
+            op = tx["operations"][0]["value"]          
         self.assertIn("memo", op)
         self.assertEqual(op["memo"], "Foobar")
         self.assertEqual(op["from"], "test1")
@@ -62,11 +60,11 @@ class Testcases(unittest.TestCase):
         self.assertEqual(float(amount), 1.33)
 
     def test_create_account(self):
-        bts = Steem(node=self.nodelist.get_nodes(),
+        bts = Steem(node=get_steem_nodes(),
                     nobroadcast=True,
                     unsigned=True,
                     data_refresh_time_seconds=900,
-                    keys={"active": wif, "owner": wif, "memo": wif},
+                    keys={"active": wif, "owner": wif2, "memo": wif3},
                     num_retries=10)
         core_unit = "STM"
         name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
@@ -91,11 +89,18 @@ class Testcases(unittest.TestCase):
             additional_posting_accounts=["test3"],
             storekeys=False,
         )
-        self.assertEqual(
-            tx["operations"][0][0],
-            "account_create"
-        )
-        op = tx["operations"][0][1]
+        if isinstance(tx["operations"][0], list):
+            self.assertEqual(
+                tx["operations"][0][0],
+                "account_create"
+            )
+            op = tx["operations"][0][1]
+        else:
+            self.assertEqual(
+                tx["operations"][0]["type"],
+                "account_create_operation"
+            )
+            op = tx["operations"][0]["value"]            
         role = "active"
         self.assertIn(
             format(key5.pubkey, core_unit),
@@ -131,11 +136,11 @@ class Testcases(unittest.TestCase):
             "test")
 
     def test_create_account_password(self):
-        bts = Steem(node=self.nodelist.get_nodes(),
+        bts = Steem(node=get_steem_nodes(),
                     nobroadcast=True,
                     unsigned=True,
                     data_refresh_time_seconds=900,
-                    keys={"active": wif, "owner": wif, "memo": wif},
+                    keys={"active": wif, "owner": wif2, "memo": wif3},
                     num_retries=10)
         core_unit = "STM"
         name = ''.join(random.choice(string.ascii_lowercase) for _ in range(12))
@@ -152,11 +157,18 @@ class Testcases(unittest.TestCase):
             additional_active_accounts=["test1"],
             storekeys=False,
         )
-        self.assertEqual(
-            tx["operations"][0][0],
-            "account_create"
-        )
-        op = tx["operations"][0][1]
+        if isinstance(tx["operations"][0], list):
+            self.assertEqual(
+                tx["operations"][0][0],
+                "account_create"
+            )
+            op = tx["operations"][0][1]
+        else:
+            self.assertEqual(
+                tx["operations"][0]["type"],
+                "account_create_operation"
+            )
+            op = tx["operations"][0]["value"]            
         role = "active"
         self.assertIn(
             format(key5.pubkey, core_unit),
@@ -204,9 +216,9 @@ class Testcases(unittest.TestCase):
         tx1 = bts.new_tx()
         tx2 = bts.new_tx()
 
-        acc.transfer("test1", 1, "STEEM", append_to=tx1)
-        acc.transfer("test1", 2, "STEEM", append_to=tx2)
-        acc.transfer("test1", 3, "STEEM", append_to=tx1)
+        acc.transfer("test1", 1, bts.token_symbol, append_to=tx1)
+        acc.transfer("test1", 2, bts.token_symbol, append_to=tx2)
+        acc.transfer("test1", 3, bts.token_symbol, append_to=tx1)
         tx1 = tx1.json()
         tx2 = tx2.json()
         ops1 = tx1["operations"]
@@ -250,11 +262,18 @@ class Testcases(unittest.TestCase):
             threshold=1,
             permission="owner",
         )
-        self.assertEqual(
-            (tx["operations"][0][0]),
-            "account_update"
-        )
-        op = tx["operations"][0][1]
+        if isinstance(tx["operations"][0], list):
+            self.assertEqual(
+                (tx["operations"][0][0]),
+                "account_update"
+            )
+            op = tx["operations"][0][1]
+        else:
+            self.assertEqual(
+                (tx["operations"][0]["type"]),
+                "account_update_operation"
+            )
+            op = tx["operations"][0]["value"]            
         self.assertIn("owner", op)
         self.assertIn(
             [wif, '1'],
@@ -288,27 +307,41 @@ class Testcases(unittest.TestCase):
         acc = self.account
         prefix = "STM"
         pkey = 'STM55VCzsb47NZwWe5F3qyQKedX9iHBHMVVFSc96PDvV7wuj7W86n'
-        self.assertEqual(acc.steem.prefix, prefix)
-        acc.steem.txbuffer.clear()
+        self.assertEqual(acc.blockchain.prefix, prefix)
+        acc.blockchain.txbuffer.clear()
         tx = acc.update_memo_key(pkey)
-        self.assertEqual(
-            (tx["operations"][0][0]),
-            "account_update"
-        )
-        op = tx["operations"][0][1]
+        if isinstance(tx["operations"][0], list):
+            self.assertEqual(
+                (tx["operations"][0][0]),
+                "account_update"
+            )
+            op = tx["operations"][0][1]
+        else:
+            self.assertEqual(
+                (tx["operations"][0]["type"]),
+                "account_update_operation"
+            )
+            op = tx["operations"][0]["value"]            
         self.assertEqual(
             op["memo_key"],
             pkey)
 
     def test_approvewitness(self):
         w = self.account
-        w.steem.txbuffer.clear()
+        w.blockchain.txbuffer.clear()
         tx = w.approvewitness("test1")
-        self.assertEqual(
-            (tx["operations"][0][0]),
-            "account_witness_vote"
-        )
-        op = tx["operations"][0][1]
+        if isinstance(tx["operations"][0], list):
+            self.assertEqual(
+                (tx["operations"][0][0]),
+                "account_witness_vote"
+            )
+            op = tx["operations"][0][1]
+        else:
+            self.assertEqual(
+                (tx["operations"][0]["type"]),
+                "account_witness_vote_operation"
+            )
+            op = tx["operations"][0]["value"]            
         self.assertIn(
             "test1",
             op["witness"])
@@ -319,35 +352,56 @@ class Testcases(unittest.TestCase):
         tx = bts.post("title", "body", author="test", permlink=None, reply_identifier=None,
                       json_metadata=None, comment_options=None, community="test", tags=["a", "b", "c", "d", "e"],
                       beneficiaries=[{'account': 'test1', 'weight': 5000}, {'account': 'test2', 'weight': 5000}], self_vote=True)
-        self.assertEqual(
-            (tx["operations"][0][0]),
-            "comment"
-        )
-        op = tx["operations"][0][1]
+        if isinstance(tx["operations"][0], list):
+            self.assertEqual(
+                (tx["operations"][0][0]),
+                "comment"
+            )
+            op = tx["operations"][0][1]
+        else:
+            self.assertEqual(
+                (tx["operations"][0]["type"]),
+                "comment_operation"
+            )
+            op = tx["operations"][0]["value"]            
         self.assertEqual(op["body"], "body")
         self.assertEqual(op["title"], "title")
         self.assertTrue(op["permlink"].startswith("title"))
         self.assertEqual(op["parent_author"], "")
-        self.assertEqual(op["parent_permlink"], "a")
+        self.assertEqual(op["parent_permlink"], "test")
         json_metadata = json.loads(op["json_metadata"])
         self.assertEqual(json_metadata["tags"], ["a", "b", "c", "d", "e"])
         self.assertEqual(json_metadata["app"], "beem/%s" % (beem_version))
-        self.assertEqual(
-            (tx["operations"][1][0]),
-            "comment_options"
-        )
-        op = tx["operations"][1][1]
+        if isinstance(tx["operations"][1], list):
+            self.assertEqual(
+                (tx["operations"][1][0]),
+                "comment_options"
+            )
+            op = tx["operations"][1][1]
+        else:
+            self.assertEqual(
+                (tx["operations"][1]["type"]),
+                "comment_options_operation"
+            )
+            op = tx["operations"][1]["value"]            
         self.assertEqual(len(op['extensions'][0][1]['beneficiaries']), 2)
 
     def test_comment_option(self):
         bts = self.bts
         bts.txbuffer.clear()
         tx = bts.comment_options({}, "@gtg/witness-gtg-log", account="test")
-        self.assertEqual(
-            (tx["operations"][0][0]),
-            "comment_options"
-        )
-        op = tx["operations"][0][1]
+        if isinstance(tx["operations"][0], list):
+            self.assertEqual(
+                (tx["operations"][0][0]),
+                "comment_options"
+            )
+            op = tx["operations"][0][1]
+        else:
+            self.assertEqual(
+                (tx["operations"][0]["type"]),
+                "comment_options_operation"
+            )
+            op = tx["operations"][0]["value"]            
         self.assertIn(
             "gtg",
             op["author"])
@@ -362,33 +416,39 @@ class Testcases(unittest.TestCase):
         self.assertFalse(bts.get_blockchain_version() == '0.0.0')
 
     def test_offline(self):
-        bts = Steem(node=self.nodelist.get_nodes(),
+        bts = Steem(node=get_steem_nodes(),
                     offline=True,
                     data_refresh_time_seconds=900,
-                    keys={"active": wif, "owner": wif, "memo": wif})
-        bts.refresh_data()
+                    keys={"active": wif, "owner": wif2, "memo": wif3})
+        bts.refresh_data("feed_history")
         self.assertTrue(bts.get_feed_history(use_stored_data=False) is None)
         self.assertTrue(bts.get_feed_history(use_stored_data=True) is None)
+        bts.refresh_data("reward_funds")
         self.assertTrue(bts.get_reward_funds(use_stored_data=False) is None)
         self.assertTrue(bts.get_reward_funds(use_stored_data=True) is None)
         self.assertTrue(bts.get_current_median_history(use_stored_data=False) is None)
         self.assertTrue(bts.get_current_median_history(use_stored_data=True) is None)
+        bts.refresh_data("hardfork_properties")
         self.assertTrue(bts.get_hardfork_properties(use_stored_data=False) is None)
         self.assertTrue(bts.get_hardfork_properties(use_stored_data=True) is None)
-        self.assertTrue(bts.get_network(use_stored_data=False) is None)
-        self.assertTrue(bts.get_network(use_stored_data=True) is None)
+        bts.refresh_data("config")
+        self.assertTrue(bts.get_network(use_stored_data=False) is not None)
+        self.assertTrue(bts.get_network(use_stored_data=True) is not None)
+        bts.refresh_data("witness_schedule")
         self.assertTrue(bts.get_witness_schedule(use_stored_data=False) is None)
         self.assertTrue(bts.get_witness_schedule(use_stored_data=True) is None)
         self.assertTrue(bts.get_config(use_stored_data=False) is None)
         self.assertTrue(bts.get_config(use_stored_data=True) is None)
         self.assertEqual(bts.get_block_interval(), 3)
         self.assertEqual(bts.get_blockchain_version(), '0.0.0')
+        self.assertFalse(bts.is_hive)
+        self.assertTrue(bts.is_steem)        
 
     def test_properties(self):
-        bts = Steem(node=self.nodelist.get_nodes(),
+        bts = Steem(node=get_steem_nodes(),
                     nobroadcast=True,
                     data_refresh_time_seconds=900,
-                    keys={"active": wif, "owner": wif, "memo": wif},
+                    keys={"active": wif, "owner": wif2, "memo": wif3},
                     num_retries=10)
         self.assertTrue(bts.get_feed_history(use_stored_data=False) is not None)
         self.assertTrue(bts.get_reward_funds(use_stored_data=False) is not None)
@@ -399,10 +459,13 @@ class Testcases(unittest.TestCase):
         self.assertTrue(bts.get_config(use_stored_data=False) is not None)
         self.assertTrue(bts.get_block_interval() is not None)
         self.assertTrue(bts.get_blockchain_version() is not None)
+        self.assertTrue(bts.get_blockchain_name() == "steem")
+        self.assertFalse(bts.is_hive)
+        self.assertTrue(bts.is_steem)        
 
     def test_sp_to_rshares(self):
         stm = self.bts
-        rshares = stm.sp_to_rshares(stm.vests_to_sp(1e6))
+        rshares = stm.sp_to_rshares(stm.vests_to_sp(1e6), post_rshares=1e19)
         self.assertTrue(abs(rshares - 20000000000.0) < 2)
 
     def test_rshares_to_vests(self):
@@ -452,3 +515,12 @@ class Testcases(unittest.TestCase):
             exceptions.MissingKeyError
         ):
             bts.broadcast(tx=tx)
+
+    def test_switch_blockchain(self):
+        bts = Steem(
+            node=get_steem_nodes(),
+            num_retries=10)        
+        bts.switch_blockchain("steem", update_nodes=True)
+        assert not bts.is_hive
+        bts.switch_blockchain("hive", update_nodes=True)
+        assert bts.is_hive        

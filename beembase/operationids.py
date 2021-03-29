@@ -1,7 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+# -*- coding: utf-8 -*-
 #: Operation ids
 ops = [
     'vote',
@@ -50,7 +47,8 @@ ops = [
     'account_update2',
     'create_proposal',
     'update_proposal_votes',
-    'remove_proposal',    
+    'remove_proposal',
+    'update_proposal',
     'fill_convert_request',
     'author_reward',
     'curation_reward',
@@ -66,48 +64,19 @@ ops = [
     'comment_payout_update',
     'return_vesting_delegation',
     'comment_benefactor_reward',
-    'return_vesting_delegation',
-    'comment_benefactor_reward',
     'producer_reward',
     'clear_null_account_balance',
     'proposal_pay',
-    'sps_fund'
+    'sps_fund',
+    'hardfork_hive',
+    'hardfork_hive_restore',
+    'delayed_voting',
+    'consolidate_treasury_balance',
+    'effective_comment_vote',
+    'ineffective_delete_comment',
+    'sps_convert'
 ]
 operations = {o: ops.index(o) for o in ops}
-
-ops_wls = [
-    'vote',
-    'comment',
-    'transfer',
-    'transfer_to_vesting',
-    'withdraw_vesting',
-    'account_create',
-    'account_update',
-    'account_action',
-    'social_action',
-    'witness_update',
-    'account_witness_vote',
-    'account_witness_proxy',
-    'custom',
-    'delete_comment',
-    'custom_json',
-    'comment_options',
-    'set_withdraw_vesting_route',
-    'custom_binary',
-    'claim_reward_balance',
-    'friend_action',
-    'pod_action',
-    'author_reward',
-    'curation_reward',
-    'comment_reward',
-    'shutdown_witness',
-    'hardfork',
-    'comment_payout_update',
-    'comment_benefactor_reward',
-    'devfund',
-    'pod_virtual'
-]
-operations_wls = {o: ops_wls.index(o) for o in ops_wls}
 
 
 def getOperationNameForId(i):

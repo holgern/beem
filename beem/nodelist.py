@@ -1,21 +1,33 @@
-# This Python file uses the following encoding: utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import next
+# -*- coding: utf-8 -*-
 import re
 import time
 import math
+from timeit import default_timer as timer
 import json
-from beem.instance import shared_steem_instance
+from beem.instance import shared_blockchain_instance
 from beem.account import Account
 import logging
 log = logging.getLogger(__name__)
 
 
+def node_answer_time(node):
+    try:
+        from beem.blockchaininstance import BlockChainInstance
+        stm_local = BlockChainInstance(node=node, num_retries=2, num_retries_call=2, timeout=10)
+        start = timer()
+        stm_local.get_network(use_stored_data=False)
+        stop = timer()
+        rpc_answer_time = stop - start
+    except KeyboardInterrupt:
+        rpc_answer_time = float("inf")
+        raise KeyboardInterrupt()
+    except:
+        rpc_answer_time = float("inf")
+    return rpc_answer_time
+
+
 class NodeList(list):
-    """ Returns a node list
+    """ Returns HIVE/STEEM nodes as list
 
         .. code-block:: python
 
@@ -29,265 +41,237 @@ class NodeList(list):
             {
                 "url": "https://api.steemit.com",
                 "version": "0.20.2",
-                "type": "appbase-limited",
+                "type": "appbase",
                 "owner": "steemit",
+                "hive": False,
                 "score": 50
             },
             {
-                "url": "https://steemd-appbase.steemit.com",
+                "url": "https://api.justyy.com",
                 "version": "0.20.2",
                 "type": "appbase",
-                "owner": "steemit",
-                "score": -10
-            },
-            {
-                "url": "wss://steemd-appbase.steemit.com",
-                "version": "0.20.2",
-                "type": "appbase",
-                "owner": "steemit",
-                "score": -10
-            },
-            {
-                "url": "wss://appbasetest.timcliff.com",
-                "version": "0.19.11",
-                "type": "appbase",
-                "owner": "timcliff",
-                "score": -10
-            },
-            {
-                "url": "https://appbasetest.timcliff.com",
-                "version": "0.20.2",
-                "type": "appbase",
-                "owner": "timcliff",
-                "score": 10
-            },
-            {
-                "url": "https://api.steem.house",
-                "version": "0.20.2",
-                "type": "appbase",
-                "owner": "gtg",
-                "score": 10
-            },
-            {
-                "url": "https://api.steemitdev.com",
-                "version": "0.19.11",
-                "type": "appbase-dev",
-                "owner": "steemit",
-                "score": 10
-            },
-            {
-                "url": "https://api.steemitstage.com",
-                "version": "0.19.11",
-                "type": "appbase-dev",
-                "owner": "steemit",
-                "score": 10
-            },
-            {
-                "url": "wss://rpc.steemviz.com",
-                "version": "0.19.12",
-                "type": "appbase",
-                "owner": "ausbitbank",
-                "score": -10
-            },
-            {
-                "url": "https://rpc.steemviz.com",
-                "version": "0.19.12",
-                "type": "appbase",
-                "owner": "ausbitbank",
-                "score": -10
-            },
-            {
-                "url": "wss://steemd.privex.io",
-                "version": "0.20.2",
-                "type": "appbase",
-                "owner": "privex",
-                "score": -10
-            },
-            {
-                "url": "https://steemd.privex.io",
-                "version": "0.20.2",
-                "type": "appbase",
-                "owner": "privex",
-                "score": 50
-            },
-            {
-                "url": "wss://rpc.buildteam.io",
-                "version": "0.20.2",
-                "type": "appbase",
-                "owner": "themarkymark",
-                "score": -10
-            },
-            {
-                "url": "https://rpc.buildteam.io",
-                "version": "0.20.2",
-                "type": "appbase",
-                "owner": "themarkymark",
-                "score": -20
-            },
-            {
-                "url": "wss://gtg.steem.house:8090",
-                "version": "0.19.12",
-                "type": "appbase",
-                "owner": "gtg",
-                "score": -10
-            },
-            {
-                "url": "https://gtg.steem.house:8090",
-                "version": "0.19.12",
-                "type": "appbase",
-                "owner": "gtg",
-                "score": -10
-            },
-            {
-                "url": "wss://steemd.pevo.science",
-                "version": "0.19.2",
-                "type": "normal",
-                "owner": "pharesim",
-                "score": -10
-            },
-            {
-                "url": "https://steemd.pevo.science",
-                "version": "0.19.6",
-                "type": "normal",
-                "owner": "pharesim",
-                "score": -10
-            },
-            {
-                "url": "wss://rpc.steemliberator.com",
-                "version": "0.19.12",
-                "type": "appbase",
-                "owner": "netuoso",
-                "score": -10
-            },
-            {
-                "url": "https://rpc.steemliberator.com",
-                "version": "0.19.12",
-                "type": "appbase",
-                "owner": "netuoso",
-                "score": -10
-            },
-            {
-                "url": "wss://seed.bitcoiner.me",
-                "version": "0.19.6",
-                "type": "normal",
-                "owner": "bitcoiner",
-                "score": -10
-            },
-            {
-                "url": "https://seed.bitcoiner.me",
-                "version": "0.19.6",
-                "type": "normal",
-                "owner": "bitcoiner",
-                "score": -10
-            },
-            {
-                "url": "wss://steemd.steemgigs.org",
-                "version": "0.19.6",
-                "type": "normal",
-                "owner": "steemgigs",
-                "score": -10
-            },
-            {
-                "url": "https://steemd.steemgigs.org",
-                "version": "0.19.6",
-                "type": "normal",
-                "owner": "steemgigs",
-                "score": -10
-            },
-            {
-                "url": "wss://steemd.minnowsupportproject.org",
-                "version": "0.19.11",
-                "type": "appbase",
-                "owner": "followbtcnews",
-                "score": -10
-            },
-            {
-                "url": "https://steemd.minnowsupportproject.org",
-                "version": "0.19.12",
-                "type": "appbase",
-                "owner": "followbtcnews",
-                "score": 100
-            },
-            {
-                "url": "wss://anyx.io",
-                "version": "0.20.6",
-                "type": "appbase",
-                "owner": "anyx",
-                "score": -10
-            },
-            {
-                "url": "https://anyx.io",
-                "version": "0.20.6",
-                "type": "appbase",
-                "owner": "anyx",
-                "score": 80
-            },
-            {
-                "url": "http://anyx.io",
-                "version": "0.20.6",
-                "type": "appbase",
-                "owner": "anyx",
-                "score": 50
-            },            
-            {
-                "url": "https://rpc.curiesteem.com",
-                "version": "0.20.2",
-                "type": "appbase",
-                "owner": "curie",
-                "score": -10
-            },
-            {
-                "url": "wss://rpc.curiesteem.com",
-                "version": "0.20.2",
-                "type": "appbase",
-                "owner": "curie",
-                "score": -10
-            },
-            {
-                "url": "https://rpc.usesteem.com",
-                "version": "0.20.8",
-                "type": "appbase",
-                "owner": "themarkymark",
-                "score": 90
-            },            
-            {
-                "url": "wss://testnet.steem.vc",
-                "version": "0.19.2",
-                "type": "testnet",
-                "owner": "almost-digital",
+                "owner": "justyy",
+                "hive": False,
                 "score": 20
             },
             {
-                "url": "ws://testnet.steem.vc",
-                "version": "0.19.2",
+                "url": "https://api.steemdb.online",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "steem_supporter",
+                "hive": False,
+                "score": 20
+            },
+            {
+                "url": "https://api.steem.buzz",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "ericet",
+                "hive": False,
+                "score": 20
+            },
+            {
+                "url": "https://api.steem.buzz",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "ericet",
+                "hive": False,
+                "score": 20
+            },
+            {
+                "url": "https://anyx.io",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "anyx",
+                "hive": True,
+                "score": 50
+            },
+            {
+                "url": "https://hive-test-beeabode.roelandp.nl",
+                "version": "0.23.0",
                 "type": "testnet",
-                "owner": "almost-digital",
+                "owner": "roelandp",
+                "hive": True,
                 "score": 5
             },
             {
-                "url": "https://testnet.steem.vc",
-                "version": "0.19.2",
-                "type": "testnet",
-                "owner": "almost-digital",
+                "url": "https://api.hivekings.com",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "drakos",
+                "hive": True,
+                "score": 50
+            },
+            {
+                "url": "https://api.hive.blog",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "hive",
+                "hive": True,
+                "score": 80
+            },
+            {
+                "url": "https://api.openhive.network",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "gtg",
+                "hive": True,
+                "score": 50
+            },
+            {
+                "url": "https://techcoderx.com",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "techcoderx",
+                "hive": True,
                 "score": 10
             },
             {
-                "url": "http://testnet.steem.vc",
-                "version": "0.19.2",
-                "type": "testnet",
-                "owner": "almost-digital",
-                "score": 5
+                "url": "https://steem.61bts.com",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "ety001",
+                "hive": False,
+                "score": 10
             },
             {
-                "url": "https://testnet.steemitdev.com",
-                "version": "0.21.0",
-                "type": "testnet-dev",
-                "owner": "steemit",
-                "score": 5
-            }]
+                "url": "https://cn.steems.top",
+                "version": "0.22.5",
+                "type": "appbase",
+                "owner": "maiyude",
+                "hive": False,
+                "score": 10
+            },
+            {
+                "url": "https://rpc.ecency.com",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "good-karma",
+                "hive": True,
+                "score": 10
+            },
+            {
+                "url": "https://hived.privex.io",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "someguy123",
+                "hive": True,
+                "score": 10
+            },
+            {
+                "url": "https://api.pharesim.me",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "pharesim",
+                "hive": True,
+                "score": 10                
+            },
+            {
+                "url": "https://rpc.ausbit.dev",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "ausbitbank",
+                "hive": True,
+                "score": 50                
+            },
+            {
+                "url": "https://hive.roelandp.nl",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "roelandp",
+                "hive": True,
+                "score": 50                
+            },
+            {
+                "url": "https://api.c0ff33a.uk",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "c0ff33a",
+                "hive": True,
+                "score": 40                
+            },
+            {
+                "url": "https://api.deathwing.me",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "deathwing",
+                "hive": True,
+                "score": 40                
+            },
+            {
+                "url": "https://hive-api.arcange.eu",
+                "version": "1.24.2",
+                "type": "appbase",
+                "owner": "arcange",
+                "hive": True,
+                "score": 40                   
+            },
+            {
+                "url": "https://fin.hive.3speak.co",
+                "version": "1.24.2",
+                "type": "appbase",
+                "owner": "3speak",
+                "hive": True,
+                "score": 40                   
+            },
+            {
+                "url": "https://hived.emre.sh",
+                "version": "1.24.2",
+                "type": "appbase",
+                "owner": "emrebeyler",
+                "hive": True,
+                "score": 40                   
+            }            
+        ]
         super(NodeList, self).__init__(nodes)
 
-    def update_nodes(self, weights=None, steem_instance=None):
+    def update(self, node_list):
+        new_nodes = []
+        for node_url in node_list:
+            for node in self:
+                if node["url"] == node_url:
+                    new_nodes.append(node)
+        super(NodeList, self).__init__(new_nodes)
+
+    def get_node_answer_time(self, node_list=None, verbose=False):
+        """ Pings all nodes and measure the answer time
+        
+            .. code-block:: python
+
+                from beem.nodelist import NodeList
+                nl = NodeList()
+                nl.update_nodes()
+                nl.ping_nodes()
+        """
+        ping_times = []
+        if node_list is None:
+            node_list = []
+            for node in self:
+                node_list.append(node["url"])
+        for node in node_list:
+            ping_times.append(1000.)
+        available_nodes = []
+        for node in self:
+            available_nodes.append(node["url"])
+        for i in range(len(node_list)):
+            if node_list[i] not in available_nodes:
+                ping_times[i] = float("inf")
+                continue
+            try:
+                ping_times[i] = node_answer_time(node_list[i])
+                if  verbose:
+                    print("node %s results in %.2f" % (node_list[i], ping_times[i]))
+            except KeyboardInterrupt:
+                ping_times[i] = float("inf")
+                break
+        sorted_arg = sorted(range(len(ping_times)), key=ping_times.__getitem__)
+        sorted_nodes = []
+        for i in sorted_arg:
+            if ping_times[i] != float("inf"):
+                sorted_nodes.append({"url": node_list[i], "delay_ms": ping_times[i] * 1000})      
+        return sorted_nodes
+
+    def update_nodes(self, weights=None, blockchain_instance=None, **kwargs):
         """ Reads metadata from fullnodeupdate and recalculates the nodes score
 
             :param list/dict weight: can be used to weight the different benchmarks
@@ -302,14 +286,19 @@ class NodeList(list):
                 weights = {'block': 0.1, 'history': 0.1, 'apicall': 1, 'config': 1}
                 nl.update_nodes(weights)
         """
-        steem = steem_instance or shared_steem_instance()
+        if blockchain_instance is None:
+            if kwargs.get("steem_instance"):
+                blockchain_instance = kwargs["steem_instance"]
+            elif kwargs.get("hive_instance"):
+                blockchain_instance = kwargs["hive_instance"]        
+        steem = blockchain_instance or shared_blockchain_instance()
         metadata = None
         account = None
         cnt = 0
         while metadata is None and cnt < 5:
             cnt += 1
             try:
-                account = Account("fullnodeupdate", steem_instance=steem)
+                account = Account("fullnodeupdate", blockchain_instance=steem)
                 metadata = json.loads(account["json_metadata"])
             except:
                 steem.rpc.next()
@@ -375,9 +364,10 @@ class NodeList(list):
             new_nodes.append(new_node)
         super(NodeList, self).__init__(new_nodes)
 
-    def get_nodes(self, exclude_limited=False, dev=False, testnet=False, testnetdev=False, wss=True, https=True, not_working=False, normal=True, appbase=True):
+    def get_nodes(self, hive=False, exclude_limited=False, dev=False, testnet=False, testnetdev=False, wss=True, https=True, not_working=False, normal=True, appbase=True):
         """ Returns nodes as list
 
+            :param bool hive: When True, only HIVE nodes will be returned
             :param bool exclude_limited: When True, limited nodes are excluded
             :param bool dev: when True, dev nodes with version 0.19.11 are included
             :param bool testnet: when True, testnet nodes are included
@@ -403,6 +393,56 @@ class NodeList(list):
             node_type_list.append("appbase-limited")
         for node in self:
             if node["type"] in node_type_list and (node["score"] >= 0 or not_working):
+                if hive != node["hive"]:
+                    continue
+                if not https and node["url"][:5] == 'https':
+                    continue
+                if not wss and node["url"][:3] == 'wss':
+                    continue
+                node_list.append(node)
+
+        return [node["url"] for node in sorted(node_list, key=lambda self: self['score'], reverse=True)]
+
+    def get_hive_nodes(self, testnet=False, not_working=False, wss=True, https=True):
+        """ Returns hive only nodes as list
+
+            :param bool testnet: when True, testnet nodes are included
+            :param bool not_working: When True, all nodes including not working ones will be returned
+
+        """
+        node_list = []
+        node_type_list = []
+      
+        for node in self:
+            if not node["hive"]:
+                continue
+            if (node["score"] < 0 and not not_working):
+                continue
+            if (testnet and node["type"] == "testnet") or (not testnet and node["type"] != "testnet"):
+                if not https and node["url"][:5] == 'https':
+                    continue
+                if not wss and node["url"][:3] == 'wss':
+                    continue
+                node_list.append(node)
+
+        return [node["url"] for node in sorted(node_list, key=lambda self: self['score'], reverse=True)]
+
+    def get_steem_nodes(self, testnet=False, not_working=False, wss=True, https=True):
+        """ Returns steem only nodes as list
+
+            :param bool testnet: when True, testnet nodes are included
+            :param bool not_working: When True, all nodes including not working ones will be returned
+
+        """
+        node_list = []
+        node_type_list = []
+
+        for node in self:
+            if node["hive"]:
+                continue
+            if (node["score"] < 0 and not not_working):
+                continue
+            if (testnet and node["type"] == "testnet") or (not testnet and node["type"] != "testnet"):            
                 if not https and node["url"][:5] == 'https':
                     continue
                 if not wss and node["url"][:3] == 'wss':

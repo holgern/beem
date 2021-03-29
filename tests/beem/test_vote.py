@@ -1,20 +1,16 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import super
+# -*- coding: utf-8 -*-
 import unittest
 from parameterized import parameterized
 import pytz
 from datetime import datetime, timedelta
 from pprint import pprint
-from beem import Steem, exceptions
+from beem import Steem, exceptions, Hive
 from beem.comment import Comment
 from beem.account import Account
 from beem.vote import Vote, ActiveVotes, AccountVotes
-from beem.instance import set_shared_steem_instance
+from beem.instance import set_shared_blockchain_instance
 from beem.utils import construct_authorperm, resolve_authorperm, resolve_authorpermvoter, construct_authorpermvoter
-from beem.nodelist import NodeList
+from .nodes import get_hive_nodes, get_steem_nodes
 
 wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
@@ -22,24 +18,23 @@ wif = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 class Testcases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        nodelist = NodeList()
-        nodelist.update_nodes(steem_instance=Steem(node=nodelist.get_nodes(exclude_limited=False), num_retries=10))
-        cls.bts = Steem(
-            node=nodelist.get_nodes(exclude_limited=True),
+        cls.bts = Hive(
+            node=get_hive_nodes(),
             nobroadcast=True,
             keys={"active": wif},
             num_retries=10
         )
         # from getpass import getpass
         # self.bts.wallet.unlock(getpass())
-        set_shared_steem_instance(cls.bts)
+        set_shared_blockchain_instance(cls.bts)
         cls.bts.set_default_account("test")
 
-        acc = Account("holger80", steem_instance=cls.bts)
+        acc = Account("fullnodeupdate", blockchain_instance=cls.bts)
         n_votes = 0
         index = 0
+        entries = acc.get_blog(limit=20)[::-1]
         while n_votes == 0:
-            comment = acc.get_feed(limit=30)[::-1][index]
+            comment = Comment(entries[index], blockchain_instance=cls.bts)
             votes = comment.get_votes()
             n_votes = len(votes)
             index += 1
@@ -55,12 +50,13 @@ class Testcases(unittest.TestCase):
 
     def test_vote(self):
         bts = self.bts
-        vote = Vote(self.authorpermvoter, steem_instance=bts)
+        self.assertTrue(len(bts.get_reward_funds(use_stored_data=False)) > 0)
+        vote = Vote(self.authorpermvoter, blockchain_instance=bts)
         self.assertEqual(self.voter, vote["voter"])
         self.assertEqual(self.author, vote["author"])
         self.assertEqual(self.permlink, vote["permlink"])
 
-        vote = Vote(self.voter, authorperm=self.authorperm, steem_instance=bts)
+        vote = Vote(self.voter, authorperm=self.authorperm, blockchain_instance=bts)
         self.assertEqual(self.voter, vote["voter"])
         self.assertEqual(self.author, vote["author"])
         self.assertEqual(self.permlink, vote["permlink"])
@@ -68,9 +64,13 @@ class Testcases(unittest.TestCase):
         self.assertEqual(self.voter, vote_json["voter"])
         self.assertEqual(self.voter, vote.voter)
         self.assertTrue(vote.weight >= 0)
-        self.assertTrue(vote.sbd >= 0)
-        self.assertTrue(vote.rshares >= 0)
-        self.assertTrue(vote.percent >= 0)
+        if vote.percent >= 0:
+            self.assertTrue(vote.hbd >= 0)
+            self.assertTrue(vote.rshares >= 0)
+        else:
+            self.assertTrue(vote.hbd < 0)
+            self.assertTrue(vote.rshares < 0)            
+
         self.assertTrue(vote.reputation is not None)
         self.assertTrue(vote.rep is not None)
         self.assertTrue(vote.time is not None)
@@ -82,9 +82,12 @@ class Testcases(unittest.TestCase):
         self.assertEqual(self.voter, vote_json["voter"])
         self.assertEqual(self.voter, vote.voter)
         self.assertTrue(vote.weight >= 0)
-        self.assertTrue(vote.sbd >= 0)
-        self.assertTrue(vote.rshares >= 0)
-        self.assertTrue(vote.percent >= 0)
+        if vote.percent >= 0:
+            self.assertTrue(vote.hbd >= 0)
+            self.assertTrue(vote.rshares >= 0)
+        else:
+            self.assertTrue(vote.hbd < 0)
+            self.assertTrue(vote.rshares < 0)
         self.assertTrue(vote.reputation is not None)
         self.assertTrue(vote.rep is not None)
         self.assertTrue(vote.time is not None)
@@ -94,29 +97,30 @@ class Testcases(unittest.TestCase):
         with self.assertRaises(
             exceptions.VoteDoesNotExistsException
         ):
-            Vote(construct_authorpermvoter(self.author, self.permlink, "asdfsldfjlasd"), steem_instance=bts)
+            Vote(construct_authorpermvoter(self.author, self.permlink, "asdfsldfjlasd"), blockchain_instance=bts)
 
         with self.assertRaises(
             exceptions.VoteDoesNotExistsException
         ):
-            Vote(construct_authorpermvoter(self.author, "sdlfjd", "asdfsldfjlasd"), steem_instance=bts)
+            Vote(construct_authorpermvoter(self.author, "sdlfjd", "asdfsldfjlasd"), blockchain_instance=bts)
 
         with self.assertRaises(
             exceptions.VoteDoesNotExistsException
         ):
-            Vote(construct_authorpermvoter("sdalfj", "dsfa", "asdfsldfjlasd"), steem_instance=bts)
+            Vote(construct_authorpermvoter("sdalfj", "dsfa", "asdfsldfjlasd"), blockchain_instance=bts)
 
     def test_activevotes(self):
         bts = self.bts
-        votes = ActiveVotes(self.authorperm, steem_instance=bts)
+        votes = ActiveVotes(self.authorperm, blockchain_instance=bts)
         votes.printAsTable()
         vote_list = votes.get_list()
         self.assertTrue(isinstance(vote_list, list))
 
+    @unittest.skip
     def test_accountvotes(self):
         bts = self.bts
         utc = pytz.timezone('UTC')
         limit_time = utc.localize(datetime.utcnow()) - timedelta(days=7)
-        votes = AccountVotes(self.voter, start=limit_time, steem_instance=bts)
+        votes = AccountVotes(self.voter, start=limit_time, blockchain_instance=bts)
         self.assertTrue(len(votes) > 0)
         self.assertTrue(isinstance(votes[0], Vote))
