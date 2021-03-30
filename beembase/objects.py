@@ -336,7 +336,7 @@ class UpdateProposalEndDate(GrapheneObject):
 
             super(UpdateProposalEndDate, self).__init__(
                 OrderedDict([
-                    ('end_date', PointInTime(kwargs['update_proposal_end_date'])),
+                    ('end_date', PointInTime(kwargs['end_date'])),
                 ]))
 
 
@@ -347,25 +347,26 @@ class UpdateProposalExtensions(Static_variant):
 
         Example::
 
-            [1,
-                {'end_date': '2021-03-28T04:00:00'}
-            ]
+            {
+                'type': '1',
+                'value':
+                      {
+                        'end_date': '2021-04-05T13:39:48'
+                      }
+            }
 
     """
     def __init__(self, o):
-        if type(o) == dict and 'type' in o and 'value' in o:
-            if o['type'] == "end_date":
-                type_id = 1
-            else:
-                type_id = ~0
-            data = o['value']
-        else:
-            type_id, data = o
+        if isinstance(o, dict) and 'type' in o and 'value' in o:
+          if o['type'] == "update_proposal_end_date":
+              type_id = 1
+          else:
+              type_id = ~0
 
         if type_id == 1:
-            data = (UpdateProposalEndDate(data))
+            data = (UpdateProposalEndDate(o['value']))
         else:
             raise Exception("Unknown UpdateProposalExtension")
-        super(UpdateProposalExtensions, self).__init__(data, type_id)
+        super(UpdateProposalExtensions, self).__init__(data, type_id, False)
 
 

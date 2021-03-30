@@ -347,9 +347,12 @@ class Optional(object):
 
 
 class Static_variant(object):
-    def __init__(self, d, type_id):
+    def __init__(self, d, type_id, legacy_style = True):
         self.data = d
         self.type_id = type_id
+
+        #`legacy_style = True` it means, that static variant is treated like an array, otherwise like an object
+        self.legacy_style = legacy_style
 
     def __bytes__(self):
         """Returns bytes representation."""
@@ -357,8 +360,10 @@ class Static_variant(object):
 
     def __str__(self):
         """Returns data as string."""
-        return json.dumps([self.type_id, self.data.json()])
-
+        if self.legacy_style:
+          return json.dumps([self.type_id, self.data.json()])
+        else:
+          return json.dumps({ 'type': self.type_id, 'value': self.data.json() })
 
 class Map(object):
     def __init__(self, data):
