@@ -358,10 +358,12 @@ class UpdateProposalExtensions(Static_variant):
     """
     def __init__(self, o):
         if isinstance(o, dict) and 'type' in o and 'value' in o:
-          if o['type'] == "update_proposal_end_date":
-              type_id = 1
-          else:
-              type_id = ~0
+            if o['type'] == "update_proposal_end_date":
+                type_id = 1
+            else:
+                type_id = ~0
+        else:
+            type_id, data = o        
 
         if type_id == 1:
             data = (UpdateProposalEndDate(o['value']))
