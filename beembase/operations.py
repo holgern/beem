@@ -402,8 +402,9 @@ class Update_proposal(GrapheneObject):
 
         prefix = kwargs.get("prefix", default_prefix)
         extensions = Array([])
-        if "extensions" in kwargs and kwargs["extensions"]:
-            extensions = Array([UpdateProposalExtensions(o) for o in kwargs["extensions"]])
+        if "end_date" in kwargs and kwargs["end_date"]:
+            extension = { 'type': 'update_proposal_end_date', 'value': {'end_date': kwargs["end_date"]} }
+            extensions = Array([UpdateProposalExtensions(extension)])
 
 
         super(Update_proposal, self).__init__(

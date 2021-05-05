@@ -228,3 +228,57 @@ class RC(object):
         execution_time_count = resource_execution_time["account_update_operation_exec_time"]
         resource_count = self.get_resource_count(tx_size, execution_time_count, state_bytes_count)
         return self.blockchain.get_rc_cost(resource_count)
+
+    def set_slot_delegator(self, from_pool, to_account, to_slot, signer):
+        """ Set a slot to receive RC from a pool
+
+            :param str from_pool: Pool to set the slot to
+            :param str to_account: Account on which we want to update the slot
+            :param int to_slot: slot we want to set
+            :param str signer: Account who broadcast this
+        """
+        json_body = [
+            'set_slot_delegator', {
+                'from_pool': from_pool,
+                'to_account': to_account,
+                'to_slot': to_slot,
+                'signer': signer,
+            }
+        ]
+        return self.blockchain.custom_json(
+            "rc", json_body, required_auths=[signer])
+
+    def delegate_from_pool(self, from_pool, to_account, max_rc):
+        """ Set a slot to receive RC from a pool
+
+            :param str from_pool: Pool to set the slot to
+            :param str to_account: Account on which we want to update the slot
+            :param int max_rc: max rc to delegate
+        """
+        json_body = [
+            'delegate_drc_from_pool', {
+                'from_pool': from_pool,
+                'to_account': to_account,
+                'asset_symbol': {'nai': "@@000000037", 'decimals': 6},
+                "drc_max_mana": max_rc,
+            }
+        ]
+        return self.blockchain.custom_json(
+            "rc", json_body, required_auths=[from_pool])
+
+    def delegate_to_pool(self, username, to_pool, rc):
+        """ Set a slot to receive RC from a pool
+
+            :param str username: user delegating rc to the pool
+            :param str to_pool: Pool to delegate to
+            :param str rc: rc to delegate
+        """
+        json_body = [
+            'delegate_to_pool', {
+                'from_account': username,
+                'to_pool': to_pool,
+                'amount':  {'symbol': "VESTS", 'amount': rc, 'precision': 6, 'nai': '@@000000037'},
+            }
+        ]
+        return self.blockchain.custom_json(
+            "rc", json_body, required_auths=[username])
