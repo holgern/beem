@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import struct
-import time
+#import time (not currently used)
 from datetime import timedelta
 from binascii import unhexlify
 from beemgraphenebase.py23 import bytes_types, integer_types, string_types, text_type
@@ -11,7 +11,7 @@ from beembase.objects import Operation
 from beemgraphenebase.account import PrivateKey, PublicKey
 from beembase.signedtransactions import Signed_Transaction
 from beembase.ledgertransactions import Ledger_Transaction
-from beembase import transactions, operations
+from beembase import operations #removed deprecated transactions module
 from .exceptions import (
     InsufficientAuthorityError,
     MissingKeyError,

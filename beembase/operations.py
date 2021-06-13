@@ -642,6 +642,24 @@ class Convert(GrapheneObject):
                 ('amount', Amount(kwargs["amount"], prefix=prefix, json_str=json_str)),
             ]))
 
+#Operation added for HF25 for the new HBD/Hive conversion operation
+class Collateralized_convert(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        prefix = kwargs.get("prefix", default_prefix)
+        json_str = kwargs.get("json_str", False)
+        super(Collateralized_convert, self).__init__(
+            OrderedDict([
+                ('owner', String(kwargs["owner"])),
+                ('requestid', Uint32(kwargs["requestid"])),
+                ('amount', Amount(kwargs["amount"], prefix=prefix, json_str=json_str)),
+            
+            ]))
+
+
 
 class Set_withdraw_vesting_route(GrapheneObject):
     def __init__(self, *args, **kwargs):

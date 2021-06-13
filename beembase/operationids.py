@@ -10,6 +10,7 @@ ops = [
     'limit_order_cancel',
     'feed_publish',
     'convert',
+    'collateralized_convert'
     'account_create',
     'account_update',
     'witness_update',
@@ -64,7 +65,6 @@ ops = [
     'comment_payout_update',
     'return_vesting_delegation',
     'comment_benefactor_reward',
-    'producer_reward',
     'clear_null_account_balance',
     'proposal_pay',
     'sps_fund',
