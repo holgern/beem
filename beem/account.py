@@ -3000,6 +3000,38 @@ class Account(BlockchainObject):
 
         return self.blockchain.finalizeOp(op, account, "active")
 
+    #Added to differentiate and match the addition of the HF25 convert operation
+    def collateralized_convert(self, amount, account=None, request_id=None, **kwargs):
+        """ Convert Hive dollars to Hive (this method is meant to be more instant)
+            and reflect the method added in HF25 
+
+            :param float amount: amount of SBD to convert
+            :param str account: (optional) the source account for the transfer
+                if not ``default_account``
+            :param str request_id: (optional) identifier for tracking the
+                conversion`
+
+        """
+        if account is None:
+            account = self
+        else:
+            account = Account(account, blockchain_instance=self.blockchain)
+        amount = self._check_amount(amount, self.blockchain.backed_token_symbol)
+        if request_id:
+            request_id = int(request_id)
+        else:
+            request_id = random.getrandbits(32)  
+        op = operations.Collateralized_convert(
+            **{
+                "owner": account["name"],
+                "requestid": request_id,
+                "amount": amount,
+                "prefix": self.blockchain.prefix,
+                "json_str": not bool(self.blockchain.config["use_condenser"]),
+            })
+
+        return self.blockchain.finalizeOp(op, account, "active", **kwargs)
+
     def transfer_to_savings(self, amount, asset, memo, to=None, account=None, **kwargs):
         """ Transfer SBD or STEEM into a 'savings' account.
 
