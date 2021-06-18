@@ -1,5 +1,10 @@
 Changelog
 ========
+0.24.23
+-------
+* Fixed some small code issues
+* Added reccurring_transfer op in preparation for HF25 (@sicarius)
+* Added collateralized_convert op in preparation for HF25 (@sicarius)
 0.24.22
 -------
 * Fix to parameter in transfer_to_vesting
