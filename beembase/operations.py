@@ -66,6 +66,35 @@ class Transfer(GrapheneObject):
             ('memo', memo),
         ]))
 
+#Added recurring transfer support for HF25
+class Recurring_transfer(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        # Allow for overwrite of prefix
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        prefix = kwargs.get("prefix", default_prefix)
+        json_str = kwargs.get("json_str", False)
+        if "memo" not in kwargs:
+            kwargs["memo"] = ""
+        if isinstance(kwargs["memo"], dict):
+            kwargs["memo"]["prefix"] = prefix
+            memo = Optional(Memo(**kwargs["memo"]))
+        elif isinstance(kwargs["memo"], string_types):
+            memo = (String(kwargs["memo"]))
+        else:
+            memo = Optional(Memo(kwargs["memo"]))
+        
+        super(Recurring_transfer, self).__init__(OrderedDict([
+            ('from', String(kwargs["from"])),
+            ('to', String(kwargs["to"])),
+            ('amount', Amount(kwargs["amount"], prefix=prefix, json_str=json_str)),
+            ('memo', memo),
+            ('recurrence', Int16(kwargs["recurrence"])),
+            ('executions', Int16(kwargs["executions"])),
+        ]))
+
 
 class Vote(GrapheneObject):
     def __init__(self, *args, **kwargs):

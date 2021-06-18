@@ -2937,6 +2937,69 @@ class Account(BlockchainObject):
         })
         return self.blockchain.finalizeOp(op, account, "active", **kwargs)
 
+    #-------------------------------------------------------------------------------
+    # Recurring Transfer added in hf25
+    #-------------------------------------------------------------------------------
+    def recurring_transfer(self, to, amount, asset, recurrence, executions, memo="", skip_account_check=False, account=None, **kwargs):
+        """ Transfer an asset to another account.
+
+            :param str to: Recipient
+            :param float amount: Amount to transfer in each occurence, must have 3 decimal points
+            :param str asset: Asset to transfer
+            :param int recurrence: How often in hours to execute transfer
+            :param int executions: Number of times to recur before stopping execution
+            :param str memo: (optional) Memo, may begin with `#` for encrypted
+                messaging
+            :param bool skip_account_check: (optional) When True, the receiver
+                account name is not checked to speed up sending multiple transfers in a row
+            :param str account: (optional) the source account for the transfer
+                if not ``default_account``
+
+
+            Transfer example:
+
+            .. code-block:: python
+
+                from beem.account import Account
+                from beem import Hive
+                active_wif = "5xxxx"
+                stm = Hive(keys=[active_wif])
+                acc = Account("test", blockchain_instance=stm)
+                acc.transfer("test1", 1, "HIVE", 48, 5, "test")
+
+        """
+
+        if account is None:
+            account = self  
+        elif not skip_account_check:
+            account = Account(account, blockchain_instance=self.blockchain)
+        amount = Amount(amount, asset, blockchain_instance=self.blockchain)
+        if not skip_account_check:
+            to = Account(to, blockchain_instance=self.blockchain)
+
+        to_name = extract_account_name(to)
+        account_name = extract_account_name(account)        
+        if memo and memo[0] == "#":
+            from .memo import Memo
+            memoObj = Memo(
+                from_account=account,
+                to_account=to,
+                blockchain_instance=self.blockchain
+            )
+            memo = memoObj.encrypt(memo[1:])["message"]
+        
+        op = operations.Recurring_transfer(**{
+            "amount": amount,
+            "to": to_name,
+            "memo": memo,
+            "from": account_name,
+            "recurrence": recurrence,
+            "executions": executions,
+            "prefix": self.blockchain.prefix,
+            "json_str": not bool(self.blockchain.config["use_condenser"]),
+        })
+        return self.blockchain.finalizeOp(op, account, "active", **kwargs)
+
     def transfer_to_vesting(self, amount, to=None, account=None, skip_account_check=False, **kwargs):
         """ Vest STEEM
 

@@ -4,6 +4,7 @@ ops = [
     'vote',
     'comment',
     'transfer',
+    'recurring_transfer',
     'transfer_to_vesting',
     'withdraw_vesting',
     'limit_order_create',
