@@ -363,7 +363,7 @@ class UpdateProposalExtensions(Static_variant):
             else:
                 type_id = ~0
         else:
-            type_id, data = o        
+            type_id, data = o
 
         if type_id == 1:
             data = (UpdateProposalEndDate(o['value']))

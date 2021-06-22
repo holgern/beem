@@ -66,6 +66,35 @@ class Transfer(GrapheneObject):
             ('memo', memo),
         ]))
 
+#Added recurring transfer support for HF25
+class Recurring_transfer(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        # Allow for overwrite of prefix
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        prefix = kwargs.get("prefix", default_prefix)
+        json_str = kwargs.get("json_str", False)
+        if "memo" not in kwargs:
+            kwargs["memo"] = ""
+        if isinstance(kwargs["memo"], dict):
+            kwargs["memo"]["prefix"] = prefix
+            memo = Optional(Memo(**kwargs["memo"]))
+        elif isinstance(kwargs["memo"], string_types):
+            memo = (String(kwargs["memo"]))
+        else:
+            memo = Optional(Memo(kwargs["memo"]))
+        
+        super(Recurring_transfer, self).__init__(OrderedDict([
+            ('from', String(kwargs["from"])),
+            ('to', String(kwargs["to"])),
+            ('amount', Amount(kwargs["amount"], prefix=prefix, json_str=json_str)),
+            ('memo', memo),
+            ('recurrence', Int16(kwargs["recurrence"])),
+            ('executions', Int16(kwargs["executions"])),
+        ]))
+
 
 class Vote(GrapheneObject):
     def __init__(self, *args, **kwargs):
@@ -402,8 +431,9 @@ class Update_proposal(GrapheneObject):
 
         prefix = kwargs.get("prefix", default_prefix)
         extensions = Array([])
-        if "extensions" in kwargs and kwargs["extensions"]:
-            extensions = Array([UpdateProposalExtensions(o) for o in kwargs["extensions"]])
+        if "end_date" in kwargs and kwargs["end_date"]:
+            extension = { 'type': 'update_proposal_end_date', 'value': {'end_date': kwargs["end_date"]} }
+            extensions = Array([UpdateProposalExtensions(extension)])
 
 
         super(Update_proposal, self).__init__(
@@ -640,6 +670,24 @@ class Convert(GrapheneObject):
                 ('requestid', Uint32(kwargs["requestid"])),
                 ('amount', Amount(kwargs["amount"], prefix=prefix, json_str=json_str)),
             ]))
+
+#Operation added for HF25 for the new HBD/Hive conversion operation
+class Collateralized_convert(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if check_for_class(self, args):
+            return
+        if len(args) == 1 and len(kwargs) == 0:
+            kwargs = args[0]
+        prefix = kwargs.get("prefix", default_prefix)
+        json_str = kwargs.get("json_str", False)
+        super(Collateralized_convert, self).__init__(
+            OrderedDict([
+                ('owner', String(kwargs["owner"])),
+                ('requestid', Uint32(kwargs["requestid"])),
+                ('amount', Amount(kwargs["amount"], prefix=prefix, json_str=json_str)),
+            
+            ]))
+
 
 
 class Set_withdraw_vesting_route(GrapheneObject):
