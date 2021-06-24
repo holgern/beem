@@ -305,7 +305,7 @@ class GrapheneRPC(object):
         symbols = []
         chain_assets = []
         for key in props:
-            if key[-8:] == "CHAIN_ID":
+            if key != "OLD_CHAIN_ID" and key[-8:] == "CHAIN_ID":
                 chain_id = props[key]
                 blockchain_name = key.split("_")[0]
             elif key[-13:] == "CHAIN_VERSION":
