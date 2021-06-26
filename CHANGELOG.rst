@@ -1,5 +1,9 @@
 Changelog
 ========
+0.24.26
+-------
+* reverting change to operationsid for HF24, please uncoment line 158 in file beembase\operationids.py for using in HF25
+
 0.24.25
 -------
 * More robust HIVE_CHAIN_ID detection
