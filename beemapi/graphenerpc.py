@@ -304,6 +304,8 @@ class GrapheneRPC(object):
         prefix = None
         symbols = []
         chain_assets = []
+        if 'HIVE_CHAIN_ID' in props and 'STEEM_CHAIN_ID' in props:
+            del props['STEEM_CHAIN_ID']
         for key in props:
             if key[-8:] == "CHAIN_ID":
                 chain_id = props[key]
