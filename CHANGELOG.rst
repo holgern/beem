@@ -1,5 +1,9 @@
 Changelog
 ========
+0.24.25
+-------
+* More robust HIVE_CHAIN_ID detection
+
 0.24.24
 -------
 * Prioritize HIVE_CHAIN_ID property for the chain selection (@emre)
