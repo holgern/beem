@@ -1,8 +1,12 @@
 Changelog
 ========
+0.24.27
+-------
+* Adapt changes of HF25 to operationids
+
 0.24.26
 -------
-* reverting change to operationsid for HF24, please uncoment line 158 in file beembase\operationids.py for using in HF25
+* reverting change to operationsid 
 
 0.24.25
 -------
