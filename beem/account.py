@@ -176,8 +176,10 @@ class Account(BlockchainObject):
             "reward_hbd_balance",            
             "reward_steem_balance",
             "reward_hive_balance",
+            "reward_blurt_balance",
             "reward_vesting_balance",
             "reward_vesting_steem",
+            "reward_vesting_blurt",
             "vesting_shares",
             "delegated_vesting_shares",
             "received_vesting_shares",
@@ -233,12 +235,14 @@ class Account(BlockchainObject):
             "savings_sbd_balance",
             "reward_sbd_balance",
             "reward_steem_balance",
+            "reward_blurt_balance",
             "hbd_balance",
             "savings_hbd_balance",
             "reward_hbd_balance",
             "reward_hive_balance",            
             "reward_vesting_balance",
             "reward_vesting_steem",
+            "reward_vesting_blurt",
             "vesting_shares",
             "delegated_vesting_shares",
             "received_vesting_shares",
@@ -1188,6 +1192,8 @@ class Account(BlockchainObject):
             amount_list = ["reward_steem_balance", "reward_sbd_balance", "reward_vesting_balance"]
         elif "reward_hive_balance" in self and "reward_hbd_balance" in self:
             amount_list = ["reward_hive_balance", "reward_hbd_balance", "reward_vesting_balance"]
+        elif "reward_blurt_balance" in self:
+            amount_list = ["reward_blurt_balance", "reward_vesting_balance"]
         else:
             amount_list = []
         rewards_amount = []
@@ -3212,12 +3218,13 @@ class Account(BlockchainObject):
         return amount
 
     def claim_reward_balance(self,
-                             reward_steem=0,
-                             reward_sbd=0,
-                             reward_hive=0,
-                             reward_hbd=0,                             
-                             reward_vests=0,
-                             account=None, **kwargs):
+                            reward_steem=0,
+                            reward_sbd=0,
+                            reward_hive=0,
+                            reward_hbd=0, 
+                            reward_blurt=0,                            
+                            reward_vests=0,
+                            account=None, **kwargs):
         """ Claim reward balances.
         By default, this will claim ``all`` outstanding balances. To bypass
         this behaviour, set desired claim amount by setting any of
@@ -3225,6 +3232,7 @@ class Account(BlockchainObject):
 
         :param str reward_steem: Amount of STEEM you would like to claim.
         :param str reward_hive: Amount of HIVE you would like to claim.
+        :param str reward_blurt: Amount of BLURT you would like to claim.
         :param str reward_sbd: Amount of SBD you would like to claim.
         :param str reward_hbd: Amount of HBD you would like to claim.
         :param str reward_vests: Amount of VESTS you would like to claim.
@@ -3242,16 +3250,18 @@ class Account(BlockchainObject):
         # if no values were set by user, claim all outstanding balances on
         # account
 
-        reward_token_amount = self._check_amount(reward_steem + reward_hive, self.blockchain.token_symbol)
+        reward_token_amount = self._check_amount(reward_steem + reward_hive + reward_blurt, self.blockchain.token_symbol)
         reward_backed_token_amount = self._check_amount(reward_sbd + reward_hbd, self.blockchain.backed_token_symbol)
         reward_vests_amount = self._check_amount(reward_vests, self.blockchain.vest_token_symbol)
 
         if self.blockchain.is_hive:
             reward_token = "reward_hive"
             reward_backed_token = "reward_hbd"
-        else:
+        elif self.blockchain.is_steem:
             reward_token = "reward_steem"
-            reward_backed_token = "reward_sbd"            
+            reward_backed_token = "reward_sbd"
+        else:
+            reward_token = "reward_blurt"
 
         if reward_token_amount.amount == 0 and reward_backed_token_amount.amount == 0 and reward_vests_amount.amount == 0:
             if len(account.balances["rewards"]) == 3:

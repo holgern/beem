@@ -899,6 +899,13 @@ class Claim_reward_balance(GrapheneObject):
                     ('reward_hive', Amount(kwargs["reward_hive"], prefix=prefix, json_str=json_str)),
                     ('reward_vests', Amount(kwargs["reward_vests"], prefix=prefix)),
                 ]))
+        elif "reward_blurt" in kwargs:
+            super(Claim_reward_balance, self).__init__(
+                OrderedDict([
+                    ('account', String(kwargs["account"])),
+                    ('reward_blurt', Amount(kwargs["reward_blurt"], prefix=prefix)),
+                    ('reward_vests', Amount(kwargs["reward_vests"], prefix=prefix)),
+                ]))
         else:
             super(Claim_reward_balance, self).__init__(
                 OrderedDict([
