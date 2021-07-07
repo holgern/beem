@@ -1139,6 +1139,14 @@ class Account(BlockchainObject):
         self.blockchain.rpc.set_next_node_on_empty_reply(True)
         return self.blockchain.rpc.list_all_subscriptions({'account': account}, api='bridge')
 
+    def get_community_context(self, community):
+        """Returns role, subscription status, title for account in a given community"""
+        account = extract_account_name(self["name"])
+        if not self.blockchain.is_connected():
+            raise OfflineHasNoRPCException("No RPC available in offline mode!")
+        self.blockchain.rpc.set_next_node_on_empty_reply(True)
+        return self.blockchain.rpc.get_community_context({'account': account, 'name': community}, api='bridge')
+
     def get_account_posts(self, sort="feed", limit=20, account=None, observer=None, raw_data=False):
         """Returns account feed"""
         if account is None:
