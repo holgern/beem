@@ -2921,8 +2921,8 @@ class Account(BlockchainObject):
         if memo and memo[0] == "#":
             from .memo import Memo
             memoObj = Memo(
-                from_account=account,
-                to_account=to,
+                from_account=account_name,
+                to_account=to_name,
                 blockchain_instance=self.blockchain
             )
             memo = memoObj.encrypt(memo[1:])["message"]
