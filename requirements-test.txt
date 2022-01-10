@@ -16,7 +16,7 @@ Click==8.0.3
 click_shell>=2.0
 prettytable
 pycodestyle==2.8.0
-pyflakes==2.3.1
+pyflakes==2.4.0
 pylibscrypt==2.0.0
 six==1.15.0
 pytest
