@@ -106,9 +106,17 @@ For OSX, please do the following::
 
 For Termux on Android, please install the following packages:
 
+Note: Use latest [f-droid Termux package](https://f-droid.org/en/packages/com.termux/) to resolve outdated repository issues.
+
 .. code:: bash
 
-    pkg install clang openssl python
+    pkg install clang python rust
+
+Termux continued: Set CARGO_BUILD_TARGET environment variable to appropriate device target architecture. Example below:
+
+.. code:: bash
+
+   export CARGO_BUILD_TARGET=aarch64-linux-android
 
 Signing and Verify can be fasten (200 %) by installing cryptography (you may need to replace pip3 by pip):
 
