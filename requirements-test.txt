@@ -18,7 +18,7 @@ prettytable
 pycodestyle==2.8.0
 pyflakes==2.4.0
 pylibscrypt==2.0.0
-six==1.15.0
+six==1.16.0
 pytest
 pytest-mock
 pytest-cov
