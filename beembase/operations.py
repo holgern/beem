@@ -981,28 +981,28 @@ class Escrow_transfer(GrapheneObject):
                 OrderedDict([
                     ('from', String(kwargs["from"])),
                     ('to', String(kwargs["to"])),
-                    ('agent', String(kwargs["agent"])),
+                    ('hbd_amount', Amount(kwargs["hbd_amount"], prefix=prefix, replace_hive_by_steem=False)),
+                    ('hive_amount', Amount(kwargs["hive_amount"], prefix=prefix, replace_hive_by_steem=False)),
                     ('escrow_id', Uint32(kwargs["escrow_id"])),
-                    ('hbd_amount', Amount(kwargs["hbd_amount"], prefix=prefix, json_str=json_str)),
-                    ('hive_amount', Amount(kwargs["hive_amount"], prefix=prefix, json_str=json_str)),
-                    ('fee', Amount(kwargs["fee"], prefix=prefix, json_str=json_str)),
+                    ('agent', String(kwargs["agent"])),
+                    ('fee', Amount(kwargs["fee"], prefix=prefix, replace_hive_by_steem=False)),
+                    ('json_meta', String(meta)),
                     ('ratification_deadline', PointInTime(kwargs["ratification_deadline"])),
                     ('escrow_expiration', PointInTime(kwargs["escrow_expiration"])),
-                    ('json_meta', String(meta)),
                 ]))
         else:
             super(Escrow_transfer, self).__init__(
                 OrderedDict([
-                    ('from', String(kwargs["from"])),
+                   ('from', String(kwargs["from"])),
                     ('to', String(kwargs["to"])),
-                    ('agent', String(kwargs["agent"])),
+                    ('sbd_amount', Amount(kwargs["sbd_amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
+                    ('steem_amount', Amount(kwargs["steem_amount"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
                     ('escrow_id', Uint32(kwargs["escrow_id"])),
-                    ('sbd_amount', Amount(kwargs["sbd_amount"], prefix=prefix)),
-                    ('steem_amount', Amount(kwargs["steem_amount"], prefix=prefix)),
-                    ('fee', Amount(kwargs["fee"], prefix=prefix)),
+                    ('agent', String(kwargs["agent"])),
+                    ('fee', Amount(kwargs["fee"], prefix=prefix, replace_hive_by_steem=replace_hive_by_steem, json_str=json_str)),
+                    ('json_meta', String(meta)),
                     ('ratification_deadline', PointInTime(kwargs["ratification_deadline"])),
                     ('escrow_expiration', PointInTime(kwargs["escrow_expiration"])),
-                    ('json_meta', String(meta)),
                 ]))            
 
 
