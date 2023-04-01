@@ -300,7 +300,16 @@ class BIP32Key(object):
     def Identifier(self):
         """Return key identifier as string"""
         cK = self.PublicKey()
-        return hashlib.new('ripemd160', sha256(cK).digest()).digest()
+        try:
+            return hashlib.new('ripemd160', sha256(cK).digest()).digest()
+        except BaseException:
+            # ripemd160 is not guaranteed to be available in hashlib on all platforms.
+            # Historically, our Android builds had hashlib/openssl which did not have it.
+            # see https://github.com/spesmilo/electrum/issues/7093
+            # We bundle a pure python implementation as fallback that gets used now:
+            from beem import ripemd
+            md = ripemd.new(sha256(cK).digest())
+            return md.digest()
 
     def Fingerprint(self):
         """Return key fingerprint as string"""

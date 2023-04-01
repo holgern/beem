@@ -135,9 +135,18 @@ def base58encode(hexstring):
 
 
 def ripemd160(s):
-    ripemd160 = hashlib.new('ripemd160')
-    ripemd160.update(unhexlify(s))
-    return ripemd160.digest()
+    try:
+        ripemd160 = hashlib.new('ripemd160')
+        ripemd160.update(unhexlify(s))
+        return ripemd160.digest()
+    except BaseException:
+        # ripemd160 is not guaranteed to be available in hashlib on all platforms.
+        # Historically, our Android builds had hashlib/openssl which did not have it.
+        # see https://github.com/spesmilo/electrum/issues/7093
+        # We bundle a pure python implementation as fallback that gets used now:
+        from beem import ripemd
+        md = ripemd.new(unhexlify(s))
+        return md.digest()
 
 def doublesha256(s):
     return hashlib.sha256(hashlib.sha256(unhexlify(s)).digest()).digest()
