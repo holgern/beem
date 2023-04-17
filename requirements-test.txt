@@ -7,7 +7,7 @@ requests==2.28.2
 websocket-client==1.5.1
 pytz==2023.3
 pycryptodomex==3.17
-scrypt==0.8.18
+scrypt==0.8.20
 cryptography==3.4.7
 ruamel.yaml
 mock==4.0.3
