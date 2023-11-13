@@ -10,7 +10,7 @@ pycryptodomex==3.19.0
 scrypt==0.8.20
 cryptography==41.0.5
 ruamel.yaml
-mock==4.0.3
+mock==5.1.0
 appdirs==1.4.4
 Click==7.1.2
 click_shell>=2.0
