@@ -12,7 +12,7 @@ cryptography==43.0.1
 ruamel.yaml
 mock==5.1.0
 appdirs==1.4.4
-Click==7.1.2
+Click==8.1.7
 click_shell>=2.0
 prettytable
 pycodestyle==2.7.0
